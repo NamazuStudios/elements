@@ -52,7 +52,7 @@ public class RemoteProxyProviderUnitTest {
         verify(getMockRemoteInvoker()).invokeSync(
             eq(expected),
             eq(emptyList()),
-            any(RemoteInvoker.InvocationErrorConsumer.class)
+            any(InvocationErrorConsumer.class)
         );
 
     }
@@ -74,7 +74,7 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invokeSync(
             argThat(i -> i.equals(expected)),
-            eq(emptyList()), any(RemoteInvoker.InvocationErrorConsumer.class)
+            eq(emptyList()), any(InvocationErrorConsumer.class)
         );
 
     }
@@ -130,7 +130,7 @@ public class RemoteProxyProviderUnitTest {
                 argThat(cl -> {
                     cl.forEach(c -> c.accept(expectedInvocationResult));
                     return true;
-                }), argThat((RemoteInvoker.InvocationErrorConsumer ec) -> {
+                }), argThat((InvocationErrorConsumer ec) -> {
                     try {
                         ec.accept(new InvocationError());
                         return true;
@@ -164,7 +164,7 @@ public class RemoteProxyProviderUnitTest {
 
         verify(getMockRemoteInvoker()).invokeFuture(
             eq(expected),
-            eq(emptyList()), any(RemoteInvoker.InvocationErrorConsumer.class)
+            eq(emptyList()), any(InvocationErrorConsumer.class)
         );
 
     }
@@ -203,7 +203,7 @@ public class RemoteProxyProviderUnitTest {
             argThat(cl -> {
                 cl.forEach(c -> c.accept(expectedInvocationResult));
                 return true;
-            }), any(RemoteInvoker.InvocationErrorConsumer.class)
+            }), any(InvocationErrorConsumer.class)
         );
 
     }
@@ -242,7 +242,7 @@ public class RemoteProxyProviderUnitTest {
             argThat(cl -> {
                 cl.forEach(c -> c.accept(expectedInvocationResult));
                 return true;
-            }), argThat((RemoteInvoker.InvocationErrorConsumer ec) -> {
+            }), argThat((InvocationErrorConsumer ec) -> {
                 try {
                     ec.accept(new InvocationError());
                     return true;

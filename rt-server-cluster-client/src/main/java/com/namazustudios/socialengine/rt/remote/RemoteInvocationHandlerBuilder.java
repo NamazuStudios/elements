@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Reflection;
-import com.namazustudios.socialengine.rt.RoutingAddressProvider;
-import com.namazustudios.socialengine.rt.RoutingStrategy;
-import com.namazustudios.socialengine.rt.annotation.*;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.remote.RemoteInvoker.InvocationErrorConsumer;
+import com.namazustudios.socialengine.rt.annotation.Dispatch;
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.ResultHandler;
+import com.namazustudios.socialengine.rt.annotation.Serialize;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,14 +12,13 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.*;
-import java.util.concurrent.ExecutionException;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
 import static java.util.Arrays.stream;
@@ -41,11 +39,13 @@ public class RemoteInvocationHandlerBuilder {
 
     private final Dispatch.Type dispatchType;
 
-    private final RoutingStrategy routingStrategy;
+    private final RemoteInvocationDispatcher remoteInvocationDispatcher;
 
-    private final RemoteInvokerRegistry remoteInvokerRegistry;
+    private final Class<? extends RoutingStrategy> routingStrategyClass;
 
-    public RemoteInvocationHandlerBuilder(final RemoteInvokerRegistry remoteInvokerRegistry, final Class<?> type, final Method method) {
+    public RemoteInvocationHandlerBuilder(final RemoteInvocationDispatcher remoteInvocationDispatcher,
+                                          final Class<?> type,
+                                          final Method method) {
 
         if (method.getAnnotation(RemotelyInvokable.class) == null) {
             throw new IllegalArgumentException(format(method) + " is not annotated with @RemotelyInvokable");
@@ -56,22 +56,9 @@ public class RemoteInvocationHandlerBuilder {
         this.dispatchType = Dispatch.Type.determine(method);
 
         final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
-        final Class<? extends RoutingStrategy> routingStrategyCls = remotelyInvokable.value();
+        routingStrategyClass = remotelyInvokable.value();
 
-        this.remoteInvokerRegistry = remoteInvokerRegistry;
-
-        if (routingStrategyCls != null) {
-            try {
-                final RoutingStrategy routingStrategy = routingStrategyCls.newInstance();
-                this.routingStrategy = routingStrategy;
-            }
-            catch (Exception e) {
-                throw new InternalException(e);
-            }
-        }
-        else {
-            this.routingStrategy = null;
-        }
+        this.remoteInvocationDispatcher = remoteInvocationDispatcher;
 
         switch (dispatchType) {
             case HYBRID:
@@ -118,12 +105,13 @@ public class RemoteInvocationHandlerBuilder {
         return dispatchType;
     }
 
-    public RoutingStrategy getRoutingStrategy() {
-        return routingStrategy;
-    }
-
-    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
-        return remoteInvokerRegistry;
+    /**
+     * Returns the {@link RemoteInvocationDispatcher} to use for this method.
+     *
+     * @return the {@link RemoteInvocationDispatcher}
+     */
+    public RemoteInvocationDispatcher getRemoteInvocationDispatcher() {
+        return remoteInvocationDispatcher;
     }
 
     /**
@@ -155,8 +143,7 @@ public class RemoteInvocationHandlerBuilder {
         final Function<Object[], List<Object>> parameterAssembler;
         parameterAssembler = getParameterAssembler();
 
-        final Function<Object[], RoutingAddressProvider> routingAddressProviderAssembler;
-        routingAddressProviderAssembler = getRoutingAddressProviderAssembler();
+        final Function<Object[], Route> routeAssembler = getRouteAssembler();
 
         final Function<Object[], InvocationErrorConsumer> invocationErrorConsumerAssembler;
         invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
@@ -168,19 +155,17 @@ public class RemoteInvocationHandlerBuilder {
         parameters = stream(method.getParameterTypes()).map(c -> c.getName()).collect(toList());
 
         return (proxy, method1, args) -> {
+
+            final Route route = routeAssembler.apply(args);
+
             final Invocation invocation = new Invocation();
 
             invocation.setDispatchType(getDispatchType());
-            invocation.setRoutingStrategy(getRoutingStrategy());
             invocation.setType(getType().getName());
             invocation.setName(getName());
             invocation.setMethod(getMethod().getName());
             invocation.setParameters(parameters);
             invocation.setArguments(parameterAssembler.apply(args));
-
-            final RoutingAddressProvider routingAddressProvider = routingAddressProviderAssembler.apply(args);
-
-            invocation.setRoutingAddress(routingAddressProvider.getRoutingAddress());
 
             final InvocationErrorConsumer invocationErrorConsumer;
             invocationErrorConsumer = invocationErrorConsumerAssembler.apply(args);
@@ -188,7 +173,7 @@ public class RemoteInvocationHandlerBuilder {
             final List<Consumer<InvocationResult>> invocationResultConsumerList;
             invocationResultConsumerList = invocationResultConsumerAssembler.apply(args, invocationErrorConsumer);
 
-            return returnValueTransformer.transform(invocation, invocationResultConsumerList, invocationErrorConsumer);
+            return returnValueTransformer.transform(route, invocation, invocationResultConsumerList, invocationErrorConsumer);
 
         };
 
@@ -199,18 +184,17 @@ public class RemoteInvocationHandlerBuilder {
         final Dispatch.Type type = getDispatchType();
 
         switch (type) {
-// TODO Fix this
-//            case SYNCHRONOUS:
-//                return remoteInvoker::invokeSync;
-//            case ASYNCHRONOUS:
-//                return remoteInvoker::invokeAsync;
-//            case FUTURE:
-//                return remoteInvoker::invokeFuture;
-//            case HYBRID:
-//            case CONSUMER:
-//                return isVoidMethod()   ? remoteInvoker::invokeAsync :
-//                       isFutureMethod() ? remoteInvoker::invokeFuture :
-//                                          remoteInvoker::invokeSync;
+            case SYNCHRONOUS:
+                return getRemoteInvocationDispatcher()::invokeSync;
+            case ASYNCHRONOUS:
+                return getRemoteInvocationDispatcher()::invokeAsync;
+            case FUTURE:
+                return getRemoteInvocationDispatcher()::invokeFuture;
+            case HYBRID:
+            case CONSUMER:
+                return isVoidMethod()   ? getRemoteInvocationDispatcher()::invokeAsync :
+                       isFutureMethod() ? getRemoteInvocationDispatcher()::invokeFuture :
+                                          getRemoteInvocationDispatcher()::invokeSync;
             default:
                 throw new IllegalArgumentException("Unknown dispatch type: " + type);
         }
@@ -232,22 +216,26 @@ public class RemoteInvocationHandlerBuilder {
         return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
     }
 
-    private Function<Object[], RoutingAddressProvider> getRoutingAddressProviderAssembler() {
-        final Method method = getMethod();
-        final int[] indices = indices(method, AddressProvider.class);
-        if (indices.length > 1) {
-            throw new IllegalArgumentException("There should be at most one AddressProvider for method signature: " + method.toString());
-        }
+//    private Function<Object[], RoutingAddressProvider> getRoutingAddressProviderAssembler() {
+//        final Method method = getMethod();
+//        final int[] indices = indices(method, AddressProvider.class);
+//        if (indices.length > 1) {
+//            throw new IllegalArgumentException("There should be at most one AddressProvider for method signature: " + method.toString());
+//        }
+//
+//        if (indices.length == 1) {
+//            final int addressProviderIndex = indices[0];
+//            return objects -> (RoutingAddressProvider) objects[addressProviderIndex];
+//        }
+//        else {
+//            return objects -> null;
+//        }
+//    }
 
-        if (indices.length == 1) {
-            final int addressProviderIndex = indices[0];
-            return objects -> (RoutingAddressProvider) objects[addressProviderIndex];
-        }
-        else {
-            return objects -> null;
-        }
+    private Function<Object[], Route> getRouteAssembler() {
+        // TODO Extract Address from parameters
+        return null;
     }
-
 
     private Function<Object[], InvocationErrorConsumer> getInvocationErrorConsumerAssembler() {
 
@@ -348,7 +336,8 @@ public class RemoteInvocationHandlerBuilder {
          * @return an {@link Object} to return from the {@link InvocationHandler}
          * @throws Throwable if an exception occurs, can also be re-throwing the remiote invocation error
          */
-        Object transform(Invocation invocation,
+        Object transform(Route route,
+                         Invocation invocation,
                          List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                          InvocationErrorConsumer asyncInvocationErrorConsumer) throws Throwable;
 
