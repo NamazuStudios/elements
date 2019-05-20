@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.annotation.AddressProvider;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.remote.AddressedRoutingStrategy;
 
 import java.util.concurrent.TimeUnit;
 
@@ -30,10 +32,10 @@ public interface SchedulerContext {
      * @param taskId the {@link TaskId} of the task
      *
      */
-    @RemotelyInvokable
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     void resumeTaskAfterDelay(@Serialize long time,
                               @Serialize TimeUnit timeUnit,
-                              @Serialize TaskId taskId);
+                              @AddressProvider @Serialize TaskId taskId);
 
     /**
      * Resumes the supplied task with the {@link TaskId} supplying multiple results to the destination.
@@ -41,8 +43,8 @@ public interface SchedulerContext {
      * @param taskId the {@link TaskId} of the supplied task
      * @param results zero or more results from resuming the task
      */
-    @RemotelyInvokable
-    void resume(@Serialize TaskId taskId, @Serialize Object ... results);
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
+    void resume(@AddressProvider @Serialize TaskId taskId, @Serialize Object ... results);
 
     /**
      * Resumes a task that was waiting on a network call.
@@ -50,8 +52,8 @@ public interface SchedulerContext {
      * @param result the result of the network operation, passed to the task
      *
      */
-    @RemotelyInvokable
-    void resumeFromNetwork(@Serialize TaskId taskId, @Serialize Object result);
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
+    void resumeFromNetwork(@AddressProvider @Serialize TaskId taskId, @Serialize Object result);
 
     /**
      * Resumes a task that was waiting for any reason.  This is used to hand an error to the running task in order to a
@@ -60,7 +62,7 @@ public interface SchedulerContext {
      * @param throwable the error in the blocked operation
      *
      */
-    @RemotelyInvokable
-    void resumeWithError(@Serialize TaskId taskId, @Serialize Throwable throwable);
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
+    void resumeWithError(@AddressProvider @Serialize TaskId taskId, @Serialize Throwable throwable);
 
 }

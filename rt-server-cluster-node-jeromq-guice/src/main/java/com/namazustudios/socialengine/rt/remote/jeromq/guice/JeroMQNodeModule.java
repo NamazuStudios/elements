@@ -75,7 +75,7 @@ public class JeroMQNodeModule extends PrivateModule {
     /**
      * Specifies the minimum number of connections to keep active, even if the timeout has expired.
      *
-     * @param minimumConnections the minimum number of connections to keep open
+     * @param minimumConnections the minimum number of connections to keep issueOpenInprocChannelCommand
      * @return this instance
      */
     public JeroMQNodeModule withMinimumConnections(final int minimumConnections) {
@@ -88,7 +88,7 @@ public class JeroMQNodeModule extends PrivateModule {
     /**
      * Specifies the maximum number of connections to keep active, even if the timeout has expired.
      *
-     * @param maximumConnections the minimum number of connections to keep open
+     * @param maximumConnections the minimum number of connections to keep issueOpenInprocChannelCommand
      * @return this instance
      */
     public JeroMQNodeModule withMaximumConnections(int maximumConnections) {

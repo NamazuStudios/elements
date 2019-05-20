@@ -172,6 +172,7 @@
             <artifactId>jersey-hk2</artifactId>
             <version>${jersey.version}</version>
         </dependency>
+
     </dependencies>
 
     <build>

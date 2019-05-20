@@ -77,7 +77,7 @@ public interface HandlerContext {
      *
      * @return {@link Future<Object>} which can be used to obtain the result of the invocation.
      */
-    @RemotelyInvokable
+    @RemotelyInvokable(AnyRoutingStrategy.class)
     void invokeSingleUseHandlerAsync(
         @ResultHandler Consumer<Object> success, @ErrorHandler Consumer<Throwable> failure,
         @Serialize Attributes attributes, @Serialize String module,
@@ -124,7 +124,7 @@ public interface HandlerContext {
      * @param args the arguments passed to the method {@see {@link MethodDispatcher#params(Object...)}}
      * @return the {@link Future<Object>} of the result.
      */
-    @RemotelyInvokable
+    @RemotelyInvokable(AnyRoutingStrategy.class)
     void invokeRetainedHandlerAsync(
         @ResultHandler Consumer<Object> success, @ErrorHandler Consumer<Throwable> failure,
         @Serialize Attributes attributes, @Serialize String module,

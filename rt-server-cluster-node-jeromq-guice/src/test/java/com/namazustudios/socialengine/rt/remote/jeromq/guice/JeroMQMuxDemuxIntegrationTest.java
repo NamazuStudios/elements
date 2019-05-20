@@ -2,12 +2,11 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
-import com.namazustudios.socialengine.rt.ConnectionDemultiplexer;
-import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
-import com.namazustudios.socialengine.rt.jeromq.Routing;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
+import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -25,7 +24,7 @@ import java.util.concurrent.ExecutionException;
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
-import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.Collections.unmodifiableList;
@@ -44,37 +43,35 @@ public class JeroMQMuxDemuxIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQMuxDemuxIntegrationTest.class);
 
-    public static final String CONNECTION_ADDRESS = "inproc://test-connection";
+//    public static final String CONNECTION_ADDRESS = "inproc://test-connection";
+    public static final Integer BIND_PORT = 28883;  // TODO: need to redo this test
 
-    public static List<String> DESTINATION_IDS = unmodifiableList(range(0, 15)
-        .mapToObj(value -> format("test-destination-%d", value))
+    public static List<UUID> INPROC_IDENTIFIERS = unmodifiableList(range(0, 15)
+        .mapToObj(value -> RouteRepresentationUtil.buildInprocIdentifierFromString(format("test-inprocIdentifier-%d", value)))
         .collect(toList()));
 
     private Thread echoer;
 
     private ZContext master;
 
-    private ConnectionMultiplexer connectionMultiplexer;
-
-    private ConnectionDemultiplexer connectionDemultiplexer;
+    private ConnectionService multiplexedConnectionService;
+    private ConnectionService demultiplexedConnectionService;
 
     @BeforeClass
     public void setup() {
 
         master = new ZContext();
 
-        final Routing routing = new Routing();
         final Injector muxInjector = createInjector(new MuxerModule());
         final Injector demuxInjector = createInjector(new DemuxerModule());
 
-        connectionMultiplexer = muxInjector.getInstance(ConnectionMultiplexer.class);
-        connectionDemultiplexer = demuxInjector.getInstance(ConnectionDemultiplexer.class);
+        multiplexedConnectionService = muxInjector.getInstance(ConnectionService.class);
+        demultiplexedConnectionService = demuxInjector.getInstance(ConnectionService.class);
 
         echoer = new Thread(() -> {
 
-            final List<ZMQ.Socket> socketList = DESTINATION_IDS.stream()
-                .map(routing::getDestinationId)
-                .map(routing::getDemultiplexedAddressForDestinationId)
+            final List<ZMQ.Socket> socketList = INPROC_IDENTIFIERS.stream()
+                .map(RouteRepresentationUtil::buildDemultiplexInprocAddress)
                 .map(addr -> {
                     final ZMQ.Socket socket = master.createSocket(ZMQ.ROUTER);
                     socket.setRouterMandatory(true);
@@ -122,31 +119,28 @@ public class JeroMQMuxDemuxIntegrationTest {
 
         echoer.start();
 
-        connectionMultiplexer.start();
-        connectionDemultiplexer.start();
+        multiplexedConnectionService.start();
+        demultiplexedConnectionService.start();
 
-        DESTINATION_IDS.forEach(connectionMultiplexer::open);
-        DESTINATION_IDS.forEach(connectionDemultiplexer::open);
+        INPROC_IDENTIFIERS.forEach(inprocIdentifier -> multiplexedConnectionService.issueBindInprocCommand(null, inprocIdentifier));
+        INPROC_IDENTIFIERS.forEach(inprocIdentifier -> demultiplexedConnectionService.issueConnectInprocCommand(null, inprocIdentifier));
 
     }
 
     @AfterClass
     public void teardown() throws Exception {
-        connectionDemultiplexer.stop();
-        connectionMultiplexer.stop();
+        multiplexedConnectionService.stop();
+        multiplexedConnectionService.stop();
         echoer.interrupt();
         echoer.join();
     }
 
     @DataProvider(parallel = true)
-    public Object[][] destinationIdDataSupplier() {
+    public static Object[][] destinationIdDataSupplier() {
 
-        final Routing routing = new Routing();
-
-        return DESTINATION_IDS
+        return INPROC_IDENTIFIERS
             .stream()
-            .map(id -> routing.getDestinationId(id))
-            .map(uuid -> new Object[]{routing.getMultiplexedAddressForDestinationId(uuid)})
+            .map(uuid -> new Object[]{RouteRepresentationUtil.buildMultiplexInprocAddress(uuid)})
             .toArray(Object[][]::new);
 
     }
@@ -161,7 +155,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             final int index = poller.register(connection.socket(), POLLIN | POLLERR);
             final boolean connected = connection.socket().connect(multiplexedAddress);
-            assertTrue(connected, "Failed to connect.");
+            assertTrue(connected, "Failed to issueOpenBackendChannelCommand.");
 
             final ZMsg request = new ZMsg();
             request.push(uuid.toString());
@@ -198,11 +192,7 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             bind(ZContext.class).toInstance(master);
 
-            bind(String.class)
-                .annotatedWith(named(JeroMQConnectionMultiplexer.CONNECT_ADDR))
-                .toInstance(CONNECTION_ADDRESS);
-
-            bind(ConnectionMultiplexer.class).to(JeroMQConnectionMultiplexer.class).asEagerSingleton();
+            bind(ConnectionService.class).to(JeroMQMultiplexedConnectionService.class).asEagerSingleton();
 
         }
 
@@ -215,11 +205,11 @@ public class JeroMQMuxDemuxIntegrationTest {
 
             bind(ZContext.class).toInstance(master);
 
-            bind(String.class)
-                .annotatedWith(named(JeroMQConnectionDemultiplexer.BIND_ADDR))
-                .toInstance(CONNECTION_ADDRESS);
+            bind(Integer.class)
+                .annotatedWith(named(JeroMQDemultiplexedConnectionService.BIND_PORT))
+                .toInstance(BIND_PORT);
 
-            bind(ConnectionDemultiplexer.class).to(JeroMQConnectionDemultiplexer.class).asEagerSingleton();
+            bind(ConnectionService.class).to(JeroMQDemultiplexedConnectionService.class).asEagerSingleton();
 
         }
 

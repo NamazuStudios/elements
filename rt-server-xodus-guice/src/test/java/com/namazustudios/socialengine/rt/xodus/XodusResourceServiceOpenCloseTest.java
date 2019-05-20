@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.UUID;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
@@ -122,7 +123,8 @@ public class XodusResourceServiceOpenCloseTest {
     private Resource newMockResource() throws IOException {
 
         final Resource mock = mock(Resource.class);
-        final ResourceId resourceId = new ResourceId();
+        final UUID nodeUuid = randomUUID();
+        final ResourceId resourceId = new ResourceId(nodeUuid);
 
         when(mock.getId()).thenReturn(resourceId);
         doAnswer(invocation -> {

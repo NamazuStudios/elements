@@ -11,7 +11,7 @@ import static java.lang.String.format;
  * Represents a globally-unique id of a task, associated with a {@link Resource}.  This is currently backed by an
  * instance of {@Link UUID}, but the string representation should be considered opaque by users of this type.
  */
-public class TaskId implements Serializable {
+public class TaskId implements Serializable, RoutingAddressProvider {
 
     public static final String ID_SEPARATOR = ":";
 
@@ -82,6 +82,10 @@ public class TaskId implements Serializable {
     @Override
     public int hashCode() {
         return Objects.hash(uuid, getResourceId());
+    }
+
+    public String getRoutingAddress() {
+        return resourceId.getRoutingAddress();
     }
 
 }

@@ -13,6 +13,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -33,9 +34,10 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
     public Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
+        final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId();
+            final ResourceId resourceId = new ResourceId(nodeUuid);
             final Path path = new Path(asList("test", randomUUID().toString()));
             final Path alias = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path, alias});

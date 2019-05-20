@@ -23,7 +23,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.SNDMORE;
 

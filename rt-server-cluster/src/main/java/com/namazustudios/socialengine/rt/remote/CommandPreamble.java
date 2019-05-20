@@ -1,8 +1,14 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote;
 
 import javolution.io.Struct;
 
 public class CommandPreamble extends Struct {
+
+    public static CommandPreamble CommandPreambleFromBytes(final byte[] bytes) {
+        final CommandPreamble commandPreamble = new CommandPreamble();
+        commandPreamble.getByteBuffer().put(bytes);
+        return commandPreamble;
+    }
 
     /**
      * The command type
@@ -32,7 +38,7 @@ public class CommandPreamble extends Struct {
         /**
          * A StatusResponse
          */
-        STATUS_RESPONSE
+        STATUS_RESPONSE,
 
     }
 

@@ -5,8 +5,9 @@ import com.namazustudios.socialengine.appserve.guice.DispatcherModule;
 import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
@@ -32,7 +33,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
@@ -52,7 +52,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private GitLoader gitLoader;
 
-    private ConnectionMultiplexer connectionMultiplexer;
+    private ConnectionService connectionService;
 
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
@@ -102,16 +102,17 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private Injector injectorFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
-            final UUID uuid = getConnectionMultiplexer().getDestinationUUIDForNodeId(application.getId());
-            getConnectionMultiplexer().open(application.getId());
+            final String inprocIdentifierString = application.getId();
+            final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(inprocIdentifierString);
 
-            final String connectAddress = getConnectionMultiplexer().getConnectAddress(uuid);
+            getConnectionService().issueBindInprocCommand(null, inprocIdentifier);
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
-                .withDefaultExecutorServiceProvider()
-                .withConnectAddress(connectAddress);
+                .withDefaultExecutorServiceProvider();
+// TODO Determine inproc:// address
+//                .withConnectAddress(connectAddress);
 
             return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
 
@@ -120,7 +121,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     @Override
     protected void doStart() throws Exception {
-        getConnectionMultiplexer().start();
+        getConnectionService().start();
 
         final App version = new App(getDeploymentManager(), this, VERSION_ORIGIN_ID);
         getDeploymentManager().addApp(version);
@@ -134,7 +135,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             final App app = new App(getDeploymentManager(), this, application.getId());
             getDeploymentManager().addApp(app);
         } catch (Exception ex) {
-            logger.error("Failed to deploy applciation {} ", application.getName(), ex);
+            logger.error("Failed to deploy application {} ", application.getName(), ex);
         }
     }
 
@@ -145,7 +146,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             .stream()
             .map(i -> i.getInstance(Context.class))
             .forEach(this::shutdown);
-        getConnectionMultiplexer().stop();
+        getConnectionService().stop();
     }
 
     private void shutdown(final Context context) {
@@ -192,13 +193,12 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.gitLoader = gitLoader;
     }
 
-    public ConnectionMultiplexer getConnectionMultiplexer() {
-        return connectionMultiplexer;
+    public ConnectionService getConnectionService() {
+        return connectionService;
     }
 
     @Inject
-    public void setConnectionMultiplexer(ConnectionMultiplexer connectionMultiplexer) {
-        this.connectionMultiplexer = connectionMultiplexer;
+    public void setConnectionService(ConnectionService connectionService) {
+        this.connectionService = connectionService;
     }
-
 }

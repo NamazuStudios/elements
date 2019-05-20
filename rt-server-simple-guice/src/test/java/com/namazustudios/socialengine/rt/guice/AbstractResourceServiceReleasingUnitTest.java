@@ -13,6 +13,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -35,9 +36,10 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
     public static Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
+        final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId();
+            final ResourceId resourceId = new ResourceId(nodeUuid);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
@@ -256,7 +258,8 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
 
     @Test(dependsOnMethods = "testAllPathsUnlinked")
     public void testDeleteWithPaths() {
-        final ResourceId resourceId = new ResourceId();
+        final UUID nodeUuid = randomUUID();
+        final ResourceId resourceId = new ResourceId(nodeUuid);
         final Resource resource = Mockito.mock(Resource.class);
 
         when(resource.getId()).thenReturn(resourceId);

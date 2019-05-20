@@ -17,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.util.Arrays.asList;
+import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.*;
@@ -34,9 +35,10 @@ public class XodusResourceServicePersistenceTest {
     public Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
+        final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 10; ++i) {
-            final ResourceId resourceId = new ResourceId();
+            final ResourceId resourceId = new ResourceId(nodeUuid);
             final Path path = new Path(asList("test", resourceId.asString()));
             testData.add(new Object[]{resourceId, path});
         }

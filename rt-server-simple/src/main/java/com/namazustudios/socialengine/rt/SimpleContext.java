@@ -36,6 +36,8 @@ public class SimpleContext implements Context {
 
     private ManifestLoader manifestLoader;
 
+    private ApplicationNodeMetadataContext applicationNodeMetadataContext;
+
     private Thread hook = new Thread(this::shutdown);
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleContext.class);
@@ -47,6 +49,7 @@ public class SimpleContext implements Context {
         getSchedulerContext().start();
         getIndexContext().start();
         getHandlerContext().start();
+        getApplicationNodeMetadataContext().start();
         getManifestLoader().loadAndRunIfNecessary();
         runStartupManifest();
     }
@@ -108,6 +111,7 @@ public class SimpleContext implements Context {
         getIndexContext().stop();
         getSchedulerContext().stop();
         getResourceContext().stop();
+        getApplicationNodeMetadataContext().stop();
 
         // Then stops all services
         getResourceLoader().close();
@@ -201,4 +205,12 @@ public class SimpleContext implements Context {
         this.manifestLoader = manifestLoader;
     }
 
+    public ApplicationNodeMetadataContext getApplicationNodeMetadataContext() {
+        return applicationNodeMetadataContext;
+    }
+
+    @Inject
+    public void setApplicationNodeMetadataContext(ApplicationNodeMetadataContext applicationNodeMetadataContext) {
+        this.applicationNodeMetadataContext = applicationNodeMetadataContext;
+    }
 }

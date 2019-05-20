@@ -8,7 +8,7 @@ import java.util.Arrays;
 /**
  * Manipulates the identity frames on an instance of {@link ZMsg}.
  */
-public class Identity {
+public class IdentityUtil {
 
     public static final byte[] EMPTY_DELIMITER = new byte[0];
 
@@ -18,21 +18,21 @@ public class Identity {
      * @param msg the message from which to copy
      * @return a copy of the identity portion in a new {@link ZMsg}
      */
-    public ZMsg copyIdentity(final ZMsg msg) {
+    public static ZMsg copyIdentity(final ZMsg msg) {
 
-        final ZMsg identity = new ZMsg();
+        final ZMsg identityMsg = new ZMsg();
 
         for (final ZFrame frame : msg) {
 
             if (Arrays.equals(frame.getData(), EMPTY_DELIMITER)) {
                 break;
             } else {
-                identity.addLast(frame.duplicate());
+                identityMsg.addLast(frame.duplicate());
             }
 
         }
 
-        return identity;
+        return identityMsg;
 
     }
 
@@ -45,16 +45,16 @@ public class Identity {
      * @param msg the message from which to pop the identity
      * @return a new message containing just the identity portion
      */
-    public ZMsg popIdentity(final ZMsg msg) {
+    public static ZMsg popIdentity(final ZMsg msg) {
 
-        final ZMsg identity = new ZMsg();
+        final ZMsg identityMsg = new ZMsg();
 
         while (!msg.isEmpty() && !Arrays.equals(msg.peek().getData(), EMPTY_DELIMITER)) {
-            identity.addLast(msg.removeFirst());
+            identityMsg.addLast(msg.removeFirst());
         }
 
         if (!msg.isEmpty()) msg.pop();
-        return identity;
+        return identityMsg;
 
     }
 
@@ -65,7 +65,7 @@ public class Identity {
      * @param msg the message to receive the identity frames
      * @param identity a {@link ZMsg} containing all identity frames
      */
-    public void pushIdentity(final ZMsg msg, final ZMsg identity) {
+    public static void pushIdentity(final ZMsg msg, final ZMsg identity) {
 
         msg.push(EMPTY_DELIMITER);
 

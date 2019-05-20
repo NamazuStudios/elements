@@ -62,11 +62,11 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     }
 
     /**
-     * Specifies the connect address used by the underlying {@link JeroMQRemoteInvoker}.  This provides a binding for
+     * Specifies the issueOpenBackendChannelCommand address used by the underlying {@link JeroMQRemoteInvoker}.  This provides a binding for
      * the option {@link JeroMQRemoteInvoker#CONNECT_ADDRESS}.  Leaving this unspecified will not assign any properties
      * and leave it to external means to configure the underlying module.
      *
-     * @param connectAddress the connect address
+     * @param connectAddress the issueOpenBackendChannelCommand address
      * @return this instance
      */
     public JeroMQRemoteInvokerModule withConnectAddress(final String connectAddress) {
@@ -94,7 +94,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     /**
      * Specifies the minimum number of connections to keep active, even if the timeout has expired.
      *
-     * @param minimumConnections the minimum number of connections to keep open
+     * @param minimumConnections the minimum number of connections to keep issueOpenInprocChannelCommand
      * @return this instance
      */
     public JeroMQRemoteInvokerModule withMinimumConnections(final int minimumConnections) {
@@ -107,7 +107,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     /**
      * Specifies the minimum number of connections to allow.
      *
-     * @param maximumConnections the minimum number of connections to keep open
+     * @param maximumConnections the minimum number of connections to keep issueOpenInprocChannelCommand
      * @return this instance
      */
     public JeroMQRemoteInvokerModule withMaximumConnections(int maximumConnections) {
