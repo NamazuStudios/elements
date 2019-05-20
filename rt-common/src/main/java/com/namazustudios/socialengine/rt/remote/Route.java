@@ -6,7 +6,7 @@ public class Route  {
 
     Object address;
 
-    Class<RoutingStrategy> routingStrategyType;
+    Class<? extends RoutingStrategy> routingStrategyType;
 
     public Object getAddress() {
         return address;
@@ -16,11 +16,11 @@ public class Route  {
         this.address = address;
     }
 
-    public Class<RoutingStrategy> getRoutingStrategyType() {
+    public Class<? extends RoutingStrategy> getRoutingStrategyType() {
         return routingStrategyType;
     }
 
-    public void setRoutingStrategyType(Class<RoutingStrategy> routingStrategyType) {
+    public void setRoutingStrategyType(Class<? extends RoutingStrategy> routingStrategyType) {
         this.routingStrategyType = routingStrategyType;
     }
 

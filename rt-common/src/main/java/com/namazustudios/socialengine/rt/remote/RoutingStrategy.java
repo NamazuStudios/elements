@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
-
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -24,6 +22,11 @@ public interface RoutingStrategy {
                       List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                       InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception;
 
+    /**
+     * The defaul {@link RoutingStrategy} which simply selects a {@link RemoteInvoker} from the
+     * {@link RemoteInvokerRegistry} using {@link RemoteInvokerRegistry#getAnyRemoteInvoker()} and sends the
+     * {@link Invocation} there.
+     */
     class DefaultRoutingStrategy implements RoutingStrategy {
 
         @Override

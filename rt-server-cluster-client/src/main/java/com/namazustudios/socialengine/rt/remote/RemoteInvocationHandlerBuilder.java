@@ -41,7 +41,7 @@ public class RemoteInvocationHandlerBuilder {
 
     private final RemoteInvocationDispatcher remoteInvocationDispatcher;
 
-    private final Class<? extends RoutingStrategy> routingStrategyClass;
+    private final Class<? extends RoutingStrategy> routingStrategyType;
 
     public RemoteInvocationHandlerBuilder(final RemoteInvocationDispatcher remoteInvocationDispatcher,
                                           final Class<?> type,
@@ -56,7 +56,7 @@ public class RemoteInvocationHandlerBuilder {
         this.dispatchType = Dispatch.Type.determine(method);
 
         final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
-        routingStrategyClass = remotelyInvokable.value();
+        routingStrategyType = remotelyInvokable.value();
 
         this.remoteInvocationDispatcher = remoteInvocationDispatcher;
 
@@ -143,7 +143,7 @@ public class RemoteInvocationHandlerBuilder {
         final Function<Object[], List<Object>> parameterAssembler;
         parameterAssembler = getParameterAssembler();
 
-        final Function<Object[], Route> routeAssembler = getRouteAssembler();
+        final Function<Object[], Object> addressAssembler = getAddressAssembler();
 
         final Function<Object[], InvocationErrorConsumer> invocationErrorConsumerAssembler;
         invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
@@ -156,7 +156,9 @@ public class RemoteInvocationHandlerBuilder {
 
         return (proxy, method1, args) -> {
 
-            final Route route = routeAssembler.apply(args);
+            final Route route = new Route();
+            route.setAddress(addressAssembler.apply(args));
+            route.setRoutingStrategyType(routingStrategyType);
 
             final Invocation invocation = new Invocation();
 
@@ -232,8 +234,8 @@ public class RemoteInvocationHandlerBuilder {
 //        }
 //    }
 
-    private Function<Object[], Route> getRouteAssembler() {
-        // TODO Extract Address from parameters
+    private Function<Object[], Object> getAddressAssembler() {
+        // TODO: Return Closure to extract Address from parameters
         return null;
     }
 
