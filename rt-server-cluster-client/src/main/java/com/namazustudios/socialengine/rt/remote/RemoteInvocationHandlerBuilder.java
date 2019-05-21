@@ -162,7 +162,7 @@ public class RemoteInvocationHandlerBuilder {
         final Function<Object[], List<Object>> parameterAssembler;
         parameterAssembler = getParameterAssembler();
 
-        final Function<Object[], List<Object>> addressAssembler = getAddressAssembler();
+        final Function<Object[], List<Object>> addressAssembler = addressAssemblerSupplier.get();
 
         final Function<Object[], InvocationErrorConsumer> invocationErrorConsumerAssembler;
         invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
