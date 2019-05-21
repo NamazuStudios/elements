@@ -34,6 +34,7 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
             final String inprocMultiplexAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
 
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
+                .withDefaultExecutorServiceProvider()
                 .withConnectAddress(inprocMultiplexAddress);
 
             final Injector contextInjector = getInjectorProvider()

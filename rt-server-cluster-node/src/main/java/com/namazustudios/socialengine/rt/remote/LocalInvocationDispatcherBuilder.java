@@ -19,6 +19,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
+import static com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher.*;
 import static java.util.Arrays.stream;
 
 /**
@@ -48,16 +49,18 @@ public class LocalInvocationDispatcherBuilder {
         this.dispatchType = Dispatch.Type.determine(method);
 
         switch (getDispatchType()) {
+
+            case HYBRID:
             case CONSUMER:
                 returnValueStrategy =
-                    void.class.isAssignableFrom(getMethod().getReturnType())   ? LocalInvocationDispatcher.ignoreReturnValueStrategy() :
-                    Future.class.isAssignableFrom(getMethod().getReturnType()) ? LocalInvocationDispatcher.blockingFutureStrategy()    :
-                                                                                 LocalInvocationDispatcher.simpleReturnValueStrategy();
+                    void.class.isAssignableFrom(getMethod().getReturnType())   ? ignoreReturnValueStrategy() :
+                    Future.class.isAssignableFrom(getMethod().getReturnType()) ? blockingFutureStrategy()    :
+                                                                                 simpleReturnValueStrategy();
                 break;
             case FUTURE:
 
                 if (Future.class.isAssignableFrom(getMethod().getReturnType())) {
-                    returnValueStrategy = LocalInvocationDispatcher.blockingFutureStrategy();
+                    returnValueStrategy = blockingFutureStrategy();
                 } else {
                     final String msg = format(getMethod()) + " does not return " + Future.class.getName();
                     throw new IllegalArgumentException(msg);
@@ -67,8 +70,12 @@ public class LocalInvocationDispatcherBuilder {
 
             case SYNCHRONOUS:
                 returnValueStrategy =
-                    Future.class.isAssignableFrom(getMethod().getReturnType()) ? LocalInvocationDispatcher.blockingFutureStrategy() :
-                                                                                 LocalInvocationDispatcher.simpleReturnValueStrategy();
+                    Future.class.isAssignableFrom(getMethod().getReturnType()) ? blockingFutureStrategy() :
+                                                                                 simpleReturnValueStrategy();
+                break;
+
+            case ASYNCHRONOUS:
+                returnValueStrategy = ignoreReturnValueStrategy();
                 break;
 
             default:

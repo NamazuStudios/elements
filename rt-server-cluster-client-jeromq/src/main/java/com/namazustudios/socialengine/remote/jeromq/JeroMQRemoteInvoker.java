@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.Connection;
+import com.namazustudios.socialengine.rt.exception.RemoteThrowableException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
@@ -18,18 +18,26 @@ import javax.inject.Named;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.ZMQ.SNDMORE;
-import static org.zeromq.ZMQ.poll;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
+    /**
+     * The connect address for use with the {@link JeroMQRemoteInvoker}
+     */
     public static final String CONNECT_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.connectAddress";
+
+    /**
+     * Specifies an {@link ExecutorService} used to run the asynchronous tasks in the {@link RemoteInvoker}
+     */
+    public static final String ASYNC_EXECUTOR_SERVICE = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.executor";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
@@ -40,6 +48,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     private PayloadWriter payloadWriter;
 
     private ConnectionPool connectionPool;
+
+    private ExecutorService executorService;
 
     @Override
     public void start() {
@@ -56,16 +66,53 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     @Override
-    public Future<Object> invoke(final Invocation invocation,
-                                 final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                                 final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public Future<Object> invokeFuture(final Invocation invocation,
+                                       final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                                       final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final Map<String, String > mdcContext = MDC.getCopyOfContextMap();
-        final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask = new RemoteInvocationFutureTask<>();
+        final CompletableFuture<Object> completableFuture = new CompletableFuture<>();
 
-        getConnectionPool().processV((Connection connection) -> {
+        getExecutorService().submit(() -> {
 
             if (mdcContext != null) MDC.setContextMap(mdcContext);
+
+            try {
+                doInvoke(invocation,
+                         hr -> hr.get(completableFuture),
+                         asyncInvocationResultConsumerList,
+                         asyncInvocationErrorConsumer);
+            } catch (Exception ex) {
+                completableFuture.completeExceptionally(ex);
+                logger.error("Caught exception processing invocation.", ex);
+            }finally {
+                MDC.clear();
+            }
+
+        });
+
+        return completableFuture;
+
+    }
+
+    @Override
+    public Object invokeSync(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
+        return doInvoke(invocation,
+                        hr -> logger.debug("Got sync return value: {}", hr),
+                        asyncInvocationResultConsumerList,
+                        asyncInvocationErrorConsumer);
+    }
+
+    public Object doInvoke(
+            final Invocation invocation,
+            final Consumer<HandleResult> resultConsumer,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
+
+        final HandleResult syncResult = getConnectionPool().process(connection -> {
 
             try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
@@ -74,8 +121,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                 final int expectedResponseCount = asyncInvocationResultConsumerList.size();
 
+                HandleResult r = null;
                 boolean syncCompleted = false;
-                boolean asyncCompleted = false;
+                boolean asyncCompleted = expectedResponseCount == 0;
 
                 for (int remaining = expectedResponseCount; !(syncCompleted && asyncCompleted);) {
 
@@ -87,14 +135,14 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                     msg.pop();
 
                     final HandleResult result = handleResponse(
-                        msg,
-                        remoteInvocationFutureTask,
-                        asyncInvocationResultConsumerList,
-                        asyncInvocationErrorConsumer);
+                            msg,
+                            asyncInvocationResultConsumerList,
+                            asyncInvocationErrorConsumer);
 
-                    switch (result) {
+                    switch (result.type) {
                         case SYNC_ERROR:
                         case SYNC_RESULT:
+                            resultConsumer.accept(r = result);
                             syncCompleted = true;
                             break;
                         case ASYNC_RESULT:
@@ -110,6 +158,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 }
 
                 logger.debug("Finished Invocation.");
+                if (r == null) throw new InternalException("Got no sync result.");
+
+                return r;
 
             } catch (Exception ex) {
 
@@ -123,17 +174,14 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(ex);
-                remoteInvocationFutureTask.setException(ex);
                 asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
                 throw ex;
 
-            } finally {
-                MDC.clear();
             }
 
         });
 
-        return remoteInvocationFutureTask;
+        return syncResult.get();
 
     }
 
@@ -180,20 +228,16 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     private HandleResult handleResponse(final ZMsg msg,
-                                        final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
                                         final List<Consumer<InvocationResult>> asyncResultConsumerList,
                                         final InvocationErrorConsumer asyncErrorConsumer) {
 
         final ResponseHeader responseHeader = receiveHeader(msg);
-        final int part = responseHeader.part.get();
 
         switch (responseHeader.type.get()) {
             case INVOCATION_RESULT:
-                handleResult(msg, responseHeader, remoteInvocationFutureTask, asyncResultConsumerList);
-                return part == 0 ? HandleResult.SYNC_RESULT : HandleResult.ASYNC_RESULT;
+                return handleResult(msg, responseHeader, asyncResultConsumerList);
             case INVOCATION_ERROR:
-                handleError(msg, responseHeader, remoteInvocationFutureTask, asyncErrorConsumer);
-                return part == 0 ? HandleResult.SYNC_ERROR : HandleResult.ASYNC_ERROR;
+                return handleError(msg, responseHeader, asyncErrorConsumer);
             default:
                 logger.error("Invalid response type {}", responseHeader.type.get());
                 throw new InternalException("Invalid response type " + responseHeader.type.get());
@@ -201,11 +245,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private void handleError(final ZMsg msg,
-                             final ResponseHeader responseHeader,
-                             final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
-                             final InvocationErrorConsumer asyncErrorConsumer) {
-
+    private HandleResult handleError(final ZMsg msg,
+                                     final ResponseHeader responseHeader,
+                                     final InvocationErrorConsumer asyncErrorConsumer) {
 
         final int part = responseHeader.part.get();
         final InvocationError invocationError = extractInvocationError(msg);
@@ -218,12 +260,11 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 (Exception) throwable :
                 new RemoteInvocationException(throwable);
 
-            if (!remoteInvocationFutureTask.setException(exception)) {
-                logger.error("Already set result.  Silencing error.", exception);
-            }
+            return new HandleResult(HandleResult.Type.SYNC_ERROR, exception);
 
         } else if (part == 1) {
             asyncErrorConsumer.accept(invocationError);
+            return new HandleResult(HandleResult.Type.ASYNC_ERROR);
         } else {
             throw new InternalException("Invalid error part " + responseHeader.part.get());
         }
@@ -241,10 +282,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         }
     }
 
-    private void handleResult(final ZMsg msg,
-                              final ResponseHeader responseHeader,
-                              final RemoteInvocationFutureTask<Object> remoteInvocationFutureTask,
-                              final List<Consumer<InvocationResult>> asyncResultConsumerList) {
+    private HandleResult handleResult(final ZMsg msg,
+                                      final ResponseHeader responseHeader,
+                                      final List<Consumer<InvocationResult>> asyncResultConsumerList) {
 
         final InvocationResult invocationResult;
 
@@ -258,9 +298,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         final int part = responseHeader.part.get();
 
         if (part == 0) {
-            remoteInvocationFutureTask.setResult(invocationResult.getResult());
+            return new HandleResult(HandleResult.Type.SYNC_RESULT, invocationResult.getResult());
         } else {
             asyncResultConsumerList.get(part - 1).accept(invocationResult);
+            return new HandleResult(HandleResult.Type.ASYNC_RESULT);
         }
 
     }
@@ -307,114 +348,85 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.connectionPool = connectionPool;
     }
 
-    /**
-     * A {@link Future<T>} type which will wait for a call from another thread before returning the value.  This is
-     * backed by a {@link CountDownLatch} (hence the name) as well as a {@link FutureTask} to handle the result.  This
-     * allows for the setting of a {@link Callable<T>} to supply the result which will not get called until the latch
-     * has counted down.
-     *
-     * By default this supplies {@link Callable<T>} which just throws an exception.  Only one result can be set to this
-     * instance.
-     *
-     * @param <T>
-     */
-    private class RemoteInvocationFutureTask<T> implements RunnableFuture<T> {
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
 
-        private final ResultSupplier<T> unspecifiedResult = () -> {
-            throw new InternalException("Interrupted or request timed out.");
-        };
+    @Inject
+    public void setExecutorService(@Named(ASYNC_EXECUTOR_SERVICE) ExecutorService executorService) {
+        this.executorService = executorService;
+    }
 
-        private final AtomicReference<ResultSupplier<T>> resultCallable = new AtomicReference<>(unspecifiedResult);
+    private static class HandleResult {
 
-        private final FutureTask<T> futureTask = new FutureTask<T>(() -> resultCallable.get().supply());
+        private final Type type;
 
-        @Override
-        public boolean isCancelled() {
-            return futureTask.isCancelled();
-        }
+        private final Object value;
 
-        @Override
-        public boolean isDone() {
-            return futureTask.isDone();
-        }
+        public HandleResult(final Type type) {
 
-        @Override
-        public boolean cancel(boolean mayInterruptIfRunning) {
-            return futureTask.cancel(mayInterruptIfRunning);
-        }
+            if (type == null) throw new InternalException("Must specify type.");
 
-        @Override
-        public T get() throws InterruptedException, ExecutionException {
-            return futureTask.get();
-        }
+            switch (type) {
+                case SYNC_ERROR:
+                case SYNC_RESULT:
+                    throw new InternalException("Must specify ASYNC_ERROR or ASYNC_RESULT");
+            }
 
-        @Override
-        public T get(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-            return futureTask.get(timeout, unit);
-        }
-
-        @Override
-        public void run() {
-            futureTask.run();
-        }
-
-        /**
-         * Sets the result of this {@link RemoteInvocationFutureTask}.
-         *
-         * @param result the result obbject
-         * @return true if the set was successful
-         */
-        public boolean setResult(final T result) {
-            logger.debug("Setting remote result {}", result);
-            return setResultCallable(() -> result);
-        }
-
-        /**
-         * Sets the exception to this {@link RemoteInvocationFutureTask}.
-         * '
-         * @param exception the {@link Exception} to set
-         */
-        public boolean setException(final Exception exception) {
-
-            logger.debug("Setting remote exception {}", exception);
-
-            return setResultCallable(() -> {
-                throw exception;
-            });
+            this.type = type;
+            this.value = null;
 
         }
 
-        /**
-         * Sets the result {@link Callable<T>} and releases the latch allowing the supplied result to be available
-         * immediately after this call returns.  If a result has previously been set, then this simply rejects the
-         * changed value and does nothing.
-         *
-         * @param resultCallable the result {@link Callable<T>}
-         * @return true if the result was set, or false if a previous result was alredy set.
-         */
-        public boolean setResultCallable(final ResultSupplier<T> resultCallable) {
-            if (this.resultCallable.compareAndSet(unspecifiedResult, resultCallable)) {
-                run();
-                return true;
-            } else {
-                return false;
+        public HandleResult(final Type type, final Object value) {
+
+            if (type == null) throw new InternalException("Must specify type.");
+
+            switch (type) {
+                case ASYNC_ERROR:
+                case ASYNC_RESULT:
+                    throw new InternalException("Must specify SYNC_ERROR or SYNC_RESULT");
+                case SYNC_ERROR:
+                    if (!(value instanceof Throwable)) throw new InternalException("Must specify Throwable for sync errors.");
+            }
+
+            this.type = type;
+            this.value = value;
+
+        }
+
+        public Object get() throws Exception {
+            switch (type) {
+                case SYNC_ERROR:
+                    throw ( (value instanceof Exception) ? (Exception) value : new RemoteThrowableException((Throwable)value) );
+                case SYNC_RESULT:
+                    return value;
+                default:
+                    throw new InternalException("Unexpected result type.");
             }
         }
 
-    }
+        public void get(final CompletableFuture<Object> completableFuture) {
+            switch (type) {
+                case SYNC_ERROR:
+                    completableFuture.completeExceptionally((Throwable)value);
+                    break;
+                case SYNC_RESULT:
+                    completableFuture.complete(value);
+                    break;
+                default:
+                    completableFuture.completeExceptionally(new InternalException("Unexpected result type."));
+                    break;
+            }
+        }
 
-    @FunctionalInterface
-    private interface ResultSupplier<T> {
+        private enum Type {
+            SYNC_RESULT,
+            SYNC_ERROR,
+            ASYNC_RESULT,
+            ASYNC_ERROR
+        }
 
-        T supply() throws Exception;
-
-    }
-
-    private enum HandleResult {
-        SYNC_RESULT,
-        SYNC_ERROR,
-        ASYNC_RESULT,
-        ASYNC_ERROR
     }
 
 }

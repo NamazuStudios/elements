@@ -15,13 +15,11 @@ import static com.namazustudios.socialengine.rt.Reflection.methods;
 
 public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
 
-    private Provider<RemoteInvoker> remoteInvokerProvider;
-
     private final String name;
 
     private final Class<ProxyableT> interfaceClassT;
 
-    private RemoteInvokerRegistry remoteInvokerRegistry;
+    private Provider<RemoteInvocationDispatcher> remoteInvocationDispatcherProvider;
 
     public RemoteProxyProvider(final Class<ProxyableT> proxyableInterface) {
         this(proxyableInterface, null);
@@ -47,30 +45,24 @@ public class RemoteProxyProvider<ProxyableT> implements Provider<ProxyableT> {
             .withSharedMethodHandleCache()
             .dontProxyDefaultMethods();
 
+        final RemoteInvocationDispatcher remoteInvocationDispatcher = getRemoteInvocationDispatcherProvider().get();
+
         methods(interfaceClassT)
             .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
-            .map(m -> new RemoteInvocationHandlerBuilder(getRemoteInvokerRegistry(), interfaceClassT, m).withName(name))
+            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvocationDispatcher, interfaceClassT, m).withName(name))
             .forEach(b -> builder.handler(b.build()).forMethod(b.getMethod()));
 
         return builder.build();
 
     }
 
-    public Provider<RemoteInvoker> getRemoteInvokerProvider() {
-        return remoteInvokerProvider;
+    public Provider<RemoteInvocationDispatcher> getRemoteInvocationDispatcherProvider() {
+        return remoteInvocationDispatcherProvider;
     }
 
     @Inject
-    public void setRemoteInvokerProvider(Provider<RemoteInvoker> remoteInvokerProvider) {
-        this.remoteInvokerProvider = remoteInvokerProvider;
+    public void setRemoteInvocationDispatcherProvider(Provider<RemoteInvocationDispatcher> remoteInvocationDispatcherProvider) {
+        this.remoteInvocationDispatcherProvider = remoteInvocationDispatcherProvider;
     }
 
-    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
-        return remoteInvokerRegistry;
-    }
-
-    @Inject
-    public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
-        this.remoteInvokerRegistry = remoteInvokerRegistry;
-    }
 }

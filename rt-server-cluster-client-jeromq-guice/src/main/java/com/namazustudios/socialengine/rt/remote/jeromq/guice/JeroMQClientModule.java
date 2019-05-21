@@ -1,8 +1,11 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
+import com.google.inject.Provider;
 import com.namazustudios.socialengine.rt.Context;
 import org.zeromq.ZContext;
+
+import java.util.concurrent.ExecutorService;
 
 /**
  * Combines {@link JeroMQRemoteInvokerModule} with the {@link ClusterClientContextModule} to make a complete client
@@ -74,6 +77,28 @@ public class JeroMQClientModule extends PrivateModule {
      */
     public JeroMQClientModule withMaximumConnections(int maximumConnections) {
         jeroMQRemoteInvokerModule.withMaximumConnections(maximumConnections);
+        return this;
+    }
+
+    /**
+     * {@see {@link JeroMQRemoteInvokerModule#withDefaultExecutorServiceProvider()}}
+     *
+     * @return this instance
+     */
+    public JeroMQClientModule withDefaultExecutorServiceProvider() {
+        jeroMQRemoteInvokerModule.withDefaultExecutorServiceProvider();
+        return this;
+    }
+
+    /**
+     * {@see {@link JeroMQRemoteInvokerModule#withExecutorServiceProvider(Provider)}}
+     *
+     * @param executorServiceProvider a {@link Provider<ExecutorService>} instance
+     *
+     * @return this instance
+     */
+    public JeroMQClientModule withExecutorServiceProvider(Provider<ExecutorService> executorServiceProvider) {
+        jeroMQRemoteInvokerModule.withExecutorServiceProvider(executorServiceProvider);
         return this;
     }
 

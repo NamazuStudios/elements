@@ -64,6 +64,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         final List<Module> clientModules = new ArrayList<>(this.clientModules);
 
         clientModules.add(new JeroMQClientModule()
+            .withDefaultExecutorServiceProvider()
             .withZContext(shadow(zContext))
             .withConnectAddress(INTERNAL_NODE_ADDRESS)
             .withMinimumConnections(5)

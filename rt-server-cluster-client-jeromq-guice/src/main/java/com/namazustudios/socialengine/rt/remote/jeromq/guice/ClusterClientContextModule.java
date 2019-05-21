@@ -1,10 +1,8 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteAddressRegistry;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvokerRegistry;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.remote.RemoteAddressRegistry;
 import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
 
@@ -43,9 +41,10 @@ public class ClusterClientContextModule extends PrivateModule {
                 .to(JeroMQRemoteInvokerRegistry.class)
                 .asEagerSingleton();
 
-        bind(RemoteAddressRegistry.class)
-                .to(JeroMQRemoteAddressRegistry.class)
-                .asEagerSingleton();
+// TODO Fix this
+//        bind(RemoteAddressRegistry.class)
+//                .to(JeroMQRemoteAddressRegistry.class)
+//                .asEagerSingleton();
 
     }
 

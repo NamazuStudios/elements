@@ -4,6 +4,7 @@ import com.google.inject.*;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
@@ -34,7 +35,7 @@ public class MultiNodeContainerModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        bind(ZContext.class).asEagerSingleton();
+        install(new ZContextModule());
         bind(MultiNodeContainer.class).asEagerSingleton();
 
         bind(ConnectionService.class)

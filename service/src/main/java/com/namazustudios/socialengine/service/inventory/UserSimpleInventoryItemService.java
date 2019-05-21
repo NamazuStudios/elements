@@ -42,6 +42,11 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
         throw new ForbiddenException("Unprivileged requests are unable to create inventory items.");
     }
 
+    @Override
+    public void deleteInventoryItem(final String inventoryItemId) {
+        throw new ForbiddenException("Unprivileged requests are unable to delete inventory items.");
+    }
+
     public InventoryItemDao getInventoryItemDao() {
         return inventoryItemDao;
     }

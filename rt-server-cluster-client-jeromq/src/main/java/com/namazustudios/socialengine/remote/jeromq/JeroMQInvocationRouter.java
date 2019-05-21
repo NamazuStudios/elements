@@ -5,9 +5,9 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import com.namazustudios.socialengine.rt.RoutingAddressProvider;
-import com.namazustudios.socialengine.rt.RoutingStrategy;
+import com.namazustudios.socialengine.rt.remote.RoutingStrategy;
 import com.namazustudios.socialengine.rt.remote.*;
-import com.namazustudios.socialengine.rt.remote.RemoteInvoker.InvocationErrorConsumer;
+import com.namazustudios.socialengine.rt.remote.InvocationErrorConsumer;
 
 import javax.inject.Inject;
 
@@ -19,7 +19,7 @@ public class JeroMQInvocationRouter implements InvocationRouter {
                                             Invocation invocation,
                                             List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                                             InvocationErrorConsumer asyncInvocationErrorConsumer) {
-
+        return null;
     }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {

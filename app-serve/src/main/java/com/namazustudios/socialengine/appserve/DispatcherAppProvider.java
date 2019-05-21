@@ -109,9 +109,10 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
-
-            final String connectAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
-            final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule().withConnectAddress(connectAddress);
+            final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
+                .withDefaultExecutorServiceProvider();
+// TODO Determine inproc:// address
+//                .withConnectAddress(connectAddress);
 
             return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
 

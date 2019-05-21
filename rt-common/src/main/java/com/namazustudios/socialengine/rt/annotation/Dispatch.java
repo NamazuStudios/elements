@@ -38,9 +38,19 @@ public @interface Dispatch {
          *
          * This mode is automatically selected if a {@link Method} returns an object and neither {@link ResultHandler}
          * or {@link ErrorHandler} are specified in the parameters.  This implies that the return type must be
-         * serializable.  The invocation will block until the remote end produces a result.
+         * serializable.  The invocation will block until the remote end produces a result and returns the value.
          */
         SYNCHRONOUS,
+
+        /**
+         * The method is dispatched, returning immediately and deferring the driving of results to a background process
+         * Which will call the associated {@link ErrorHandler} and {@link ResultHandler} parameters.
+         *
+         * This mode is automatically selected if a {@link Method} returns void and has both a {@link ResultHandler}
+         * and {@link ErrorHandler} specified in the parameters.  This implies that the return type must be
+         * serializable.
+         */
+        ASYNCHRONOUS,
 
         /**
          * This behaves similar to {@link #SYNCHRONOUS}, except the calling method must return some type of
@@ -48,7 +58,7 @@ public @interface Dispatch {
          * in the event of a failure.
          *
          * The method may use {@link ResultHandler} or {@link ErrorHandler} to receive results in addition to the
-         * returned {@link Future}.
+         * returned {@link Future}, and may be independent results.
          *
          * On the client side, either {@link ResultHandler} or {@link ErrorHandler} may be used to receive the result.
          * The client method invocation will not block and instead return an instance of {@link Future} which will be
@@ -57,18 +67,16 @@ public @interface Dispatch {
         FUTURE,
 
         /**
-         * The method is dispatched and the return value is discarded on the remote end.  The annotated {@link Method}
-         * should be a void method.  However, null will be substituted on the local side for any return value.
-         * Primitives are not supported.
-         *
-         * The method must use {@link ResultHandler} and {@link ErrorHandler} to receive results.  On both client and
-         * server side.
-         *
-         * The method may return a value.  However, this will indicate that the client side code will block until the
-         * remote method has returned.  If the method returns a {@link Future}, then it will be returned without
-         * blocking.  If the method return type is void, then no blocking will happen.
-         *
+         * This is a type of method that doesn't exactly fit in the other categories.  Depending on the context, a
+         * method of this type may pick one of the other strategies to do the invocation.  Underlying connection
+         * details may affect the actual behavior of the method.  However, the following
          */
+        HYBRID,
+
+        /**
+         * @deprecated Renamed to {@link #HYBRID}.
+         */
+        @Deprecated
         CONSUMER;
 
         /**
@@ -90,6 +98,7 @@ public @interface Dispatch {
                 .filter(a -> aClass.isInstance(a))
                 .count();
 
+            final Class<?> rType = method.getReturnType();
             final int errorCount = count.apply(ErrorHandler.class);
             final int resultCount = count.apply(ResultHandler.class);
 
@@ -97,11 +106,13 @@ public @interface Dispatch {
                 return FUTURE;
             } if (errorCount == 0 && resultCount == 0) {
                 return SYNCHRONOUS;
+            } else if (void.class.equals(rType) || Void.class.equals(rType)) {
+                return ASYNCHRONOUS;
             } else if (errorCount != 1) {
                 final String msg = String.format("Only one of %s can be specified for %s", ErrorHandler.class.getSimpleName(), format(method));
                 throw new IllegalArgumentException(msg);
             } else {
-                return CONSUMER;
+                return HYBRID;
             }
 
         }

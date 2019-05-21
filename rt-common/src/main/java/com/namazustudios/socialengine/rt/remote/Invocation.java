@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.RoutingStrategy;
 import com.namazustudios.socialengine.rt.annotation.Dispatch;
 
 import java.io.Serializable;
@@ -24,10 +23,6 @@ public class Invocation implements Serializable {
     private List<Object> arguments;
 
     private Dispatch.Type dispatchType;
-
-    private RoutingStrategy routingStrategy;
-
-    private String routingAddress;
 
     /**
      * Gets the string representing the type of the remote object to invoke.  {@see {@link Class#getName()}}
@@ -141,22 +136,6 @@ public class Invocation implements Serializable {
         this.dispatchType = dispatchType;
     }
 
-    public RoutingStrategy getRoutingStrategy() {
-        return routingStrategy;
-    }
-
-    public void setRoutingStrategy(RoutingStrategy routingStrategy) {
-        this.routingStrategy = routingStrategy;
-    }
-
-    public String getRoutingAddress() {
-        return routingAddress;
-    }
-
-    public void setRoutingAddress(String routingAddress) {
-        this.routingAddress = routingAddress;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -167,14 +146,12 @@ public class Invocation implements Serializable {
                 Objects.equals(getMethod(), that.getMethod()) &&
                 Objects.equals(getParameters(), that.getParameters()) &&
                 Objects.equals(getArguments(), that.getArguments()) &&
-                getDispatchType() == that.getDispatchType() &&
-                Objects.equals(getRoutingStrategy(), that.getRoutingStrategy()) &&
-                Objects.equals(getRoutingAddress(), that.getRoutingAddress());
+                getDispatchType() == that.getDispatchType();
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getType(), getName(), getMethod(), getParameters(), getArguments(), getDispatchType(), getRoutingStrategy(), getRoutingAddress());
+        return Objects.hash(getType(), getName(), getMethod(), getParameters(), getArguments(), getDispatchType());
     }
 
     @Override
@@ -186,8 +163,6 @@ public class Invocation implements Serializable {
                 ", parameters=" + parameters +
                 ", arguments=" + arguments +
                 ", dispatchType=" + dispatchType +
-                ", routingStrategy=" + routingStrategy +
-                ", routingAddress='" + routingAddress + '\'' +
                 '}';
     }
 }

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
+import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 
 import java.util.Properties;
 
