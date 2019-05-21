@@ -140,7 +140,7 @@ public class RemoteInvocationHandlerBuilder {
         final Function<Object[], List<Object>> parameterAssembler;
         parameterAssembler = getParameterAssembler();
 
-        final Function<Object[], Object> addressAssembler = getAddressAssembler();
+        final Function<Object[], List<Object>> addressAssembler = getAddressAssembler();
 
         final Function<Object[], InvocationErrorConsumer> invocationErrorConsumerAssembler;
         invocationErrorConsumerAssembler = getInvocationErrorConsumerAssembler();
@@ -215,15 +215,10 @@ public class RemoteInvocationHandlerBuilder {
         return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
     }
 
-    private Function<Object[], Object> getAddressAssembler() {
-
+    private Function<Object[], List<Object>> getAddressAssembler() {
         final Method method = getMethod();
         final int[] indices = indices(method, AddressProvider.class);
-        if (indices.length != 1) throw new IllegalArgumentException("Only parameter may bear AddressProvider.");
-
-        final int index = indices[0];
-        return objects -> objects[index];
-
+        return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
     }
 
     private Function<Object[], InvocationErrorConsumer> getInvocationErrorConsumerAssembler() {

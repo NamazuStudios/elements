@@ -6,17 +6,17 @@ import java.util.function.Consumer;
 
 public interface RoutingStrategy {
 
-    Future<Object> invokeFuture(Object address,
+    Future<Object> invokeFuture(List<Object> address,
                                 RemoteInvokerRegistry remoteInvokerRegistry,
                                 Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                                 InvocationErrorConsumer asyncInvocationErrorConsumer);
 
-    Void invokeAsync(Object address,
+    Void invokeAsync(List<Object> address,
                      RemoteInvokerRegistry remoteInvokerRegistry,
                      Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                      InvocationErrorConsumer asyncInvocationErrorConsumer);
 
-    Object invokeSync(Object address,
+    Object invokeSync(List<Object> address,
                       RemoteInvokerRegistry remoteInvokerRegistry,
                       Invocation invocation,
                       List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
@@ -31,7 +31,7 @@ public interface RoutingStrategy {
 
         @Override
         public Future<Object> invokeFuture(
-                Object address,
+                List<Object> address,
                 RemoteInvokerRegistry remoteInvokerRegistry,
                 Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                 InvocationErrorConsumer asyncInvocationErrorConsumer) {
@@ -42,7 +42,7 @@ public interface RoutingStrategy {
         }
 
         @Override
-        public Void invokeAsync(Object address,
+        public Void invokeAsync(List<Object> address,
                                 RemoteInvokerRegistry remoteInvokerRegistry,
                                 Invocation invocation,
                                 List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
@@ -54,7 +54,7 @@ public interface RoutingStrategy {
         }
 
         @Override
-        public Object invokeSync(Object address,
+        public Object invokeSync(List<Object> address,
                                  RemoteInvokerRegistry remoteInvokerRegistry,
                                  Invocation invocation,
                                  List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,

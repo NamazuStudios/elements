@@ -1,18 +1,19 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import java.util.List;
 import java.util.Objects;
 
 public class Route  {
 
-    Object address;
+    List<Object> address;
 
     Class<? extends RoutingStrategy> routingStrategyType;
 
-    public Object getAddress() {
+    public List<Object> getAddress() {
         return address;
     }
 
-    public void setAddress(Object address) {
+    public void setAddress(List<Object> address) {
         this.address = address;
     }
 
