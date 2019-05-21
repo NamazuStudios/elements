@@ -16,6 +16,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
 import static java.util.Arrays.stream;
@@ -36,9 +37,38 @@ public class RemoteInvocationHandlerBuilder {
 
     private final Dispatch.Type dispatchType;
 
-    private final RemoteInvocationDispatcher remoteInvocationDispatcher;
+    private final Supplier<ReturnValueTransformer> returnValueTransformerSupplier;
+
+    private final Supplier<Function<Object[], List<Object>>> addressAssemblerSupplier;
 
     private final Class<? extends RoutingStrategy> routingStrategyType;
+
+    public RemoteInvocationHandlerBuilder(final RemoteInvoker remoteInvoker,
+                                          final Class<?> type,
+                                          final Method method) {
+
+        if (method.getAnnotation(RemotelyInvokable.class) == null) {
+            throw new IllegalArgumentException(format(method) + " is not annotated with @RemotelyInvokable");
+        }
+
+        this.type = type;
+        this.method = method;
+        this.dispatchType = Dispatch.Type.determine(method);
+
+        final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
+        routingStrategyType = remotelyInvokable.value();
+
+        this.addressAssemblerSupplier = () -> null;
+        this.returnValueTransformerSupplier = () -> getReturnValueTransformer(remoteInvoker);
+
+        switch (dispatchType) {
+            case HYBRID:
+            case CONSUMER:
+                logger.warn("Using dispatch type {} for method {}.  Usage is discouraged.", dispatchType, format(method));
+                break;
+        }
+
+    }
 
     public RemoteInvocationHandlerBuilder(final RemoteInvocationDispatcher remoteInvocationDispatcher,
                                           final Class<?> type,
@@ -55,7 +85,8 @@ public class RemoteInvocationHandlerBuilder {
         final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
         routingStrategyType = remotelyInvokable.value();
 
-        this.remoteInvocationDispatcher = remoteInvocationDispatcher;
+        this.addressAssemblerSupplier = this::getAddressAssembler;
+        this.returnValueTransformerSupplier = () -> getReturnValueTransformer(remoteInvocationDispatcher);
 
         switch (dispatchType) {
             case HYBRID:
@@ -103,15 +134,6 @@ public class RemoteInvocationHandlerBuilder {
     }
 
     /**
-     * Returns the {@link RemoteInvocationDispatcher} to use for this method.
-     *
-     * @return the {@link RemoteInvocationDispatcher}
-     */
-    public RemoteInvocationDispatcher getRemoteInvocationDispatcher() {
-        return remoteInvocationDispatcher;
-    }
-
-    /**
      * Sets the name of the remote object to invoke.  {@link Invocation#getName()}.
      *
      * @param name may be null if no name is used.
@@ -135,7 +157,7 @@ public class RemoteInvocationHandlerBuilder {
         logger.info("Building invocation handler for {} with dispatch type {}", format(method), getDispatchType());
 
         final ReturnValueTransformer returnValueTransformer;
-        returnValueTransformer = getReturnValueTransformer();
+        returnValueTransformer = returnValueTransformerSupplier.get();
 
         final Function<Object[], List<Object>> parameterAssembler;
         parameterAssembler = getParameterAssembler();
@@ -177,23 +199,44 @@ public class RemoteInvocationHandlerBuilder {
         };
 
     }
-
-    private ReturnValueTransformer getReturnValueTransformer() {
+    private ReturnValueTransformer getReturnValueTransformer(final RemoteInvoker remoteInvoker) {
 
         final Dispatch.Type type = getDispatchType();
 
         switch (type) {
             case SYNCHRONOUS:
-                return getRemoteInvocationDispatcher()::invokeSync;
+                return (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
             case ASYNCHRONOUS:
-                return getRemoteInvocationDispatcher()::invokeAsync;
+                return (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae);
             case FUTURE:
-                return getRemoteInvocationDispatcher()::invokeFuture;
+                return (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae);
             case HYBRID:
             case CONSUMER:
-                return isVoidMethod()   ? getRemoteInvocationDispatcher()::invokeAsync :
-                       isFutureMethod() ? getRemoteInvocationDispatcher()::invokeFuture :
-                                          getRemoteInvocationDispatcher()::invokeSync;
+                return isVoidMethod()    ? (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
+                        isFutureMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae) :
+                                           (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
+            default:
+                throw new IllegalArgumentException("Unknown dispatch type: " + type);
+        }
+
+    }
+
+    private ReturnValueTransformer getReturnValueTransformer(final RemoteInvocationDispatcher remoteInvocationDispatcher) {
+
+        final Dispatch.Type type = getDispatchType();
+
+        switch (type) {
+            case SYNCHRONOUS:
+                return remoteInvocationDispatcher::invokeSync;
+            case ASYNCHRONOUS:
+                return remoteInvocationDispatcher::invokeAsync;
+            case FUTURE:
+                return remoteInvocationDispatcher::invokeFuture;
+            case HYBRID:
+            case CONSUMER:
+                return isVoidMethod()   ? remoteInvocationDispatcher::invokeAsync :
+                       isFutureMethod() ? remoteInvocationDispatcher::invokeFuture :
+                                          remoteInvocationDispatcher::invokeSync;
             default:
                 throw new IllegalArgumentException("Unknown dispatch type: " + type);
         }
