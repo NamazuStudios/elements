@@ -6,11 +6,6 @@ import java.util.Set;
 
 public interface RemoteInvokerRegistry {
 
-// I dont' think these need to be part of the public interface.  The registry shoudl be aware of
-// the changes to the network and react accordingly on its own.
-//    void registerRemoteInvoker(String address, RemoteInvoker remoteInvoker);
-//    boolean unregisterRemoteInvoker(String address);
-
     RemoteInvoker getAnyRemoteInvoker();
 
     /**

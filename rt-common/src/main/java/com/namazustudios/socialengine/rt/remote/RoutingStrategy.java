@@ -23,7 +23,7 @@ public interface RoutingStrategy {
                       InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception;
 
     /**
-     * The defaul {@link RoutingStrategy} which simply selects a {@link RemoteInvoker} from the
+     * The default {@link RoutingStrategy} which simply selects a {@link RemoteInvoker} from the
      * {@link RemoteInvokerRegistry} using {@link RemoteInvokerRegistry#getAnyRemoteInvoker()} and sends the
      * {@link Invocation} there.
      */

@@ -1,10 +1,11 @@
 package com.namazustudios.socialengine.rt.srv;
 
+import com.namazustudios.socialengine.rt.Listenable;
+
 import java.util.Set;
 import java.util.function.Consumer;
 
-public interface SrvMonitorService {
-
+public interface SrvMonitorService extends Listenable<SrvMonitorServiceListener> {
     /**
      * Begins monitoring for SRV records that match the given FQDN.
      *
@@ -16,18 +17,5 @@ public interface SrvMonitorService {
 
     void stop();
 
-    void registerOnCreatedSrvRecordListener(Consumer<SrvRecord> consumer);
-    boolean unregisterOnCreatedSrvRecordListener(Consumer<SrvRecord> consumer);
-
-    void registerOnUpdatedSrvRecordListener(Consumer<SrvRecord> consumer);
-    boolean unregisterOnUpdatedSrvRecordListener(Consumer<SrvRecord> consumer);
-
-    void registerOnDeletedSrvRecordListener(Consumer<SrvRecord> consumer);
-    boolean unregisterOnDeletedSrvRecordListener(Consumer<SrvRecord> consumer);
-
     Set<SrvRecord> getSrvRecords();
-    Set<Consumer<SrvRecord>> getSrvCreationListeners();
-    Set<Consumer<SrvRecord>> getSrvUpdateListeners();
-    Set<Consumer<SrvRecord>> getSrvDeletionListeners();
-
 }
