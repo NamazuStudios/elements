@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.service.FacebookAuthService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.Consumes;
@@ -16,12 +17,14 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 4/2/15.
  */
 @Api(value = "FacebookSession",
-        description = "Creates a Session instance from a username and password.")
+     description = "Creates a Session instance from a username and password.",
+     authorizations = {@Authorization(SESSION_SECRET)})
 @Path("facebook_session")
 public class FacebookAuthResource {
 
