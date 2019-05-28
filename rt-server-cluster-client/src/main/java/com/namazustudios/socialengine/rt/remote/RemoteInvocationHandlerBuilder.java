@@ -260,7 +260,7 @@ public class RemoteInvocationHandlerBuilder {
 
     private Function<Object[], List<Object>> getAddressAssembler() {
         final Method method = getMethod();
-        final int[] indices = indices(method, AddressProvider.class);
+        final int[] indices = indices(method, ProvidesAddress.class);
         return objects -> stream(indices).mapToObj(index -> objects[index]).collect(toList());
     }
 
