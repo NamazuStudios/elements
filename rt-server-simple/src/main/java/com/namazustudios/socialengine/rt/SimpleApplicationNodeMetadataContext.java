@@ -68,7 +68,7 @@ public class SimpleApplicationNodeMetadataContext implements ApplicationNodeMeta
     }
 
     @Override
-    public UUID getUuid() {
+    public UUID getInstanceUuid() {
         return localApplicationNodeUuid;
     }
 

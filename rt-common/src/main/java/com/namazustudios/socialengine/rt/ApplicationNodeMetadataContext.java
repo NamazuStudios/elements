@@ -12,7 +12,7 @@ import java.util.UUID;
 @Proxyable
 public interface ApplicationNodeMetadataContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    UUID getUuid();
+    UUID getInstanceUuid();
 
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     long getInMemoryResourceCount();

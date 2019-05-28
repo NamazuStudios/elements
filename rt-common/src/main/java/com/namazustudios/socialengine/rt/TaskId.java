@@ -10,8 +10,12 @@ import static java.lang.String.format;
 /**
  * Represents a globally-unique id of a task, associated with a {@link Resource}.  This is currently backed by an
  * instance of {@Link UUID}, but the string representation should be considered opaque by users of this type.
+ *
+ * By convention, we may represent the TaskId as a compound Id string, combining the string representation of the
+ * {@link ResourceId} with the string representation of the TaskId's UUID, separated by the ID_SEPARATOR. Such a
+ * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}:{task_uuid}".
  */
-public class TaskId implements Serializable, RoutingAddressProvider {
+public class TaskId implements Serializable, InstanceUuidProvider {
 
     public static final String ID_SEPARATOR = ":";
 
@@ -84,8 +88,8 @@ public class TaskId implements Serializable, RoutingAddressProvider {
         return Objects.hash(uuid, getResourceId());
     }
 
-    public String getRoutingAddress() {
-        return resourceId.getRoutingAddress();
+    public UUID getInstanceUuid() {
+        return resourceId.getInstanceUuid();
     }
 
 }
