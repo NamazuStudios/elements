@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * Represents the globally unique ID for a particular {@link Resource}.  This is currently backed by
@@ -17,20 +18,25 @@ import java.util.UUID;
  * non-null.
  *
  * By convention, we may represent the ResourceId as a compound Id string, combining the string representation of the
- * {@link WorkerId} with the string representation of the resource UUID, separated by the ADDRESS_SEPARATOR. Such a
+ * {@link WorkerId} with the string representation of the resource UUID, separated by the ID_SEPARATOR. Such a
  * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}".
  *
  * Created by patricktwohig on 4/11/17.
  */
-public class ResourceId implements Serializable, InstanceUuidProvider {
+public class ResourceId implements Serializable, AddressAliasProvider {
 
     /**
-     * Should not conflict with the {@link WorkerId#ADDRESS_SEPARATOR}.
+     * Should not conflict with the {@link WorkerId#ID_SEPARATOR}.
+     *
+     * TODO: we should maybe just use a universal separator and then infer the number of segments based on the context,
+     *  e.g. a ResourceId is expected to have three components, WorkerId is expected to have 2.
      *
      * May be utilized in the Path string, in which case we should try to adhere to a valid URI schema. See:
      * https://stackoverflow.com/a/3641782.
      */
-    public static final String ADDRESS_SEPARATOR = "\\+";
+    public static final String ID_SEPARATOR = "\\+";
+
+    public static final Pattern ID_SEPARATOR_PATTERN = Pattern.compile(ID_SEPARATOR);
 
     public static final int WORKER_COMPOUND_ID_STRING_INDEX = 0;
 
@@ -55,8 +61,22 @@ public class ResourceId implements Serializable, InstanceUuidProvider {
      * @param compoundIdString the {@link String} representation of the {@link ResourceId} from {@link ResourceId#asString()}.
      */
     public ResourceId(final String compoundIdString) {
-        this.workerId = workerIdFromResourceCompoundIdString(compoundIdString);
-        this.resourceUuid = resourceUuidFromCompoundIdString(compoundIdString);
+        final int separatorCount = compoundIdString.length() - compoundIdString.replace(ID_SEPARATOR, "").length();
+        if (separatorCount != 1) {
+            throw new IllegalArgumentException("Resource ID string should have exactly one address separator: " + ID_SEPARATOR);
+        }
+
+        final String [] components = compoundIdString.split(ID_SEPARATOR);
+
+        if (components.length != 2) {
+            throw new IllegalArgumentException("Resource ID string could not be parsed successfully.");
+        }
+
+        final String workerCompoundIdString = components[WORKER_COMPOUND_ID_STRING_INDEX];
+        this.workerId = new WorkerId(workerCompoundIdString);
+
+        final String resourceUuidString = components[RESOURCE_UUID_STRING_INDEX];
+        this.resourceUuid = UUID.fromString(resourceUuidString);
     }
 
     /**
@@ -65,7 +85,7 @@ public class ResourceId implements Serializable, InstanceUuidProvider {
      * @return the string representation
      */
     public String asString() {
-        return workerId.toString() + ADDRESS_SEPARATOR + resourceUuid.toString();
+        return workerId.toString() + ID_SEPARATOR + resourceUuid.toString();
     }
 
     @Override
@@ -87,48 +107,9 @@ public class ResourceId implements Serializable, InstanceUuidProvider {
         return asString();
     }
 
-    // TODO: combine these two string parser ops into a single op
-    public static WorkerId workerIdFromResourceCompoundIdString(final String resourceCompoundIdString) {
-        final int separatorCount = resourceCompoundIdString.length() - resourceCompoundIdString.replace(ADDRESS_SEPARATOR, "").length();
-        if (separatorCount != 1) {
-            throw new IllegalArgumentException("Resource ID string should have exactly one address separator: " + ADDRESS_SEPARATOR);
-        }
-
-        final String [] components = resourceCompoundIdString.split(ADDRESS_SEPARATOR);
-
-        if (components.length != 2) {
-            throw new IllegalArgumentException("Resource ID string could not be parsed successfully.");
-        }
-
-        final String workerCompoundIdString = components[WORKER_COMPOUND_ID_STRING_INDEX];
-
-        final WorkerId workerId = new WorkerId(workerCompoundIdString);
-
-        return workerId;
-    }
-
-    public static UUID resourceUuidFromCompoundIdString(final String resourceCompoundIdString) {
-        final int separatorCount = resourceCompoundIdString.length() - resourceCompoundIdString.replace(ADDRESS_SEPARATOR, "").length();
-        if (separatorCount != 1) {
-            throw new IllegalArgumentException("Resource ID string should have exactly one address separator (@).");
-        }
-
-        final String [] components = resourceCompoundIdString.split(ADDRESS_SEPARATOR);
-
-        if (components.length != 2) {
-            throw new IllegalArgumentException("Resource ID string could not be parsed successfully.");
-        }
-
-        final String resourceUuidString = components[RESOURCE_UUID_STRING_INDEX];
-
-        final UUID resourceUuid = UUID.fromString(resourceUuidString);
-
-        return resourceUuid;
-    }
-
-    public UUID getInstanceUuid() {
+    public UUID getAddressAlias() {
         if (workerId != null) {
-            return workerId.getInstanceUuid();
+            return workerId.getAddressAlias();
         }
         else {
             return null;

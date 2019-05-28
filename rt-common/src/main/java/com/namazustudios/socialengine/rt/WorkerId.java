@@ -15,20 +15,20 @@ import java.util.UUID;
  * For now, a {@link WorkerId} should at all times have exactly both of the UUIDs assigned and non-null.
  *
  * By convention, we may represent these address pairs in a single string of the form "{instance_uuid}.{app_uuid}",
- * separated by the String {@link WorkerId#ADDRESS_SEPARATOR}. This is referred to as a compoundIdString. This module
+ * separated by the String {@link WorkerId#ID_SEPARATOR}. This is referred to as a compoundIdString. This module
  * provides convenience methods to construct that representation as well as instantiate a new {@link WorkerId} from a
  * given string of that form.
  *
  */
-public class WorkerId implements Serializable, InstanceUuidProvider {
+public class WorkerId implements Serializable, AddressAliasProvider {
 
     /**
-     * Should not conflict with {@link ResourceId#ADDRESS_SEPARATOR}.
+     * Should not conflict with {@link ResourceId#ID_SEPARATOR}.
      *
      * May be utilized in the Path string, in which case we should try to adhere to a valid URI schema. See:
      * https://stackoverflow.com/a/3641782.
      */
-    public static final String ADDRESS_SEPARATOR = ".";
+    public static final String ID_SEPARATOR = ".";
 
     public static final int INSTANCE_UUID_STRING_INDEX = 0;
 
@@ -50,8 +50,22 @@ public class WorkerId implements Serializable, InstanceUuidProvider {
      * @param compoundIdString the {@link String} representation of the {@link WorkerId} from {@link #asString()}.
      */
     public WorkerId(final String compoundIdString) {
-        this.instanceUuid = instanceUuidFromCompoundIdString(compoundIdString);
-        this.applicationUuid = applicationUuidFromCompoundIdString(compoundIdString);
+        final int separatorCount = compoundIdString.length() - compoundIdString.replace(ID_SEPARATOR, "").length();
+        if (separatorCount != 1) {
+            throw new IllegalArgumentException("Worker ID string should have exactly one address separator: " + ID_SEPARATOR);
+        }
+
+        final String [] components = compoundIdString.split(ID_SEPARATOR);
+
+        if (components.length != 2) {
+            throw new IllegalArgumentException("Worker ID string could not be parsed successfully.");
+        }
+
+        final String instanceUuidString = components[INSTANCE_UUID_STRING_INDEX];
+        this.instanceUuid = UUID.fromString(instanceUuidString);
+
+        final String applicationUuidString = components[APPLICATION_UUID_STRING_INDEX];
+        this.applicationUuid = UUID.fromString(applicationUuidString);
     }
 
     /**
@@ -60,7 +74,7 @@ public class WorkerId implements Serializable, InstanceUuidProvider {
      * @return the string representation
      */
     public String asString() {
-        final String compoundIdString = instanceUuid.toString() + ADDRESS_SEPARATOR + applicationUuid.toString();
+        final String compoundIdString = instanceUuid.toString() + ID_SEPARATOR + applicationUuid.toString();
         return compoundIdString;
     }
 
@@ -83,46 +97,7 @@ public class WorkerId implements Serializable, InstanceUuidProvider {
         return asString();
     }
 
-    public UUID getInstanceUuid() {
+    public UUID getAddressAlias() {
         return instanceUuid;
-    }
-
-    // TODO: combine these two string parser ops into a single op
-    public static UUID instanceUuidFromCompoundIdString(final String compoundIdString) {
-        final int separatorCount = compoundIdString.length() - compoundIdString.replace(ADDRESS_SEPARATOR, "").length();
-        if (separatorCount != 1) {
-            throw new IllegalArgumentException("Worker ID string should have exactly one address separator: " + ADDRESS_SEPARATOR);
-        }
-
-        final String [] components = compoundIdString.split(ADDRESS_SEPARATOR);
-
-        if (components.length != 2) {
-            throw new IllegalArgumentException("Worker ID string could not be parsed successfully.");
-        }
-
-        final String instanceUuidString = components[INSTANCE_UUID_STRING_INDEX];
-
-        final UUID instanceUuid = UUID.fromString(instanceUuidString);
-
-        return instanceUuid;
-    }
-
-    public static UUID applicationUuidFromCompoundIdString(final String compoundIdString) {
-        final int separatorCount = compoundIdString.length() - compoundIdString.replace(ADDRESS_SEPARATOR, "").length();
-        if (separatorCount != 1) {
-            throw new IllegalArgumentException("Worker ID string should have exactly one address separator: " + ADDRESS_SEPARATOR);
-        }
-
-        final String [] components = compoundIdString.split(ADDRESS_SEPARATOR);
-
-        if (components.length != 2) {
-            throw new IllegalArgumentException("Worker ID string could not be parsed successfully.");
-        }
-
-        final String applicationUuidString = components[APPLICATION_UUID_STRING_INDEX];
-
-        final UUID applicationUuid = UUID.fromString(applicationUuidString);
-
-        return applicationUuid;
     }
 }

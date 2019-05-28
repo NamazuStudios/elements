@@ -93,11 +93,10 @@ public class LuaResource implements Resource {
             final LuaState luaState,
             final Context context,
             final ResourceAcquisition resourceAcquisition,
-            final ApplicationNodeMetadataContext applicationNodeMetadataContext
+            final WorkerMetadataContext workerMetadataContext
     ) {
         try {
-            final WorkerId workerId = new WorkerId(applicationNodeMetadataContext.getInstanceUuid(), );
-            this.resourceId = new ResourceId(workerId);
+            this.resourceId = new ResourceId(workerMetadataContext.getWorkerId());
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);
