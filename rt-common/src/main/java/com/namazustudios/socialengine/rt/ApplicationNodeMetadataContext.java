@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.remote.RoutingStrategy;
 
 import java.util.UUID;
 
@@ -10,14 +11,13 @@ import java.util.UUID;
  */
 @Proxyable
 public interface ApplicationNodeMetadataContext {
-
-    @RemotelyInvokable(AggregateRoutingStrategy.class)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     UUID getUuid();
 
-    @RemotelyInvokable(AggregateRoutingStrategy.class)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     long getInMemoryResourceCount();
 
-    @RemotelyInvokable(AggregateRoutingStrategy.class)
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
     double getLoadAverage();
 
     /**
@@ -29,34 +29,4 @@ public interface ApplicationNodeMetadataContext {
      * Stops this {@link ApplicationNodeMetadataContext}.
      */
     default void stop() {}
-
-    // TODO: VV Move all this to another module VV
-//    UUID getLocalApplicationNodeUuid();
-//
-//    UUID getNextApplicationNodeUuidForSingleUseInvocation();
-//
-//    String getHostnameForAppNodeUUID(uuid);
-//
-//    enum SingleUseSelectionStrategy {
-//        /**
-//         *  Select an Application Node in the network for single use invocation randomly.
-//         */
-//        RANDOM,
-//
-//        /**
-//         *  Select by an un-prioritized, circular schedule.
-//         */
-//        ROUND_ROBIN,
-//
-//        /**
-//         *  Select by the Application Node that has most recently reported the least number of allocated resources.
-//         */
-//        MIN_RESOURCE_ALLOCATION,
-//
-//        /**
-//         *  Select by the Application Node that has most recently reported the smallest load average.
-//         */
-//        MIN_LOAD_AVERAGE,
-//    }
-
 }

@@ -42,6 +42,7 @@ public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler
 
             monitoring = true;
 
+            // TODO: delete this!
             new java.util.Timer().schedule(
                     new java.util.TimerTask() {
                         @Override
