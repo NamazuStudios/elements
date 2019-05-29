@@ -1,36 +1,18 @@
 package com.namazustudios.socialengine.rt;
 
 import javax.inject.Inject;
-import java.util.UUID;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.UUID.nameUUIDFromBytes;
 
 
-public class SimpleWorkerMetadataContext implements WorkerMetadataContext {
+public class SimpleNodeMetadataContext implements NodeMetadataContext {
     private LoadMonitorService loadMonitorService;
 
     private ResourceService resourceService;
 
     private Node node;
 
-    private final WorkerId workerId;
+    private NodeId nodeId;
 
     private InstanceUuidProvider instanceUuidProvider;
-
-    public SimpleWorkerMetadataContext() {
-        workerId = buildWorkerId();
-    }
-
-    private WorkerId buildWorkerId() {
-        final UUID instanceUuid = getInstanceUuidProvider().get();
-
-        final byte[] applicationUuidBytes = getNode().getId().getBytes(UTF_8);
-        final UUID applicationUuid = nameUUIDFromBytes(applicationUuidBytes);
-
-        final WorkerId workerId = new WorkerId(instanceUuid, applicationUuid);
-        return workerId;
-    }
 
     @Override
     public void start() {
@@ -43,8 +25,8 @@ public class SimpleWorkerMetadataContext implements WorkerMetadataContext {
     }
 
     @Override
-    public WorkerId getWorkerId() {
-        return workerId;
+    public NodeId getNodeId() {
+        return nodeId;
     }
 
     @Override
@@ -83,6 +65,9 @@ public class SimpleWorkerMetadataContext implements WorkerMetadataContext {
     @Inject
     public void setNode(Node node) {
         this.node = node;
+        if (node != null) {
+            nodeId = node.getNodeId();
+        }
     }
 
     public InstanceUuidProvider getInstanceUuidProvider() {

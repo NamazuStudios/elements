@@ -7,9 +7,9 @@ import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
  * Provides data for a Worker.
  */
 @Proxyable
-public interface WorkerMetadataContext {
+public interface NodeMetadataContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    WorkerId getWorkerId();
+    NodeId getNodeId();
 
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     long getInMemoryResourceCount();
@@ -20,12 +20,12 @@ public interface WorkerMetadataContext {
     double getLoadAverage();
 
     /**
-     * Starts this {@link WorkerMetadataContext}.
+     * Starts this {@link NodeMetadataContext}.
      */
     default void start() {}
 
     /**
-     * Stops this {@link WorkerMetadataContext}.
+     * Stops this {@link NodeMetadataContext}.
      */
     default void stop() {}
 }

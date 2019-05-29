@@ -12,15 +12,15 @@ import java.util.UUID;
  * ec2 instances represented by UUIDs I1, I2, then we will have six workers in the deployment addressable with the pairs
  * (I1, A1), (I1, A2), (I1, A3), (I2, A1), (I2, A2), (I2, A3).
  *
- * For now, a {@link WorkerId} should at all times have exactly both of the UUIDs assigned and non-null.
+ * For now, a {@link NodeId} should at all times have exactly both of the UUIDs assigned and non-null.
  *
  * By convention, we may represent these address pairs in a single string of the form "{instance_uuid}.{app_uuid}",
- * separated by the String {@link WorkerId#ID_SEPARATOR}. This is referred to as a compoundIdString. This module
- * provides convenience methods to construct that representation as well as instantiate a new {@link WorkerId} from a
+ * separated by the String {@link NodeId#ID_SEPARATOR}. This is referred to as a compoundIdString. This module
+ * provides convenience methods to construct that representation as well as instantiate a new {@link NodeId} from a
  * given string of that form.
  *
  */
-public class WorkerId implements Serializable, AddressAliasProvider {
+public class NodeId implements Serializable, AddressAliasProvider {
 
     /**
      * Should not conflict with {@link ResourceId#ID_SEPARATOR}.
@@ -38,18 +38,18 @@ public class WorkerId implements Serializable, AddressAliasProvider {
 
     private final UUID applicationUuid;
 
-    public WorkerId(final UUID instanceUuid, final UUID applicationUuid) {
+    public NodeId(final UUID instanceUuid, final UUID applicationUuid) {
         this.instanceUuid = instanceUuid;
         this.applicationUuid = applicationUuid;
     }
 
     /**
-     * Parses a new {@link WorkerId} from the given {@link String}.  The should be the string representation returned
+     * Parses a new {@link NodeId} from the given {@link String}.  The should be the string representation returned
      * byt {@link #asString()}.
      *
-     * @param compoundIdString the {@link String} representation of the {@link WorkerId} from {@link #asString()}.
+     * @param compoundIdString the {@link String} representation of the {@link NodeId} from {@link #asString()}.
      */
-    public WorkerId(final String compoundIdString) {
+    public NodeId(final String compoundIdString) {
         final int separatorCount = compoundIdString.length() - compoundIdString.replace(ID_SEPARATOR, "").length();
         if (separatorCount != 1) {
             throw new IllegalArgumentException("Worker ID string should have exactly one address separator: " + ID_SEPARATOR);
@@ -69,7 +69,7 @@ public class WorkerId implements Serializable, AddressAliasProvider {
     }
 
     /**
-     * Returns the compound Id string representation of this {@link WorkerId}
+     * Returns the compound Id string representation of this {@link NodeId}
      *
      * @return the string representation
      */
@@ -82,9 +82,9 @@ public class WorkerId implements Serializable, AddressAliasProvider {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        WorkerId workerId = (WorkerId) o;
-        return Objects.equals(instanceUuid, workerId.instanceUuid) &&
-                Objects.equals(applicationUuid, workerId.applicationUuid);
+        NodeId nodeId = (NodeId) o;
+        return Objects.equals(instanceUuid, nodeId.instanceUuid) &&
+                Objects.equals(applicationUuid, nodeId.applicationUuid);
     }
 
     @Override
@@ -95,6 +95,14 @@ public class WorkerId implements Serializable, AddressAliasProvider {
     @Override
     public String toString() {
         return asString();
+    }
+
+    public UUID getInstanceUuid() {
+        return instanceUuid;
+    }
+
+    public UUID getApplicationUuid() {
+        return applicationUuid;
     }
 
     public UUID getAddressAlias() {

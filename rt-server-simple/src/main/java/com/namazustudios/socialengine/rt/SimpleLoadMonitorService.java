@@ -59,7 +59,7 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
             atomicLoadAverage.set(UNKNOWN_LOAD_AVERAGE);
         }
         else {
-
+            // TODO: how should we handle this case? throw exception, or be silent since it "achieved" desired state?
         }
     }
 

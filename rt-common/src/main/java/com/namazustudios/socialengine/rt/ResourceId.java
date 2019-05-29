@@ -10,15 +10,15 @@ import java.util.regex.Pattern;
  * an instance of {@Link UUID}, but the string representation should be considered opaque by users
  * of this type. Though the ResourceId is may be globally represented by a single UUID, for addressment we represent
  * a ResourceId as a 3-tuple of UUIDs: (InstanceUuid, ApplicationUuid, ResourceUuid), i.e. Resource r is belongs to
- * Application a on Instance i. The first two elements of the tuple are represented in the code by a {@link WorkerId}
+ * Application a on Instance i. The first two elements of the tuple are represented in the code by a {@link NodeId}
  * owned by a {@link ResourceId} object, and the latter element would be held in a direct UUID object by the
  * {@link ResourceId} object.
  *
- * For now, a {@link ResourceId} should at all times have exactly both the WorkerId and ResourceUuid assigned and
+ * For now, a {@link ResourceId} should at all times have exactly both the NodeId and ResourceUuid assigned and
  * non-null.
  *
  * By convention, we may represent the ResourceId as a compound Id string, combining the string representation of the
- * {@link WorkerId} with the string representation of the resource UUID, separated by the ID_SEPARATOR. Such a
+ * {@link NodeId} with the string representation of the resource UUID, separated by the ID_SEPARATOR. Such a
  * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}".
  *
  * Created by patricktwohig on 4/11/17.
@@ -26,10 +26,10 @@ import java.util.regex.Pattern;
 public class ResourceId implements Serializable, AddressAliasProvider {
 
     /**
-     * Should not conflict with the {@link WorkerId#ID_SEPARATOR}.
+     * Should not conflict with the {@link NodeId#ID_SEPARATOR}.
      *
      * TODO: we should maybe just use a universal separator and then infer the number of segments based on the context,
-     *  e.g. a ResourceId is expected to have three components, WorkerId is expected to have 2.
+     *  e.g. a ResourceId is expected to have three components, NodeId is expected to have 2.
      *
      * May be utilized in the Path string, in which case we should try to adhere to a valid URI schema. See:
      * https://stackoverflow.com/a/3641782.
@@ -42,15 +42,15 @@ public class ResourceId implements Serializable, AddressAliasProvider {
 
     public static final int RESOURCE_UUID_STRING_INDEX = 1;
 
-    private final WorkerId workerId;
+    private final NodeId nodeId;
 
     private final UUID resourceUuid;
 
     /**
      * Creates a new unique {@link ResourceId}.
      */
-    public ResourceId(final WorkerId workerId) {
-        this.workerId = workerId;
+    public ResourceId(final NodeId nodeId) {
+        this.nodeId = nodeId;
         resourceUuid = UUID.randomUUID();
     }
 
@@ -73,7 +73,7 @@ public class ResourceId implements Serializable, AddressAliasProvider {
         }
 
         final String workerCompoundIdString = components[WORKER_COMPOUND_ID_STRING_INDEX];
-        this.workerId = new WorkerId(workerCompoundIdString);
+        this.nodeId = new NodeId(workerCompoundIdString);
 
         final String resourceUuidString = components[RESOURCE_UUID_STRING_INDEX];
         this.resourceUuid = UUID.fromString(resourceUuidString);
@@ -85,7 +85,7 @@ public class ResourceId implements Serializable, AddressAliasProvider {
      * @return the string representation
      */
     public String asString() {
-        return workerId.toString() + ID_SEPARATOR + resourceUuid.toString();
+        return nodeId.toString() + ID_SEPARATOR + resourceUuid.toString();
     }
 
     @Override
@@ -93,13 +93,13 @@ public class ResourceId implements Serializable, AddressAliasProvider {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ResourceId that = (ResourceId) o;
-        return Objects.equals(workerId, that.workerId) &&
+        return Objects.equals(nodeId, that.nodeId) &&
                 Objects.equals(resourceUuid, that.resourceUuid);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(workerId, resourceUuid);
+        return Objects.hash(nodeId, resourceUuid);
     }
 
     @Override
@@ -108,8 +108,8 @@ public class ResourceId implements Serializable, AddressAliasProvider {
     }
 
     public UUID getAddressAlias() {
-        if (workerId != null) {
-            return workerId.getAddressAlias();
+        if (nodeId != null) {
+            return nodeId.getAddressAlias();
         }
         else {
             return null;

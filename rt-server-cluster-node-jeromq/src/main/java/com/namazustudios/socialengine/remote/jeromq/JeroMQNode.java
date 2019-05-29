@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.NodeLifecycle;
-import com.namazustudios.socialengine.rt.PayloadReader;
-import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.IdentityUtil;
 import com.namazustudios.socialengine.rt.remote.*;
+import com.namazustudios.socialengine.rt.remote.RequestHeader;
+import com.namazustudios.socialengine.rt.remote.ResponseHeader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -18,6 +17,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -32,6 +32,8 @@ import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMI
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -55,11 +57,11 @@ public class JeroMQNode implements Node {
 
     private final AtomicReference<NodeContext> nodeContext = new AtomicReference<>();
 
-    private String id;
+    private InstanceUuidProvider instanceUuidProvider;
+
+    private NodeId nodeId;
 
     private String name;
-
-    private IdentityUtil identityUtil;
 
     private ZContext zContext;
 
@@ -78,21 +80,20 @@ public class JeroMQNode implements Node {
     private Logger logger = staticLogger;
 
     @Override
-    public String getId() {
-        return id;
-    }
-
-    @Override
     public String getName() {
         return name;
     }
 
-    public String getInboundAddr() {
-        return format(INBOUND_ADDR_FORMAT, getId());
+    public String getOutboundAddr() {
+        return format(OUTBOUND_ADDR_FORMAT, getNodeId().getApplicationUuid().toString());
     }
 
-    public String getOutboundAddr() {
-        return format(OUTBOUND_ADDR_FORMAT, getId());
+    private void buildNodeIdIfPossible() {
+        if (getInstanceUuidProvider() != null && getName() != null) {
+            final UUID instanceUuid = getInstanceUuidProvider().get();
+            final UUID nodeUuid = nameUUIDFromBytes(getName().getBytes(UTF_8));
+            nodeId = new NodeId(instanceUuid, nodeUuid);
+        }
     }
 
     @Override
@@ -125,13 +126,9 @@ public class JeroMQNode implements Node {
 
     }
 
-    public IdentityUtil getIdentityUtil() {
-        return identityUtil;
-    }
-
-    @Inject
-    public void setIdentityUtil(IdentityUtil identityUtil) {
-        this.identityUtil = identityUtil;
+    @Override
+    public NodeId getNodeId() {
+        return nodeId;
     }
 
     public ZContext getzContext() {
@@ -189,14 +186,9 @@ public class JeroMQNode implements Node {
     }
 
     @Inject
-    public void setId(@Named(ID) String id) {
-        this.id = id;
-        logger = LoggerFactory.getLogger(loggerName());
-    }
-
-    @Inject
     public void setName(@Named(NAME) String name) {
         this.name = name;
+        buildNodeIdIfPossible();
         logger = LoggerFactory.getLogger(loggerName());
     }
 
@@ -210,9 +202,19 @@ public class JeroMQNode implements Node {
     }
 
     private String loggerName() {
-        return Stream.of(JeroMQNode.class.getName(), getName(), getId())
+        return Stream.of(JeroMQNode.class.getName(), getNodeId().getApplicationUuid().toString())
                      .filter(s -> s != null)
                      .collect(Collectors.joining("."));
+    }
+
+    public InstanceUuidProvider getInstanceUuidProvider() {
+        return instanceUuidProvider;
+    }
+
+    @Inject
+    public void setInstanceUuidProvider(InstanceUuidProvider instanceUuidProvider) {
+        this.instanceUuidProvider = instanceUuidProvider;
+        buildNodeIdIfPossible();
     }
 
     private class NodeContext {

@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.exception.MultiException;
 
 import java.io.File;
 import java.io.PrintWriter;
+import java.nio.ByteBuffer;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Arrays;
@@ -32,7 +33,10 @@ public class FromDiskInstanceUuidProvider implements InstanceUuidProvider {
         if (file.exists() && !file.isDirectory()) {
             try {
                 final byte[] fileBytes = Files.readAllBytes(Paths.get(LOCAL_APPLICATION_NODE_UUID_FILE));
-                instanceUuid = UUID.nameUUIDFromBytes(fileBytes);
+                ByteBuffer bb = ByteBuffer.wrap(fileBytes);
+                long high = bb.getLong();
+                long low = bb.getLong();
+                instanceUuid = new UUID(high, low);
             }
             catch (final Exception e) {
                 throw new MultiException("Failed to read local application node uuid file", Arrays.asList(e));

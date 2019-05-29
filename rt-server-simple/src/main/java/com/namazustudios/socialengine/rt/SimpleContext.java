@@ -34,7 +34,7 @@ public class SimpleContext implements Context {
 
     private ManifestLoader manifestLoader;
 
-    private WorkerMetadataContext workerMetadataContext;
+    private NodeMetadataContext nodeMetadataContext;
 
     private Thread hook = new Thread(this::shutdown);
 
@@ -47,7 +47,7 @@ public class SimpleContext implements Context {
         getSchedulerContext().start();
         getIndexContext().start();
         getHandlerContext().start();
-        getWorkerMetadataContext().start();
+        getNodeMetadataContext().start();
         getManifestLoader().loadAndRunIfNecessary();
         runStartupManifest();
     }
@@ -109,7 +109,7 @@ public class SimpleContext implements Context {
         getIndexContext().stop();
         getSchedulerContext().stop();
         getResourceContext().stop();
-        getWorkerMetadataContext().stop();
+        getNodeMetadataContext().stop();
 
         // Then stops all services
         getResourceLoader().close();
@@ -203,12 +203,12 @@ public class SimpleContext implements Context {
         this.manifestLoader = manifestLoader;
     }
 
-    public WorkerMetadataContext getWorkerMetadataContext() {
-        return workerMetadataContext;
+    public NodeMetadataContext getNodeMetadataContext() {
+        return nodeMetadataContext;
     }
 
     @Inject
-    public void setWorkerMetadataContext(WorkerMetadataContext workerMetadataContext) {
-        this.workerMetadataContext = workerMetadataContext;
+    public void setNodeMetadataContext(NodeMetadataContext nodeMetadataContext) {
+        this.nodeMetadataContext = nodeMetadataContext;
     }
 }
