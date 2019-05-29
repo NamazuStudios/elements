@@ -3,16 +3,21 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 
+import java.util.Set;
+
 /**
- * Provides data for a Node.
+ * Provides data for an Instance.
  */
 @Proxyable
-public interface NodeMetadataContext {
+public interface InstanceMetadataContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    NodeId getNodeId();
+    Object getNetworkAddressAlias();
 
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    long getInMemoryResourceCount();
+    Set<NodeId> getAllNodeIds();
+
+    @RemotelyInvokable(AddressedRoutingStrategy.class)
+    double getLoadAverage();
 
     /**
      * Starts this {@link NodeMetadataContext}.

@@ -21,7 +21,7 @@
 //    private ResourceAvailabilityMonitorService resourceAvailabilityMonitorService;
 //
 //    public Set<String> getDestinationAddresses(RoutingAddressProvider routingAddressProvider) {
-//        final String routingAddress = getResourceAvailabilityMonitorService().getOptimalLoadAverageAddress();
+//        final String routingAddress = getResourceAvailabilityMonitorService().getNetworkAddressAliasByOptimalLoadAverage();
 //
 //        return Collections.singleton(routingAddress);
 //    }

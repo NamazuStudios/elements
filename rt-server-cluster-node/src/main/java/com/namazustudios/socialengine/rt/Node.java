@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rt;
 
 /**
- * Represents the worker node.  This is a simple interface which does nothing more than simply provide a means to start
- * and stop the service.
+ * Represents the worker node for a single Application.  This is a simple interface which in and of itself does nothing
+ * more than provide a means to start and stop the service. Conceptually, however, a Node represents the core
+ * functionality for a given Application, e.g. resource management, task management--generally everything related to
+ * Application logic execution.
  */
 public interface Node extends AutoCloseable {
 

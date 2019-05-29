@@ -20,7 +20,7 @@ import static java.lang.String.format;
  * {@link ResourceId} with the string representation of the TaskId's UUID, separated by the ID_SEPARATOR. Such a
  * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}:{task_uuid}".
  */
-public class TaskId implements Serializable, AddressAliasProvider {
+public class TaskId implements Serializable, NetworkAddresser {
 
     public static final String ID_SEPARATOR = ":";
 
@@ -93,8 +93,8 @@ public class TaskId implements Serializable, AddressAliasProvider {
         return Objects.hash(uuid, getResourceId());
     }
 
-    public UUID getAddressAlias() {
-        return resourceId.getAddressAlias();
+    public Object getNetworkAddressAlias() {
+        return resourceId.getNetworkAddressAlias();
     }
 
 }

@@ -17,7 +17,7 @@
 //            routingAddress = routingAddressProvider.getRoutingAddress();
 //        }
 //        else {
-//            routingAddress = getResourceAvailabilityMonitorService().getOptimalLoadAverageAddress();
+//            routingAddress = getResourceAvailabilityMonitorService().getNetworkAddressAliasByOptimalLoadAverage();
 //        }
 //
 //        return Collections.singleton(routingAddress);

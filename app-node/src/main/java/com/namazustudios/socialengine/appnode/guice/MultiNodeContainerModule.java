@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQInstanceMetadataContext;
+import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.MultiNodeContainer;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
@@ -40,6 +42,10 @@ public class MultiNodeContainerModule extends AbstractModule {
 
         bind(ConnectionService.class)
             .to(JeroMQDemultiplexedConnectionService.class)
+            .asEagerSingleton();
+
+        bind(InstanceMetadataContext.class)
+            .to(JeroMQInstanceMetadataContext.class)
             .asEagerSingleton();
 
         bind(SrvMonitorService.class)
