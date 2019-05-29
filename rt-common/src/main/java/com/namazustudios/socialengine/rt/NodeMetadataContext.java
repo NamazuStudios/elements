@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 
 /**
- * Provides data for a Worker.
+ * Provides data for a Node.
  */
 @Proxyable
 public interface NodeMetadataContext {

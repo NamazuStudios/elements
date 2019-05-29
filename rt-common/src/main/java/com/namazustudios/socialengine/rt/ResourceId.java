@@ -38,7 +38,7 @@ public class ResourceId implements Serializable, AddressAliasProvider {
 
     public static final Pattern ID_SEPARATOR_PATTERN = Pattern.compile(ID_SEPARATOR);
 
-    public static final int WORKER_COMPOUND_ID_STRING_INDEX = 0;
+    public static final int NODE_COMPOUND_ID_STRING_INDEX = 0;
 
     public static final int RESOURCE_UUID_STRING_INDEX = 1;
 
@@ -72,8 +72,8 @@ public class ResourceId implements Serializable, AddressAliasProvider {
             throw new IllegalArgumentException("Resource ID string could not be parsed successfully.");
         }
 
-        final String workerCompoundIdString = components[WORKER_COMPOUND_ID_STRING_INDEX];
-        this.nodeId = new NodeId(workerCompoundIdString);
+        final String nodeCompoundIdString = components[NODE_COMPOUND_ID_STRING_INDEX];
+        this.nodeId = new NodeId(nodeCompoundIdString);
 
         final String resourceUuidString = components[RESOURCE_UUID_STRING_INDEX];
         this.resourceUuid = UUID.fromString(resourceUuidString);

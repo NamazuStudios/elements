@@ -5,9 +5,9 @@ import com.namazustudios.socialengine.rt.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SimpleWorkerMetadataContextModule extends AbstractModule {
+public class SimpleNodeMetadataContextModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleWorkerMetadataContextModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleNodeMetadataContextModule.class);
 
     @Override
     protected void configure() {
