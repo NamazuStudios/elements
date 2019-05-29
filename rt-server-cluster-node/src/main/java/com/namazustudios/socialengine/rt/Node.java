@@ -6,19 +6,11 @@ package com.namazustudios.socialengine.rt;
  */
 public interface Node extends AutoCloseable {
 
-    /**
-     * Gets the unique ID of the node.  This can be assigned by the contained or assigned in configuration.  Must be
-     * unique.  This may be human readable, but is not guaranteed.  For human readability, use {@link #getName()}
-     * instead.
-     *
-     * @return the unique node ID
-     */
-    String getId();
+    NodeId getNodeId();
 
     /**
      * Gets the name of the node.  This can be assigned by the container or assigned in configuration.  Must be human
-     * readable, and should be unique.  However, it is an error to depend on this value being unique.  The method
-     * {@link #getId()} should be used instead.
+     * readable, and should be unique per Instance.
      *
      * @return the name of the node
      */

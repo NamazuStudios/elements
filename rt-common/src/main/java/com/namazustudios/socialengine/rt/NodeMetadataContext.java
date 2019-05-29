@@ -2,31 +2,30 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.remote.RoutingStrategy;
-
-import java.util.UUID;
 
 /**
- * Provides data for an Application node.
+ * Provides data for a Node.
  */
 @Proxyable
-public interface ApplicationNodeMetadataContext {
+public interface NodeMetadataContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    UUID getUuid();
+    NodeId getNodeId();
 
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     long getInMemoryResourceCount();
 
+    // TODO: this is an instance-level piece of data, so maybe split out the instance-level data into a separate
+    //  context, e.g. InstanceMetadataContext. And we could report instance-level resource counts etc.
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     double getLoadAverage();
 
     /**
-     * Starts this {@link ApplicationNodeMetadataContext}.
+     * Starts this {@link NodeMetadataContext}.
      */
     default void start() {}
 
     /**
-     * Stops this {@link ApplicationNodeMetadataContext}.
+     * Stops this {@link NodeMetadataContext}.
      */
     default void stop() {}
 }

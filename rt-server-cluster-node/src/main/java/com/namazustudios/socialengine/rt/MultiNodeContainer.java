@@ -43,8 +43,8 @@ public class MultiNodeContainer implements AutoCloseable {
         }
 
         getNodeSet().forEach(node -> {
-            final byte[] inprocIdentifierBytes = node.getId().getBytes(UTF_8);
-            final UUID inprocIdentifier = nameUUIDFromBytes(inprocIdentifierBytes);
+            final UUID inprocIdentifier = node.getNodeId().getApplicationUuid();
+
             getConnectionService().issueConnectInprocCommand(null, inprocIdentifier);
         });
 

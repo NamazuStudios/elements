@@ -8,9 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;
-import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 import static java.lang.Runtime.getRuntime;
@@ -36,7 +34,7 @@ public class SimpleContext implements Context {
 
     private ManifestLoader manifestLoader;
 
-    private ApplicationNodeMetadataContext applicationNodeMetadataContext;
+    private NodeMetadataContext nodeMetadataContext;
 
     private Thread hook = new Thread(this::shutdown);
 
@@ -49,7 +47,7 @@ public class SimpleContext implements Context {
         getSchedulerContext().start();
         getIndexContext().start();
         getHandlerContext().start();
-        getApplicationNodeMetadataContext().start();
+        getNodeMetadataContext().start();
         getManifestLoader().loadAndRunIfNecessary();
         runStartupManifest();
     }
@@ -111,7 +109,7 @@ public class SimpleContext implements Context {
         getIndexContext().stop();
         getSchedulerContext().stop();
         getResourceContext().stop();
-        getApplicationNodeMetadataContext().stop();
+        getNodeMetadataContext().stop();
 
         // Then stops all services
         getResourceLoader().close();
@@ -205,12 +203,12 @@ public class SimpleContext implements Context {
         this.manifestLoader = manifestLoader;
     }
 
-    public ApplicationNodeMetadataContext getApplicationNodeMetadataContext() {
-        return applicationNodeMetadataContext;
+    public NodeMetadataContext getNodeMetadataContext() {
+        return nodeMetadataContext;
     }
 
     @Inject
-    public void setApplicationNodeMetadataContext(ApplicationNodeMetadataContext applicationNodeMetadataContext) {
-        this.applicationNodeMetadataContext = applicationNodeMetadataContext;
+    public void setNodeMetadataContext(NodeMetadataContext nodeMetadataContext) {
+        this.nodeMetadataContext = nodeMetadataContext;
     }
 }

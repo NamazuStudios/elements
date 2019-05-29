@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.*;
@@ -57,7 +56,7 @@ public class XodusContextModule extends PrivateModule {
         // The remaining contexts are fine as their simple equivalents.
         install(new SimpleIndexContextModule());
         install(simpleHandlerContextModule);
-        install(new SimpleApplicationNodeMetadataContextModule());
+        install(new SimpleNodeMetadataContextModule());
 
         expose(IndexContext.class);
         expose(ResourceContext.class);

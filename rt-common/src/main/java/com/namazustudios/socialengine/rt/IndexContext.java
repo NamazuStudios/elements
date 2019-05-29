@@ -50,7 +50,7 @@ public interface IndexContext {
      * @return a {@link Future<Stream<Listing>>} which can be used to obtain the result
      */
     @RemotelyInvokable(AggregateOrAddressedRoutingStrategy.class)
-    void listAsync(@AddressProvider @Serialize Path path,
+    void listAsync(@ProvidesAddress @Serialize Path path,
                    @ResultHandler Consumer<Stream<Listing>> success,
                    @ErrorHandler  Consumer<Throwable> failure);
 
@@ -80,7 +80,7 @@ public interface IndexContext {
      *
      */
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    void linkAsync(@AddressProvider @Serialize ResourceId resourceId,
+    void linkAsync(@ProvidesAddress @Serialize ResourceId resourceId,
                    @Serialize Path destination,
                    @ResultHandler Consumer<Void> success,
                    @ErrorHandler  Consumer<Throwable> failure);
@@ -107,7 +107,7 @@ public interface IndexContext {
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    void linkPathAsync(@AddressProvider @Serialize Path source, @Serialize Path destination,
+    void linkPathAsync(@ProvidesAddress @Serialize Path source, @Serialize Path destination,
                        @ResultHandler Consumer<Void> success,
                        @ErrorHandler  Consumer<Throwable> failure);
 
@@ -138,7 +138,7 @@ public interface IndexContext {
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    void unlinkAsync(@AddressProvider @Serialize Path path,
+    void unlinkAsync(@ProvidesAddress @Serialize Path path,
                      @ResultHandler Consumer<Unlink> success,
                      @ErrorHandler  Consumer<Throwable> failure);
 

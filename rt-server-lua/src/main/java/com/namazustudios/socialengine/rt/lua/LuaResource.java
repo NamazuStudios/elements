@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -31,7 +30,6 @@ import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.COROUTINES_TABLE;
-import static com.namazustudios.socialengine.rt.ResumeReason.*;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -95,10 +93,10 @@ public class LuaResource implements Resource {
             final LuaState luaState,
             final Context context,
             final ResourceAcquisition resourceAcquisition,
-            final ApplicationNodeMetadataContext applicationNodeMetadataContext
+            final NodeMetadataContext nodeMetadataContext
     ) {
         try {
-            this.resourceId = new ResourceId(applicationNodeMetadataContext.getUuid());
+            this.resourceId = new ResourceId(nodeMetadataContext.getNodeId());
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);
