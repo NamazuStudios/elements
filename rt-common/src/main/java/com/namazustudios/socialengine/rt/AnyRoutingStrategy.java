@@ -18,20 +18,20 @@
 // * network and neither should the local invocation (should the local app node be chosen to perform it).
 // */
 //public class AnyRoutingStrategy implements RoutingStrategy {
-//    private ResourceAvailabilityMonitorService resourceAvailabilityMonitorService;
+//    private InstanceResourceMonitorService resourceAvailabilityMonitorService;
 //
 //    public Set<String> getDestinationAddresses(RoutingAddressProvider routingAddressProvider) {
-//        final String routingAddress = getResourceAvailabilityMonitorService().getNetworkAddressAliasByOptimalLoadAverage();
+//        final String routingAddress = getResourceAvailabilityMonitorService().getInstanceUuidByOptimalLoadAverage();
 //
 //        return Collections.singleton(routingAddress);
 //    }
 //
-//    public ResourceAvailabilityMonitorService getResourceAvailabilityMonitorService() {
+//    public InstanceResourceMonitorService getResourceAvailabilityMonitorService() {
 //        return resourceAvailabilityMonitorService;
 //    }
 //
 //    @Inject
-//    public void setResourceAvailabilityMonitorService(ResourceAvailabilityMonitorService resourceAvailabilityMonitorService) {
+//    public void setResourceAvailabilityMonitorService(InstanceResourceMonitorService resourceAvailabilityMonitorService) {
 //        this.resourceAvailabilityMonitorService = resourceAvailabilityMonitorService;
 //    }
 //}

@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 
 import java.util.Set;
+import java.util.UUID;
 
 /**
  * Provides data for an Instance.
@@ -11,7 +12,7 @@ import java.util.Set;
 @Proxyable
 public interface InstanceMetadataContext {
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    Object getNetworkAddressAlias();
+    UUID getInstanceUuid();
 
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     Set<NodeId> getAllNodeIds();

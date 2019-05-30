@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.*;
 
 import javax.inject.Inject;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 /**
@@ -14,7 +15,7 @@ public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
     private Set<Node> nodeSet;
     private LoadMonitorService loadMonitorService;
 
-    public Object getNetworkAddressAlias() {
+    public UUID getInstanceUuid() {
         return getInstanceUuidProvider().get();
     }
 
