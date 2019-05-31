@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.RemoteThrowableException;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
@@ -12,6 +13,7 @@ import org.slf4j.MDC;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 import org.zeromq.ZPoller;
+import zmq.ZError;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,7 +40,6 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private String connectAddress;
 
-    // TODO: set default timeout in env var/properties
     private int timeoutMillis;
 
     private PayloadReader payloadReader;
@@ -134,6 +135,13 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                     }
 
                     final ZMsg msg = ZMsg.recvMsg(connection.socket());
+                    final int error = connection.socket().errno();
+                    if (msg == null || error != 0) {
+                        if (connection.socket().errno() == ZError.EAGAIN) {
+                            throw new HandlerTimeoutException("Remote invocation timed out for addr: " + getConnectAddress());
+                        }
+                    }
+
                     msg.pop();
 
                     final HandleResult result = handleResponse(
