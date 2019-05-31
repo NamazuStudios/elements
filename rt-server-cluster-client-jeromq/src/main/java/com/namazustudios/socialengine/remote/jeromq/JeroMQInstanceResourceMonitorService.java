@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.InstanceResourceMonitorService;
+import com.namazustudios.socialengine.rt.remote.RemoteInvocationDispatcher;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -9,6 +10,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class JeroMQInstanceResourceMonitorService implements InstanceResourceMonitorService {
     private final AtomicBoolean atomicIsRunning = new AtomicBoolean(false);
     private final AtomicReference<Set<UUID>> atomicInstanceUuids = new AtomicReference<>(new HashSet<>());
+    private final AtomicReference<Map<UUID, RemoteInvocationDispatcher>> atomicRemoteInvocationDispatchers = new AtomicReference<>(new HashMap<>());
 
     // TODO: maybe we record the timestamp as well for when we get the data sample (see TODO notes below)
     private final AtomicReference<Map<UUID, Double>> atomicMostRecentLoadAverages = new AtomicReference<>(new HashMap<>());
@@ -28,8 +30,12 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
                     final Set<UUID> instanceUuids = atomicInstanceUuids.get();
                     final Map<UUID, Double> loadAverages = new HashMap<>();
                     for (UUID instanceUuid : instanceUuids) {
-                        // TODO: we need to perform the remote invocation against the InstanceMetadataContext, pointed
-                        //  to the correct instance by utilizing the given instanceUuid. For now, we just hardcode -1.
+                        synchronized (atomicRemoteInvocationDispatchers) {
+                            final Map<UUID, RemoteInvocationDispatcher> remoteInvocationDispatchers = atomicRemoteInvocationDispatchers.get();
+                            final RemoteInvocationDispatcher remoteInvocationDispatcher = remoteInvocationDispatchers.get(instanceUuid);
+                            remoteInvocationDispatcher.invokeAsync()
+                        }
+
                         // TODO: we need to try/catch the remote invocation and determine the right strategy, e.g. do
                         //  we record the load average for that instance as -1, or do nothing? What happens if we see
                         //  failures over a long period of time?
@@ -74,7 +80,8 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
 
     @Override
     public UUID getInstanceUuidByOptimalLoadAverage() {
-
+        // TODO: fill this out
+        return null;
     }
 
     @Override

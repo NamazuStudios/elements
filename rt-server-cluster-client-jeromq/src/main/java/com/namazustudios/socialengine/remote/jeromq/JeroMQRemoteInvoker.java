@@ -30,11 +30,6 @@ import static org.zeromq.ZMQ.SNDMORE;
 public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     /**
-     * The connect address for use with the {@link JeroMQRemoteInvoker}
-     */
-    public static final String CONNECT_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.connectAddress";
-
-    /**
      * Specifies an {@link ExecutorService} used to run the asynchronous tasks in the {@link RemoteInvoker}
      */
     public static final String ASYNC_EXECUTOR_SERVICE = "com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.executor";
@@ -42,6 +37,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
     private String connectAddress;
+
+    // TODO: set default timeout in env var/properties
+    private int timeoutMillis;
 
     private PayloadReader payloadReader;
 
@@ -52,9 +50,12 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     private ExecutorService executorService;
 
     @Override
-    public void start() {
+    public void start(String connectAddress, int timeoutMillis) {
+        this.connectAddress = connectAddress;
+        this.timeoutMillis = timeoutMillis;
         getConnectionPool().start(zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
+            socket.setReceiveTimeOut(getTimeoutMillis());
             socket.connect(getConnectAddress());
             return socket;
         }, JeroMQRemoteInvoker.class.getName());
@@ -63,6 +64,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @Override
     public void stop() {
         getConnectionPool().stop();
+        connectAddress = null;
     }
 
     @Override
@@ -334,9 +336,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         return connectAddress;
     }
 
-    @Inject
-    public void setConnectAddress(@Named(CONNECT_ADDRESS) String connectAddress) {
-        this.connectAddress = connectAddress;
+    public int getTimeoutMillis() {
+        return timeoutMillis;
     }
 
     public ConnectionPool getConnectionPool() {
@@ -424,7 +425,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             SYNC_RESULT,
             SYNC_ERROR,
             ASYNC_RESULT,
-            ASYNC_ERROR
+            ASYNC_ERROR,
+            TIMEOUT_ERROR,
         }
 
     }

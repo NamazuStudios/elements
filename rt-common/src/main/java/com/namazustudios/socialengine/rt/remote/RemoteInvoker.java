@@ -14,12 +14,15 @@ import static com.namazustudios.socialengine.rt.annotation.Dispatch.*;
  */
 public interface RemoteInvoker {
 
+    // TODO: load default timeout from env vars/properties
+    default void start(String connectAddress) { start(connectAddress, 5000); }
+
     /**
      * Starts up thin is complete.
      *
      * The default implementation of this method does nothing in case no setup is necessary.
      */
-    default void start() {}
+    default void start(String connectAddress, int timeoutMillis) {}
 
     /**
      * Stops this {@link RemoteInvoker}.  This method must gracefully shut down all connections and stop any worker
