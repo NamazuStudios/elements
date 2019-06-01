@@ -37,7 +37,7 @@ public class ProxyBuilder<ProxyT> {
         throw new NoSuchMethodError("No invocation handler for method: " + method);
     };
 
-    private String name;
+    private final String name;
 
     private final Class<ProxyT> interfaceClassT;
 
@@ -49,20 +49,19 @@ public class ProxyBuilder<ProxyT> {
      * @param interfaceClassT
      */
     public ProxyBuilder(final Class<ProxyT> interfaceClassT) {
-        this.interfaceClassT = interfaceClassT;
-        classLoader = interfaceClassT.getClassLoader();
+        this(interfaceClassT, null);
     }
 
     /**
-     * Specifies the name of the remote proxy to use.  Relates to {@link Invocation#getName()} and maps to the naming
-     * used in {@link javax.inject.Named}.
+     * Creates a {@link ProxyBuilder<ProxyT>} for the supplied interface type.
      *
-     * @param name the name of the remote proxy
-     * @return this instance
+     * @param interfaceClassT
+     * @param name Relates to {@link Invocation#getName()} and maps to the naming used in {@link javax.inject.Named}.
      */
-    public ProxyBuilder<ProxyT> withName(final String name) {
+    public ProxyBuilder(final Class<ProxyT> interfaceClassT, final String name) {
         this.name = name;
-        return this;
+        this.interfaceClassT = interfaceClassT;
+        classLoader = interfaceClassT.getClassLoader();
     }
 
     /**
