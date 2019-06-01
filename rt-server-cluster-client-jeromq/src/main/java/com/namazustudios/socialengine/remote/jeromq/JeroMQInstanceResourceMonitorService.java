@@ -4,10 +4,14 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.InstanceResourceMonitorService;
+import com.namazustudios.socialengine.rt.NodeMetadataContext;
+import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
-import com.namazustudios.socialengine.rt.remote.RemoteInvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.ProxyBuilder;
+import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
-import java.net.SocketTimeoutException;
+import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -19,6 +23,28 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
 
     // TODO: load expected size from properties
     private final AtomicReference<BiMap<UUID, Double>> atomicMostRecentLoadAverages = new AtomicReference<>(HashBiMap.create(16));
+
+    private Provider<RemoteInvoker> remoteInvokerProvider;
+    private Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider;
+
+    private void onInstanceConnected(final SrvUniqueIdentifier srvUniqueIdentifier, final UUID instanceUuid) {
+        final String connectAddress = "tcp://" + srvUniqueIdentifier.getHost() + ":" + srvUniqueIdentifier.getPort();
+        final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
+        // TODO: get the timeout millis from properties
+        remoteInvoker.start(connectAddress, 1000);
+
+        final ProxyBuilder<InstanceMetadataContext> instanceMetadataContextProxyBuilder = getInstanceMetadataContextProxyBuilderProvider().get();
+        final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder.withRemoteInvoker(remoteInvoker);
+
+        synchronized (atomicInstanceMetadataContexts) {
+            final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
+            instanceMetadataContexts.put(instanceUuid, instanceMetadataContext);
+        }
+    }
+
+    private void onInstanceDisconnected(final SrvUniqueIdentifier srvUniqueIdentifier, final UUID instanceUuid) {
+
+    }
 
     // TODO: we need to manually remove kv-pairs from the most recent load averages whenever an instance goes offline,
     //  otherwise it will stick around forever and therefore would be considered a viable candidate destination for
@@ -141,4 +167,21 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
         return isRunning;
     }
 
+    public Provider<RemoteInvoker> getRemoteInvokerProvider() {
+        return remoteInvokerProvider;
+    }
+
+    @Inject
+    public void setRemoteInvokerProvider(Provider<RemoteInvoker> remoteInvokerProvider) {
+        this.remoteInvokerProvider = remoteInvokerProvider;
+    }
+
+    public Provider<ProxyBuilder<InstanceMetadataContext>> getInstanceMetadataContextProxyBuilderProvider() {
+        return instanceMetadataContextProxyBuilderProvider;
+    }
+
+    @Inject
+    public void setInstanceMetadataContextProxyBuilderProvider(Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider) {
+        this.instanceMetadataContextProxyBuilderProvider = instanceMetadataContextProxyBuilderProvider;
+    }
 }
