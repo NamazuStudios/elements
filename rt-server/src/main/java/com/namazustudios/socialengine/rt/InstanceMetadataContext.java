@@ -11,11 +11,12 @@ import java.util.UUID;
  */
 @Proxyable
 public interface InstanceMetadataContext {
-    @RemotelyInvokable(AddressedRoutingStrategy.class)
     UUID getInstanceUuid();
 
+    NodeId getInstanceNodeId();
+
     @RemotelyInvokable(AddressedRoutingStrategy.class)
-    Set<NodeId> getAllNodeIds();
+    Set<NodeId> getApplicationNodeIds();
 
     @RemotelyInvokable(AddressedRoutingStrategy.class)
     double getLoadAverage();
