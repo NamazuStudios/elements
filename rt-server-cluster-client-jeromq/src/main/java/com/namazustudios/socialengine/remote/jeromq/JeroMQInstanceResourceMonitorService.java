@@ -2,10 +2,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.namazustudios.socialengine.rt.InstanceMetadataContext;
-import com.namazustudios.socialengine.rt.InstanceResourceMonitorService;
-import com.namazustudios.socialengine.rt.NodeMetadataContext;
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import com.namazustudios.socialengine.rt.remote.ProxyBuilder;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
@@ -29,8 +26,9 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
     private Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider;
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
-    private void onInstanceConnected(final UUID instanceUuid) {
-        final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(instanceUuid);
+    public void onInstanceConnected(final UUID instanceUuid) {
+        final NodeId instanceNodeId = new NodeId(instanceUuid, null);
+        final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(instanceNodeId);
         final ProxyBuilder<InstanceMetadataContext> instanceMetadataContextProxyBuilder = getInstanceMetadataContextProxyBuilderProvider().get();
         final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder
                 .withHandlersForRemoteInvoker(remoteInvoker)
@@ -42,13 +40,14 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
         }
     }
 
-    private void onInstanceDisconnected(final SrvUniqueIdentifier srvUniqueIdentifier, final UUID instanceUuid) {
-
+    public void onInstanceDisconnected(final UUID instanceUuid) {
+        synchronized (atomicInstanceMetadataContexts) {
+            final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
+            if (instanceUuid != null) {
+                instanceMetadataContexts.remove(instanceUuid);
+            }
+        }
     }
-
-    // TODO: we need to manually remove kv-pairs from the most recent load averages whenever an instance goes offline,
-    //  otherwise it will stick around forever and therefore would be considered a viable candidate destination for
-    //  "ANY" routing.
 
     @Override
     public void start(long refreshRateMillis) {
@@ -94,7 +93,7 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
                      * until we do another round of polling.
                      *
                      * TODO: We could do some optimizations here, e.g. trying to parallelize all the getLoadAverage()
-                     *  calls (see note above).
+                     *  calls (see note above). Right now this is a naive implementation.
                      */
                     Thread.sleep(refreshRateMillis);
                     isRunning = atomicIsRunning.get();
