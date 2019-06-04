@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -25,6 +26,8 @@ public class MultiNodeContainer implements AutoCloseable {
     private static final Logger logger = LoggerFactory.getLogger(MultiNodeContainer.class);
 
     private Set<Node> nodeSet;
+
+    private Node masterNode;
 
     private ConnectionService connectionService;
 
@@ -58,6 +61,19 @@ public class MultiNodeContainer implements AutoCloseable {
             }
         }).filter(ex -> ex != null).collect(toList()));
 
+        try {
+            getMasterNode().start();
+
+            // for now, by convention we use the instance uuid for the inproc address for the master node
+            final UUID inprocIdentifier = getMasterNode().getNodeId().getInstanceUuid();
+
+            getConnectionService().issueConnectInprocCommand(null, inprocIdentifier);
+        }
+        catch (Exception e) {
+            logger.error("Error stopping node.", e);
+            exceptionList.add(e);
+        }
+
         if (!exceptionList.isEmpty()) {
             throw new MultiException(exceptionList);
         }
@@ -75,10 +91,18 @@ public class MultiNodeContainer implements AutoCloseable {
                 node.stop();
                 return null;
             } catch (Exception ex) {
-                logger.error("Error starting node.", ex);
+                logger.error("Error stopping node.", ex);
                 return ex;
             }
         }).filter(ex -> ex != null).collect(toList());
+
+        try {
+            getMasterNode().stop();
+        }
+        catch (Exception e) {
+            logger.error("Error stopping master node.", e);
+            exceptionList.add(e);
+        }
 
         try {
             getConnectionService().stop();
@@ -108,5 +132,14 @@ public class MultiNodeContainer implements AutoCloseable {
     @Inject
     public void setConnectionService(ConnectionService connectionService) {
         this.connectionService = connectionService;
+    }
+
+    public Node getMasterNode() {
+        return masterNode;
+    }
+
+    @Inject
+    public void setMasterNode(@Named("MASTER_NODE") Node masterNode) {
+        this.masterNode = masterNode;
     }
 }

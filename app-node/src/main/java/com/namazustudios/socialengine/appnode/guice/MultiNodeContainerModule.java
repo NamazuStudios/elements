@@ -8,9 +8,7 @@ import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQInstanceMetadataContext;
-import com.namazustudios.socialengine.rt.InstanceMetadataContext;
-import com.namazustudios.socialengine.rt.MultiNodeContainer;
-import com.namazustudios.socialengine.rt.Node;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
@@ -18,7 +16,6 @@ import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZContext;
 
 import java.io.File;
 import java.util.LinkedHashSet;
@@ -31,6 +28,7 @@ import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
 public class MultiNodeContainerModule extends AbstractModule {
+    public static final String MASTER_NODE = "MASTER_NODE";
 
     private static final Logger logger = LoggerFactory.getLogger(MultiNodeContainerModule.class);
 
@@ -56,6 +54,24 @@ public class MultiNodeContainerModule extends AbstractModule {
             .toProvider(nodeProvider())
             .asEagerSingleton();
 
+        bind(Node.class)
+            .annotatedWith(named(MASTER_NODE))
+            .toProvider(masterNodeProvider());
+
+        bind(InstanceUuidProvider.class)
+            .to(FromDiskInstanceUuidProvider.class)
+            .asEagerSingleton();
+    }
+
+    private Provider<Node> masterNodeProvider() {
+        final Provider<Injector> injectorProvider = getProvider(Injector.class);
+
+        return () -> {
+            final Injector injector = injectorProvider.get();
+            final Injector masterNodeInjector = injector.createChildInjector(new MasterNodeModule());
+            final Node masterNode = masterNodeInjector.getInstance(Node.class);
+            return masterNode;
+        };
     }
 
     private Provider<Set<Node>> nodeProvider() {

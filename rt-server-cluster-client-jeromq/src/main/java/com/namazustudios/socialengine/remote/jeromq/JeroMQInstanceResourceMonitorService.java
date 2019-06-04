@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
 import com.namazustudios.socialengine.rt.remote.ProxyBuilder;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
+import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -26,15 +27,14 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
 
     private Provider<RemoteInvoker> remoteInvokerProvider;
     private Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider;
+    private RemoteInvokerRegistry remoteInvokerRegistry;
 
-    private void onInstanceConnected(final SrvUniqueIdentifier srvUniqueIdentifier, final UUID instanceUuid) {
-        final String connectAddress = "tcp://" + srvUniqueIdentifier.getHost() + ":" + srvUniqueIdentifier.getPort();
-        final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-        // TODO: get the timeout millis from properties
-        remoteInvoker.start(connectAddress, 1000);
-
+    private void onInstanceConnected(final UUID instanceUuid) {
+        final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(instanceUuid);
         final ProxyBuilder<InstanceMetadataContext> instanceMetadataContextProxyBuilder = getInstanceMetadataContextProxyBuilderProvider().get();
-        final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder.withRemoteInvoker(remoteInvoker);
+        final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder
+                .withHandlersForRemoteInvoker(remoteInvoker)
+                .build();
 
         synchronized (atomicInstanceMetadataContexts) {
             final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
@@ -183,5 +183,14 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
     @Inject
     public void setInstanceMetadataContextProxyBuilderProvider(Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider) {
         this.instanceMetadataContextProxyBuilderProvider = instanceMetadataContextProxyBuilderProvider;
+    }
+
+    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
+        return remoteInvokerRegistry;
+    }
+
+    @Inject
+    public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
+        this.remoteInvokerRegistry = remoteInvokerRegistry;
     }
 }
