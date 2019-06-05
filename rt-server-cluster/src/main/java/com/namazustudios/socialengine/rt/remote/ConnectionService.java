@@ -14,6 +14,8 @@ import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.DIS
 
 public interface ConnectionService {
 
+    String getControlAddress();
+
     /**
      * Starts the service.
      */

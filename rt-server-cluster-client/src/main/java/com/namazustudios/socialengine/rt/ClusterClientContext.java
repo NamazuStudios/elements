@@ -6,8 +6,6 @@ import javax.inject.Inject;
 
 public class ClusterClientContext implements Context {
 
-    private RemoteInvoker remoteInvoker;
-
     private ResourceContext resourceContext;
 
     private IndexContext indexContext;
@@ -18,21 +16,11 @@ public class ClusterClientContext implements Context {
 
     @Override
     public void start() {
-        getRemoteInvoker().start();
     }
 
     @Override
     public void shutdown() {
-        getRemoteInvoker().stop();
-    }
 
-    public RemoteInvoker getRemoteInvoker() {
-        return remoteInvoker;
-    }
-
-    @Inject
-    public void setRemoteInvoker(RemoteInvoker remoteInvoker) {
-        this.remoteInvoker = remoteInvoker;
     }
 
     @Override

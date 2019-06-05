@@ -128,7 +128,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         bindExecutorServiceAction.run();
         bindTimeoutAction.run();
 
-        bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class).asEagerSingleton();
+        bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class);
         bind(ConnectionPool.class).to(SimpleConnectionPool.class);
 
         expose(RemoteInvoker.class);

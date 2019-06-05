@@ -1,76 +1,187 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
+import com.google.common.collect.Maps;
+import com.namazustudios.socialengine.rt.NodeId;
+import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
+import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
-import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
 public class JeroMQRemoteInvokerRegistry implements RemoteInvokerRegistry {
-    private final AtomicReference<Map<Object, RemoteInvoker>> atomicRemoteInvokerMapReference = new AtomicReference<>(new HashMap<>());
+    private final AtomicReference<Map<NodeId, RemoteInvoker>> atomicInstanceRemoteInvokersReference = new AtomicReference<>(new HashMap<>());
+    private final AtomicReference<Map<NodeId, RemoteInvoker>> atomicApplicationRemoteInvokersReference = new AtomicReference<>(new HashMap<>());
 
-    private SrvMonitorService srvMonitorService;
+    private Provider<RemoteInvoker> remoteInvokerProvider;
 
+    private ConnectionService connectionService;
 
-    private void registerAsSrvMonitorListener() {
-        srvMonitorService.registerOnCreatedSrvRecordListener((srvRecord -> {
-            // 1) get the advertised addr from the app node listed in the srv record,
-            // 2) create remote invoker from guice, and then
-            // 3) call registerRemoteInvoker()
-        }));
+    public void onInstanceConnected(final UUID instanceUuid) {
+        final NodeId instanceNodeId = new NodeId(instanceUuid, null);
 
-        srvMonitorService.registerOnUpdatedSrvRecordListener((srvRecord -> {
-            // unused for now
-        }));
-
-        srvMonitorService.registerOnDeletedSrvRecordListener((srvRecord -> {
-            //
-        }));
-    }
-
-    private void registerRemoteInvoker(Object address, RemoteInvoker remoteInvoker) {
-        final Map<Object, RemoteInvoker> remoteInvokerMap = atomicRemoteInvokerMapReference.get();
-        remoteInvokerMap.put(address, remoteInvoker);
-    }
-
-    private boolean unregisterRemoteInvoker(Object address) {
-        final Map<Object, RemoteInvoker> remoteInvokerMap = atomicRemoteInvokerMapReference.get();
-        if (remoteInvokerMap.containsKey(address)) {
-            remoteInvokerMap.remove(address);
-            return true;
+        synchronized(atomicInstanceRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> instanceRemoteInvokers = atomicInstanceRemoteInvokersReference.get();
+            // only stand up/connect a remote invoker if necessary in case we accidentally are told an instance appeared twice (should not happen by contract)
+            instanceRemoteInvokers.computeIfAbsent(instanceNodeId, ini -> {
+                final RemoteInvoker instanceRemoteInvoker = getRemoteInvokerProvider().get();
+                final String connectAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(instanceNodeId);
+                instanceRemoteInvoker.start(connectAddress);
+                return instanceRemoteInvoker;
+            });
         }
-        else {
-            return false;
+    }
+
+    public void onInstanceDisconnected(final UUID instanceUuid) {
+        synchronized(atomicInstanceRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> remoteInvokers = atomicInstanceRemoteInvokersReference.get();
+            final NodeId instanceNodeId = new NodeId(instanceUuid, null);
+            final RemoteInvoker removedInstanceRemoteInvoker = remoteInvokers.remove(instanceNodeId);
+
+            if (removedInstanceRemoteInvoker != null) {
+                removedInstanceRemoteInvoker.stop();
+            }
+        }
+    }
+
+    public void onApplicationsAppeared(final UUID instanceUuid, final Set<UUID> applicationUuids) {
+        final List<NodeId> applicationNodeIds = applicationUuids
+                .stream()
+                .map(applicationUuid -> new NodeId(instanceUuid, applicationUuid))
+                .collect(Collectors.toList());
+
+        synchronized (atomicApplicationRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> applicationRemoteInvokers = atomicApplicationRemoteInvokersReference.get();
+
+            applicationNodeIds.forEach(applicationNodeId -> {
+                // only stand up/connect a remote invoker if necessary in case we accidentally are told an application appeared twice (should not happen by contract)
+                applicationRemoteInvokers.computeIfAbsent(applicationNodeId, ani -> {
+                    final RemoteInvoker applicationRemoteInvoker = getRemoteInvokerProvider().get();
+                    final String connectAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(applicationNodeId);
+                    applicationRemoteInvoker.start(connectAddress);
+                    return applicationRemoteInvoker;
+                });
+            });
+        }
+    }
+
+    public void onApplicationsDisappeared(final UUID instanceUuid, final Set<UUID> applicationUuids) {
+        final List<NodeId> applicationNodeIds = applicationUuids
+                .stream()
+                .map(applicationUuid -> new NodeId(instanceUuid, applicationUuid))
+                .collect(Collectors.toList());
+
+        synchronized (atomicApplicationRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> applicationRemoteInvokers = atomicApplicationRemoteInvokersReference.get();
+
+            final List<RemoteInvoker> removedApplicationRemoteInvokers = applicationNodeIds
+                    .stream()
+                    .map(applicationNodeId -> applicationRemoteInvokers.remove(applicationNodeId))
+                    .filter(removedApplicationRemoteInvoker -> removedApplicationRemoteInvoker != null)
+                    .collect(Collectors.toList());
+
+            removedApplicationRemoteInvokers.forEach(removedApplicationRemoteInvoker -> removedApplicationRemoteInvoker.stop());
         }
     }
 
     @Override
-    public RemoteInvoker getRemoteInvoker(Object address) {
-        final Map<Object, RemoteInvoker> remoteInvokerMap = atomicRemoteInvokerMapReference.get();
-        return remoteInvokerMap.get(address);
+    public RemoteInvoker getAnyInstanceRemoteInvoker() {
+        synchronized(atomicInstanceRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> instanceRemoteInvokers = atomicInstanceRemoteInvokersReference.get();
+            final Optional<RemoteInvoker> optionalRemoteInvoker = instanceRemoteInvokers
+                    .values()
+                    .stream()
+                    .skip((int) (instanceRemoteInvokers.size() * Math.random()))
+                    .findFirst();
+            if (optionalRemoteInvoker != null) {
+                return optionalRemoteInvoker.get();
+            }
+            else {
+                return null;
+            }
+        }
     }
 
     @Override
-    public Set<RemoteInvoker> getAllRemoteInvokers() {
-        final Map<Object, RemoteInvoker> remoteInvokerMap = atomicRemoteInvokerMapReference.get();
-        final Set<RemoteInvoker> remoteInvokers = remoteInvokerMap.values().stream().collect(Collectors.toSet());
-        return remoteInvokers;
+    public RemoteInvoker getAnyApplicationRemoteInvoker() {
+        synchronized(atomicApplicationRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> applicationRemoteInvokers = atomicApplicationRemoteInvokersReference.get();
+            final Optional<RemoteInvoker> optionalRemoteInvoker = applicationRemoteInvokers
+                    .values()
+                    .stream()
+                    .skip((int) (applicationRemoteInvokers.size() * Math.random()))
+                    .findFirst();
+            if (optionalRemoteInvoker != null) {
+                return optionalRemoteInvoker.get();
+            }
+            else {
+                return null;
+            }
+        }
     }
 
-    public SrvMonitorService getSrvMonitorService() {
-        return srvMonitorService;
+    @Override
+    public RemoteInvoker getRemoteInvoker(NodeId nodeId) {
+        RemoteInvoker remoteInvoker = getApplicationRemoteInvoker(nodeId);
+
+        if (remoteInvoker == null) {
+            remoteInvoker = getInstanceRemoteInvoker(nodeId);
+        }
+
+        return remoteInvoker;
+    }
+
+    @Override
+    public RemoteInvoker getInstanceRemoteInvoker(NodeId nodeId) {
+        synchronized(atomicInstanceRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> instanceRemoteInvokers = atomicInstanceRemoteInvokersReference.get();
+            return instanceRemoteInvokers.get(nodeId);
+        }
+    }
+
+    @Override
+    public RemoteInvoker getApplicationRemoteInvoker(NodeId nodeId) {
+        synchronized(atomicApplicationRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> applicationRemoteInvokers = atomicApplicationRemoteInvokersReference.get();
+            return applicationRemoteInvokers.get(nodeId);
+        }
+    }
+
+    @Override
+    public Set<RemoteInvoker> getAllInstanceRemoteInvokers() {
+        synchronized(atomicInstanceRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> instanceRemoteInvokers = atomicInstanceRemoteInvokersReference.get();
+            return instanceRemoteInvokers.values().stream().collect(Collectors.toSet());
+        }
+    }
+
+    @Override
+    public Set<RemoteInvoker> getAllApplicationRemoteInvokers() {
+        synchronized(atomicApplicationRemoteInvokersReference) {
+            final Map<NodeId, RemoteInvoker> applicationRemoteInvokers = atomicApplicationRemoteInvokersReference.get();
+            return applicationRemoteInvokers.values().stream().collect(Collectors.toSet());
+        }
+    }
+
+    public Provider<RemoteInvoker> getRemoteInvokerProvider() {
+        return remoteInvokerProvider;
     }
 
     @Inject
-    public void setSrvMonitorService(SrvMonitorService srvMonitorService) {
-        this.srvMonitorService = srvMonitorService;
+    public void setRemoteInvokerProvider(Provider<RemoteInvoker> remoteInvokerProvider) {
+        this.remoteInvokerProvider = remoteInvokerProvider;
+    }
 
-        if (this.srvMonitorService != null) {
-            registerAsSrvMonitorListener();
-        }
+    public ConnectionService getConnectionService() {
+        return connectionService;
+    }
+
+    @Inject
+    public void setConnectionService(ConnectionService connectionService) {
+        this.connectionService = connectionService;
     }
 }
