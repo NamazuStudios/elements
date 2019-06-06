@@ -20,7 +20,7 @@ import java.util.UUID;
  * given string of that form.
  *
  */
-public class NodeId implements Serializable, AddressAliasProvider {
+public class NodeId implements Serializable, NetworkAddressor {
 
     /**
      * Should not conflict with {@link ResourceId#ID_SEPARATOR}.
@@ -103,9 +103,5 @@ public class NodeId implements Serializable, AddressAliasProvider {
 
     public UUID getApplicationUuid() {
         return applicationUuid;
-    }
-
-    public UUID getAddressAlias() {
-        return instanceUuid;
     }
 }

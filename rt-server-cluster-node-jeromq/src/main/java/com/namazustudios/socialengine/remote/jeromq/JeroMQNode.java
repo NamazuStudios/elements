@@ -89,9 +89,17 @@ public class JeroMQNode implements Node {
     }
 
     private void buildNodeIdIfPossible() {
-        if (getInstanceUuidProvider() != null && getName() != null) {
+        // name may be null, which signifies that the node is the master node
+        if (getInstanceUuidProvider() != null) {
             final UUID instanceUuid = getInstanceUuidProvider().get();
-            final UUID nodeUuid = nameUUIDFromBytes(getName().getBytes(UTF_8));
+            final UUID nodeUuid;
+            if (getName() != null) {
+                nodeUuid = nameUUIDFromBytes(getName().getBytes(UTF_8));
+            }
+            else {
+                nodeUuid = null;
+            }
+
             nodeId = new NodeId(instanceUuid, nodeUuid);
         }
     }

@@ -34,11 +34,6 @@ public class SimpleNodeMetadataContext implements NodeMetadataContext {
         return getResourceService().getInMemoryResourceCount();
     }
 
-    @Override
-    public double getLoadAverage() {
-        return loadMonitorService.getLoadAverage();
-    }
-
 
     public LoadMonitorService getLoadMonitorService() {
         return loadMonitorService;
