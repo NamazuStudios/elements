@@ -25,12 +25,11 @@ import java.util.UUID;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
 import static com.namazustudios.socialengine.rt.Node.LOCAL_INSTANCE_ID;
+import static com.namazustudios.socialengine.rt.Node.MASTER_NODE;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
 public class MultiNodeContainerModule extends AbstractModule {
-    public static final String MASTER_NODE = "MASTER_NODE";
-
     private static final Logger logger = LoggerFactory.getLogger(MultiNodeContainerModule.class);
 
     @Override

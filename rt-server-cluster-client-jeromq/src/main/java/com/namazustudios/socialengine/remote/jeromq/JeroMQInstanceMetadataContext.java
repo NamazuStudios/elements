@@ -56,9 +56,6 @@ public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
     }
 
     @Inject
-    /**
-     * TODO: make sure this injection pattern is fine (borrowed from {@link com.namazustudios.socialengine.rt.MultiNodeContainer})
-     */
     public void setNodeSet(Set<Node> nodeSet) {
         this.nodeSet = nodeSet;
     }
