@@ -245,6 +245,15 @@ public class MessageManager implements AutoCloseable {
 
         final MessageManagerConfiguration.Strategy strategy = messageManagerConfiguration.getStrategy();
 
+        // TODO:
+        //  1) we need to have a tcp->instance uuid registry
+        //  2) we get instance uuid from the given tcpAddr
+        //  3) we build nodeid accordingly
+        //  alternatively.... we just transmit the full nodeid string in the RoutingCommand, and parse it here. when the
+        //  routingcommand is going to be transmitted, we look at the instance uuid of the destination for a given nodeid,
+        //  look up the tcpAddr at that time, and then stringify the nodeid when we pass it into the routing command builder.
+        //  we could also utilize this approach to see if the instanceuuid == local instance uuid and then invoke locally if so
+
         switch (strategy) {
             case MULTIPLEX:
                 inprocAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
@@ -295,6 +304,8 @@ public class MessageManager implements AutoCloseable {
         final String inprocAddress;
 
         final MessageManagerConfiguration.Strategy strategy = messageManagerConfiguration.getStrategy();
+
+        // TODO: see the notes above in connectToInprocAddress
 
         switch (strategy) {
             case MULTIPLEX:

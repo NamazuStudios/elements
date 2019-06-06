@@ -4,14 +4,18 @@ import com.google.inject.Injector;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.UUID;
 import java.util.function.Function;
+
+import static com.namazustudios.socialengine.rt.Node.LOCAL_INSTANCE_ID;
 
 public class RTContextProvider implements Provider<Function<String, Context>> {
 
@@ -20,6 +24,8 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
     private Provider<ConnectionService> connectionServiceProvider;
 
     private Provider<ApplicationDao> applicationDaoProvider;
+
+    private UUID instanceUuid;
 
     @Override
     public Function<String, Context> get() {
@@ -30,8 +36,9 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
 
             final ConnectionService connectionService = getConnectionServiceProvider().get();
 
-            final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(application.getId());
-            final String inprocMultiplexAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
+            final UUID applicationUuid = RouteRepresentationUtil.buildInprocIdentifierFromString(application.getId());
+            final NodeId nodeId = new NodeId(instanceUuid, applicationUuid);
+            final String inprocMultiplexAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(nodeId);
 
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
                 .withDefaultExecutorServiceProvider()
@@ -45,7 +52,7 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
 
             context.start();
 
-            connectionService.issueConnectInprocCommand("localhost", inprocIdentifier);
+            connectionService.issueConnectInprocCommand("localhost", nodeId);
 
             return context;
 
@@ -79,4 +86,13 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
         this.applicationDaoProvider = applicationDaoProvider;
     }
 
+    public UUID getInstanceUuid() {
+        return instanceUuid;
+    }
+
+    @Inject
+    @Named(LOCAL_INSTANCE_ID)
+    public void setInstanceUuid(UUID instanceUuid) {
+        this.instanceUuid = instanceUuid;
+    }
 }
