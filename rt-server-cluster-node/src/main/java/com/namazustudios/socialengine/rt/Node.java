@@ -7,6 +7,7 @@ package com.namazustudios.socialengine.rt;
  * Application logic execution.
  */
 public interface Node extends AutoCloseable {
+    String LOCAL_INSTANCE_ID = "LOCAL_INSTANCE_ID";
 
     NodeId getNodeId();
 

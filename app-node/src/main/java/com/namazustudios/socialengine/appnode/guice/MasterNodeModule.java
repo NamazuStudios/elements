@@ -16,10 +16,6 @@ public class MasterNodeModule extends AbstractModule {
     protected void configure() {
         install(new ZContextModule());
 
-        bind(InstanceUuidProvider.class)
-            .to(FromDiskInstanceUuidProvider.class)
-            .asEagerSingleton();
-
         bind(NodeLifecycle.class).to(ContextNodeLifecycle.class).asEagerSingleton();
         bind(InvocationDispatcher.class).to(ContextInvocationDispatcher.class);
     }

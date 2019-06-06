@@ -57,7 +57,7 @@ public class JeroMQNode implements Node {
 
     private final AtomicReference<NodeContext> nodeContext = new AtomicReference<>();
 
-    private InstanceUuidProvider instanceUuidProvider;
+    private UUID instanceUuid;
 
     private NodeId nodeId;
 
@@ -90,8 +90,8 @@ public class JeroMQNode implements Node {
 
     private void buildNodeIdIfPossible() {
         // name may be null, which signifies that the node is the master node
-        if (getInstanceUuidProvider() != null) {
-            final UUID instanceUuid = getInstanceUuidProvider().get();
+        if (getInstanceUuid() != null) {
+            final UUID instanceUuid = getInstanceUuid();
             final UUID nodeUuid;
             if (getName() != null) {
                 nodeUuid = nameUUIDFromBytes(getName().getBytes(UTF_8));
@@ -215,14 +215,14 @@ public class JeroMQNode implements Node {
                      .collect(Collectors.joining("."));
     }
 
-    public InstanceUuidProvider getInstanceUuidProvider() {
-        return instanceUuidProvider;
+    public UUID getInstanceUuid() {
+        return instanceUuid;
     }
 
     @Inject
-    public void setInstanceUuidProvider(InstanceUuidProvider instanceUuidProvider) {
-        this.instanceUuidProvider = instanceUuidProvider;
-        buildNodeIdIfPossible();
+    @Named(LOCAL_INSTANCE_ID)
+    public void setInstanceUuid(UUID instanceUuid) {
+        this.instanceUuid = instanceUuid;
     }
 
     private class NodeContext {

@@ -12,8 +12,6 @@ public class SimpleNodeMetadataContext implements NodeMetadataContext {
 
     private NodeId nodeId;
 
-    private InstanceUuidProvider instanceUuidProvider;
-
     @Override
     public void start() {
         getLoadMonitorService().start();
@@ -63,14 +61,5 @@ public class SimpleNodeMetadataContext implements NodeMetadataContext {
         if (node != null) {
             nodeId = node.getNodeId();
         }
-    }
-
-    public InstanceUuidProvider getInstanceUuidProvider() {
-        return instanceUuidProvider;
-    }
-
-    @Inject
-    public void setInstanceUuidProvider(InstanceUuidProvider instanceUuidProvider) {
-        this.instanceUuidProvider = instanceUuidProvider;
     }
 }
