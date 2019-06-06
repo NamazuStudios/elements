@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
+import static com.namazustudios.socialengine.rt.Node.MASTER_NODE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.stream.Collectors.toList;
@@ -139,7 +140,7 @@ public class MultiNodeContainer implements AutoCloseable {
     }
 
     @Inject
-    public void setMasterNode(@Named("MASTER_NODE") Node masterNode) {
+    public void setMasterNode(@Named(MASTER_NODE) Node masterNode) {
         this.masterNode = masterNode;
     }
 }
