@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.remote.PackedUUID;
 import javolution.io.Struct;
 
@@ -13,7 +14,7 @@ public class RoutingCommand extends Struct {
     public static RoutingCommand buildRoutingCommand(
             final Action action,
             final String tcpAddress,
-            final UUID inprocIdentifier
+            final NodeId nodeId
             ) {
         if (action == null) {
             throw new IllegalArgumentException("Action must not be null");
@@ -27,8 +28,8 @@ public class RoutingCommand extends Struct {
             routingCommand.tcpAddress.set(tcpAddress);
         }
 
-        if (inprocIdentifier != null) {
-            routingCommand.inprocIdentifier.set(inprocIdentifier);
+        if (nodeId != null && nodeId.getApplicationUuid() != null) {
+            routingCommand.inprocIdentifier.set(nodeId.getApplicationUuid());
         }
 
         return routingCommand;

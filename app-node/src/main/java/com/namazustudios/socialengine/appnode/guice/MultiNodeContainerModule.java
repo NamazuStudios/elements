@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
+import static com.namazustudios.socialengine.rt.Node.LOCAL_INSTANCE_ID;
 import static com.namazustudios.socialengine.rt.Node.MASTER_NODE;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
@@ -57,9 +58,9 @@ public class MultiNodeContainerModule extends AbstractModule {
             .annotatedWith(named(MASTER_NODE))
             .toProvider(masterNodeProvider());
 
-        bind(InstanceUuidProvider.class)
-            .to(FromDiskInstanceUuidProvider.class)
-            .asEagerSingleton();
+        bind(UUID.class)
+            .annotatedWith(named(LOCAL_INSTANCE_ID))
+            .toInstance(new FromDiskInstanceUuidProvider().get());
     }
 
     private Provider<Node> masterNodeProvider() {
@@ -80,6 +81,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         final Provider<GitLoader> gitLoaderProvider = getProvider(GitLoader.class);
         final Provider<ConnectionService> connectionServiceProvider = getProvider(ConnectionService.class);
         final Provider<File> resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
+        final Provider<UUID> instanceUuidProvider = getProvider(Key.get(UUID.class, named(LOCAL_INSTANCE_ID)));
 
         return () -> {
 
@@ -87,6 +89,7 @@ public class MultiNodeContainerModule extends AbstractModule {
             final Injector injector = injectorProvider.get();
             final GitLoader gitLoader = gitLoaderProvider.get();
             final ConnectionService connectionService = connectionServiceProvider.get();
+            final UUID instanceUuid = instanceUuidProvider.get();
 
             final Set<Node> nodeSet = applicationDao.getActiveApplications().getObjects().stream()
                 .map(application -> {
@@ -100,8 +103,10 @@ public class MultiNodeContainerModule extends AbstractModule {
                         return null;
                     }
 
-                    final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(application.getId());
-                    final String bindAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(inprocIdentifier);
+                    final UUID applicationUuid = RouteRepresentationUtil.buildInprocIdentifierFromString(application.getId());
+                    final NodeId nodeId = new NodeId(instanceUuid, applicationUuid);
+
+                    final String bindAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(nodeId);
 
                     final JeroMQNodeModule nodeModule = new JeroMQNodeModule()
                         .withBindAddress(bindAddress)

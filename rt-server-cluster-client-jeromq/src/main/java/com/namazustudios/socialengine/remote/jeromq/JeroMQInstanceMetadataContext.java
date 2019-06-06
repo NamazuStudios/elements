@@ -11,15 +11,11 @@ import java.util.stream.Collectors;
  * Provides data for an Instance.
  */
 public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
-    private InstanceUuidProvider instanceUuidProvider;
     private UUID instanceUuid;
     private NodeId instanceNodeId;
     private Set<Node> nodeSet;
     private LoadMonitorService loadMonitorService;
 
-    public UUID getInstanceUuid() {
-        return getInstanceUuidProvider().get();
-    }
 
     public Set<NodeId> getApplicationNodeIds() {
         return getNodeSet().stream().map(node -> node.getNodeId()).collect(Collectors.toSet());
@@ -29,23 +25,12 @@ public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
         return getLoadMonitorService().getLoadAverage();
     }
 
-    public InstanceUuidProvider getInstanceUuidProvider() {
-        return instanceUuidProvider;
+    public UUID getInstanceUuid() {
+        return instanceUuid;
     }
 
     @Inject
-    public void setInstanceUuidProvider(InstanceUuidProvider instanceUuidProvider) {
-        this.instanceUuidProvider = instanceUuidProvider;
-
-        if (instanceUuidProvider != null) {
-            setInstanceUuid(instanceUuidProvider.get());
-        }
-        else {
-            setInstanceUuid(null);
-        }
-    }
-
-    private void setInstanceUuid(UUID instanceUuid) {
+    public void setInstanceUuid(UUID instanceUuid) {
         this.instanceUuid = instanceUuid;
 
         if (instanceUuid != null) {

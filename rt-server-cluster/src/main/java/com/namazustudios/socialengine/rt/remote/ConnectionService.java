@@ -5,6 +5,8 @@ import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
+
+import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
 import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 
@@ -13,6 +15,8 @@ import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.*;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.DISCONNECT_TCP;
 
 public interface ConnectionService {
+
+    String getControlAddress();
 
     /**
      * Starts the service.
@@ -40,24 +44,24 @@ public interface ConnectionService {
         issueRoutingCommand(DISCONNECT_TCP, tcpAddress, null);
     }
 
-    default void issueBindInprocCommand(final String tcpAddress, final UUID inprocIdentifier) {
-        issueRoutingCommand(BIND_INPROC, tcpAddress, inprocIdentifier);
+    default void issueBindInprocCommand(final String tcpAddress, final NodeId nodeId) {
+        issueRoutingCommand(BIND_INPROC, tcpAddress, nodeId);
     }
 
-    default void issueUnbindInprocCommand(final String tcpAddress, final UUID inprocIdentifier) {
-        issueRoutingCommand(UNBIND_INPROC, tcpAddress, inprocIdentifier);
+    default void issueUnbindInprocCommand(final String tcpAddress, final NodeId nodeId) {
+        issueRoutingCommand(UNBIND_INPROC, tcpAddress, nodeId);
     }
 
-    default void issueConnectInprocCommand(final String tcpAddress, final UUID inprocIdentifier) {
-        issueRoutingCommand(CONNECT_INPROC, tcpAddress, inprocIdentifier);
+    default void issueConnectInprocCommand(final String tcpAddress, final NodeId nodeId) {
+        issueRoutingCommand(CONNECT_INPROC, tcpAddress, nodeId);
     }
 
-    default void issueDisconnectInprocCommand(final String tcpAddress, final UUID inprocIdentifier) {
-        issueRoutingCommand(DISCONNECT_INPROC, tcpAddress, inprocIdentifier);
+    default void issueDisconnectInprocCommand(final String tcpAddress, final NodeId nodeId) {
+        issueRoutingCommand(DISCONNECT_INPROC, tcpAddress, nodeId);
     }
 
-    default void issueRoutingCommand(final Action action, final String tcpAddress, final UUID inprocIdentifier) {
-        final RoutingCommand command = buildRoutingCommand(action, tcpAddress, inprocIdentifier);
+    default void issueRoutingCommand(final Action action, final String tcpAddress, final NodeId nodeId) {
+        final RoutingCommand command = buildRoutingCommand(action, tcpAddress, nodeId);
         issueRoutingCommand(command);
     }
 

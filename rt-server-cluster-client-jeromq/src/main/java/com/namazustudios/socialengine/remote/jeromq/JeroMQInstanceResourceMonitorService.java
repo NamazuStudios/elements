@@ -22,7 +22,6 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
     // TODO: load expected size from properties
     private final AtomicReference<BiMap<UUID, Double>> atomicMostRecentLoadAverages = new AtomicReference<>(HashBiMap.create(16));
 
-    private Provider<RemoteInvoker> remoteInvokerProvider;
     private Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider;
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
@@ -164,15 +163,6 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
     public boolean isRunning() {
         final boolean isRunning = atomicIsRunning.get();
         return isRunning;
-    }
-
-    public Provider<RemoteInvoker> getRemoteInvokerProvider() {
-        return remoteInvokerProvider;
-    }
-
-    @Inject
-    public void setRemoteInvokerProvider(Provider<RemoteInvoker> remoteInvokerProvider) {
-        this.remoteInvokerProvider = remoteInvokerProvider;
     }
 
     public Provider<ProxyBuilder<InstanceMetadataContext>> getInstanceMetadataContextProxyBuilderProvider() {

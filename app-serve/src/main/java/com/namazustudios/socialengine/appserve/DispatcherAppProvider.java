@@ -38,7 +38,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private static final String PATH_PREFIX = "app-serve";
     private static final String VERSION_PREFIX = "app-serve-version";
-    private static final String VERSION_ORIGIN_ID = "31a020f2-1df1-4b1a-8bc1-a50d2cabd823";
+    private static final String VERSION_ORIGIN_ID = "31a020f2-1df1-4b1a-8bc1-a50d2cabd823"; // TODO: do we need to worry abt uniqueness across instances?
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
 
@@ -110,9 +110,8 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
-                .withDefaultExecutorServiceProvider();
-// TODO Determine inproc:// address
-//                .withConnectAddress(connectAddress);
+                .withDefaultExecutorServiceProvider()
+                .withConnectAddress(getConnectionService().getControlAddress());
 
             return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
 
