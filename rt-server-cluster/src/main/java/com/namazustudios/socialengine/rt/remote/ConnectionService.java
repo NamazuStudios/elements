@@ -6,9 +6,9 @@ import java.util.UUID;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
 
+import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.buildRoutingCommand;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.*;
@@ -77,6 +77,6 @@ public interface ConnectionService {
      */
     void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer);
 
-    boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier);
-    boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier);
+    boolean connectToBackend(final HostAndPort hostAndPort);
+    boolean disconnectFromBackend(final HostAndPort hostAndPort);
 }

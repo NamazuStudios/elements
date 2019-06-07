@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.srv;
 
 import com.google.common.collect.ImmutableSet;
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
+import com.google.common.net.HostAndPort;
 import com.spotify.dns.*;
 
 import java.util.HashMap;
@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler, ChangeNotifier.Listener<LookupResult> {
@@ -18,9 +17,9 @@ public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler
     private String fqdn;
     private boolean monitoring = false;
 
-    private AtomicReference<Map<SrvUniqueIdentifier, SrvRecord>> atomicSrvRecordsReference = new AtomicReference<>(new HashMap<>());
+    private AtomicReference<Map<HostAndPort, SrvRecord>> atomicSrvRecords = new AtomicReference<>(new HashMap<>());
 
-    private AtomicReference<Set<SrvMonitorServiceListener>> atomicSrvMonitorServiceListenersReference = new AtomicReference<>(new HashSet<>());
+    private AtomicReference<Set<SrvMonitorServiceListener>> atomicSrvMonitorServiceListeners = new AtomicReference<>(new HashSet<>());
 
     private DnsSrvWatcher<LookupResult> watcher;
     private ChangeNotifier<LookupResult> notifier;
@@ -72,7 +71,7 @@ public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler
         DnsSrvResolver resolver = DnsSrvResolvers.newBuilder()
                 .cachingLookups(true)
                 .retainingDataOnFailures(true)  // TODO: we may erroneously assume torn-down instances still exist b/c of this,
-                                                // TODO: not sure how often a failure may occur or what exactly Spotify defines as a failure
+                                                //  not sure how often a failure may occur or what exactly Spotify defines as a failure
                 .dnsLookupTimeoutMillis(1000)   // TODO: load this from params
                 .build();
 
@@ -98,67 +97,71 @@ public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler
         watcher = null;
         notifier = null;
 
-        final Map<SrvUniqueIdentifier, SrvRecord> srvRecords = atomicSrvRecordsReference.get();
-        srvRecords.clear();
+        synchronized(atomicSrvRecords) {
+            final Map<HostAndPort, SrvRecord> srvRecords = atomicSrvRecords.get();
+            srvRecords.clear();
+        }
 
-        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListenersReference.get();
-        srvMonitorServiceListeners.clear();
+        synchronized(atomicSrvMonitorServiceListeners) {
+            final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListeners.get();
+            srvMonitorServiceListeners.clear();
+        }
     }
 
     @Override
     public void onChange(ChangeNotifier.ChangeNotification<LookupResult> changeNotification) {
-        final Set<SrvUniqueIdentifier> listedSrvUniqueIdentifiers = new HashSet<>();
-        final Map<SrvUniqueIdentifier, SrvRecord> srvRecords = atomicSrvRecordsReference.get();
+        synchronized (atomicSrvRecords) {
+            final Map<HostAndPort, SrvRecord> srvRecords = atomicSrvRecords.get();
+            final Set<HostAndPort> listedHostsAndPorts = new HashSet<>();
 
-        for (LookupResult lookupResult : changeNotification.current()) {
-            final SrvUniqueIdentifier srvUniqueIdentifier =
-                    new SrvUniqueIdentifier(lookupResult.host(), lookupResult.port());
-            listedSrvUniqueIdentifiers.add(srvUniqueIdentifier);
+            for (LookupResult lookupResult : changeNotification.current()) {
+                final HostAndPort hostAndPort = HostAndPort.fromParts(lookupResult.host(), lookupResult.port());
+                listedHostsAndPorts.add(hostAndPort);
 
-            if (srvRecords.containsKey(srvUniqueIdentifier)) {
-                final SrvRecord srvRecord = srvRecords.get(srvUniqueIdentifier);
-                boolean updated = srvRecord.updateFromLookupResultIfNecessary(lookupResult);
+                if (srvRecords.containsKey(hostAndPort)) {
+                    final SrvRecord srvRecord = srvRecords.get(hostAndPort);
+                    boolean updated = srvRecord.updateFromLookupResultIfNecessary(lookupResult);
 
-                if (updated) {
-                    notifyUpdateListeners(srvRecord);
+                    if (updated) {
+                        notifyUpdateListeners(srvRecord);
+                    }
+                }
+                else {
+                    final SrvRecord srvRecord = SrvRecord.createFromLookupResult(lookupResult);
+                    srvRecords.put(hostAndPort, srvRecord);
+
+                    notifyCreationListeners(srvRecord);
                 }
             }
-            else {
-                final SrvRecord srvRecord = SrvRecord.createFromLookupResult(lookupResult);
-                srvRecords.put(srvUniqueIdentifier, srvRecord);
 
-                notifyCreationListeners(srvRecord);
+            final Set<HostAndPort> delistedHostsAndPorts = new HashSet<>(srvRecords.keySet());
+            delistedHostsAndPorts.removeAll(listedHostsAndPorts);
+
+            for (HostAndPort delistedHostAndPort : delistedHostsAndPorts) {
+                final SrvRecord srvRecord = srvRecords.get(delistedHostAndPort);
+                srvRecords.remove(delistedHostAndPort);
+
+                notifyDeletionListeners(srvRecord);
             }
         }
-
-        final Set<SrvUniqueIdentifier> delistedSrvUniqueIdentifiers = new HashSet<>(srvRecords.keySet());
-        delistedSrvUniqueIdentifiers.removeAll(listedSrvUniqueIdentifiers);
-
-        for (SrvUniqueIdentifier delistedSrvUniqueIdentifier : delistedSrvUniqueIdentifiers) {
-            final SrvRecord srvRecord = srvRecords.get(delistedSrvUniqueIdentifier);
-            srvRecords.remove(delistedSrvUniqueIdentifier);
-
-            notifyDeletionListeners(srvRecord);
-        }
-
     }
 
     private void notifyCreationListeners(SrvRecord srvRecord) {
-        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListenersReference.get();
+        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListeners.get();
         for (SrvMonitorServiceListener srvMonitorServiceListener : srvMonitorServiceListeners) {
             srvMonitorServiceListener.onSrvRecordCreated(srvRecord);
         }
     }
 
     private void notifyUpdateListeners(SrvRecord srvRecord) {
-        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListenersReference.get();
+        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListeners.get();
         for (SrvMonitorServiceListener srvMonitorServiceListener : srvMonitorServiceListeners) {
             srvMonitorServiceListener.onSrvRecordUpdated(srvRecord);
         }
     }
 
     private void notifyDeletionListeners(SrvRecord srvRecord) {
-        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListenersReference.get();
+        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListeners.get();
         for (SrvMonitorServiceListener srvMonitorServiceListener : srvMonitorServiceListeners) {
             srvMonitorServiceListener.onSrvRecordDeleted(srvRecord);
         }
@@ -166,19 +169,19 @@ public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler
 
     @Override
     public void registerListener(SrvMonitorServiceListener listener) {
-        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListenersReference.get();
+        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListeners.get();
         srvMonitorServiceListeners.add(listener);
     }
 
     @Override
     public boolean unregisterListener(SrvMonitorServiceListener listener) {
-        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListenersReference.get();
+        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListeners.get();
         return srvMonitorServiceListeners.remove(listener);
     }
 
     @Override
     public Set<SrvMonitorServiceListener> getListeners() {
-        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListenersReference.get();
+        final Set<SrvMonitorServiceListener> srvMonitorServiceListeners = atomicSrvMonitorServiceListeners.get();
         return ImmutableSet.copyOf(srvMonitorServiceListeners);
     }
 
@@ -189,8 +192,8 @@ public class SpotifySrvMonitorService implements SrvMonitorService, ErrorHandler
 
     @Override
     public Set<SrvRecord> getSrvRecords() {
-        final Map<SrvUniqueIdentifier, SrvRecord> srvRecords = atomicSrvRecordsReference.get();
-        return ImmutableSet.copyOf(srvRecords.values());
+        final Map<HostAndPort, SrvRecord> srvRecords = atomicSrvRecords.get();
+        return srvRecords.values().stream().collect(Collectors.toSet());
     }
 
     public String getFqdn() {

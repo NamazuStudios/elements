@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.google.common.collect.Maps;
+import com.namazustudios.socialengine.rt.InstanceDiscoveryServiceListener;
 import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
@@ -13,7 +13,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-public class JeroMQRemoteInvokerRegistry implements RemoteInvokerRegistry {
+public class JeroMQRemoteInvokerRegistry implements RemoteInvokerRegistry, InstanceDiscoveryServiceListener {
     private final AtomicReference<Map<NodeId, RemoteInvoker>> atomicInstanceRemoteInvokersReference = new AtomicReference<>(new HashMap<>());
     private final AtomicReference<Map<NodeId, RemoteInvoker>> atomicApplicationRemoteInvokersReference = new AtomicReference<>(new HashMap<>());
 

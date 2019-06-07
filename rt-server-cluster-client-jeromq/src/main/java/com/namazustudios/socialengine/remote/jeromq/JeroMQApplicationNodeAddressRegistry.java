@@ -3,13 +3,13 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.google.common.collect.ImmutableSet;
-import com.namazustudios.socialengine.rt.Listenable;
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
+import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.remote.ApplicationNodeAddressRegistry;
 import com.namazustudios.socialengine.rt.remote.ApplicationNodeAddressRegistryListener;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorServiceListener;
 import com.namazustudios.socialengine.rt.srv.SrvRecord;
+import sun.security.krb5.internal.HostAddress;
 
 import javax.inject.Inject;
 import java.util.HashSet;
@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class JeroMQApplicationNodeAddressRegistry implements ApplicationNodeAddressRegistry, SrvMonitorServiceListener {
     // TODO: define expected size (i.e. expected number of application nodes in the network) in properties
-    private final AtomicReference<BiMap<Object, SrvUniqueIdentifier>> atomicAddressBiMapReference =
+    private final AtomicReference<BiMap<Object, HostAndPort>> atomicAddressBiMapReference =
             new AtomicReference<>(HashBiMap.create(16));
 
     private final AtomicReference<Set<ApplicationNodeAddressRegistryListener>>
@@ -28,26 +28,26 @@ public class JeroMQApplicationNodeAddressRegistry implements ApplicationNodeAddr
 
 
     @Override
-    public Object getAddressForSrvUniqueIdentifier(SrvUniqueIdentifier srvUniqueIdentifier) {
-        BiMap<Object, SrvUniqueIdentifier> addressBiMap = atomicAddressBiMapReference.get();
-        return addressBiMap.inverse().get(srvUniqueIdentifier);
+    public Object getAddressForHostAndPort(HostAndPort hostAndPort) {
+        BiMap<Object, HostAndPort> addressBiMap = atomicAddressBiMapReference.get();
+        return addressBiMap.inverse().get(hostAndPort);
     }
 
     @Override
-    public SrvUniqueIdentifier getSrvUniqueIdentifierForAddress(Object address) {
-        BiMap<Object, SrvUniqueIdentifier> addressBiMap = atomicAddressBiMapReference.get();
+    public HostAndPort getHostAndPortForAddress(Object address) {
+        BiMap<Object, HostAndPort> addressBiMap = atomicAddressBiMapReference.get();
         return addressBiMap.get(address);
     }
 
     @Override
     public Set<Object> getAllAddresses() {
-        BiMap<Object, SrvUniqueIdentifier> addressBiMap = atomicAddressBiMapReference.get();
+        BiMap<Object, HostAndPort> addressBiMap = atomicAddressBiMapReference.get();
         return ImmutableSet.copyOf(addressBiMap.keySet());
     }
 
     @Override
-    public Set<SrvUniqueIdentifier> getAllSrvUniqueIdentifiers() {
-        BiMap<Object, SrvUniqueIdentifier> addressBiMap = atomicAddressBiMapReference.get();
+    public Set<HostAndPort> getAllHostsAndPorts() {
+        BiMap<Object, HostAndPort> addressBiMap = atomicAddressBiMapReference.get();
         return ImmutableSet.copyOf(addressBiMap.values());
     }
 

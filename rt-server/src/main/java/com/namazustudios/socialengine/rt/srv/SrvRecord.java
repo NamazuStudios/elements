@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.srv;
 
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
+import com.google.common.net.HostAndPort;
 import com.spotify.dns.LookupResult;
 
 import java.util.Objects;
@@ -102,8 +102,8 @@ public class SrvRecord {
         this.ttl = ttl;
     }
 
-    public SrvUniqueIdentifier getUniqueIdentifier() {
-        return new SrvUniqueIdentifier(getHost(), getPort());
+    public HostAndPort getUniqueIdentifier() {
+        return HostAndPort.fromParts(getHost(), getPort());
     }
 
     @Override

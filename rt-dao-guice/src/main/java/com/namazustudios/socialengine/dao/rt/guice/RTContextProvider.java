@@ -15,7 +15,7 @@ import javax.inject.Provider;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static com.namazustudios.socialengine.rt.Node.LOCAL_INSTANCE_ID;
+import static com.namazustudios.socialengine.rt.Node.LOCAL_INSTANCE_UUID_NAME;
 
 public class RTContextProvider implements Provider<Function<String, Context>> {
 
@@ -91,7 +91,7 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
     }
 
     @Inject
-    @Named(LOCAL_INSTANCE_ID)
+    @Named(LOCAL_INSTANCE_UUID_NAME)
     public void setInstanceUuid(UUID instanceUuid) {
         this.instanceUuid = instanceUuid;
     }
