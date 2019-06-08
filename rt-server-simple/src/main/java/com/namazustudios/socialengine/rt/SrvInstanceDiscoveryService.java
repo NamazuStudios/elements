@@ -20,7 +20,8 @@ public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, Sr
     }
 
     public void onSrvRecordCreated(SrvRecord srvRecord) {
-        // TODO: for now, we should 
+        // TODO: for now, we should connect, look to see if the status response's instance uuid matches local instance
+        //  uuid, and then disconnect if so and record the hostname. 
         getConnectionService().connectToBackend(srvRecord.getHostAndPort());
     }
 
