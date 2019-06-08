@@ -15,6 +15,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.Constants.BIND_PORT_NAME;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
@@ -27,7 +28,6 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexedConnectionService.class);
 
-    public static final String BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.bindPort";
     public static final String CONTROL_BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindPort";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.applicationNodeFqdn";
 
@@ -96,7 +96,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 //                return; // then ignore it and do not connect
 //            }
 //
-//            final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
+//            final boolean didIssueCommand = connectToBackend(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
@@ -121,7 +121,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 //                return; // then ignore it and do not issue unnecessary disconnect command
 //            }
 //
-//            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getUniqueIdentifier());
+//            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
@@ -218,7 +218,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     }
 
     @Inject
-    public void setBindPort(@Named(BIND_PORT) Integer bindPort) {
+    public void setBindPort(@Named(BIND_PORT_NAME) Integer bindPort) {
         this.bindPort = bindPort;
     }
 

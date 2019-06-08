@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.rt.guice;
 
+import com.google.inject.Inject;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.dao.ContextFactory;
@@ -9,19 +10,22 @@ import com.namazustudios.socialengine.dao.rt.RTManifestDao;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQInstanceMetadataContext;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQMultiplexedConnectionService;
-import com.namazustudios.socialengine.rt.InstanceMetadataContext;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
-import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import org.zeromq.ZContext;
 
+import javax.inject.Named;
 import java.util.function.Function;
+
+import static com.namazustudios.socialengine.rt.Constants.IS_LOCAL_ENVIRONMENT_NAME;
 
 /**
  * Created by patricktwohig on 8/22/17.
  */
 public class RTDaoModule extends PrivateModule {
+    private boolean isLocalInstance;
 
     @Override
     protected void configure() {
@@ -42,6 +46,25 @@ public class RTDaoModule extends PrivateModule {
         bind(ContextFactory.class).to(DefaultContextFactory.class).asEagerSingleton();
         bind(new TypeLiteral<Function<String, Context>>(){}).toProvider(RTContextProvider.class);
 
+        if (isLocalInstance) {
+            bind(InstanceDiscoveryService.class)
+                    .to(StaticInstanceDiscoveryService.class)
+                    .asEagerSingleton();
+        }
+        else {
+            bind(InstanceDiscoveryService.class)
+                    .to(SrvInstanceDiscoveryService.class)
+                    .asEagerSingleton();
+        }
     }
 
+    public boolean getLocalInstance() {
+        return isLocalInstance;
+    }
+
+    @Inject
+    @Named(IS_LOCAL_ENVIRONMENT_NAME)
+    public void setLocalInstance(boolean localInstance) {
+        isLocalInstance = localInstance;
+    }
 }

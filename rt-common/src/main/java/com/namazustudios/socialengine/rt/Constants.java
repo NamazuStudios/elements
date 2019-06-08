@@ -62,4 +62,18 @@ public interface Constants {
      */
     String SCHEDULER_THREADS = "com.namazustudios.socialengine.rt.scheduler.threads";
 
+    /**
+     * Whether or not the environment is local.
+     */
+    String IS_LOCAL_ENVIRONMENT_NAME = "com.namazustudios.socialengine.rt.is_local_environment";
+
+    String LOCAL_INSTANCE_CONNECT_PORTS_NAME = "com.namazustudios.socialengine.rt.local_instance_connect_ports";
+
+    String LOCAL_INSTANCE_CONTROL_PORTS_NAME = "com.namazustudios.socialengine.rt.local_instance_control_ports";
+
+    // NOTE: this may be null for a process with client-only responsibilities (this is necessary for the instance
+    //  discovery service, which may be used by a process that has a tcp binding, or by a pure client process)
+    String BIND_PORT_NAME = "com.namazustudios.socialengine.rt.bind_port";
+
+    String BIND_CONTROL_PORT_NAME = "com.namazustudios.socialengine.rt.bind_control_port";
 }

@@ -3,7 +3,7 @@ import static com.namazustudios.socialengine.rt.Listenable.Listener;
 
 import java.util.UUID;
 
-public interface InstanceDiscoveryServiceListener extends Listener {
+public interface InstanceConnectionMonitorServiceListener extends Listener {
     default void onInstanceConnected(UUID instanceUuid) {}
     default void onInstanceDisconnected(UUID instanceUuid) {}
 }

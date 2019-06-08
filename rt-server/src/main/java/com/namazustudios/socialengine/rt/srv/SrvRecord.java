@@ -102,7 +102,7 @@ public class SrvRecord {
         this.ttl = ttl;
     }
 
-    public HostAndPort getUniqueIdentifier() {
+    public HostAndPort getHostAndPort() {
         return HostAndPort.fromParts(getHost(), getPort());
     }
 

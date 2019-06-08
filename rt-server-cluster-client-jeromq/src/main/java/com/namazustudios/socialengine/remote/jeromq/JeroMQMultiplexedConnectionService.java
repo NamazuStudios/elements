@@ -71,7 +71,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
 //        srvMonitorService.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
 //            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-//            final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
+//            final boolean didIssueCommand = connectToBackend(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
@@ -90,7 +90,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 //            logger.info("Detected App Node SRV record deletion: host={} port={}",
 //                    srvRecord.getHost(), srvRecord.getPort());
 //
-//            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getUniqueIdentifier());
+//            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());

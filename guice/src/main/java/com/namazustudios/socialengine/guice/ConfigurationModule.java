@@ -17,6 +17,8 @@ import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.Constants.CORS_ALLOWED_ORIGINS;
+import static com.namazustudios.socialengine.rt.Constants.LOCAL_INSTANCE_CONNECT_PORTS_NAME;
+import static com.namazustudios.socialengine.rt.Constants.LOCAL_INSTANCE_CONTROL_PORTS_NAME;
 
 /**
  * Created by patricktwohig on 4/3/15.
@@ -43,15 +45,12 @@ public class ConfigurationModule extends AbstractModule {
 
         final Multibinder<URI> corsAllowedOriginsMultibinder;
         corsAllowedOriginsMultibinder = newSetBinder(binder(), URI.class, named(CORS_ALLOWED_ORIGINS));
-
         final String corsAllowedOriginsProperty = properties.getProperty(CORS_ALLOWED_ORIGINS, "");
-
         final Iterable<String> corsAllowedOrigins = Splitter
             .on(",")
             .trimResults()
             .omitEmptyStrings()
             .split(corsAllowedOriginsProperty);
-
         for (final String origin : corsAllowedOrigins) {
             try {
                 corsAllowedOriginsMultibinder.addBinding().toInstance(new URI(origin));
@@ -60,6 +59,36 @@ public class ConfigurationModule extends AbstractModule {
             }
         }
 
-    }
+        final Multibinder<Integer> connectPortsMultibinder = newSetBinder(binder(), Integer.class, named(LOCAL_INSTANCE_CONNECT_PORTS_NAME));
+        final String connectPortsString = properties.getProperty(LOCAL_INSTANCE_CONNECT_PORTS_NAME, "");
+        final Iterable<String> connectPortStringIterable = Splitter
+                .on(",")
+                .trimResults()
+                .omitEmptyStrings()
+                .split(connectPortsString);
+        for (final String connectPortString : connectPortStringIterable) {
+            try {
+                connectPortsMultibinder.addBinding().toInstance(new Integer(connectPortString));
+            }
+            catch (Exception e) {
+                binder().addError(e);
+            }
+        }
 
+        final Multibinder<Integer> controlPortsMultibinder = newSetBinder(binder(), Integer.class, named(LOCAL_INSTANCE_CONTROL_PORTS_NAME));
+        final String controlPortsString = properties.getProperty(LOCAL_INSTANCE_CONTROL_PORTS_NAME, "");
+        final Iterable<String> controlPortStringIterable = Splitter
+                .on(",")
+                .trimResults()
+                .omitEmptyStrings()
+                .split(controlPortsString);
+        for (final String controlPortString : controlPortStringIterable) {
+            try {
+                controlPortsMultibinder.addBinding().toInstance(new Integer(controlPortString));
+            }
+            catch (Exception e) {
+                binder().addError(e);
+            }
+        }
+    }
 }

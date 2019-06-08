@@ -24,6 +24,7 @@ import java.util.UUID;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
+import static com.namazustudios.socialengine.rt.Constants.IS_LOCAL_ENVIRONMENT_NAME;
 import static com.namazustudios.socialengine.rt.Node.LOCAL_INSTANCE_UUID_NAME;
 import static com.namazustudios.socialengine.rt.Node.MASTER_NODE_NAME;
 import static java.util.Collections.unmodifiableSet;
@@ -32,8 +33,11 @@ import static java.util.stream.Collectors.toCollection;
 public class MultiNodeContainerModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(MultiNodeContainerModule.class);
 
+
     @Override
     protected void configure() {
+        final Provider<Boolean> isLocalInstanceProvider = getProvider(Key.get(Boolean.class, named(IS_LOCAL_ENVIRONMENT_NAME)));
+        final boolean isLocalInstance = isLocalInstanceProvider.get();
 
         install(new ZContextModule());
         bind(MultiNodeContainer.class).asEagerSingleton();
@@ -49,6 +53,17 @@ public class MultiNodeContainerModule extends AbstractModule {
         bind(SrvMonitorService.class)
             .to(SpotifySrvMonitorService.class)
             .asEagerSingleton();
+
+        if (isLocalInstance) {
+            bind(InstanceDiscoveryService.class)
+                .to(StaticInstanceDiscoveryService.class)
+                .asEagerSingleton();
+        }
+        else {
+            bind(InstanceDiscoveryService.class)
+                .to(SrvInstanceDiscoveryService.class)
+                .asEagerSingleton();
+        }
 
         bind(new TypeLiteral<Set<Node>>(){})
             .toProvider(nodeProvider())
