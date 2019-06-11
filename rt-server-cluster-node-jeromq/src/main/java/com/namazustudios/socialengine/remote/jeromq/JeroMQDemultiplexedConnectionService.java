@@ -14,7 +14,8 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.Constants.INSTANCE_INVOKER_BIND_PORT_NAME;
+import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_CONTROL_PORT_NAME;
+import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_INVOKER_PORT_NAME;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
@@ -27,11 +28,10 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexedConnectionService.class);
 
-    public static final String CONTROL_BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindPort";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.applicationNodeFqdn";
 
-    private Integer bindPort;
-    private Integer controlBindPort;
+    private Integer currentInstanceInvokerPort;
+    private Integer currentInstanceControlPort;
     private String applicationNodeFqdn;
 
     private final AtomicReference<Thread> atomicDemultiplexedConnectionThread = new AtomicReference<>();
@@ -52,7 +52,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     private void setUpAndStartDemultiplexedConnection() {
         final Set<String> controlAddresses = new HashSet<>();
         controlAddresses.add(controlAddress);
-        final String controlBindAddress = RouteRepresentationUtil.buildTcpAddress("*", controlBindPort);
+        final String controlBindAddress = RouteRepresentationUtil.buildTcpAddress("*", getCurrentInstanceControlPort());
         controlAddresses.add(controlBindAddress);
         final JeroMQDemultiplexedConnectionRunnable demultiplexedConnectionRunnable = new JeroMQDemultiplexedConnectionRunnable(
                 controlAddresses,
@@ -71,17 +71,17 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
             logger.info("Successfully started demultiplexed thread and established control channel.");
 
             // now that we have a control channel set up, immediately establish the tcp bind so other instances can talk with this app node
-            bindBackendAddress();
+            bindInvokerAddress();
         } else {
             throw new IllegalStateException("Failed to set up demultiplexed connection.");
         }
     }
 
-    private void bindBackendAddress() {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress("*", getBindPort());
-        logger.info("Issuing bind tcp command to address: {}....", backendAddress);
-        issueBindTcpCommand(backendAddress);
-        logger.info("Successfully issued bind tcp command to address: {}....", backendAddress);
+    private void bindInvokerAddress() {
+        final String invokerAddress = RouteRepresentationUtil.buildTcpAddress("*", getCurrentInstanceInvokerPort());
+        logger.info("Issuing bind tcp command to address: {}....", invokerAddress);
+        issueBindTcpCommand(invokerAddress);
+        logger.info("Successfully issued bind tcp command to address: {}....", invokerAddress);
     }
 
     void setUpAndStartSrvMonitor() {
@@ -174,32 +174,30 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     @Override
     public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
-        final String invokerAddress = RouteRepresentationUtil.buildTcpAddress(
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
                 invokerHostAndPort.getHost(),
                 invokerHostAndPort.getPort());
 
-        if (invokerAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(invokerAddress);
-
-        final String controlAddress = RouteRepresentationUtil.buildTcpAddress(
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
                 controlHostAndPort.getHost(),
                 controlHostAndPort.getPort()
         );
 
-        if (controlAddress == null) {
+        if (controlTcpAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(controlAddress);
+        issueConnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }
 
     @Override
-    public boolean disconnectFromInstance(final HostAndPort hostAndPort) {
+    public boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
         final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
                 hostAndPort.getHost(),
                 hostAndPort.getPort());
@@ -222,22 +220,24 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         this.zContext = zContext;
     }
 
-    public Integer getBindPort() {
-        return bindPort;
+    public Integer getCurrentInstanceInvokerPort() {
+        return currentInstanceInvokerPort;
     }
 
     @Inject
-    public void setBindPort(@Named(INSTANCE_INVOKER_BIND_PORT_NAME) Integer bindPort) {
-        this.bindPort = bindPort;
+    @Named(CURRENT_INSTANCE_INVOKER_PORT_NAME)
+    public void setCurrentInstanceInvokerPort(Integer currentInstanceInvokerPort) {
+        this.currentInstanceInvokerPort = currentInstanceInvokerPort;
     }
 
-    public Integer getControlBindPort() {
-        return controlBindPort;
+    public Integer getCurrentInstanceControlPort() {
+        return currentInstanceControlPort;
     }
 
     @Inject
-    public void setControlBindPort(@Named(CONTROL_BIND_PORT) Integer controlBindPort) {
-        this.controlBindPort = controlBindPort;
+    @Named(CURRENT_INSTANCE_CONTROL_PORT_NAME)
+    public void setCurrentInstanceControlPort(Integer currentInstanceControlPort) {
+        this.currentInstanceControlPort = currentInstanceControlPort;
     }
 
     public String getControlAddress() {

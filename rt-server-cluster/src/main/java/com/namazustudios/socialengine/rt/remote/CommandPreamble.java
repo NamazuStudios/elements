@@ -40,6 +40,11 @@ public class CommandPreamble extends Struct {
          */
         STATUS_RESPONSE,
 
+        /**
+         * A InstanceConnectionCommand command
+         */
+        INSTANCE_CONNECTION_COMMAND,
+
     }
 
 }

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote;
 import java.nio.ByteBuffer;
 
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.INSTANCE_CONNECTION_COMMAND;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
 
 import com.google.common.net.HostAndPort;
@@ -12,6 +13,9 @@ import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.buildRoutingCommand;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.*;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.DISCONNECT_TCP;
+
+import static com.namazustudios.socialengine.rt.remote.InstanceConnectionCommand.buildInstanceConnectionCommand;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionCommand;
 
 public interface ConnectionService {
 
@@ -68,6 +72,18 @@ public interface ConnectionService {
         issueCommand(ROUTING_COMMAND, command.getByteBuffer());
     }
 
+    default void issueConnectInstanceCommand(final String invokerTcpAddress, final String controlTcpAddress) {
+        final InstanceConnectionCommand instanceConnectionCommand =
+                buildInstanceConnectionCommand(InstanceConnectionCommand.Action.CONNECT, invokerTcpAddress, controlTcpAddress);
+        issueCommand(INSTANCE_CONNECTION_COMMAND, instanceConnectionCommand.getByteBuffer());
+    }
+
+    default void issueDisconnectInstanceCommand(final String invokerTcpAddress, final String controlTcpAddress) {
+        final InstanceConnectionCommand instanceConnectionCommand =
+                buildInstanceConnectionCommand(InstanceConnectionCommand.Action.DISCONNECT, invokerTcpAddress, controlTcpAddress);
+        issueCommand(INSTANCE_CONNECTION_COMMAND, instanceConnectionCommand.getByteBuffer());
+    }
+
     /**
      * Issues a command over the control socket.
      *
@@ -76,6 +92,6 @@ public interface ConnectionService {
      */
     void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer);
 
-    boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort);
-    boolean disconnectFromInstance(final HostAndPort invokerHostAndPort);
+    boolean connectToInstance(final HostAndPort connectHostAndPort, final HostAndPort controlHostAndPort);
+    boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort);
 }
