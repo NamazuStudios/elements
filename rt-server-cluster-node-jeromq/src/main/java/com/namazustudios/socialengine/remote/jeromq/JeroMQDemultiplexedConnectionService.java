@@ -4,7 +4,6 @@ import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
-import com.namazustudios.socialengine.rt.srv.SrvRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -15,7 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.Constants.BIND_PORT_NAME;
+import static com.namazustudios.socialengine.rt.Constants.INSTANCE_INVOKER_BIND_PORT_NAME;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
@@ -91,12 +90,12 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 //            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
 //
 //            // if we discover the current instance's srv record...
-//            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getBindPort()) {
+//            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getConnectBindPort()) {
 //                logger.info("Skipping issue open backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
 //                return; // then ignore it and do not connect
 //            }
 //
-//            final boolean didIssueCommand = connectToBackend(srvRecord.getHostAndPort());
+//            final boolean didIssueCommand = connectToInstance(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
@@ -116,12 +115,12 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 //                    srvRecord.getHost(), srvRecord.getPort());
 //
 //            // if we discover the current instance's srv record...
-//            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getBindPort()) {
+//            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getConnectBindPort()) {
 //                logger.info("Skipping issue close backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
 //                return; // then ignore it and do not issue unnecessary disconnect command
 //            }
 //
-//            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getHostAndPort());
+//            final boolean didIssueCommand = disconnectFromInstance(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
@@ -174,23 +173,33 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     }
 
     @Override
-    // TODO: make some intermediary connection service that takes care of this and srv monitor
-    public boolean connectToBackend(final HostAndPort hostAndPort) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                hostAndPort.getHost(),
-                hostAndPort.getPort());
+    public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+        final String invokerAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(backendAddress);
+        issueConnectTcpCommand(invokerAddress);
+
+        final String controlAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlAddress == null) {
+            return false;
+        }
+
+        issueConnectTcpCommand(controlAddress);
 
         return true;
     }
 
     @Override
-    public boolean disconnectFromBackend(final HostAndPort hostAndPort) {
+    public boolean disconnectFromInstance(final HostAndPort hostAndPort) {
         final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
                 hostAndPort.getHost(),
                 hostAndPort.getPort());
@@ -218,7 +227,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     }
 
     @Inject
-    public void setBindPort(@Named(BIND_PORT_NAME) Integer bindPort) {
+    public void setBindPort(@Named(INSTANCE_INVOKER_BIND_PORT_NAME) Integer bindPort) {
         this.bindPort = bindPort;
     }
 

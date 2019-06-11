@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
@@ -77,6 +76,6 @@ public interface ConnectionService {
      */
     void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer);
 
-    boolean connectToBackend(final HostAndPort hostAndPort);
-    boolean disconnectFromBackend(final HostAndPort hostAndPort);
+    boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort);
+    boolean disconnectFromInstance(final HostAndPort invokerHostAndPort);
 }

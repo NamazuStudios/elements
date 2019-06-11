@@ -2,7 +2,7 @@
   <configuration default="false" name="AppNodeMain (port 28884)" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appnode.ApplicationNodeMain" />
     <module name="app-node" />
-    <option name="VM_PARAMETERS" value="-Dcom.namazustudios.socialengine.git.storage.directory=$PROJECT_DIR$/../socialengine-repos -Dcom.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.bindPort=28884 -Dcom.namazustudios.socialengine.appnode.storage.base.directory=storage.xodus.28884 -Dcom.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindPort=20884 -Dcom.namazustudios.socialengine.rt.is_local_environment=true -Dcom.namazustudios.socialengine.rt.local_instance_connect_ports=28883,28884 -Dcom.namazustudios.socialengine.rt.local_instance_control_ports=20883,20884 -Dcom.namazustudios.socialengine.rt.bind_port=28884 -Dcom.namazustudios.socialengine.rt.bind_control_port=20884" />
+    <option name="VM_PARAMETERS" value="-Dcom.namazustudios.socialengine.git.storage.directory=$USER_HOME$/socialengine-repos -Dcom.namazustudios.socialengine.rt.is_local_environment=true -Dcom.namazustudios.socialengine.rt.static_instance_invoker_addresses=localhost:28883,localhost:28884 -Dcom.namazustudios.socialengine.rt.static_instance_control_addresses=localhost:20883,localhost:20884 -Dcom.namazustudios.socialengine.rt.current_instance_invoker_port=28884 -Dcom.namazustudios.socialengine.rt.current_instance_control_port=20884" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

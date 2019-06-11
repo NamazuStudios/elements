@@ -5,43 +5,42 @@ import com.namazustudios.socialengine.rt.remote.ConnectionService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.List;
 
-import static com.namazustudios.socialengine.rt.Constants.BIND_PORT_NAME;
-import static com.namazustudios.socialengine.rt.Constants.LOCAL_INSTANCE_CONNECT_PORTS_NAME;
+import static com.namazustudios.socialengine.rt.Constants.*;
 
 public class StaticInstanceDiscoveryService implements InstanceDiscoveryService {
     ConnectionService connectionService;
 
-    Set<Integer> localInstanceConnectPorts;
-    Integer bindPort;
+    List<String> staticInstanceInvokerAddresses;
+    List<String> staticInstanceControlAddresses;
+
+    Integer currentInstanceInvokerPort;
+    Integer currentInstanceControlPort;
 
     @Override
     public void start() {
-        // do not connect to the local instance
-        final Set<Integer> connectPorts = new HashSet<>(localInstanceConnectPorts);
-        connectPorts.remove(bindPort);
+        if (getStaticInstanceInvokerAddresses().size() != getStaticInstanceControlAddresses().size()) {
+            throw new IllegalStateException("Static Instance Invoker Addresses size must match Static Instance Control Addresses size.");
+        }
 
-        final Set<HostAndPort> hostsAndPorts = connectPorts
-                .stream()
-                .map(port -> HostAndPort.fromParts("localhost", port))
-                .collect(Collectors.toSet());
-        hostsAndPorts.forEach(hostAndPort -> getConnectionService().connectToBackend(hostAndPort));
+        for (int i=0; i<getStaticInstanceInvokerAddresses().size(); i++) {
+            final String invokerAddress = getStaticInstanceInvokerAddresses().get(i);
+            final String controlAddress = getStaticInstanceControlAddresses().get(i);
+
+            final HostAndPort invokerHostAndPort = HostAndPort.fromString(invokerAddress);
+            final HostAndPort controlHostAndPort = HostAndPort.fromString(controlAddress);
+            getConnectionService().connectToInstance(invokerHostAndPort, controlHostAndPort);
+        }
     }
 
     @Override
     public void stop() {
-        // do not disconnect from the local instance since the conn does not exist
-        final Set<Integer> connectPorts = new HashSet<>(localInstanceConnectPorts);
-        connectPorts.remove(bindPort);
-
-        final Set<HostAndPort> hostsAndPorts = connectPorts
-                .stream()
-                .map(port -> HostAndPort.fromParts("localhost", port))
-                .collect(Collectors.toSet());
-        hostsAndPorts.forEach(hostAndPort -> getConnectionService().disconnectFromBackend(hostAndPort));
+        for (int i=0; i<getStaticInstanceInvokerAddresses().size(); i++) {
+            final String invokerAddress = getStaticInstanceInvokerAddresses().get(i);
+            final HostAndPort invokerHostAndPort = HostAndPort.fromString(invokerAddress);
+            getConnectionService().disconnectFromInstance(invokerHostAndPort);
+        }
     }
 
     public ConnectionService getConnectionService() {
@@ -53,23 +52,43 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
         this.connectionService = connectionService;
     }
 
-    public Set<Integer> getLocalInstanceConnectPorts() {
-        return localInstanceConnectPorts;
+    public List<String> getStaticInstanceInvokerAddresses() {
+        return staticInstanceInvokerAddresses;
     }
 
     @Inject
-    @Named(LOCAL_INSTANCE_CONNECT_PORTS_NAME)
-    public void setLocalInstanceConnectPorts(Set<Integer> localInstanceConnectPorts) {
-        this.localInstanceConnectPorts = localInstanceConnectPorts;
+    @Named(STATIC_INSTANCE_INVOKER_ADDRESSES_NAME)
+    public void setStaticInstanceInvokerAddresses(List<String> staticInstanceInvokerAddresses) {
+        this.staticInstanceInvokerAddresses = staticInstanceInvokerAddresses;
     }
 
-    public Integer getBindPort() {
-        return bindPort;
+    public List<String> getStaticInstanceControlAddresses() {
+        return staticInstanceControlAddresses;
     }
 
     @Inject
-    @Named(BIND_PORT_NAME)
-    public void setBindPort(Integer bindPort) {
-        this.bindPort = bindPort;
+    @Named(STATIC_INSTANCE_CONTROL_ADDRESSES_NAME)
+    public void setStaticInstanceControlAddresses(List<String> staticInstanceControlAddresses) {
+        this.staticInstanceControlAddresses = staticInstanceControlAddresses;
+    }
+
+    public Integer getCurrentInstanceInvokerPort() {
+        return currentInstanceInvokerPort;
+    }
+
+    @Inject
+    @Named(CURRENT_INSTANCE_INVOKER_PORT_NAME)
+    public void setCurrentInstanceInvokerPort(Integer currentInstanceInvokerPort) {
+        this.currentInstanceInvokerPort = currentInstanceInvokerPort;
+    }
+
+    public Integer getCurrentInstanceControlPort() {
+        return currentInstanceControlPort;
+    }
+
+    @Inject
+    @Named(CURRENT_INSTANCE_CONTROL_PORT_NAME)
+    public void setCurrentInstanceControlPort(Integer currentInstanceControlPort) {
+        this.currentInstanceControlPort = currentInstanceControlPort;
     }
 }

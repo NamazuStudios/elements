@@ -71,7 +71,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
 //        srvMonitorService.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
 //            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-//            final boolean didIssueCommand = connectToBackend(srvRecord.getHostAndPort());
+//            final boolean didIssueCommand = connectToInstance(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
@@ -90,7 +90,7 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 //            logger.info("Detected App Node SRV record deletion: host={} port={}",
 //                    srvRecord.getHost(), srvRecord.getPort());
 //
-//            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getHostAndPort());
+//            final boolean didIssueCommand = disconnectFromInstance(srvRecord.getHostAndPort());
 //
 //            if (didIssueCommand) {
 //                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
@@ -142,23 +142,33 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
     }
 
     @Override
-    // TODO: make some intermediary connection service that takes care of this and srv monitor
-    public boolean connectToBackend(final HostAndPort hostAndPort) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                hostAndPort.getHost(),
-                hostAndPort.getPort());
+    public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+        final String invokerAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(backendAddress);
+        issueConnectTcpCommand(invokerAddress);
+
+        final String controlAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlAddress == null) {
+            return false;
+        }
+
+        issueConnectTcpCommand(controlAddress);
 
         return true;
     }
 
     @Override
-    public boolean disconnectFromBackend(final HostAndPort hostAndPort) {
+    public boolean disconnectFromInstance(final HostAndPort hostAndPort) {
         final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
                 hostAndPort.getHost(),
                 hostAndPort.getPort());
