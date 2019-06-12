@@ -7,6 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 
 import com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageManagerConfiguration;
+
+import java.util.UUID;
+
 import static com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageManagerConfiguration.Strategy.MULTIPLEX;
 
 import static org.zeromq.ZContext.shadow;
@@ -38,7 +41,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
     @Override
     public void run() {
         final MessageManagerConfiguration messageManagerConfiguration =
-                new MessageManagerConfiguration(MULTIPLEX, false);
+                new MessageManagerConfiguration(MULTIPLEX, null, false);
 
         try (final ZContext context = shadow(zContext);
              final MessageManager messageManager = new MessageManager(messageManagerConfiguration);

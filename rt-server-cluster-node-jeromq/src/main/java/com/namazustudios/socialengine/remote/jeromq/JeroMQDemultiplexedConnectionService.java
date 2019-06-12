@@ -198,15 +198,24 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     @Override
     public boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                hostAndPort.getHost(),
-                hostAndPort.getPort());
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueDisconnectTcpCommand(backendAddress);
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlTcpAddress == null) {
+            return false;
+        }
+
+        issueDisconnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }

@@ -5,26 +5,17 @@ import javolution.io.Struct;
 import java.util.UUID;
 
 public class StatusResponse extends Struct {
-    public static StatusResponse buildStatusResponse(
-            UUID nodeIdentifier,
-            double loadAverage,
-            long inMemoryResourceCount
-    ) {
-        if (nodeIdentifier == null) {
-            throw new IllegalArgumentException("nodeIdentifier must not be null.");
+    public static StatusResponse buildStatusResponse(UUID instanceUuid) {
+        if (instanceUuid == null) {
+            throw new IllegalArgumentException("InstanceUuid must not be null.");
         }
 
         final StatusResponse statusResponse = new StatusResponse();
 
-        statusResponse.nodeIdentifier.set(nodeIdentifier);
-        statusResponse.loadAverage.set(loadAverage);
-        statusResponse.inMemoryResourceCount.set(inMemoryResourceCount);
+        statusResponse.instanceUuid.set(instanceUuid);
 
         return statusResponse;
     }
 
-    public final PackedUUID nodeIdentifier = inner(new PackedUUID());
-    public final Float64 loadAverage = new Float64();
-    public final Signed64 inMemoryResourceCount = new Signed64();
-
+    public final PackedUUID instanceUuid = inner(new PackedUUID());
 }

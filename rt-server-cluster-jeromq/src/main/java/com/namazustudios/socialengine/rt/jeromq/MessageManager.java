@@ -10,6 +10,8 @@ import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandPreambleFromBytes;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.RoutingCommandFromBytes;
+import static com.namazustudios.socialengine.rt.remote.StatusResponse.buildStatusResponse;
+import static com.namazustudios.socialengine.rt.remote.InstanceConnectionCommand.InstanceConnectionCommandFromBytes;
 import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND_ACK;
@@ -31,8 +33,6 @@ public class MessageManager implements AutoCloseable {
     private final MessageManagerConfiguration messageManagerConfiguration;
 
     private final SocketHandleRegistry socketHandleRegistry = new SocketHandleRegistry();
-
-
 
     //================================================================================
     //
@@ -82,6 +82,11 @@ public class MessageManager implements AutoCloseable {
                 // and handle the formed RoutingCommand
                 handleRoutingCommand(routingCommand, connectionsManager);
                 break;
+            case INSTANCE_CONNECTION_COMMAND:
+                final byte[] instanceConnectionCommandBytes = msg.pop().getData();
+                final InstanceConnectionCommand instanceConnectionCommand = InstanceConnectionCommandFromBytes(instanceConnectionCommandBytes);
+                handleInstanceConnectionCommand(instanceConnectionCommand, connectionsManager);
+                break;
             default:
                 logger.error("Unexpected command: {}", preamble.commandType.get());
         }
@@ -89,7 +94,7 @@ public class MessageManager implements AutoCloseable {
 
     private void sendStatusResponse(final int socketHandle, final ConnectionsManager connectionsManager) {
         // build the response with status data
-        final StatusResponse statusResponse = new StatusResponse();
+        final StatusResponse statusResponse = buildStatusResponse(messageManagerConfiguration.getInstanceUuid());
         final ZMsg responseMsg = buildControlMsg(STATUS_RESPONSE, statusResponse.getByteBuffer());
 
         // and send the response back over the same pipe
@@ -106,6 +111,34 @@ public class MessageManager implements AutoCloseable {
 
         // and send the msg back over the same pipe
         connectionsManager.sendMsgToSocketHandle(socketHandle, acknowledgementMsg);
+    }
+
+    private void handleInstanceConnectionCommand(
+            final InstanceConnectionCommand instanceConnectionCommand,
+            final ConnectionsManager connectionsManager
+    ) {
+        final InstanceConnectionCommand.Action action = instanceConnectionCommand.action.get();
+        final String invokerTcpAddress = instanceConnectionCommand.invokerTcpAddress.get();
+        final String controlTcpAddress = instanceConnectionCommand.controlTcpAddress.get();
+
+        // TODO: delete this log
+        logger.info("Recv inst conn cmd: {}, invk: {}, ctrl: {}", action, invokerTcpAddress, controlTcpAddress);
+
+        switch (action) {
+            case NO_OP: {
+                break;
+            }
+            case CONNECT: {
+                break;
+            }
+            case DISCONNECT: {
+
+            }
+            default: {
+                logger.warn("Encountered unhandled instance connection action: {}. Dropping message.", action);
+                break;
+            }
+        }
     }
 
     private void handleRoutingCommand(
@@ -457,14 +490,17 @@ public class MessageManager implements AutoCloseable {
 
     public static final class MessageManagerConfiguration {
         private final boolean shouldSendRoutingCommandAcknowledgement;
+        private final UUID instanceUuid;
         private final Strategy strategy;
 
         public MessageManagerConfiguration(
                 final Strategy strategy,
+                final UUID instanceUuid,
                 final boolean shouldSendRoutingCommandAcknowledgement
         ) {
-            this.shouldSendRoutingCommandAcknowledgement = shouldSendRoutingCommandAcknowledgement;
             this.strategy = strategy;
+            this.instanceUuid = instanceUuid;
+            this.shouldSendRoutingCommandAcknowledgement = shouldSendRoutingCommandAcknowledgement;
         }
 
         public boolean isShouldSendRoutingCommandAcknowledgement() {
@@ -473,6 +509,10 @@ public class MessageManager implements AutoCloseable {
 
         public Strategy getStrategy() {
             return strategy;
+        }
+
+        public UUID getInstanceUuid() {
+            return instanceUuid;
         }
 
         public enum Strategy {

@@ -75,4 +75,7 @@ public interface Constants {
 
     String CURRENT_INSTANCE_INVOKER_PORT_NAME = "com.namazustudios.socialengine.rt.current_instance_invoker_port";
     String CURRENT_INSTANCE_CONTROL_PORT_NAME = "com.namazustudios.socialengine.rt.current_instance_control_port";
+
+    String CURRENT_INSTANCE_UUID_NAME = "com.namazustudios.socialengine.rt.current_instance_id";
+    String MASTER_NODE_NAME = "com.namazustudios.socialengine.rt.master_node";
 }

@@ -143,41 +143,48 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
     @Override
     public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
-        final String invokerAddress = RouteRepresentationUtil.buildTcpAddress(
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
                 invokerHostAndPort.getHost(),
                 invokerHostAndPort.getPort());
 
-        if (invokerAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(invokerAddress);
-
-        final String controlAddress = RouteRepresentationUtil.buildTcpAddress(
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
                 controlHostAndPort.getHost(),
                 controlHostAndPort.getPort()
         );
 
-        if (controlAddress == null) {
+        if (controlTcpAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(controlAddress);
+        issueConnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }
 
     @Override
-    public boolean disconnectFromInstance(final HostAndPort hostAndPort) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                hostAndPort.getHost(),
-                hostAndPort.getPort());
+    public boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueDisconnectTcpCommand(backendAddress);
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlTcpAddress == null) {
+            return false;
+        }
+
+        issueDisconnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }
