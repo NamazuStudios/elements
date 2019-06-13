@@ -71,6 +71,10 @@ public class SocketHandleRegistry implements AutoCloseable {
         return instanceUuidToInvokerSocketHandle.containsKey(instanceUuid);
     }
 
+    public boolean hasNodeId(final NodeId nodeId) {
+        return nodeIdToSocketHandle.containsKey(nodeId);
+    }
+
     public int getSocketHandleForInvokerTcpAddress(final String invokerTcpAddress) {
         return returnSocketHandleNotFoundIfNecessary(invokerTcpAddressToSocketHandle.get(invokerTcpAddress));
     }

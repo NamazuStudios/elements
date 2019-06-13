@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 
+import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,69 +52,12 @@ public class MessageManager implements AutoCloseable {
         this.messageManagerConfiguration = messageManagerConfiguration;
     }
 
-
-
-    //================================================================================
-    //
-    // Handle Control Message
-    //
-    //================================================================================
-
-    public void handleControlMessage(
-            final int socketHandle,
-            final ZMsg msg,
-            final ConnectionsManager connectionsManager
-    ) {
-        final byte[] commandPreambleBytes = msg.pop().getData();
-        final CommandPreamble preamble = CommandPreambleFromBytes(commandPreambleBytes);
-
-        final CommandType commandType = preamble.commandType.get();
-
-        // TODO: make sure to remove logs
-        logger.info("Recv ctrl msg: {}", commandType);
-
-        switch(commandType) {
-            case STATUS_REQUEST:    // we received a request for current status
-                sendStatusResponse(socketHandle, connectionsManager);
-                break;
-            case STATUS_RESPONSE:
-                final byte[] statusResponseBytes = msg.pop().getData();
-                final StatusResponse statusResponse = StatusResponseFromBytes(statusResponseBytes);
-                handleStatusResponse(socketHandle, statusResponse);
-                break;
-            case ROUTING_COMMAND:   // we have received a command to open/close another channel (inproc or backend)
-                // conditionally send back msg ack (e.g. if we are demultiplexer)
-                if (messageManagerConfiguration.isShouldSendRoutingCommandAcknowledgement()) {
-                    sendRoutingCommandAcknowledgement(socketHandle, connectionsManager);
-                }
-
-                // so, convert the ZMsg into a RoutingCommand
-                final byte[] routingCommandBytes = msg.pop().getData();
-                final RoutingCommand routingCommand = RoutingCommandFromBytes(routingCommandBytes);
-
-                // and handle the formed RoutingCommand
-                handleRoutingCommand(routingCommand, connectionsManager);
-                break;
-            case INSTANCE_CONNECTION_COMMAND:
-                final byte[] instanceConnectionCommandBytes = msg.pop().getData();
-                final InstanceConnectionCommand instanceConnectionCommand = InstanceConnectionCommandFromBytes(instanceConnectionCommandBytes);
-                handleInstanceConnectionCommand(instanceConnectionCommand, connectionsManager);
-                break;
-            case INSTANCE_UUID_LIST_REQUEST:
-                sendInstanceUuidListResponse(socketHandle, connectionsManager);
-                break;
-            default:
-                logger.error("Unexpected command: {}", preamble.commandType.get());
-        }
-    }
-
     private void sendStatusRequest(final int socketHandle, final ConnectionsManager connectionsManager) {
         final StatusRequest statusRequest = buildStatusRequest();
         final ZMsg requestMsg = buildControlMsg(STATUS_REQUEST, statusRequest.getByteBuffer());
 
         connectionsManager.sendMsgToSocketHandle(socketHandle, requestMsg);
     }
-
 
     private void sendStatusResponse(final int socketHandle, final ConnectionsManager connectionsManager) {
         // build the response with status data
@@ -159,7 +103,7 @@ public class MessageManager implements AutoCloseable {
         final String controlTcpAddress = instanceConnectionCommand.controlTcpAddress.get();
 
         // TODO: delete this log
-        logger.info("Recv inst conn cmd: {}, invk: {}, ctrl: {}", action, invokerTcpAddress, controlTcpAddress);
+        logger.info("Ctrl-bind: recv inst conn cmd: {}, invk: {}, ctrl: {}", action, invokerTcpAddress, controlTcpAddress);
 
         switch (action) {
             case NO_OP: {
@@ -173,7 +117,7 @@ public class MessageManager implements AutoCloseable {
                 handleDisconnectInstanceCommand(invokerTcpAddress, controlTcpAddress, connectionsManager);
             }
             default: {
-                logger.warn("Encountered unhandled instance connection action: {}. Dropping message.", action);
+                logger.warn("Ctrl-bind: Encountered unhandled instance connection action: {}. Dropping message.", action);
                 break;
             }
         }
@@ -192,8 +136,8 @@ public class MessageManager implements AutoCloseable {
         final String controlTcpAddress,
         final ConnectionsManager connectionsManager
     ) {
-        final int invokerSocketHandle = connectToTcpAddress(invokerTcpAddress, connectionsManager);
-        final int controlSocketHandle = connectToTcpAddress(controlTcpAddress, connectionsManager);
+        final int invokerSocketHandle = connectToInvoker(invokerTcpAddress, connectionsManager);
+        final int controlSocketHandle = connectToControl(controlTcpAddress, connectionsManager);
 
         socketHandleRegistry.registerInstanceSocketHandles(
             invokerTcpAddress,
@@ -221,7 +165,7 @@ public class MessageManager implements AutoCloseable {
             connectionsManager.closeAndDestroySocketHandle(controlSocketHandle);
         }
         catch (IllegalStateException e) {
-            logger.error("Failed to close/destroy connected tcp socket handle for instance uuid {} with error: {}", instanceUuid, e);
+            logger.error("Ctrl-bind: Failed to close/destroy ivkr/ctrl socket for instance uuid {} with error: {}", instanceUuid, e);
         }
 
 
@@ -231,7 +175,7 @@ public class MessageManager implements AutoCloseable {
                 connectionsManager.closeAndDestroySocketHandle(nodeSocketHandle);
             }
             catch (IllegalStateException e) {
-                logger.error("Failed to close/destroy connected inproc socket handle for instance uuid {} with error: {}", instanceUuid, e);
+                logger.error("Ctrl-bind: Failed to close/destroy a node socket for instance uuid {} with error: {}", instanceUuid, e);
             }
         });
 
@@ -244,41 +188,61 @@ public class MessageManager implements AutoCloseable {
     ) {
         final Action action = routingCommand.action.get();
         final String tcpAddress = routingCommand.tcpAddress.get();
-        final UUID inprocIdentifier = routingCommand.inprocIdentifier.get();
+        final UUID instanceUuid = routingCommand.instanceUuid.get();
+        final UUID applicationUuid = routingCommand.applicationUuid.get();
+        final NodeId nodeId = new NodeId(instanceUuid, applicationUuid);
 
         // TODO: delete this log
-        logger.info("Recv rout cmd: {}", action);
+        logger.info("Ctrl-bind: recv rout cmd: {}", action);
 
         switch (action) {
             case NO_OP: {
                 break;
             }
             case BIND_INVOKER: {
-                bindInvoker(tcpAddress, connectionsManager);
+                final int invokerSocketHandle = bindInvoker(tcpAddress, connectionsManager);
+                if (invokerSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                    socketHandleRegistry.registerBoundInvokerSocket(tcpAddress, invokerSocketHandle);
+                }
                 break;
             }
             case UNBIND_INVOKER: {
-                unbindInvoker(connectionsManager);
+                final int invokerSocketHandle = unbindInvoker(connectionsManager);
+                if (invokerSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                    socketHandleRegistry.unregisterBoundInvokerSocket();
+                }
                 break;
             }
             case CONNECT_NODE: {
-                connectToNode(tcpAddress, inprocIdentifier, connectionsManager);
+                final int nodeSocketHandle = connectToNode(nodeId, connectionsManager);
+                if (nodeSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                    socketHandleRegistry.registerNode(nodeId, nodeSocketHandle);
+                }
                 break;
             }
             case DISCONNECT_NODE: {
-                disconnectFromNode(inprocIdentifier, connectionsManager);
+                final int nodeSocketHandle = disconnectFromNode(nodeId, connectionsManager);
+                if (nodeSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                    socketHandleRegistry.unregisterNode(nodeId);
+                }
                 break;
             }
             case BIND_NODE: {
-                bindNode(tcpAddress, inprocIdentifier, connectionsManager);
+                final int nodeSocketHandle = bindNode(nodeId, connectionsManager);
+                if (nodeSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                    socketHandleRegistry.registerNode(nodeId, nodeSocketHandle);
+                }
                 break;
             }
             case UNBIND_NODE: {
-                unbindNode(inprocIdentifier, connectionsManager);
+                final int nodeSocketHandle = unbindNode(nodeId, connectionsManager);
+                if (nodeSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                    socketHandleRegistry.unregisterNode(nodeId);
+                }
                 break;
             }
             default: {
-                logger.warn("Encountered unhandled routing action: {}. Dropping message.", action);
+                logger.warn("Ctrl-bind: Encountered unhandled routing action: {}. Dropping message.", action);
                 break;
             }
         }
@@ -292,15 +256,15 @@ public class MessageManager implements AutoCloseable {
     //
     //================================================================================
 
-    private int connectToTcpAddress(
-            final String tcpAddress,
+    private int connectToInvoker(
+            final String invokerTcpAddress,
             final ConnectionsManager connectionsManager
     ) {
         final int socketHandle = connectionsManager.connectToAddressAndBeginPolling(
-                tcpAddress,
-                DEALER,
-                this::handleConnectedTcpMessage,
-                true
+            invokerTcpAddress,
+            DEALER,
+            this::handleConnectedInvokerMessage,
+            true
                 );
 
         return socketHandle;
@@ -313,99 +277,101 @@ public class MessageManager implements AutoCloseable {
         final int invokerSocketHandle = connectionsManager.bindToAddressAndBeginPolling(
             invokerTcpAddress,
                 DEALER,
-                this::handleBoundTcpMessage,
+                this::handleBoundInvokerMessage,
                 true
         );
-        socketHandleRegistry.registerBoundInvokerSocket(invokerTcpAddress, invokerSocketHandle);
 
         return invokerSocketHandle;
     }
 
-    private void unbindInvoker(
+    private int connectToControl(
+        final String controlTcpAddress,
+        final ConnectionsManager connectionsManager
+    ) {
+        final int controlSocketHandle = connectionsManager.connectToAddressAndBeginPolling(
+            controlTcpAddress,
+            PUSH,
+            this::handleConnectedControlMessage,
+            true
+        );
+
+        return controlSocketHandle;
+    }
+
+    private int unbindInvoker(
             final ConnectionsManager connectionsManager
     ) {
         final int invokerSocketHandle = socketHandleRegistry.getBoundInvokerSocketHandle();
         if (invokerSocketHandle == SOCKET_HANDLE_NOT_FOUND) {
-            logger.warn("Received control command to unbind the invoker socket, but a handle is not currently registered. Dropping message.");
-            return;
+            logger.warn("Ctrl-bind: Received control command to unbind the invoker socket, but a handle is not currently registered. Dropping message.");
+            return SOCKET_HANDLE_NOT_FOUND;
         }
 
         try {
             connectionsManager.closeAndDestroySocketHandle(invokerSocketHandle);
         }
         catch (Exception e) {
-            logger.error("Failed to close/destroy bound tcp socket handle {} with error: {}", invokerSocketHandle, e);
-            return;
+            logger.error("Ctrl-bind: Failed to close/destroy ivkr socket {} with error: {}", invokerSocketHandle, e);
+            return SOCKET_HANDLE_NOT_FOUND;
         }
 
-        socketHandleRegistry.unregisterBoundInvokerSocket();
+        return invokerSocketHandle;
     }
 
     private int connectToNode(
-            final String tcpAddress,
-            final UUID inprocIdentifier,
-            final ConnectionsManager connectionsManager
+        final NodeId nodeId,
+        final ConnectionsManager connectionsManager
     ) {
-        final String inprocAddress;
+        final String nodeAddress;
 
         final MessageManagerConfiguration.Strategy strategy = messageManagerConfiguration.getStrategy();
-
-        // TODO:
-        //  1) we need to have a tcp->instance uuid registry
-        //  2) we get instance uuid from the given tcpAddr
-        //  3) we build nodeid accordingly
-        //  alternatively.... we just transmit the full nodeid string in the RoutingCommand, and parse it here. when the
-        //  routingcommand is going to be transmitted, we look at the instance uuid of the destination for a given nodeid,
-        //  look up the tcpAddr at that time, and then stringify the nodeid when we pass it into the routing command builder.
-        //  we could also utilize this approach to see if the instanceuuid == local instance uuid and then invoke locally if so
 
         // TODO: maybe rename these to Client vs Instance instead of Multiplex vs Demultiplex
         switch (strategy) {
             case MULTIPLEX:
-                inprocAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
+                nodeAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(nodeId);
                 break;
             case DEMULTIPLEX:
-                inprocAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(inprocIdentifier);
+                nodeAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(nodeId);
                 break;
             default: {
-                logger.warn("Connect inproc: Encountered unhandled strategy in configuration: {}. Dropping message.", strategy);
-                return -1;
+                logger.warn("Ctrl-bind: Connect node: Encountered unhandled strategy in configuration: {}. Dropping message.", strategy);
+                return SOCKET_HANDLE_NOT_FOUND;
             }
         }
 
         final int socketHandle = connectionsManager.connectToAddressAndBeginPolling(
-                inprocAddress,
-                DEALER,
-                this::handleConnectedInprocMessage,
-                false
+            nodeAddress,
+            DEALER,
+            this::handleConnectedNodeMessage,
+            false
         );
-        socketHandleRegistry.registerInprocSocketHandle(socketHandle, tcpAddress, inprocIdentifier);
 
         return socketHandle;
     }
 
-    private void disconnectFromNode(
-            final UUID inprocIdentifier,
-            final ConnectionsManager connectionsManager
+    private int disconnectFromNode(
+        final NodeId nodeId,
+        final ConnectionsManager connectionsManager
     ) {
-        final int socketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
-        if (socketHandle < 0) {
-            return;
+        final int socketHandle = socketHandleRegistry.getSocketHandleForNodeId(nodeId);
+        if (socketHandle == SOCKET_HANDLE_NOT_FOUND) {
+            return SOCKET_HANDLE_NOT_FOUND;
         }
 
         try {
             connectionsManager.closeAndDestroySocketHandle(socketHandle);
-            socketHandleRegistry.unregisterInprocSocketHandle(socketHandle);
         }
         catch (Exception e) {
-            logger.error("Failed to close/destroy connected inproc socket handle {} with error: {}", socketHandle, e);
+            logger.error("Ctrl-bind: Disconnect node: Failed to close/destroy connected node socket handle {} with error: {}", socketHandle, e);
         }
+
+        return socketHandle;
     }
 
     private int bindNode(
-            final String tcpAddress,
-            final UUID inprocIdentifier,
-            final ConnectionsManager connectionsManager
+        final NodeId nodeId,
+        final ConnectionsManager connectionsManager
     ) {
         final String inprocAddress;
 
@@ -415,44 +381,44 @@ public class MessageManager implements AutoCloseable {
 
         switch (strategy) {
             case MULTIPLEX:
-                inprocAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(inprocIdentifier);
+                inprocAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(nodeId);
                 break;
             case DEMULTIPLEX:
-                inprocAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(inprocIdentifier);
+                inprocAddress = RouteRepresentationUtil.buildDemultiplexInprocAddress(nodeId);
                 break;
             default: {
-                logger.warn("Bind inproc: Encountered unhandled strategy in configuration: {}. Dropping message.", strategy);
-                return -1;
+                logger.warn("Ctrl-bind: Bind node: Encountered unhandled strategy in configuration: {}. Dropping message.", strategy);
+                return SOCKET_HANDLE_NOT_FOUND;
             }
         }
 
         final int socketHandle = connectionsManager.bindToAddressAndBeginPolling(
-                inprocAddress,
-                ROUTER,
-                this::handleBoundInprocMessage,
-                false
+            inprocAddress,
+            ROUTER,
+            this::handleBoundNodeMessage,
+            false
         );
-        socketHandleRegistry.registerInprocSocketHandle(socketHandle, tcpAddress, inprocIdentifier);
 
         return socketHandle;
     }
 
-    private void unbindNode(
-            final UUID inprocIdentifier,
-            final ConnectionsManager connectionsManager
+    private int unbindNode(
+        final NodeId nodeId,
+        final ConnectionsManager connectionsManager
     ) {
-        final int socketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
-        if (socketHandle < 0) {
-            return;
+        final int socketHandle = socketHandleRegistry.getSocketHandleForNodeId(nodeId);
+        if (socketHandle == SOCKET_HANDLE_NOT_FOUND) {
+            return SOCKET_HANDLE_NOT_FOUND;
         }
 
         try {
             connectionsManager.closeAndDestroySocketHandle(socketHandle);
-            socketHandleRegistry.unregisterInprocSocketHandle(socketHandle);
         }
         catch (Exception e) {
-            logger.error("Failed to close/destroy bound inproc socket handle {} with error: {}", socketHandle, e);
+            logger.error("Ctrl-bind: Unbind node: Failed to close/destroy bound node socket handle {} with error: {}", socketHandle, e);
         }
+
+        return socketHandle;
     }
 
 
@@ -463,95 +429,183 @@ public class MessageManager implements AutoCloseable {
     //
     //================================================================================
 
-    private void handleConnectedTcpMessage(
-            final int socketHandle,
-            final ZMsg msg,
-            final ConnectionsManager connectionsManager
+    private void handleBoundInvokerMessage(
+        final int socketHandle,
+        final ZMsg msg,
+        final ConnectionsManager connectionsManager
     ) {
         final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
-        final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
+        final UUID instanceUuid = routingHeader.instanceUuid.get();
+        final UUID applicationUuid = routingHeader.applicationUuid.get();
+        final NodeId nodeId = new NodeId(instanceUuid, applicationUuid);
         final Status status = routingHeader.status.get();
 
         if (status == CONTINUE) {
-            final int inprocSocketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
+            final int nodeSocketHandle;
+            if (socketHandleRegistry.hasNodeId(nodeId)) {
+                nodeSocketHandle = socketHandleRegistry.getSocketHandleForNodeId(nodeId);
+            }
+            else {
+                nodeSocketHandle = connectToNode(nodeId, connectionsManager);
+                if (nodeSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                    socketHandleRegistry.registerNode(nodeId, nodeSocketHandle);
+                }
+            }
 
-            if (inprocSocketHandle < 0) {
-                logger.warn("Socket not established for inproc identifier {}. Dropping message.", inprocIdentifier);
+            if (nodeSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                connectionsManager.sendMsgToSocketHandle(nodeSocketHandle, msg);
+            }
+            else {
+                logger.error("Ivkr-bind: Failed to handle invoker bind msg for NodeId {}. Dropping message.",
+                    status, nodeId);
+            }
+        } else {
+            logger.error("Ivkr-bind: Failed to handle invoker bind msg with status {} for NodeId {}. Dropping message.",
+                status, nodeId);
+        }
+    }
+
+    public void handleBoundControlMessage(
+        final int socketHandle,
+        final ZMsg msg,
+        final ConnectionsManager connectionsManager
+    ) {
+        final byte[] commandPreambleBytes = msg.pop().getData();
+        final CommandPreamble preamble = CommandPreambleFromBytes(commandPreambleBytes);
+
+        final CommandType commandType = preamble.commandType.get();
+
+        // TODO: make sure to remove logs
+        logger.info("Ctrl-bind: Recv ctrl msg: {}", commandType);
+
+        switch(commandType) {
+            case STATUS_REQUEST:    // we received a request for current status
+                sendStatusResponse(socketHandle, connectionsManager);
+                break;
+            case ROUTING_COMMAND:   // we have received a command to open/close another channel (inproc or backend)
+                // conditionally send back msg ack (e.g. if we are demultiplexer)
+                if (messageManagerConfiguration.isShouldSendRoutingCommandAcknowledgement()) {
+                    sendRoutingCommandAcknowledgement(socketHandle, connectionsManager);
+                }
+
+                // so, convert the ZMsg into a RoutingCommand
+                final byte[] routingCommandBytes = msg.pop().getData();
+                final RoutingCommand routingCommand = RoutingCommandFromBytes(routingCommandBytes);
+
+                // and handle the formed RoutingCommand
+                handleRoutingCommand(routingCommand, connectionsManager);
+                break;
+            case INSTANCE_CONNECTION_COMMAND:
+                final byte[] instanceConnectionCommandBytes = msg.pop().getData();
+                final InstanceConnectionCommand instanceConnectionCommand = InstanceConnectionCommandFromBytes(instanceConnectionCommandBytes);
+                handleInstanceConnectionCommand(instanceConnectionCommand, connectionsManager);
+                break;
+            case INSTANCE_UUID_LIST_REQUEST:
+                sendInstanceUuidListResponse(socketHandle, connectionsManager);
+                break;
+            default:
+                logger.error("Ctrl-bind: Unexpected command: {}", preamble.commandType.get());
+        }
+    }
+
+    private void handleConnectedInvokerMessage(
+        final int socketHandle,
+        final ZMsg msg,
+        final ConnectionsManager connectionsManager
+    ) {
+        final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
+        final UUID instanceUuid = routingHeader.instanceUuid.get();
+        final UUID applicationUuid = routingHeader.applicationUuid.get();
+        final NodeId nodeId = new NodeId(instanceUuid, applicationUuid);
+        final Status status = routingHeader.status.get();
+
+        if (status == CONTINUE) {
+            final int nodeSocketHandle = socketHandleRegistry.getSocketHandleForNodeId(nodeId);
+
+            if (nodeSocketHandle != SOCKET_HANDLE_NOT_FOUND) {
+                logger.warn("Ivkr-conn: Node conn not established for NodeId {}. Dropping message.", nodeId);
                 return;
             }
 
-            connectionsManager.sendMsgToSocketHandle(inprocSocketHandle, msg);
+            connectionsManager.sendMsgToSocketHandle(nodeSocketHandle, msg);
         }
         else {
-            logger.error("Failed to handle tcp conn msg with status {} for inproc identifier {}. Dropping message.",
-                    status, inprocIdentifier);
+            logger.error("Ivkr-conn: Failed to handle invoker conn msg with status {} for NodeId {}. Dropping message.",
+                    status, nodeId);
         }
     }
 
-    private void handleBoundTcpMessage(
-            final int socketHandle,
-            final ZMsg msg,
-            final ConnectionsManager connectionsManager
+    private void handleConnectedControlMessage(
+        final int socketHandle,
+        final ZMsg msg,
+        final ConnectionsManager connectionsManager
     ) {
-        final RoutingHeader routingHeader = RouteRepresentationUtil.getAndStripRoutingHeader(msg);
-        final String tcpAddress = routingHeader.tcpAddress.get();
-        final UUID inprocIdentifier = routingHeader.inprocIdentifier.get();
-        final Status status = routingHeader.status.get();
+        final byte[] commandPreambleBytes = msg.pop().getData();
+        final CommandPreamble preamble = CommandPreambleFromBytes(commandPreambleBytes);
 
-        if (status == CONTINUE) {
-            final int inprocSocketHandle;
-            if (socketHandleRegistry.hasInprocIdentifier(inprocIdentifier)) {
-                inprocSocketHandle = socketHandleRegistry.getInprocSocketHandle(inprocIdentifier);
-            }
-            else {
-                inprocSocketHandle = connectToNode(tcpAddress, inprocIdentifier, connectionsManager);
-            }
+        final CommandType commandType = preamble.commandType.get();
 
-            connectionsManager.sendMsgToSocketHandle(inprocSocketHandle, msg);
-        } else {
-            logger.error("Failed to handle tcp bind msg with status {} for inproc identifier {}. Dropping message.",
-                    status, inprocIdentifier);
+        // TODO: make sure to remove logs
+        logger.info("Recv ctrl msg: {}", commandType);
+
+        switch (commandType) {
+            case STATUS_RESPONSE:
+                final byte[] statusResponseBytes = msg.pop().getData();
+                final StatusResponse statusResponse = StatusResponseFromBytes(statusResponseBytes);
+                handleStatusResponse(socketHandle, statusResponse);
+                break;
+            default:
+                logger.error("Ctrl-conn: Unexpected command: {}", preamble.commandType.get());
+                break;
         }
     }
 
-    private void handleConnectedInprocMessage(
+    private void handleConnectedNodeMessage(
             final int socketHandle,
             final ZMsg msg,
             final ConnectionsManager connectionsManager
     ) {
-        final UUID inprocIdentifier = socketHandleRegistry.getInprocIdentifier(socketHandle);
-        final String tcpAddress = socketHandleRegistry.getTcpAddressForInprocIdentifier(inprocIdentifier);
+        final NodeId nodeId = socketHandleRegistry.getNodeIdForSocketHandle(socketHandle);
+
+        if (nodeId == null) {
+            logger.error("Node-conn: NodeId not found for socket handle {}. Dropping message.", socketHandle);
+            return;
+        }
 
         final RoutingHeader routingHeader = new RoutingHeader();
         routingHeader.status.set(CONTINUE);
-        routingHeader.tcpAddress.set(tcpAddress);
-        routingHeader.inprocIdentifier.set(inprocIdentifier);
+        routingHeader.instanceUuid.set(nodeId.getInstanceUuid());
+        routingHeader.applicationUuid.set(nodeId.getApplicationUuid());
 
         RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
 
-        final int tcpSocketHandle = socketHandleRegistry.getTcpSocketHandle(tcpAddress);
+        final int invokerSocketHandle = socketHandleRegistry.getInvokerSocketHandleForInstanceUuid(nodeId.getInstanceUuid());
 
-        connectionsManager.sendMsgToSocketHandle(tcpSocketHandle, msg);
+        connectionsManager.sendMsgToSocketHandle(invokerSocketHandle, msg);
     }
 
-    private void handleBoundInprocMessage(
+    private void handleBoundNodeMessage(
             final int socketHandle,
             final ZMsg msg,
             final ConnectionsManager connectionsManager
     ) {
-        final UUID inprocIdentifier = socketHandleRegistry.getInprocIdentifier(socketHandle);
-        final String tcpAddress = socketHandleRegistry.getTcpAddressForInprocIdentifier(inprocIdentifier);
+        final NodeId nodeId = socketHandleRegistry.getNodeIdForSocketHandle(socketHandle);
+
+        if (nodeId == null) {
+            logger.error("Node-bind: NodeId not found for socket handle {}. Dropping message.", socketHandle);
+            return;
+        }
 
         final RoutingHeader routingHeader = new RoutingHeader();
         routingHeader.status.set(CONTINUE);
-        routingHeader.tcpAddress.set(tcpAddress);
-        routingHeader.inprocIdentifier.set(inprocIdentifier);
+        routingHeader.instanceUuid.set(nodeId.getInstanceUuid());
+        routingHeader.applicationUuid.set(nodeId.getApplicationUuid());
 
         RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
 
-        final int tcpSocketHandle = socketHandleRegistry.getTcpSocketHandle(tcpAddress);
+        final int invokerSocketHandle = socketHandleRegistry.getInvokerSocketHandleForInstanceUuid(nodeId.getInstanceUuid());
 
-        connectionsManager.sendMsgToSocketHandle(tcpSocketHandle, msg);
+        connectionsManager.sendMsgToSocketHandle(invokerSocketHandle, msg);
     }
 
 

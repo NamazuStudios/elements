@@ -8,8 +8,6 @@ import org.zeromq.*;
 
 import com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageManagerConfiguration;
 
-import java.util.UUID;
-
 import static com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageManagerConfiguration.Strategy.MULTIPLEX;
 
 import static org.zeromq.ZContext.shadow;
@@ -41,7 +39,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
     @Override
     public void run() {
         final MessageManagerConfiguration messageManagerConfiguration =
-                new MessageManagerConfiguration(MULTIPLEX, null, controlAddress, false);
+                new MessageManagerConfiguration(MULTIPLEX, null, false);
 
         try (final ZContext context = shadow(zContext);
              final MessageManager messageManager = new MessageManager(messageManagerConfiguration);
@@ -53,7 +51,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
                 final int controlSocketHandle = cm.bindToAddressAndBeginPolling(
                         controlAddress,
                         PULL,
-                        messageManager::handleControlMessage,
+                        messageManager::handleBoundControlMessage,
                         false
                 );
                 logger.info("Successfully bound control socket to handle: {}.", controlSocketHandle);

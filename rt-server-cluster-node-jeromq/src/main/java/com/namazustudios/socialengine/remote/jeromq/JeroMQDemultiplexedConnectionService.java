@@ -14,8 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_CONTROL_PORT_NAME;
-import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_INVOKER_PORT_NAME;
+import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
@@ -33,6 +32,8 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     private Integer currentInstanceInvokerPort;
     private Integer currentInstanceControlPort;
     private String applicationNodeFqdn;
+
+    private UUID instanceUuid;
 
     private final AtomicReference<Thread> atomicDemultiplexedConnectionThread = new AtomicReference<>();
 
@@ -56,6 +57,7 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         controlAddresses.add(controlBindAddress);
         final JeroMQDemultiplexedConnectionRunnable demultiplexedConnectionRunnable = new JeroMQDemultiplexedConnectionRunnable(
                 controlAddresses,
+                getInstanceUuid(),
                 getzContext()
         );
         final Thread demultiplexedConnectionThread = new Thread(demultiplexedConnectionRunnable);
@@ -271,4 +273,13 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         this.srvMonitorService = srvMonitorService;
     }
 
+    public UUID getInstanceUuid() {
+        return instanceUuid;
+    }
+
+    @Inject
+    @Named(CURRENT_INSTANCE_UUID_NAME)
+    public void setInstanceUuid(UUID instanceUuid) {
+        this.instanceUuid = instanceUuid;
+    }
 }
