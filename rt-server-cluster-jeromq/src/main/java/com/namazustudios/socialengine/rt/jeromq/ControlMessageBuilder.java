@@ -7,9 +7,15 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import java.nio.ByteBuffer;
+import java.util.Collections;
+import java.util.List;
 
 public interface ControlMessageBuilder {
     static ZMsg buildControlMsg(CommandType commandType, ByteBuffer controlByteBuffer) {
+        return buildControlMsg(commandType, Collections.singletonList(controlByteBuffer));
+    }
+
+    static ZMsg buildControlMsg(CommandType commandType, List<ByteBuffer> controlByteBuffers) {
         final CommandPreamble commandPreamble = new CommandPreamble();
         commandPreamble.commandType.set(commandType);
 
@@ -21,12 +27,15 @@ public interface ControlMessageBuilder {
         byte[] preambleBytes = new byte[preambleByteBuffer.remaining()];
         preambleByteBuffer.get(preambleBytes);
 
-        controlByteBuffer.rewind(); // JF: sometimes the buffer cursor is non-zero, so make sure to explicitly reset
-        byte[] controlBytes = new byte[controlByteBuffer.remaining()];
-        controlByteBuffer.get(controlBytes);
-
         msg.add(new ZFrame(preambleBytes));
-        msg.add(new ZFrame(controlBytes));
+
+        controlByteBuffers.forEach(controlByteBuffer -> {
+            controlByteBuffer.rewind(); // JF: sometimes the buffer cursor is non-zero, so make sure to explicitly reset
+            byte[] controlBytes = new byte[controlByteBuffer.remaining()];
+            controlByteBuffer.get(controlBytes);
+
+            msg.add(new ZFrame(controlBytes));
+        });
 
         return msg;
     }

@@ -17,5 +17,11 @@ public class StatusResponse extends Struct {
         return statusResponse;
     }
 
+    public static StatusResponse StatusResponseFromBytes(final byte[] bytes) {
+        final StatusResponse statusResponse = new StatusResponse();
+        statusResponse.getByteBuffer().put(bytes);
+        return statusResponse;
+    }
+
     public final PackedUUID instanceUuid = inner(new PackedUUID());
 }

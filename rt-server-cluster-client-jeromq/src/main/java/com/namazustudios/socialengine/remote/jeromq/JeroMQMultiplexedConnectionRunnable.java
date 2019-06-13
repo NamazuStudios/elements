@@ -41,7 +41,7 @@ public class JeroMQMultiplexedConnectionRunnable implements Runnable {
     @Override
     public void run() {
         final MessageManagerConfiguration messageManagerConfiguration =
-                new MessageManagerConfiguration(MULTIPLEX, null, false);
+                new MessageManagerConfiguration(MULTIPLEX, null, controlAddress, false);
 
         try (final ZContext context = shadow(zContext);
              final MessageManager messageManager = new MessageManager(messageManagerConfiguration);

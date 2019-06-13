@@ -72,44 +72,34 @@ public class RoutingCommand extends Struct {
         NO_OP,
 
         /**
-         * Establishes a DEALER connection to a ROUTER tcp socket at the given {@link RoutingCommand#tcpAddress}.
+         * Binds a ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress} to begin receiving invoker payloads.
          */
-        CONNECT_TCP,
+        BIND_INVOKER,
 
         /**
-         * Ends the DEALER connection to the ROUTER tcp socket at the given {@link RoutingCommand#tcpAddress}.
+         * Unbinds the ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress} to stop receiving invoker payloads.
          */
-        DISCONNECT_TCP,
-
-        /**
-         * Binds a ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress}.
-         */
-        BIND_TCP,
-
-        /**
-         * Unbinds the ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress}.
-         */
-        UNBIND_TCP,
+        UNBIND_INVOKER,
 
         /**
          * Establishes a DEALER connection to a ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
          */
-        CONNECT_INPROC,
+        CONNECT_NODE,
 
         /**
          * Ends the DEALER connection from the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
          */
-        DISCONNECT_INPROC,
+        DISCONNECT_NODE,
 
         /**
          * Binds a ROUTER inproc socket with the given {@link RoutingCommand#inprocIdentifier}.
          */
-        BIND_INPROC,
+        BIND_NODE,
 
         /**
          * Unbinds the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
          */
-        UNBIND_INPROC,
+        UNBIND_NODE,
 
     }
 

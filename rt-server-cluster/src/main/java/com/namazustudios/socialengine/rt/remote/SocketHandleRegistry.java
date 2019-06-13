@@ -25,6 +25,9 @@ public class SocketHandleRegistry implements AutoCloseable {
     // TODO: have higher-level registry where other layers can inspect instance uuid <-> nodeids
 
     // TODO: expected sizes from env vars
+    private String boundInvokerTcpAddress = null;
+    private int boundInvokerSocketHandle = SOCKET_HANDLE_NOT_FOUND;
+
     private final BiMap<String, Integer> invokerTcpAddressToSocketHandle = new HashBiMap<>(16);
     private final BiMap<String, Integer> controlTcpAddressToSocketHandle = new HashBiMap<>(16);
 
@@ -37,8 +40,14 @@ public class SocketHandleRegistry implements AutoCloseable {
 
     private final Map<UUID, Set<NodeId>> instanceUuidToNodeIds = new HashMap<>(16);
 
+    private final Map<UUID, Set<Integer>> instanceUuidToNodeSocketHandles = new HashMap<>(16);
+
     private Set<NodeId> getOrCreateNodeIdSetForInstanceUuid(final UUID instanceUuid) {
         return instanceUuidToNodeIds.computeIfAbsent(instanceUuid, i -> new HashSet<>());
+    }
+
+    private Set<Integer> getOrCreateNodeSocketHandleSetForInstanceUuid(final UUID instanceUuid) {
+        return instanceUuidToNodeSocketHandles.computeIfAbsent(instanceUuid, i -> new HashSet<>());
     }
 
     private static int returnSocketHandleNotFoundIfNecessary(final Integer socketHandle) {
@@ -108,6 +117,22 @@ public class SocketHandleRegistry implements AutoCloseable {
 
     public NodeId getNodeIdForSocketHandle(final int socketHandle) {
         return nodeIdToSocketHandle.inverse().get(socketHandle);
+    }
+
+    public Set<Integer> getNodeSocketHandlesForInstanceUuid(final UUID instanceUuid) {
+        return instanceUuidToNodeSocketHandles.get(instanceUuid);
+    }
+
+    public Set<UUID> getRegisteredInstanceUuids() {
+        return instanceUuidToInvokerSocketHandle.keySet();
+    }
+
+    public String getBoundInvokerTcpAddress() {
+        return boundInvokerTcpAddress;
+    }
+
+    public int getBoundInvokerSocketHandle() {
+        return boundInvokerSocketHandle;
     }
 
     /**
@@ -180,6 +205,8 @@ public class SocketHandleRegistry implements AutoCloseable {
             nodeIdToSocketHandle.keySet().removeAll(nodeIds);
         }
 
+        instanceUuidToNodeSocketHandles.remove(instanceUuid);
+
         return true;
     }
 
@@ -187,16 +214,34 @@ public class SocketHandleRegistry implements AutoCloseable {
         nodeIdToSocketHandle.put(nodeId, nodeSocketHandle);
 
         final UUID instanceUuid = nodeId.getInstanceUuid();
+
         final Set<NodeId> nodeIds = getOrCreateNodeIdSetForInstanceUuid(instanceUuid);
         nodeIds.add(nodeId);
+
+        final Set<Integer> nodeSocketHandles = getOrCreateNodeSocketHandleSetForInstanceUuid(instanceUuid);
+        nodeSocketHandles.add(nodeSocketHandle);
     }
 
     public void unregisterNode(final NodeId nodeId) {
-        nodeIdToSocketHandle.remove(nodeId);
+        final int nodeSocketHandle = nodeIdToSocketHandle.remove(nodeId);
 
         final UUID instanceUuid = nodeId.getInstanceUuid();
+
         final Set<NodeId> nodeIds = getOrCreateNodeIdSetForInstanceUuid(instanceUuid);
         nodeIds.remove(nodeId);
+
+        final Set<Integer> nodeSocketHandles = getOrCreateNodeSocketHandleSetForInstanceUuid(instanceUuid);
+        nodeSocketHandles.remove(nodeSocketHandle);
+    }
+
+    public void registerBoundInvokerSocket(final String boundInvokerTcpAddress, final int boundInvokerSocketHandle) {
+        this.boundInvokerTcpAddress = boundInvokerTcpAddress;
+        this.boundInvokerSocketHandle = boundInvokerSocketHandle;
+    }
+
+    public void unregisterBoundInvokerSocket() {
+        this.boundInvokerTcpAddress = null;
+        this.boundInvokerSocketHandle = SOCKET_HANDLE_NOT_FOUND;
     }
 
     @Override
@@ -212,5 +257,7 @@ public class SocketHandleRegistry implements AutoCloseable {
         nodeIdToSocketHandle.clear();
 
         instanceUuidToNodeIds.clear();
+
+        instanceUuidToNodeSocketHandles.clear();
     }
 }

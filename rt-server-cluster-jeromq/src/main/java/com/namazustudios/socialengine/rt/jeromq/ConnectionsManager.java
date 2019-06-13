@@ -74,32 +74,32 @@ public class ConnectionsManager implements AutoCloseable {
             }
 
             range(0, poller.getNext())
-                    .filter(socketHandle -> poller.getItem(socketHandle) != null)
-                    .forEach(socketHandle -> {
-                        final boolean didReceiveInput = poller.pollin(socketHandle);
-                        final boolean didReceiveError = poller.pollerr(socketHandle);
+                .filter(socketHandle -> poller.getItem(socketHandle) != null)
+                .forEach(socketHandle -> {
+                    final boolean didReceiveInput = poller.pollin(socketHandle);
+                    final boolean didReceiveError = poller.pollerr(socketHandle);
 
-                        if (didReceiveInput) {
-                            final ZMQ.Socket socket = poller.getSocket(socketHandle);
-                            final ZMsg msg = recvMsg(socket);
+                    if (didReceiveInput) {
+                        final ZMQ.Socket socket = poller.getSocket(socketHandle);
+                        final ZMsg msg = recvMsg(socket);
 
-                            final Map<Integer, MessageConsumer> messageHandlers = atomicMessageHandlers.get();
+                        final Map<Integer, MessageConsumer> messageHandlers = atomicMessageHandlers.get();
 
-                            if (!messageHandlers.containsKey(socketHandle)) {
-                                logger.warn("Message Handler not found for socket handle {}. Dropping message.", socketHandle);
-                                return;
-                            }
-
-                            final MessageConsumer messageConsumer = messageHandlers.get(socketHandle);
-
-                            messageConsumer.accept(socketHandle, msg, this);
+                        if (!messageHandlers.containsKey(socketHandle)) {
+                            logger.warn("Message Handler not found for socket handle {}. Dropping message.", socketHandle);
+                            return;
                         }
-                        else if (didReceiveError) {
-                            throw new InternalException(
-                                    "Poller error on socket handle: " + poller.getSocket(socketHandle)
-                            );
-                        }
-                    });
+
+                        final MessageConsumer messageConsumer = messageHandlers.get(socketHandle);
+
+                        messageConsumer.accept(socketHandle, msg, this);
+                    }
+                    else if (didReceiveError) {
+                        throw new InternalException(
+                                "Poller error on socket handle: " + poller.getSocket(socketHandle)
+                        );
+                    }
+                });
         }
     }
 
