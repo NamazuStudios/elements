@@ -24,16 +24,20 @@ import java.util.UUID;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
-import static com.namazustudios.socialengine.rt.Node.LOCAL_INSTANCE_ID;
-import static com.namazustudios.socialengine.rt.Node.MASTER_NODE;
+import static com.namazustudios.socialengine.rt.Constants.IS_LOCAL_ENVIRONMENT_NAME;
+import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_UUID_NAME;
+import static com.namazustudios.socialengine.rt.Constants.MASTER_NODE_NAME;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
 public class MultiNodeContainerModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(MultiNodeContainerModule.class);
 
+
     @Override
     protected void configure() {
+        final Provider<Boolean> isLocalInstanceProvider = getProvider(Key.get(Boolean.class, named(IS_LOCAL_ENVIRONMENT_NAME)));
+        final boolean isLocalInstance = isLocalInstanceProvider.get();
 
         install(new ZContextModule());
         bind(MultiNodeContainer.class).asEagerSingleton();
@@ -50,16 +54,27 @@ public class MultiNodeContainerModule extends AbstractModule {
             .to(SpotifySrvMonitorService.class)
             .asEagerSingleton();
 
+        if (isLocalInstance) {
+            bind(InstanceDiscoveryService.class)
+                .to(StaticInstanceDiscoveryService.class)
+                .asEagerSingleton();
+        }
+        else {
+            bind(InstanceDiscoveryService.class)
+                .to(SrvInstanceDiscoveryService.class)
+                .asEagerSingleton();
+        }
+
         bind(new TypeLiteral<Set<Node>>(){})
             .toProvider(nodeProvider())
             .asEagerSingleton();
 
         bind(Node.class)
-            .annotatedWith(named(MASTER_NODE))
+            .annotatedWith(named(MASTER_NODE_NAME))
             .toProvider(masterNodeProvider());
 
         bind(UUID.class)
-            .annotatedWith(named(LOCAL_INSTANCE_ID))
+            .annotatedWith(named(CURRENT_INSTANCE_UUID_NAME))
             .toInstance(new FromDiskInstanceUuidProvider().get());
     }
 
@@ -81,7 +96,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         final Provider<GitLoader> gitLoaderProvider = getProvider(GitLoader.class);
         final Provider<ConnectionService> connectionServiceProvider = getProvider(ConnectionService.class);
         final Provider<File> resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
-        final Provider<UUID> instanceUuidProvider = getProvider(Key.get(UUID.class, named(LOCAL_INSTANCE_ID)));
+        final Provider<UUID> instanceUuidProvider = getProvider(Key.get(UUID.class, named(CURRENT_INSTANCE_UUID_NAME)));
 
         return () -> {
 

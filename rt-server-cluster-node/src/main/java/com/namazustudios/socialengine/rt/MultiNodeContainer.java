@@ -12,9 +12,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static com.namazustudios.socialengine.rt.Node.MASTER_NODE;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.UUID.nameUUIDFromBytes;
+import static com.namazustudios.socialengine.rt.Node.MASTER_NODE_NAME;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -47,9 +45,7 @@ public class MultiNodeContainer implements AutoCloseable {
         }
 
         getNodeSet().forEach(node -> {
-            final UUID inprocIdentifier = node.getNodeId().getApplicationUuid();
-
-            getConnectionService().issueConnectInprocCommand(null, inprocIdentifier);
+            getConnectionService().issueConnectInprocCommand(null, node.getNodeId());
         });
 
         exceptionList.addAll(getNodeSet().parallelStream().map(node -> {
@@ -66,9 +62,7 @@ public class MultiNodeContainer implements AutoCloseable {
             getMasterNode().start();
 
             // for now, by convention we use the instance uuid for the inproc address for the master node
-            final UUID inprocIdentifier = getMasterNode().getNodeId().getInstanceUuid();
-
-            getConnectionService().issueConnectInprocCommand(null, inprocIdentifier);
+            getConnectionService().issueConnectInprocCommand(null, getMasterNode().getNodeId());
         }
         catch (Exception e) {
             logger.error("Error stopping node.", e);
@@ -140,7 +134,7 @@ public class MultiNodeContainer implements AutoCloseable {
     }
 
     @Inject
-    public void setMasterNode(@Named(MASTER_NODE) Node masterNode) {
+    public void setMasterNode(@Named(MASTER_NODE_NAME) Node masterNode) {
         this.masterNode = masterNode;
     }
 }

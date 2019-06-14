@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
+import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 import com.namazustudios.socialengine.rt.srv.SrvRecord;
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -69,46 +69,46 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
 
     private void setUpAndStartSrvMonitor() {
 
-        srvMonitorService.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
-            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
-
-            if (didIssueCommand) {
-                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-            else {
-                logger.info("Failed to issue open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-        });
-
-        srvMonitorService.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
-            // for now, ignore updates
-            logger.info("Detected App Node SRV record update: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-        });
-
-        srvMonitorService.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
-            logger.info("Detected App Node SRV record deletion: host={} port={}",
-                    srvRecord.getHost(), srvRecord.getPort());
-
-            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getUniqueIdentifier());
-
-            if (didIssueCommand) {
-                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-            else {
-                logger.info("Failed to issue close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-        });
-
-        logger.info("Starting SRV record monitor for FQDN: {}...", applicationNodeFqdn);
-        final boolean didStart = srvMonitorService.start(applicationNodeFqdn);
-
-        if (didStart) {
-            logger.info("Successfully started SRV record monitor for FQDN: {}", applicationNodeFqdn);
-        }
-        else {
-            throw new IllegalStateException("Failed to start SRV record monitor for FQDN: " + applicationNodeFqdn);
-        }
+//        srvMonitorService.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
+//            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            final boolean didIssueCommand = connectToInstance(srvRecord.getHostAndPort());
+//
+//            if (didIssueCommand) {
+//                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//            else {
+//                logger.info("Failed to issue open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//        });
+//
+//        srvMonitorService.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
+//            // for now, ignore updates
+//            logger.info("Detected App Node SRV record update: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//        });
+//
+//        srvMonitorService.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
+//            logger.info("Detected App Node SRV record deletion: host={} port={}",
+//                    srvRecord.getHost(), srvRecord.getPort());
+//
+//            final boolean didIssueCommand = disconnectFromInstance(srvRecord.getHostAndPort());
+//
+//            if (didIssueCommand) {
+//                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//            else {
+//                logger.info("Failed to issue close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//        });
+//
+//        logger.info("Starting SRV record monitor for FQDN: {}...", applicationNodeFqdn);
+//        final boolean didStart = srvMonitorService.start(applicationNodeFqdn);
+//
+//        if (didStart) {
+//            logger.info("Successfully started SRV record monitor for FQDN: {}", applicationNodeFqdn);
+//        }
+//        else {
+//            throw new IllegalStateException("Failed to start SRV record monitor for FQDN: " + applicationNodeFqdn);
+//        }
 
     }
 
@@ -142,32 +142,49 @@ public class JeroMQMultiplexedConnectionService implements ConnectionService {
     }
 
     @Override
-    // TODO: make some intermediary connection service that takes care of this and srv monitor
-    public boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                srvUniqueIdentifier.getHost(),
-                srvUniqueIdentifier.getPort());
+    public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(backendAddress);
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlTcpAddress == null) {
+            return false;
+        }
+
+        issueConnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }
 
     @Override
-    public boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                srvUniqueIdentifier.getHost(),
-                srvUniqueIdentifier.getPort());
+    public boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueDisconnectTcpCommand(backendAddress);
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlTcpAddress == null) {
+            return false;
+        }
+
+        issueDisconnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }

@@ -220,7 +220,7 @@ public class JeroMQNode implements Node {
     }
 
     @Inject
-    @Named(LOCAL_INSTANCE_ID)
+    @Named(CURRENT_INSTANCE_UUID_NAME)
     public void setInstanceUuid(UUID instanceUuid) {
         this.instanceUuid = instanceUuid;
     }

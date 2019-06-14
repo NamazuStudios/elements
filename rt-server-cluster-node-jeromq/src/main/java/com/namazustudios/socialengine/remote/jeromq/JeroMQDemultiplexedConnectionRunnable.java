@@ -9,6 +9,7 @@ import org.zeromq.*;
 import com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageManagerConfiguration;
 
 import java.util.Set;
+import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.jeromq.MessageManager.MessageManagerConfiguration.Strategy.DEMULTIPLEX;
 
@@ -28,9 +29,13 @@ public class JeroMQDemultiplexedConnectionRunnable implements Runnable {
 
     private final SyncWait<Void> threadBlocker = new SyncWait<>(logger);
 
+    private final UUID instanceUuid;
+
     public JeroMQDemultiplexedConnectionRunnable(final Set<String> controlAddresses,
+                                                 final UUID instanceUuid,
                                                  final ZContext zContext) {
         this.controlAddresses = controlAddresses;
+        this.instanceUuid = instanceUuid;
         this.zContext = zContext;
     }
 
@@ -41,7 +46,7 @@ public class JeroMQDemultiplexedConnectionRunnable implements Runnable {
     @Override
     public void run() {
         final MessageManagerConfiguration messageManagerConfiguration =
-                new MessageManagerConfiguration(DEMULTIPLEX, true);
+                new MessageManagerConfiguration(DEMULTIPLEX, instanceUuid, true);
 
         try (final ZContext context = shadow(zContext);
              final MessageManager messageManager = new MessageManager(messageManagerConfiguration);
@@ -53,7 +58,7 @@ public class JeroMQDemultiplexedConnectionRunnable implements Runnable {
                 final int controlSocketHandle = cm.bindToAddressesAndBeginPolling(
                         controlAddresses,
                         REP,
-                        messageManager::handleControlMessage,
+                        messageManager::handleBoundControlMessage,
                         false
                 );
                 logger.info("Successfully bound control socket to handle: {}.", controlSocketHandle);

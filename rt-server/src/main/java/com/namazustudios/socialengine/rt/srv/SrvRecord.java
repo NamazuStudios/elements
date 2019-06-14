@@ -1,10 +1,14 @@
 package com.namazustudios.socialengine.rt.srv;
 
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
+import com.google.common.net.HostAndPort;
 import com.spotify.dns.LookupResult;
 
 import java.util.Objects;
 
+/**
+ * By convention, the SrvRecord advertises the connect port, and we define the control port in env vars (utilized in
+ * SrvInstanceDiscoveryService).
+ */
 public class SrvRecord {
 
     final private String host;
@@ -102,8 +106,8 @@ public class SrvRecord {
         this.ttl = ttl;
     }
 
-    public SrvUniqueIdentifier getUniqueIdentifier() {
-        return new SrvUniqueIdentifier(getHost(), getPort());
+    public HostAndPort getHostAndPort() {
+        return HostAndPort.fromParts(getHost(), getPort());
     }
 
     @Override

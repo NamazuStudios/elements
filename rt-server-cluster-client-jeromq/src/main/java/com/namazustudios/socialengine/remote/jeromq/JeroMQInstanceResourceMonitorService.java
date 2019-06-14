@@ -14,7 +14,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class JeroMQInstanceResourceMonitorService implements InstanceResourceMonitorService {
+public class JeroMQInstanceResourceMonitorService implements InstanceResourceMonitorService, InstanceConnectionMonitorServiceListener {
     private final AtomicBoolean atomicIsRunning = new AtomicBoolean(false);
 
     private final AtomicReference<Map<UUID, InstanceMetadataContext>> atomicInstanceMetadataContexts = new AtomicReference<>(new HashMap<>());

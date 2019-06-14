@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
+import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.jeromq.*;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
-import com.namazustudios.socialengine.rt.srv.SrvRecord;
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -15,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder.buildControlMsg;
@@ -27,13 +27,13 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexedConnectionService.class);
 
-    public static final String BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.bindPort";
-    public static final String CONTROL_BIND_PORT = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.controlBindPort";
     public static final String APPLICATION_NODE_FQDN = "com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.applicationNodeFqdn";
 
-    private Integer bindPort;
-    private Integer controlBindPort;
+    private Integer currentInstanceInvokerPort;
+    private Integer currentInstanceControlPort;
     private String applicationNodeFqdn;
+
+    private UUID instanceUuid;
 
     private final AtomicReference<Thread> atomicDemultiplexedConnectionThread = new AtomicReference<>();
 
@@ -53,10 +53,11 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     private void setUpAndStartDemultiplexedConnection() {
         final Set<String> controlAddresses = new HashSet<>();
         controlAddresses.add(controlAddress);
-        final String controlBindAddress = RouteRepresentationUtil.buildTcpAddress("*", controlBindPort);
+        final String controlBindAddress = RouteRepresentationUtil.buildTcpAddress("*", getCurrentInstanceControlPort());
         controlAddresses.add(controlBindAddress);
         final JeroMQDemultiplexedConnectionRunnable demultiplexedConnectionRunnable = new JeroMQDemultiplexedConnectionRunnable(
                 controlAddresses,
+                getInstanceUuid(),
                 getzContext()
         );
         final Thread demultiplexedConnectionThread = new Thread(demultiplexedConnectionRunnable);
@@ -72,74 +73,74 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
             logger.info("Successfully started demultiplexed thread and established control channel.");
 
             // now that we have a control channel set up, immediately establish the tcp bind so other instances can talk with this app node
-            bindBackendAddress();
+            bindInvokerAddress();
         } else {
             throw new IllegalStateException("Failed to set up demultiplexed connection.");
         }
     }
 
-    private void bindBackendAddress() {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress("*", getBindPort());
-        logger.info("Issuing bind tcp command to address: {}....", backendAddress);
-        issueBindTcpCommand(backendAddress);
-        logger.info("Successfully issued bind tcp command to address: {}....", backendAddress);
+    private void bindInvokerAddress() {
+        final String invokerAddress = RouteRepresentationUtil.buildTcpAddress("*", getCurrentInstanceInvokerPort());
+        logger.info("Issuing bind tcp command to address: {}....", invokerAddress);
+        issueBindTcpCommand(invokerAddress);
+        logger.info("Successfully issued bind tcp command to address: {}....", invokerAddress);
     }
 
     void setUpAndStartSrvMonitor() {
 
-        srvMonitorService.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
-            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-
-            // if we discover the current instance's srv record...
-            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getBindPort()) {
-                logger.info("Skipping issue open backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-                return; // then ignore it and do not connect
-            }
-
-            final boolean didIssueCommand = connectToBackend(srvRecord.getUniqueIdentifier());
-
-            if (didIssueCommand) {
-                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-            else {
-                logger.info("Failed to issue open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-        });
-
-        srvMonitorService.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
-            // for now, ignore updates
-            logger.info("Detected App Node SRV record update: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-        });
-
-        srvMonitorService.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
-            logger.info("Detected App Node SRV record deletion: host={} port={}",
-                    srvRecord.getHost(), srvRecord.getPort());
-
-            // if we discover the current instance's srv record...
-            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getBindPort()) {
-                logger.info("Skipping issue close backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-                return; // then ignore it and do not issue unnecessary disconnect command
-            }
-
-            final boolean didIssueCommand = disconnectFromBackend(srvRecord.getUniqueIdentifier());
-
-            if (didIssueCommand) {
-                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-            else {
-                logger.info("Failed to issue close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
-            }
-        });
-
-        logger.info("Starting SRV record monitor for FQDN: {}...", applicationNodeFqdn);
-        final boolean didStart = srvMonitorService.start(applicationNodeFqdn);
-
-        if (didStart) {
-            logger.info("Successfully started SRV record monitor for FQDN: {}", applicationNodeFqdn);
-        }
-        else {
-            throw new IllegalStateException("Failed to start SRV record monitor for FQDN: " + applicationNodeFqdn);
-        }
+//        srvMonitorService.registerOnCreatedSrvRecordListener((SrvRecord srvRecord) -> {
+//            logger.info("Detected App Node SRV record creation: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//
+//            // if we discover the current instance's srv record...
+//            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getConnectBindPort()) {
+//                logger.info("Skipping issue open backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//                return; // then ignore it and do not connect
+//            }
+//
+//            final boolean didIssueCommand = connectToInstance(srvRecord.getHostAndPort());
+//
+//            if (didIssueCommand) {
+//                logger.info("Successfully issued open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//            else {
+//                logger.info("Failed to issue open backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//        });
+//
+//        srvMonitorService.registerOnUpdatedSrvRecordListener((SrvRecord srvRecord) -> {
+//            // for now, ignore updates
+//            logger.info("Detected App Node SRV record update: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//        });
+//
+//        srvMonitorService.registerOnDeletedSrvRecordListener((SrvRecord srvRecord) -> {
+//            logger.info("Detected App Node SRV record deletion: host={} port={}",
+//                    srvRecord.getHost(), srvRecord.getPort());
+//
+//            // if we discover the current instance's srv record...
+//            if (RouteRepresentationUtil.isHostLocalhost(srvRecord.getHost()) && srvRecord.getPort() == getConnectBindPort()) {
+//                logger.info("Skipping issue close backend command to local instance: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//                return; // then ignore it and do not issue unnecessary disconnect command
+//            }
+//
+//            final boolean didIssueCommand = disconnectFromInstance(srvRecord.getHostAndPort());
+//
+//            if (didIssueCommand) {
+//                logger.info("Successfully issued close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//            else {
+//                logger.info("Failed to issue close backend command for: host={} port={}", srvRecord.getHost(), srvRecord.getPort());
+//            }
+//        });
+//
+//        logger.info("Starting SRV record monitor for FQDN: {}...", applicationNodeFqdn);
+//        final boolean didStart = srvMonitorService.start(applicationNodeFqdn);
+//
+//        if (didStart) {
+//            logger.info("Successfully started SRV record monitor for FQDN: {}", applicationNodeFqdn);
+//        }
+//        else {
+//            throw new IllegalStateException("Failed to start SRV record monitor for FQDN: " + applicationNodeFqdn);
+//        }
 
     }
 
@@ -174,32 +175,49 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
     }
 
     @Override
-    // TODO: make some intermediary connection service that takes care of this and srv monitor
-    public boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                srvUniqueIdentifier.getHost(),
-                srvUniqueIdentifier.getPort());
+    public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueConnectTcpCommand(backendAddress);
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlTcpAddress == null) {
+            return false;
+        }
+
+        issueConnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }
 
     @Override
-    public boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier) {
-        final String backendAddress = RouteRepresentationUtil.buildTcpAddress(
-                srvUniqueIdentifier.getHost(),
-                srvUniqueIdentifier.getPort());
+    public boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                invokerHostAndPort.getHost(),
+                invokerHostAndPort.getPort());
 
-        if (backendAddress == null) {
+        if (invokerTcpAddress == null) {
             return false;
         }
 
-        issueDisconnectTcpCommand(backendAddress);
+        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+                controlHostAndPort.getHost(),
+                controlHostAndPort.getPort()
+        );
+
+        if (controlTcpAddress == null) {
+            return false;
+        }
+
+        issueDisconnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
 
         return true;
     }
@@ -213,22 +231,24 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         this.zContext = zContext;
     }
 
-    public Integer getBindPort() {
-        return bindPort;
+    public Integer getCurrentInstanceInvokerPort() {
+        return currentInstanceInvokerPort;
     }
 
     @Inject
-    public void setBindPort(@Named(BIND_PORT) Integer bindPort) {
-        this.bindPort = bindPort;
+    @Named(CURRENT_INSTANCE_INVOKER_PORT_NAME)
+    public void setCurrentInstanceInvokerPort(Integer currentInstanceInvokerPort) {
+        this.currentInstanceInvokerPort = currentInstanceInvokerPort;
     }
 
-    public Integer getControlBindPort() {
-        return controlBindPort;
+    public Integer getCurrentInstanceControlPort() {
+        return currentInstanceControlPort;
     }
 
     @Inject
-    public void setControlBindPort(@Named(CONTROL_BIND_PORT) Integer controlBindPort) {
-        this.controlBindPort = controlBindPort;
+    @Named(CURRENT_INSTANCE_CONTROL_PORT_NAME)
+    public void setCurrentInstanceControlPort(Integer currentInstanceControlPort) {
+        this.currentInstanceControlPort = currentInstanceControlPort;
     }
 
     public String getControlAddress() {
@@ -253,4 +273,13 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
         this.srvMonitorService = srvMonitorService;
     }
 
+    public UUID getInstanceUuid() {
+        return instanceUuid;
+    }
+
+    @Inject
+    @Named(CURRENT_INSTANCE_UUID_NAME)
+    public void setInstanceUuid(UUID instanceUuid) {
+        this.instanceUuid = instanceUuid;
+    }
 }

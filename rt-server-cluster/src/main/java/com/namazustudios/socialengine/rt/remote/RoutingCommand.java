@@ -8,8 +8,23 @@ import java.util.UUID;
 
 /**
  * Used to control the routes stored.
+ *
+ * TODO: maybe split out invoker routing command vs node routing command
  */
 public class RoutingCommand extends Struct {
+    public static RoutingCommand buildRoutingCommand(
+        final Action action,
+        final String tcpAddress
+    ) {
+        return buildRoutingCommand(action, tcpAddress, null);
+    }
+
+    public static RoutingCommand buildRoutingCommand(
+        final Action action,
+        final NodeId nodeId
+    ) {
+        return buildRoutingCommand(action, null, nodeId);
+    }
 
     public static RoutingCommand buildRoutingCommand(
             final Action action,
@@ -28,8 +43,14 @@ public class RoutingCommand extends Struct {
             routingCommand.tcpAddress.set(tcpAddress);
         }
 
-        if (nodeId != null && nodeId.getApplicationUuid() != null) {
-            routingCommand.inprocIdentifier.set(nodeId.getApplicationUuid());
+        if (nodeId != null) {
+            if (nodeId.getInstanceUuid() != null) {
+                routingCommand.instanceUuid.set(nodeId.getInstanceUuid());
+            }
+
+            if (nodeId.getApplicationUuid() != null) {
+                routingCommand.applicationUuid.set(nodeId.getApplicationUuid());
+            }
         }
 
         return routingCommand;
@@ -47,19 +68,24 @@ public class RoutingCommand extends Struct {
     public final Enum32<Action> action = new Enum32<>(Action.values());
 
     /**
-     * The tcpAddress destination. This should be non-null if action is {@link Action#CONNECT_TCP} or
-     * {@link Action#DISCONNECT_TCP}, and it will be ignored if the action is INPROC-related.
+     * The tcpAddress destination. This should be non-null if action is {@link Action#BIND_INVOKER}, and it will be
+     * ignored otherwise.
      *
      * TODO: split out the tcp routing commands into a separate struct to reduce inproc command transmission size.
      */
     public final UTF8String tcpAddress = new UTF8String(64);
 
     /**
-     * The inprocIdentifier {@link java.util.UUID} to control. This should be non-null if action is
-     * INPROC-related, and it will be ignored if the action is
-     * {@link Action#CONNECT_TCP} or {@link Action#DISCONNECT_TCP}.
+     * The instance uuid of a Node to control. This should be non-null if the action is Node related, and it will be
+     * ignored otherwise.
      */
-    public final PackedUUID inprocIdentifier = inner(new PackedUUID());
+    public final PackedUUID instanceUuid = inner(new PackedUUID());
+
+    /**
+     * The application uuid of a Node to control. This should be non-null if the action is Node related, and it will be
+     * ignored otherwise.
+     */
+    public final PackedUUID applicationUuid = inner(new PackedUUID());
 
     /**
      * A list of actions which can be performed.
@@ -72,45 +98,34 @@ public class RoutingCommand extends Struct {
         NO_OP,
 
         /**
-         * Establishes a DEALER connection to a ROUTER tcp socket at the given {@link RoutingCommand#tcpAddress}.
+         * Binds a ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress} to begin receiving invoker payloads.
          */
-        CONNECT_TCP,
+        BIND_INVOKER,
 
         /**
-         * Ends the DEALER connection to the ROUTER tcp socket at the given {@link RoutingCommand#tcpAddress}.
+         * Unbinds the ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress} to stop receiving invoker payloads.
          */
-        DISCONNECT_TCP,
+        UNBIND_INVOKER,
 
         /**
-         * Binds a ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress}.
+         * Establishes a DEALER connection to a ROUTER inproc socket.
          */
-        BIND_TCP,
+        CONNECT_NODE,
 
         /**
-         * Unbinds the ROUTER tcp socket with the given {@link RoutingCommand#tcpAddress}.
+         * Ends the DEALER connection from the ROUTER inproc socket.
          */
-        UNBIND_TCP,
+        DISCONNECT_NODE,
 
         /**
-         * Establishes a DEALER connection to a ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
+         * Binds a ROUTER inproc socket.
          */
-        CONNECT_INPROC,
+        BIND_NODE,
 
         /**
-         * Ends the DEALER connection from the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
+         * Unbinds the ROUTER inproc socket.
          */
-        DISCONNECT_INPROC,
-
-        /**
-         * Binds a ROUTER inproc socket with the given {@link RoutingCommand#inprocIdentifier}.
-         */
-        BIND_INPROC,
-
-        /**
-         * Unbinds the ROUTER inproc socket for the given {@link RoutingCommand#inprocIdentifier}.
-         */
-        UNBIND_INPROC,
+        UNBIND_NODE,
 
     }
-
 }

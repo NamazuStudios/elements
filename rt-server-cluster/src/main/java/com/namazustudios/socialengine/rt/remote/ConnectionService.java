@@ -1,18 +1,19 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import java.nio.ByteBuffer;
-import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.INSTANCE_CONNECTION_COMMAND;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
 
+import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
-import com.namazustudios.socialengine.rt.SrvUniqueIdentifier;
 
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.buildRoutingCommand;
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.*;
-import static com.namazustudios.socialengine.rt.remote.RoutingCommand.Action.DISCONNECT_TCP;
+
+import static com.namazustudios.socialengine.rt.remote.InstanceConnectionCommand.buildInstanceConnectionCommand;
 
 public interface ConnectionService {
 
@@ -29,35 +30,27 @@ public interface ConnectionService {
     void stop();
 
     default void issueBindTcpCommand(final String tcpAddress) {
-        issueRoutingCommand(BIND_TCP, tcpAddress, null);
+        issueRoutingCommand(BIND_INVOKER, tcpAddress, null);
     }
 
     default void issueUnbindTcpCommand(final String tcpAddress) {
-        issueRoutingCommand(UNBIND_TCP, tcpAddress, null);
-    }
-
-    default void issueConnectTcpCommand(final String tcpAddress) {
-        issueRoutingCommand(CONNECT_TCP, tcpAddress, null);
-    }
-
-    default void issueDisconnectTcpCommand(final String tcpAddress) {
-        issueRoutingCommand(DISCONNECT_TCP, tcpAddress, null);
+        issueRoutingCommand(UNBIND_INVOKER, tcpAddress, null);
     }
 
     default void issueBindInprocCommand(final String tcpAddress, final NodeId nodeId) {
-        issueRoutingCommand(BIND_INPROC, tcpAddress, nodeId);
+        issueRoutingCommand(BIND_NODE, tcpAddress, nodeId);
     }
 
     default void issueUnbindInprocCommand(final String tcpAddress, final NodeId nodeId) {
-        issueRoutingCommand(UNBIND_INPROC, tcpAddress, nodeId);
+        issueRoutingCommand(UNBIND_NODE, tcpAddress, nodeId);
     }
 
     default void issueConnectInprocCommand(final String tcpAddress, final NodeId nodeId) {
-        issueRoutingCommand(CONNECT_INPROC, tcpAddress, nodeId);
+        issueRoutingCommand(CONNECT_NODE, tcpAddress, nodeId);
     }
 
     default void issueDisconnectInprocCommand(final String tcpAddress, final NodeId nodeId) {
-        issueRoutingCommand(DISCONNECT_INPROC, tcpAddress, nodeId);
+        issueRoutingCommand(DISCONNECT_NODE, tcpAddress, nodeId);
     }
 
     default void issueRoutingCommand(final Action action, final String tcpAddress, final NodeId nodeId) {
@@ -69,6 +62,18 @@ public interface ConnectionService {
         issueCommand(ROUTING_COMMAND, command.getByteBuffer());
     }
 
+    default void issueConnectInstanceCommand(final String invokerTcpAddress, final String controlTcpAddress) {
+        final InstanceConnectionCommand instanceConnectionCommand =
+                buildInstanceConnectionCommand(InstanceConnectionCommand.Action.CONNECT, invokerTcpAddress, controlTcpAddress);
+        issueCommand(INSTANCE_CONNECTION_COMMAND, instanceConnectionCommand.getByteBuffer());
+    }
+
+    default void issueDisconnectInstanceCommand(final String invokerTcpAddress, final String controlTcpAddress) {
+        final InstanceConnectionCommand instanceConnectionCommand =
+                buildInstanceConnectionCommand(InstanceConnectionCommand.Action.DISCONNECT, invokerTcpAddress, controlTcpAddress);
+        issueCommand(INSTANCE_CONNECTION_COMMAND, instanceConnectionCommand.getByteBuffer());
+    }
+
     /**
      * Issues a command over the control socket.
      *
@@ -77,6 +82,6 @@ public interface ConnectionService {
      */
     void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer);
 
-    boolean connectToBackend(final SrvUniqueIdentifier srvUniqueIdentifier);
-    boolean disconnectFromBackend(final SrvUniqueIdentifier srvUniqueIdentifier);
+    boolean connectToInstance(final HostAndPort connectHostAndPort, final HostAndPort controlHostAndPort);
+    boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort);
 }

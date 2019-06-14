@@ -16,12 +16,9 @@ public class RoutingHeader extends Struct {
      */
     public final Enum32<Status> status = new Enum32<>(Status.values());
 
-    public final UTF8String tcpAddress = new UTF8String(128);
+    public final PackedUUID instanceUuid = inner(new PackedUUID());
 
-    /**
-     * Represents the message's final inprocIdentifier.  Typically corresponds to an ID generated from a Node id.
-     */
-    public final PackedUUID inprocIdentifier = inner(new PackedUUID());
+    public final PackedUUID applicationUuid = inner(new PackedUUID());
 
     public enum Status {
 

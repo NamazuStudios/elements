@@ -62,4 +62,20 @@ public interface Constants {
      */
     String SCHEDULER_THREADS = "com.namazustudios.socialengine.rt.scheduler.threads";
 
+    /**
+     * Whether or not the environment is local.
+     */
+    String IS_LOCAL_ENVIRONMENT_NAME = "com.namazustudios.socialengine.rt.is_local_environment";
+
+    String STATIC_INSTANCE_INVOKER_ADDRESSES_NAME = "com.namazustudios.socialengine.rt.static_instance_invoker_addresses";
+    String STATIC_INSTANCE_CONTROL_ADDRESSES_NAME = "com.namazustudios.socialengine.rt.static_instance_control_addresses";
+
+    String SRV_INSTANCE_INVOKER_PORT_NAME = "com.namazustudios.socialengine.rt.srv_instance_invoker_port";
+    String SRV_INSTANCE_CONTROL_PORT_NAME = "com.namazustudios.socialengine.rt.srv_instance_control_port";
+
+    String CURRENT_INSTANCE_INVOKER_PORT_NAME = "com.namazustudios.socialengine.rt.current_instance_invoker_port";
+    String CURRENT_INSTANCE_CONTROL_PORT_NAME = "com.namazustudios.socialengine.rt.current_instance_control_port";
+
+    String CURRENT_INSTANCE_UUID_NAME = "com.namazustudios.socialengine.rt.current_instance_id";
+    String MASTER_NODE_NAME = "com.namazustudios.socialengine.rt.master_node";
 }
