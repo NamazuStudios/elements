@@ -36,7 +36,8 @@ public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, Sr
 
     public void onSrvRecordDeleted(SrvRecord srvRecord) {
         final HostAndPort invokerHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceInvokerPort());
-        getConnectionService().disconnectFromInstance(invokerHostAndPort);
+        final HostAndPort controlHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceControlPort());
+        getConnectionService().disconnectFromInstance(invokerHostAndPort, controlHostAndPort);
     }
 
     public ConnectionService getConnectionService() {

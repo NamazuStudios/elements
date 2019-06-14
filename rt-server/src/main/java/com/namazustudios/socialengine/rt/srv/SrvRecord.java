@@ -6,8 +6,7 @@ import com.spotify.dns.LookupResult;
 import java.util.Objects;
 
 /**
- * By convention, the SrvRecord advertises the connect port, and we define the control port in env vars (utilized in
- * SrvInstanceDiscoveryService).
+ * By convention, the SrvRecord advertises the port, but we do not utilize it.
  */
 public class SrvRecord {
 
