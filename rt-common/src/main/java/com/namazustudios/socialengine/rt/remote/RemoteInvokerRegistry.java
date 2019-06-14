@@ -1,12 +1,11 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.InstanceConnectionMonitorServiceListener;
 import com.namazustudios.socialengine.rt.NodeId;
-import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 
 import java.util.Set;
-import java.util.UUID;
 
-public interface RemoteInvokerRegistry {
+public interface RemoteInvokerRegistry extends InstanceConnectionMonitorServiceListener {
     /**
      * Returns a randomly-selected instance-level {@link RemoteInvoker}, or null if none are currently registered.
      * @return {@link RemoteInvoker} or null.

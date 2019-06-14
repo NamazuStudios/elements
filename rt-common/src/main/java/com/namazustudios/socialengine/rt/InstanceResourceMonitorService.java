@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import java.util.UUID;
 
-public interface InstanceResourceMonitorService {
+public interface InstanceResourceMonitorService extends InstanceConnectionMonitorServiceListener {
     default void start(long refreshRateMillis) {}
 
     default void stop() {}

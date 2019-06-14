@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.InstanceConnectionMonitorServiceListener;
 import com.namazustudios.socialengine.rt.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
@@ -13,7 +12,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-public class JeroMQRemoteInvokerRegistry implements RemoteInvokerRegistry, InstanceConnectionMonitorServiceListener {
+public class JeroMQRemoteInvokerRegistry implements RemoteInvokerRegistry {
     private final AtomicReference<Map<NodeId, RemoteInvoker>> atomicInstanceRemoteInvokersReference = new AtomicReference<>(new HashMap<>());
     private final AtomicReference<Map<NodeId, RemoteInvoker>> atomicApplicationRemoteInvokersReference = new AtomicReference<>(new HashMap<>());
 
@@ -21,30 +20,45 @@ public class JeroMQRemoteInvokerRegistry implements RemoteInvokerRegistry, Insta
 
     private ConnectionService connectionService;
 
-    public void onInstanceConnected(final UUID instanceUuid) {
-        final NodeId instanceNodeId = new NodeId(instanceUuid, null);
+    @Override
+    public void onInstancesConnected(final Set<UUID> instanceUuids) {
+        final Set<NodeId> instanceNodeIds = instanceUuids
+            .stream()
+            .map(instanceUuid -> new NodeId(instanceUuid, null))
+            .collect(Collectors.toSet());
 
         synchronized(atomicInstanceRemoteInvokersReference) {
             final Map<NodeId, RemoteInvoker> instanceRemoteInvokers = atomicInstanceRemoteInvokersReference.get();
-            // only stand up/connect a remote invoker if necessary in case we accidentally are told an instance appeared twice (should not happen by contract)
-            instanceRemoteInvokers.computeIfAbsent(instanceNodeId, ini -> {
-                final RemoteInvoker instanceRemoteInvoker = getRemoteInvokerProvider().get();
-                final String connectAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(instanceNodeId);
-                instanceRemoteInvoker.start(connectAddress);
-                return instanceRemoteInvoker;
+
+            instanceNodeIds.forEach(instanceNodeId -> {
+                // only stand up/connect a remote invoker if necessary in case we accidentally are told an instance appeared twice (should not happen by contract)
+                instanceRemoteInvokers.computeIfAbsent(instanceNodeId, ini -> {
+                    final RemoteInvoker instanceRemoteInvoker = getRemoteInvokerProvider().get();
+                    final String connectAddress = RouteRepresentationUtil.buildMultiplexInprocAddress(instanceNodeId);
+                    instanceRemoteInvoker.start(connectAddress);
+                    return instanceRemoteInvoker;
+                });
             });
         }
     }
 
-    public void onInstanceDisconnected(final UUID instanceUuid) {
+    @Override
+    public void onInstancesDisconnected(final Set<UUID> instanceUuids) {
+        final Set<NodeId> instanceNodeIds = instanceUuids
+            .stream()
+            .map(instanceUuid -> new NodeId(instanceUuid, null))
+            .collect(Collectors.toSet());
+
         synchronized(atomicInstanceRemoteInvokersReference) {
             final Map<NodeId, RemoteInvoker> remoteInvokers = atomicInstanceRemoteInvokersReference.get();
-            final NodeId instanceNodeId = new NodeId(instanceUuid, null);
-            final RemoteInvoker removedInstanceRemoteInvoker = remoteInvokers.remove(instanceNodeId);
+            instanceNodeIds.forEach(instanceNodeId -> {
+                final RemoteInvoker removedInstanceRemoteInvoker = remoteInvokers.remove(instanceNodeId);
 
-            if (removedInstanceRemoteInvoker != null) {
-                removedInstanceRemoteInvoker.stop();
-            }
+                if (removedInstanceRemoteInvoker != null) {
+                    removedInstanceRemoteInvoker.stop();
+                }
+            });
+
         }
     }
 

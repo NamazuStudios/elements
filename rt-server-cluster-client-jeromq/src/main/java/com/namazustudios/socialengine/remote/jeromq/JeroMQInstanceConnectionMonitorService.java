@@ -1,15 +1,16 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.namazustudios.socialengine.rt.InstanceConnectionMonitorService;
 import com.namazustudios.socialengine.rt.InstanceConnectionMonitorServiceListener;
 import com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.CommandPreamble;
-import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceUuidListRequest;
 
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandPreambleFromBytes;
+import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.INSTANCE_UUID_LIST_RESPONSE;
 import static com.namazustudios.socialengine.rt.remote.InstanceUuidListRequest.buildInstanceUuidListRequest;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.INSTANCE_UUID_LIST_REQUEST;
 
@@ -24,7 +25,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
@@ -37,8 +37,6 @@ import static org.zeromq.ZMQ.REQ;
 
 public class JeroMQInstanceConnectionMonitorService implements InstanceConnectionMonitorService {
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionMonitorService.class);
-
-    private ConnectionService connectionService;
 
     private ZContext zContext;
 
@@ -84,26 +82,38 @@ public class JeroMQInstanceConnectionMonitorService implements InstanceConnectio
                         final CommandPreamble preamble = CommandPreambleFromBytes(commandPreambleBytes);
                         final CommandPreamble.CommandType commandType = preamble.commandType.get();
 
-                        switch (commandType) {
-                            case INSTANCE_UUID_LIST_RESPONSE: {
-                                final Set<UUID> instanceUuids = StreamSupport
-                                    .stream(resZMsg.spliterator(), false)
-                                    .map(zFrame -> {
-                                        final InstanceUuidListResponse instanceUuidListResponse = InstanceUuidListResponseFromBytes(zFrame.getData());
-                                        return instanceUuidListResponse.instanceUuid.get();
-                                    })
-                                    .collect(Collectors.toSet());
+                        if (commandType == INSTANCE_UUID_LIST_RESPONSE) {
+                            final Set<UUID> instanceUuids = StreamSupport
+                                .stream(resZMsg.spliterator(), false)
+                                .map(zFrame -> {
+                                    final InstanceUuidListResponse instanceUuidListResponse = InstanceUuidListResponseFromBytes(zFrame.getData());
+                                    return instanceUuidListResponse.instanceUuid.get();
+                                })
+                                .collect(Collectors.toSet());
 
-                                synchronized (atomicInstanceUuids) {
-                                    atomicInstanceUuids.set(instanceUuids);
+                            final Set<UUID> oldInstanceUuids;
+
+                            synchronized (atomicInstanceUuids) {
+                                oldInstanceUuids = atomicInstanceUuids.get();
+                                atomicInstanceUuids.set(instanceUuids);
+                            }
+
+                            final Set<UUID> disconnectedInstanceUuids = Sets.difference(oldInstanceUuids, instanceUuids).immutableCopy();
+                            final Set<UUID> connectedInstanceUuids = Sets.difference(instanceUuids, oldInstanceUuids).immutableCopy();
+
+                            synchronized (atomicListeners) {
+                                final Set<InstanceConnectionMonitorServiceListener> listeners = atomicListeners.get();
+                                if (!disconnectedInstanceUuids.isEmpty()) {
+                                    listeners.forEach(listener -> listener.onInstancesDisconnected(disconnectedInstanceUuids));
                                 }
 
-
+                                if (!connectedInstanceUuids.isEmpty()) {
+                                    listeners.forEach(listener -> listener.onInstancesConnected(connectedInstanceUuids));
+                                }
                             }
-                                break;
-                            default:
-                                logger.warn("InstanceConnectionMonitorService: received unhandled command type: {}. Dropping message.", commandType);
-                                break;
+                        }
+                        else {
+                            logger.warn("InstanceConnectionMonitorService: received unhandled command type: {}. Dropping message.", commandType);
                         }
 
                         Thread.sleep(sleepMillis);
@@ -120,10 +130,6 @@ public class JeroMQInstanceConnectionMonitorService implements InstanceConnectio
         }
     }
 
-    private List<UUID> retrieveConnectedInstanceUuids() {
-
-    }
-
     @Override
     public void stop() {
         synchronized (atomicThread) {
@@ -134,6 +140,13 @@ public class JeroMQInstanceConnectionMonitorService implements InstanceConnectio
 
         synchronized (atomicInstanceUuids) {
             atomicInstanceUuids.set(null);
+        }
+    }
+
+    @Override
+    public Set<UUID> getInstanceUuids() {
+        synchronized (atomicInstanceUuids) {
+            return atomicInstanceUuids.get();
         }
     }
 
@@ -149,22 +162,13 @@ public class JeroMQInstanceConnectionMonitorService implements InstanceConnectio
     public boolean unregisterListener(InstanceConnectionMonitorServiceListener listener) {
         synchronized (atomicListeners) {
             final Set<InstanceConnectionMonitorServiceListener> listeners = atomicListeners.get();
-            listeners.remove(listener);
+            return listeners.remove(listener);
         }
     }
 
     @Override
     public Set<InstanceConnectionMonitorServiceListener> getListeners() {
         return ImmutableSet.copyOf(atomicListeners.get());
-    }
-
-    public ConnectionService getConnectionService() {
-        return connectionService;
-    }
-
-    @Inject
-    public void setConnectionService(ConnectionService connectionService) {
-        this.connectionService = connectionService;
     }
 
     public int getCurrentInstanceControlPort() {
