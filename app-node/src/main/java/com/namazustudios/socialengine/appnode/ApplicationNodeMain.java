@@ -14,7 +14,7 @@ import org.zeromq.ZMsg;
 import java.util.Properties;
 
 import static com.namazustudios.socialengine.appnode.Constants.CONTROL_REQUEST_TIMEOUT;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.CONTROL_BIND_PORT;
+import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_CONTROL_PORT_NAME;
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.STATUS_REQUEST;
 import static com.namazustudios.socialengine.rt.jeromq.Connection.from;
 import static java.lang.String.format;
@@ -39,7 +39,7 @@ public class ApplicationNodeMain {
             if(arg.equalsIgnoreCase("--status-check")) {
                 final Properties properties = defaultConfigurationSupplier.get();
 
-                final Integer port = Integer.parseInt(properties.getProperty(CONTROL_BIND_PORT));
+                final Integer port = Integer.parseInt(properties.getProperty(CURRENT_INSTANCE_CONTROL_PORT_NAME));
                 final String statusCheckAddress = RouteRepresentationUtil.buildTcpAddress("*", port);
 
                 logger.info(format("Performing status check on %s...", statusCheckAddress));
