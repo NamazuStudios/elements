@@ -65,7 +65,7 @@ public class MongoRankDao implements RankDao {
         query
             .filter("leaderboard", mongoLeaderboard)
             .filter("leaderboardEpoch",
-                    leaderboardEpoch > 0 ? leaderboardEpoch : mongoLeaderboard.getCurrentEpoch())
+                    leaderboardEpochLookupValue > 0 ? leaderboardEpochLookupValue : mongoLeaderboard.getCurrentEpoch())
             .order(Sort.descending("pointValue"));
 
         final long adjustedOffset = max(0, offset);
