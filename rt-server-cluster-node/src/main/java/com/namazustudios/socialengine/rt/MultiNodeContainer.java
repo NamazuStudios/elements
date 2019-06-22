@@ -10,9 +10,8 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.UUID;
 
-import static com.namazustudios.socialengine.rt.Node.MASTER_NODE_NAME;
+import static com.namazustudios.socialengine.rt.Constants.MASTER_NODE_NAME;
 import static java.util.stream.Collectors.toList;
 
 /**

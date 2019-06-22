@@ -13,8 +13,9 @@ import javax.inject.Provider;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
-public class JeroMQInstanceResourceMonitorService implements InstanceResourceMonitorService, InstanceConnectionMonitorServiceListener {
+public class JeroMQInstanceResourceMonitorService implements InstanceResourceMonitorService {
     private final AtomicBoolean atomicIsRunning = new AtomicBoolean(false);
 
     private final AtomicReference<Map<UUID, InstanceMetadataContext>> atomicInstanceMetadataContexts = new AtomicReference<>(new HashMap<>());
@@ -25,26 +26,29 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
     private Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider;
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
-    public void onInstanceConnected(final UUID instanceUuid) {
-        final NodeId instanceNodeId = new NodeId(instanceUuid, null);
-        final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(instanceNodeId);
-        final ProxyBuilder<InstanceMetadataContext> instanceMetadataContextProxyBuilder = getInstanceMetadataContextProxyBuilderProvider().get();
-        final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder
-                .withHandlersForRemoteInvoker(remoteInvoker)
-                .build();
-
+    @Override
+    public void onInstancesConnected(final Set<UUID> instanceUuids) {
         synchronized (atomicInstanceMetadataContexts) {
             final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
-            instanceMetadataContexts.put(instanceUuid, instanceMetadataContext);
+            instanceUuids.forEach(instanceUuid -> {
+                instanceMetadataContexts.computeIfAbsent(instanceUuid, i -> {
+                    final NodeId instanceNodeId = new NodeId(instanceUuid, null);
+                    final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(instanceNodeId);
+                    final ProxyBuilder<InstanceMetadataContext> instanceMetadataContextProxyBuilder = getInstanceMetadataContextProxyBuilderProvider().get();
+                    final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder
+                        .withHandlersForRemoteInvoker(remoteInvoker)
+                        .build();
+                    return instanceMetadataContext;
+                });
+            });
         }
     }
 
-    public void onInstanceDisconnected(final UUID instanceUuid) {
+    @Override
+    public void onInstancesDisconnected(final Set<UUID> instanceUuids) {
         synchronized (atomicInstanceMetadataContexts) {
             final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
-            if (instanceUuid != null) {
-                instanceMetadataContexts.remove(instanceUuid);
-            }
+            instanceUuids.forEach(instanceUuid -> instanceMetadataContexts.remove(instanceUuid));
         }
     }
 
