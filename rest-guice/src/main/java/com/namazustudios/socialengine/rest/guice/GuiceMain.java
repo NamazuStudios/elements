@@ -96,7 +96,6 @@ public class GuiceMain extends GuiceServletContextListener {
             new RTGitApplicationModule(),
             new ValidationModule(),
             new GameOnInvokerModule(),
-            new JacksonHttpClientModule(),
             new AppleIapReceiptInvokerModule()
         );
 

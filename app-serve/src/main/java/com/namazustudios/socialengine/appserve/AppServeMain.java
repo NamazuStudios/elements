@@ -44,7 +44,13 @@ public class AppServeMain {
             new ZContextModule(),
             new JeroMQMultiplexerModule(),
             new RTFilesystemGitLoaderModule(),
-            new JaxRSClientModule()
+            new JaxRSClientModule(),
+            new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(ResourceAcquisition.class).to(NullResourceAcquisition.class);
+                }
+            }
         );
 
         final Server server = injector.getInstance(Server.class);
