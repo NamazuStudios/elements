@@ -1,32 +1,25 @@
 package com.namazustudios.socialengine.service.appleiap.client.invoker.invoker;
 
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.service.appleiap.client.exception.AppleIapVerifyReceiptStatusErrorCodeException;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import com.namazustudios.socialengine.service.appleiap.client.model.AppleIapGrandUnifiedReceipt;
 import com.namazustudios.socialengine.service.appleiap.client.model.AppleIapVerifyReceiptResponse;
-
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.ws.rs.ServerErrorException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.Response;
-
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.TimeZone;
 
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.namazustudios.socialengine.AppleIapConstants.*;
-
 import static javax.ws.rs.client.Entity.entity;
-import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON_TYPE;
 import static javax.ws.rs.core.Response.Status.OK;
 
@@ -110,4 +103,5 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
     public ObjectMapper getObjectMapper() {
         return objectMapper;
     }
+
 }
