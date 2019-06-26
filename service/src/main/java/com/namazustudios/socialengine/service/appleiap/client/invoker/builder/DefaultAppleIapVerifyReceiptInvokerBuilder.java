@@ -19,19 +19,18 @@ public class DefaultAppleIapVerifyReceiptInvokerBuilder implements Builder {
     @Override
     public Builder withEnvironment(AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment) {
         this.appleIapVerifyReceiptEnvironment = appleIapVerifyReceiptEnvironment;
-
         return this;
     }
 
     @Override
     public Builder withReceiptData(String receiptData) {
         this.receiptData = receiptData;
-
         return this;
     }
 
     @Override
     public AppleIapVerifyReceiptInvoker build() {
+
         if (appleIapVerifyReceiptEnvironment == null) {
             throw new IllegalStateException("appleIapVerifyReceiptEnvironment is null.");
         }

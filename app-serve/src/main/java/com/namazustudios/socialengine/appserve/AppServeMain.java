@@ -42,40 +42,13 @@ public class AppServeMain {
             new MongoSearchModule(),
             new ZContextModule(),
             new JeroMQMultiplexerModule(),
-            new RTFilesystemGitLoaderModule(),
-            new AbstractModule() {
-                @Override
-                protected void configure() {
-                    bind(ResourceAcquisition.class).to(NullResourceAcquisition.class);
-                    bind(Client.class).toProvider(AppServeMain::buildClient).asEagerSingleton();
-                }
-            }
+            new RTFilesystemGitLoaderModule()
         );
 
         final Server server = injector.getInstance(Server.class);
         server.start();
         server.join();
 
-    }
-
-    public static Client buildClient() {
-        final Client client = ClientBuilder.newClient().register(ObjectMapperContextResolver.class);
-        return client;
-    }
-
-    @Provider
-    public static class ObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
-        private final ObjectMapper mapper;
-
-        public ObjectMapperContextResolver() {
-            mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        }
-
-        @Override
-        public ObjectMapper getContext(Class<?> type) {
-            return mapper;
-        }
     }
 
 }

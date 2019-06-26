@@ -1,22 +1,21 @@
 package com.namazustudios.socialengine.rest.guice;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.inject.AbstractModule;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.jackson.JacksonFeature;
-import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.inject.Key;
+import com.google.inject.PrivateModule;
+import com.google.inject.TypeLiteral;
 
+import javax.inject.Provider;
 import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
 
-public class HttpClientModule extends AbstractModule {
+import static javax.ws.rs.client.ClientBuilder.newBuilder;
+
+public class JacksonHttpClientModule extends PrivateModule {
 
     public static final String DISABLE_SSL_VERIFICATION = "com.namazustudios.ssl.verification.disable";
 
@@ -66,30 +65,39 @@ public class HttpClientModule extends AbstractModule {
         }
     }
 
+    private Provider<ObjectMapper> objectMapperProvider = ObjectMapper::new;
 
     @Override
     protected void configure() {
-        bind(Client.class).toProvider(HttpClientModule::buildClient).asEagerSingleton();
+
+        expose(Client.class);
+
+        final Key<ContextResolver<ObjectMapper>> key = Key.get(new TypeLiteral<ContextResolver<ObjectMapper>>(){});
+
+        final Provider<ContextResolver<ObjectMapper>> contextResolverProvider;
+
+        contextResolverProvider = getProvider(key);
+
+        bind(Client.class).toProvider(() -> newBuilder()
+            .register(contextResolverProvider.get())
+            .build())
+        .asEagerSingleton();
+
+        bind(ObjectMapper.class).toProvider(objectMapperProvider);
+        bind(new TypeLiteral<ContextResolver<ObjectMapper>>(){}).to(ObjectMapperContextResolver.class);
+
     }
 
-    public static Client buildClient() {
-        final Client client = ClientBuilder.newClient().register(ObjectMapperContextResolver.class);
-        return client;
-    }
-
-    @Provider
-    public static class ObjectMapperContextResolver implements ContextResolver<ObjectMapper> {
-        private final ObjectMapper mapper;
-
-        public ObjectMapperContextResolver() {
-            mapper = new ObjectMapper();
-            mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        }
-
-        @Override
-        public ObjectMapper getContext(Class<?> type) {
-            return mapper;
-        }
+    /**
+     * Specifies a {@link Provider<ObjectMapper>} which will be used to provide the underlying HTTP client's
+     * {@link ObjectMapper}.
+     *
+     * @param objectMapperProvider the {@link Provider<ObjectMapper>}
+     * @return this instance
+     */
+    public JacksonHttpClientModule withObjectMapperProvider(final Provider<ObjectMapper> objectMapperProvider) {
+        this.objectMapperProvider = objectMapperProvider;
+        return this;
     }
 
 }
