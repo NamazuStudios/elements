@@ -1,10 +1,14 @@
 package com.namazustudios.socialengine.service.appleiap.client.model;
 
+import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
 import io.swagger.annotations.ApiModel;
 
-import java.util.*;
+import java.util.Objects;
+
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
 
 @ApiModel
+@ClientSerializationStrategy(SNAKE)
 public class AppleIapVerifyReceiptResponse {
     private Integer status;
 

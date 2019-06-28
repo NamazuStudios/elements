@@ -27,11 +27,5 @@ public class GameOnInvokerModule extends PrivateModule {
         bind(GameOnAdminPrizeInvoker.Builder.class).to(DefaultGameOnPrizeInvokerBuilder.class);
         bind(GameOnGamePrizeInvoker.Builder.class).to(DefaultGameOnGamePrizeInvokerBuilder.class);
 
-        install(new JacksonHttpClientModule().withObjectMapperProvider(() -> {
-            final ObjectMapper objectMapper = new ObjectMapper();
-            objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-            return objectMapper;
-        }));
-
     }
 }

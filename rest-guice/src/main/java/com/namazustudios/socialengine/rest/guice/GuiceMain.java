@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rest.guice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
@@ -24,6 +26,9 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
 import java.util.Properties;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -96,7 +101,17 @@ public class GuiceMain extends GuiceServletContextListener {
             new RTGitApplicationModule(),
             new ValidationModule(),
             new GameOnInvokerModule(),
-            new AppleIapReceiptInvokerModule()
+            new AppleIapReceiptInvokerModule(),
+            new JacksonHttpClientModule().withDefaultObjectMapperProvider(() -> {
+                final ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                return objectMapper;
+            }).withNamedObjectMapperProvider("snake", () -> {
+                final ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                return objectMapper;
+            })
         );
 
     }

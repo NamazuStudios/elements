@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
+import com.google.inject.multibindings.MapBinder;
+import org.glassfish.jersey.jackson.JacksonFeature;
 
 import javax.inject.Provider;
 import javax.net.ssl.*;
@@ -12,7 +14,12 @@ import javax.ws.rs.ext.ContextResolver;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.HashMap;
+import java.util.Map;
 
+import static com.google.inject.Scopes.SINGLETON;
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.DEFAULT;
 import static javax.ws.rs.client.ClientBuilder.newBuilder;
 
 public class JacksonHttpClientModule extends PrivateModule {
@@ -65,7 +72,9 @@ public class JacksonHttpClientModule extends PrivateModule {
         }
     }
 
-    private Provider<ObjectMapper> objectMapperProvider = ObjectMapper::new;
+    private Provider<ObjectMapper> defaultObjectMapperProvider = ObjectMapper::new;
+
+    private Map<String, Provider<ObjectMapper>> namedObjectMapperProviders = new HashMap<>();
 
     @Override
     protected void configure() {
@@ -78,13 +87,23 @@ public class JacksonHttpClientModule extends PrivateModule {
 
         contextResolverProvider = getProvider(key);
 
-        bind(Client.class).toProvider(() -> newBuilder()
-            .register(contextResolverProvider.get())
-            .build())
-        .asEagerSingleton();
+        bind(Client.class).toProvider(() -> {
 
-        bind(ObjectMapper.class).toProvider(objectMapperProvider);
-        bind(new TypeLiteral<ContextResolver<ObjectMapper>>(){}).to(ObjectMapperContextResolver.class);
+            final Client client = newBuilder()
+                .register(JacksonFeature.class)
+                .register(contextResolverProvider.get())
+                .build();
+
+            return client;
+
+        }).in(SINGLETON);
+
+        bind(new TypeLiteral<ContextResolver<ObjectMapper>>(){}).to(ClientObjectMapperContextResolver.class);
+
+        final MapBinder<String, ObjectMapper> stringObjectMapperMapBinder;
+        stringObjectMapperMapBinder = MapBinder.newMapBinder(binder(), String.class, ObjectMapper.class);
+        stringObjectMapperMapBinder.addBinding(DEFAULT).toProvider(defaultObjectMapperProvider);
+        namedObjectMapperProviders.forEach((k, v) -> stringObjectMapperMapBinder.addBinding(k).toProvider(v));
 
     }
 
@@ -95,8 +114,23 @@ public class JacksonHttpClientModule extends PrivateModule {
      * @param objectMapperProvider the {@link Provider<ObjectMapper>}
      * @return this instance
      */
-    public JacksonHttpClientModule withObjectMapperProvider(final Provider<ObjectMapper> objectMapperProvider) {
-        this.objectMapperProvider = objectMapperProvider;
+    public JacksonHttpClientModule withDefaultObjectMapperProvider(final Provider<ObjectMapper> objectMapperProvider) {
+        this.defaultObjectMapperProvider = objectMapperProvider;
+        return this;
+    }
+
+    /**
+     * Specifies a {@link Provider<ObjectMapper>} which will be bound with the supplied name using the
+     * {@link javax.inject.Named} annotation.
+     *
+     * @param name the name
+     * @param objectMapperProvider the {@link Provider<ObjectMapper>}
+     *
+     * @return this instance
+     */
+    public JacksonHttpClientModule withNamedObjectMapperProvider(final String name,
+                                                                 final Provider<ObjectMapper> objectMapperProvider) {
+        namedObjectMapperProviders.put(name, objectMapperProvider);
         return this;
     }
 
