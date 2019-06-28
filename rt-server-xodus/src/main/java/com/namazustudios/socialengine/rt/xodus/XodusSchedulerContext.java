@@ -101,9 +101,8 @@ public class XodusSchedulerContext implements SchedulerContext {
     }
 
     @Override
-    public void resumeTaskAfterDelay(final long time,
-                                     final TimeUnit timeUnit,
-                                     final TaskId taskId) {
+    public void resumeTaskAfterDelay(final TaskId taskId, final long time,
+                                     final TimeUnit timeUnit) {
 
         // In case the process shuts down before tasks are executed, we must store the task info so it can be
         // re-run when the process wakes back up.

@@ -49,6 +49,11 @@ public enum ResponseCode {
     DUPLICATE_RESOURCE,
 
     /**
+     * Indicates that we were trying to register a task twice for the same task ID
+     */
+    DUPLICATE_TASK,
+
+    /**
      * A particular path or resource ID could not be found.
      */
     RESOURCE_NOT_FOUND,
