@@ -15,12 +15,10 @@ import org.testng.annotations.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
-
 import java.util.Map;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.google.inject.Guice.createInjector;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
 import static org.testng.Assert.assertEquals;
 
@@ -36,6 +34,7 @@ public class JacksonHttpClientModuleTest {
 
     @AfterClass
     public void teardown() throws Exception {
+        getClient().close();
         jettyEmbeddedJSONService.stop();
     }
 

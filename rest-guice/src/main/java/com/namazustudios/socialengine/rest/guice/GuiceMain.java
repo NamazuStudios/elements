@@ -6,6 +6,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -29,6 +30,7 @@ import java.util.Properties;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -106,7 +108,7 @@ public class GuiceMain extends GuiceServletContextListener {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
                 return objectMapper;
-            }).withNamedObjectMapperProvider("snake", () -> {
+            }).withNamedObjectMapperProvider(SNAKE, () -> {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
