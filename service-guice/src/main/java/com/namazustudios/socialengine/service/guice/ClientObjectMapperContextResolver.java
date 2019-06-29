@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.service.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.CacheBuilder;

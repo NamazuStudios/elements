@@ -1,13 +1,11 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.service.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.rest.guice.model.TestDefaultModel;
-import com.namazustudios.socialengine.rest.guice.model.TestLCamelModel;
-import com.namazustudios.socialengine.rest.guice.model.TestSnakeModel;
-import com.namazustudios.socialengine.rest.guice.servlet.JettyEmbeddedJSONService;
+
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
@@ -57,7 +55,7 @@ public class JacksonHttpClientModuleTest {
 
         assertEquals(map.size(), 1);
         assertEquals(map.get("testProperty"), "foo");
-        assertEquals(testModel.getTestProperty(), "foo");
+        Assert.assertEquals(testModel.getTestProperty(), "foo");
 
     }
 
@@ -78,7 +76,7 @@ public class JacksonHttpClientModuleTest {
 
         assertEquals(map.size(), 1);
         assertEquals(map.get("test_property"), "foo");
-        assertEquals(testModel.getTestProperty(), "foo");
+        Assert.assertEquals(testModel.getTestProperty(), "foo");
 
     }
 
@@ -99,7 +97,7 @@ public class JacksonHttpClientModuleTest {
 
         assertEquals(map.size(), 1);
         assertEquals(map.get("testProperty"), "foo");
-        assertEquals(testModel.getTestProperty(), "foo");
+        Assert.assertEquals(testModel.getTestProperty(), "foo");
 
     }
 

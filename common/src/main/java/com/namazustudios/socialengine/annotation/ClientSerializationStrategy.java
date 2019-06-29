@@ -7,8 +7,8 @@ import java.lang.annotation.Target;
 
 /**
  * Specifies the serialization strategy for a model.  In the event that a model needs to be serialized with varying
- * strategies, this can be used to hint the underlying container how it should be serialized.  In some cases, it may
- * be necessary to override or change the behavior of the underlying serialization.
+ * strategies, this can be used to hint the underlying container how it should be serialized or deserialized.  In some
+ * cases, it may be necessary to override or change the behavior of the underlying serialization.
  *
  * This only affects the use case when used in a client context.
  *

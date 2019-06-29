@@ -1,11 +1,11 @@
-package com.namazustudios.socialengine.rest.guice.model;
+package com.namazustudios.socialengine.service.guice;
 
 import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
 
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.LCAMEL;
 
-@ClientSerializationStrategy(SNAKE)
-public class TestSnakeModel {
+@ClientSerializationStrategy(LCAMEL)
+public class TestLCamelModel {
 
     private String testProperty;
 

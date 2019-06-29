@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.service.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Key;
@@ -6,23 +6,30 @@ import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.MapBinder;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
 import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.ext.ContextResolver;
 import java.security.KeyManagementException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.google.inject.Scopes.SINGLETON;
-import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.DEFAULT;
 import static javax.ws.rs.client.ClientBuilder.newBuilder;
 
 public class JacksonHttpClientModule extends PrivateModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(JacksonHttpClientModule.class);
 
     public static final String DISABLE_SSL_VERIFICATION = "com.namazustudios.ssl.verification.disable";
 
@@ -39,19 +46,19 @@ public class JacksonHttpClientModule extends PrivateModule {
     private static void disableSslVerification() {
         try
         {
-            // Create a trust manager that does not validate certificate chains
-            TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
-                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+
+            logger.warn("Disabling SSL Certificate Validation.");
+
+            final TrustManager[] trustAllCerts = new TrustManager[] {new X509TrustManager() {
+                    public java.security.cert.X509Certificate[] getAcceptedIssuers() {
                     return null;
                 }
-                public void checkClientTrusted(X509Certificate[] certs, String authType) {
+                    public void checkClientTrusted(X509Certificate[] certs, String authType) {}
+                    public void checkServerTrusted(X509Certificate[] certs, String authType) {}
                 }
-                public void checkServerTrusted(X509Certificate[] certs, String authType) {
-                }
-            }
             };
 
-            // Install the all-trusting trust manager
+
             SSLContext sc = SSLContext.getInstance("SSL");
             sc.init(null, trustAllCerts, new java.security.SecureRandom());
             HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory());
@@ -66,11 +73,13 @@ public class JacksonHttpClientModule extends PrivateModule {
             // Install the all-trusting host verifier
             HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
         } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
+            logger.error("Caught exception disabling SSL Verification.", e);
         } catch (KeyManagementException e) {
-            e.printStackTrace();
+            logger.error("Caught exception disabling SSL Verification.", e);
         }
     }
+
+    private List<Consumer<ClientBuilder>> registrations = new ArrayList<>();
 
     private Provider<ObjectMapper> defaultObjectMapperProvider = ObjectMapper::new;
 
@@ -89,12 +98,13 @@ public class JacksonHttpClientModule extends PrivateModule {
 
         bind(Client.class).toProvider(() -> {
 
-            final Client client = newBuilder()
+            final ClientBuilder builder = newBuilder()
                 .register(JacksonFeature.class)
-                .register(contextResolverProvider.get())
-                .build();
+                .register(contextResolverProvider.get());
 
-            return client;
+            registrations.forEach(c -> c.accept(builder));
+
+            return builder.build();
 
         }).in(SINGLETON);
 
@@ -105,6 +115,17 @@ public class JacksonHttpClientModule extends PrivateModule {
         stringObjectMapperMapBinder.addBinding(DEFAULT).toProvider(defaultObjectMapperProvider);
         namedObjectMapperProviders.forEach((k, v) -> stringObjectMapperMapBinder.addBinding(k).toProvider(v));
 
+    }
+
+    /**
+     * Adds a type to be passed to {@link ClientBuilder#register(Object)}.
+     *
+     * @param <T> the type to register
+     * @return this instance
+     */
+    public <T> JacksonHttpClientModule withRegisteredComponent(final Class<T> cls) {
+        registrations.add(cb -> cb.register(cls));
+        return this;
     }
 
     /**

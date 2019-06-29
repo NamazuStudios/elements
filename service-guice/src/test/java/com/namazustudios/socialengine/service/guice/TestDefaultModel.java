@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.guice.model;
+package com.namazustudios.socialengine.service.guice;
 
 public class TestDefaultModel {
 

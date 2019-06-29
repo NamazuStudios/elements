@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.guice.servlet;
+package com.namazustudios.socialengine.service.guice;
 
 import com.google.common.net.HttpHeaders;
 

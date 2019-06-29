@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.guice.servlet;
+package com.namazustudios.socialengine.service.guice;
 
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
