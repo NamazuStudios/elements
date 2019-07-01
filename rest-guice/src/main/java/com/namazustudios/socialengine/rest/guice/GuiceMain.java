@@ -18,6 +18,7 @@ import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
 import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
+import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.NotificationServiceModule;
 import org.apache.bval.guice.ValidationModule;
@@ -103,7 +104,9 @@ public class GuiceMain extends GuiceServletContextListener {
             new ValidationModule(),
             new GameOnInvokerModule(),
             new AppleIapReceiptInvokerModule(),
-            new JacksonHttpClientModule().withDefaultObjectMapperProvider(() -> {
+            new JacksonHttpClientModule()
+            .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
+            .withDefaultObjectMapperProvider(() -> {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
                 return objectMapper;

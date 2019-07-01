@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.service.appleiap.client.exception.AppleIapVerifyReceiptStatusErrorCodeException;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.builder.DefaultAppleIapVerifyReceiptInvokerBuilder;
-import com.namazustudios.socialengine.service.appleiap.client.model.AppleIapGrandUnifiedReceipt;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -18,7 +17,6 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
 import static com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment.SANDBOX;
-import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
 
 @Guice(modules = TestVerifyAppleReceipt.Module.class)
