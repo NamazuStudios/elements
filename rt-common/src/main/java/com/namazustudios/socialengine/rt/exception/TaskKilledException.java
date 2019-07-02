@@ -5,22 +5,18 @@ import com.namazustudios.socialengine.rt.TaskId;
 
 import static java.lang.String.format;
 
-public class DuplicateTaskException extends BaseException {
+public class TaskKilledException extends BaseException {
 
     private final TaskId taskId;
 
-    public DuplicateTaskException(TaskId taskId) {
-        super(format("Task with id %s already exists.", taskId));
+    public TaskKilledException(TaskId taskId) {
+        super(format("Task with id %s was killed.", taskId));
         this.taskId = taskId;
     }
 
     @Override
     public ResponseCode getResponseCode() {
-        return ResponseCode.DUPLICATE_TASK;
-    }
-
-    public TaskId getTaskId() {
-        return taskId;
+        return ResponseCode.TASK_KILLED;
     }
 
 }

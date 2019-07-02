@@ -35,12 +35,11 @@ public interface TaskContext {
      * @param taskId the task ID
      * @param tConsumer
      * @param throwableTConsumer
-     * @param <T>
      * @throws DuplicateTaskException if the supplied {@link TaskId} was already registered.
      */
     @RemotelyInvokable
-    <T> void register(@Serialize TaskId taskId,
-                      @ResultHandler Consumer<T> tConsumer,
+    void register(@Serialize TaskId taskId,
+                      @ResultHandler Consumer<Object> tConsumer,
                       @ErrorHandler Consumer<Throwable> throwableTConsumer);
 
     /**
@@ -48,10 +47,9 @@ public interface TaskContext {
      * the {@link #register(TaskId, Consumer, Consumer)} call will be processed.
      *
      * @param taskId
-     * @param <T>
      */
     @RemotelyInvokable
-    <T> void finishWithResult(@Serialize TaskId taskId, T result);
+    void finishWithResult(@Serialize TaskId taskId, Object result);
 
     /**
      * Finishes the task with associated {@link TaskId} with the provided {@link Throwable} error.

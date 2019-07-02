@@ -45,6 +45,7 @@ public class SimpleContext implements Context {
     @Override
     public void start() {
         getRuntime().addShutdownHook(hook);
+        getTaskContext().start();
         getResourceContext().start();
         getSchedulerContext().start();
         getIndexContext().start();
@@ -110,6 +111,7 @@ public class SimpleContext implements Context {
         getIndexContext().stop();
         getSchedulerContext().stop();
         getResourceContext().stop();
+        getTaskContext().stop();
 
         // Then stops all services
         getResourceLoader().close();

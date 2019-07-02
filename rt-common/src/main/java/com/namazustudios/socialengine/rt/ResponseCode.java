@@ -54,6 +54,16 @@ public enum ResponseCode {
     DUPLICATE_TASK,
 
     /**
+     * Indicates that the supplied task was not found.
+     */
+    TASK_NOT_FOUND,
+
+    /**
+     * Indicates that the supplied task was killed.
+     */
+    TASK_KILLED,
+
+    /**
      * A particular path or resource ID could not be found.
      */
     RESOURCE_NOT_FOUND,
