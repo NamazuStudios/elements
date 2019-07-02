@@ -60,7 +60,12 @@ public class XodusServicesModule extends PrivateModule {
             .to(SimpleRetainedHandlerService.class)
             .asEagerSingleton();
 
+        bind(TaskService.class)
+            .to(SimpleTaskService.class)
+            .asEagerSingleton();
+
         expose(Scheduler.class);
+        expose(TaskService.class);
         expose(ResourceService.class);
         expose(SingleUseHandlerService.class);
         expose(RetainedHandlerService.class);
