@@ -953,30 +953,29 @@ public class XodusResourceService implements ResourceService {
 
     }
 
-    public void acquire(final ResourceId resourceId) {
-        getEnvironment().executeInTransaction(txn -> {
+    public void persist(final ResourceId resourceId) {
 
-            final Store acquiresStore = openAcquires(txn);
-            final ByteIterable resourceIdKey = stringToEntry(resourceId.asString());
-            final ByteIterable value = acquiresStore.get(txn, resourceIdKey);
-
-            // This is only called to increment the acquire count, so it may not need to actually manipulate the
-            // cache.  Trying to increment the count otherwise is an error.
-            if (value == null) {
-                throw new IllegalStateException("Attempting to acquire resource which has no acquires.");
-            }
-
-            final int acquires = entryToInt(value);
-            acquiresStore.put(txn, resourceIdKey, intToEntry(acquires + 1));
-
-        });
-    }
-
-    public void release(final ResourceId resourceId) {
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceId);
-        final XodusResource xodusResource = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
-        if (xodusResource == null) return;
-        release(xodusResource);
+
+        try (final Monitor monitor = getResourceLockService().getMonitor(resourceId)) {
+            getEnvironment().executeInTransaction(txn -> {
+
+                final Store acquiresStore = openAcquires(txn);
+                final Store resourcesStore = openResources(txn);
+                final ByteIterable acquiresByteIterable = acquiresStore.get(txn, xodusCacheKey.getKey());
+                final int acquires = entryToInt(acquiresByteIterable);
+
+                if (acquires < 1) {
+                    logger.warn("Resource with ID '{}' not acquired.  No persistence necessary.", resourceId);
+                    return;
+                }
+
+                final XodusResource xodusResource = readFromCache(xodusCacheKey);
+                xodusResource.persist(txn, resourcesStore);
+
+            });
+        }
+
     }
 
     private Store openResources(final Transaction txn) {

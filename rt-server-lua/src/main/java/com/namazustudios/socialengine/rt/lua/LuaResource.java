@@ -82,7 +82,7 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Context context) {
+    public LuaResource(final LuaState luaState, final Context context, final PersistenceStrategy persistenceStrategy) {
         try {
 
             this.context = context;
@@ -94,7 +94,7 @@ public class LuaResource implements Resource {
             openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context));
+            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context, persistenceStrategy));
             getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());

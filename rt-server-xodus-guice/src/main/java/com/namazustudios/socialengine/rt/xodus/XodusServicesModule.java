@@ -41,8 +41,8 @@ public class XodusServicesModule extends PrivateModule {
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
 
-        bind(ResourceService.class).to(XodusResourceService.class);
-        bind(XodusResourceService.class).asEagerSingleton();
+        bind(PersistenceStrategy.class).to(XodusPersistenceStrategy.class);
+        bind(ResourceService.class).to(XodusResourceService.class).asEagerSingleton();
 
         bind(ScheduledExecutorService.class)
             .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
@@ -64,6 +64,7 @@ public class XodusServicesModule extends PrivateModule {
         expose(ResourceService.class);
         expose(SingleUseHandlerService.class);
         expose(RetainedHandlerService.class);
+        expose(PersistenceStrategy.class);
 
     }
 
