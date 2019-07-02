@@ -49,7 +49,6 @@ public class SimpleServicesModule extends PrivateModule {
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
         bind(RetainedHandlerService.class).to(SimpleRetainedHandlerService.class).asEagerSingleton();
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
-        bind(ResourceAcquisition.class).to(NullResourceAcquisition.class).asEagerSingleton();
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
             .toProvider(() -> new ProxyLockService<>(Deque.class));
@@ -69,7 +68,6 @@ public class SimpleServicesModule extends PrivateModule {
         expose(ResourceService.class);
         expose(RetainedHandlerService.class);
         expose(SingleUseHandlerService.class);
-        expose(ResourceAcquisition.class);
 
     }
 

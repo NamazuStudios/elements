@@ -15,8 +15,6 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.ZContextModule;
-import com.namazustudios.socialengine.rt.NullResourceAcquisition;
-import com.namazustudios.socialengine.rt.ResourceAcquisition;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 
@@ -46,7 +44,6 @@ public class AppServeMain {
             new AbstractModule() {
                 @Override
                 protected void configure() {
-                    bind(ResourceAcquisition.class).to(NullResourceAcquisition.class);
                     bind(Client.class).toProvider(AppServeMain::buildClient).asEagerSingleton();
                 }
             }

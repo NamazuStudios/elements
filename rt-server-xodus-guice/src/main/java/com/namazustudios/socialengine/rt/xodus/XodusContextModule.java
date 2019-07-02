@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.guice.*;
+import com.namazustudios.socialengine.rt.guice.SimpleHandlerContextModule;
+import com.namazustudios.socialengine.rt.guice.SimpleIndexContextModule;
+import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 
 import java.util.concurrent.TimeUnit;
 
@@ -62,7 +63,6 @@ public class XodusContextModule extends PrivateModule {
         expose(ResourceContext.class);
         expose(HandlerContext.class);
         expose(SchedulerContext.class);
-        expose(ResourceAcquisition.class);
 
     }
 

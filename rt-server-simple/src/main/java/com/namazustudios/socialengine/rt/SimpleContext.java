@@ -32,6 +32,8 @@ public class SimpleContext implements Context {
 
     private HandlerContext handlerContext;
 
+    private TaskContext taskContext;
+
     private AssetLoader assetLoader;
 
     private ManifestLoader manifestLoader;
@@ -190,6 +192,16 @@ public class SimpleContext implements Context {
     @Inject
     public void setHandlerContext(HandlerContext handlerContext) {
         this.handlerContext = handlerContext;
+    }
+
+    @Override
+    public TaskContext getTaskContext() {
+        return taskContext;
+    }
+
+    @Inject
+    public void setTaskContext(TaskContext taskContext) {
+        this.taskContext = taskContext;
     }
 
     public ManifestLoader getManifestLoader() {
