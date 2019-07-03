@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.PersistenceStrategy;
 import com.namazustudios.socialengine.rt.SimpleContext;
 
 import static com.google.inject.name.Names.named;
@@ -43,6 +44,9 @@ public class SimpleContextModule extends PrivateModule {
         install(new SimpleResourceContextModule());
         install(new SimpleSchedulerContextModule());
         install(new SimpleHandlerContextModule());
+        install(new SimpleTaskContextModule());
+
+        expose(PersistenceStrategy.class);
 
     }
 

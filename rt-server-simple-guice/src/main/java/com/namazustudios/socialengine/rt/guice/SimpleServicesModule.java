@@ -45,12 +45,12 @@ public class SimpleServicesModule extends PrivateModule {
         bindSchedulerThreads.run();
 
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
-        bind(PersistenceStrategy.class).toInstance(PersistenceStrategy.getNullPersistence());
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
         bind(RetainedHandlerService.class).to(SimpleRetainedHandlerService.class).asEagerSingleton();
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
         bind(TaskService.class).to(SimpleTaskService.class);
+        bind(PersistenceStrategy.class).toInstance(PersistenceStrategy.getNullPersistence());
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
             .toProvider(() -> new ProxyLockService<>(Deque.class));

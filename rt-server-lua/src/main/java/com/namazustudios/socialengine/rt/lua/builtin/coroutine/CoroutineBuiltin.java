@@ -293,7 +293,7 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private TimeUnit timeUnit(final LuaState luaState) {
-        return luaState.getTop() > 2 ? luaState.checkEnum(3, TimeUnit.values()) : TimeUnit.SECONDS;
+        return luaState.getTop() > 2 ? luaState.checkEnum(4, TimeUnit.values()) : TimeUnit.SECONDS;
     }
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
