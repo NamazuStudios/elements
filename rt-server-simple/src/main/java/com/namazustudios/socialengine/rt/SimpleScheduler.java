@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
@@ -9,10 +8,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
-import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Stream;
 
 import static java.util.concurrent.TimeUnit.MINUTES;
 
@@ -134,13 +131,25 @@ public class SimpleScheduler implements Scheduler {
                                               final Function<Resource, T> operation,
                                               final Consumer<Throwable> failure) {
         return () -> {
+
+            final Resource resource;
+
             try {
-                final Resource resource = getResourceService().getAndAcquireResourceWithId(resourceId);
-                return performProtected(resource, operation);
+                resource = getResourceService().getAndAcquireResourceWithId(resourceId);
             } catch (Throwable th) {
                 failure.accept(th);
                 throw th;
             }
+
+            try {
+                return performProtected(resource, operation);
+            } catch (Throwable th) {
+                failure.accept(th);
+                throw th;
+            } finally {
+                getResourceService().release(resource);
+            }
+
         };
     }
 

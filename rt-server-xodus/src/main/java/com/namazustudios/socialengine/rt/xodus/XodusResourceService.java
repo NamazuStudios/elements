@@ -1120,7 +1120,7 @@ public class XodusResourceService implements ResourceService {
         try {
             return (XodusResource) resource;
         } catch (ClassCastException ex) {
-            throw new IllegalArgumentException("Not a Xodus managed Resource.", ex);
+            throw new IllegalArgumentException("Not an Xodus managed Resource.", ex);
         }
     }
 

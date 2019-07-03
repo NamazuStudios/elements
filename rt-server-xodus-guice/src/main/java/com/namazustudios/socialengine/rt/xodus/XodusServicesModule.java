@@ -41,8 +41,9 @@ public class XodusServicesModule extends PrivateModule {
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
 
+        bind(XodusResourceService.class).asEagerSingleton();
+        bind(ResourceService.class).to(XodusResourceService.class);
         bind(PersistenceStrategy.class).to(XodusPersistenceStrategy.class);
-        bind(ResourceService.class).to(XodusResourceService.class).asEagerSingleton();
 
         bind(ScheduledExecutorService.class)
             .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))

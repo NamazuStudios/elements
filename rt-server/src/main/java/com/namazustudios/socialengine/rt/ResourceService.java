@@ -135,7 +135,7 @@ public interface ResourceService extends AutoCloseable {
      * The default implementation of this does nothing as in-memory implementations do not need to implement this.  If
      * the {@link Resource} is not managed by this {@link ResourceService} then the behavior of this call is undefined.
      *
-     * @param resource the {@link Resource} to add, must be first acquired by a call to this service.
+     * @param resource the {@link Resource} to release, must be first acquired by a call to this service.
      * @return true if released, false if the {@link Resource} does not exist in this {@link ResourceService}
      */
     default boolean tryRelease(final Resource resource) {
