@@ -255,6 +255,11 @@ public class LuaResource implements Resource {
 
             luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
 
+            if (luaState.isNil(-1)) {
+                luaState.newTable();
+                return 1;
+            }
+
             luaState.pushNil();
             while (luaState.next(2)) {
 
