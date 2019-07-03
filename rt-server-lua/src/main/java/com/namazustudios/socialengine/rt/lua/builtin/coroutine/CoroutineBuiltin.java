@@ -233,7 +233,7 @@ public class CoroutineBuiltin implements Builtin {
     private boolean processYieldInstruction(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
 
         final YieldInstruction instruction;
-        instruction = luaState.getTop() > 0 ? luaState.checkEnum(1, YieldInstruction.values()) : IMMEDIATE;
+        instruction = luaState.getTop() > 0 ? luaState.checkEnum(2, YieldInstruction.values()) : IMMEDIATE;
 
         switch (instruction) {
             case FOR:

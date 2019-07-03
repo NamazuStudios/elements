@@ -30,7 +30,7 @@ public class SimpleTaskService implements TaskService {
 
     @Override
     public void stop() {
-        taskMap.updateAndGet(m -> {
+        taskMap.getAndUpdate(m -> {
 
             if (m == null) {
                 throw new IllegalStateException("SimpleTaskService already stopped.");
@@ -52,7 +52,7 @@ public class SimpleTaskService implements TaskService {
         final Task task = new Task(taskId);
         task.register(consumer, throwableTConsumer);
 
-        if (!getMap().replace(taskId, null, task)) {
+        if (getMap().putIfAbsent(taskId, task) != null) {
             throw new DuplicateTaskException(taskId);
         }
 
