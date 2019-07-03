@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
+import com.namazustudios.socialengine.rt.exception.ResourceDestroyedException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -137,8 +138,16 @@ public interface Resource extends AutoCloseable {
     Set<TaskId> getTasks();
 
     /**
-     * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.
+     * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.  Any tasks pending on the
+     * resource will be completed with a {@link ResourceDestroyedException} immediately.
      */
     void close();
+
+    /**
+     * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.  Any tasks pending on ths
+     * resource will not be destroyed or unregistered.  It is possible that later a new {@link Resource} would be made
+     * and the contents of this deserialized back into this one.
+     */
+    void unload();
 
 }

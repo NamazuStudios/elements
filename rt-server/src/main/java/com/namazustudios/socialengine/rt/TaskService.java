@@ -32,18 +32,24 @@ public interface TaskService {
      * Finishes a task with the supplied result.  In completing the task, references are immediately cleared
      * and no further messages can be sent to that {@link TaskId}.
      *
+     * As not all tasks are registered with a set of listeners, this may simply return false indicating that no
+     * listeners were notified.
+     *
      * @param taskId the {@link TaskId}
      * @param result the {@link Object} that is the result of completing the task
      */
-    void finishWithResult(TaskId taskId, Object result);
+    boolean finishWithResult(TaskId taskId, Object result);
 
     /**
      * Fails a task with the supplied {@link Throwable}, indicating an error.  In completing the task, references are
      * immediately cleared and no further messages can be sent to that {@link TaskId}.
      *
+     * As not all tasks are registered with a set of listeners, this may simply return false indicating that no
+     * listeners were notified.
+     *
      * @param taskId the {@link TaskId}
      * @param error the {@link Throwable} that is the result of failing the task
      */
-    void finishWithError(TaskId taskId, Throwable error);
+    boolean finishWithError(TaskId taskId, Throwable error);
 
 }

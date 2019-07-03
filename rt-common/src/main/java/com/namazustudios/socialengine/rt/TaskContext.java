@@ -39,24 +39,32 @@ public interface TaskContext {
      */
     @RemotelyInvokable
     void register(@Serialize TaskId taskId,
-                      @ResultHandler Consumer<Object> tConsumer,
-                      @ErrorHandler Consumer<Throwable> throwableTConsumer);
+                  @ResultHandler Consumer<Object> tConsumer,
+                  @ErrorHandler Consumer<Throwable> throwableTConsumer);
 
     /**
      * Finishes the task with associated {@link TaskId} with the provided result.  Consumers previously registered with
      * the {@link #register(TaskId, Consumer, Consumer)} call will be processed.
      *
+     * As not all tasks are registered with a set of listeners, this may simply return false indicating that no
+     * listeners were notified.
+     *
      * @param taskId
+     * @return true if the task was finished, false if otherwise
      */
     @RemotelyInvokable
-    void finishWithResult(@Serialize TaskId taskId, Object result);
+    boolean finishWithResult(@Serialize TaskId taskId, Object result);
 
     /**
      * Finishes the task with associated {@link TaskId} with the provided {@link Throwable} error.
      *
+     * As not all tasks are registered with a set of listeners, this may simply return false indicating that no
+     * listeners were notified.
+     *
      * @param taskId the {@link TaskId}
+     * @return true if the task was finished, false if otherwise
      */
     @RemotelyInvokable
-    void finishWithError(@Serialize TaskId taskId, Throwable error);
+    boolean finishWithError(@Serialize TaskId taskId, Throwable error);
 
 }

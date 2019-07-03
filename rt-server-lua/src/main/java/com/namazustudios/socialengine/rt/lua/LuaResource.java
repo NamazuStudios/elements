@@ -303,6 +303,11 @@ public class LuaResource implements Resource {
     }
 
     @Override
+    public void unload() {
+        getLuaState().close();
+    }
+
+    @Override
     public MethodDispatcher getMethodDispatcher(final String name) {
         return params -> (consumer, throwableConsumer) -> {
 

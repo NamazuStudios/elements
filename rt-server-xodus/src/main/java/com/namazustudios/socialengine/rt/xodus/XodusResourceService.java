@@ -526,10 +526,10 @@ public class XodusResourceService implements ResourceService {
                     }
 
                     try {
-                        // Ensure that it's closed once it's persisted to avoi memory leaks.
-                        xodusResource.close();
+                        // Ensure that it's closed once it's persisted to avoid memory leaks.
+                        xodusResource.unload();
                     } catch (Exception ex) {
-                        logger.error("Could not close resource.", ex);
+                        logger.error("Could not unload resource.", ex);
                     }
 
                 }
@@ -943,9 +943,9 @@ public class XodusResourceService implements ResourceService {
 
         }).forEach(xr -> {
             try {
-                xr.close();
+                xr.unload();
             } catch (Exception ex) {
-                logger.error("Caught exception closing Resource {}", xr.getId(), ex);
+                logger.error("Caught exception unloading Resource {}", xr.getId(), ex);
             }
         });
 

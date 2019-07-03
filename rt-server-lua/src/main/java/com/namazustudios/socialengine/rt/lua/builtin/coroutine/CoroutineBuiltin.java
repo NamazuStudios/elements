@@ -23,7 +23,6 @@ import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstr
 import static java.lang.Math.max;
 import static java.lang.StrictMath.round;
 import static java.lang.System.currentTimeMillis;
-import static java.lang.System.err;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class CoroutineBuiltin implements Builtin {
@@ -252,7 +251,7 @@ public class CoroutineBuiltin implements Builtin {
             case INDEFINITELY:
                 return false;
             case COMMIT:
-                requestPersistence(taskId, luaState, logAssist);
+                persist(taskId, luaState, logAssist);
                 return true;
             default:
                 throw new InternalException("unknown enum value " + instruction);
@@ -322,15 +321,9 @@ public class CoroutineBuiltin implements Builtin {
 
     }
 
-    private void requestPersistence(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
-
-        if (luaState.getTop() < 1) {
-            throw new IllegalArgumentException("time value must be specified");
-        }
-
+    private void persist(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final ResourceId resourceId = getLuaResource().getId();
         getPersistenceStrategy().persist(resourceId);
-
     }
 
     @Override

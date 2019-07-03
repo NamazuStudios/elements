@@ -26,13 +26,13 @@ public class SimpleTaskContext implements TaskContext {
     }
 
     @Override
-    public void finishWithResult(final TaskId taskId, final Object result) {
-        getTaskService().finishWithResult(taskId, result);
+    public boolean finishWithResult(final TaskId taskId, final Object result) {
+        return getTaskService().finishWithResult(taskId, result);
     }
 
     @Override
-    public void finishWithError(final TaskId taskId, final Throwable error) {
-        getTaskService().finishWithError(taskId, error);
+    public boolean finishWithError(final TaskId taskId, final Throwable error) {
+        return getTaskService().finishWithError(taskId, error);
     }
 
     public TaskService getTaskService() {

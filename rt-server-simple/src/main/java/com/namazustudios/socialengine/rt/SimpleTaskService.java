@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.DuplicateTaskException;
-import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
 import com.namazustudios.socialengine.rt.exception.TaskKilledException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,28 +59,24 @@ public class SimpleTaskService implements TaskService {
     }
 
     @Override
-    public void finishWithResult(final TaskId taskId, final Object result) {
+    public boolean finishWithResult(final TaskId taskId, final Object result) {
 
         final Task task = getMap().remove(taskId);
-
-        if (task == null) {
-            throw new NoSuchTaskException(taskId);
-        }
+        if (task == null) return false;
 
         task.finish(result);
+        return true;
 
     }
 
     @Override
-    public void finishWithError(final TaskId taskId, final Throwable error) {
+    public boolean finishWithError(final TaskId taskId, final Throwable error) {
 
         final Task task = getMap().remove(taskId);
-
-        if (task == null) {
-            throw new NoSuchTaskException(taskId);
-        }
+        if (task == null) return false;
 
         task.finish(error);
+        return true;
 
     }
 
