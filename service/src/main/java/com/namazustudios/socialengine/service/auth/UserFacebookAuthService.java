@@ -40,6 +40,7 @@ public class UserFacebookAuthService extends AnonFacebookAuthService implements 
             facebookOAuthAccessToken,
             (fbUser) -> {
                 final User user = new User();
+                user.setId(getUser().getId());
                 user.setLevel(getUser().getLevel());
                 user.setActive(getUser().isActive());
                 user.setFacebookId(fbUser.getId());
