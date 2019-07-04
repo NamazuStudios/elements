@@ -5,8 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -22,7 +22,7 @@ public class SimpleIndexContext implements IndexContext {
 
     @Override
     public void listAsync(final Path path,
-                          final Consumer<Stream<Listing>> success,
+                          final Consumer<List<Listing>> success,
                           final Consumer<Throwable> failure) {
         getExecutorService().submit(() -> {
             try {

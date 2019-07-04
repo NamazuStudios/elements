@@ -4,12 +4,14 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.Iterators;
 
 import java.io.File;
 import java.io.Serializable;
 import java.nio.charset.Charset;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 import static com.google.common.collect.Iterators.limit;
@@ -25,7 +27,7 @@ import static java.util.Collections.unmodifiableList;
  *
  * Created by patricktwohig on 9/4/15.
  */
-public class Path implements Comparable<Path>, Serializable, RoutingAddressProvider {
+public class Path implements Comparable<Path>, Serializable {
 
     /**
      * The separator of the context from the path components. Literal value "://", e.g. "myContext://foo/bar".

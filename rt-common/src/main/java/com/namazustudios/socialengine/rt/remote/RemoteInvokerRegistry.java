@@ -1,34 +1,15 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.InstanceConnectionMonitorServiceListener;
 import com.namazustudios.socialengine.rt.NodeId;
 
 import java.util.Set;
 
-public interface RemoteInvokerRegistry extends InstanceConnectionMonitorServiceListener {
-    /**
-     * Returns a randomly-selected instance-level {@link RemoteInvoker}, or null if none are currently registered.
-     * @return {@link RemoteInvoker} or null.
-     */
-    RemoteInvoker getAnyInstanceRemoteInvoker();
+public interface RemoteInvokerRegistry {
 
     /**
-     * Returns a randomly-selected application-level {@link RemoteInvoker}, or null if none are currently registered.
-     * @return {@link RemoteInvoker} or null.
+     * Returns a {@link RemoteInvoker}
      */
-    RemoteInvoker getAnyApplicationRemoteInvoker();
-
-    /**
-     * Returns all registered Instance-level {@link RemoteInvoker}s.
-     * @return a {@link Set} of {@link RemoteInvoker}s.
-     */
-    Set<RemoteInvoker> getAllInstanceRemoteInvokers();
-
-    /**
-     * Returns all registered Application-level {@link RemoteInvoker}s.
-     * @return a {@link Set} of {@link RemoteInvoker}s.
-     */
-    Set<RemoteInvoker> getAllApplicationRemoteInvokers();
+    RemoteInvoker getAnyRemoteInvoker();
 
     /**
      * Returns the {@link RemoteInvoker} registered under the given NodeId. It may be a {@link NodeId} for
@@ -56,4 +37,5 @@ public interface RemoteInvokerRegistry extends InstanceConnectionMonitorServiceL
      * @return a RemoteInvoker for the given nodeId, or null if not found.
      */
     RemoteInvoker getApplicationRemoteInvoker(NodeId nodeId);
+
 }

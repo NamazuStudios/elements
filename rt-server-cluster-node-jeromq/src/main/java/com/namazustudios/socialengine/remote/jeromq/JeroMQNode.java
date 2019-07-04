@@ -86,7 +86,7 @@ public class JeroMQNode implements Node {
     }
 
     public String getOutboundAddr() {
-        return format(OUTBOUND_ADDR_FORMAT, getNodeId().getApplicationUuid().toString());
+        return format(OUTBOUND_ADDR_FORMAT, getNodeId().getApplicationId().toString());
     }
 
     private void buildNodeIdIfPossible() {
@@ -211,7 +211,7 @@ public class JeroMQNode implements Node {
     }
 
     private String loggerName() {
-        return Stream.of(JeroMQNode.class.getName(), getNodeId().getApplicationUuid().toString())
+        return Stream.of(JeroMQNode.class.getName(), getNodeId().getApplicationId().toString())
                      .filter(s -> s != null)
                      .collect(Collectors.joining("."));
     }

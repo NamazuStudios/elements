@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
  *
  * Created by patricktwohig on 4/11/17.
  */
-public class ResourceId implements Serializable, NetworkAddressor {
+public class ResourceId implements Serializable {
 
     /**
      * Should not conflict with the {@link NodeId#ID_SEPARATOR}.
@@ -107,12 +107,4 @@ public class ResourceId implements Serializable, NetworkAddressor {
         return asString();
     }
 
-    public UUID getInstanceUuid() {
-        if (nodeId != null) {
-            return nodeId.getInstanceUuid();
-        }
-        else {
-            return null;
-        }
-    }
 }

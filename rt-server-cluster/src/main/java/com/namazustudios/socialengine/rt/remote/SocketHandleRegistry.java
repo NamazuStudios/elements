@@ -6,11 +6,7 @@ import com.namazustudios.socialengine.rt.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.*;
-
-import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_UUID_NAME;
 
 /**
  * Maps socket handles to tcp addresses/inproc identifiers (and vice versa). Note: this is not a thread-safe module and
@@ -217,7 +213,7 @@ public class SocketHandleRegistry implements AutoCloseable {
     public void registerNode(final NodeId nodeId, final int nodeSocketHandle) {
         nodeIdToSocketHandle.put(nodeId, nodeSocketHandle);
 
-        final UUID instanceUuid = nodeId.getInstanceUuid();
+        final UUID instanceUuid = nodeId.getInstanceId();
 
         final Set<NodeId> nodeIds = getOrCreateNodeIdSetForInstanceUuid(instanceUuid);
         nodeIds.add(nodeId);
@@ -229,7 +225,7 @@ public class SocketHandleRegistry implements AutoCloseable {
     public void unregisterNode(final NodeId nodeId) {
         final int nodeSocketHandle = nodeIdToSocketHandle.remove(nodeId);
 
-        final UUID instanceUuid = nodeId.getInstanceUuid();
+        final UUID instanceUuid = nodeId.getInstanceId();
 
         final Set<NodeId> nodeIds = getOrCreateNodeIdSetForInstanceUuid(instanceUuid);
         nodeIds.remove(nodeId);

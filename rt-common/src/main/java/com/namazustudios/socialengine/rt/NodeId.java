@@ -20,7 +20,7 @@ import java.util.UUID;
  * given string of that form.
  *
  */
-public class NodeId implements Serializable, NetworkAddressor {
+public class NodeId implements Serializable {
 
     /**
      * Should not conflict with {@link ResourceId#ID_SEPARATOR}.
@@ -34,13 +34,13 @@ public class NodeId implements Serializable, NetworkAddressor {
 
     public static final int APPLICATION_UUID_STRING_INDEX = 1;
 
-    private final UUID instanceUuid;
+    private final UUID instanceId;
 
-    private final UUID applicationUuid;
+    private final UUID applicationId;
 
-    public NodeId(final UUID instanceUuid, final UUID applicationUuid) {
-        this.instanceUuid = instanceUuid;
-        this.applicationUuid = applicationUuid;
+    public NodeId(final UUID instanceId, final UUID applicationId) {
+        this.instanceId = instanceId;
+        this.applicationId = applicationId;
     }
 
     /**
@@ -62,10 +62,10 @@ public class NodeId implements Serializable, NetworkAddressor {
         }
 
         final String instanceUuidString = components[INSTANCE_UUID_STRING_INDEX];
-        this.instanceUuid = UUID.fromString(instanceUuidString);
+        this.instanceId = UUID.fromString(instanceUuidString);
 
         final String applicationUuidString = components[APPLICATION_UUID_STRING_INDEX];
-        this.applicationUuid = UUID.fromString(applicationUuidString);
+        this.applicationId = UUID.fromString(applicationUuidString);
     }
 
     /**
@@ -74,7 +74,7 @@ public class NodeId implements Serializable, NetworkAddressor {
      * @return the string representation
      */
     public String asString() {
-        final String compoundIdString = instanceUuid.toString() + ID_SEPARATOR + applicationUuid.toString();
+        final String compoundIdString = instanceId.toString() + ID_SEPARATOR + applicationId.toString();
         return compoundIdString;
     }
 
@@ -83,13 +83,13 @@ public class NodeId implements Serializable, NetworkAddressor {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         NodeId nodeId = (NodeId) o;
-        return Objects.equals(instanceUuid, nodeId.instanceUuid) &&
-                Objects.equals(applicationUuid, nodeId.applicationUuid);
+        return Objects.equals(instanceId, nodeId.instanceId) &&
+               Objects.equals(applicationId, nodeId.applicationId);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(instanceUuid, applicationUuid);
+        return Objects.hash(instanceId, applicationId);
     }
 
     @Override
@@ -97,11 +97,12 @@ public class NodeId implements Serializable, NetworkAddressor {
         return asString();
     }
 
-    public UUID getInstanceUuid() {
-        return instanceUuid;
+    public UUID getInstanceId() {
+        return instanceId;
     }
 
-    public UUID getApplicationUuid() {
-        return applicationUuid;
+    public UUID getApplicationId() {
+        return applicationId;
     }
+
 }

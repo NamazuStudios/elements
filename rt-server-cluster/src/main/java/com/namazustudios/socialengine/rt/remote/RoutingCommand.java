@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.NodeId;
-import com.namazustudios.socialengine.rt.remote.PackedUUID;
 import javolution.io.Struct;
-
-import java.util.UUID;
 
 /**
  * Used to control the routes stored.
@@ -44,12 +41,12 @@ public class RoutingCommand extends Struct {
         }
 
         if (nodeId != null) {
-            if (nodeId.getInstanceUuid() != null) {
-                routingCommand.instanceUuid.set(nodeId.getInstanceUuid());
+            if (nodeId.getInstanceId() != null) {
+                routingCommand.instanceUuid.set(nodeId.getInstanceId());
             }
 
-            if (nodeId.getApplicationUuid() != null) {
-                routingCommand.applicationUuid.set(nodeId.getApplicationUuid());
+            if (nodeId.getApplicationId() != null) {
+                routingCommand.applicationUuid.set(nodeId.getApplicationId());
             }
         }
 

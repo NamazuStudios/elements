@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.remote.MalformedMessageException;
 import com.namazustudios.socialengine.rt.remote.RoutingHeader;
 import org.zeromq.ZMsg;
 
-import javax.inject.Inject;
 import java.nio.charset.Charset;
 import java.util.UUID;
 
@@ -81,11 +80,11 @@ public class RouteRepresentationUtil {
      * Returns the {@link String} representing the internal route address.
      **/
     public static String buildMultiplexInprocAddress(final NodeId nodeId) {
-        if (nodeId.getApplicationUuid() != null) {
-            return format("inproc://multiplex-%s.%s", nodeId.getInstanceUuid(), nodeId.getApplicationUuid());
+        if (nodeId.getApplicationId() != null) {
+            return format("inproc://multiplex-%s.%s", nodeId.getInstanceId(), nodeId.getApplicationId());
         }
         else {
-            return format("inproc://multiplex-%s", nodeId.getInstanceUuid());
+            return format("inproc://multiplex-%s", nodeId.getInstanceId());
         }
     }
 
@@ -96,11 +95,11 @@ public class RouteRepresentationUtil {
      * Returns the {@link String} representing the internal route address.
      **/
     public static String buildDemultiplexInprocAddress(final NodeId nodeId) {
-        if (nodeId.getApplicationUuid() != null) {
-            return format("inproc://demultiplex-%s.%s", nodeId.getInstanceUuid(), nodeId.getApplicationUuid());
+        if (nodeId.getApplicationId() != null) {
+            return format("inproc://demultiplex-%s.%s", nodeId.getInstanceId(), nodeId.getApplicationId());
         }
         else {
-            return format("inproc://demultiplex-%s", nodeId.getInstanceUuid());
+            return format("inproc://demultiplex-%s", nodeId.getInstanceId());
         }
     }
 

@@ -35,28 +35,28 @@ public class RemoteInvocationHandlerBuilder {
 
     private final Method method;
 
+    private final Routing routing;
+
     private final Dispatch.Type dispatchType;
 
     private final Supplier<ReturnValueTransformer> returnValueTransformerSupplier;
 
     private final Supplier<Function<Object[], List<Object>>> addressAssemblerSupplier;
 
-    private final Class<? extends RoutingStrategy> routingStrategyType;
-
     public RemoteInvocationHandlerBuilder(final RemoteInvoker remoteInvoker,
                                           final Class<?> type,
                                           final Method method) {
 
-        if (method.getAnnotation(RemotelyInvokable.class) == null) {
+        final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
+
+        if (remotelyInvokable == null) {
             throw new IllegalArgumentException(format(method) + " is not annotated with @RemotelyInvokable");
         }
 
         this.type = type;
         this.method = method;
         this.dispatchType = Dispatch.Type.determine(method);
-
-        final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
-        routingStrategyType = remotelyInvokable.value();
+        this.routing = remotelyInvokable.routing();
 
         this.addressAssemblerSupplier = () -> null;
         this.returnValueTransformerSupplier = () -> getReturnValueTransformer(remoteInvoker);
@@ -74,16 +74,17 @@ public class RemoteInvocationHandlerBuilder {
                                           final Class<?> type,
                                           final Method method) {
 
-        if (method.getAnnotation(RemotelyInvokable.class) == null) {
+
+        final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
+
+        if (remotelyInvokable == null) {
             throw new IllegalArgumentException(format(method) + " is not annotated with @RemotelyInvokable");
         }
 
         this.type = type;
         this.method = method;
         this.dispatchType = Dispatch.Type.determine(method);
-
-        final RemotelyInvokable remotelyInvokable = method.getAnnotation(RemotelyInvokable.class);
-        routingStrategyType = remotelyInvokable.value();
+        this.routing = remotelyInvokable.routing();
 
         this.addressAssemblerSupplier = this::getAddressAssembler;
         this.returnValueTransformerSupplier = () -> getReturnValueTransformer(remoteInvocationDispatcher);
@@ -177,7 +178,8 @@ public class RemoteInvocationHandlerBuilder {
 
             final Route route = new Route();
             route.setAddress(addressAssembler.apply(args));
-            route.setRoutingStrategyType(routingStrategyType);
+            route.setRoutingStrategyType(routing.value());
+            route.setRoutingStrategyName(routing.name());
 
             final Invocation invocation = new Invocation();
 
