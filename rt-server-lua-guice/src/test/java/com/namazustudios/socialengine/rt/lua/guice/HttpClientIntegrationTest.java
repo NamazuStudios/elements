@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;

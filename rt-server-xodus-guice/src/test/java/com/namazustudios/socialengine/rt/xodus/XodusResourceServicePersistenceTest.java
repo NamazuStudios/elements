@@ -1,11 +1,9 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.common.io.ByteStreams;
-import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
-import jetbrains.exodus.env.Environment;
-import jetbrains.exodus.env.Environments;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;

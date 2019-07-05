@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.NodeId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;

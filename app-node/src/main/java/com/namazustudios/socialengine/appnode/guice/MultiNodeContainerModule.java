@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQInstanceMetadataContext;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;

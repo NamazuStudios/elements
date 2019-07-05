@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;

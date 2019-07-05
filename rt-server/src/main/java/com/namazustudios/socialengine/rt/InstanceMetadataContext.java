@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.util.Set;
 import java.util.UUID;

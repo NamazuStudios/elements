@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;

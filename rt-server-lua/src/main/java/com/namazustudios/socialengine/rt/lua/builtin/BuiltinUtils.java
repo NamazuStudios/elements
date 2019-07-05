@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.LuaState;
-import com.namazustudios.socialengine.rt.TaskId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 
 import static com.namazustudios.socialengine.rt.lua.Constants.REQUIRE;

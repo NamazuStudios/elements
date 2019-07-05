@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
 import jetbrains.exodus.ByteIterable;
-import jetbrains.exodus.bindings.StringBinding;
 
 import java.io.Serializable;
 import java.util.Objects;

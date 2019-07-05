@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+
 import java.util.Objects;
 import java.util.UUID;
 

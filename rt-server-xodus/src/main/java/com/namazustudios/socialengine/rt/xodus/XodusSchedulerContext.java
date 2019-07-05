@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.env.Cursor;
 import jetbrains.exodus.env.Environment;

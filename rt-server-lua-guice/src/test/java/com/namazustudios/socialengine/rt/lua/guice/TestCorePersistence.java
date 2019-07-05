@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.util.ClasspathHelper;

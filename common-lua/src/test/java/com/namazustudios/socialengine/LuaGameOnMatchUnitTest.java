@@ -1,9 +1,8 @@
 package com.namazustudios.socialengine;
 
-import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 

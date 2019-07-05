@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+
 /**
  * A dummy implementation of the {@link ResourceAcquisition} instance.
  */

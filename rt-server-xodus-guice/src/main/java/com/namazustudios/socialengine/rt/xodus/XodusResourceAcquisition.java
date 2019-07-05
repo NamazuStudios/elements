@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.namazustudios.socialengine.rt.ResourceAcquisition;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceLockService;
 import com.namazustudios.socialengine.rt.Scheduler;
 

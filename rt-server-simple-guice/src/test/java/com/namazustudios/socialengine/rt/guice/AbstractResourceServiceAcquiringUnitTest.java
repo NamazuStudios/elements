@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.mockito.Mockito;

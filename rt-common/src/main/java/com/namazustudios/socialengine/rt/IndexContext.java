@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.routing.AggregatePathRoutingStrategy;
 import com.namazustudios.socialengine.rt.routing.PathResourceIdRoutingStrategy;
 import com.namazustudios.socialengine.rt.routing.PathRoutingStrategy;

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.testkit;
 import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

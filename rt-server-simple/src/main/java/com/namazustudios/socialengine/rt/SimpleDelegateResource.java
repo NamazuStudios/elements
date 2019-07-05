@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;

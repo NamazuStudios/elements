@@ -7,7 +7,7 @@ import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandTy
 import static com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType.ROUTING_COMMAND;
 
 import com.google.common.net.HostAndPort;
-import com.namazustudios.socialengine.rt.NodeId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.RoutingCommand.Action;
 
 import static com.namazustudios.socialengine.rt.remote.RoutingCommand.buildRoutingCommand;

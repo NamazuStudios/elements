@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.NodeId;
-
-import java.util.Set;
+import com.namazustudios.socialengine.rt.id.NodeId;
 
 public interface RemoteInvokerRegistry {
 

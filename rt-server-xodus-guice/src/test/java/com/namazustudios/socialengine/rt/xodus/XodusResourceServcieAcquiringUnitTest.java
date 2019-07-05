@@ -3,13 +3,13 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceAcquiringUnitTest;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
 import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
 import java.io.*;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;

@@ -4,7 +4,7 @@ import com.google.inject.Injector;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.NodeId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;

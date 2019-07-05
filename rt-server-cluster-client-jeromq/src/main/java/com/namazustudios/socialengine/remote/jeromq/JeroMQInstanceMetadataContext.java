@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.NodeId;
 
 import javax.inject.Inject;
 import java.util.Set;

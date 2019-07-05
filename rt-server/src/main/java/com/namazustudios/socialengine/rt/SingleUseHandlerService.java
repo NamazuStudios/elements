@@ -1,7 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.TaskId;
+
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Used to implement handler types.  Handlers are {@link Resource} instances that are meant to handle one-time requests
@@ -24,7 +25,7 @@ public interface SingleUseHandlerService {
      * code.
      */
     TaskId perform(Consumer<Object> success, Consumer<Throwable> failure,
-                 String module, Attributes attributes,
-                 String method, Object... args);
+                   String module, Attributes attributes,
+                   String method, Object... args);
 
 }

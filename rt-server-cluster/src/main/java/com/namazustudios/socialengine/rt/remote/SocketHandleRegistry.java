@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.namazustudios.socialengine.rt.NodeId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

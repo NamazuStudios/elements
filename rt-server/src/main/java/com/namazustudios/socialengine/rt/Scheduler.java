@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

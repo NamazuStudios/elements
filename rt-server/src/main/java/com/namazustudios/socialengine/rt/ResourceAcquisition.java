@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+
 /**
  * Provides a link to the {@link ResourceService} to perform certain operations from within a {@link Resource}.  THis
  * is essentially an internal implementation detail that allowes resources to acquire themselves and scheduleRelease themselves

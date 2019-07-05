@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceReleasingUnitTest;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
 import org.testng.annotations.Guice;
 

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 
-import com.namazustudios.socialengine.rt.exception.DuplicateException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;

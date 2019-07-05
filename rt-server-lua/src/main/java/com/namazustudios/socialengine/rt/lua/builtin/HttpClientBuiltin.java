@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.TaskId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

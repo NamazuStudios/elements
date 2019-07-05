@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import jetbrains.exodus.ByteIterable;
 
 import static jetbrains.exodus.bindings.StringBinding.entryToString;

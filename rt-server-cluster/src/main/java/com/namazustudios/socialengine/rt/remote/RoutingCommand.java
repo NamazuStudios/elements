@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.NodeId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import javolution.io.Struct;
 
 /**

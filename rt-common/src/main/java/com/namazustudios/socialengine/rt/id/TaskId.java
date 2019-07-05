@@ -1,10 +1,15 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.id;
+
+import com.namazustudios.socialengine.rt.Resource;
+import com.sun.org.apache.regexp.internal.RE;
 
 import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
+import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
+import static com.namazustudios.socialengine.rt.id.V1CompoundId.ID_SEPARATOR_PATTERN;
 import static java.lang.String.format;
 
 /**
@@ -20,22 +25,29 @@ import static java.lang.String.format;
  * {@link ResourceId} with the string representation of the TaskId's UUID, separated by the ID_SEPARATOR. Such a
  * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}:{task_uuid}".
  */
-public class TaskId implements Serializable, NetworkAddressor {
+public class TaskId implements Serializable {
 
-    public static final String ID_SEPARATOR = ":";
+    final V1CompoundId v1CompoundId;
 
-    public static final Pattern ID_SEPARATOR_PATTERN = Pattern.compile(ID_SEPARATOR);
+    private transient volatile int hash;
 
-    private final UUID uuid;
+    private transient volatile String string;
 
-    private ResourceId resourceId;
+    private transient volatile NodeId nodeId;
+
+    private transient volatile ResourceId resourceId;
+
+    private TaskId() { v1CompoundId = null; }
 
     /**
      * Creates a new unique {@link TaskId}.
      */
     public TaskId(final ResourceId resourceId) {
-        uuid = UUID.randomUUID();
-        this.resourceId = resourceId;
+        v1CompoundId = new V1CompoundId.Builder()
+                .with(resourceId.v1CompoundId)
+                .with(TASK, UUID.randomUUID())
+                .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+            .build();
     }
 
     /**
@@ -44,16 +56,19 @@ public class TaskId implements Serializable, NetworkAddressor {
      * @param stringRepresentation the string representation
      */
     public TaskId(final String stringRepresentation) {
+        v1CompoundId = new V1CompoundId.Builder()
+                .with(stringRepresentation)
+                .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+            .build();
+    }
 
-        final String[] components = ID_SEPARATOR_PATTERN.split(stringRepresentation);
-
-        if (components.length != 2) {
-            throw new IllegalArgumentException("Task id format invalid: " + stringRepresentation);
-        }
-
-        uuid = UUID.fromString(components[1]);
-        resourceId = new ResourceId(components[0]);
-
+    /**
+     * Returns the {@link NodeId} attached to this {@link TaskId}.
+     *
+     * @return the {@link NodeId}
+     */
+    public NodeId getNodeId() {
+        return nodeId == null ? (nodeId = new NodeId(v1CompoundId)) : nodeId;
     }
 
     /**
@@ -62,7 +77,7 @@ public class TaskId implements Serializable, NetworkAddressor {
      * @return the {@link ResourceId} attached to this {@link TaskId}
      */
     public ResourceId getResourceId() {
-        return resourceId;
+        return resourceId == null ? (resourceId = new ResourceId(v1CompoundId)) : resourceId;
     }
 
     /**
@@ -71,35 +86,25 @@ public class TaskId implements Serializable, NetworkAddressor {
      * @return the string representation
      */
     public String asString() {
-        return format("%s%s%s", resourceId.asString(), ID_SEPARATOR, uuid.toString());
-    }
-
-    @Override
-    public String toString() {
-        return asString();
+        return string == null ? (string = v1CompoundId.asString(INSTANCE, APPLICATION, RESOURCE, TASK)) : string;
     }
 
     @Override
     public boolean equals(Object object) {
         if (this == object) return true;
         if (!(object instanceof TaskId)) return false;
-        TaskId taskId = (TaskId) object;
-        return Objects.equals(uuid, taskId.uuid) &&
-               Objects.equals(getResourceId(), taskId.getResourceId());
+        final TaskId taskId = (TaskId) object;
+        return v1CompoundId.equals(taskId.v1CompoundId, INSTANCE, APPLICATION, RESOURCE, TASK);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(uuid, getResourceId());
+        return hash == 0 ? (hash = v1CompoundId.hashCode(INSTANCE, APPLICATION, RESOURCE, TASK)) : hash;
     }
 
-    public UUID getInstanceUuid() {
-        if (resourceId != null) {
-            return resourceId.getInstanceUuid();
-        }
-        else {
-            return null;
-        }
+    @Override
+    public String toString() {
+        return asString();
     }
 
 }

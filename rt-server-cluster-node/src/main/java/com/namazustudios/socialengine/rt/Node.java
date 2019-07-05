@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.NodeId;
+
 /**
  * Represents the worker node for a single Application.  This is a simple interface which in and of itself does nothing
  * more than provide a means to start and stop the service. Conceptually, however, a Node represents the core

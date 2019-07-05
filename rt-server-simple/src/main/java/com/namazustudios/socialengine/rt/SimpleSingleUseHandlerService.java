@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,8 +43,8 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     @Override
     public TaskId perform(final Consumer<Object> success, final Consumer<Throwable> failure,
-                        final String module, final Attributes attributes,
-                        final String method, final Object... args) {
+                          final String module, final Attributes attributes,
+                          final String method, final Object... args) {
         final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();

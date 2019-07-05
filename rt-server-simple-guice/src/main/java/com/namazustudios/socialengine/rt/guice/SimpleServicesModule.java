@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
 import com.namazustudios.socialengine.rt.provider.ScheduledExecutorServiceProvider;
 
