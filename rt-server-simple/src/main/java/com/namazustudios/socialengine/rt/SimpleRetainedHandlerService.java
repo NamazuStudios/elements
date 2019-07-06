@@ -30,7 +30,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
             final String module, final Attributes attributes,
             final String method, final Object... args) {
 
-        final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
+        final Path path = Path.fromComponents("tmp", "handler", "re", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
 
