@@ -97,7 +97,11 @@ public class LuaResourceIntegrationTest {
             {"test.response", "test_simple_response"},
             {"test.yield_commit", "test_commit"},
             {"test.yield_commit", "test_complex_commit"},
-            {"test.yield_commit", "test_repeat_commit"}
+            {"test.yield_commit", "test_repeat_commit"},
+            {"test.pass_table", "pass_simple_table"},
+            {"test.pass_table", "pass_simple_array"},
+            {"test.pass_table", "pass_complex_array"},
+            {"test.pass_table", "pass_complex_table"}
         };
     }
 
