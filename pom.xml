@@ -111,6 +111,7 @@
         <netty.version>4.1.22.Final</netty.version>
         <xodus.version>1.2.3</xodus.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
+        <spotify.dns.version>3.1.5</spotify.dns.version>
     </properties>
 
     <dependencies>

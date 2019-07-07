@@ -20,9 +20,11 @@ public class NodeId implements Serializable {
 
     final V1CompoundId v1CompoundId;
 
-    private volatile int hash;
+    private transient volatile int hash;
 
-    private volatile String string;
+    private transient volatile String string;
+
+    private transient volatile InstanceId instanceId;
 
     private NodeId() { v1CompoundId = null; }
 
@@ -57,6 +59,10 @@ public class NodeId implements Serializable {
                 .without(TASK, RESOURCE)
                 .only(INSTANCE, APPLICATION)
             .build();
+    }
+
+    public InstanceId getInstanceId() {
+        return (instanceId == null) ? (instanceId = new InstanceId(v1CompoundId)) : instanceId;
     }
 
     /**
