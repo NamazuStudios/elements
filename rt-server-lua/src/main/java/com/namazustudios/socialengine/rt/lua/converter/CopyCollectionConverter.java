@@ -19,16 +19,20 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
-        if (isArray(luaState, index) && formalType.isAssignableFrom(Iterable.class)) {
+
+        final boolean isArray = isArray(luaState, index);
+
+        if (isArray && (formalType.isAssignableFrom(Iterable.class) || Object.class.equals(formalType))) {
             final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
             return (T) new ArrayList<Object>(proxyList);
-        } else if (formalType.isAssignableFrom(Map.class)) {
+        } else if (formalType.isAssignableFrom(Map.class) || Object.class.equals(formalType)) {
             final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
             return (T) new LinkedHashMap<Object, Object>(proxyMap);
         } else {
             final LuaType luaType = luaState.type(index);
             throw new IllegalArgumentException("Unexpected " + luaType + " on the Lua stack requested conversion.");
         }
+
     }
 
     private boolean isArray(final LuaState luaState, final int index) {
@@ -139,7 +143,11 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
     @Override
     public boolean isConvertibleFromLua(final LuaState luaState, final int index, final Class<?> formalType) {
-        return luaState.type(index) == TABLE && (formalType.isAssignableFrom(Map.class) || formalType.isAssignableFrom(Iterable.class));
+        return luaState.type(index) == TABLE && (
+            formalType.isAssignableFrom(Map.class) ||
+            formalType.isAssignableFrom(Iterable.class) ||
+            Object.class.equals(formalType)
+        );
     }
 
 }
