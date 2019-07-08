@@ -1,14 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
-import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import java.util.Iterator;
 import java.util.Map;
 
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertFalse;
-import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.*;
 
 public class ParameterizedPathUnitTest {
 

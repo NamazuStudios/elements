@@ -526,10 +526,10 @@ public class XodusResourceService implements ResourceService {
                     }
 
                     try {
-                        // Ensure that it's closed once it's persisted to avoi memory leaks.
-                        xodusResource.close();
+                        // Ensure that it's closed once it's persisted to avoid memory leaks.
+                        xodusResource.unload();
                     } catch (Exception ex) {
-                        logger.error("Could not close resource.", ex);
+                        logger.error("Could not unload resource.", ex);
                     }
 
                 }
@@ -943,9 +943,9 @@ public class XodusResourceService implements ResourceService {
 
         }).forEach(xr -> {
             try {
-                xr.close();
+                xr.unload();
             } catch (Exception ex) {
-                logger.error("Caught exception closing Resource {}", xr.getId(), ex);
+                logger.error("Caught exception unloading Resource {}", xr.getId(), ex);
             }
         });
 
@@ -953,30 +953,29 @@ public class XodusResourceService implements ResourceService {
 
     }
 
-    public void acquire(final ResourceId resourceId) {
-        getEnvironment().executeInTransaction(txn -> {
+    public void persist(final ResourceId resourceId) {
 
-            final Store acquiresStore = openAcquires(txn);
-            final ByteIterable resourceIdKey = stringToEntry(resourceId.asString());
-            final ByteIterable value = acquiresStore.get(txn, resourceIdKey);
-
-            // This is only called to increment the acquire count, so it may not need to actually manipulate the
-            // cache.  Trying to increment the count otherwise is an error.
-            if (value == null) {
-                throw new IllegalStateException("Attempting to acquire resource which has no acquires.");
-            }
-
-            final int acquires = entryToInt(value);
-            acquiresStore.put(txn, resourceIdKey, intToEntry(acquires + 1));
-
-        });
-    }
-
-    public void release(final ResourceId resourceId) {
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceId);
-        final XodusResource xodusResource = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
-        if (xodusResource == null) return;
-        release(xodusResource);
+
+        try (final Monitor monitor = getResourceLockService().getMonitor(resourceId)) {
+            getEnvironment().executeInTransaction(txn -> {
+
+                final Store acquiresStore = openAcquires(txn);
+                final Store resourcesStore = openResources(txn);
+                final ByteIterable acquiresByteIterable = acquiresStore.get(txn, xodusCacheKey.getKey());
+                final int acquires = entryToInt(acquiresByteIterable);
+
+                if (acquires < 1) {
+                    logger.warn("Resource with ID '{}' not acquired.  No persistence necessary.", resourceId);
+                    return;
+                }
+
+                final XodusResource xodusResource = readFromCache(xodusCacheKey);
+                xodusResource.persist(txn, resourcesStore);
+
+            });
+        }
+
     }
 
     private Store openResources(final Transaction txn) {
@@ -1121,7 +1120,7 @@ public class XodusResourceService implements ResourceService {
         try {
             return (XodusResource) resource;
         } catch (ClassCastException ex) {
-            throw new IllegalArgumentException("Not a Xodus managed Resource.", ex);
+            throw new IllegalArgumentException("Not an Xodus managed Resource.", ex);
         }
     }
 

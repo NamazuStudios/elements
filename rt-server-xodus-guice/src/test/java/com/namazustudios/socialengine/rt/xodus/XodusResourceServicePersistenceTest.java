@@ -63,7 +63,7 @@ public class XodusResourceServicePersistenceTest {
 
         getResourceService().addAndReleaseResource(path, resource);
 
-        verify(resource, times(1)).close();
+        verify(resource, times(1)).unload();
         verify(resource, times(1)).serialize(any());
 
     }
@@ -86,13 +86,14 @@ public class XodusResourceServicePersistenceTest {
         assertEquals(acquired.getId(), originalId);
 
         getResourceService().release(acquired);
-        verify(acquired.getDelegate(), times(1)).close();
+        verify(acquired.getDelegate(), times(1)).unload();
         verify(acquired.getDelegate(), times(1)).serialize(any());
 
         final Resource removed = getResourceService().removeResource(originalId);
         assertEquals(removed, DeadResource.getInstance());
-        removed.close(); // Check that the returned resource behaves properly (never throws) which DeadResource should
-                         // not do for the closed type.
+
+        removed.close();  // Check that the returned resource behaves properly (never throws) which DeadResource should
+        removed.unload(); // not do for the closed type.
 
     }
 

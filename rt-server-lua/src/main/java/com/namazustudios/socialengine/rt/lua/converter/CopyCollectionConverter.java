@@ -7,24 +7,37 @@ import com.namazustudios.socialengine.jnlua.LuaValueProxy;
 import com.namazustudios.socialengine.rt.lua.Constants;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
+import java.lang.reflect.Array;
 import java.util.*;
 
 import static com.namazustudios.socialengine.jnlua.DefaultConverter.*;
 import static com.namazustudios.socialengine.jnlua.LuaType.TABLE;
 import static com.namazustudios.socialengine.rt.lua.Constants.*;
-import static com.namazustudios.socialengine.rt.manifest.model.Type.ARRAY;
-import static com.namazustudios.socialengine.rt.manifest.model.Type.OBJECT;
+import static com.namazustudios.socialengine.rt.manifest.model.Type.*;
 
 public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT> {
 
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
-        if (isArray(luaState, index) && formalType.isAssignableFrom(Iterable.class)) {
+        if (Iterable.class.isAssignableFrom(formalType)) {
             final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
             return (T) new ArrayList<Object>(proxyList);
-        } else if (formalType.isAssignableFrom(Map.class)) {
+        } else if (Map.class.isAssignableFrom(formalType)) {
             final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
             return (T) new LinkedHashMap<Object, Object>(proxyMap);
+        } else if (Object.class.equals(formalType)) {
+            if (isArray(luaState, index)) {
+                final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
+                T list =  (T) new ArrayList<Object>(proxyList);
+                return list;
+            } else {
+                final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
+                T map = (T) new LinkedHashMap<Object, Object>(proxyMap);
+                return map;
+            }
+        } else if (Object[].class.equals(formalType)) {
+            final Object[] array = copyArray(luaState, index);
+            return (T) array;
         } else {
             final LuaType luaType = luaState.type(index);
             throw new IllegalArgumentException("Unexpected " + luaType + " on the Lua stack requested conversion.");
@@ -87,8 +100,37 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
     }
 
+    public Object[] copyArray(final LuaState luaState, final int index) {
+
+        final int top = luaState.getTop();
+
+        try {
+
+            final int length = luaState.rawLen(index);
+            final Object[] array = new Object[length];
+
+            for (int i = 0; i < length; i++) {
+
+                luaState.rawGet(index, i + 1);
+
+                try {
+                    array[i] = luaState.toJavaObject(-1, Object.class);
+                } finally {
+                    luaState.pop(1);
+                }
+
+            }
+
+            return array;
+
+        } finally {
+            luaState.setTop(top);
+        }
+
+    }
+
     @Override
-    public void convertJavaObject(LuaState luaState, Object object) {
+    public void convertJavaObject(final LuaState luaState, final Object object) {
         if (object instanceof LuaValueProxy && luaState.equals(((LuaValueProxy) object).getLuaState())) {
             getInstance().convertJavaObject(luaState, object);
         } else if (object instanceof Map) {
@@ -139,7 +181,12 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
     @Override
     public boolean isConvertibleFromLua(final LuaState luaState, final int index, final Class<?> formalType) {
-        return luaState.type(index) == TABLE && (formalType.isAssignableFrom(Map.class) || formalType.isAssignableFrom(Iterable.class));
+        return luaState.type(index) == TABLE && (
+            Map.class.isAssignableFrom(formalType) ||
+            Iterable.class.isAssignableFrom(formalType) ||
+            Object[].class.equals(formalType) ||
+            Object.class.equals(formalType)
+        );
     }
 
 }

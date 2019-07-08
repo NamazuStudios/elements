@@ -18,20 +18,15 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.*;
-import static com.namazustudios.socialengine.jnlua.LuaState.YIELD;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.COROUTINES_TABLE;
-import static com.namazustudios.socialengine.rt.ResumeReason.*;
 
 /**
  * The abstract {@link Resource} type backed by a Lua script.  This uses the JNLua implentation
@@ -50,11 +45,11 @@ public class LuaResource implements Resource {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
-    private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
-
     private ResourceId resourceId = new ResourceId();
 
     private Attributes attributes = Attributes.emptyAttributes();
+
+    private final Context context;
 
     private final LuaState luaState;
 
@@ -63,8 +58,6 @@ public class LuaResource implements Resource {
     private final Persistence persistence;
 
     private final BuiltinManager builtinManager;
-
-    private final ResourceAcquisition resourceAcquisition;
 
     private Logger scriptLog = logger;
 
@@ -89,19 +82,19 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Context context, final ResourceAcquisition resourceAcquisition) {
+    public LuaResource(final LuaState luaState, final Context context, final PersistenceStrategy persistenceStrategy) {
         try {
 
+            this.context = context;
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);
             this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, persistence);
-            this.resourceAcquisition = resourceAcquisition;
 
             openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context.getSchedulerContext()));
+            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context, persistenceStrategy));
             getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this, context));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
@@ -262,6 +255,11 @@ public class LuaResource implements Resource {
 
             luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
 
+            if (luaState.isNil(-1)) {
+                luaState.newTable();
+                return 1;
+            }
+
             luaState.pushNil();
             while (luaState.next(2)) {
 
@@ -300,13 +298,18 @@ public class LuaResource implements Resource {
     @Override
     public void close() {
 
-        taskIdPendingTaskMap.values().forEach(pendingTask -> {
+        getTasks().forEach(taskId -> {
             final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
-            pendingTask.fail(resourceDestroyedException);
+            context.getTaskContext().finishWithError(taskId, resourceDestroyedException);
         });
 
         getLuaState().close();
 
+    }
+
+    @Override
+    public void unload() {
+        getLuaState().close();
     }
 
     @Override
@@ -340,13 +343,12 @@ public class LuaResource implements Resource {
 
                 final TaskId taskId = new TaskId(luaState.checkString(1));            // task id
                 final int status = luaState.checkInteger(2);                          // thread status
-                final PendingTask pendingTask = new PendingTask(taskId, consumer, throwableConsumer);
 
                 if (status == YIELD) {
-                    addPendingTask(pendingTask);
+                    context.getTaskContext().register(taskId, consumer, throwableConsumer);
                 } else {
                     final Object result = luaState.checkJavaObject(3, Object.class);      // result
-                    pendingTask.finish(result);
+                    finish(taskId, consumer, result);
                 }
 
                 return taskId;
@@ -361,11 +363,16 @@ public class LuaResource implements Resource {
         };
     }
 
+    private void finish(final TaskId taskId, final Consumer<Object> consumer, final Object result) {
+        try {
+            consumer.accept(result);
+        } catch (Exception ex) {
+            logger.error("Caught exception finishing task {}", taskId, ex);
+        }
+    }
+
     @Override
     public void resume(final TaskId taskId, final Object ... results) {
-        final PendingTask pendingTask = taskIdPendingTaskMap.getOrDefault(taskId, new PendingTask(taskId,
-                o -> scriptLog.debug("Discarding {} for task {}", o, taskId),
-                e -> scriptLog.debug("Discarding exception for task {}", taskId, e)));
 
         final LuaState luaState = getLuaState();
         FinallyAction finalOperation = () -> luaState.setTop(0);
@@ -400,7 +407,7 @@ public class LuaResource implements Resource {
             throw ex;
         } catch (Exception ex) {
             getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
-            pendingTask.fail(ex);
+            getContext().getTaskContext().finishWithError(taskId, ex);
             throw ex;
         } finally {
             finalOperation.perform();
@@ -429,46 +436,13 @@ public class LuaResource implements Resource {
         resume(taskId, ResumeReason.SCHEDULER.toString(), elapsedTime);
     }
 
-    private void addPendingTask(final PendingTask pendingTask) {
-        if (taskIdPendingTaskMap.put(pendingTask.taskId, pendingTask) == null) {
-            resourceAcquisition.acquire(getId());
-        }
-    }
-
     /**
-     * Finishes a pending task by driving the associated {@link Consumer<Object>} used to receive the successful
-     * result.
+     * Gets the {@link Context} associated with this {@link LuaResource}.
      *
-     * @param taskId the {@link TaskId} of the task to fail
-     * @param result the result {@link Object}
+     * @return the {@link Context}.
      */
-    public void finishPendingTask(final TaskId taskId, final Object result) {
-
-        final PendingTask pendingTask = taskIdPendingTaskMap.remove(taskId);
-
-        if (pendingTask != null) {
-            pendingTask.finish(result);
-            resourceAcquisition.scheduleRelease(getId());
-        }
-
-    }
-
-    /**
-     * Fails a {@link PendingTask} with the supplied {@link Throwable}, handing it to the associated
-     * {@Link Consumer<Throwable>}.
-     *
-     * @param taskId the {@link TaskId} of the task to fail
-     * @param error the {@link Throwable} which caused the failure
-     */
-    public void failPendingTask(final TaskId taskId, final Throwable error) {
-
-        final PendingTask pendingTask = taskIdPendingTaskMap.remove(taskId);
-
-        if (pendingTask != null) {
-            pendingTask.fail(error);
-            resourceAcquisition.scheduleRelease(getId());
-        }
-
+    public Context getContext() {
+        return context;
     }
 
     /**
@@ -505,42 +479,6 @@ public class LuaResource implements Resource {
      */
     public Logger getScriptLog() {
         return scriptLog;
-    }
-
-    private static class PendingTask {
-
-        private final TaskId taskId;
-
-        private final Consumer<Object> resultConsumer;
-
-        private final Consumer<Throwable> throwableConsumer;
-
-        public PendingTask(
-                final TaskId taskId,
-                final Consumer<Object> resultConsumer,
-                final Consumer<Throwable> throwableConsumer) {
-            this.taskId = taskId;
-            this.resultConsumer = resultConsumer;
-            this.throwableConsumer = throwableConsumer;
-        }
-
-        public void finish(final Object result) {
-            try {
-                resultConsumer.accept(result);
-            } catch (Exception ex) {
-                fail(ex);
-            }
-        }
-
-        public void fail(final Throwable th) {
-            try {
-                logger.error("Task failed with exception.", taskId, th);
-                throwableConsumer.accept(th);
-            } catch (Exception ex) {
-                logger.error("Caught exception failing task {} ", taskId, ex);
-            }
-        }
-
     }
 
 }

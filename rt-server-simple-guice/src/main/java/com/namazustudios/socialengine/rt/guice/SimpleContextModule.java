@@ -1,20 +1,11 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.PrivateModule;
-import com.google.inject.name.Names;
-import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.PersistenceStrategy;
+import com.namazustudios.socialengine.rt.SimpleContext;
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import static com.google.inject.matcher.Matchers.annotatedWith;
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
-import static java.lang.String.format;
-import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class SimpleContextModule extends PrivateModule {
 
@@ -53,8 +44,9 @@ public class SimpleContextModule extends PrivateModule {
         install(new SimpleResourceContextModule());
         install(new SimpleSchedulerContextModule());
         install(new SimpleHandlerContextModule());
+        install(new SimpleTaskContextModule());
 
-        expose(ResourceAcquisition.class);
+        expose(PersistenceStrategy.class);
 
     }
 
