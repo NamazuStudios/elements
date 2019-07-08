@@ -49,7 +49,8 @@ function pass_table.pass_complex_array()
 
     local out = {
         { "Hello!", "World!" },
-        { "¡Hola", "Mundo!"  }
+        { "¡Hola", "Mundo!"  },
+        { { "¡Hola", "Mundo!" } }
     }
 
     local result, code
@@ -71,7 +72,8 @@ function pass_table.pass_complex_table()
 
     local out = {
         a = { a = "Hello!", b = "World!" },
-        b = { a = "¡Hola",  b = "Mundo!" }
+        b = { a = "¡Hola",  b = "Mundo!" },
+        c = { a = { h = "¡Hola", w = "Mundo!" } }
     }
 
     local result, code
