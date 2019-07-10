@@ -4,7 +4,6 @@ import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.ResourceLockService.Monitor;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
-import com.namazustudios.socialengine.rt.exception.InconsistentStateException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import jetbrains.exodus.ByteIterable;
@@ -283,19 +282,13 @@ public class XodusResourceService implements ResourceService {
             final ByteIterable value = resources.get(txn, resourceIdKey);
 
             if (value == null) {
-                // This should never happen if the state of the database is consistent.
-                throw new InconsistentStateException("Newly acquired resource has no value.");
+                // This should never happen if the state of the database is consistent.  If this does happen we should
+                // at least vacuum the entries to prevent further inconsistencies.
+                doRemoveResource(txn, resourceIdKey);
+                throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
             }
 
-            final XodusResource xodusResource = loadAndCache(xodusCacheKey, value);
-
-            return () -> {
-                try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
-                    final Condition condition = monitor.getCondition(CONDITION_ACQUIRE);
-                    condition.signalAll();
-                    return xodusResource;
-                }
-            };
+            return () -> loadAndCache(xodusCacheKey, value);
 
         } else {
             return () -> readFromCache(xodusCacheKey);
@@ -343,18 +336,34 @@ public class XodusResourceService implements ResourceService {
 
     private XodusResource loadAndCache(final XodusCacheKey xodusCacheKey, final ByteIterable value) {
 
-        final int length = value.getLength();
-        final byte[] bytes = value.getBytesUnsafe();
+        // This locks and loads the resource.  Once it's inserted into the cache, the signal hits and any other
+        // waiters will be notified and can fetch it from the cache.  If it happens to be deleted in the time that it
+        // takes to acquire, the timeout will still hit for the resource and an exception will be raised.  This should
+        // also not happen very often, but could happen if there's thread starvation or the system is under heavy load
 
-        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
-            final XodusResource xodusResource = new XodusResource(getResourceLoader().load(bis));
-            final XodusResource existing = getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource);
-            if (existing != null) existing.unload();
-            return xodusResource;
-        } catch (IOException ex) {
-            throw new InternalException(ex);
+        try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
+
+            final Condition condition = monitor.getCondition(CONDITION_ACQUIRE);
+            condition.signalAll();
+
+            final int length = value.getLength();
+            final byte[] bytes = value.getBytesUnsafe();
+
+            try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
+
+                final XodusResource xodusResource = new XodusResource(getResourceLoader().load(bis));
+
+                if (getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource) != null) {
+                    logger.error("Consistency error.  Expecting no existing resource in cache.");
+                }
+
+                return xodusResource;
+
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            }
+
         }
-
     }
 
     @Override
