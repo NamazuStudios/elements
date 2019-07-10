@@ -38,6 +38,7 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
 
     @Override
     public AppleIapGrandUnifiedReceipt invoke() {
+
         final HashMap<String, String> requestBody = new HashMap<>();
         requestBody.put(RECEIPT_DATA_KEY, this.receiptData);
 

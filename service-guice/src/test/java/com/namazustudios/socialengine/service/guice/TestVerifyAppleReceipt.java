@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.service.guice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.io.ByteStreams;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.service.appleiap.client.exception.AppleIapVerifyReceiptStatusErrorCodeException;
@@ -11,10 +10,11 @@ import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import java.io.InputStream;
-import java.nio.charset.Charset;
+import java.util.Base64;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
+import static com.google.common.io.ByteStreams.toByteArray;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
 import static com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment.SANDBOX;
 import static org.testng.Assert.fail;
@@ -28,7 +28,7 @@ public class TestVerifyAppleReceipt {
     public void testSandboxVerification() throws Exception {
         try (final InputStream is = TestVerifyAppleReceipt.class.getResourceAsStream("/iap_sandbox_receipt.txt")) {
 
-            final String receiptData = new String(ByteStreams.toByteArray(is), Charset.forName("UTF-8"));
+            final String receiptData = Base64.getEncoder().encodeToString(toByteArray(is));
 
             getBuilder()
                 .withEnvironment(SANDBOX)
@@ -36,10 +36,6 @@ public class TestVerifyAppleReceipt {
                 .build()
                 .invoke();
 
-            fail("Expected exception.");
-
-        } catch (final AppleIapVerifyReceiptStatusErrorCodeException ex) {
-            // Pass Test
         }
     }
 
