@@ -270,6 +270,7 @@ public class XodusResourceService implements ResourceService {
         final Store resources = openResources(txn);
         final int acquires = doAcquire(txn, resourceIdKey);
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceIdKey);
+        final ByteIterable value = resources.get(txn, resourceIdKey);
 
         // We return a supplier, because we wish to avoid repeat attempts to use the serializer to actually read it from
         // a blob of bytes.  We also want to avoid acquiring a lock during the transactional phase of the method so
@@ -279,17 +280,16 @@ public class XodusResourceService implements ResourceService {
         if (acquires == 1) {
 
             // Only read the bytes if we absolutely need to.
-            final ByteIterable value = resources.get(txn, resourceIdKey);
 
             if (value == null) {
                 // This should never happen if the state of the database is consistent.
                 throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
             }
 
-            return () -> getOrLoad(xodusCacheKey, () -> resources.get(txn, resourceIdKey));
+            return () -> getOrLoad(xodusCacheKey, value);
 
         } else {
-            return () -> getOrLoad(xodusCacheKey, () -> resources.get(txn, resourceIdKey));
+            return () -> getOrLoad(xodusCacheKey, value);
         }
 
     }
@@ -334,10 +334,8 @@ public class XodusResourceService implements ResourceService {
         }
     }
 
-    private XodusResource getOrLoad(final XodusCacheKey xodusCacheKey, final Supplier<ByteIterable> valueSupplier) {
+    private XodusResource getOrLoad(final XodusCacheKey xodusCacheKey, final ByteIterable value) {
         try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
-
-            final ByteIterable value = valueSupplier.get();
 
             final int length = value.getLength();
             final byte[] bytes = value.getBytesUnsafe();
