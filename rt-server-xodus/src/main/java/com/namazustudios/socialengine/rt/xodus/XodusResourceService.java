@@ -277,21 +277,7 @@ public class XodusResourceService implements ResourceService {
         // returning a supplier will side-step that issue while allowining us to handle edge cases when contention among
         // the same resource may be high.
 
-        if (acquires == 1) {
-
-            // Only read the bytes if we absolutely need to.
-
-            if (value == null) {
-                // This should never happen if the state of the database is consistent.
-                throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
-            }
-
-            return () -> getOrLoad(xodusCacheKey, value);
-
-        } else {
-            return () -> getOrLoad(xodusCacheKey, value);
-        }
-
+        return () -> getOrLoad(xodusCacheKey, value);
     }
 
     private XodusResource readFromCache(final XodusCacheKey xodusCacheKey) {
