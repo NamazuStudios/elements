@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.jnlua.LuaValueProxy;
 import com.namazustudios.socialengine.rt.lua.Constants;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
 import java.util.*;
@@ -16,6 +18,8 @@ import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.manifest.model.Type.*;
 
 public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT> {
+
+    private static final Logger logger = LoggerFactory.getLogger(CopyCollectionConverter.class);
 
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
@@ -98,6 +102,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
             final LuaType luaType = l.type(1);
             final Map<?, ?> proxyMap = getInstance().convertLuaValue(l, 1, Map.class);
             out.putAll(proxyMap);
+            logger.info("Copied Collection.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
             return 0;
         });
         luaState.pushValue(abs);
@@ -115,6 +120,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         luaState.pushJavaFunction(l -> {
             final List<?> proxyList = getInstance().convertLuaValue(l, 1, List.class);
             out.addAll(proxyList);
+            logger.info("Copied Collection.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
             return 0;
         });
         luaState.pushValue(abs);
@@ -139,6 +145,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 for (int i = 0; i < length; i++) {
 
                     luaState.rawGet(1, i + 1);
+                    logger.info("Copied Collection.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
 
                     try {
                         array[i] = luaState.toJavaObject(-1, Object.class);
@@ -204,6 +211,31 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                     final Object element = listIterator.next();
                     l.pushJavaObject(element);
                     l.rawSet(-2, ++index);
+                }
+
+                l.newTable();
+                l.pushString(ARRAY.value);
+                l.setField(-2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(-2);
+                l.setTop(1);
+
+                return 1;
+
+            });
+
+            luaState.call(0, 1);
+
+        } else if (object != null && object.getClass().isArray()) {
+            final Object[] array = (Object[])object;
+
+            luaState.pushJavaFunction(l -> {
+
+                l.newTable();
+
+                for (int index = 0; index < array.length; ++index) {
+                    final Object element = array[index];
+                    l.pushJavaObject(element);
+                    l.rawSet(-2, (index + 1));
                 }
 
                 l.newTable();
