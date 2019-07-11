@@ -20,24 +20,13 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
         if (Iterable.class.isAssignableFrom(formalType)) {
-            final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
-            return (T) new ArrayList<Object>(proxyList);
+            return (T) copyList(luaState, index);
         } else if (Map.class.isAssignableFrom(formalType)) {
-            final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
-            return (T) new LinkedHashMap<Object, Object>(proxyMap);
+            return (T) copyMap(luaState, index);
         } else if (Object.class.equals(formalType)) {
-            if (isArray(luaState, index)) {
-                final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
-                T list =  (T) new ArrayList<Object>(proxyList);
-                return list;
-            } else {
-                final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
-                T map = (T) new LinkedHashMap<Object, Object>(proxyMap);
-                return map;
-            }
+            return isArray(luaState, index) ? (T) copyList(luaState, index) : (T) copyMap(luaState, index);
         } else if (Object[].class.equals(formalType)) {
-            final Object[] array = copyArray(luaState, index);
-            return (T) array;
+            return (T) copyArray(luaState, index);
         } else {
             final LuaType luaType = luaState.type(index);
             throw new IllegalArgumentException("Unexpected " + luaType + " on the Lua stack requested conversion.");
@@ -100,26 +89,70 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
     }
 
-    public Object[] copyArray(final LuaState luaState, final int index) {
+    private Map<?, ?> copyMap(final LuaState luaState, final int index) {
+
+        final int abs = luaState.absIndex(index);
+        final Map<Object, Object> out = new LinkedHashMap<>();
+
+        luaState.pushJavaFunction(l -> {
+            final LuaType luaType = l.type(1);
+            final Map<?, ?> proxyMap = getInstance().convertLuaValue(l, 1, Map.class);
+            out.putAll(proxyMap);
+            return 0;
+        });
+        luaState.pushValue(abs);
+        luaState.call(1, 0);
+
+        return out;
+
+    }
+
+    private List<?> copyList(final LuaState luaState, final int index) {
+
+        final int abs = luaState.absIndex(index);
+        final List<Object> out = new ArrayList<>();
+
+        luaState.pushJavaFunction(l -> {
+            final List<?> proxyList = getInstance().convertLuaValue(l, 1, List.class);
+            out.addAll(proxyList);
+            return 0;
+        });
+        luaState.pushValue(abs);
+        luaState.call(1, 0);
+
+        return out;
+
+    }
+
+    private Object[] copyArray(final LuaState luaState, final int index) {
 
         final int top = luaState.getTop();
+        final int abs = luaState.absIndex(index);
 
         try {
 
             final int length = luaState.rawLen(index);
             final Object[] array = new Object[length];
 
-            for (int i = 0; i < length; i++) {
+            luaState.pushJavaFunction(l -> {
 
-                luaState.rawGet(index, i + 1);
+                for (int i = 0; i < length; i++) {
 
-                try {
-                    array[i] = luaState.toJavaObject(-1, Object.class);
-                } finally {
-                    luaState.pop(1);
+                    luaState.rawGet(index, i + 1);
+
+                    try {
+                        array[i] = luaState.toJavaObject(-1, Object.class);
+                    } finally {
+                        luaState.pop(1);
+                    }
+
                 }
 
-            }
+                return 0;
+
+            });
+            luaState.pushValue(abs);
+            luaState.call(1, 0);
 
             return array;
 
@@ -137,37 +170,53 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
             final Map<?, ?> map = (Map<?,?>)object;
 
-            luaState.newTable();
+            luaState.pushJavaFunction(l -> {
+                l.newTable();
 
-            map.forEach((k, v) -> {
-                luaState.pushJavaObject(k);
-                luaState.pushJavaObject(v);
-                luaState.setTable(-3);
+                map.forEach((k, v) -> {
+                    l.pushJavaObject(k);
+                    l.pushJavaObject(v);
+                    l.setTable(-3);
+                });
+
+                l.newTable();
+                l.pushString(OBJECT.value);
+                l.setField(-2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(-2);
+                l.setTop(1);
+
+                return 1;
             });
 
-            luaState.newTable();
-            luaState.pushString(OBJECT.value);
-            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
-            luaState.setMetatable(-2);
+            luaState.call(0, 1);
 
         } else if (object instanceof Iterable) {
 
-            int index = 0;
-            final Iterable<?> list = (Iterable<?>)object;
-            final Iterator<?> listIterator = list.iterator();
+            luaState.pushJavaFunction(l -> {
 
-            luaState.newTable();
+                int index = 0;
+                final Iterable<?> list = (Iterable<?>)object;
+                final Iterator<?> listIterator = list.iterator();
 
-            while (listIterator.hasNext()) {
-                final Object element = listIterator.next();
-                luaState.pushJavaObject(element);
-                luaState.rawSet(-2, ++index);
-            }
+                l.newTable();
 
-            luaState.newTable();
-            luaState.pushString(ARRAY.value);
-            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
-            luaState.setMetatable(-2);
+                while (listIterator.hasNext()) {
+                    final Object element = listIterator.next();
+                    l.pushJavaObject(element);
+                    l.rawSet(-2, ++index);
+                }
+
+                l.newTable();
+                l.pushString(ARRAY.value);
+                l.setField(-2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(-2);
+                l.setTop(1);
+
+                return 1;
+
+            });
+
+            luaState.call(0, 1);
 
         } else {
             throw new IllegalArgumentException("Unexpected object " + object + " attempted to convert.");
