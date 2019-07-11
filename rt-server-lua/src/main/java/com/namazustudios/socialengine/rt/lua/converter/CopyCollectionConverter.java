@@ -138,7 +138,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
                 for (int i = 0; i < length; i++) {
 
-                    luaState.rawGet(index, i + 1);
+                    luaState.rawGet(1, i + 1);
 
                     try {
                         array[i] = luaState.toJavaObject(-1, Object.class);
