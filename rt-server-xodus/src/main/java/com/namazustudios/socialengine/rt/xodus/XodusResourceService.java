@@ -323,14 +323,17 @@ public class XodusResourceService implements ResourceService {
     private XodusResource getOrLoad(final XodusCacheKey xodusCacheKey, final ByteIterable value) {
         try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
 
-            final int length = value.getLength();
-            final byte[] bytes = value.getBytesUnsafe();
-
             final Map<XodusCacheKey, XodusResource> cache = getStorage().getResourceIdResourceMap();
 
             XodusResource xodusResource = cache.get(xodusCacheKey);
 
             if (xodusResource == null) {
+
+                if (value == null) throw new InternalException("No data for resource: " + xodusCacheKey.getResourceId());
+
+                final int length = value.getLength();
+                final byte[] bytes = value.getBytesUnsafe();
+
                 try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
 
                     xodusResource = new XodusResource(getResourceLoader().load(bis));
@@ -496,7 +499,7 @@ public class XodusResourceService implements ResourceService {
 
             return () -> {
 
-                try (final Monitor monitor = getResourceLockService().getMonitor(xodusResource.getId())) {
+                try (final Monitor _ = getResourceLockService().getMonitor(xodusResource.getId())) {
 
                     final XodusResource removed;
                     removed = getStorage().getResourceIdResourceMap().remove(xodusResource.getXodusCacheKey());
