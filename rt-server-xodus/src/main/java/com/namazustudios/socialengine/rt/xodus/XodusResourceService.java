@@ -282,56 +282,24 @@ public class XodusResourceService implements ResourceService {
             final ByteIterable value = resources.get(txn, resourceIdKey);
 
             if (value == null) {
-                // This should never happen if the state of the database is consistent.  If this does happen we should
-                // at least vacuum the entries to prevent further inconsistencies.
-                doRemoveResource(txn, resourceIdKey);
+                // This should never happen if the state of the database is consistent.
                 throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
             }
 
-            return () -> loadAndCache(xodusCacheKey, value);
+            return () -> getOrLoad(xodusCacheKey, () -> resources.get(txn, resourceIdKey));
 
         } else {
-            return () -> readFromCache(xodusCacheKey);
+            return () -> getOrLoad(xodusCacheKey, () -> resources.get(txn, resourceIdKey));
         }
 
     }
 
     private XodusResource readFromCache(final XodusCacheKey xodusCacheKey) {
-
-        final XodusResource xodusResource = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
-
-        if (xodusResource != null) {
-            return xodusResource;
-        }
-
-        // It is possible that the database was written before the first to acquire has written it to the cache, so
-        // therefore we must wait and acquire it later using a condition variable supplied by the resource lock
-        // service.  Only the first thread to acquire will insert it into the cache.
-
-        final Stopwatch stopwatch = Stopwatch.createStarted();
-
-        try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
-
-            final Condition condition = monitor.getCondition(CONDITION_ACQUIRE);
-
-            XodusResource xr = null;
-
-            while (xr == null) {
-
-                final long timeout = ACQUIRE_TIMEOUT_MS - stopwatch.elapsed(MILLISECONDS);
-                if (timeout < 0) throw new InternalException("Resource acquire timeout: " + xodusCacheKey.getResourceId());
-
-                condition.await(timeout, MILLISECONDS);
-                xr = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
-
-            }
-
+        try (final Monitor m = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
+            final XodusResource xr = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
+            if (xr == null) throw new InternalException("Resource not present in cache: " + xodusCacheKey.getResourceId());
             return xr;
-
-        } catch (InterruptedException ex) {
-            throw new InternalException(ex);
         }
-
     }
 
     private XodusResource loadAndCache(final XodusCacheKey xodusCacheKey, final ByteIterable value) {
@@ -362,6 +330,37 @@ public class XodusResourceService implements ResourceService {
             } catch (IOException ex) {
                 throw new InternalException(ex);
             }
+
+        }
+    }
+
+    private XodusResource getOrLoad(final XodusCacheKey xodusCacheKey, final Supplier<ByteIterable> valueSupplier) {
+        try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
+
+            final ByteIterable value = valueSupplier.get();
+
+            final int length = value.getLength();
+            final byte[] bytes = value.getBytesUnsafe();
+
+            final Map<XodusCacheKey, XodusResource> cache = getStorage().getResourceIdResourceMap();
+
+            XodusResource xodusResource = cache.get(xodusCacheKey);
+
+            if (xodusResource == null) {
+                try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
+
+                    xodusResource = new XodusResource(getResourceLoader().load(bis));
+
+                    if (getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource) != null) {
+                        logger.error("Consistency error.  Expecting no existing resource in cache.");
+                    }
+
+                } catch (IOException ex) {
+                    throw new InternalException(ex);
+                }
+            }
+
+            return xodusResource;
 
         }
     }

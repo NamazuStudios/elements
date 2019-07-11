@@ -134,7 +134,7 @@ public class SimpleScheduler implements Scheduler {
 
             final Resource resource;
 
-            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+//            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
                 try {
                     resource = getResourceService().getAndAcquireResourceWithId(resourceId);
@@ -151,7 +151,8 @@ public class SimpleScheduler implements Scheduler {
                 } finally {
                     getResourceService().release(resource);
                 }
-            }
+
+//            }
 
         };
     }
