@@ -270,22 +270,68 @@ public class XodusResourceService implements ResourceService {
         final Store resources = openResources(txn);
         final int acquires = doAcquire(txn, resourceIdKey);
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceIdKey);
-        final ByteIterable value = resources.get(txn, resourceIdKey);
 
         // We return a supplier, because we wish to avoid repeat attempts to use the serializer to actually read it from
         // a blob of bytes.  We also want to avoid acquiring a lock during the transactional phase of the method so
         // returning a supplier will side-step that issue while allowining us to handle edge cases when contention among
         // the same resource may be high.
 
-        return () -> getOrLoad(xodusCacheKey, value);
+        if (acquires == 1) {
+
+            // Only read the bytes if we absolutely need to.
+            final ByteIterable value = resources.get(txn, resourceIdKey);
+
+            if (value == null) {
+                // This should never happen if the state of the database is consistent.  If this does happen we should
+                // at least vacuum the entries to prevent further inconsistencies.
+                doRemoveResource(txn, resourceIdKey);
+                throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
+            }
+
+            return () -> loadAndCache(xodusCacheKey, value);
+
+        } else {
+            return () -> readFromCache(xodusCacheKey);
+        }
+
     }
 
     private XodusResource readFromCache(final XodusCacheKey xodusCacheKey) {
-        try (final Monitor m = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
-            final XodusResource xr = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
-            if (xr == null) throw new InternalException("Resource not present in cache: " + xodusCacheKey.getResourceId());
-            return xr;
+
+        final XodusResource xodusResource = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
+
+        if (xodusResource != null) {
+            return xodusResource;
         }
+
+        // It is possible that the database was written before the first to acquire has written it to the cache, so
+        // therefore we must wait and acquire it later using a condition variable supplied by the resource lock
+        // service.  Only the first thread to acquire will insert it into the cache.
+
+        final Stopwatch stopwatch = Stopwatch.createStarted();
+
+        try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
+
+            final Condition condition = monitor.getCondition(CONDITION_ACQUIRE);
+
+            XodusResource xr = null;
+
+            while (xr == null) {
+
+                final long timeout = ACQUIRE_TIMEOUT_MS - stopwatch.elapsed(MILLISECONDS);
+                if (timeout < 0) throw new InternalException("Resource acquire timeout: " + xodusCacheKey.getResourceId());
+
+                condition.await(timeout, MILLISECONDS);
+                xr = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
+
+            }
+
+            return xr;
+
+        } catch (InterruptedException ex) {
+            throw new InternalException(ex);
+        }
+
     }
 
     private XodusResource loadAndCache(final XodusCacheKey xodusCacheKey, final ByteIterable value) {
