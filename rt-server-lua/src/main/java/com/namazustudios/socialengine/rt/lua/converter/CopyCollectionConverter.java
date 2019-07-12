@@ -124,9 +124,11 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
         luaState.pushJavaFunction(l -> {
 
+            final int len = luaState.rawLen(1);
+
             l.pushNil();
 
-            while (l.next(1)) {
+            for (int i = 0; l.next(1) && i < len; ++i) {
                 l.pushValue(-2);
                 final Object v = l.toJavaObject(-2, Object.class);
                 out.add(v);
