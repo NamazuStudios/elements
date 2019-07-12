@@ -105,7 +105,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 l.pop(2);
             }
 
-            logger.info("Copied Map Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
+            logger.trace("Copied Map Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
             return 0;
 
         });
@@ -135,8 +135,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 l.pop(2);
             }
 
-            if (out.size() == 1 && out.get(0) == null) throw new RuntimeException("Here");
-            logger.info("Copied List Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
+            logger.trace("Copied List Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
             return 0;
 
         });
@@ -171,7 +170,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
                 }
 
-                logger.info("Copied Array Out.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
+                logger.trace("Copied Array Out.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
 
                 return 0;
 
@@ -195,7 +194,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
             final Map<?, ?> map = (Map<?,?>)object;
 
-            logger.info("Copied Collection In.\nSize: {}\nContents: {}", map.size(), Arrays.toString(map.entrySet().toArray()));
+            logger.trace("Copied Collection In.\nSize: {}\nContents: {}", map.size(), Arrays.toString(map.entrySet().toArray()));
 
             luaState.pushJavaFunction(l -> {
                 l.newTable();
@@ -211,8 +210,6 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 l.setField(2, MANIFEST_TYPE_METAFIELD);
                 l.setMetatable(1);
                 l.setTop(1);
-
-                printTable(l, 1);
 
                 return 1;
             });
@@ -242,15 +239,13 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                     ll.add(element);
                 }
 
-                logger.info("Copied Collection In.\nSize: {}\nContents: {}", ll.size(), Arrays.toString(ll.toArray()));
+                logger.trace("Copied Collection In.\nSize: {}\nContents: {}", ll.size(), Arrays.toString(ll.toArray()));
 
                 l.newTable();
                 l.pushString(ARRAY.value);
                 l.setField(2, MANIFEST_TYPE_METAFIELD);
                 l.setMetatable(1);
                 l.setTop(1);
-
-                printTable(l, 1);
 
                 return 1;
 
@@ -261,7 +256,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         } else if (object != null && object.getClass().isArray()) {
             final Object[] array = (Object[])object;
 
-            logger.info("Copied Array In.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
+            logger.trace("Copied Array In.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
 
             luaState.pushJavaFunction(l -> {
 
@@ -279,8 +274,6 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 l.setMetatable(1);
                 l.setTop(1);
 
-                printTable(l, 1);
-
                 return 1;
 
             });
@@ -290,36 +283,6 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         } else {
             throw new IllegalArgumentException("Unexpected object " + object + " attempted to convert.");
         }
-    }
-
-    private void printTable(final LuaState luaState, final int index) {
-
-        final  int top = luaState.getTop();
-        final StringBuilder sb = new StringBuilder();
-
-        try {
-
-            // language=Lua
-            final String func = "local log = require(\"namazu.log\")\n" +
-                    "\n" +
-                    "local table = ... \n" +
-                    "\n" +
-                    "for k,v in pairs(table)\n" +
-                    "do\n" +
-                    "    log.info(\"Table - Key: {} -> Value: {}\", k, v)\n" +
-                    "end\n";
-
-            luaState.load(func, "_internal_");
-            luaState.pushValue(index);
-            luaState.call(1, 0);
-
-            logger.info("Lua Table Contents: {}", sb);
-
-        } finally {
-            luaState.setTop(top);
-        }
-
-
     }
 
     @Override
