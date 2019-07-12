@@ -1,20 +1,16 @@
 package com.namazustudios.socialengine.rt.lua.converter;
 
 import com.namazustudios.socialengine.jnlua.LuaState;
-
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.jnlua.LuaValueProxy;
-import com.namazustudios.socialengine.rt.lua.Constants;
-import com.namazustudios.socialengine.rt.manifest.model.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Array;
 import java.util.*;
 
-import static com.namazustudios.socialengine.jnlua.DefaultConverter.*;
+import static com.namazustudios.socialengine.jnlua.DefaultConverter.getInstance;
 import static com.namazustudios.socialengine.jnlua.LuaType.TABLE;
-import static com.namazustudios.socialengine.rt.lua.Constants.*;
+import static com.namazustudios.socialengine.rt.lua.Constants.MANIFEST_TYPE_METAFIELD;
 import static com.namazustudios.socialengine.rt.manifest.model.Type.*;
 
 public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT> {
@@ -99,10 +95,9 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         final Map<Object, Object> out = new LinkedHashMap<>();
 
         luaState.pushJavaFunction(l -> {
-            final LuaType luaType = l.type(1);
             final Map<?, ?> proxyMap = getInstance().convertLuaValue(l, 1, Map.class);
             out.putAll(proxyMap);
-            logger.info("Copied Collection.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
+            logger.info("Copied Collection Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
             return 0;
         });
         luaState.pushValue(abs);
@@ -120,7 +115,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         luaState.pushJavaFunction(l -> {
             final List<?> proxyList = getInstance().convertLuaValue(l, 1, List.class);
             out.addAll(proxyList);
-            logger.info("Copied Collection.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
+            logger.info("Copied Collection Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
             return 0;
         });
         luaState.pushValue(abs);
@@ -145,7 +140,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 for (int i = 0; i < length; i++) {
 
                     luaState.rawGet(1, i + 1);
-                    logger.info("Copied Collection.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
+                    logger.info("Copied Collection Out.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
 
                     try {
                         array[i] = luaState.toJavaObject(-1, Object.class);
@@ -177,6 +172,8 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
             final Map<?, ?> map = (Map<?,?>)object;
 
+            logger.info("Copied Collection In.\nSize: {}\nContents: {}", map.size(), Arrays.toString(map.entrySet().toArray()));
+
             luaState.pushJavaFunction(l -> {
                 l.newTable();
 
@@ -188,9 +185,11 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
                 l.newTable();
                 l.pushString(OBJECT.value);
-                l.setField(-2, MANIFEST_TYPE_METAFIELD);
-                l.setMetatable(-2);
+                l.setField(2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(1);
                 l.setTop(1);
+
+                printTable(l, 1);
 
                 return 1;
             });
@@ -199,25 +198,36 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
         } else if (object instanceof Iterable) {
 
+
             luaState.pushJavaFunction(l -> {
 
                 int index = 0;
+
                 final Iterable<?> list = (Iterable<?>)object;
                 final Iterator<?> listIterator = list.iterator();
 
                 l.newTable();
 
+
+                final List<Object> ll = new ArrayList<>();
+
                 while (listIterator.hasNext()) {
                     final Object element = listIterator.next();
                     l.pushJavaObject(element);
                     l.rawSet(-2, ++index);
+
+                    ll.add(element);
                 }
+
+                logger.info("Copied Collection In.\nSize: {}\nContents: {}", ll.size(), Arrays.toString(ll.toArray()));
 
                 l.newTable();
                 l.pushString(ARRAY.value);
-                l.setField(-2, MANIFEST_TYPE_METAFIELD);
-                l.setMetatable(-2);
+                l.setField(2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(1);
                 l.setTop(1);
+
+                printTable(l, 1);
 
                 return 1;
 
@@ -227,6 +237,8 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
         } else if (object != null && object.getClass().isArray()) {
             final Object[] array = (Object[])object;
+
+            logger.info("Copied Array In.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
 
             luaState.pushJavaFunction(l -> {
 
@@ -241,8 +253,10 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 l.newTable();
                 l.pushString(ARRAY.value);
                 l.setField(-2, MANIFEST_TYPE_METAFIELD);
-                l.setMetatable(-2);
+                l.setMetatable(1);
                 l.setTop(1);
+
+                printTable(l, 1);
 
                 return 1;
 
@@ -253,6 +267,36 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         } else {
             throw new IllegalArgumentException("Unexpected object " + object + " attempted to convert.");
         }
+    }
+
+    private void printTable(final LuaState luaState, final int index) {
+
+        final  int top = luaState.getTop();
+        final StringBuilder sb = new StringBuilder();
+
+        try {
+
+            // language=Lua
+            final String func = "local log = require(\"namazu.log\")\n" +
+                    "\n" +
+                    "local table = ... \n" +
+                    "\n" +
+                    "for k,v in pairs(table)\n" +
+                    "do\n" +
+                    "    log.info(\"Table - Key: {} -> Value: {}\", k, v)\n" +
+                    "end\n";
+
+            luaState.load(func, "_internal_");
+            luaState.pushValue(index);
+            luaState.call(1, 0);
+
+            logger.info("Lua Table Contents: {}", sb);
+
+        } finally {
+            luaState.setTop(top);
+        }
+
+
     }
 
     @Override
