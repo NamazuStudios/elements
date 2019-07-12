@@ -134,20 +134,24 @@ public class SimpleScheduler implements Scheduler {
 
             final Resource resource;
 
-            try {
-                resource = getResourceService().getAndAcquireResourceWithId(resourceId);
-            } catch (Throwable th) {
-                failure.accept(th);
-                throw th;
-            }
+            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
-            try {
-                return performProtected(resource, operation);
-            } catch (Throwable th) {
-                failure.accept(th);
-                throw th;
-            } finally {
-                getResourceService().release(resource);
+                try {
+                    resource = getResourceService().getAndAcquireResourceWithId(resourceId);
+                } catch (Throwable th) {
+                    failure.accept(th);
+                    throw th;
+                }
+
+                try {
+                    return performProtected(resource, operation);
+                } catch (Throwable th) {
+                    failure.accept(th);
+                    throw th;
+                } finally {
+                    getResourceService().release(resource);
+                }
+
             }
 
         };

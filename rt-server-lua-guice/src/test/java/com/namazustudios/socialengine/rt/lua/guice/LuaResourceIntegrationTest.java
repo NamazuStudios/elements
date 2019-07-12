@@ -101,7 +101,8 @@ public class LuaResourceIntegrationTest {
             {"test.pass_table", "pass_simple_table"},
             {"test.pass_table", "pass_simple_array"},
             {"test.pass_table", "pass_complex_array"},
-            {"test.pass_table", "pass_complex_table"}
+            {"test.pass_table", "pass_complex_table"},
+            {"test.pass_table", "pass_complex_table_to_multiple_resources"}
         };
     }
 
