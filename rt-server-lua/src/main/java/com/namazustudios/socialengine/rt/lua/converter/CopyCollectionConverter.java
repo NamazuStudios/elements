@@ -105,7 +105,7 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 l.pop(2);
             }
 
-            logger.info("Copied Collection Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
+            logger.info("Copied Map Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
             return 0;
 
         });
@@ -135,7 +135,8 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 l.pop(2);
             }
 
-            logger.info("Copied Collection Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
+            if (out.size() == 1 && out.get(0) == null) throw new RuntimeException("Here");
+            logger.info("Copied List Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
             return 0;
 
         });
@@ -161,7 +162,6 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                 for (int i = 0; i < length; i++) {
 
                     luaState.rawGet(1, i + 1);
-                    logger.info("Copied Collection Out.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
 
                     try {
                         array[i] = luaState.toJavaObject(-1, Object.class);
@@ -170,6 +170,8 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
                     }
 
                 }
+
+                logger.info("Copied Array Out.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
 
                 return 0;
 
