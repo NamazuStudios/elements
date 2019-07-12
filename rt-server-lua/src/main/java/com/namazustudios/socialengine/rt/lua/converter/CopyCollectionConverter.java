@@ -38,18 +38,17 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         final int top = luaState.getTop();
 
         try {
+            if (luaState.getMetatable(index)) {
+                luaState.getField(-1, MANIFEST_TYPE_METAFIELD);
 
-            luaState.getMetatable(index);
-            luaState.getField(-1, MANIFEST_TYPE_METAFIELD);
+                final String value = luaState.toString(-1);
 
-            final String value = luaState.toString(-1);
-
-            if (ARRAY.value.equals(value)) {
-                return true;
-            } else if (OBJECT.value.equals(value)) {
-                return false;
+                if (ARRAY.value.equals(value)) {
+                    return true;
+                } else if (OBJECT.value.equals(value)) {
+                    return false;
+                }
             }
-
         } finally {
             luaState.setTop(top);
         }
@@ -95,11 +94,22 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         final Map<Object, Object> out = new LinkedHashMap<>();
 
         luaState.pushJavaFunction(l -> {
-            final Map<?, ?> proxyMap = getInstance().convertLuaValue(l, 1, Map.class);
-            out.putAll(proxyMap);
+
+            l.pushNil();
+
+            while (l.next(1)) {
+                l.pushValue(-2);
+                final Object k = l.toJavaObject(-1, Object.class);
+                final Object v = l.toJavaObject(-2, Object.class);
+                out.put(k, v);
+                l.pop(2);
+            }
+
             logger.info("Copied Collection Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
             return 0;
+
         });
+
         luaState.pushValue(abs);
         luaState.call(1, 0);
 
@@ -113,10 +123,19 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         final List<Object> out = new ArrayList<>();
 
         luaState.pushJavaFunction(l -> {
-            final List<?> proxyList = getInstance().convertLuaValue(l, 1, List.class);
-            out.addAll(proxyList);
+
+            l.pushNil();
+
+            while (l.next(1)) {
+                l.pushValue(-2);
+                final Object v = l.toJavaObject(-2, Object.class);
+                out.add(v);
+                l.pop(2);
+            }
+
             logger.info("Copied Collection Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
             return 0;
+
         });
         luaState.pushValue(abs);
         luaState.call(1, 0);
