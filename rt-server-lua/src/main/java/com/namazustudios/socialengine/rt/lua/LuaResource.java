@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
@@ -95,10 +96,10 @@ public class LuaResource implements Resource {
             final LuaState luaState,
             final Context context,
             final ResourceAcquisition resourceAcquisition,
-            final NodeMetadataContext nodeMetadataContext
-    ) {
+            final NodeId nodeId) {
         try {
-            this.resourceId = new ResourceId(nodeMetadataContext.getNodeId());
+            // TODO Insert NodeId
+            this.resourceId = new ResourceId(nodeId);
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);

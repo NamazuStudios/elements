@@ -11,6 +11,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.toList;
+
 public class SimpleIndexContext implements IndexContext {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceContext.class);
@@ -27,29 +29,20 @@ public class SimpleIndexContext implements IndexContext {
                           final Consumer<Throwable> failure) {
         getExecutorService().submit(() -> {
             try {
-                final Stream<Listing> stream = getResourceService().listParallelStream(path).map(this::transform);
-                success.accept(stream);
-                return getResourceService().listParallelStream(path).map(this::transform);
+
+                final List<Listing> listings = getResourceService()
+                    .listParallelStream(path)
+                    .map(SimpleIndexContextListing::new)
+                    .collect(toList());
+
+                success.accept(listings);
+
             } catch (Throwable th) {
                 logger.error("Caught exception listing {}", path, th);
                 failure.accept(th);
                 throw th;
             }
         });
-    }
-
-    private Listing transform(final ResourceService.Listing listing) {
-        return new Listing() {
-            @Override
-            public Path getPath() {
-                return listing.getPath();
-            }
-
-            @Override
-            public ResourceId getResourceId() {
-                return listing.getResourceId();
-            }
-        };
     }
 
     @Override

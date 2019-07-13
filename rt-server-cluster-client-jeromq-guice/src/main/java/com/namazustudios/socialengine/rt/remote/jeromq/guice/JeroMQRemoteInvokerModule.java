@@ -12,7 +12,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.ASYNC_EXECUTOR_SERVICE;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 
@@ -63,7 +62,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
 
     /**
      * Specifies the issueOpenBackendChannelCommand address used by the underlying {@link JeroMQRemoteInvoker}.  This provides a binding for
-     * the option {@link JeroMQRemoteInvoker#CONNECT_ADDRESS}.  Leaving this unspecified will not assign any properties
+     * the option {@link JeroMQRemoteInvoker}.  Leaving this unspecified will not assign any properties
      * and leave it to external means to configure the underlying module.
      *
      * @param connectAddress the issueOpenBackendChannelCommand address
@@ -71,7 +70,8 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withConnectAddress(final String connectAddress) {
         bindConnectAddressAction = () -> bind(String.class)
-            .annotatedWith(named(CONNECT_ADDRESS))
+// TODO FIx this
+//            .annotatedWith(named(CONNECT_ADDRESS))
             .toInstance(connectAddress);
         return this;
     }

@@ -163,64 +163,70 @@ public class JeroMQDemultiplexedConnectionService implements ConnectionService {
 
     @Override
     public void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer) {
-        try (final ZContext context = shadow(getzContext());
-             final Connection connection = from(context, c -> c.createSocket(REQ))) {
-            connection.socket().connect(getControlAddress());
-
-            final ZMsg msg = buildControlMsg(commandType, byteBuffer);
-
-            connection.sendMessage(msg);
-            connection.socket().recv();
-        }
+//        try (final ZContext context = shadow(getzContext());
+//             final Connection connection = from(context, c -> c.createSocket(REQ))) {
+//            connection.socket().connect(getControlAddress());
+//
+//            final ZMsg msg = buildControlMsg(commandType, byteBuffer);
+//
+//            connection.sendMessage(msg);
+//            connection.socket().recv();
+//        }
     }
 
     @Override
-    public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
-        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
-                invokerHostAndPort.getHost(),
-                invokerHostAndPort.getPort());
-
-        if (invokerTcpAddress == null) {
-            return false;
-        }
-
-        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
-                controlHostAndPort.getHost(),
-                controlHostAndPort.getPort()
-        );
-
-        if (controlTcpAddress == null) {
-            return false;
-        }
-
-        issueConnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
-
-        return true;
+    public Connection connectToInstance(final String remoteAddress) {
+        // TODO Implement This
+        return null;
     }
 
-    @Override
-    public boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
-        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
-                invokerHostAndPort.getHost(),
-                invokerHostAndPort.getPort());
-
-        if (invokerTcpAddress == null) {
-            return false;
-        }
-
-        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
-                controlHostAndPort.getHost(),
-                controlHostAndPort.getPort()
-        );
-
-        if (controlTcpAddress == null) {
-            return false;
-        }
-
-        issueDisconnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
-
-        return true;
-    }
+    //    @Override
+//    public boolean connectToInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+//        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+//                invokerHostAndPort.getHost(),
+//                invokerHostAndPort.getPort());
+//
+//        if (invokerTcpAddress == null) {
+//            return false;
+//        }
+//
+//        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+//                controlHostAndPort.getHost(),
+//                controlHostAndPort.getPort()
+//        );
+//
+//        if (controlTcpAddress == null) {
+//            return false;
+//        }
+//
+//        issueConnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
+//
+//        return true;
+//    }
+//
+//    @Override
+//    public boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort) {
+//        final String invokerTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+//                invokerHostAndPort.getHost(),
+//                invokerHostAndPort.getPort());
+//
+//        if (invokerTcpAddress == null) {
+//            return false;
+//        }
+//
+//        final String controlTcpAddress = RouteRepresentationUtil.buildTcpAddress(
+//                controlHostAndPort.getHost(),
+//                controlHostAndPort.getPort()
+//        );
+//
+//        if (controlTcpAddress == null) {
+//            return false;
+//        }
+//
+//        issueDisconnectInstanceCommand(invokerTcpAddress, controlTcpAddress);
+//
+//        return true;
+//    }
 
     public ZContext getzContext() {
         return zContext;

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.util.Set;
@@ -32,10 +33,10 @@ public interface InstanceMetadataContext {
      * @return the {@link NodeId}
      */
     @RemotelyInvokable
-    NodeId getInstanceId();
+    InstanceId getInstanceId();
 
     @RemotelyInvokable
-    Set<NodeId> getApplicationNodeIds();
+    Set<NodeId> getNodeIds();
 
     @RemotelyInvokable
     double getLoadAverage();

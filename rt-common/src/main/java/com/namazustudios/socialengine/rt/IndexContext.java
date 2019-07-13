@@ -32,10 +32,10 @@ public interface IndexContext {
      * Performs the operations of {@link #listAsync(Path, Consumer, Consumer)} synchronously.
      *
      * @param path the {@link Path} to match
-     * @return a {@link Stream<Listing>} representing all matched {@link Path}s
+     * @return a {@link List<Listing>} representing all matched {@link Path}s
      */
-    default Stream<Listing> list(@Serialize final Path path) {
-        final SyncWait<Stream<Listing>> streamSyncWait = new SyncWait<>(getClass());
+    default List<Listing> list(@Serialize final Path path) {
+        final SyncWait<List<Listing>> streamSyncWait = new SyncWait<>(getClass());
         listAsync(path, v -> streamSyncWait.getResultConsumer(), streamSyncWait.getErrorConsumer());
         return streamSyncWait.get();
     }
@@ -45,13 +45,13 @@ public interface IndexContext {
      * provided {@link Path}.  Unlike other methods for linking and unlinking, the provided {@link Path} may be a
      * wildcard as determined by {@link Path#isWildcard()}.
      *
-     * The supplied {@link Stream<Listing>>} should represent a complete buffering of all {@link Listing} instances
+     * The supplied {@link List<Listing>>} should represent a complete buffering of all {@link Listing} instances
      * matching the {@link Path}.
      *
      * @param path the {@link Path} to match
      * @param success a {@link Consumer<Listing>} which receives an instance of {@link Listing}
      * @param failure a {@link Consumer<Throwable>} which receives an exception indicating a failure reason.
-     * @return a {@link Future<Stream<Listing>>} which can be used to obtain the result
+     * @return a {@link Future<List<Listing>>} which can be used to obtain the result
      */
     @RemotelyInvokable(routing = @Routing(AggregatePathRoutingStrategy.class))
     void listAsync(@ProvidesAddress @Serialize Path path,

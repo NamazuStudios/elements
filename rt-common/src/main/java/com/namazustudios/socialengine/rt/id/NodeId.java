@@ -28,6 +28,15 @@ public class NodeId implements Serializable {
 
     private NodeId() { v1CompoundId = null; }
 
+    public NodeId(final InstanceId inaInstanceId, final UUID applicationId) {
+        v1CompoundId = new V1CompoundId.Builder()
+                .with(instanceId.v1CompoundId)
+                .with(APPLICATION, applicationId)
+                .only(INSTANCE, APPLICATION)
+            .build();
+    }
+
+
     public NodeId(final UUID instanceId, final UUID applicationId) {
         v1CompoundId = new V1CompoundId.Builder()
                 .with(INSTANCE, instanceId)
@@ -61,6 +70,20 @@ public class NodeId implements Serializable {
             .build();
     }
 
+    /**
+     * Gets the {@link UUID} for this {@link NodeId}.
+     *
+     * @return the {@link UUID}
+     */
+    public UUID getApplicationUuid() {
+        return v1CompoundId.getComponent(APPLICATION).getValue();
+    }
+
+    /**
+     * Returns the {@link InstanceId}.
+     *
+     * @return the {@link InstanceId} assocaited with this {@link NodeId}
+     */
     public InstanceId getInstanceId() {
         return (instanceId == null) ? (instanceId = new InstanceId(v1CompoundId)) : instanceId;
     }

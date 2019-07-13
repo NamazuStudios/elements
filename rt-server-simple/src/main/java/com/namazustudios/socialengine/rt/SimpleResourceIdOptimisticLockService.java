@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.util.Objects;
@@ -12,21 +14,21 @@ import static java.util.UUID.randomUUID;
  */
 public class SimpleResourceIdOptimisticLockService implements OptimisticLockService<ResourceId> {
 
-    private final UUID lockUuid = randomUUID();
+    private static final NodeId MOCK_NODE_ID = new NodeId(randomUUID(), randomUUID());
 
     @Override
     public ResourceId createLock() {
-        return new LockingId(lockUuid);
+        return new LockingId();
     }
 
     @Override
-    public boolean isLock(ResourceId resourceId) {
+    public boolean isLock(final ResourceId resourceId) {
         return resourceId != null && Objects.equals(LockingId.class, resourceId.getClass());
     }
 
     private static class LockingId extends ResourceId {
-        public LockingId(UUID nodeUuid) {
-            super(nodeUuid);
+        public LockingId() {
+            super(MOCK_NODE_ID);
         }
     }
 

@@ -11,7 +11,8 @@ public class SimpleNodeMetadataContextModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(NodeMetadataContext.class).to(SimpleNodeMetadataContext.class).asEagerSingleton();
+        // TODO: Is this necessary?
+//        bind(NodeMetadataContext.class).to(SimpleNodeMetadataContext.class).asEagerSingleton();
 
         // TODO: from my understanding, we will have a separate singleton for each Application on an Instance, in which
         //  case we need to move this so that there is exactly one load monitor service per Instance. Could be coupled

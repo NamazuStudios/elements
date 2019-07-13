@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import javax.inject.Inject;
@@ -8,48 +9,37 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.toSet;
+
 /**
  * Provides data for an Instance.
  */
 public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
-    private UUID instanceUuid;
-    private NodeId instanceNodeId;
+
+    private InstanceId instanceId;
+
     private Set<Node> nodeSet;
+
     private LoadMonitorService loadMonitorService;
 
-
-    public Set<NodeId> getApplicationNodeIds() {
-        return getNodeSet().stream().map(node -> node.getNodeId()).collect(Collectors.toSet());
+    @Override
+    public Set<NodeId> getNodeIds() {
+        return getNodeSet().stream().map(n -> n.getNodeId()).collect(toSet());
     }
 
+    @Override
     public double getLoadAverage() {
         return getLoadMonitorService().getLoadAverage();
     }
 
-    public UUID getInstanceUuid() {
-        return instanceUuid;
+    @Override
+    public InstanceId getInstanceId() {
+        return instanceId;
     }
 
     @Inject
-    public void setInstanceUuid(UUID instanceUuid) {
-        this.instanceUuid = instanceUuid;
-
-        if (instanceUuid != null) {
-            final NodeId instanceNodeId = new NodeId(instanceUuid, null);
-            setInstanceNodeId(instanceNodeId);
-        }
-        else {
-            setInstanceNodeId(null);
-        }
-    }
-
-    @Override
-    public NodeId getInstanceNodeId() {
-        return instanceNodeId;
-    }
-
-    private void setInstanceNodeId(NodeId instanceNodeId) {
-        this.instanceNodeId = instanceNodeId;
+    public void setInstanceId(InstanceId instanceId) {
+        this.instanceId = instanceId;
     }
 
     public Set<Node> getNodeSet() {
@@ -69,4 +59,5 @@ public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
     public void setLoadMonitorService(LoadMonitorService loadMonitorService) {
         this.loadMonitorService = loadMonitorService;
     }
+
 }

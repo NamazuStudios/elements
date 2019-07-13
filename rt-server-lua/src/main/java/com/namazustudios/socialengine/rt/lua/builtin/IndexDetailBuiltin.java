@@ -49,10 +49,8 @@ public class IndexDetailBuiltin implements Builtin {
 
             final TaskId taskId = currentTaskId(luaState);
 
-            final Consumer<Stream<IndexContext.Listing>> success = stream -> {
-                final List<IndexContext.Listing> listings = stream.collect(toList());
+            final Consumer<List<IndexContext.Listing>> success = listings ->
                 getContext().getSchedulerContext().resumeFromNetwork(taskId, listings);
-            };
 
             final Consumer<Throwable> failure = throwable -> getContext()
                 .getSchedulerContext()

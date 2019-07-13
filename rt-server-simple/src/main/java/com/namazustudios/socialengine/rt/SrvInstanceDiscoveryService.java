@@ -12,8 +12,11 @@ import static com.namazustudios.socialengine.rt.Constants.SRV_INSTANCE_CONTROL_P
 import static com.namazustudios.socialengine.rt.Constants.SRV_INSTANCE_INVOKER_PORT_NAME;
 
 public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, SrvMonitorServiceListener {
+
     private ConnectionService connectionService;
+
     private Integer srvInstanceInvokerPort;
+
     private Integer srvInstanceControlPort;
 
     @Override
@@ -26,18 +29,19 @@ public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, Sr
 
     }
 
-    public void onSrvRecordCreated(SrvRecord srvRecord) {
+    public void onSrvRecordCreated(final SrvRecord srvRecord) {
         // TODO: for now, we should connect, look to see if the status response's instance uuid matches local instance
         //  uuid, and then disconnect if so and record the hostname.
-        final HostAndPort invokerHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceInvokerPort());
-        final HostAndPort controlHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceControlPort());
-        getConnectionService().connectToInstance(invokerHostAndPort, controlHostAndPort);
+//        final HostAndPort invokerHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceInvokerPort());
+//        final HostAndPort controlHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceControlPort());
+//        getConnectionService().connectToInstance(invokerHostAndPort, controlHostAndPort);
     }
 
-    public void onSrvRecordDeleted(SrvRecord srvRecord) {
+    public void onSrvRecordDeleted(final SrvRecord srvRecord) {
+        // TODO: Correct this later.
         final HostAndPort invokerHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceInvokerPort());
         final HostAndPort controlHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceControlPort());
-        getConnectionService().disconnectFromInstance(invokerHostAndPort, controlHostAndPort);
+//        getConnectionService().disconnectFromInstance(invokerHostAndPort, controlHostAndPort);
     }
 
     public ConnectionService getConnectionService() {
@@ -68,4 +72,5 @@ public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, Sr
     public void setSrvInstanceControlPort(Integer srvInstanceControlPort) {
         this.srvInstanceControlPort = srvInstanceControlPort;
     }
+
 }

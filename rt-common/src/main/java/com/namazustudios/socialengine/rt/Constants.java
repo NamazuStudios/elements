@@ -68,6 +68,7 @@ public interface Constants {
     String IS_LOCAL_ENVIRONMENT_NAME = "com.namazustudios.socialengine.rt.is_local_environment";
 
     String STATIC_INSTANCE_INVOKER_ADDRESSES_NAME = "com.namazustudios.socialengine.rt.static_instance_invoker_addresses";
+
     String STATIC_INSTANCE_CONTROL_ADDRESSES_NAME = "com.namazustudios.socialengine.rt.static_instance_control_addresses";
 
     String SRV_INSTANCE_INVOKER_PORT_NAME = "com.namazustudios.socialengine.rt.srv_instance_invoker_port";

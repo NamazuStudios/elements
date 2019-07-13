@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.common.io.ByteStreams;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -36,7 +38,9 @@ public class XodusResourceServicePersistenceTest {
         final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 10; ++i) {
-            final ResourceId resourceId = new ResourceId(nodeUuid);
+            final InstanceId instanceId = new InstanceId();
+            final NodeId nodeId = new NodeId(instanceId, randomUUID());
+            final ResourceId resourceId = new ResourceId(nodeId);
             final Path path = new Path(asList("test", resourceId.asString()));
             testData.add(new Object[]{resourceId, path});
         }

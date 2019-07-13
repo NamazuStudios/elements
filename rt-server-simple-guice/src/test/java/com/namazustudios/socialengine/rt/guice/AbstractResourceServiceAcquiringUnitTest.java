@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
@@ -37,7 +39,9 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId(nodeUuid);
+            final InstanceId instanceId = new InstanceId();
+            final NodeId nodeId = new NodeId(instanceId, randomUUID());
+            final ResourceId resourceId = new ResourceId(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
@@ -263,7 +267,9 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
         final UUID nodeUuid = randomUUID();
 
-        final ResourceId resourceId = new ResourceId(nodeUuid);
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final ResourceId resourceId = new ResourceId(nodeId);
         final Resource resource = Mockito.mock(Resource.class);
 
         when(resource.getId()).thenReturn(resourceId);

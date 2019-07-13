@@ -80,10 +80,9 @@ public class RouteRepresentationUtil {
      * Returns the {@link String} representing the internal route address.
      **/
     public static String buildMultiplexInprocAddress(final NodeId nodeId) {
-        if (nodeId.getApplicationId() != null) {
-            return format("inproc://multiplex-%s.%s", nodeId.getInstanceId(), nodeId.getApplicationId());
-        }
-        else {
+        if (nodeId.getApplicationUuid() != null) {
+            return format("inproc://multiplex-%s.%s", nodeId.getInstanceId(), nodeId.getApplicationUuid());
+        } else {
             return format("inproc://multiplex-%s", nodeId.getInstanceId());
         }
     }
@@ -95,8 +94,8 @@ public class RouteRepresentationUtil {
      * Returns the {@link String} representing the internal route address.
      **/
     public static String buildDemultiplexInprocAddress(final NodeId nodeId) {
-        if (nodeId.getApplicationId() != null) {
-            return format("inproc://demultiplex-%s.%s", nodeId.getInstanceId(), nodeId.getApplicationId());
+        if (nodeId.getApplicationUuid() != null) {
+            return format("inproc://demultiplex-%s.%s", nodeId.getInstanceId(), nodeId.getApplicationUuid());
         }
         else {
             return format("inproc://demultiplex-%s", nodeId.getInstanceId());

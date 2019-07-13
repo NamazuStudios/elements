@@ -26,34 +26,34 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
     private Provider<ProxyBuilder<InstanceMetadataContext>> instanceMetadataContextProxyBuilderProvider;
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
-    @Override
-    public void onInstancesConnected(final Set<UUID> instanceUuids) {
-        synchronized (atomicInstanceMetadataContexts) {
-            final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
-            instanceUuids.forEach(instanceUuid -> {
-                instanceMetadataContexts.computeIfAbsent(instanceUuid, i -> {
-                    final NodeId instanceNodeId = new NodeId(instanceUuid, null);
-                    final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(instanceNodeId);
-                    final ProxyBuilder<InstanceMetadataContext> instanceMetadataContextProxyBuilder = getInstanceMetadataContextProxyBuilderProvider().get();
-                    final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder
-                        .withHandlersForRemoteInvoker(remoteInvoker)
-                        .build();
-                    return instanceMetadataContext;
-                });
-            });
-        }
-    }
+//    @Override
+//    public void onInstancesConnected(final Set<UUID> instanceUuids) {
+//        synchronized (atomicInstanceMetadataContexts) {
+//            final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
+//            instanceUuids.forEach(instanceUuid -> {
+//                instanceMetadataContexts.computeIfAbsent(instanceUuid, i -> {
+//                    final NodeId instanceNodeId = new NodeId(instanceUuid, null);
+//                    final RemoteInvoker remoteInvoker = getRemoteInvokerRegistry().getRemoteInvoker(instanceNodeId);
+//                    final ProxyBuilder<InstanceMetadataContext> instanceMetadataContextProxyBuilder = getInstanceMetadataContextProxyBuilderProvider().get();
+//                    final InstanceMetadataContext instanceMetadataContext = instanceMetadataContextProxyBuilder
+//                        .withHandlersForRemoteInvoker(remoteInvoker)
+//                        .build();
+//                    return instanceMetadataContext;
+//                });
+//            });
+//        }
+//    }
+//
+//    @Override
+//    public void onInstancesDisconnected(final Set<UUID> instanceUuids) {
+//        synchronized (atomicInstanceMetadataContexts) {
+//            final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
+//            instanceUuids.forEach(instanceUuid -> instanceMetadataContexts.remove(instanceUuid));
+//        }
+//    }
 
     @Override
-    public void onInstancesDisconnected(final Set<UUID> instanceUuids) {
-        synchronized (atomicInstanceMetadataContexts) {
-            final Map<UUID, InstanceMetadataContext> instanceMetadataContexts = atomicInstanceMetadataContexts.get();
-            instanceUuids.forEach(instanceUuid -> instanceMetadataContexts.remove(instanceUuid));
-        }
-    }
-
-    @Override
-    public void start(long refreshRateMillis) {
+    public void start() {
         atomicIsRunning.compareAndSet(false, true);
 
         final Thread thread = new Thread(() -> {
@@ -98,7 +98,7 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
                      * TODO: We could do some optimizations here, e.g. trying to parallelize all the getLoadAverage()
                      *  calls (see note above). Right now this is a naive implementation.
                      */
-                    Thread.sleep(refreshRateMillis);
+                    Thread.sleep(1000);
                     isRunning = atomicIsRunning.get();
                 }
             }

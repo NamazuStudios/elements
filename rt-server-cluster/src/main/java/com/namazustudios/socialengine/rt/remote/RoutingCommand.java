@@ -5,10 +5,9 @@ import javolution.io.Struct;
 
 /**
  * Used to control the routes stored.
- *
- * TODO: maybe split out invoker routing command vs node routing command
  */
 public class RoutingCommand extends Struct {
+
     public static RoutingCommand buildRoutingCommand(
         final Action action,
         final String tcpAddress
@@ -41,13 +40,8 @@ public class RoutingCommand extends Struct {
         }
 
         if (nodeId != null) {
-            if (nodeId.getInstanceId() != null) {
-                routingCommand.instanceUuid.set(nodeId.getInstanceId());
-            }
-
-            if (nodeId.getApplicationId() != null) {
-                routingCommand.applicationUuid.set(nodeId.getApplicationId());
-            }
+            routingCommand.instanceUuid.set(nodeId.getInstanceId().getUuid());
+            routingCommand.applicationUuid.set(nodeId.getApplicationUuid());
         }
 
         return routingCommand;
@@ -125,4 +119,5 @@ public class RoutingCommand extends Struct {
         UNBIND_NODE,
 
     }
+
 }

@@ -26,7 +26,6 @@ import java.util.function.Consumer;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
@@ -54,7 +53,8 @@ public class JeroMQEndToEndIntegrationTest {
         setTestServiceInterface(clientInvoker.getInstance(TestServiceInterface.class));
 
         getNode().start();
-        getRemoteInvoker().start();
+// TODO FIXME
+//        getRemoteInvoker().start();
 
     }
 
@@ -344,7 +344,8 @@ public class JeroMQEndToEndIntegrationTest {
             bind(String.class).annotatedWith(named(ConnectionPool.MAX_CONNECTIONS)).toInstance("250");
 
             bind(String.class)
-                .annotatedWith(named(CONNECT_ADDRESS))
+// TODO FIXME
+//                .annotatedWith(named(CONNECT_ADDRESS))
                 .toInstance("inproc://integration-test");
 
             bind(TestServiceInterface.class)

@@ -574,14 +574,14 @@ public class MessageManager implements AutoCloseable {
 
         final RoutingHeader routingHeader = new RoutingHeader();
         routingHeader.status.set(CONTINUE);
-        routingHeader.instanceUuid.set(nodeId.getInstanceId());
-        routingHeader.applicationUuid.set(nodeId.getApplicationId());
+        routingHeader.instanceUuid.set(nodeId.getInstanceId().getUuid());
+        routingHeader.applicationUuid.set(nodeId.getApplicationUuid());
 
         RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
 
-        final int invokerSocketHandle = socketHandleRegistry.getInvokerSocketHandleForInstanceUuid(nodeId.getInstanceId());
-
+        final int invokerSocketHandle = socketHandleRegistry.getInvokerSocketHandleForInstanceUuid(nodeId.getInstanceId().getUuid());
         connectionsManager.sendMsgToSocketHandle(invokerSocketHandle, msg);
+
     }
 
     private void handleBoundNodeMessage(
@@ -598,14 +598,14 @@ public class MessageManager implements AutoCloseable {
 
         final RoutingHeader routingHeader = new RoutingHeader();
         routingHeader.status.set(CONTINUE);
-        routingHeader.instanceUuid.set(nodeId.getInstanceId());
-        routingHeader.applicationUuid.set(nodeId.getApplicationId());
+        routingHeader.instanceUuid.set(nodeId.getInstanceId().getUuid());
+        routingHeader.applicationUuid.set(nodeId.getApplicationUuid());
 
         RouteRepresentationUtil.insertRoutingHeader(msg, routingHeader);
 
-        final int invokerSocketHandle = socketHandleRegistry.getInvokerSocketHandleForInstanceUuid(nodeId.getInstanceId());
-
+        final int invokerSocketHandle = socketHandleRegistry.getInvokerSocketHandleForInstanceUuid(nodeId.getInstanceId().getUuid());
         connectionsManager.sendMsgToSocketHandle(invokerSocketHandle, msg);
+
     }
 
 

@@ -82,6 +82,18 @@ public interface ConnectionService {
      */
     void issueCommand(final CommandType commandType, final ByteBuffer byteBuffer);
 
-    boolean connectToInstance(final HostAndPort connectHostAndPort, final HostAndPort controlHostAndPort);
-    boolean disconnectFromInstance(final HostAndPort invokerHostAndPort, final HostAndPort controlHostAndPort);
+    Connection connectToInstance(final String remoteAddress);
+
+    /**
+     * Represents a connection to a remote instance.
+     */
+    interface Connection {
+
+        /**
+         * Disconnects and disposes of the underlying {@link Connection}
+         */
+        void disconnect();
+
+    }
+
 }

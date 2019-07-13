@@ -16,27 +16,22 @@ public class SocketHandleRegistry implements AutoCloseable {
 
     public static final int SOCKET_HANDLE_NOT_FOUND = -1;
 
-    private static final Logger logger = LoggerFactory.getLogger(SocketHandleRegistry.class);
-
-    // TODO: have higher-level registry where other layers can inspect instance uuid <-> nodeids
-
-    // TODO: expected sizes from env vars
     private String boundInvokerTcpAddress = null;
     private int boundInvokerSocketHandle = SOCKET_HANDLE_NOT_FOUND;
 
-    private final BiMap<String, Integer> invokerTcpAddressToSocketHandle = new HashBiMap<>(16);
-    private final BiMap<String, Integer> controlTcpAddressToSocketHandle = new HashBiMap<>(16);
+    private final BiMap<String, Integer> invokerTcpAddressToSocketHandle = HashBiMap.create(16);
+    private final BiMap<String, Integer> controlTcpAddressToSocketHandle = HashBiMap.create(16);
 
-    private final BiMap<Integer, Integer> controlSocketHandleToInvokerSocketHandle = new HashBiMap<>(16);
+    private final BiMap<Integer, Integer> controlSocketHandleToInvokerSocketHandle = HashBiMap.create(16);
 
-    private final BiMap<UUID, Integer> instanceUuidToInvokerSocketHandle = new HashBiMap<>(16);
-    private final BiMap<UUID, Integer> instanceUuidToControlSocketHandle = new HashBiMap<>(16);
+    private final BiMap<UUID, Integer> instanceUuidToInvokerSocketHandle = HashBiMap.create(16);
+    private final BiMap<UUID, Integer> instanceUuidToControlSocketHandle = HashBiMap.create(16);
 
-    private final BiMap<NodeId, Integer> nodeIdToSocketHandle = new HashBiMap<>(16);
+    private final BiMap<NodeId, Integer> nodeIdToSocketHandle = HashBiMap.create(16);
 
-    private final Map<UUID, Set<NodeId>> instanceUuidToNodeIds = new HashMap<>(16);
+    private final Map<UUID, Set<NodeId>> instanceUuidToNodeIds = HashBiMap.create(16);
 
-    private final Map<UUID, Set<Integer>> instanceUuidToNodeSocketHandles = new HashMap<>(16);
+    private final Map<UUID, Set<Integer>> instanceUuidToNodeSocketHandles = HashBiMap.create(16);
 
     private Set<NodeId> getOrCreateNodeIdSetForInstanceUuid(final UUID instanceUuid) {
         return instanceUuidToNodeIds.computeIfAbsent(instanceUuid, i -> new HashSet<>());
@@ -213,7 +208,7 @@ public class SocketHandleRegistry implements AutoCloseable {
     public void registerNode(final NodeId nodeId, final int nodeSocketHandle) {
         nodeIdToSocketHandle.put(nodeId, nodeSocketHandle);
 
-        final UUID instanceUuid = nodeId.getInstanceId();
+        final UUID instanceUuid = nodeId.getInstanceId().getUuid();
 
         final Set<NodeId> nodeIds = getOrCreateNodeIdSetForInstanceUuid(instanceUuid);
         nodeIds.add(nodeId);
@@ -223,15 +218,17 @@ public class SocketHandleRegistry implements AutoCloseable {
     }
 
     public void unregisterNode(final NodeId nodeId) {
+
         final int nodeSocketHandle = nodeIdToSocketHandle.remove(nodeId);
 
-        final UUID instanceUuid = nodeId.getInstanceId();
+        final UUID instanceUuid = nodeId.getInstanceId().getUuid();
 
         final Set<NodeId> nodeIds = getOrCreateNodeIdSetForInstanceUuid(instanceUuid);
         nodeIds.remove(nodeId);
 
         final Set<Integer> nodeSocketHandles = getOrCreateNodeSocketHandleSetForInstanceUuid(instanceUuid);
         nodeSocketHandles.remove(nodeSocketHandle);
+
     }
 
     public void registerBoundInvokerSocket(final String boundInvokerTcpAddress, final int boundInvokerSocketHandle) {

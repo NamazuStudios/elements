@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
@@ -16,6 +18,7 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -34,10 +37,11 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
     public static Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
-        final UUID nodeUuid = randomUUID();
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(randomUUID(), randomUUID());
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId(nodeUuid);
+            final ResourceId resourceId = new ResourceId(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
@@ -256,8 +260,10 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
 
     @Test(dependsOnMethods = "testAllPathsUnlinked")
     public void testDeleteWithPaths() {
-        final UUID nodeUuid = randomUUID();
-        final ResourceId resourceId = new ResourceId(nodeUuid);
+
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final ResourceId resourceId = new ResourceId(nodeId);
         final Resource resource = Mockito.mock(Resource.class);
 
         when(resource.getId()).thenReturn(resourceId);

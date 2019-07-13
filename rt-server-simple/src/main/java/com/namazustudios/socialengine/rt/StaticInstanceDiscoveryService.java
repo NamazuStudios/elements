@@ -2,45 +2,62 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.sql.Connection;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.Constants.*;
+import static java.util.stream.Collectors.toList;
 
 public class StaticInstanceDiscoveryService implements InstanceDiscoveryService {
-    ConnectionService connectionService;
 
-    List<String> staticInstanceInvokerAddresses;
-    List<String> staticInstanceControlAddresses;
+    private static final Logger logger = LoggerFactory.getLogger(StaticInstanceDiscoveryService.class);
 
-    Integer currentInstanceInvokerPort;
-    Integer currentInstanceControlPort;
+    public static final String REMOTE_CONNECT_ADDRESSES = "com.namazustudios.socialengine.rt.StaticInstanceDiscoveryService.remoteConnectAddresses";
+
+    private Set<String> remoteConnectAddresses;
+
+    private ConnectionService connectionService;
+
+    private final AtomicReference<List<ConnectionService.Connection>> connectionList = new AtomicReference<>();
 
     @Override
     public void start() {
-        if (getStaticInstanceInvokerAddresses().size() != getStaticInstanceControlAddresses().size()) {
-            throw new IllegalStateException("Static Instance Invoker Addresses size must match Static Instance Control Addresses size.");
+
+        final List<ConnectionService.Connection> connections = getRemoteConnectAddresses()
+            .stream()
+            .map(getConnectionService()::connectToInstance)
+            .collect(toList());
+        if (this.connectionList.compareAndSet(null, connections)) {
+            logger.info("Connected to {} ", connections);
+        } else {
+            disconnect(connections);
         }
 
-        for (int i=0; i<getStaticInstanceInvokerAddresses().size(); i++) {
-            final String invokerAddress = getStaticInstanceInvokerAddresses().get(i);
-            final String controlAddress = getStaticInstanceControlAddresses().get(i);
-
-            final HostAndPort invokerHostAndPort = HostAndPort.fromString(invokerAddress);
-            final HostAndPort controlHostAndPort = HostAndPort.fromString(controlAddress);
-            getConnectionService().connectToInstance(invokerHostAndPort, controlHostAndPort);
-        }
     }
 
     @Override
     public void stop() {
-        for (int i=0; i<getStaticInstanceInvokerAddresses().size(); i++) {
-            final String invokerAddress = getStaticInstanceInvokerAddresses().get(i);
-            final HostAndPort invokerHostAndPort = HostAndPort.fromString(invokerAddress);
-            getConnectionService().disconnectFromInstance(invokerHostAndPort);
-        }
+        final List<ConnectionService.Connection> connections = connectionList.getAndSet(null);
+        if (connections == null) throw new IllegalStateException("Not connected.");
+        disconnect(connections);
+    }
+
+    private void disconnect(final List<ConnectionService.Connection> connections) {
+        connections.forEach(c -> {
+            try {
+                c.disconnect();
+            } catch (Exception ex) {
+                logger.error("Could not disconnect from {}.", ex);
+            }
+        });
     }
 
     public ConnectionService getConnectionService() {
@@ -52,43 +69,13 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
         this.connectionService = connectionService;
     }
 
-    public List<String> getStaticInstanceInvokerAddresses() {
-        return staticInstanceInvokerAddresses;
+    public Set<String> getRemoteConnectAddresses() {
+        return remoteConnectAddresses;
     }
 
     @Inject
-    @Named(STATIC_INSTANCE_INVOKER_ADDRESSES_NAME)
-    public void setStaticInstanceInvokerAddresses(List<String> staticInstanceInvokerAddresses) {
-        this.staticInstanceInvokerAddresses = staticInstanceInvokerAddresses;
+    public void setRemoteConnectAddresses(@Named(REMOTE_CONNECT_ADDRESSES) Set<String> remoteConnectAddresses) {
+        this.remoteConnectAddresses = remoteConnectAddresses;
     }
 
-    public List<String> getStaticInstanceControlAddresses() {
-        return staticInstanceControlAddresses;
-    }
-
-    @Inject
-    @Named(STATIC_INSTANCE_CONTROL_ADDRESSES_NAME)
-    public void setStaticInstanceControlAddresses(List<String> staticInstanceControlAddresses) {
-        this.staticInstanceControlAddresses = staticInstanceControlAddresses;
-    }
-
-    public Integer getCurrentInstanceInvokerPort() {
-        return currentInstanceInvokerPort;
-    }
-
-    @Inject
-    @Named(CURRENT_INSTANCE_INVOKER_PORT_NAME)
-    public void setCurrentInstanceInvokerPort(Integer currentInstanceInvokerPort) {
-        this.currentInstanceInvokerPort = currentInstanceInvokerPort;
-    }
-
-    public Integer getCurrentInstanceControlPort() {
-        return currentInstanceControlPort;
-    }
-
-    @Inject
-    @Named(CURRENT_INSTANCE_CONTROL_PORT_NAME)
-    public void setCurrentInstanceControlPort(Integer currentInstanceControlPort) {
-        this.currentInstanceControlPort = currentInstanceControlPort;
-    }
 }

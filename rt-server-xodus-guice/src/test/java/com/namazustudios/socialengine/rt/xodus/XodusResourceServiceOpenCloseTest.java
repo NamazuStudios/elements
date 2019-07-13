@@ -6,6 +6,8 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider;
 import jetbrains.exodus.env.Environment;
@@ -124,8 +126,9 @@ public class XodusResourceServiceOpenCloseTest {
     private Resource newMockResource() throws IOException {
 
         final Resource mock = mock(Resource.class);
-        final UUID nodeUuid = randomUUID();
-        final ResourceId resourceId = new ResourceId(nodeUuid);
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final ResourceId resourceId = new ResourceId(nodeId);
 
         when(mock.getId()).thenReturn(resourceId);
         doAnswer(invocation -> {
