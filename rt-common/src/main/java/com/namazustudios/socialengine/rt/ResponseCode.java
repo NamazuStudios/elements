@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
@@ -149,6 +150,11 @@ public enum ResponseCode {
      * Indicates that there was a problem routing calls to a remote node.
      */
     ROUTING_EXCEPTION,
+
+    /**
+     * Indicates that a type has an invalid {@link NodeId}
+     */
+    INVALID_NODE_ID,
 
     /**
      * Indicates that a handler reached a timeout condition.

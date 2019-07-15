@@ -11,19 +11,19 @@ public class StandardRemoteInvocationDispatcher implements RemoteInvocationDispa
 
     private IocResolver iocResolver;
 
-    private RemoteInvokerRegistry remoteInvokerRegistry;
-
     @Override
     public Future<Object> invokeFuture(final Route route,
                                        final Invocation invocation,
                                        final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                                        final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final RoutingStrategy routingStrategy = getIocResolver().inject(route.getRoutingStrategyType());
+        final RoutingStrategy routingStrategy = getRoutingStrategy(route);
 
         return routingStrategy.invokeFuture(
-            route.getAddress(), getRemoteInvokerRegistry(),
-            invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+            route.getAddress(),
+            invocation,
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer);
 
     }
 
@@ -33,11 +33,13 @@ public class StandardRemoteInvocationDispatcher implements RemoteInvocationDispa
                             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final RoutingStrategy routingStrategy = getIocResolver().inject(route.getRoutingStrategyType());
+        final RoutingStrategy routingStrategy = getRoutingStrategy(route);
 
         return routingStrategy.invokeAsync(
-                route.getAddress(), getRemoteInvokerRegistry(),
-                invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+            route.getAddress(),
+            invocation,
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer);
 
     }
 
@@ -47,11 +49,24 @@ public class StandardRemoteInvocationDispatcher implements RemoteInvocationDispa
                              final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
                              final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
 
-        final RoutingStrategy routingStrategy = getIocResolver().inject(route.getRoutingStrategyType());
+        final RoutingStrategy routingStrategy = getRoutingStrategy(route);
 
         return routingStrategy.invokeSync(
-                route.getAddress(), getRemoteInvokerRegistry(),
-                invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+            route.getAddress(),
+            invocation,
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer);
+
+    }
+
+    public RoutingStrategy getRoutingStrategy(final Route route) {
+
+        final Class<? extends RoutingStrategy> cls = route.getRoutingStrategyType();
+        final String name = route.getRoutingStrategyName();
+
+        return name == null || name.isEmpty() ?
+            getIocResolver().inject(cls) :
+            getIocResolver().inject(cls, name);
 
     }
 
@@ -62,15 +77,6 @@ public class StandardRemoteInvocationDispatcher implements RemoteInvocationDispa
     @Inject
     public void setIocResolver(IocResolver iocResolver) {
         this.iocResolver = iocResolver;
-    }
-
-    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
-        return remoteInvokerRegistry;
-    }
-
-    @Inject
-    public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
-        this.remoteInvokerRegistry = remoteInvokerRegistry;
     }
 
 }

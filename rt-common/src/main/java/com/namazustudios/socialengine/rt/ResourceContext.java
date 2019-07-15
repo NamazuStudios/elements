@@ -3,8 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.routing.BroadcastRoutingStrategy;
-import com.namazustudios.socialengine.rt.routing.PathRoutingStrategy;
-import com.namazustudios.socialengine.rt.routing.ResourceIdRoutingStrategy;
+import com.namazustudios.socialengine.rt.routing.SameNodeIdRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 
 import java.util.function.Consumer;
@@ -109,7 +108,7 @@ public interface ResourceContext {
      * @param args the argument array
      * @return the result of the invocation
      */
-    @RemotelyInvokable(routing = @Routing(ResourceIdRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     default Object invoke(@ProvidesAddress @Serialize final ResourceId resourceId,
                           @Serialize final String method,
                           @Serialize final Object... args) {
@@ -129,7 +128,7 @@ public interface ResourceContext {
      * @param args the args
      * @return
      */
-    @RemotelyInvokable(routing = @Routing(ResourceIdRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void invokeAsync(@ResultHandler Consumer<Object> success,
                      @ErrorHandler  Consumer<Throwable> failure,
                      @ProvidesAddress @Serialize ResourceId resourceId,
@@ -163,7 +162,7 @@ public interface ResourceContext {
      * @param args the args
      * @return
      */
-    @RemotelyInvokable(routing = @Routing(PathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void invokePathAsync(@ResultHandler Consumer<Object> success,
                          @ErrorHandler  Consumer<Throwable> failure,
                          @ProvidesAddress @Serialize Path path,
@@ -187,7 +186,7 @@ public interface ResourceContext {
      * @param failure called if the operation fails
      * @param resourceId the {@link ResourceId}
      */
-    @RemotelyInvokable(routing = @Routing(ResourceIdRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void destroyAsync(@ResultHandler Consumer<Void> success,
                       @ErrorHandler  Consumer<Throwable> failure,
                       @ProvidesAddress @Serialize     ResourceId resourceId);

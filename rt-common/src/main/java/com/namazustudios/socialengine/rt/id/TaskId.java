@@ -25,7 +25,7 @@ import static java.lang.String.format;
  * {@link ResourceId} with the string representation of the TaskId's UUID, separated by the ID_SEPARATOR. Such a
  * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}:{task_uuid}".
  */
-public class TaskId implements Serializable {
+public class TaskId implements Serializable, HasNodeId {
 
     final V1CompoundId v1CompoundId;
 
@@ -67,6 +67,7 @@ public class TaskId implements Serializable {
      *
      * @return the {@link NodeId}
      */
+    @Override
     public NodeId getNodeId() {
         return nodeId == null ? (nodeId = new NodeId(v1CompoundId)) : nodeId;
     }

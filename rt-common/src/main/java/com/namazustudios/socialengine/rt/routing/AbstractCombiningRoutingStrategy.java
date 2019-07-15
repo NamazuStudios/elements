@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
@@ -17,24 +18,28 @@ import static java.util.stream.Collectors.toList;
  * A compex type of {@link RoutingStrategy} where each invocation goes to all known {@link RemoteInvoker} instances
  * and then combines the results together into a single result.  In the event of a single error, the whole call is
  * canceled rather than trying to partially report some result.
+ *
+ * It is not recommended that this {@link RoutingStrategy} be used for writes if reliability is expected, but only for
+ * read operations.
  */
 public abstract class AbstractCombiningRoutingStrategy implements RoutingStrategy {
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractCombiningRoutingStrategy.class);
 
+    private RemoteInvokerRegistry remoteInvokerRegistry;
+
     @Override
     public Future<Object> invokeFuture(
             final List<Object> address,
-            final RemoteInvokerRegistry remoteInvokerRegistry,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        if (!address.isEmpty()) logger.warn("Ignorning routing address {}", address);
+        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
         final InvocationResult initial = newInitialInvocationResult();
 
-        final List<RemoteInvoker> invokers = remoteInvokerRegistry.getAllRemoteInvokers();
+        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers();
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
@@ -57,16 +62,15 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
     @Override
     public Void invokeAsync(
             final List<Object> address,
-            final RemoteInvokerRegistry remoteInvokerRegistry,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        if (!address.isEmpty()) logger.warn("Ignorning routing address {}", address);
+        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
         final InvocationResult initial = newInitialInvocationResult();
 
-        final List<RemoteInvoker> invokers = remoteInvokerRegistry.getAllRemoteInvokers();
+        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers();
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
@@ -89,16 +93,15 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
     @Override
     public Object invokeSync(
             final List<Object> address,
-            final RemoteInvokerRegistry remoteInvokerRegistry,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
 
-        if (!address.isEmpty()) logger.warn("Ignorning routing address {}", address);
+        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
         final InvocationResult initial = newInitialInvocationResult();
 
-        final List<RemoteInvoker> invokers = remoteInvokerRegistry.getAllRemoteInvokers();
+        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers();
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
@@ -153,5 +156,14 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
      * @return the {@link InvocationResult} combining the results of both a and b
      */
     protected abstract InvocationResult combine(InvocationResult a, InvocationResult b);
+
+    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
+        return remoteInvokerRegistry;
+    }
+
+    @Inject
+    public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
+        this.remoteInvokerRegistry = remoteInvokerRegistry;
+    }
 
 }

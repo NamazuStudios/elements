@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.annotation;
 
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.remote.RoutingStrategy;
+import com.namazustudios.socialengine.rt.routing.DefaultRoutingStrategy;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -21,7 +22,7 @@ public @interface Routing {
      *
      * @return the {@link RoutingStrategy} class
      */
-    Class<? extends RoutingStrategy> value() default RoutingStrategy.DefaultRoutingStrategy.class;
+    Class<? extends RoutingStrategy> value() default DefaultRoutingStrategy.class;
 
     /**
      * Optionally specifies the name of the {@link RoutingStrategy} to use.  If non-empty, this will be used in

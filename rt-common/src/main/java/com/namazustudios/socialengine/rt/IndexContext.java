@@ -2,9 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.routing.ListAggregatePathRoutingStrategy;
-import com.namazustudios.socialengine.rt.routing.PathResourceIdRoutingStrategy;
-import com.namazustudios.socialengine.rt.routing.PathRoutingStrategy;
+import com.namazustudios.socialengine.rt.routing.SameNodeIdRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 
 import java.util.List;
@@ -52,7 +50,7 @@ public interface IndexContext {
      * @param failure a {@link Consumer<Throwable>} which receives an exception indicating a failure reason.
      * @return a {@link Future<List<Listing>>} which can be used to obtain the result
      */
-    @RemotelyInvokable(routing = @Routing(ListAggregatePathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void listAsync(@Serialize Path path,
                    @ResultHandler Consumer<List<Listing>> success,
                    @ErrorHandler  Consumer<Throwable> failure);
@@ -82,7 +80,7 @@ public interface IndexContext {
      *
      *
      */
-    @RemotelyInvokable(routing = @Routing(PathResourceIdRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void linkAsync(@ProvidesAddress @Serialize ResourceId resourceId,
                    @ProvidesAddress @Serialize Path destination,
                    @ResultHandler Consumer<Void> success,
@@ -109,7 +107,7 @@ public interface IndexContext {
      * @param failure @ {@link Consumer<Throwable> which will be called on a failure
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
-    @RemotelyInvokable(routing = @Routing(PathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void linkPathAsync(@ProvidesAddress @Serialize Path source,
                        @ProvidesAddress @Serialize Path destination,
                        @ResultHandler Consumer<Void> success,
@@ -141,7 +139,7 @@ public interface IndexContext {
      * @param failure a {@link Consumer<Throwable>} to receive an exception if one was generated
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
-    @RemotelyInvokable(routing = @Routing(PathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void unlinkAsync(@ProvidesAddress @Serialize Path path,
                      @ResultHandler Consumer<Unlink> success,
                      @ErrorHandler  Consumer<Throwable> failure);

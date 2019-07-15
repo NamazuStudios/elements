@@ -4,6 +4,9 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.Iterables;
+import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
+import com.namazustudios.socialengine.rt.id.HasNodeId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.io.File;
 import java.io.Serializable;
@@ -25,9 +28,14 @@ import static java.util.Collections.unmodifiableList;
 /**
  * Represents the path scheme for use in the server.
  *
+ * This implements {@link HasNodeId} which uses the {@link #getContext()} to attempt to derive the {@link NodeId} or
+ * throw an exception if the context does not produce a valid {@link NodeId}.
+ *
+ * If the path has a wildcard context, then it returns a null {@link NodeId}.
+ *
  * Created by patricktwohig on 9/4/15.
  */
-public class Path implements Comparable<Path>, Serializable {
+public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
     /**
      * The separator of the context from the path components. Literal value "://", e.g. "myContext://foo/bar".
@@ -84,6 +92,8 @@ public class Path implements Comparable<Path>, Serializable {
 
     // A boolean value to indicate if the path is a wildcard path.
     private final boolean wildcard;
+
+    private transient volatile NodeId nodeId = null;
 
     private Path() {
         // This constructor must exist to ensure that the object can be serialized.  Serialization is able to break
@@ -311,6 +321,12 @@ public class Path implements Comparable<Path>, Serializable {
         }
 
         return pathFromContextAndComponents(context, components, pathSeparator);
+    }
+
+    @Override
+    public NodeId getNodeId() throws InvalidNodeIdException {
+        return !hasContext() ? null :
+                nodeId == null ? (nodeId = new NodeId(getContext())) : nodeId;
     }
 
     @Override

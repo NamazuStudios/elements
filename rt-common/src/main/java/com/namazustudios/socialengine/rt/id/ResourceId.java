@@ -28,7 +28,7 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
  *
  * Created by patricktwohig on 4/11/17.
  */
-public class ResourceId implements Serializable {
+public class ResourceId implements Serializable, HasNodeId {
 
     final V1CompoundId v1CompoundId;
 
@@ -91,6 +91,7 @@ public class ResourceId implements Serializable {
      *
      * @return the {@link NodeId}
      */
+    @Override
     public NodeId getNodeId() {
         return nodeId == null ? (nodeId = new NodeId(v1CompoundId)) : nodeId;
     }

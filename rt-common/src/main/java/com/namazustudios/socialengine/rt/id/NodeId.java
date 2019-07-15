@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
 import sun.text.resources.en.FormatData_en_IE;
 
 import java.io.Serializable;
@@ -16,7 +17,7 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
  * across two ec2 instances represented by UUIDs I1, I2, then we will have six workers in the deployment addressable
  * with the pairs (I1, A1), (I1, A2), (I1, A3), (I2, A1), (I2, A2), (I2, A3).
  */
-public class NodeId implements Serializable {
+public class NodeId implements Serializable, HasNodeId {
 
     final V1CompoundId v1CompoundId;
 
@@ -28,20 +29,27 @@ public class NodeId implements Serializable {
 
     private NodeId() { v1CompoundId = null; }
 
-    public NodeId(final InstanceId inaInstanceId, final UUID applicationId) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(instanceId.v1CompoundId)
-                .with(APPLICATION, applicationId)
-                .only(INSTANCE, APPLICATION)
-            .build();
+    public NodeId(final InstanceId instanceId, final UUID applicationId) {
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(instanceId.v1CompoundId)
+                    .with(APPLICATION, applicationId)
+                    .only(INSTANCE, APPLICATION)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
     }
 
-
     public NodeId(final UUID instanceId, final UUID applicationId) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(INSTANCE, instanceId)
-                .with(APPLICATION, applicationId)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(INSTANCE, instanceId)
+                    .with(APPLICATION, applicationId)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
     }
 
     /**
@@ -51,10 +59,14 @@ public class NodeId implements Serializable {
      * @param stringRepresentation the {@link String} representation of the {@link NodeId} from {@link #asString()}.
      */
     public NodeId(final String stringRepresentation) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(stringRepresentation)
-                .only(INSTANCE, APPLICATION)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(stringRepresentation)
+                    .only(INSTANCE, APPLICATION)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
     }
 
     /**
@@ -63,11 +75,15 @@ public class NodeId implements Serializable {
      * @param v1CompoundId
      */
     NodeId(final V1CompoundId v1CompoundId) {
-        this.v1CompoundId = new V1CompoundId.Builder()
-                .with(v1CompoundId)
-                .without(TASK, RESOURCE)
-                .only(INSTANCE, APPLICATION)
-            .build();
+        try {
+            this.v1CompoundId = new V1CompoundId.Builder()
+                    .with(v1CompoundId)
+                    .without(TASK, RESOURCE)
+                    .only(INSTANCE, APPLICATION)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
     }
 
     /**
@@ -95,6 +111,11 @@ public class NodeId implements Serializable {
      */
     public String asString() {
         return string == null ? (string = v1CompoundId.asString(INSTANCE, APPLICATION)) : string;
+    }
+
+    @Override
+    public NodeId getNodeId() throws InvalidNodeIdException {
+        return this;
     }
 
     @Override
