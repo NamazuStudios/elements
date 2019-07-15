@@ -146,6 +146,11 @@ public enum ResponseCode {
     INTERNAL_ERROR_BAD_MANIFEST_FATAL,
 
     /**
+     * Indicates that there was a problem routing calls to a remote node.
+     */
+    ROUTING_EXCEPTION,
+
+    /**
      * Indicates that a handler reached a timeout condition.
      */
     HANDLER_TIMEOUT,

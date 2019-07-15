@@ -3,18 +3,23 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.annotation.Dispatch.*;
+import static com.namazustudios.socialengine.rt.annotation.Dispatch.Type;
 
 /**
  * Holds a connection to the remote service and dispatches {@link Invocation}.
  */
 public interface RemoteInvoker {
 
-    // TODO: load default timeout from env vars/properties
+    /**
+     * Starts this {@link RemoteInvoker} and connects to the supplied address.
+     *
+     * @param connectAddress the connect address
+     */
     default void start(String connectAddress) { start(connectAddress, 5000); }
 
     /**
@@ -84,9 +89,30 @@ public interface RemoteInvoker {
      * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
      * @return a {@link Future<Object>} which returns the result of the remote invocation
      */
-    Future<Object> invokeFuture(Invocation invocation,
+    default Future<Object> invokeFuture(Invocation invocation,
                                 List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                                InvocationErrorConsumer asyncInvocationErrorConsumer);
+                                InvocationErrorConsumer asyncInvocationErrorConsumer) {
+        return invokeCompletionStage(
+            invocation,
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer).toCompletableFuture();
+    }
+
+    /**
+     * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
+     * {@link Consumer< InvocationError >} will relay all encountered errors.
+     *
+     * Typically this is used with the {@link Type#FUTURE}
+     *
+     * @param invocation the outgoing {@link Invocation}
+     * @param asyncInvocationResultConsumerList a {@link List<Consumer<InvocationResult>>} to capture all async results
+     * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
+     * @return a {@link Future<Object>} which returns the result of the remote invocation
+     */
+    CompletionStage<Object> invokeCompletionStage(
+            Invocation invocation,
+            List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied

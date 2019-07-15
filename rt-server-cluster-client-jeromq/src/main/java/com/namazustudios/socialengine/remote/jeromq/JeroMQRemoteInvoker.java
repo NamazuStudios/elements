@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -69,9 +70,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     @Override
-    public Future<Object> invokeFuture(final Invocation invocation,
-                                       final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                                       final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public CompletionStage<Object> invokeCompletionStage(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final Map<String, String > mdcContext = MDC.getCopyOfContextMap();
         final CompletableFuture<Object> completableFuture = new CompletableFuture<>();

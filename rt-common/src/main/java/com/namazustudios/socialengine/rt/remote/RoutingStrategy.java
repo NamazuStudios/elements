@@ -6,21 +6,24 @@ import java.util.function.Consumer;
 
 public interface RoutingStrategy {
 
-    Future<Object> invokeFuture(List<Object> address,
-                                RemoteInvokerRegistry remoteInvokerRegistry,
-                                Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                                InvocationErrorConsumer asyncInvocationErrorConsumer);
+    Future<Object> invokeFuture(
+            List<Object> address,
+            RemoteInvokerRegistry remoteInvokerRegistry,
+            Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            InvocationErrorConsumer asyncInvocationErrorConsumer);
 
-    Void invokeAsync(List<Object> address,
-                     RemoteInvokerRegistry remoteInvokerRegistry,
-                     Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                     InvocationErrorConsumer asyncInvocationErrorConsumer);
+    Void invokeAsync(
+            List<Object> address,
+            RemoteInvokerRegistry remoteInvokerRegistry,
+            Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            InvocationErrorConsumer asyncInvocationErrorConsumer);
 
-    Object invokeSync(List<Object> address,
-                      RemoteInvokerRegistry remoteInvokerRegistry,
-                      Invocation invocation,
-                      List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                      InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception;
+    Object invokeSync(
+            List<Object> address,
+            RemoteInvokerRegistry remoteInvokerRegistry,
+            Invocation invocation,
+            List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception;
 
     /**
      * The default {@link RoutingStrategy} which simply selects a {@link RemoteInvoker} from the

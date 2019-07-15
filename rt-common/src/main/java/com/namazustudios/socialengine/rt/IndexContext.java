@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.routing.AggregatePathRoutingStrategy;
+import com.namazustudios.socialengine.rt.routing.ListAggregatePathRoutingStrategy;
 import com.namazustudios.socialengine.rt.routing.PathResourceIdRoutingStrategy;
 import com.namazustudios.socialengine.rt.routing.PathRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.rt.util.SyncWait;
 import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * Used to index various {@link Resource} instances by {@link Path}.
@@ -53,8 +52,8 @@ public interface IndexContext {
      * @param failure a {@link Consumer<Throwable>} which receives an exception indicating a failure reason.
      * @return a {@link Future<List<Listing>>} which can be used to obtain the result
      */
-    @RemotelyInvokable(routing = @Routing(AggregatePathRoutingStrategy.class))
-    void listAsync(@ProvidesAddress @Serialize Path path,
+    @RemotelyInvokable(routing = @Routing(ListAggregatePathRoutingStrategy.class))
+    void listAsync(@Serialize Path path,
                    @ResultHandler Consumer<List<Listing>> success,
                    @ErrorHandler  Consumer<Throwable> failure);
 
