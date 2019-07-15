@@ -1,40 +1,42 @@
 package com.namazustudios.socialengine.rt.routing;
 
 import com.namazustudios.socialengine.rt.remote.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-public class BroadcastRoutingStrategy implements RoutingStrategy {
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+
+/**
+ * This routing stragegy will broadcast to all nodes.  It performs no aggregation and only works with methods returning
+ * void or accepting a Void response.  More specifically, the return must always be null for all consumers.
+ */
+public class BroadcastRoutingStrategy extends AbstractCombiningRoutingStrategy {
+
+    private static final Logger logger = LoggerFactory.getLogger(BroadcastRoutingStrategy.class);
 
     @Override
-    public Future<Object> invokeFuture(
-            final List<Object> address,
-            final RemoteInvokerRegistry remoteInvokerRegistry,
-            final Invocation invocation,
-            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
-        return null;
+    protected InvocationResult newInitialInvocationResult() {
+        final InvocationResult result = new InvocationResult();
+        return result;
     }
 
     @Override
-    public Void invokeAsync(
-            final List<Object> address,
-            final RemoteInvokerRegistry remoteInvokerRegistry,
-            final Invocation invocation,
-            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
-        return null;
+    protected InvocationResult combine(final InvocationResult ra, final InvocationResult rb) {
+        final Object a = ra.getResult();
+        final Object b = rb.getResult();
+        ra.setResult(combine(a, b));
+        return ra;
     }
 
     @Override
-    public Object invokeSync(
-            final List<Object> address,
-            final RemoteInvokerRegistry remoteInvokerRegistry,
-            final Invocation invocation,
-            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-            final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
+    protected Object combine(final Object a, final Object b) {
+        if (a != null || b != null) logger.warn("Trying to combine {} and {}.  Translating to null.", a, b);
         return null;
     }
 

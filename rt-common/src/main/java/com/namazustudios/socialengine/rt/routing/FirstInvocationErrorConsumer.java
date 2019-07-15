@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.rt.remote.InvocationError;
 import com.namazustudios.socialengine.rt.remote.InvocationErrorConsumer;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 public class FirstInvocationErrorConsumer implements InvocationErrorConsumer {
 

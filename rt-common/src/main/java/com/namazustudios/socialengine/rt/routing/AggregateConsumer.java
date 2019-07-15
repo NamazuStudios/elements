@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.routing;
 
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
 
@@ -14,7 +13,6 @@ import java.util.function.Consumer;
  * @param <T>
  */
 public class AggregateConsumer<T> implements Consumer<T> {
-
 
     private final AtomicInteger count;
 
@@ -43,20 +41,6 @@ public class AggregateConsumer<T> implements Consumer<T> {
             delegate.accept(result);
         }
 
-    }
-
-    /**
-     * Returns a {@link Consumer<U>} that will cancel the call to the delegate {@link Consumer} specified in this
-     * instance.
-     *
-     * @param delegate the the delegate {@link Consumer<U>} that will be called if the returned {@link Consumer<U>} is
-     *                 called.
-     * @param <U>
-     */
-    public <U> Consumer<U> newCancelConsumer(final Consumer<U> delegate) {
-        return u -> {
-            if (count.getAndSet(0) > 0) delegate.accept(u);
-        };
     }
 
 }
