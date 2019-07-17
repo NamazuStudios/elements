@@ -7,6 +7,11 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * The instance connection service handles the dirty details of connecting to a remote Node and keeping track of
+ * nodes connected in the system.  It is essentially the communication nexus for the rest of the system and provides
+ * client code the ability to connect and get basic information on remote nodes.
+ */
 public interface InstanceConnectionService {
 
     String getControlAddress();
@@ -55,12 +60,13 @@ public interface InstanceConnectionService {
     Subscription subscribeToDisconnect(Consumer<InstanceConnection> onDisconnect);
 
     /**
-     * Opens a {@lin}
+     * Opens a route to the supplied node with {@link NodeId}, returning an address where it will be possible to connect
+     * using a {@link RemoteInvoker}.
+     *
      * @param nodeId
      * @return
      */
     String getRoute(NodeId nodeId);
-
 
     /**
      * Represents a connection to a remote instance.
@@ -68,20 +74,25 @@ public interface InstanceConnectionService {
     interface InstanceConnection {
 
         /**
-         * Gets the {@link InstanceId} represented by this {@link InstanceConnection}
+         * Gets the {@link InstanceId} represented by this {@link InstanceConnection}.  The value here is stored locally
+         * and does not require a connection to the network.  Therefore it is still safe to call this method after the
+         * remote end disconnects.
          *
-         * @return
+         * @return the {@link InstanceId} for the connection
          */
         InstanceId getInstanceId();
 
         /**
-         * Get the {@link InstanceMetadataContext} assoicated with
-         * @return
+         * Get the {@link InstanceMetadataContext} associated with the remote instance.  This will be a remote proxy for
+         * the instance and will not be available after a call to {@link #disconnect()} is made.
+         *
+         * @return the {@link InstanceMetadataContext}
          */
         InstanceMetadataContext getInstanceMetadataContext();
 
         /**
-         * Disconnects and disposes of the underlying {@link InstanceConnection}
+         * Disconnects and disposes of the underlying {@link InstanceConnection}.  Trying to use the
+         * {@link InstanceMetadataContext} belonging to this connection will fail immediately.
          */
         void disconnect();
 

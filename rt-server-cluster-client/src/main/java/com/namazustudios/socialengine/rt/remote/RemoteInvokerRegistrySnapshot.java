@@ -11,7 +11,6 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toList;
 
@@ -67,48 +66,76 @@ class RemoteInvokerRegistrySnapshot {
     }
 
     public void clear() {
+
+        final Storage old;
         final Lock lock = readWriteLock.writeLock();
 
         try {
+            lock.lock();
+            old = storage;
             storage = new Storage();
         } finally {
             lock.unlock();
         }
+
+        old.clear();
 
     }
 
     public RefreshBuilder refresh() {
         return new RefreshBuilder() {
 
-            private BiConsumer<Storage, Storage> prune = (o, n) -> {};
+            private Consumer<Storage> prune = s -> {};
+            private Set<NodeId> toRetain = new HashSet<>();
 
             private final List<Consumer<Storage>> updates = new ArrayList<>();
 
             @Override
             public void commit(final BiConsumer<RemoteInvoker, Exception> cleanup) {
 
+
+                final Runnable purge;
                 final Lock lock = readWriteLock.writeLock();
 
                 try {
-
                     lock.lock();
 
-                    final Storage update = storage.copy();
+                    // Copy the data in case any of the subsequent operations fail we won't leave things in a state
+                    // of undefined behavior.
+
+                    final Storage update = storage.begin();
                     update.cleanup = cleanup;
-                    updates.forEach(op -> op.accept(storage));
-                    prune.accept(storage, update);
-                    storage.sort();
+
+                    // Apply all updates and prune if necessary.
+                    updates.forEach(up -> up.accept(update));
+                    prune.accept(update);
+
+                    // Re-sort everything for load balancing consistency as new RemoteInvokers were added and updated
+                    // based on load characteristics.
+                    update.sort();
+
+                    // Generate the list of objects to purge
+                    purge = update.purge();
+
+                    // Finally make the new storage live
+                    storage = update;
 
                 } finally {
                     lock.unlock();
-                    storage.purge();
                 }
+
+                // Purging old connections is deferred as the last step.  At this point everything that needs purged
+                // will be removed from the pool and we want to defer the actual destruction of those to avoid having
+                // to hold the lock while a shutdown of each remote invoker takes place.
+
+                purge.run();
 
             }
 
             @Override
             public RefreshBuilder add(final NodeId nodeId, final double load,
                                       final Supplier<RemoteInvoker> remoteInvokerSupplier) {
+                toRetain.add(nodeId);
                 updates.add(storage -> storage.add(nodeId, load, remoteInvokerSupplier));
                 return this;
             }
@@ -127,7 +154,7 @@ class RemoteInvokerRegistrySnapshot {
 
             @Override
             public RefreshBuilder prune() {
-                prune = (existing, update) -> update.prune(existing);
+                prune = storage -> storage.prune(toRetain);
                 return this;
             }
 
@@ -140,7 +167,7 @@ class RemoteInvokerRegistrySnapshot {
             throw new IllegalStateException("No cleanup routine specified.");
         };
 
-        private final List<RemoteInvoker> invokersToPurge = new ArrayList<>();
+        private final Set<RemoteInvoker> invokersToPurge = new HashSet<>();
 
         private final Map<NodeId, RemoteInvoker> invokersByNode = new HashMap<>();
 
@@ -186,18 +213,25 @@ class RemoteInvokerRegistrySnapshot {
                 .forEach(this::remove);
         }
 
-        private void prune(final Storage existing) {
-
+        private void prune(final Set<NodeId> toRetain) {
+            final Set<NodeId> toPurge = new HashSet<>(invokersByNode.keySet());
+            toPurge.removeAll(toRetain);
+            toPurge.forEach(this::remove);
         }
 
-        private void purge() {
-            invokersToPurge.forEach(ri -> {
+        private Runnable purge() {
+
+            final List<RemoteInvoker> toPurge = new ArrayList<>(invokersToPurge);
+            final BiConsumer<RemoteInvoker, Exception> cleanup = this.cleanup;
+
+            return () -> toPurge.forEach(ri -> {
                 try {
                     cleanup.accept(ri, null);
                 } catch (Exception ex) {
                     cleanup.accept(ri, ex);
                 }
             });
+
         }
 
         private void sort() {
@@ -208,10 +242,19 @@ class RemoteInvokerRegistrySnapshot {
             }));
         }
 
-        private Storage copy() {
+        private void clear() {
+            invokersByNode.forEach((nid, ri) -> {
+                try {
+                    cleanup.accept(ri, null);
+                } catch (Exception ex) {
+                    cleanup.accept(ri, ex);
+                }
+            });
+        }
+
+        private Storage begin() {
             final Storage copy = new Storage();
             copy.invokersByNode.putAll(invokersByNode);
-            invokersByApplication.forEach((a, i) -> copy.invokersByApplication.put(a, new ArrayList<>(i)));
             return copy;
         }
 
