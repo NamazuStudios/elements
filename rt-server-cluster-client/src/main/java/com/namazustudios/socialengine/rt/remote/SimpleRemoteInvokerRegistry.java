@@ -26,7 +26,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleRemoteInvokerRegistry.class);
 
-    private static final long REFRESH_RATE = 5;
+    private static final long REFRESH_RATE = 30;
 
     private static final TimeUnit REFRESH_UNITS = SECONDS;
 
@@ -204,7 +204,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             final InstanceId instanceId = context.getInstanceId();
 
             try {
-                load = context.getLoadAverage();
+                load = context.getInstanceQuality();
             } catch (Exception ex) {
                 logger.error("Could not determine load average for instance {}", instanceId, ex);
                 return builder;

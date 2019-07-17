@@ -1,20 +1,17 @@
-package com.namazustudios.socialengine.remote.jeromq;
+package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import javax.inject.Inject;
 import java.util.Set;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.toSet;
 
 /**
  * Provides data for an Instance.
  */
-public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
+public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
 
     private InstanceId instanceId;
 
@@ -28,8 +25,8 @@ public class JeroMQInstanceMetadataContext implements InstanceMetadataContext {
     }
 
     @Override
-    public double getLoadAverage() {
-        return getLoadMonitorService().getLoadAverage();
+    public double getInstanceQuality() {
+        return getLoadMonitorService().getInstanceQuality();
     }
 
     @Override

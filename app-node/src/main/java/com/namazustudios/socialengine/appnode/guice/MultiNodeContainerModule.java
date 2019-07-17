@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQInstanceMetadataContext;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
@@ -42,9 +41,9 @@ public class MultiNodeContainerModule extends AbstractModule {
         install(new ZContextModule());
         bind(MultiNodeContainer.class).asEagerSingleton();
 
-        bind(InstanceMetadataContext.class)
-            .to(JeroMQInstanceMetadataContext.class)
-            .asEagerSingleton();
+//        bind(InstanceMetadataContext.class)
+//            .to(JeroMQInstanceMetadataContext.class)
+//            .asEagerSingleton();
 
         bind(SrvMonitorService.class)
             .to(SpotifySrvMonitorService.class)

@@ -4,9 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
-import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ProxyBuilder;
-import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
 
 import javax.inject.Inject;
@@ -62,7 +60,7 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
                 while (isRunning && !Thread.interrupted()) {
                     final Map<UUID, Double> loadAverages = new HashMap<>();
 
-                    // TODO: maybe we revisit synchronizing it for so long: since the getLoadAverage calls are blocking,
+                    // TODO: maybe we revisit synchronizing it for so long: since the getInstanceQuality calls are blocking,
                     //  we may block the connection established notifier or other accessors of the instance metadata
                     //  contexts
                     synchronized (atomicInstanceMetadataContexts) {
@@ -74,7 +72,7 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
                             final InstanceMetadataContext instanceMetadataContext = instanceMetadataContexts.get(instanceUuid);
 
                             try {
-                                final double loadAverage = instanceMetadataContext.getLoadAverage();
+                                final double loadAverage = instanceMetadataContext.getInstanceQuality();
                                 loadAverages.put(instanceUuid, loadAverage);
                             }
                             catch (HandlerTimeoutException e) {
@@ -90,12 +88,12 @@ public class JeroMQInstanceResourceMonitorService implements InstanceResourceMon
 
                     /**
                      * Right now, we just have a simple thread sleep, regardless of how long it takes for all the
-                     * synchronous getLoadAverage() calls to resolve. So in the worst case, we may need to wait up to
+                     * synchronous getInstanceQuality() calls to resolve. So in the worst case, we may need to wait up to
                      *      totalMillis = n * remoteInvoker.getTimeoutMillis() + refreshRateMillis, n = the number of
                      *      instances we are polling,
                      * until we do another round of polling.
                      *
-                     * TODO: We could do some optimizations here, e.g. trying to parallelize all the getLoadAverage()
+                     * TODO: We could do some optimizations here, e.g. trying to parallelize all the getInstanceQuality()
                      *  calls (see note above). Right now this is a naive implementation.
                      */
                     Thread.sleep(1000);

@@ -9,6 +9,12 @@ import com.namazustudios.socialengine.rt.id.NodeId;
  * Application logic execution.
  */
 public interface Node extends AutoCloseable {
+
+    /**
+     * Gets the {@link NodeId}
+     *
+     * @return
+     */
     NodeId getNodeId();
 
     /**

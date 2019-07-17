@@ -39,6 +39,6 @@ public interface InstanceMetadataContext {
     Set<NodeId> getNodeIds();
 
     @RemotelyInvokable
-    double getLoadAverage();
+    double getInstanceQuality();
 
 }
