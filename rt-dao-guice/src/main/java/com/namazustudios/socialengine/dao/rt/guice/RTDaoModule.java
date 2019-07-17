@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.dao.rt.DefaultContextFactory;
 import com.namazustudios.socialengine.dao.rt.RTManifestDao;
 import com.namazustudios.socialengine.guice.ZContextModule;
-import com.namazustudios.socialengine.rt.SimpleInstanceMetadataContext;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
@@ -38,21 +37,22 @@ public class RTDaoModule extends PrivateModule {
 
         bind(ManifestDao.class).to(RTManifestDao.class).asEagerSingleton();
         bind(ZContext.class).asEagerSingleton();
-        bind(InstanceMetadataContext.class).to(SimpleInstanceMetadataContext.class).asEagerSingleton();
         bind(SrvMonitorService.class).to(SpotifySrvMonitorService.class).asEagerSingleton();
         bind(ContextFactory.class).to(DefaultContextFactory.class).asEagerSingleton();
         bind(new TypeLiteral<Function<String, Context>>(){}).toProvider(RTContextProvider.class);
 
-        if (isLocalInstance) {
-            bind(InstanceDiscoveryService.class)
-                    .to(StaticInstanceDiscoveryService.class)
-                    .asEagerSingleton();
-        }
-        else {
-            bind(InstanceDiscoveryService.class)
-                    .to(SrvInstanceDiscoveryService.class)
-                    .asEagerSingleton();
-        }
+// TODO
+//        if (isLocalInstance) {
+//            bind(InstanceDiscoveryService.class)
+//                    .to(StaticInstanceDiscoveryService.class)
+//                    .asEagerSingleton();
+//        }
+//        else {
+//            bind(InstanceDiscoveryService.class)
+//                    .to(SrvInstanceDiscoveryService.class)
+//                    .asEagerSingleton();
+//        }
+
     }
 
     public boolean getLocalInstance() {

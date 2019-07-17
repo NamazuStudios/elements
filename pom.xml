@@ -40,13 +40,12 @@
         <module>rt-server-xodus</module>
         <module>rt-server-xodus-guice</module>
         <module>rt-server-cluster</module>
+        <module>rt-server-cluster-guice</module>
         <module>rt-server-cluster-jeromq</module>
+        <module>rt-server-cluster-jeromq-guice</module>
         <module>rt-server-cluster-node</module>
         <module>rt-server-cluster-node-jeromq</module>
         <module>rt-server-cluster-node-jeromq-guice</module>
-        <module>rt-server-cluster-client</module>
-        <module>rt-server-cluster-client-jeromq</module>
-        <module>rt-server-cluster-client-jeromq-guice</module>
         <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
