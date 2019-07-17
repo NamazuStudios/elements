@@ -6,12 +6,11 @@ import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQInstanceMetadataContext;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
-import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
@@ -42,10 +41,6 @@ public class MultiNodeContainerModule extends AbstractModule {
 
         install(new ZContextModule());
         bind(MultiNodeContainer.class).asEagerSingleton();
-
-        bind(ConnectionService.class)
-            .to(JeroMQDemultiplexedConnectionService.class)
-            .asEagerSingleton();
 
         bind(InstanceMetadataContext.class)
             .to(JeroMQInstanceMetadataContext.class)
@@ -95,7 +90,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
         final Provider<Injector> injectorProvider = getProvider(Injector.class);
         final Provider<GitLoader> gitLoaderProvider = getProvider(GitLoader.class);
-        final Provider<ConnectionService> connectionServiceProvider = getProvider(ConnectionService.class);
+        final Provider<InstanceConnectionService> connectionServiceProvider = getProvider(InstanceConnectionService.class);
         final Provider<File> resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
         final Provider<UUID> instanceUuidProvider = getProvider(Key.get(UUID.class, named(CURRENT_INSTANCE_UUID_NAME)));
 
@@ -104,7 +99,7 @@ public class MultiNodeContainerModule extends AbstractModule {
             final ApplicationDao applicationDao = applicationDaoProvider.get();
             final Injector injector = injectorProvider.get();
             final GitLoader gitLoader = gitLoaderProvider.get();
-            final ConnectionService connectionService = connectionServiceProvider.get();
+            final InstanceConnectionService connectionService = connectionServiceProvider.get();
             final UUID instanceUuid = instanceUuidProvider.get();
 
             final Set<Node> nodeSet = applicationDao.getActiveApplications().getObjects().stream()

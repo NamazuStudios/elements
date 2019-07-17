@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
@@ -52,7 +52,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private GitLoader gitLoader;
 
-    private ConnectionService connectionService;
+    private InstanceConnectionService connectionService;
 
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
@@ -106,7 +106,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(inprocIdentifierString);
 
 // TODO Fix me
-//            getConnectionService().issueBindInprocCommand(null, inprocIdentifier);
+//            getInstanceConnectionService().issueBindInprocCommand(null, inprocIdentifier);
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
@@ -193,12 +193,12 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.gitLoader = gitLoader;
     }
 
-    public ConnectionService getConnectionService() {
+    public InstanceConnectionService getConnectionService() {
         return connectionService;
     }
 
     @Inject
-    public void setConnectionService(ConnectionService connectionService) {
+    public void setConnectionService(InstanceConnectionService connectionService) {
         this.connectionService = connectionService;
     }
 }

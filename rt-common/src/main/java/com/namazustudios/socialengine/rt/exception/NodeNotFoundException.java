@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt.exception;
 
 import com.namazustudios.socialengine.rt.ResponseCode;
+import com.namazustudios.socialengine.rt.id.NodeId;
+
+import static java.lang.String.format;
 
 public class NodeNotFoundException extends InternalException {
 
@@ -16,6 +19,10 @@ public class NodeNotFoundException extends InternalException {
 
     public NodeNotFoundException(Throwable cause) {
         super(cause);
+    }
+
+    public NodeNotFoundException(final NodeId nodeId) {
+        this(format("Node with ID not found %s", nodeId.asString()));
     }
 
     public NodeNotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {

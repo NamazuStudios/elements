@@ -5,8 +5,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -26,6 +28,8 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractCombiningRoutingStrategy.class);
 
+    private UUID defaultApplicationId;
+
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
     @Override
@@ -39,7 +43,7 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
 
         final InvocationResult initial = newInitialInvocationResult();
 
-        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers();
+        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers(getDefaultApplicationId());
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
@@ -70,7 +74,7 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
 
         final InvocationResult initial = newInitialInvocationResult();
 
-        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers();
+        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers(getDefaultApplicationId());
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
@@ -101,7 +105,7 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
 
         final InvocationResult initial = newInitialInvocationResult();
 
-        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers();
+        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers(defaultApplicationId);
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
@@ -164,6 +168,15 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
     @Inject
     public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
         this.remoteInvokerRegistry = remoteInvokerRegistry;
+    }
+
+    public UUID getDefaultApplicationId() {
+        return defaultApplicationId;
+    }
+
+    @Inject
+    public void setDefaultApplicationId(@Named(DEFAULT_APPLICATION) UUID defaultApplicationId) {
+        this.defaultApplicationId = defaultApplicationId;
     }
 
 }

@@ -1,19 +1,15 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.net.HostAndPort;
-import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.sql.Connection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.stream.Collectors;
 
-import static com.namazustudios.socialengine.rt.Constants.*;
 import static java.util.stream.Collectors.toList;
 
 public class StaticInstanceDiscoveryService implements InstanceDiscoveryService {
@@ -24,17 +20,18 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
 
     private Set<String> remoteConnectAddresses;
 
-    private ConnectionService connectionService;
+    private InstanceConnectionService connectionService;
 
-    private final AtomicReference<List<ConnectionService.Connection>> connectionList = new AtomicReference<>();
+    private final AtomicReference<List<InstanceConnectionService.InstanceConnection>> connectionList = new AtomicReference<>();
 
     @Override
     public void start() {
 
-        final List<ConnectionService.Connection> connections = getRemoteConnectAddresses()
+        final List<InstanceConnectionService.InstanceConnection> connections = getRemoteConnectAddresses()
             .stream()
-            .map(getConnectionService()::connectToInstance)
+            .map(getConnectionService()::connect)
             .collect(toList());
+
         if (this.connectionList.compareAndSet(null, connections)) {
             logger.info("Connected to {} ", connections);
         } else {
@@ -45,12 +42,12 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
 
     @Override
     public void stop() {
-        final List<ConnectionService.Connection> connections = connectionList.getAndSet(null);
+        final List<InstanceConnectionService.InstanceConnection> connections = connectionList.getAndSet(null);
         if (connections == null) throw new IllegalStateException("Not connected.");
         disconnect(connections);
     }
 
-    private void disconnect(final List<ConnectionService.Connection> connections) {
+    private void disconnect(final List<InstanceConnectionService.InstanceConnection> connections) {
         connections.forEach(c -> {
             try {
                 c.disconnect();
@@ -60,12 +57,12 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
         });
     }
 
-    public ConnectionService getConnectionService() {
+    public InstanceConnectionService getConnectionService() {
         return connectionService;
     }
 
     @Inject
-    public void setConnectionService(ConnectionService connectionService) {
+    public void setConnectionService(InstanceConnectionService connectionService) {
         this.connectionService = connectionService;
     }
 

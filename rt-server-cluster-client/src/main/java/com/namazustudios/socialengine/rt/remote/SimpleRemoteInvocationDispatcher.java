@@ -7,7 +7,7 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-public class StandardRemoteInvocationDispatcher implements RemoteInvocationDispatcher {
+public class SimpleRemoteInvocationDispatcher implements RemoteInvocationDispatcher {
 
     private IocResolver iocResolver;
 
@@ -61,8 +61,8 @@ public class StandardRemoteInvocationDispatcher implements RemoteInvocationDispa
 
     public RoutingStrategy getRoutingStrategy(final Route route) {
 
-        final Class<? extends RoutingStrategy> cls = route.getRoutingStrategyType();
         final String name = route.getRoutingStrategyName();
+        final Class<? extends RoutingStrategy> cls = route.getRoutingStrategyType();
 
         return name == null || name.isEmpty() ?
             getIocResolver().inject(cls) :

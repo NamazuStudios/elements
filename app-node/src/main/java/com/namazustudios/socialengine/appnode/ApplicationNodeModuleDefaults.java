@@ -1,15 +1,13 @@
 package com.namazustudios.socialengine.appnode;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
-import com.namazustudios.socialengine.rt.HandlerContext;
-import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.appnode.Constants.*;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQDemultiplexedConnectionService.*;
-import static com.namazustudios.socialengine.rt.Constants.*;
-import static com.namazustudios.socialengine.rt.HandlerContext.*;
+import static com.namazustudios.socialengine.appnode.Constants.CONTROL_REQUEST_TIMEOUT;
+import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
+import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.jeromq.ConnectionPool.*;
 
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
@@ -23,7 +21,6 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
 // TODO FIXME
 //        properties.setProperty(BIND_PORT, "28883");
 //        properties.setProperty(`CONTROL_BIND_PORT, "20883");
-        properties.setProperty(APPLICATION_NODE_FQDN, "appnode.tcp.namazustudios.com.");
         properties.setProperty(CONTROL_REQUEST_TIMEOUT, "1000");
         properties.setProperty(SCHEDULER_THREADS, Integer.toString(Runtime.getRuntime().availableProcessors()) + 1);
         properties.setProperty(HANDLER_TIMEOUT_MSEC, "180000");

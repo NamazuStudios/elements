@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.common.net.HostAndPort;
-import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.srv.SrvMonitorServiceListener;
 import com.namazustudios.socialengine.rt.srv.SrvRecord;
 
@@ -13,7 +13,7 @@ import static com.namazustudios.socialengine.rt.Constants.SRV_INSTANCE_INVOKER_P
 
 public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, SrvMonitorServiceListener {
 
-    private ConnectionService connectionService;
+    private InstanceConnectionService connectionService;
 
     private Integer srvInstanceInvokerPort;
 
@@ -34,7 +34,7 @@ public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, Sr
         //  uuid, and then disconnect if so and record the hostname.
 //        final HostAndPort invokerHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceInvokerPort());
 //        final HostAndPort controlHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceControlPort());
-//        getConnectionService().connectToInstance(invokerHostAndPort, controlHostAndPort);
+//        getConnectionService().connect(invokerHostAndPort, controlHostAndPort);
     }
 
     public void onSrvRecordDeleted(final SrvRecord srvRecord) {
@@ -44,12 +44,12 @@ public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, Sr
 //        getConnectionService().disconnectFromInstance(invokerHostAndPort, controlHostAndPort);
     }
 
-    public ConnectionService getConnectionService() {
+    public InstanceConnectionService getConnectionService() {
         return connectionService;
     }
 
     @Inject
-    public void setConnectionService(ConnectionService connectionService) {
+    public void setConnectionService(InstanceConnectionService connectionService) {
         this.connectionService = connectionService;
     }
 

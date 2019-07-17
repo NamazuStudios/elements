@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.MultiException;
-import com.namazustudios.socialengine.rt.remote.ConnectionService;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +16,7 @@ import static java.util.stream.Collectors.toList;
 
 /**
  * Contains all {@link Node} instances for several {@link Node} instances and manages their life cycles therein.  This
- * imposes the additional requirement of providing some form of {@link ConnectionService} to route internal
+ * imposes the additional requirement of providing some form of {@link InstanceConnectionService} to route internal
  * requests.
  */
 public class MultiNodeContainer implements AutoCloseable {
@@ -27,7 +27,7 @@ public class MultiNodeContainer implements AutoCloseable {
 
     private Node masterNode;
 
-    private ConnectionService connectionService;
+    private InstanceConnectionService connectionService;
 
     /**
      * Attempts to start each {@link Node}, throwing an instance of {@link MultiException} if any {@link Node} fails
@@ -44,7 +44,7 @@ public class MultiNodeContainer implements AutoCloseable {
         }
 
         getNodeSet().forEach(node -> {
-            getConnectionService().issueConnectInprocCommand(null, node.getNodeId());
+//            getConnectionService().issueConnectInprocCommand(null, node.getNodeId());
         });
 
         exceptionList.addAll(getNodeSet().parallelStream().map(node -> {
@@ -61,7 +61,7 @@ public class MultiNodeContainer implements AutoCloseable {
             getMasterNode().start();
 
             // for now, by convention we use the instance uuid for the inproc address for the master node
-            getConnectionService().issueConnectInprocCommand(null, getMasterNode().getNodeId());
+//            getConnectionService().issueConnectInprocCommand(null, getMasterNode().getNodeId());
         }
         catch (Exception e) {
             logger.error("Error stopping node.", e);
@@ -119,12 +119,12 @@ public class MultiNodeContainer implements AutoCloseable {
         this.nodeSet = nodeSet;
     }
 
-    public ConnectionService getConnectionService() {
+    public InstanceConnectionService getConnectionService() {
         return connectionService;
     }
 
     @Inject
-    public void setConnectionService(ConnectionService connectionService) {
+    public void setConnectionService(InstanceConnectionService connectionService) {
         this.connectionService = connectionService;
     }
 
@@ -136,4 +136,5 @@ public class MultiNodeContainer implements AutoCloseable {
     public void setMasterNode(@Named(MASTER_NODE_NAME) Node masterNode) {
         this.masterNode = masterNode;
     }
+
 }
