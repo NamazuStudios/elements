@@ -5,10 +5,8 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.SimpleInstanceMetadataContext;
 import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
-import com.namazustudios.socialengine.rt.SrvInstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.SpotifySrvInstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.StaticInstanceDiscoveryService;
-import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
-import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 import org.zeromq.ZContext;
 
 import javax.inject.Named;
@@ -20,9 +18,9 @@ public class JeroMQMultiplexerModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
         bind(ZContext.class).asEagerSingleton();
         bind(InstanceMetadataContext.class).to(SimpleInstanceMetadataContext.class).asEagerSingleton();
-        bind(SrvMonitorService.class).to(SpotifySrvMonitorService.class).asEagerSingleton();
 
         if (isLocalInstance) {
             bind(InstanceDiscoveryService.class)
@@ -31,7 +29,7 @@ public class JeroMQMultiplexerModule extends AbstractModule {
         }
         else {
             bind(InstanceDiscoveryService.class)
-                    .to(SrvInstanceDiscoveryService.class)
+                    .to(SpotifySrvInstanceDiscoveryService.class)
                     .asEagerSingleton();
         }
     }

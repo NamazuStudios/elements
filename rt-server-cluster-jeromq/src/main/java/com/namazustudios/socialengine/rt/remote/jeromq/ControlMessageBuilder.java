@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.remote.CommandPreamble;
 import com.namazustudios.socialengine.rt.remote.CommandPreamble.CommandType;
@@ -10,12 +10,13 @@ import java.nio.ByteBuffer;
 import java.util.Collections;
 import java.util.List;
 
-public interface ControlMessageBuilder {
-    static ZMsg buildControlMsg(CommandType commandType, ByteBuffer controlByteBuffer) {
+public class ControlMessageBuilder {
+
+    public static ZMsg buildControlMsg(CommandType commandType, ByteBuffer controlByteBuffer) {
         return buildControlMsg(commandType, Collections.singletonList(controlByteBuffer));
     }
 
-    static ZMsg buildControlMsg(CommandType commandType, List<ByteBuffer> controlByteBuffers) {
+    public static ZMsg buildControlMsg(CommandType commandType, List<ByteBuffer> controlByteBuffers) {
         final CommandPreamble commandPreamble = new CommandPreamble();
         commandPreamble.commandType.set(commandType);
 
@@ -41,7 +42,7 @@ public interface ControlMessageBuilder {
     }
 
     // this is deprecated and should be removed entirely
-    static void send(final ZMQ.Socket control, CommandPreamble.CommandType commandType, ByteBuffer commandByteBuffer) {
+    public static void send(final ZMQ.Socket control, CommandPreamble.CommandType commandType, ByteBuffer commandByteBuffer) {
         final CommandPreamble preamble = new CommandPreamble();
         preamble.commandType.set(commandType);
 
@@ -59,4 +60,7 @@ public interface ControlMessageBuilder {
 
         msg.send(control);
     }
+
+    
+
 }

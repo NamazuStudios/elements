@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
+import com.namazustudios.socialengine.rt.remote.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;

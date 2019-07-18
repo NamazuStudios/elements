@@ -8,11 +8,9 @@ import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
+import com.namazustudios.socialengine.rt.remote.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
-import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
-import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,13 +39,13 @@ public class MultiNodeContainerModule extends AbstractModule {
         install(new ZContextModule());
         bind(MultiNodeContainer.class).asEagerSingleton();
 
+// TODO No idea what to do here
 //        bind(InstanceMetadataContext.class)
 //            .to(JeroMQInstanceMetadataContext.class)
 //            .asEagerSingleton();
-
-        bind(SrvMonitorService.class)
-            .to(SpotifySrvMonitorService.class)
-            .asEagerSingleton();
+//        bind(SrvMonitorService.class)
+//            .to(SpotifySrvMonitorService.class)
+//            .asEagerSingleton();
 
         if (isLocalInstance) {
             bind(InstanceDiscoveryService.class)
@@ -56,7 +54,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         }
         else {
             bind(InstanceDiscoveryService.class)
-                .to(SrvInstanceDiscoveryService.class)
+                .to(SpotifySrvInstanceDiscoveryService.class)
                 .asEagerSingleton();
         }
 

@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.IdentityUtil;
+import com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil;
 import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.RequestHeader;
 import com.namazustudios.socialengine.rt.remote.ResponseHeader;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_UUID_NAME;
-import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;

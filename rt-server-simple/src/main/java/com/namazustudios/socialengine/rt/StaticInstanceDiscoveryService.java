@@ -6,10 +6,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toList;
 
 public class StaticInstanceDiscoveryService implements InstanceDiscoveryService {
@@ -25,11 +27,16 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
     private final AtomicReference<List<InstanceConnectionService.InstanceConnection>> connectionList = new AtomicReference<>();
 
     @Override
+    public Set<String> getRemoteConnections() {
+        return unmodifiableSet(remoteConnectAddresses);
+    }
+
+    @Override
     public void start() {
 
         final List<InstanceConnectionService.InstanceConnection> connections = getRemoteConnectAddresses()
             .stream()
-            .map(getConnectionService()::connect)
+            .map(getConnectionService()::connectToInstance)
             .collect(toList());
 
         if (this.connectionList.compareAndSet(null, connections)) {

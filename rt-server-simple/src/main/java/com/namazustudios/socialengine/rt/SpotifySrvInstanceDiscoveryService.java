@@ -1,23 +1,21 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.net.HostAndPort;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import com.namazustudios.socialengine.rt.srv.SrvMonitorServiceListener;
-import com.namazustudios.socialengine.rt.srv.SrvRecord;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.Constants.SRV_INSTANCE_CONTROL_PORT_NAME;
 import static com.namazustudios.socialengine.rt.Constants.SRV_INSTANCE_INVOKER_PORT_NAME;
 
-public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, SrvMonitorServiceListener {
-
-    private InstanceConnectionService connectionService;
+public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryService {
 
     private Integer srvInstanceInvokerPort;
 
     private Integer srvInstanceControlPort;
+
+    private InstanceConnectionService connectionService;
 
     @Override
     public void start() {
@@ -29,19 +27,9 @@ public class SrvInstanceDiscoveryService implements InstanceDiscoveryService, Sr
 
     }
 
-    public void onSrvRecordCreated(final SrvRecord srvRecord) {
-        // TODO: for now, we should connect, look to see if the status response's instance uuid matches local instance
-        //  uuid, and then disconnect if so and record the hostname.
-//        final HostAndPort invokerHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceInvokerPort());
-//        final HostAndPort controlHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceControlPort());
-//        getConnectionService().connect(invokerHostAndPort, controlHostAndPort);
-    }
-
-    public void onSrvRecordDeleted(final SrvRecord srvRecord) {
-        // TODO: Correct this later.
-        final HostAndPort invokerHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceInvokerPort());
-        final HostAndPort controlHostAndPort = HostAndPort.fromParts(srvRecord.getHost(), getSrvInstanceControlPort());
-//        getConnectionService().disconnectFromInstance(invokerHostAndPort, controlHostAndPort);
+    @Override
+    public Set<String> getRemoteConnections() {
+        return null;
     }
 
     public InstanceConnectionService getConnectionService() {

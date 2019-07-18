@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.appnode;
 
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.rt.jeromq.RouteRepresentationUtil;
+import com.namazustudios.socialengine.rt.remote.jeromq.RouteRepresentationUtil;
 import com.namazustudios.socialengine.rt.remote.CommandPreamble;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
-import com.namazustudios.socialengine.rt.jeromq.ControlMessageBuilder;
+import com.namazustudios.socialengine.rt.remote.jeromq.ControlMessageBuilder;
 import com.namazustudios.socialengine.rt.remote.StatusRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

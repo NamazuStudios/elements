@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.remote.jeromq;
+package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.zeromq.SocketType;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 import org.zeromq.ZPoller;
@@ -23,11 +24,11 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.jeromq.IdentityUtil.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static java.lang.Thread.interrupted;
+import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZMQ.SNDMORE;
 
 public class JeroMQRemoteInvoker implements RemoteInvoker {
@@ -56,7 +57,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.connectAddress = connectAddress;
         this.timeoutMillis = timeoutMillis;
         getConnectionPool().start(zContext -> {
-            final ZMQ.Socket socket = zContext.createSocket(ZMQ.DEALER);
+            final ZMQ.Socket socket = zContext.createSocket(DEALER);
             socket.setReceiveTimeOut(getTimeoutMillis());
             socket.connect(getConnectAddress());
             return socket;

@@ -14,8 +14,6 @@ import java.util.function.Consumer;
  */
 public interface InstanceConnectionService {
 
-    String getControlAddress();
-
     /**
      * Starts the service.
      */
@@ -32,7 +30,7 @@ public interface InstanceConnectionService {
      * @param remoteAddress the remote address, expressed as the underlying implementation's connection string format
      * @return
      */
-    InstanceConnection connect(String remoteAddress);
+    InstanceConnection connectToInstance(String remoteAddress);
 
     /**
      * Gets a {@link List<InstanceConnection>} representing all active connections.
@@ -46,27 +44,18 @@ public interface InstanceConnectionService {
      * {@link InstanceConnectionService}.
      *
      * @param onConnect the {@link Consumer<InstanceConnection>}
-     * @return a {@link Subscription} that can be cancled later.
+     * @return a {@link PubSub.Subscription} that can be cancled later.
      */
-    Subscription subscribeToConnect(Consumer<InstanceConnection> onConnect);
+    PubSub.Subscription subscribeToConnect(Consumer<InstanceConnection> onConnect);
 
     /**
      * Adds a {@link Consumer<InstanceConnection>} that will be called when a an instance has disconnected from this
      * {@link InstanceConnectionService}.
      *
      * @param onDisconnect the {@link Consumer<InstanceConnection>}
-     * @return a {@link Subscription} that can be cancled later.
+     * @return a {@link PubSub.Subscription} that can be cancled later.
      */
-    Subscription subscribeToDisconnect(Consumer<InstanceConnection> onDisconnect);
-
-    /**
-     * Opens a route to the supplied node with {@link NodeId}, returning an address where it will be possible to connect
-     * using a {@link RemoteInvoker}.
-     *
-     * @param nodeId
-     * @return
-     */
-    String getRoute(NodeId nodeId);
+    PubSub.Subscription subscribeToDisconnect(Consumer<InstanceConnection> onDisconnect);
 
     /**
      * Represents a connection to a remote instance.
@@ -91,23 +80,19 @@ public interface InstanceConnectionService {
         InstanceMetadataContext getInstanceMetadataContext();
 
         /**
+         * Opens a route to the supplied node with {@link NodeId}, returning an address where it will be possible to
+         * connect using a {@link RemoteInvoker}.
+         *
+         * @param nodeId
+         * @return
+         */
+        String openRouteToNode(NodeId nodeId);
+
+        /**
          * Disconnects and disposes of the underlying {@link InstanceConnection}.  Trying to use the
          * {@link InstanceMetadataContext} belonging to this connection will fail immediately.
          */
         void disconnect();
-
-    }
-
-    /**
-     * Returned from the various subscribe calls.  Can be used to cancel the subscription.
-     */
-    @FunctionalInterface
-    interface Subscription {
-
-        /**
-         * Unsubscribes from the
-         */
-        void unsubscribe();
 
     }
 

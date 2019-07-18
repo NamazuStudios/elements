@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.MalformedMessageException;

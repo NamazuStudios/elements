@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq;
+package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;

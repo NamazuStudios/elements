@@ -21,16 +21,6 @@ public class CommandPreamble extends Struct {
     public enum CommandType {
 
         /**
-         * A RoutingCommand
-         */
-        ROUTING_COMMAND,
-
-        /**
-         * A RoutingCommand acknowledgement
-         */
-        ROUTING_COMMAND_ACK,
-
-        /**
          * A StatusRequest
          */
         STATUS_REQUEST,

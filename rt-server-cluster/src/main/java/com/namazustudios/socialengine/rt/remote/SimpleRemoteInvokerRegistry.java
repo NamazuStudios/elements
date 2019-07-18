@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -112,9 +111,9 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
     private class RegistryContext {
 
-        private InstanceConnectionService.Subscription connect;
+        private PubSub.Subscription connect;
 
-        private InstanceConnectionService.Subscription disconnect;
+        private PubSub.Subscription disconnect;
 
         private ScheduledExecutorService scheduledExecutorService;
 
@@ -153,8 +152,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private void add(final InstanceConnection connection) {
             final RefreshBuilder builder = snapshot.refresh();
-            final InstanceMetadataContext context = connection.getInstanceMetadataContext();
-            add(builder, context).commit((ri, ex) -> {
+            add(builder, connection).commit((ri, ex) -> {
                 if (ri != null) {
                     logger.error("Cleaning up RemoteInvoker {}", ri, ex);
                     ri.stop();
@@ -182,8 +180,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             final List<InstanceConnection> connections = getInstanceConnectionService().getActiveConnections();
 
             for (final InstanceConnection connection : connections) {
-                final InstanceMetadataContext context = connection.getInstanceMetadataContext();
-                add(builder, context);
+                add(builder, connection);
             }
 
             builder.prune().commit((ri, ex) -> {
@@ -197,36 +194,36 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         }
 
-        private RefreshBuilder add(final RefreshBuilder builder, final InstanceMetadataContext context) {
+        private RefreshBuilder add(final RefreshBuilder builder, final InstanceConnection connection) {
 
             final double load;
             final Set<NodeId> nodeIdSet;
-            final InstanceId instanceId = context.getInstanceId();
+            final InstanceId instanceId = connection.getInstanceMetadataContext().getInstanceId();
 
             try {
-                load = context.getInstanceQuality();
+                load = connection.getInstanceMetadataContext().getInstanceQuality();
             } catch (Exception ex) {
                 logger.error("Could not determine load average for instance {}", instanceId, ex);
                 return builder;
             }
 
             try {
-                nodeIdSet = context.getNodeIds();
+                nodeIdSet = connection.getInstanceMetadataContext().getNodeIds();
             } catch (Exception ex) {
                 logger.error("Could not node id set for instance {}", instanceId, ex);
                 return builder;
             }
 
             for (final NodeId nodeId : nodeIdSet) {
-                builder.add(nodeId, load, () -> establishNewConnection(nodeId));
+                builder.add(nodeId, load, () -> establishNewConnection(nodeId, connection));
             }
 
             return builder;
 
         }
 
-        private RemoteInvoker establishNewConnection(NodeId nodeId) {
-            final String addr = getInstanceConnectionService().getRoute(nodeId);
+        private RemoteInvoker establishNewConnection(final NodeId nodeId, final InstanceConnection connection) {
+            final String addr = connection.openRouteToNode(nodeId);
             final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
             remoteInvoker.start(addr);
             return remoteInvoker;

@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.Provider;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker;
+import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvoker;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
