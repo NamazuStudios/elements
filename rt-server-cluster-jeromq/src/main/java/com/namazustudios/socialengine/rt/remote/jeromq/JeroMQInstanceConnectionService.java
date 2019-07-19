@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.PubSub;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
+import com.namazustudios.socialengine.rt.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -30,9 +31,7 @@ import static java.util.stream.Collectors.toList;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
 
-    public static final String INVOKER_BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.invoker.bind.addr";
-
-    public static final String CONTROL_BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.control.bind.addr";
+    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.bind.addr";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
@@ -40,9 +39,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     private ZContext zContext;
 
-    private String controlBindAddress;
-
-    private String invokerBindAddress;
+    private String bindAddress;
 
     private Provider<RemoteInvoker> remoteInvokerProvider;
 
@@ -89,13 +86,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     }
 
     @Override
-    public PubSub.Subscription subscribeToConnect(final Consumer<InstanceConnection> onConnect) {
+    public Subscription subscribeToConnect(final Consumer<InstanceConnection> onConnect) {
         final InstanceConnectionContext context = getContext();
         return context.subscribeToConnect(onConnect);
     }
 
     @Override
-    public PubSub.Subscription subscribeToDisconnect(final Consumer<InstanceConnection> onDisconnect) {
+    public Subscription subscribeToDisconnect(final Consumer<InstanceConnection> onDisconnect) {
         final InstanceConnectionContext context = getContext();
         return context.subscribeToDisconnect(onDisconnect);
     }
@@ -124,22 +121,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         this.zContext = zContext;
     }
 
-    public String getControlBindAddress() {
-        return controlBindAddress;
+    public String getBindAddress() {
+        return bindAddress;
     }
 
     @Inject
-    public void setControlBindAddress(@Named(CONTROL_BIND_ADDRESS) String controlBindAddress) {
-        this.controlBindAddress = controlBindAddress;
-    }
-
-    public String getInvokerBindAddress() {
-        return invokerBindAddress;
-    }
-
-    @Inject
-    public void setInvokerBindAddress(@Named(INVOKER_BIND_ADDRESS) String invokerBindAddress) {
-        this.invokerBindAddress = invokerBindAddress;
+    public void setBindAddress(@Named(BIND_ADDRESS) String bindAddress) {
+        this.bindAddress = bindAddress;
     }
 
     public Provider<RemoteInvoker> getRemoteInvokerProvider() {
@@ -166,7 +154,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
-        private final String internalControlAddress = format("inproc://server/%s", randomUUID());
+        private final String internalBindAddress = format("inproc://control/%s", randomUUID());
 
         private final BiMap<InstanceHostInfo, JeroMQInstanceConnection> activeConnections = HashBiMap.create();
 
@@ -198,19 +186,17 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private void server() {
 
-            final List<String> invokers = asList(getInvokerBindAddress());
-            final List<String> controls = asList(getInternalControlAddress(), getControlBindAddress());
+            final List<String> binds = asList(getInternalBindAddress(), getBindAddress());
 
-            try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(),
-                                                                            controls, invokers)) {
+            try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(), binds)) {
                 getInstanceDiscoveryService().getRemoteConnections().forEach(this::createNewConnection);
                 server.run();
             }
 
         }
 
-        public String getInternalControlAddress() {
-            return internalControlAddress;
+        public String getInternalBindAddress() {
+            return internalBindAddress;
         }
 
         public List<InstanceConnection> getActiveConnections() {
@@ -245,10 +231,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         private JeroMQInstanceConnection createNewConnection(final InstanceHostInfo instanceHostInfo) {
 
             final InstanceId instanceId;
-            final String instanceInvokerAddress = instanceHostInfo.getInvokerAddress();
-            final String instanceControlAddress = instanceHostInfo.getControlAddress();
+            final String instanceConnectAddress = instanceHostInfo.getConnectAddress();
 
-            try (final JeroMQControlClient client = new JeroMQControlClient(getzContext(), instanceControlAddress)) {
+            try (final JeroMQControlClient client = new JeroMQControlClient(getzContext(), instanceConnectAddress)) {
                 final JeroMQInstanceStatus status = client.getInstanceStatus();
                 instanceId = status.getInstanceId();
             }
@@ -264,13 +249,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 if (connection != null) return connection;
 
                 final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-                remoteInvoker.start(instanceInvokerAddress);
+                remoteInvoker.start(instanceConnectAddress);
 
                 connection = new JeroMQInstanceConnection(
                         instanceId,
                         remoteInvoker,
                         getzContext(),
-                        getInternalControlAddress(),
+                        getInternalBindAddress(),
                         instanceHostInfo,
                         this::disconnect);
 
@@ -304,11 +289,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         }
 
-        public PubSub.Subscription subscribeToConnect(final Consumer<InstanceConnection> onConnect) {
+        public Subscription subscribeToConnect(final Consumer<InstanceConnection> onConnect) {
             return this.onConnect.subscribe(onConnect);
         }
 
-        public PubSub.Subscription subscribeToDisconnect(final Consumer<InstanceConnection> onDisconnect) {
+        public Subscription subscribeToDisconnect(final Consumer<InstanceConnection> onDisconnect) {
             return this.onDisconnect.subscribe(onDisconnect);
         }
 

@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.rt.remote.ProxyBuilder;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import org.zeromq.ZContext;
 
-import java.rmi.Remote;
 import java.util.function.Consumer;
 
 class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConnection {
@@ -55,7 +54,7 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
     @Override
     public String openRouteToNode(NodeId nodeId) {
         try (JeroMQControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
-            final String address = client.openRouteToNode(nodeId, instanceHostInfo.getInvokerAddress());
+            final String address = client.openRouteToNode(nodeId, instanceHostInfo.getConnectAddress());
             return address;
         }
     }

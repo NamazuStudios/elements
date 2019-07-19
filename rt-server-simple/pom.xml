@@ -26,6 +26,12 @@
             <artifactId>rt-server-cluster-node</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.spotify</groupId>
+            <artifactId>dns</artifactId>
+            <version>${spotify.dns.version}</version>
+            <scope>optional</scope>
+        </dependency>
     </dependencies>
 
     <build>

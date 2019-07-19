@@ -10,6 +10,9 @@ import org.zeromq.*;
 
 import java.util.*;
 
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.ROUTE_REQUEST;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
 import static org.zeromq.SocketType.DEALER;
@@ -54,9 +57,17 @@ public class JeroMQMultiplexRouter {
             final ZMQ.Socket backend = poller.getSocket(index);
 
             final ZMsg zMsg = ZMsg.recvMsg(backend);
-            final ZFrame routeHeader = zMsg.removeFirst();
-            final ZFrame nodeIdHeader = zMsg.removeFirst();
+            final ZMsg identity = popIdentity(zMsg);
+            final JeroMQControlCommand command = JeroMQControlCommand.stripCommand(zMsg);
 
+            if (!ROUTE_REQUEST.equals(command)) {
+                logger.error("Caught non-route request in backend socket {} -> {}", command, zMsg);
+                final ZMsg response = JeroMQControlException.error("Dropping.");
+                pushIdentity(response, identity);
+                return;
+            }
+
+            final ZFrame nodeIdHeader = zMsg.removeFirst();
             final NodeId nodeId = new NodeId(nodeIdHeader.getData());
 
             if (!Objects.equals(instanceId, nodeId.getInstanceId())) {
@@ -64,7 +75,7 @@ public class JeroMQMultiplexRouter {
             }
 
             final ZMQ.Socket frontend = getFrontend(nodeId);
-            zMsg.addFirst(routeHeader);
+            pushIdentity(zMsg, identity);
             zMsg.send(frontend);
 
         } catch (Exception ex) {
@@ -92,11 +103,12 @@ public class JeroMQMultiplexRouter {
 
             // Rebuilds the message and sends it
             final ZMsg zMsg = ZMsg.recvMsg(frontend);
-            final ZFrame routeHeader = zMsg.removeFirst();
+            final ZMsg identity = popIdentity(zMsg);
             final ZFrame nodeIdHeader = new ZFrame(nid.asBytes());
 
             zMsg.addFirst(nodeIdHeader);
-            zMsg.addFirst(routeHeader);
+            ROUTE_REQUEST.pushCommand(zMsg);
+            pushIdentity(zMsg, identity);
             zMsg.send(backend);
 
         } catch (Exception ex) {

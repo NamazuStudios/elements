@@ -4,10 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZMsg;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
+import java.io.*;
 
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.lang.String.format;
 
@@ -38,6 +37,36 @@ public class JeroMQControlException extends RuntimeException {
             return e;
         }
 
+    }
+
+    public static ZMsg error(final String message) {
+        final ZMsg response = new ZMsg();
+        response.addLast(EXCEPTION.toString().getBytes(CHARSET));
+        response.addLast(message.getBytes(CHARSET));
+        return response;
+    }
+
+    public static ZMsg exceptionError(final Exception ex) {
+
+        logger.error("Exception processing request.", ex);
+        final ZMsg response = new ZMsg();
+
+        response.addLast(EXCEPTION.toString().getBytes(CHARSET));
+        response.addLast(ex.getMessage().getBytes(CHARSET));
+
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+
+            try (final ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(ex);
+            }
+
+            response.addLast(bos.toByteArray());
+
+        } catch (IOException e) {
+            logger.error("Caught exception serializing exception.", e);
+        }
+
+        return response;
     }
 
 }

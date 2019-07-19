@@ -9,77 +9,54 @@ import javax.inject.Named;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toList;
 
 public class StaticInstanceDiscoveryService implements InstanceDiscoveryService {
 
-    private static final Logger logger = LoggerFactory.getLogger(StaticInstanceDiscoveryService.class);
+    public static final String HOST_INFO = "com.namazustudios.socialengine.rt.static.host.info";
 
-    public static final String REMOTE_CONNECT_ADDRESSES = "com.namazustudios.socialengine.rt.StaticInstanceDiscoveryService.remoteConnectAddresses";
+    private Set<InstanceHostInfo> hostInfoSet;
 
-    private Set<InstanceHostInfo> remoteConnectAddresses;
-
-    private InstanceConnectionService connectionService;
-
-    private final AtomicReference<List<InstanceConnectionService.InstanceConnection>> connectionList = new AtomicReference<>();
-
-    @Override
-    public Set<InstanceHostInfo> getRemoteConnections() {
-        return unmodifiableSet(remoteConnectAddresses);
-    }
+    private final AtomicBoolean running = new AtomicBoolean();
 
     @Override
     public void start() {
-
-        final List<InstanceConnectionService.InstanceConnection> connections = getRemoteConnectAddresses()
-            .stream()
-            .map(getConnectionService()::connectToInstance)
-            .collect(toList());
-
-        if (this.connectionList.compareAndSet(null, connections)) {
-            logger.info("Connected to {} ", connections);
-        } else {
-            disconnect(connections);
-        }
-
+        if (!running.compareAndSet(false, true)) throw new IllegalStateException("Already running.");
     }
 
     @Override
     public void stop() {
-        final List<InstanceConnectionService.InstanceConnection> connections = connectionList.getAndSet(null);
-        if (connections == null) throw new IllegalStateException("Not connected.");
-        disconnect(connections);
+        if (!running.compareAndSet(true, false)) throw new IllegalStateException("Not running.");
     }
 
-    private void disconnect(final List<InstanceConnectionService.InstanceConnection> connections) {
-        connections.forEach(c -> {
-            try {
-                c.disconnect();
-            } catch (Exception ex) {
-                logger.error("Could not disconnect from {}.", ex);
-            }
-        });
+    @Override
+    public Set<InstanceHostInfo> getRemoteConnections() {
+        if (!running.get())  throw new IllegalStateException("Not running.");
+        return unmodifiableSet(getHostInfoSet());
     }
 
-    public InstanceConnectionService getConnectionService() {
-        return connectionService;
+    @Override
+    public Subscription subscribeToDiscovery(final Consumer<InstanceHostInfo> instanceHostInfoConsumer) {
+        return () -> {};
     }
 
-    @Inject
-    public void setConnectionService(InstanceConnectionService connectionService) {
-        this.connectionService = connectionService;
+    @Override
+    public Subscription subscribeToUndiscovery(final Consumer<InstanceHostInfo> instanceHostInfoConsumer) {
+        return () -> {};
     }
 
-    public Set<InstanceHostInfo> getRemoteConnectAddresses() {
-        return remoteConnectAddresses;
+    public Set<InstanceHostInfo> getHostInfoSet() {
+        return hostInfoSet;
     }
 
     @Inject
-    public void setRemoteConnectAddresses(@Named(REMOTE_CONNECT_ADDRESSES) Set<InstanceHostInfo> remoteConnectAddresses) {
-        this.remoteConnectAddresses = remoteConnectAddresses;
+    public void setHostInfoSet(@Named(HOST_INFO) Set<InstanceHostInfo> hostInfoSet) {
+        this.hostInfoSet = hostInfoSet;
     }
 
 }

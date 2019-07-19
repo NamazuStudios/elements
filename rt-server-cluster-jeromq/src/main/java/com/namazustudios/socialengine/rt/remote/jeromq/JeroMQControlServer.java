@@ -7,22 +7,16 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.util.Collection;
 
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlException.exceptionError;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
-import static java.lang.String.format;
 
 public class JeroMQControlServer {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQControlServer.class);
-
-    private final int index;
-
-    private final ZMQ.Poller poller;
 
     private final InstanceId instanceId;
 
@@ -31,31 +25,25 @@ public class JeroMQControlServer {
     private final JeroMQDemultiplexRouter demultiplex;
 
     public JeroMQControlServer(final InstanceId instanceId,
-                               final ZMQ.Poller poller, final int index,
                                final JeroMQMultiplexRouter multiplex,
                                final JeroMQDemultiplexRouter demultiplex) {
         this.instanceId = instanceId;
-        this.poller = poller;
-        this.index = index;
         this.multiplex = multiplex;
         this.demultiplex = demultiplex;
     }
 
-    public void poll() {
-
-        if (!poller.pollin(index)) return;
-
-        final ZMQ.Socket socket = poller.getSocket(index);
-        final ZMsg zMsg = ZMsg.recvMsg(socket);
-
-        final JeroMQControlCommand command;
-
-        try {
-            command = JeroMQControlCommand.valueOf(zMsg);
-        } catch (IllegalArgumentException ex) {
-            logger.error("Unknown control command.", ex);
-            return;
-        }
+    /**
+     * Handles a {@link ZMsg} coming in from the main socket.  This will handle all control commands and ignore other
+     * commands such as {@link JeroMQControlCommand#ROUTE_REQUEST}.
+     *
+     * @param socket the {@link org.zeromq.ZMQ.Socket}
+     * @param zMsg the {@link ZMsg} that was read from the socket
+     * @return true if handled, false otherwise
+     */
+    public boolean handle(final ZMQ.Socket socket,
+                          final ZMsg zMsg,
+                          final JeroMQControlCommand command,
+                          final ZMsg identity) {
 
         try {
 
@@ -69,48 +57,21 @@ public class JeroMQControlServer {
                     response = processOpenRouteToNode(zMsg);
                     break;
                 default:
-                    response = defaultError(command, zMsg);
-                    break;
+                    return false;
             }
 
+            pushIdentity(response, identity);
             response.send(socket);
+
+            return true;
 
         } catch (Exception ex) {
-            final ZMsg response = exceptionError(command, ex);
+            final ZMsg response = exceptionError(ex);
+            pushIdentity(response, identity);
             response.send(socket);
+            return true;
         }
 
-    }
-
-    private ZMsg defaultError(final JeroMQControlCommand command, final ZMsg zMsg) {
-        logger.error("Unable to handle {} - {}", command, zMsg);
-        final ZMsg response = new ZMsg();
-        response.addLast(UNKNOWN_COMMAND.toString().getBytes(CHARSET));
-        response.addLast(format("Unable to process comand %s", command).getBytes(CHARSET));
-        return response;
-    }
-
-    private ZMsg exceptionError(final JeroMQControlCommand command, final Exception ex) {
-
-        logger.error("Exception processing request {}", command, ex);
-        final ZMsg response = new ZMsg();
-
-        response.addLast(EXCEPTION.toString().getBytes(CHARSET));
-        response.addLast(ex.getMessage().getBytes(CHARSET));
-
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
-
-            try (final ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-                oos.writeObject(ex);
-            }
-
-            response.addLast(bos.toByteArray());
-
-        } catch (IOException e) {
-            logger.error("Caught exception serializing exception.", e);
-        }
-
-        return response;
     }
 
     private ZMsg processInstanceStatus(final ZMsg zMsg) {

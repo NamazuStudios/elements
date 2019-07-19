@@ -7,6 +7,7 @@ import org.zeromq.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.GET_INSTANCE_STATUS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.OPEN_ROUTE_TO_NODE;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
+import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZContext.shadow;
 
 /**
@@ -32,7 +33,7 @@ public class JeroMQControlClient implements AutoCloseable {
      */
     public JeroMQControlClient(final ZContext zContext, final String instanceConnectAddress) {
         this.zContext = shadow(zContext);
-        this.socket = zContext.createSocket(SocketType.REQ);
+        this.socket = zContext.createSocket(DEALER);
         this.socket.connect(instanceConnectAddress);
     }
 

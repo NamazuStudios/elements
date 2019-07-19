@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
@@ -28,13 +30,17 @@ public class PubSub<T> {
 
     private final List<Consumer<T>> subscribers = new ArrayList<Consumer<T>>();
 
+    public PubSub() {
+        this(new ReentrantLock());
+    }
+
     public PubSub(final Lock lock) {
         this.lock = lock;
     }
 
     public Subscription subscribe(final Consumer<T> consumer) {
 
-        final PubSub.Subscription subscription = () -> {
+        final Subscription subscription = () -> {
             try {
                 lock.lock();
                 subscribers.removeIf(c -> c == consumer);
@@ -75,19 +81,6 @@ public class PubSub<T> {
             publish(t);
             onFinish.accept(t);
         });
-    }
-
-    /**
-     * Returned from the various subscribe calls.  Can be used to cancel the subscription.
-     */
-    @FunctionalInterface
-    public interface Subscription {
-
-        /**
-         * Unsubscribes from the
-         */
-        void unsubscribe();
-
     }
 
 }

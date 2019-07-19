@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
+import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
@@ -45,18 +46,18 @@ public interface InstanceConnectionService {
      * {@link InstanceConnectionService}.
      *
      * @param onConnect the {@link Consumer<InstanceConnection>}
-     * @return a {@link PubSub.Subscription} that can be cancled later.
+     * @return a {@link Subscription} that can be cancled later.
      */
-    PubSub.Subscription subscribeToConnect(Consumer<InstanceConnection> onConnect);
+    Subscription subscribeToConnect(Consumer<InstanceConnection> onConnect);
 
     /**
      * Adds a {@link Consumer<InstanceConnection>} that will be called when a an instance has disconnected from this
      * {@link InstanceConnectionService}.
      *
      * @param onDisconnect the {@link Consumer<InstanceConnection>}
-     * @return a {@link PubSub.Subscription} that can be cancled later.
+     * @return a {@link Subscription} that can be cancled later.
      */
-    PubSub.Subscription subscribeToDisconnect(Consumer<InstanceConnection> onDisconnect);
+    Subscription subscribeToDisconnect(Consumer<InstanceConnection> onDisconnect);
 
     /**
      * Represents a connection to a remote instance.
