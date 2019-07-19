@@ -4,15 +4,13 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
-
-public enum JeroMQControlCommand {
+public enum JeroMQRoutingCommand {
 
     /**
      * Requests that the message be routed to a destination.  This is a majority of messages used for invocations.  The
      * mesage will be routed based on subsequent routing information.
      */
-    ROUTE_REQUEST,
+    FORWARD,
 
     /**
      * Gets the instance status.  The instance status returns the instance ID, a listing of nodes IDs and ports
@@ -26,7 +24,7 @@ public enum JeroMQControlCommand {
      */
     OPEN_ROUTE_TO_NODE;
 
-    private static final JeroMQControlCommand VALUES[] = values();
+    private static final JeroMQRoutingCommand VALUES[] = values();
 
     /**
      * Pushes the command as the first frame in the specified {@link ZMsg}.
@@ -51,14 +49,14 @@ public enum JeroMQControlCommand {
     }
 
     /**
-     * Gets the {@link JeroMQControlCommand} or throw an {@link IllegalArgumentException} if the command could not
+     * Gets the {@link JeroMQRoutingCommand} or throw an {@link IllegalArgumentException} if the command could not
      * be understood.  This removes the first frame of the message allowing subsequent processing to take place.
      *
      * @param zMsg the message from which to read the command.
      *
-     * @return the {@link JeroMQControlCommand}
+     * @return the {@link JeroMQRoutingCommand}
      */
-    public static JeroMQControlCommand stripCommand(final ZMsg zMsg) {
+    public static JeroMQRoutingCommand stripCommand(final ZMsg zMsg) {
 
         final ZFrame frame = zMsg.removeFirst();
         final byte[] data = frame.getData();

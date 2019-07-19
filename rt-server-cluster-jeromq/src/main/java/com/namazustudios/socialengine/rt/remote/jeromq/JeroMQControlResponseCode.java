@@ -13,6 +13,11 @@ public enum JeroMQControlResponseCode {
     UNKNOWN_COMMAND,
 
     /**
+     * Indicates there was no such route.
+     */
+    NO_SUCH_ROUTE,
+
+    /**
      * There was an exception processing the request.
      */
     EXCEPTION,

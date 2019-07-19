@@ -12,7 +12,8 @@ import java.util.*;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.ROUTE_REQUEST;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.NO_SUCH_ROUTE;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.FORWARD;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
 import static org.zeromq.SocketType.DEALER;
@@ -58,15 +59,6 @@ public class JeroMQMultiplexRouter {
 
             final ZMsg zMsg = ZMsg.recvMsg(backend);
             final ZMsg identity = popIdentity(zMsg);
-            final JeroMQControlCommand command = JeroMQControlCommand.stripCommand(zMsg);
-
-            if (!ROUTE_REQUEST.equals(command)) {
-                logger.error("Caught non-route request in backend socket {} -> {}", command, zMsg);
-                final ZMsg response = JeroMQControlException.error("Dropping.");
-                pushIdentity(response, identity);
-                return;
-            }
-
             final ZFrame nodeIdHeader = zMsg.removeFirst();
             final NodeId nodeId = new NodeId(nodeIdHeader.getData());
 
@@ -86,7 +78,7 @@ public class JeroMQMultiplexRouter {
 
     private ZMQ.Socket getFrontend(final NodeId nodeId) {
         final Integer index = frontends.get(nodeId);
-        if (index == null) throw new JeroMQRoutingException("No route to: " + nodeId);
+        if (index == null) throw new JeroMQControlException(NO_SUCH_ROUTE);
         return poller.getSocket(index);
     }
 
@@ -107,7 +99,7 @@ public class JeroMQMultiplexRouter {
             final ZFrame nodeIdHeader = new ZFrame(nid.asBytes());
 
             zMsg.addFirst(nodeIdHeader);
-            ROUTE_REQUEST.pushCommand(zMsg);
+            FORWARD.pushCommand(zMsg);
             pushIdentity(zMsg, identity);
             zMsg.send(backend);
 
@@ -119,7 +111,7 @@ public class JeroMQMultiplexRouter {
 
     private ZMQ.Socket getBackend(final InstanceId instanceId) {
         final Integer index = backends.get(instanceId);
-        if (index == null) throw new JeroMQRoutingException("No route to: " + instanceId);
+        if (index == null) throw new JeroMQControlException(NO_SUCH_ROUTE);
         return poller.getSocket(index);
     }
 
@@ -137,6 +129,7 @@ public class JeroMQMultiplexRouter {
 
         localBindAddress = getLocalBindAddress(nodeId);
         frontend.bind(localBindAddress);
+
         backend.connect(instanceInvokerAddress);
 
         final int backendIndex = poller.register(frontend, POLLIN | POLLERR);

@@ -7,12 +7,13 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
 import java.util.List;
 
-import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
-import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlException.exceptionError;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
@@ -27,13 +28,11 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     private static final long POLL_TIMEOUT_MILLISECONDS = 5000;
 
-    private final ZContext zContext;
+    private final ZContext zContextShadow;
 
     private final ZMQ.Poller poller;
 
-    private final int main;
-
-    private final JeroMQControlServer control;
+    private final JeroMQCommandServer control;
 
     private final JeroMQMultiplexRouter multiplex;
 
@@ -43,16 +42,16 @@ public class JeroMQRoutingServer implements AutoCloseable {
                                final ZContext zContext,
                                final List<String> bindAddresses) {
 
-        this.zContext = shadow(zContext);
-        this.poller = zContext.createPoller(0);
+        this.zContextShadow = shadow(zContext);
+        this.poller = zContextShadow.createPoller(0);
 
-        final ZMQ.Socket main = this.zContext.createSocket(ROUTER);
+        final ZMQ.Socket main = zContextShadow.createSocket(ROUTER);
         for (final String addr : bindAddresses) main.bind(addr);
 
-        this.main = poller.register(main, POLLIN | POLLERR);
-        this.multiplex = new JeroMQMultiplexRouter(this.zContext, poller);
-        this.demultiplex = new JeroMQDemultiplexRouter(poller, this.main);
-        this.control = new JeroMQControlServer(instanceId, multiplex, demultiplex);
+        final int frontend = poller.register(main, POLLIN | POLLERR);
+        this.multiplex = new JeroMQMultiplexRouter(zContextShadow, poller);
+        this.demultiplex = new JeroMQDemultiplexRouter(poller, frontend);
+        this.control = new JeroMQCommandServer(instanceId, poller, frontend, multiplex, demultiplex);
 
     }
 
@@ -65,14 +64,9 @@ public class JeroMQRoutingServer implements AutoCloseable {
             }
 
             try {
-
-                if (poller.pollin(main)) {
-                    dispatchMain();
-                }
-
+                control.poll();
                 multiplex.poll();
                 demultiplex.poll();
-
             } catch (Exception ex) {
                 logger.error("Caught exception in routing server.", ex);
             }
@@ -81,38 +75,41 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     }
 
-    private void dispatchMain() {
-
-        final ZMQ.Socket socket = poller.getSocket(main);
-        final ZMsg zMsg = ZMsg.recvMsg(socket);
-        final ZMsg identity = popIdentity(zMsg);
-
-        final JeroMQControlCommand command;
-
-        try {
-            command = JeroMQControlCommand.stripCommand(zMsg);
-        } catch (IllegalArgumentException ex) {
-            final ZMsg response = exceptionError(ex);
-            pushIdentity(response, identity);
-            response.send(socket);
-            return;
-        }
-
-        final boolean handled = control.handle(socket, zMsg, command, identity) ||
-                                demultiplex.handle(socket, zMsg, command, identity);
-
-        if (handled && logger.isTraceEnabled()) {
-            logger.trace("Handled incoming message {}", zMsg);
-        } else if (!handled) {
-            logger.error("Dropping message from main socket: {}", zMsg);
-        }
-
-    }
-
     @Override
     public void close() {
         poller.close();
-        zContext.close();
+        zContextShadow.close();
+    }
+
+
+    public static ZMsg error(final String message) {
+        final ZMsg response = new ZMsg();
+        response.addLast(EXCEPTION.toString().getBytes(CHARSET));
+        response.addLast(message.getBytes(CHARSET));
+        return response;
+    }
+
+    public static ZMsg exceptionError(final Exception ex) {
+
+        logger.error("Exception processing request.", ex);
+        final ZMsg response = new ZMsg();
+
+        response.addLast(EXCEPTION.toString().getBytes(CHARSET));
+        response.addLast(ex.getMessage().getBytes(CHARSET));
+
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+
+            try (final ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(ex);
+            }
+
+            response.addLast(bos.toByteArray());
+
+        } catch (IOException e) {
+            logger.error("Caught exception serializing exception.", e);
+        }
+
+        return response;
     }
 
 }

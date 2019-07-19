@@ -4,8 +4,8 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.zeromq.*;
 
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.GET_INSTANCE_STATUS;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.OPEN_ROUTE_TO_NODE;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.GET_INSTANCE_STATUS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.OPEN_ROUTE_TO_NODE;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZContext.shadow;
