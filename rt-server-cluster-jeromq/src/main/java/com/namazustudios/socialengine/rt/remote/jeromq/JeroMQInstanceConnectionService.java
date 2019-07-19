@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.rt.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import com.namazustudios.socialengine.rt.remote.PubSub;
+import com.namazustudios.socialengine.rt.remote.Publisher;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.Subscription;
 import org.slf4j.Logger;
@@ -17,6 +17,7 @@ import org.zeromq.ZContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -26,6 +27,7 @@ import java.util.function.Consumer;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 
@@ -71,12 +73,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             context.stop();
         }
 
-    }
-
-    @Override
-    public InstanceConnection connectToInstance(final InstanceHostInfo instanceHostInfo) {
-        final InstanceConnectionContext context = getContext();
-        return context.getOrCreateNewConnection(instanceHostInfo);
     }
 
     @Override
@@ -152,6 +148,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private Thread server;
 
+        private Subscription onDiscover;
+
+        private Subscription onUndisover;
+
         private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
         private final String internalBindAddress = format("inproc://control/%s", randomUUID());
@@ -160,11 +160,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private final BiMap<JeroMQInstanceConnection, InstanceHostInfo> rActiveConnections = activeConnections.inverse();
 
-        private final PubSub<InstanceConnection> onConnect = new PubSub<>(readWriteLock.writeLock());
+        private final Publisher<InstanceConnection> onConnect = new Publisher<>(readWriteLock.writeLock());
 
-        private final PubSub<InstanceConnection> onDisconnect = new PubSub<>(readWriteLock.writeLock());
+        private final Publisher<InstanceConnection> onDisconnect = new Publisher<>(readWriteLock.writeLock());
 
         public void start() {
+            onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(i -> getOrCreateNewConnection(i));
+            onUndisover = getInstanceDiscoveryService().subscribeToUndiscovery(i -> disconnect(i));
             server = new Thread(this::server);
             server.setDaemon(true);
             server.setName(JeroMQInstanceConnectionService.class.getName() + " server.");
@@ -174,9 +176,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public void stop() {
 
-            server.interrupt();
+            onDiscover.unsubscribe();
+            onUndisover.unsubscribe();
+            drain();
 
             try {
+                server.interrupt();
                 server.join();
             } catch (InterruptedException e) {
                 throw new InternalException(e);
@@ -189,7 +194,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             final List<String> binds = asList(getInternalBindAddress(), getBindAddress());
 
             try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(), binds)) {
-                getInstanceDiscoveryService().getRemoteConnections().forEach(this::createNewConnection);
+                getInstanceDiscoveryService().getKnownHosts().forEach(this::createNewConnection);
                 server.run();
             }
 
@@ -270,7 +275,42 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         }
 
-        private void disconnect(final JeroMQInstanceConnection connection) {
+        public void drain() {
+            final Lock wLock = readWriteLock.writeLock();
+
+            try {
+                wLock.lock();
+
+                final List<InstanceConnection> connectionList = new ArrayList<>(activeConnections.values());
+
+                connectionList.forEach(c -> {
+                    try {
+                        c.disconnect();
+                    } catch (Exception ex) {
+                        logger.error("Could not drain connection {}", ex);
+                    }
+                });
+
+            } finally {
+                wLock.unlock();
+            }
+
+        }
+
+        public void disconnect(final InstanceHostInfo instanceHostInfo) {
+            final Lock wLock = readWriteLock.writeLock();
+
+            try {
+                wLock.lock();
+                final InstanceConnection connection = activeConnections.remove(instanceHostInfo);
+                connection.disconnect();
+            } finally {
+                wLock.unlock();
+            }
+
+        }
+
+        public void disconnect(final JeroMQInstanceConnection connection) {
 
             final Lock wLock = readWriteLock.writeLock();
 

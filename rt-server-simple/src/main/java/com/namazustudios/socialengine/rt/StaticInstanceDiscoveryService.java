@@ -35,7 +35,7 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
     }
 
     @Override
-    public Set<InstanceHostInfo> getRemoteConnections() {
+    public Set<InstanceHostInfo> getKnownHosts() {
         if (!running.get())  throw new IllegalStateException("Not running.");
         return unmodifiableSet(getHostInfoSet());
     }

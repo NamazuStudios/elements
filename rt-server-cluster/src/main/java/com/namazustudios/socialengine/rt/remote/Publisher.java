@@ -9,19 +9,18 @@ import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
 
-public class PubSub<T> {
+public class Publisher<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(PubSub.class);
+    private static final Logger logger = LoggerFactory.getLogger(Publisher.class);
 
     private static Executor dispatch = Executors.newSingleThreadExecutor(r -> {
         final Thread thread = new Thread(r);
         thread.setDaemon(true);
-        thread.setName(PubSub.class.getName() + " event dispatch.");
+        thread.setName(Publisher.class.getName() + " event dispatch.");
         thread.setUncaughtExceptionHandler((t, ex) -> logger.error("Error running InstanceConnectionService", ex));
         return thread;
     });
@@ -30,11 +29,7 @@ public class PubSub<T> {
 
     private final List<Consumer<T>> subscribers = new ArrayList<Consumer<T>>();
 
-    public PubSub() {
-        this(new ReentrantLock());
-    }
-
-    public PubSub(final Lock lock) {
+    public Publisher(final Lock lock) {
         this.lock = lock;
     }
 
@@ -71,16 +66,14 @@ public class PubSub<T> {
         try {
             lock.lock();
             subscribers.stream().collect(toList()).forEach(c -> c.accept(t));
+            onFinish.accept(t);
         } finally {
             lock.unlock();
         }
     }
 
     public void publishAsync(final T t,  final Consumer<T> onFinish) {
-        dispatch.execute(() -> {
-            publish(t);
-            onFinish.accept(t);
-        });
+        dispatch.execute(() -> publish(t, onFinish));
     }
 
 }

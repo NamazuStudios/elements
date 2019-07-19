@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.remote.PubSub;
+import com.namazustudios.socialengine.rt.remote.Publisher;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -8,14 +8,16 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toSet;
 
 public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryService {
 
@@ -27,12 +29,9 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
     private static final TimeUnit DNS_LOOKUP_POLLING_RATE_UNITS = TimeUnit.SECONDS;
 
-    public static final String CONTROL_SERVICE_NAME = "com.namazustudios.socialengine.rt.srv.control.service";
-    public static final String INVOKER_SERVICE_NAME = "com.namazustudios.socialengine.rt.srv.invoker.service";
+    public static final String SRV_QUERY_NAME = "com.namazustudios.socialengine.rt.srv.query";
 
-    private String controlServiceName;
-
-    private String invokerServiceName;
+    private String srvQuery;
 
     private final AtomicReference<SrvDiscoveryContext> context = new AtomicReference<>();
 
@@ -65,17 +64,17 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
     @Override
     public Subscription subscribeToDiscovery(final Consumer<InstanceHostInfo> instanceHostInfoConsumer) {
         final SrvDiscoveryContext context = getContext();
-        return context.discovery.subscribe(instanceHostInfoConsumer);
+        return context.onDisovery.subscribe(instanceHostInfoConsumer);
     }
 
     @Override
     public Subscription subscribeToUndiscovery(final Consumer<InstanceHostInfo> instanceHostInfoConsumer) {
         final SrvDiscoveryContext context = getContext();
-        return context.undiscovery.subscribe(instanceHostInfoConsumer);
+        return context.onUndiscovery.subscribe(instanceHostInfoConsumer);
     }
 
     @Override
-    public Collection<InstanceHostInfo> getRemoteConnections() {
+    public Collection<InstanceHostInfo> getKnownHosts() {
         final SrvDiscoveryContext context = getContext();
         return context.getRemoteConnections();
     }
@@ -86,22 +85,13 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
         return context;
     }
 
-    public String getControlServiceName() {
-        return controlServiceName;
+    public String getSrvQuery() {
+        return srvQuery;
     }
 
     @Inject
-    public void setControlServiceName(@Named(CONTROL_SERVICE_NAME) String controlServiceName) {
-        this.controlServiceName = controlServiceName;
-    }
-
-    public String getInvokerServiceName() {
-        return invokerServiceName;
-    }
-
-    @Inject
-    public void setInvokerServiceName(@Named(INVOKER_SERVICE_NAME) String invokerServiceName) {
-        this.invokerServiceName = invokerServiceName;
+    public void setSrvQuery(@Named(SRV_QUERY_NAME) String srvQuery) {
+        this.srvQuery = srvQuery;
     }
 
     private class SrvDiscoveryContext implements ChangeNotifier.Listener<LookupResult>, ErrorHandler {
@@ -112,9 +102,13 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         private ChangeNotifier<LookupResult> nodeChangeNotifier;
 
-        private final PubSub<InstanceHostInfo> discovery = new PubSub<>();
+        private Set<InstanceHostInfo> lookupResultSet = new HashSet<>();
 
-        private final PubSub<InstanceHostInfo> undiscovery = new PubSub<>();
+        private final Lock lock = new ReentrantLock();
+
+        private final Publisher<InstanceHostInfo> onDisovery = new Publisher<>(lock);
+
+        private final Publisher<InstanceHostInfo> onUndiscovery = new Publisher<>(lock);
 
         public void start() {
 
@@ -128,7 +122,7 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
                 .withErrorHandler(this)
                 .build();
 
-            nodeChangeNotifier = dnsSrvWatcher.watch(getInvokerServiceName());
+            nodeChangeNotifier = dnsSrvWatcher.watch(getSrvQuery());
             nodeChangeNotifier.setListener(this, true);
 
         }
@@ -150,12 +144,35 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
         }
 
         public Collection<InstanceHostInfo> getRemoteConnections() {
-            return Collections.emptyList();
+            return unmodifiableSet(lookupResultSet);
         }
 
         @Override
         public void onChange(final ChangeNotifier.ChangeNotification<LookupResult> changeNotification) {
+            try {
 
+                lock.lock();
+
+                final Set<InstanceHostInfo> update = changeNotification.current()
+                    .stream()
+                    .map(LookupResultInstanceHostInfo::new)
+                    .collect(toSet());
+
+                final Set<InstanceHostInfo> toAdd = new HashSet<>(update);
+                toAdd.removeAll(lookupResultSet);
+
+                final Set<InstanceHostInfo> toRemove = new HashSet<>(lookupResultSet);
+                toRemove.removeAll(update);
+
+                // Drives all events asynchronously
+                toAdd.forEach(onDisovery::publishAsync);
+                toRemove.forEach(onUndiscovery::publishAsync);
+
+                lookupResultSet = update;
+
+            } finally {
+                lock.unlock();
+            }
         }
 
         @Override
@@ -165,11 +182,11 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
     }
 
-    private static class LookupRecordInstanceHostInfo implements InstanceHostInfo {
+    private static class LookupResultInstanceHostInfo implements InstanceHostInfo {
 
         private final LookupResult lookupResult;
 
-        public LookupRecordInstanceHostInfo(LookupResult lookupResult) {
+        public LookupResultInstanceHostInfo(LookupResult lookupResult) {
             this.lookupResult = lookupResult;
         }
 
@@ -181,8 +198,8 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof LookupRecordInstanceHostInfo)) return false;
-            LookupRecordInstanceHostInfo that = (LookupRecordInstanceHostInfo) o;
+            if (!(o instanceof LookupResultInstanceHostInfo)) return false;
+            LookupResultInstanceHostInfo that = (LookupResultInstanceHostInfo) o;
             return lookupResult.equals(that.lookupResult);
         }
 

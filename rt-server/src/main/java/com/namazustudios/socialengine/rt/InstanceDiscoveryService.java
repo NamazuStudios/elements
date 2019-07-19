@@ -13,15 +13,28 @@ public interface InstanceDiscoveryService {
 
     default void stop() {}
 
-    Subscription subscribeToDiscovery(Consumer<InstanceHostInfo> instanceHostInfoConsumer);
-
-    Subscription subscribeToUndiscovery(Consumer<InstanceHostInfo> instanceHostInfoConsumer);
-
     /**
      * Gets the known remote hosts.
      *
      * @return a {@link Set<String>} containing the remote hosts
      */
-    Collection<InstanceHostInfo> getRemoteConnections();
+    Collection<InstanceHostInfo> getKnownHosts();
+
+    /**
+     * Subscribes to an event that fires when a new host joins the network.
+     *
+     * @param instanceHostInfoConsumer the {@link InstanceHostInfo}
+     *
+     * @return the {@link Subscription}
+     */
+    Subscription subscribeToDiscovery(Consumer<InstanceHostInfo> instanceHostInfoConsumer);
+
+    /**
+     * Subscribes to an event that fires when a host leaves the network.
+     *
+     * @param instanceHostInfoConsumer the {@link InstanceHostInfo}
+     * @return the {@link Subscription}
+     */
+    Subscription subscribeToUndiscovery(Consumer<InstanceHostInfo> instanceHostInfoConsumer);
 
 }

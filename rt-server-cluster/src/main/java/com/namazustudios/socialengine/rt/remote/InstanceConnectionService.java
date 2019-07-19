@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -25,14 +24,6 @@ public interface InstanceConnectionService {
      * Stops the service.
      */
     void stop();
-
-    /**
-     * Connects to an instance with the remote address.  Once connected, this will drive all applicable callbacks.
-     *
-     * @param instanceHostInfo the remote address, expressed as the underlying implementation's connection string format
-     * @return
-     */
-    InstanceConnection connectToInstance(InstanceHostInfo instanceHostInfo);
 
     /**
      * Gets a {@link List<InstanceConnection>} representing all active connections.
