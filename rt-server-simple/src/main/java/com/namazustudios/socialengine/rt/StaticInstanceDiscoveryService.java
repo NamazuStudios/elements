@@ -20,14 +20,14 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
 
     public static final String REMOTE_CONNECT_ADDRESSES = "com.namazustudios.socialengine.rt.StaticInstanceDiscoveryService.remoteConnectAddresses";
 
-    private Set<String> remoteConnectAddresses;
+    private Set<InstanceHostInfo> remoteConnectAddresses;
 
     private InstanceConnectionService connectionService;
 
     private final AtomicReference<List<InstanceConnectionService.InstanceConnection>> connectionList = new AtomicReference<>();
 
     @Override
-    public Set<String> getRemoteConnections() {
+    public Set<InstanceHostInfo> getRemoteConnections() {
         return unmodifiableSet(remoteConnectAddresses);
     }
 
@@ -73,12 +73,12 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
         this.connectionService = connectionService;
     }
 
-    public Set<String> getRemoteConnectAddresses() {
+    public Set<InstanceHostInfo> getRemoteConnectAddresses() {
         return remoteConnectAddresses;
     }
 
     @Inject
-    public void setRemoteConnectAddresses(@Named(REMOTE_CONNECT_ADDRESSES) Set<String> remoteConnectAddresses) {
+    public void setRemoteConnectAddresses(@Named(REMOTE_CONNECT_ADDRESSES) Set<InstanceHostInfo> remoteConnectAddresses) {
         this.remoteConnectAddresses = remoteConnectAddresses;
     }
 

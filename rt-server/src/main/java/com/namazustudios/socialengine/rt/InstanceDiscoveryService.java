@@ -16,6 +16,6 @@ public interface InstanceDiscoveryService {
      *
      * @return a {@link Set<String>} containing the remote hosts
      */
-    Set<String> getRemoteConnections();
+    Set<InstanceHostInfo> getRemoteConnections();
 
 }

@@ -2,10 +2,11 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import org.zeromq.SocketType;
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
+import org.zeromq.*;
 
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.GET_INSTANCE_STATUS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlCommand.OPEN_ROUTE_TO_NODE;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static org.zeromq.ZContext.shadow;
 
 /**
@@ -41,31 +42,58 @@ public class JeroMQControlClient implements AutoCloseable {
      * @return the {@link JeroMQInstanceStatus}
      */
     public JeroMQInstanceStatus getInstanceStatus() {
-        // TODO Implement this
-        return null;
+
+        final ZMsg request = new ZMsg();
+        request.add(GET_INSTANCE_STATUS.toString().getBytes(CHARSET));
+        request.send(socket);
+
+        final ZMsg response = recv();
+        return new JeroMQInstanceStatus(response);
+
     }
 
     /**
      * Issues the command to open up a route to the node.
      *
      * @param nodeId the {@link NodeId}
+     * @param instanceInvokerAddress
      *
      * @return the connect address for the node
      */
-    public String openRouteToNode(final NodeId nodeId) {
-        // TODO Implement this
-        return null;
+    public String openRouteToNode(final NodeId nodeId, final String instanceInvokerAddress) {
+
+        final ZMsg request = new ZMsg();
+
+        request.add(OPEN_ROUTE_TO_NODE.toString().getBytes(CHARSET));
+        request.add(nodeId.asString().getBytes(CHARSET));
+        request.add(instanceInvokerAddress.getBytes(CHARSET));
+        request.send(socket);
+
+        final ZMsg response = recv();
+        return response.getFirst().getString(CHARSET);
+
     }
 
-    /**
-     * Gets the connect address for the supplied {@link NodeId}
-     *
-     * @param nodeId the {@link NodeId}
-     *
-     * @return the connect address.
-     */
-    public String getConnectAddress(final NodeId nodeId) {
-        return null;
+    private ZMsg recv() {
+        final ZMsg response = ZMsg.recvMsg(socket);
+        return check(response);
+    }
+
+    private ZMsg check(final ZMsg response) {
+
+        JeroMQControlResponseCode code;
+
+        try {
+            code = JeroMQControlResponseCode.valueOf(response.removeFirst().getString(CHARSET));
+        } catch (IllegalArgumentException ex) {
+            code = JeroMQControlResponseCode.UNKNOWN_ERROR;
+        }
+
+        switch (code) {
+            case OK: return response;
+            default: throw new JeroMQControlException(code, response);
+        }
+
     }
 
     @Override

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
@@ -29,17 +30,19 @@ import static java.util.stream.Collectors.toList;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
 
-    public static final String EXTERNAL_INVOKER_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.invoker.addr";
+    public static final String INVOKER_BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.invoker.bind.addr";
 
-    public static final String EXTERNAL_CONTROL_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.server.addr";
+    public static final String CONTROL_BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.control.bind.addr";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
+    private InstanceId instanceId;
+
     private ZContext zContext;
 
-    private String externalControlAddress;
+    private String controlBindAddress;
 
-    private String externalInvokerAddress;
+    private String invokerBindAddress;
 
     private Provider<RemoteInvoker> remoteInvokerProvider;
 
@@ -74,9 +77,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     }
 
     @Override
-    public InstanceConnection connectToInstance(final String remoteAddress) {
+    public InstanceConnection connectToInstance(final InstanceHostInfo instanceHostInfo) {
         final InstanceConnectionContext context = getContext();
-        return context.getOrCreateNewConnection(remoteAddress);
+        return context.getOrCreateNewConnection(instanceHostInfo);
     }
 
     @Override
@@ -103,6 +106,15 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         return context;
     }
 
+    public InstanceId getInstanceId() {
+        return instanceId;
+    }
+
+    @Inject
+    public void setInstanceId(InstanceId instanceId) {
+        this.instanceId = instanceId;
+    }
+
     public ZContext getzContext() {
         return zContext;
     }
@@ -112,13 +124,22 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         this.zContext = zContext;
     }
 
-    public String getExternalControlAddress() {
-        return externalControlAddress;
+    public String getControlBindAddress() {
+        return controlBindAddress;
     }
 
     @Inject
-    public void setExternalControlAddress(@Named(EXTERNAL_CONTROL_ADDRESS) String externalControlAddress) {
-        this.externalControlAddress = externalControlAddress;
+    public void setControlBindAddress(@Named(CONTROL_BIND_ADDRESS) String controlBindAddress) {
+        this.controlBindAddress = controlBindAddress;
+    }
+
+    public String getInvokerBindAddress() {
+        return invokerBindAddress;
+    }
+
+    @Inject
+    public void setInvokerBindAddress(@Named(INVOKER_BIND_ADDRESS) String invokerBindAddress) {
+        this.invokerBindAddress = invokerBindAddress;
     }
 
     public Provider<RemoteInvoker> getRemoteInvokerProvider() {
@@ -130,21 +151,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         this.remoteInvokerProvider = remoteInvokerProvider;
     }
 
-    public String getExternalInvokerAddress() {
-        return externalInvokerAddress;
-    }
-
-    @Inject
-    public void setExternalInvokerAddress(@Named(EXTERNAL_INVOKER_ADDRESS) String externalInvokerAddress) {
-        this.externalInvokerAddress = externalInvokerAddress;
-    }
-
     public InstanceDiscoveryService getInstanceDiscoveryService() {
         return instanceDiscoveryService;
     }
 
     @Inject
-    public void setInstanceDiscoveryService(@Named(EXTERNAL_CONTROL_ADDRESS) InstanceDiscoveryService instanceDiscoveryService) {
+    public void setInstanceDiscoveryService(InstanceDiscoveryService instanceDiscoveryService) {
         this.instanceDiscoveryService = instanceDiscoveryService;
     }
 
@@ -156,9 +168,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private final String internalControlAddress = format("inproc://server/%s", randomUUID());
 
-        private final BiMap<String, JeroMQInstanceConnection> activeConnections = HashBiMap.create();
+        private final BiMap<InstanceHostInfo, JeroMQInstanceConnection> activeConnections = HashBiMap.create();
 
-        private final BiMap<JeroMQInstanceConnection, String> rActiveConnections = activeConnections.inverse();
+        private final BiMap<JeroMQInstanceConnection, InstanceHostInfo> rActiveConnections = activeConnections.inverse();
 
         private final PubSub<InstanceConnection> onConnect = new PubSub<>(readWriteLock.writeLock());
 
@@ -186,10 +198,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private void server() {
 
-            final List<String> invokers = asList(getExternalInvokerAddress());
-            final List<String> controls = asList(getInternalControlAddress(), getExternalControlAddress());
+            final List<String> invokers = asList(getInvokerBindAddress());
+            final List<String> controls = asList(getInternalControlAddress(), getControlBindAddress());
 
-            try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getzContext(), controls, invokers)) {
+            try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(),
+                                                                            controls, invokers)) {
                 getInstanceDiscoveryService().getRemoteConnections().forEach(this::createNewConnection);
                 server.run();
             }
@@ -213,27 +226,29 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         }
 
-        public InstanceConnection getOrCreateNewConnection(final String instanceRemoteAddress) {
+        public InstanceConnection getOrCreateNewConnection(final InstanceHostInfo instanceHostInfo) {
 
             final Lock rLock = readWriteLock.readLock();
 
             try {
                 rLock.lock();
-                final JeroMQInstanceConnection connection = activeConnections.get(instanceRemoteAddress);
+                final JeroMQInstanceConnection connection = activeConnections.get(instanceHostInfo);
                 if (connection != null) return connection;
             } finally {
                 rLock.unlock();
             }
 
-            return createNewConnection(instanceRemoteAddress);
+            return createNewConnection(instanceHostInfo);
 
         }
 
-        private JeroMQInstanceConnection createNewConnection(final String instanceRemoteAddress) {
+        private JeroMQInstanceConnection createNewConnection(final InstanceHostInfo instanceHostInfo) {
 
             final InstanceId instanceId;
+            final String instanceInvokerAddress = instanceHostInfo.getInvokerAddress();
+            final String instanceControlAddress = instanceHostInfo.getControlAddress();
 
-            try (final JeroMQControlClient client = new JeroMQControlClient(getzContext(), instanceRemoteAddress)) {
+            try (final JeroMQControlClient client = new JeroMQControlClient(getzContext(), instanceControlAddress)) {
                 final JeroMQInstanceStatus status = client.getInstanceStatus();
                 instanceId = status.getInstanceId();
             }
@@ -245,20 +260,21 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 JeroMQInstanceConnection connection;
 
                 wLock.lock();
-                connection = activeConnections.get(instanceRemoteAddress);
+                connection = activeConnections.get(instanceHostInfo);
                 if (connection != null) return connection;
 
                 final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-                remoteInvoker.start(instanceRemoteAddress);
+                remoteInvoker.start(instanceInvokerAddress);
 
                 connection = new JeroMQInstanceConnection(
                         instanceId,
                         remoteInvoker,
                         getzContext(),
                         getInternalControlAddress(),
+                        instanceHostInfo,
                         this::disconnect);
 
-                activeConnections.put(instanceRemoteAddress, connection);
+                activeConnections.put(instanceHostInfo, connection);
                 onConnect.publishAsync(connection);
 
                 return connection;
@@ -276,7 +292,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             try {
                 wLock.lock();
 
-                final String address = rActiveConnections.remove(connection);
+                final InstanceHostInfo address = rActiveConnections.remove(connection);
                 if (address == null) return;
 
                 logger.info("Disconnected from instance {}", address);

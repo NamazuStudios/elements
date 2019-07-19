@@ -28,7 +28,7 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
     }
 
     @Override
-    public Set<String> getRemoteConnections() {
+    public Set<InstanceHostInfo> getRemoteConnections() {
         return null;
     }
 

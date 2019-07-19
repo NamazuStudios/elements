@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import com.namazustudios.socialengine.rt.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -21,6 +22,8 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
 
     private final String internalControlAddress;
 
+    private final InstanceHostInfo instanceHostInfo;
+
     private final InstanceMetadataContext instanceMetadataContext;
 
     private final Consumer<JeroMQInstanceConnection> onDisconnect;
@@ -29,11 +32,13 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
                                     final RemoteInvoker remoteInvoker,
                                     final ZContext zContext,
                                     final String internalControlAddress,
+                                    final InstanceHostInfo instanceHostInfo,
                                     final Consumer<JeroMQInstanceConnection> onDisconnect) {
         this.zContext = zContext;
         this.instanceId = instanceId;
         this.onDisconnect = onDisconnect;
         this.remoteInvoker = remoteInvoker;
+        this.instanceHostInfo = instanceHostInfo;
         this.internalControlAddress = internalControlAddress;
         this.instanceMetadataContext = new ProxyBuilder<>(InstanceMetadataContext.class)
             .dontProxyDefaultMethods()
@@ -50,7 +55,7 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
     @Override
     public String openRouteToNode(NodeId nodeId) {
         try (JeroMQControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
-            final String address = client.openRouteToNode(nodeId);
+            final String address = client.openRouteToNode(nodeId, instanceHostInfo.getInvokerAddress());
             return address;
         }
     }

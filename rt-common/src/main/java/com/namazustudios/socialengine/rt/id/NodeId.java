@@ -23,6 +23,8 @@ public class NodeId implements Serializable, HasNodeId {
 
     private transient volatile int hash;
 
+    private transient volatile byte[] bytes;
+
     private transient volatile String string;
 
     private transient volatile InstanceId instanceId;
@@ -64,6 +66,17 @@ public class NodeId implements Serializable, HasNodeId {
                     .with(stringRepresentation)
                     .only(INSTANCE, APPLICATION)
                 .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
+    }
+
+    public NodeId(final byte[] byteRepresentation) {
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(byteRepresentation)
+                    .only(INSTANCE, APPLICATION)
+                    .build();
         } catch (IllegalArgumentException ex) {
             throw new InvalidNodeIdException(ex);
         }
@@ -111,6 +124,15 @@ public class NodeId implements Serializable, HasNodeId {
      */
     public String asString() {
         return string == null ? (string = v1CompoundId.asString(INSTANCE, APPLICATION)) : string;
+    }
+
+    /**
+     * Represents this {@link NodeId} as a set of packed-bytes.
+     *
+     * @return the bytes of this {@link NodeId}.
+     */
+    public byte[] asBytes() {
+        return bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION)) : bytes;
     }
 
     @Override

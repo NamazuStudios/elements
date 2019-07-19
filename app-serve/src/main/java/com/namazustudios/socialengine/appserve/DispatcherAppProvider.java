@@ -111,8 +111,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
             final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
-                .withDefaultExecutorServiceProvider()
-                .withConnectAddress(getConnectionService().getControlAddress());
+                .withDefaultExecutorServiceProvider();
 
             return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
 

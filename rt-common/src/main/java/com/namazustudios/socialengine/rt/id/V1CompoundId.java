@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.FIELD_COUNT;
 import static java.lang.System.arraycopy;
+import static java.lang.System.in;
 import static java.util.Arrays.sort;
 import static java.util.Arrays.stream;
 import static java.util.UUID.fromString;
@@ -84,6 +85,52 @@ class V1CompoundId implements Serializable {
         for(final String componentString : ID_SEPARATOR_PATTERN.split(componentsString)) {
             final Component component = new Component(componentString);
             components[component.field.ordinal()] = component;
+        }
+
+    }
+
+    private V1CompoundId(final byte[] byteRepresentation) {
+
+        components = new Component[FIELD_COUNT];
+
+        int index = 0;
+
+        try {
+            while (index < byteRepresentation.length) {
+
+                long upper = 0;
+                long lower = 0;
+
+                final UUID uuid;
+                final Field field;
+
+                final int ordinal = byteRepresentation[index++];
+
+                field = FIELDS[ordinal];
+                upper |= ((long)byteRepresentation[index++] << (8 * 7));
+                upper |= ((long)byteRepresentation[index++] << (8 * 6));
+                upper |= ((long)byteRepresentation[index++] << (8 * 5));
+                upper |= ((long)byteRepresentation[index++] << (8 * 4));
+                upper |= ((long)byteRepresentation[index++] << (8 * 3));
+                upper |= ((long)byteRepresentation[index++] << (8 * 2));
+                upper |= ((long)byteRepresentation[index++] << (8 * 1));
+                upper |= ((long)byteRepresentation[index++] << (8 * 0));
+
+                lower |= ((long)byteRepresentation[index++] << (8 * 7));
+                lower |= ((long)byteRepresentation[index++] << (8 * 6));
+                lower |= ((long)byteRepresentation[index++] << (8 * 5));
+                lower |= ((long)byteRepresentation[index++] << (8 * 4));
+                lower |= ((long)byteRepresentation[index++] << (8 * 3));
+                lower |= ((long)byteRepresentation[index++] << (8 * 2));
+                lower |= ((long)byteRepresentation[index++] << (8 * 1));
+                lower |= ((long)byteRepresentation[index++] << (8 * 0));
+
+                uuid = new UUID(upper, lower);
+                components[ordinal] = new Component(field, uuid);
+
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new IllegalArgumentException(ex);
         }
 
     }
@@ -178,6 +225,41 @@ class V1CompoundId implements Serializable {
     @Override
     public String toString() {
         return asString();
+    }
+
+    public byte[] asBytes(final Field ... fields) {
+        final byte[] bytes = new byte[fields.length * (16 + 1)];
+
+        int index = 0;
+
+        for (final Field field : fields) {
+
+            final UUID uuid = getComponent(field).getValue();
+            final long upper = uuid.getMostSignificantBits();
+            final long lower = uuid.getLeastSignificantBits();
+
+            bytes[index++] = (byte) (field.ordinal() & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 7) & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 6) & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 5) & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 4) & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 3) & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 2) & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 1) & 0xFF);
+            bytes[index++] = (byte) (upper >> (8 * 0) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 7) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 6) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 5) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 4) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 3) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 2) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 1) & 0xFF);
+            bytes[index++] = (byte) (lower >> (8 * 0) & 0xFF);
+
+        }
+
+        return bytes;
+
     }
 
     /**
@@ -302,6 +384,17 @@ class V1CompoundId implements Serializable {
          */
         Builder with(final String stringRepresentation) {
             return with(new V1CompoundId(stringRepresentation));
+        }
+
+        /**
+         * Parses the contents of a byte[] into this builder assigning all fields to the builder.
+         *
+         * @param byteRepresentation the byte representation of the {@link V1CompoundId}.
+         *
+         * @return this instance
+         */
+        Builder with(final byte[] byteRepresentation) {
+            return with(new V1CompoundId(byteRepresentation));
         }
 
         /**

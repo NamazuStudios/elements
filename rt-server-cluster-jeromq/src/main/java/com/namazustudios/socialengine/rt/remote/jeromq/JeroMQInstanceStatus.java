@@ -6,7 +6,6 @@ import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
