@@ -86,7 +86,7 @@ cd docker/services-dev
 docker-compose up --build
 ```
 
-This should start an instance of mongo and redis running on the standard ports.
+This should preStart an instance of mongo and redis running on the standard ports.
 Running any of the services should, by default, look for connections on those
 ports on localhost.  No configuration should be necessary. 
 

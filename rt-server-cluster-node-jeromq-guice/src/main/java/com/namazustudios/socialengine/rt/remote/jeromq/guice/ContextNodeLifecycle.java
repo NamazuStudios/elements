@@ -8,12 +8,12 @@ import javax.inject.Inject;
 public class ContextNodeLifecycle implements NodeLifecycle {
 
     @Override
-    public void start() {
+    public void preStart() {
         getContext().start();
     }
 
     @Override
-    public void shutdown() {
+    public void postStop() {
         getContext().shutdown();
     }
 

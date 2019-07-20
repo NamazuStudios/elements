@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil;
 import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.RequestHeader;
@@ -18,7 +19,6 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,13 +29,10 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_UUID_NAME;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
-import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -47,27 +44,19 @@ public class JeroMQNode implements Node {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(JeroMQNode.class);
 
-    private static final String INBOUND_ADDR_FORMAT = "inproc://node.%s.in";
-
     private static final String OUTBOUND_ADDR_FORMAT = "inproc://node.%s.out";
-
-    public static final String ID = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.id";
 
     public static final String NAME = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.name";
 
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
-    private final AtomicReference<NodeContext> nodeContext = new AtomicReference<>();
-
-    private UUID instanceUuid;
-
-    private NodeId nodeId;
+    private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
     private String name;
 
-    private ZContext zContext;
+    private NodeId nodeId;
 
-    private String  bindAddress;
+    private ZContext zContext;
 
     private InvocationDispatcher invocationDispatcher;
 
@@ -86,35 +75,25 @@ public class JeroMQNode implements Node {
         return name;
     }
 
+    @Override
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+
     public String getOutboundAddr() {
         return format(OUTBOUND_ADDR_FORMAT, getNodeId().getApplicationUuid().toString());
     }
 
-    private void buildNodeIdIfPossible() {
-        // name may be null, which signifies that the node is the master node
-        if (getInstanceUuid() != null) {
-            final UUID instanceUuid = getInstanceUuid();
-            final UUID nodeUuid;
-            if (getName() != null) {
-                nodeUuid = nameUUIDFromBytes(getName().getBytes(UTF_8));
-            }
-            else {
-                nodeUuid = null;
-            }
-
-            nodeId = new NodeId(instanceUuid, nodeUuid);
-        }
-    }
-
     @Override
-    public void start() {
+    public void start(final InstanceBinding binding) {
 
         final NodeContext c = new NodeContext();
 
-        if (nodeContext.compareAndSet(null, c)) {
+        if (context.compareAndSet(null, c)) {
             logger.info("Starting up.");
-            getNodeLifecycle().start();
-            c.start();
+            getNodeLifecycle().preStart();
+            c.start(binding);
+            logger.info("Started Node.");
         } else {
             throw new IllegalStateException("Already started.");
         }
@@ -124,21 +103,16 @@ public class JeroMQNode implements Node {
     @Override
     public void stop() {
 
-        final NodeContext c = nodeContext.get();
+        final NodeContext c = context.get();
 
-        if (nodeContext.compareAndSet(c, null)) {
+        if (context.compareAndSet(c, null)) {
             logger.info("Shutting down.");
             c.stop();
-            getNodeLifecycle().shutdown();
+            getNodeLifecycle().postStop();
         } else {
             throw new IllegalStateException("Already stopped.");
         }
 
-    }
-
-    @Override
-    public NodeId getNodeId() {
-        return nodeId;
     }
 
     public ZContext getzContext() {
@@ -148,15 +122,6 @@ public class JeroMQNode implements Node {
     @Inject
     public void setzContext(ZContext zContext) {
         this.zContext = zContext;
-    }
-
-    public String getBindAddress() {
-        return bindAddress;
-    }
-
-    @Inject
-    public void setBindAddress(@Named(BIND_ADDRESS) String bindAddress) {
-        this.bindAddress = bindAddress;
     }
 
     public InvocationDispatcher getInvocationDispatcher() {
@@ -196,9 +161,13 @@ public class JeroMQNode implements Node {
     }
 
     @Inject
+    public void setNodeId(NodeId nodeId) {
+        this.nodeId = nodeId;
+    }
+
+    @Inject
     public void setName(@Named(NAME) String name) {
         this.name = name;
-        buildNodeIdIfPossible();
         logger = LoggerFactory.getLogger(loggerName());
     }
 
@@ -217,16 +186,6 @@ public class JeroMQNode implements Node {
                      .collect(Collectors.joining("."));
     }
 
-    public UUID getInstanceUuid() {
-        return instanceUuid;
-    }
-
-    @Inject
-    @Named(CURRENT_INSTANCE_UUID_NAME)
-    public void setInstanceUuid(UUID instanceUuid) {
-        this.instanceUuid = instanceUuid;
-    }
-
     private class NodeContext {
 
         private final AtomicBoolean running = new AtomicBoolean();
@@ -235,7 +194,7 @@ public class JeroMQNode implements Node {
 
         private final CountDownLatch proxyStartupLatch = new CountDownLatch(1);
 
-        final AtomicInteger dispatcherCount = new AtomicInteger();
+        private final AtomicInteger dispatcherCount = new AtomicInteger();
 
         private final ExecutorService dispatchExecutorService = Executors.newCachedThreadPool(r -> {
             final Thread thread = new Thread(r);
@@ -245,15 +204,14 @@ public class JeroMQNode implements Node {
             return thread;
         });
 
-        private final Thread proxyThread;
-        {
-            proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork());
+        private Thread proxyThread;
+
+        public void start(final InstanceBinding instanceBinding) {
+
+            proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork(instanceBinding));
             proxyThread.setDaemon(true);
             proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatch");
             proxyThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
-        }
-
-        public void start() {
 
             running.set(true);
             proxyThread.start();
@@ -296,7 +254,7 @@ public class JeroMQNode implements Node {
 
         }
 
-        private void bindFrontendSocketAndPerformWork() {
+        private void bindFrontendSocketAndPerformWork(final InstanceBinding instanceBinding) {
 
             try (final ZContext context = ZContext.shadow(getzContext());
                  final Socket frontend = context.createSocket(ROUTER);
@@ -304,7 +262,7 @@ public class JeroMQNode implements Node {
                  final Poller poller = context.createPoller(4)) {
 
                 frontend.setRouterMandatory(true);
-                frontend.bind(getBindAddress());
+                frontend.bind(instanceBinding.getBindAddress());
 
                 outbound.bind(getOutboundAddr());
 

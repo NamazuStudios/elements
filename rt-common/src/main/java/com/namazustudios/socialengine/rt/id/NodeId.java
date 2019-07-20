@@ -132,7 +132,7 @@ public class NodeId implements Serializable, HasNodeId {
      * @return the bytes of this {@link NodeId}.
      */
     public byte[] asBytes() {
-        return bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION)) : bytes;
+        return (bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION)) : bytes).clone();
     }
 
     @Override

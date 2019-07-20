@@ -4,11 +4,13 @@ import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.BIND_ADDRESS;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NAME;
 
 public class JeroMQNodeModule extends PrivateModule {
 
@@ -25,13 +27,23 @@ public class JeroMQNodeModule extends PrivateModule {
     private Runnable bindTimeoutAction = () -> {};
 
     /**
-     * Specifies the node unique id based {@link JeroMQNode#ID}.
+     * Specifes the node unique {@link NodeId}.
+     *
+     * @param nodeId the string representation of the {@link NodeId}
+     * @return this instance
+     */
+    public JeroMQNodeModule withNodeId(final String nodeId) {
+        return withNodeId(new NodeId(nodeId));
+    }
+
+    /**
+     * Specifies the node unique id.
      *
      * @param nodeId the node ID
      * @return this instance
      */
-    public JeroMQNodeModule withNodeId(final String nodeId) {
-        bindNodeIdAction = () -> bind(String.class).annotatedWith(named(ID)).toInstance(nodeId);
+    public JeroMQNodeModule withNodeId(final NodeId nodeId) {
+        bindNodeIdAction = () -> bind(NodeId.class).toInstance(nodeId);
         return this;
     }
 

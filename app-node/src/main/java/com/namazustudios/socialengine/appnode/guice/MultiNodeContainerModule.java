@@ -23,7 +23,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
 import static com.namazustudios.socialengine.rt.Constants.IS_LOCAL_ENVIRONMENT_NAME;
 import static com.namazustudios.socialengine.rt.Constants.CURRENT_INSTANCE_UUID_NAME;
-import static com.namazustudios.socialengine.rt.Constants.MASTER_NODE_NAME;
+import static com.namazustudios.socialengine.rt.Node.MASTER_NODE_NAME;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
@@ -37,7 +37,7 @@ public class MultiNodeContainerModule extends AbstractModule {
         final boolean isLocalInstance = isLocalInstanceProvider.get();
 
         install(new ZContextModule());
-        bind(MultiNodeContainer.class).asEagerSingleton();
+        bind(SimpleInstance.class).asEagerSingleton();
 
 // TODO No idea what to do here
 //        bind(InstanceMetadataContext.class)

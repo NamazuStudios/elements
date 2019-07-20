@@ -12,6 +12,7 @@ import java.util.Collection;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_COMMAND;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.*;
 
 public class JeroMQCommandServer {
@@ -74,14 +75,24 @@ public class JeroMQCommandServer {
                 case OPEN_ROUTE_TO_NODE:
                     response = processOpenRouteToNode(zMsg);
                     break;
+                case OPEN_BINDING_FOR_NODE:
+                    response = openBindingForNode(zMsg);
+                    break;
+                case CLOSE_BINDING_FOR_NODE:
+                    response = closeBindingForNode(zMsg);
+                    break;
                 default:
-                    response = error("Unsupported message type: " + command);
+                    response = error(UNKNOWN_COMMAND, "Unsupported message type: " + command);
                     break;
             }
 
             pushIdentity(response, identity);
             response.send(socket);
 
+        } catch (JeroMQControlException ex) {
+            final ZMsg response = exceptionError(ex.getCode(), ex);
+            pushIdentity(response, identity);
+            response.send(socket);
         } catch (Exception ex) {
             final ZMsg response = exceptionError(ex);
             pushIdentity(response, identity);
@@ -90,22 +101,39 @@ public class JeroMQCommandServer {
 
     }
 
+    private ZMsg openBindingForNode(final ZMsg zMsg) {
+        final ZMsg response = new ZMsg();
+        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
+        final String instanceBindAddress = demultiplex.openBindingForNode(nodeId);
+        OK.pushCommand(response);
+        response.addLast(instanceBindAddress.getBytes(CHARSET));
+        return response;
+    }
+
+    private ZMsg closeBindingForNode(final ZMsg zMsg) {
+        final ZMsg response = new ZMsg();
+        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
+        demultiplex.closeBindingForNode(nodeId);
+        OK.pushCommand(response);
+        return response;
+    }
+
     private ZMsg processInstanceStatus(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
         final Collection<NodeId> nodeIds = multiplex.getConnectedPeers();
         if (!zMsg.isEmpty()) logger.warn("Unexpected frames in status request: {}", zMsg);
-        response.addLast(OK.toString().getBytes(CHARSET));
-        response.addLast(instanceId.asString().getBytes(CHARSET));
-        nodeIds.forEach(nid -> response.addLast(nid.asString().getBytes(CHARSET)));
+        OK.pushCommand(response);
+        response.addLast(instanceId.asBytes());
+        nodeIds.forEach(nid -> response.addLast(nid.asBytes()));
         return response;
     }
 
     private ZMsg processOpenRouteToNode(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
-        final NodeId nodeId = new NodeId(zMsg.removeFirst().getString(CHARSET));
+        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         final String instanceInvokerAddress = zMsg.removeFirst().getString(CHARSET);
         final String instanceRouteAddress = multiplex.openRouteToNode(nodeId, instanceInvokerAddress);
-        response.addLast(OK.toString().getBytes(CHARSET));
+        OK.pushCommand(response);
         response.addLast(instanceRouteAddress.getBytes(CHARSET));
         return response;
     }

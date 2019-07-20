@@ -14,6 +14,7 @@ import java.nio.charset.Charset;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_ERROR;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
@@ -50,7 +51,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
         final int frontend = poller.register(main, POLLIN | POLLERR);
         this.multiplex = new JeroMQMultiplexRouter(zContextShadow, poller);
-        this.demultiplex = new JeroMQDemultiplexRouter(poller, frontend);
+        this.demultiplex = new JeroMQDemultiplexRouter(zContextShadow, poller, frontend);
         this.control = new JeroMQCommandServer(instanceId, poller, frontend, multiplex, demultiplex);
 
     }
@@ -82,19 +83,24 @@ public class JeroMQRoutingServer implements AutoCloseable {
     }
 
 
-    public static ZMsg error(final String message) {
+    public static ZMsg error(final JeroMQControlResponseCode code, final String message) {
         final ZMsg response = new ZMsg();
-        response.addLast(EXCEPTION.toString().getBytes(CHARSET));
+        (code == null ? UNKNOWN_ERROR : code).pushCommand(response);
         response.addLast(message.getBytes(CHARSET));
         return response;
     }
 
     public static ZMsg exceptionError(final Exception ex) {
+        final ZMsg response = exceptionError(EXCEPTION, ex);
+        return response;
+    }
+
+    public static ZMsg exceptionError(final JeroMQControlResponseCode code, final Exception ex) {
 
         logger.error("Exception processing request.", ex);
         final ZMsg response = new ZMsg();
 
-        response.addLast(EXCEPTION.toString().getBytes(CHARSET));
+        EXCEPTION.pushCommand(response);
         response.addLast(ex.getMessage().getBytes(CHARSET));
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {

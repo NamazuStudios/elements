@@ -26,6 +26,15 @@ public interface InstanceConnectionService {
     void stop();
 
     /**
+     * Gets an {@link InstanceBinding} which a node can then use to receive incoming data.  If a binding already exists
+     * for the supplied {@link NodeId}, then an exception will be thrown.
+     *
+     * @param nodeId the {@link NodeId} for which the binding will be used.
+     * @return the {@link InstanceBinding}
+     */
+    InstanceBinding openBinding(NodeId nodeId);
+
+    /**
      * Gets a {@link List<InstanceConnection>} representing all active connections.
      *
      * @return the list of all active {@link InstanceConnection}s
@@ -86,6 +95,27 @@ public interface InstanceConnectionService {
          * {@link InstanceMetadataContext} belonging to this connection will fail immediately.
          */
         void disconnect();
+
+    }
+
+    /**
+     * Represents a binding.  The binding is managed by the {@link InstanceConnectionService}.  Wen opening a binding,
+     * a node will then bind on the provided address.  The {@link InstanceConnectionService} will accept connections
+     * until the binding is closed.
+     */
+    interface InstanceBinding {
+
+        /**
+         * Returns the host address to which to bind when receiving incoming data.
+         *
+         * @return the bind address
+         */
+        String getBindAddress();
+
+        /**
+         * Closes the binding.
+         */
+        void close();
 
     }
 

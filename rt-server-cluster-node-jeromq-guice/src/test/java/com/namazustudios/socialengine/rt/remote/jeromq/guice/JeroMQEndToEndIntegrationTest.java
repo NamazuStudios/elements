@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.NodeLifecycle;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
@@ -52,8 +53,8 @@ public class JeroMQEndToEndIntegrationTest {
         setRemoteInvoker(clientInvoker.getInstance(RemoteInvoker.class));
         setTestServiceInterface(clientInvoker.getInstance(TestServiceInterface.class));
 
-        getNode().start();
 // TODO FIXME
+//        getNode().start(binding);
 //        getRemoteInvoker().start();
 
     }
@@ -305,17 +306,17 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance("inproc://integration-test");
 
-            bind(String.class).annotatedWith(named(ID)).toInstance("integration-test");
+            bind(NodeId.class).toInstance(new NodeId(randomUUID(), randomUUID()));
             bind(String.class).annotatedWith(named(NAME)).toInstance("integration-test");
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {
                 @Override
-                public void start() {
+                public void preStart() {
                     logger.info("Starting test node lifecycle.");
                 }
 
                 @Override
-                public void shutdown() {
+                public void postStop() {
                     logger.info("Shutting down test node lifecycle.");
                 }
             });
@@ -343,13 +344,12 @@ public class JeroMQEndToEndIntegrationTest {
             bind(String.class).annotatedWith(named(ConnectionPool.MIN_CONNECTIONS)).toInstance("10");
             bind(String.class).annotatedWith(named(ConnectionPool.MAX_CONNECTIONS)).toInstance("250");
 
-            bind(String.class)
 // TODO FIXME
+//            bind(String.class)
 //                .annotatedWith(named(CONNECT_ADDRESS))
-                .toInstance("inproc://integration-test");
+//                .toInstance("inproc://integration-test");
 
-            bind(TestServiceInterface.class)
-                .toProvider(new RemoteProxyProvider<>(TestServiceInterface.class));
+            bind(TestServiceInterface.class).toProvider(new RemoteProxyProvider<>(TestServiceInterface.class));
 
         }
 

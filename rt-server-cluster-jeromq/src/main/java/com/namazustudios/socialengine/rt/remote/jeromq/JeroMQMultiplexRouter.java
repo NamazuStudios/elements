@@ -48,7 +48,7 @@ public class JeroMQMultiplexRouter {
         rBackends.forEach((index, iid) -> routeToFrontend(index, iid));
         rFrontends.forEach((index, nid) -> routeToBackend(index, nid));
     }
-
+    
     private void routeToFrontend(final int index, final InstanceId instanceId) {
 
         if (!poller.pollin(index)) return;

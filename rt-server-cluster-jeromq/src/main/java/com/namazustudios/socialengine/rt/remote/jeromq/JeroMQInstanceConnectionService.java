@@ -4,12 +4,13 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.InstanceHostInfo;
+import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.Publisher;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
-import com.namazustudios.socialengine.rt.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -27,7 +28,6 @@ import java.util.function.Consumer;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 
@@ -73,6 +73,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             context.stop();
         }
 
+    }
+
+    @Override
+    public InstanceBinding openBinding(final NodeId nodeId) {
+        final InstanceConnectionContext context = getContext();
+        return context.openBinding(nodeId);
     }
 
     @Override
@@ -335,6 +341,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public Subscription subscribeToDisconnect(final Consumer<InstanceConnection> onDisconnect) {
             return this.onDisconnect.subscribe(onDisconnect);
+        }
+
+        public InstanceBinding openBinding(final NodeId nodeId) {
+            try (final JeroMQControlClient client = new JeroMQControlClient(getzContext(), getInternalBindAddress())) {
+               final InstanceBinding instanceBinding = client.openBinding(nodeId);
+               return instanceBinding;
+            }
         }
 
     }

@@ -8,11 +8,11 @@ public interface NodeLifecycle {
     /**
      * Starts the lifecycle.
      */
-    void start();
+    void preStart();
 
     /**
      * Shutdowns or stops the lifecycle.
      */
-    void shutdown();
+    void postStop();
 
 }

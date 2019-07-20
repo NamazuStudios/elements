@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import org.zeromq.ZFrame;
+import org.zeromq.ZMsg;
+
 public enum JeroMQControlResponseCode {
 
     /**
@@ -18,6 +21,11 @@ public enum JeroMQControlResponseCode {
     NO_SUCH_ROUTE,
 
     /**
+     * Indicates a binding already exists.
+     */
+    BINDING_ALREDY_EXISTS,
+
+    /**
      * There was an exception processing the request.
      */
     EXCEPTION,
@@ -25,6 +33,59 @@ public enum JeroMQControlResponseCode {
     /**
      * Indicates an unknown error.
      */
-    UNKNOWN_ERROR
+    UNKNOWN_ERROR;
+
+    private static final JeroMQControlResponseCode VALUES[] = values();
+
+    /**
+     * Pushes the code as the first frame in the specified {@link ZMsg}.
+     *
+     * @param zMsg the {@link ZMsg} to receive the command
+     */
+    public void pushCommand(final ZMsg zMsg) {
+
+        final byte data[] = new byte[Integer.BYTES];
+
+        int index = 0;
+        final int ordinal = ordinal();
+
+        data[index++] = (byte) (ordinal >> (4 * 3));
+        data[index++] = (byte) (ordinal >> (4 * 2));
+        data[index++] = (byte) (ordinal >> (4 * 1));
+        data[index++] = (byte) (ordinal >> (4 * 0));
+
+        final ZFrame frame = new ZFrame(data);
+        zMsg.addFirst(frame);
+
+    }
+
+    /**
+     * Gets the {@link JeroMQControlResponseCode} or throw an {@link IllegalArgumentException} if the command could not
+     * be understood.  This removes the first frame of the message allowing subsequent processing to take place.
+     *
+     * @param zMsg the message from which to read the command.
+     *
+     * @return the {@link JeroMQRoutingCommand}
+     */
+    public static JeroMQControlResponseCode stripCode(final ZMsg zMsg) {
+
+        final ZFrame frame = zMsg.removeFirst();
+        final byte[] data = frame.getData();
+
+        try {
+
+            int i = 0;
+            int ordinal = 0;
+            ordinal |= (data[i++] << (4 * 3));
+            ordinal |= (data[i++] << (4 * 2));
+            ordinal |= (data[i++] << (4 * 1));
+            ordinal |= (data[i++] << (4 * 0));
+
+            return VALUES[ordinal];
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+
+    }
 
 }

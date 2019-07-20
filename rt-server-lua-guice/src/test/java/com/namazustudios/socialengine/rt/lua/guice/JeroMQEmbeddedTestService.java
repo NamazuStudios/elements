@@ -13,7 +13,6 @@ import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.zeromq.ZContext.shadow;
 
 /**
@@ -76,7 +75,9 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         node = nodeInjector.getInstance(Node.class);
         context = clientInjector.getInstance(Context.class);
 
-        getNode().start();
+// TODO
+//        getNode().start(binding);
+
         getContext().start();
         return this;
 

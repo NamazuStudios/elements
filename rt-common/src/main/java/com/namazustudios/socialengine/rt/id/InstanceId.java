@@ -13,6 +13,8 @@ public class InstanceId implements Serializable {
 
     private transient volatile int hash;
 
+    private transient byte[] bytes;
+
     private transient volatile String string;
 
     public InstanceId() {
@@ -24,6 +26,13 @@ public class InstanceId implements Serializable {
     public InstanceId(final String stringRepresentation) {
         v1CompoundId = new Builder()
                 .with(stringRepresentation)
+                .only(INSTANCE)
+            .build();
+    }
+
+    public InstanceId(final byte[] byteRepresentation) {
+        v1CompoundId = new Builder()
+                .with(byteRepresentation)
                 .only(INSTANCE)
             .build();
     }
@@ -52,6 +61,10 @@ public class InstanceId implements Serializable {
      */
     public String asString() {
         return string == null ? (string = v1CompoundId.asString(INSTANCE)) : string;
+    }
+
+    public byte[] asBytes() {
+        return (bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE)) : bytes).clone();
     }
 
     @Override

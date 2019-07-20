@@ -16,17 +16,25 @@ public class JeroMQControlException extends RuntimeException {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQControlException.class);
 
+    private final JeroMQControlResponseCode code;
+
     public JeroMQControlException(final JeroMQControlResponseCode code) {
         super(code == null ? UNKNOWN_ERROR.toString() : code.toString());
+        this.code = code;
     }
 
     public JeroMQControlException(final JeroMQControlResponseCode code, final ZMsg response) {
         super(message(code, response), cause(response));
+        this.code = code;
     }
 
     private static String message(final JeroMQControlResponseCode code, final ZMsg response) {
         final String message = response.isEmpty() ? "unknown" : response.removeFirst().getString(CHARSET);
         return format("%s - %s", code, message);
+    }
+
+    public JeroMQControlResponseCode getCode() {
+        return code;
     }
 
     private static Throwable cause(final ZMsg response) {

@@ -19,10 +19,20 @@ public enum JeroMQRoutingCommand {
     GET_INSTANCE_STATUS,
 
     /**
-     * Opens a route to a node by specifying the {@link NodeId} and connect address.  If a route is already opened
-     * then this simply returns the node.
+     * Opens a route to a node by specifying the {@link NodeId} and instance connect address.  If a route is already
+     * opened then this simply returns the node.
      */
-    OPEN_ROUTE_TO_NODE;
+    OPEN_ROUTE_TO_NODE,
+
+    /**
+     * Opens a binding for a node by specifying the {@link NodeId}.
+     */
+    OPEN_BINDING_FOR_NODE,
+
+    /**
+     * Closes a binding for a node by specifying the {@link NodeId}.
+     */
+    CLOSE_BINDING_FOR_NODE;
 
     private static final JeroMQRoutingCommand VALUES[] = values();
 
