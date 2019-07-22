@@ -14,7 +14,6 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.DISPATCHER_EXECUTOR_SERVICE;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
-import static com.namazustudios.socialengine.rt.SimpleSingleUseHandlerService.RESOURCE_SERVICE;
 
 /**
  * Creates the simple internal
@@ -45,15 +44,9 @@ public class SimpleServicesModule extends PrivateModule {
 
         bindSchedulerThreads.run();
 
-        bind(SimpleResourceService.class).asEagerSingleton();;
-        bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
-        bind(ResourceService.class)
-            .annotatedWith(named(RESOURCE_SERVICE))
-            .to(SimpleResourceService.class)
-            .asEagerSingleton();
-
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
+        bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
         bind(RetainedHandlerService.class).to(SimpleRetainedHandlerService.class).asEagerSingleton();
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
         bind(TaskService.class).to(SimpleTaskService.class);
