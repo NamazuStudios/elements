@@ -10,7 +10,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
 
@@ -25,6 +24,30 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
     private ResourceService resourceService;
 
     private ResourceLockService resourceLockService;
+    private final AtomicBoolean running = new AtomicBoolean();
+
+    @Override
+    public void start() {
+        if (running.compareAndSet(false, true)) {
+            purge();
+        } else {
+            throw new IllegalStateException("Already started.");
+        }
+    }
+
+    @Override
+    public void stop() {
+        if (running.compareAndSet(true, false)) {
+            purge();
+        } else {
+            throw new IllegalStateException("Already started.");
+        }
+    }
+
+    private void purge() {
+        final Path path = Path.fromComponents("tmp", "handler", "re", "*");
+        getResourceService().unlinkMultiple(path);
+    }
 
     @Override
     public TaskId perform(

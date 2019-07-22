@@ -356,6 +356,12 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
+    public List<Unlink> unlinkMultiple(Path path, Consumer<Resource> removed) {
+        // TODO Implement this.
+        throw new UnsupportedOperationException("TODO: Not Implemented.");
+    }
+
+    @Override
     public Resource removeResource(final ResourceId resourceId) {
 
         final Deque<Path> pathLock = getPathOptimisticLockService().createLock();
@@ -418,6 +424,12 @@ public class SimpleResourceService implements ResourceService {
 
         });
 
+    }
+
+    @Override
+    public void removeResources(Path path, Consumer<Resource> removed) {
+        // TODO Implement Me
+        throw new UnsupportedOperationException("TODO: Not Currently Supported.");
     }
 
     @Override

@@ -1,12 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.Queue;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -14,7 +11,6 @@ import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.joining;
 
 public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
@@ -28,17 +24,29 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     private ResourceLockService resourceLockService;
 
-    private Queue<ResourceId> resourceIdList;
+    private final AtomicBoolean running = new AtomicBoolean();
 
     @Override
     public void start() {
-        resourceIdList = new ConcurrentLinkedQueue<>();
+        if (running.compareAndSet(false, true)) {
+            purge();
+        } else {
+            throw new IllegalStateException("Already started.");
+        }
     }
 
     @Override
     public void stop() {
-        resourceIdList.forEach(rid -> getResourceService().destroy(rid));
-        resourceIdList = null;
+        if (running.compareAndSet(true, false)) {
+            purge();
+        } else {
+            throw new IllegalStateException("Already started.");
+        }
+    }
+
+    private void purge() {
+        final Path path = Path.fromComponents("tmp", "handler", "su", "*");
+        getResourceService().removeResources(path);
     }
 
     @Override

@@ -30,11 +30,13 @@ public class SimpleHandlerContext implements HandlerContext {
 
     @Override
     public void start() {
+        getRetainedHandlerService().start();
         getSingleUseHandlerService().start();
     }
 
     @Override
     public void stop() {
+        getRetainedHandlerService().stop();
         getSingleUseHandlerService().stop();
     }
 

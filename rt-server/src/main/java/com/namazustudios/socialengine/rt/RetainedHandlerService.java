@@ -11,6 +11,16 @@ import java.util.function.Consumer;
 public interface RetainedHandlerService {
 
     /**
+     * Starts this {@link RetainedHandlerService}
+     */
+    void start();
+
+    /**
+     * Stops this {@link RetainedHandlerService}
+     */
+    void stop();
+
+    /**
      * Creates a new {@link Resource} using the attributes and the module.  Once created, this {@link Resource} will be
      * kept in memory for any number of operations.  Once the operations is complete, the system-assigned {@link Path}
      * to the {@link Resource} will be unlinked.  If the {@link Resource} needs to persist beyond the creation of this

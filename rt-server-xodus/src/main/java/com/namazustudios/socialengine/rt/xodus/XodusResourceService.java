@@ -561,43 +561,45 @@ public class XodusResourceService implements ResourceService {
 
         checkOpen();
 
-        final List<XodusListing> result = new ArrayList<>();
+        final List<XodusListing> result = getEnvironment().computeInTransaction(txn -> {
+            final List<XodusListing> l = new ArrayList<>();
+            doList(txn, path, l::add);
+            debugList.report(txn, path, l);
+            return l;
+        });
 
-        getEnvironment().executeInTransaction(txn -> {
+        return Spliterators.spliterator(result, CONCURRENT | IMMUTABLE | NONNULL);
 
-            final Store store = openPaths(txn);
+    }
 
-            try (final Cursor cursor = store.openCursor(txn)) {
+    private void doList(final Transaction txn, final Path path, final Consumer<XodusListing> listingConsumer) {
+        final Store store = openPaths(txn);
 
-                ByteIterable key = stringToEntry(path.stripWildcard().toNormalizedPathString());
-                ByteIterable value = cursor.getSearchKeyRange(key);
+        try (final Cursor cursor = store.openCursor(txn)) {
 
-                while (value != null) {
+            ByteIterable key = stringToEntry(path.stripWildcard().toNormalizedPathString());
+            ByteIterable value = cursor.getSearchKeyRange(key);
 
-                    key = cursor.getKey();
-                    value = cursor.getValue();
+            while (value != null) {
 
-                    final XodusListing xodusListing = new XodusListing(key, value);
+                key = cursor.getKey();
+                value = cursor.getValue();
 
-                    if (path.matches(xodusListing.getPath())) {
-                        result.add(xodusListing);
-                    } else {
-                        break;
-                    }
+                final XodusListing xodusListing = new XodusListing(key, value);
 
-                    if (!cursor.getNext()) {
-                        break;
-                    }
+                if (path.matches(xodusListing.getPath())) {
+                    listingConsumer.accept(xodusListing);
+                } else {
+                    break;
+                }
 
+                if (!cursor.getNext()) {
+                    break;
                 }
 
             }
 
-            debugList.report(txn, path, result);
-
-        });
-
-        return Spliterators.spliterator(result, CONCURRENT | IMMUTABLE | NONNULL);
+        }
 
     }
 
@@ -692,26 +694,48 @@ public class XodusResourceService implements ResourceService {
     }
 
     @Override
-    public Unlink unlinkPath(final Path path, final Consumer<Resource> reovedResourceConsumer) {
+    public Unlink unlinkPath(final Path path, final Consumer<Resource> removedResourceConsumer) {
 
         checkOpen();
 
+        if (path.isWildcard()) {
+            throw new IllegalArgumentException("Must not pass wildcard path. (use unlinkMultiple instead).");
+        }
+
         final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
         final Unlink unlink = getEnvironment().computeInTransaction(txn -> doUnlink(txn, pathKey));
-
-        if (unlink.isRemoved()) {
-            try (final Monitor m = getResourceLockService().getMonitor(unlink.getResourceId())) {
-                final XodusCacheStorage xodusCacheStorage = getStorage();
-                final XodusCacheKey cacheKey = new XodusCacheKey(unlink.getResourceId());
-                final XodusResource xodusResource = xodusCacheStorage.getResourceIdResourceMap().remove(cacheKey);
-                reovedResourceConsumer.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
-            } finally {
-                getResourceLockService().delete(unlink.getResourceId());
-            }
-        }
+        if (unlink.isRemoved()) doPostRemoval(unlink, removedResourceConsumer);
 
         return unlink;
 
+    }
+
+    @Override
+    public List<Unlink> unlinkMultiple(final Path path, final Consumer<Resource> removedResourceConsumer) {
+
+        final List<Unlink> unlinkList = getEnvironment().computeInTransaction(txn -> {
+            final List<XodusListing> listings = new ArrayList<>();
+            doList(txn, path, listings::add);
+            return listings.stream().map(l -> doUnlink(txn, l.getPathKey())).collect(toList());
+        });
+
+        unlinkList.stream()
+                  .filter(unlink -> unlink.isRemoved())
+                  .forEach(unlink -> doPostRemoval(unlink, removedResourceConsumer));
+
+        return unlinkList;
+
+    }
+
+    private void doPostRemoval(final Unlink unlink, final Consumer<Resource> removedResourceConsumer) {
+        try (final Monitor m = getResourceLockService().getMonitor(unlink.getResourceId())) {
+            final XodusCacheStorage xodusCacheStorage = getStorage();
+            final XodusCacheKey cacheKey = new XodusCacheKey(unlink.getResourceId());
+            final XodusResource xodusResource = xodusCacheStorage.getResourceIdResourceMap().remove(cacheKey);
+            removedResourceConsumer.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
+        } finally {
+            getResourceLockService().delete(unlink.getResourceId());
+        }
     }
 
     private Unlink doUnlink(final Transaction txn, final ByteIterable pathKey) {
@@ -815,6 +839,28 @@ public class XodusResourceService implements ResourceService {
         } finally {
             getResourceLockService().delete(resourceId);
         }
+
+    }
+
+    @Override
+    public void removeResources(final Path path, final Consumer<Resource> removed) {
+
+        checkOpen();
+
+        getEnvironment().computeInTransaction(txn -> {
+             final List<XodusListing> listings = new ArrayList<>();
+            doList(txn, path, listings::add);
+            return listings;
+        }).forEach(listing -> {
+
+             final XodusCacheKey cacheKey = new XodusCacheKey(listing.getResourceId());
+
+             try (final Monitor m = getResourceLockService().getMonitor(listing.getResourceId())) {
+                 final XodusResource xodusResource = getStorage().getResourceIdResourceMap().remove(cacheKey);
+                 removed.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
+             }
+
+        });
 
     }
 

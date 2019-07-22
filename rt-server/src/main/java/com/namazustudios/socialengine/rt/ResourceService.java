@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -234,6 +235,31 @@ public interface ResourceService extends AutoCloseable {
     Unlink unlinkPath(Path path, Consumer<Resource> removed);
 
     /**
+     * Unlinks multiple {@link Resource}s.  This accepts a {@link Path}, which may be a wildcard.
+     *
+     * @param path
+     * @return
+     */
+    default List<Unlink> unlinkMultiple(final Path path) {
+        final Logger logger = LoggerFactory.getLogger(getClass());
+        return unlinkMultiple(path, r -> {
+            try {
+                r.close();
+            } catch (Exception ex) {
+                logger.error("Error closing resource.,", ex);
+            }
+        });
+    }
+
+    /**
+     * Unlinks multiple {@link Resource}s.  This accepts a {@link Path}, which may be a wildcard.
+     * @param path
+     * @param removed
+     * @return
+     */
+    List<Unlink> unlinkMultiple(Path path, Consumer<Resource> removed);
+
+    /**
      * Removes a {@link Resource} instance from this resource service.
      *
      * @param resourceId the path to the resource
@@ -257,6 +283,23 @@ public interface ResourceService extends AutoCloseable {
     }
 
     /**
+     * Removes all {@link Resource}s linked with the provided {@link Path}.
+     *
+     * @param path the the {@link Path} for the resource.
+     */
+    default void removeResources(final Path path) {
+        removeResources(path, r -> r.close());
+    }
+
+    /**
+     * Removes all {@link Resource}s linked with the provided {@link Path}.
+     *
+     * @param path the the {@link Path} for the resource.
+     * @param removed a {@link Consumer<Resource>} which accepts the removed resource
+     */
+    void removeResources(final Path path, final Consumer<Resource> removed);
+
+    /**
      * Removes a {@link Resource} and then immediately closes it.
      *
      * @param resourceId
@@ -278,6 +321,15 @@ public interface ResourceService extends AutoCloseable {
     default void destroy(final String resourceIdString) {
         final Resource resource = removeResource(resourceIdString);
         resource.close();
+    }
+
+    /**
+     * Destroys all {@link Resource}s at the provided {@link Path}.
+     *
+     * @param path the {@link Path}
+     */
+    default void destroyResources(final Path path) {
+        removeResources(path, r -> r.close());
     }
 
     /**
