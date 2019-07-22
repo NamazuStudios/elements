@@ -45,8 +45,7 @@ public class SimpleScheduler implements Scheduler {
 
     @Override
     public Future<Void> scheduleUnlink(final Path path) {
-        return getDispatcherExecutorService().submit(() -> {
-            getResourceService().unlinkPath(path, resource -> {
+        return getDispatcherExecutorService().submit(() -> { getResourceService().unlinkPath(path, resource -> {
 
                 final ResourceId resourceId = resource.getId();
 
@@ -55,11 +54,24 @@ public class SimpleScheduler implements Scheduler {
                 } catch (ResourceNotFoundException ex) {
                     logger.debug("No Resource found at path {}.  Disregarding.", ex);
                 } catch (Exception ex) {
-                    logger.error("Caught exception destroying Resource {}", resourceId, ex);
+                    logger.error("Caught exception unlinking resource {}", resourceId, ex);
                 }
 
             });
         }, null);
+    }
+
+    @Override
+    public Future<Void> scheduleUnlink(final Path path, final long delay, final TimeUnit timeUnit) {
+
+        final FutureTask<Void> command = new FutureTask<>(() -> {
+            scheduleUnlink(path);
+            return null;
+        });
+
+        getScheduledExecutorService().schedule(command, delay, timeUnit);
+        return command;
+
     }
 
     @Override
@@ -71,6 +83,19 @@ public class SimpleScheduler implements Scheduler {
                 logger.error("Caught exception destroying Resource {}", resourceId, ex);
             }
         }, null);
+    }
+
+    @Override
+    public Future<Void> scheduleDestruction(final ResourceId resourceId, final long delay, final TimeUnit timeUnit) {
+
+        final FutureTask<Void> command = new FutureTask<>(() -> {
+            scheduleDestruction(resourceId);
+            return null;
+        });
+
+        getScheduledExecutorService().schedule(command, delay, timeUnit);
+        return command;
+
     }
 
     @Override

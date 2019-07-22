@@ -45,20 +45,35 @@ public interface Scheduler {
     <T> Future<T> submit(Callable<T> tCallable);
 
     /**
-     * Provided the {@link Path}, this will schedule an unlink operation at some point in the near future.  This allows
-     * any pending operations to relase their locks gracefully unlink an potentially destroy any {@link Resource}s
-     * associated with the supplied {@Link Path}.  If the {@link Resource} is removed this will ensure that the
-     * {@link Resource#close()} method is called appropriately.
+     * Schedules tht unlink operation as soon as possible for the given {@link Path}.
      *
-     * @param path the {@link Path} to unlink
-     * @return a {@link Future<Void>} used to signal detruction.
+     * @param path the {@link Path}
+     * @return a {@link Future<Void>} used to signal un-linking.
      */
-    Future<Void> scheduleUnlink(Path path);
+    default Future<Void> scheduleUnlink(final Path path) {
+        return scheduleUnlink(path, 0, MILLISECONDS);
+    }
 
     /**
-     * Provided the {@link ResourceId}, this will schedule destruction at some point in the near future.  This allows
-     * any pending operations to scheduleRelease their locks gracefully and destroy the {@link Resource} associated with the
-     * supplied. {@link ResourceId}.
+     * Provided the {@link Path}, this will schedule an unlink operation at some point in the near future, but not
+     * before the delay time specified in the parameters of this method.  Any pending operations to relase their locks
+     * gracefully unlink an potentially destroy any {@link Resource}s associated with the supplied {@Link Path}.  If
+     * the {@link Resource} is removed this will ensure that the {@link Resource#close()} method is called
+     * appropriately.
+     *
+     * @param path the {@link Path} to unlink
+     * @return a {@link Future<Void>} used to signal un-linking.
+     */
+    Future<Void> scheduleUnlink(Path path, long delay, TimeUnit timeUnit);
+
+    default Future<Void> scheduleDestruction(final ResourceId resourceId) {
+        return scheduleDestruction(resourceId, 0, MILLISECONDS);
+    }
+
+    /**
+     * Provided the {@link ResourceId}, this will schedule destruction at some point in the near future, but not before.
+     * the delay specified in the arguments to this method.  This allows any pending operations to scheduleRelease their
+     * locks gracefully and destroy the {@link Resource} associated with the supplied. {@link ResourceId}.
      *
      * This ensures that the underlying {@link Resource} is removed from the {@link ResourceService} and its
      * {@link Resource#close()} method invoked.
@@ -66,7 +81,7 @@ public interface Scheduler {
      * @param resourceId the {@link ResourceId}
      * @return a {@link Future<Void>} used to signal detruction.
      */
-    Future<Void> scheduleDestruction(ResourceId resourceId);
+    Future<Void> scheduleDestruction(ResourceId resourceId, long delay, TimeUnit timeUnit);
 
     /**
      * Performs an action against the resource with the provided {@link ResourceId}.

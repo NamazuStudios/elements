@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -27,12 +28,14 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
     @Override
     public TaskId perform(
             final Consumer<Object> success, final Consumer<Throwable> failure,
+            final long timeout, final TimeUnit timeoutUnit,
             final String module, final Attributes attributes,
             final String method, final Object... args) {
 
         final Path path = Path.fromComponents("tmp", "handler", "re", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
+        getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -24,6 +25,7 @@ public interface RetainedHandlerService {
      * @return the result of the operation
      */
     TaskId perform(Consumer<Object> success, Consumer<Throwable> failure,
+                   long timeoutDelay, TimeUnit timeoutUnit,
                    String module, Attributes attributes,
                    String method, Object... args);
 

@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -41,11 +42,13 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     @Override
     public TaskId perform(final Consumer<Object> success, final Consumer<Throwable> failure,
-                        final String module, final Attributes attributes,
-                        final String method, final Object... args) {
+                          long timeoutDelay, TimeUnit timeoutUnit,
+                          final String module, final Attributes attributes,
+                          final String method, final Object... args) {
         final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
+        getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
@@ -56,7 +59,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                 if (destroyed.compareAndSet(false, true)) try {
                     getScheduler().scheduleDestruction(resourceId);
                 } catch (Exception ex) {
-                    logger.error("Error scheudling destruction for resource {}", resourceId, ex);
+                    logger.error("Error scheduling destruction for resource {}", resourceId, ex);
                 }
             };
 
@@ -71,7 +74,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                     if (sent.compareAndSet(false, true)) failure.accept(t);
 
                 } catch (Exception ex) {
-                    logger.error("Caught exception destroying resource {}", resourceId, ex);
+                    logger.error("Caught exception sending response from resource {}", resourceId, ex);
                 } finally {
                     destroy.run();
                 }

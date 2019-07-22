@@ -29,7 +29,6 @@ import java.util.stream.Stream;
 
 import static java.lang.Integer.max;
 import static java.lang.System.getProperty;
-import static java.util.Collections.unmodifiableSet;
 import static java.util.Spliterator.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -84,29 +83,6 @@ public class XodusResourceService implements ResourceService {
      * is removed entirely.
      */
     public static final String STORE_ACQUIRES = "acquires";
-
-    public static final Set<String> TEXT_STORES;
-
-    public static final Set<String> BINARY_STORES;
-
-    public static final Set<String> INTEGER_STORES;
-
-    static {
-
-        final Set<String> binaryStores = new HashSet<>();
-        binaryStores.add(STORE_RESOURCES);
-        BINARY_STORES = unmodifiableSet(binaryStores);
-
-        final Set<String> integerStores = new HashSet<>();
-        integerStores.add(STORE_ACQUIRES);
-        INTEGER_STORES = unmodifiableSet(integerStores);
-
-        final Set<String> textStores = new HashSet<>();
-        textStores.add(STORE_PATHS);
-        textStores.add(STORE_RESOURCE_IDS);
-        TEXT_STORES = unmodifiableSet(textStores);
-
-    }
 
     /**
      * The acquire condition for use with the {@link Monitor} instance used to obtain access to the cached instance
@@ -1035,79 +1011,7 @@ public class XodusResourceService implements ResourceService {
      * @return the {@link StringBuilder} that was supplied to the method.
      */
     public StringBuilder dumpStoreData(final StringBuilder stringBuilder) {
-
-        return getEnvironment().computeInReadonlyTransaction(txn -> {
-
-            final List<String> stores = getEnvironment().getAllStoreNames(txn);
-
-            stores.stream().filter(BINARY_STORES::contains).forEach(storeName -> {
-
-                final Store store = getEnvironment().openStore(storeName, USE_EXISTING, txn);
-
-                stringBuilder.append("Binary Store: ").append(store.getName()).append('\n')
-                             .append("Configuration: ").append(store.getConfig()).append('\n');
-
-                int count = 0;
-
-                try (final Cursor cursor  = store.openCursor(txn)) {
-                    while (cursor.getNext()) {
-                        final String key = entryToString(cursor.getKey());
-                        stringBuilder.append("Record # ").append(count++).append(": ")
-                                     .append(key).append(" -> ").append("<binary>").append('\n');
-                    }
-                }
-
-            });
-
-            stringBuilder.append('\n');
-
-            stores.stream().filter(INTEGER_STORES::contains).forEach(storeName -> {
-
-                final Store store = getEnvironment().openStore(storeName, USE_EXISTING, txn);
-
-                stringBuilder.append("Integer Store: ").append(store.getName()).append('\n')
-                             .append("Configuration: ").append(store.getConfig()).append('\n');
-
-                int count = 0;
-
-                try (final Cursor cursor  = store.openCursor(txn)) {
-                    while (cursor.getNext()) {
-                        final String key = entryToString(cursor.getKey());
-                        final Integer value = entryToInt(cursor.getValue());
-                        stringBuilder.append("Record # ").append(count++).append(": ")
-                                     .append(key).append(" -> ").append(value).append('\n');
-                    }
-                }
-
-            });
-
-            stringBuilder.append('\n');
-
-            stores.stream().filter(TEXT_STORES::contains).forEach(storeName -> {
-
-                final Store store = getEnvironment().openStore(storeName, USE_EXISTING, txn);
-
-                stringBuilder.append("Text Store: ").append(store.getName()).append('\n')
-                             .append("Configuration: ").append(store.getConfig()).append('\n');
-
-                int count = 0;
-
-                try (final Cursor cursor  = store.openCursor(txn)) {
-                    while (cursor.getNext()) {
-                        final String key = entryToString(cursor.getKey());
-                        final String value = entryToString(cursor.getValue());
-                        stringBuilder.append("Record # ").append(count++).append(": ")
-                                     .append(key).append(" -> ").append(value).append('\n');
-                    }
-                }
-
-            });
-
-            stringBuilder.append('\n');
-
-            return stringBuilder;
-
-        });
+        return XodusDebug.dumpStoreData(getEnvironment(), stringBuilder);
     }
 
     public Environment getEnvironment() {
