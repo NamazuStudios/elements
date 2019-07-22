@@ -79,6 +79,8 @@ public class SimpleScheduler implements Scheduler {
         return getDispatcherExecutorService().submit(() -> {
             try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
                 getResourceService().destroy(resourceId);
+            } catch (ResourceNotFoundException ex) {
+                logger.debug("Resource already destroyed {}.  Disregarding.", resourceId, ex);
             } catch (Exception ex) {
                 logger.error("Caught exception destroying Resource {}", resourceId, ex);
             }
