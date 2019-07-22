@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +19,8 @@ import static java.util.stream.Collectors.joining;
 public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleSingleUseHandlerService.class);
+
+    public static final String RESOURCE_SERVICE = "com.namazustudios.socialengine.rt.single.use.handler.service";
 
     private Scheduler scheduler;
 
@@ -129,7 +132,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
     }
 
     @Inject
-    public void setResourceService(ResourceService resourceService) {
+    public void setResourceService(@Named(RESOURCE_SERVICE) ResourceService resourceService) {
         this.resourceService = resourceService;
     }
 

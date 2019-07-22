@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.guice.SimpleResourceServiceModule;
 import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
 import com.namazustudios.socialengine.rt.provider.ScheduledExecutorServiceProvider;
 
@@ -37,6 +38,8 @@ public class XodusServicesModule extends PrivateModule {
     protected void configure() {
 
         bindSchedulerThreads.run();
+
+        install(new SimpleResourceServiceModule());
 
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
