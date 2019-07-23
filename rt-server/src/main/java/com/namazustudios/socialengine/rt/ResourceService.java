@@ -238,11 +238,12 @@ public interface ResourceService extends AutoCloseable {
      * Unlinks multiple {@link Resource}s.  This accepts a {@link Path}, which may be a wildcard.
      *
      * @param path
+     * @param max
      * @return
      */
-    default List<Unlink> unlinkMultiple(final Path path) {
+    default List<Unlink> unlinkMultiple(final Path path, int max) {
         final Logger logger = LoggerFactory.getLogger(getClass());
-        return unlinkMultiple(path, r -> {
+        return unlinkMultiple(path, max, r -> {
             try {
                 r.close();
             } catch (Exception ex) {
@@ -253,11 +254,13 @@ public interface ResourceService extends AutoCloseable {
 
     /**
      * Unlinks multiple {@link Resource}s.  This accepts a {@link Path}, which may be a wildcard.
-     * @param path
-     * @param removed
-     * @return
+     *
+     * @param path the path to remove
+     * @param max the maximum count to remove
+     * @param removed a {@link Consumer<Resource>} to process each removal
+     * @return the final {@link Unlink} operations
      */
-    List<Unlink> unlinkMultiple(Path path, Consumer<Resource> removed);
+    List<Unlink> unlinkMultiple(Path path, int max, Consumer<Resource> removed);
 
     /**
      * Removes a {@link Resource} instance from this resource service.
@@ -286,18 +289,19 @@ public interface ResourceService extends AutoCloseable {
      * Removes all {@link Resource}s linked with the provided {@link Path}.
      *
      * @param path the the {@link Path} for the resource.
+     * @param max
      */
-    default void removeResources(final Path path) {
-        removeResources(path, r -> r.close());
+    default List<ResourceId> removeResources(final Path path, int max) {
+        return removeResources(path, max, r -> r.close());
     }
 
     /**
      * Removes all {@link Resource}s linked with the provided {@link Path}.
-     *
      * @param path the the {@link Path} for the resource.
+     * @param max
      * @param removed a {@link Consumer<Resource>} which accepts the removed resource
      */
-    void removeResources(final Path path, final Consumer<Resource> removed);
+    List<ResourceId> removeResources(final Path path, int max, final Consumer<Resource> removed);
 
     /**
      * Removes a {@link Resource} and then immediately closes it.
@@ -328,8 +332,8 @@ public interface ResourceService extends AutoCloseable {
      *
      * @param path the {@link Path}
      */
-    default void destroyResources(final Path path) {
-        removeResources(path, r -> r.close());
+    default List<ResourceId> destroyResources(final Path path, final int max) {
+        return removeResources(path, max, r -> r.close());
     }
 
     /**

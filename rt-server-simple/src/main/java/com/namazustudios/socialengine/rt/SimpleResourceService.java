@@ -357,8 +357,8 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public List<Unlink> unlinkMultiple(Path path, Consumer<Resource> removed) {
-        logger.error("unlinkMultiple(Path, Consumer) not available for this implementation.");
+    public List<Unlink> unlinkMultiple(final Path path, final int max, final Consumer<Resource> removed) {
+        logger.error("unlinkMultiple(Path, int, Consumer) not available for this implementation.");
         return emptyList();
     }
 
@@ -428,8 +428,9 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public void removeResources(Path path, Consumer<Resource> removed) {
-        logger.error("removeResources(Path, Consumer) not available for this implementation.");
+    public List<ResourceId> removeResources(final Path path, final int max, final Consumer<Resource> removed) {
+        logger.error("removeResources(Path, int, Consumer) not available for this implementation.");
+        return emptyList();
     }
 
     @Override

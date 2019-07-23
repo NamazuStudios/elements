@@ -1,10 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -14,6 +15,8 @@ import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
 
 public class SimpleRetainedHandlerService implements RetainedHandlerService {
+
+    private static final int PURGE_BATCH_SIZE = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleRetainedHandlerService.class);
 
@@ -46,7 +49,15 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
 
     private void purge() {
         final Path path = Path.fromComponents("tmp", "handler", "re", "*");
-        getResourceService().unlinkMultiple(path);
+
+        List<ResourceService.Unlink> unlinkList;
+
+        do {
+            unlinkList = getResourceService().unlinkMultiple(path, PURGE_BATCH_SIZE);
+            logger.info("Purged {} resources.", unlinkList.size());
+            logger.debug("Purged [{}]", unlinkList);
+        } while (!unlinkList.isEmpty());
+
     }
 
     @Override
@@ -59,7 +70,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         final Path path = Path.fromComponents("tmp", "handler", "re", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
-        getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
+        final Future<Void> unlinkFuture = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
@@ -69,6 +80,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
             final Runnable unlink = () -> {
                 if (unlinked.compareAndSet(false, true)) try {
                     getScheduler().scheduleUnlink(path);
+                    unlinkFuture.cancel(false);
                 } catch (Exception ex) {
                     logger.error("Caught exception un-linking Resource {}", resourceId, ex);
                 }

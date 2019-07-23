@@ -4,6 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -13,6 +14,8 @@ import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
 
 public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
+
+    private static final int PURGE_BATCH_SIZE = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleSingleUseHandlerService.class);
 
@@ -46,7 +49,12 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
 
     private void purge() {
         final Path path = Path.fromComponents("tmp", "handler", "su", "*");
-        getResourceService().removeResources(path);
+        List<ResourceId> resourceIdList;
+        do {
+            resourceIdList = getResourceService().destroyResources(path, PURGE_BATCH_SIZE);
+            logger.info("Purged {} Resources", resourceIdList.size());
+            logger.debug("Purged [{}]", resourceIdList);
+        } while (!resourceIdList.isEmpty());
     }
 
     @Override

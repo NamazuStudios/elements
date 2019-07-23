@@ -563,7 +563,7 @@ public class XodusResourceService implements ResourceService {
 
         final List<XodusListing> result = getEnvironment().computeInTransaction(txn -> {
             final List<XodusListing> l = new ArrayList<>();
-            doList(txn, path, l::add);
+            doList(txn, path, Integer.MAX_VALUE, l::add);
             debugList.report(txn, path, l);
             return l;
         });
@@ -572,7 +572,10 @@ public class XodusResourceService implements ResourceService {
 
     }
 
-    private void doList(final Transaction txn, final Path path, final Consumer<XodusListing> listingConsumer) {
+    private void doList(final Transaction txn,
+                        final Path path,
+                        final int maxResults,
+                        final Consumer<XodusListing> listingConsumer) {
         final Store store = openPaths(txn);
 
         try (final Cursor cursor = store.openCursor(txn)) {
@@ -711,11 +714,12 @@ public class XodusResourceService implements ResourceService {
     }
 
     @Override
-    public List<Unlink> unlinkMultiple(final Path path, final Consumer<Resource> removedResourceConsumer) {
+    public List<Unlink> unlinkMultiple(final Path path, final int max,
+                                       final Consumer<Resource> removedResourceConsumer) {
 
         final List<Unlink> unlinkList = getEnvironment().computeInTransaction(txn -> {
             final List<XodusListing> listings = new ArrayList<>();
-            doList(txn, path, listings::add);
+            doList(txn, path, max, listings::add);
             return listings.stream().map(l -> doUnlink(txn, l.getPathKey())).collect(toList());
         });
 
@@ -843,17 +847,20 @@ public class XodusResourceService implements ResourceService {
     }
 
     @Override
-    public void removeResources(final Path path, final Consumer<Resource> removed) {
+    public List<ResourceId> removeResources(final Path path, int max, final Consumer<Resource> removed) {
 
         checkOpen();
 
+        final List<ResourceId> resourceIdList = new ArrayList<>();
+
         getEnvironment().computeInTransaction(txn -> {
              final List<XodusListing> listings = new ArrayList<>();
-            doList(txn, path, listings::add);
+            doList(txn, path, max, listings::add);
             return listings;
         }).forEach(listing -> {
 
              final XodusCacheKey cacheKey = new XodusCacheKey(listing.getResourceId());
+            resourceIdList.add(cacheKey.getResourceId());
 
              try (final Monitor m = getResourceLockService().getMonitor(listing.getResourceId())) {
                  final XodusResource xodusResource = getStorage().getResourceIdResourceMap().remove(cacheKey);
@@ -861,6 +868,8 @@ public class XodusResourceService implements ResourceService {
              }
 
         });
+
+        return resourceIdList;
 
     }
 
