@@ -47,15 +47,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
         }
     }
 
-    private void purge() {
-        final Path path = Path.fromComponents("tmp", "handler", "su", "*");
-        List<ResourceId> resourceIdList;
-        do {
-            resourceIdList = getResourceService().destroyResources(path, PURGE_BATCH_SIZE);
-            logger.info("Purged {} Resources", resourceIdList.size());
-            logger.debug("Purged [{}]", resourceIdList);
-        } while (!resourceIdList.isEmpty());
-    }
+    private void purge() {}
 
     @Override
     public TaskId perform(final Consumer<Object> success, final Consumer<Throwable> failure,
