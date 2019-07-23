@@ -17,6 +17,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.Thread.yield;
+import static java.util.Collections.emptyList;
 import static java.util.Spliterator.CONCURRENT;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
@@ -357,8 +358,8 @@ public class SimpleResourceService implements ResourceService {
 
     @Override
     public List<Unlink> unlinkMultiple(Path path, Consumer<Resource> removed) {
-        // TODO Implement this.
-        throw new UnsupportedOperationException("TODO: Not Implemented.");
+        logger.error("unlinkMultiple(Path, Consumer) not available for this implementation.");
+        return emptyList();
     }
 
     @Override
@@ -428,8 +429,7 @@ public class SimpleResourceService implements ResourceService {
 
     @Override
     public void removeResources(Path path, Consumer<Resource> removed) {
-        // TODO Implement Me
-        throw new UnsupportedOperationException("TODO: Not Currently Supported.");
+        logger.error("removeResources(Path, Consumer) not available for this implementation.");
     }
 
     @Override
