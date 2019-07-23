@@ -69,11 +69,6 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
             final Runnable unlink = () -> {
                 if (unlinked.compareAndSet(false, true)) try {
                     getScheduler().scheduleUnlink(path);
-                } catch (ResourceNotFoundException ex) {
-                    // It's probably safe to ignore this exception because the resource was removed
-                    // intentionally.  We want to make sure there's a way to detect this, but it's
-                    // not likely necessary.
-                    logger.trace("Caught exception un-linking Resource {}", resourceId, ex);
                 } catch (Exception ex) {
                     logger.error("Caught exception un-linking Resource {}", resourceId, ex);
                 }
