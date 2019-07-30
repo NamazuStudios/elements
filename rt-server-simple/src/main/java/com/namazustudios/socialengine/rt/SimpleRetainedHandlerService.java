@@ -47,7 +47,19 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         }
     }
 
-    private void purge() {}
+    private void purge() {
+
+        final Path path = Path.fromComponents("tmp", "handler", "re", "*");
+
+        List<ResourceService.Unlink> unlinkList;
+
+        do {
+            unlinkList = getResourceService().unlinkMultiple(path, PURGE_BATCH_SIZE);
+            logger.info("Purged {} resources.", unlinkList.size());
+            logger.debug("Purged [{}]", unlinkList);
+        } while (!unlinkList.isEmpty());
+
+    }
 
     @Override
     public TaskId perform(
