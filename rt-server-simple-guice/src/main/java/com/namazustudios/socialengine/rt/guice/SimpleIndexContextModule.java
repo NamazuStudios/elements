@@ -4,7 +4,7 @@ import com.google.inject.PrivateModule;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.IndexContext;
 import com.namazustudios.socialengine.rt.SimpleIndexContext;
-import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
+import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
 
 import java.util.concurrent.ExecutorService;
 
@@ -21,7 +21,7 @@ public class SimpleIndexContextModule extends PrivateModule {
 
         bind(ExecutorService.class)
             .annotatedWith(Names.named(EXECUTOR_SERVICE))
-            .toProvider(new CachedThreadPoolProvider(SimpleIndexContext.class));
+            .toProvider(new CPUCountThreadPoolProvider(SimpleIndexContext.class));
 
     }
 

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
+import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
 import com.namazustudios.socialengine.rt.provider.ScheduledExecutorServiceProvider;
 
 import java.util.Deque;
@@ -64,7 +64,7 @@ public class SimpleServicesModule extends PrivateModule {
 
         bind(ExecutorService.class)
             .annotatedWith(named(DISPATCHER_EXECUTOR_SERVICE))
-            .toProvider(new CachedThreadPoolProvider(SimpleScheduler.class, "dispatch"));
+            .toProvider(new CPUCountThreadPoolProvider(SimpleScheduler.class, "dispatch"));
 
         expose(Scheduler.class);
         expose(ResourceService.class);
