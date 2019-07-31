@@ -81,9 +81,10 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
             final Runnable unlink = () -> {
                 if (unlinked.compareAndSet(false, true)) try {
                     getScheduler().scheduleUnlink(path);
-                    unlinkFuture.cancel(false);
                 } catch (Exception ex) {
                     logger.error("Caught exception un-linking Resource {}", resourceId, ex);
+                } finally {
+                    unlinkFuture.cancel(false);
                 }
             };
 

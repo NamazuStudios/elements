@@ -325,16 +325,14 @@ public class XodusResourceService implements ResourceService {
             final int length = value.getLength();
             final byte[] bytes = value.getBytesUnsafe();
 
+            final XodusCacheStorage storage = getStorage();
+            final XodusResource existingResource = storage.getResourceIdResourceMap().get(xodusCacheKey);
+            if (existingResource != null) return existingResource;
+
             try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
-
                 final XodusResource xodusResource = new XodusResource(getResourceLoader().load(bis));
-
-                if (getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource) != null) {
-                    logger.error("Consistency error.  Expecting no existing resource in cache.");
-                }
-
+                storage.getResourceIdResourceMap().put(xodusCacheKey, xodusResource);
                 return xodusResource;
-
             } catch (IOException ex) {
                 throw new InternalException(ex);
             }

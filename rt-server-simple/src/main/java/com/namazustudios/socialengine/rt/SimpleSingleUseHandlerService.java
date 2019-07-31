@@ -5,6 +5,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -69,7 +70,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
         final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
-        getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
+        final Future<Void> destructionFuture = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
@@ -81,6 +82,8 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                     getScheduler().scheduleDestruction(resourceId);
                 } catch (Exception ex) {
                     logger.error("Error scheduling destruction for resource {}", resourceId, ex);
+                } finally {
+                    destructionFuture.cancel(false);
                 }
             };
 

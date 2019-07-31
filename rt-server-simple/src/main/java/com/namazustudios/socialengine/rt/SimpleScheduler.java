@@ -63,15 +63,9 @@ public class SimpleScheduler implements Scheduler {
 
     @Override
     public Future<Void> scheduleUnlink(final Path path, final long delay, final TimeUnit timeUnit) {
-
-        final FutureTask<Void> command = new FutureTask<>(() -> {
-            scheduleUnlink(path);
-            return null;
-        });
-
-        getScheduledExecutorService().schedule(command, delay, timeUnit);
-        return command;
-
+        return delegatingV(
+            () -> scheduleUnlink(path),
+            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
     }
 
     @Override
@@ -89,15 +83,9 @@ public class SimpleScheduler implements Scheduler {
 
     @Override
     public Future<Void> scheduleDestruction(final ResourceId resourceId, final long delay, final TimeUnit timeUnit) {
-
-        final FutureTask<Void> command = new FutureTask<>(() -> {
-            scheduleDestruction(resourceId);
-            return null;
-        });
-
-        getScheduledExecutorService().schedule(command, delay, timeUnit);
-        return command;
-
+        return delegatingV(
+            () -> scheduleDestruction(resourceId),
+            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
     }
 
     @Override
@@ -284,6 +272,21 @@ public class SimpleScheduler implements Scheduler {
     @Inject
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
+    }
+
+
+    private static FutureTask<Void> delegatingV(final Runnable runnable,
+                                                final Function<Runnable, Future<?>> delegateFutureSupplier) {
+        return new FutureTask<Void>(runnable, null) {
+
+            final Future<?> delegate = delegateFutureSupplier.apply(this);
+
+            @Override
+            public void done() {
+                if (isCancelled()) delegate.cancel(false);
+            }
+
+        };
     }
 
 }
