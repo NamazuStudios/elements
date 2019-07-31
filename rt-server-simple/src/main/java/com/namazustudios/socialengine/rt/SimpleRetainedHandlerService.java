@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.List;
 import java.util.concurrent.Future;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
@@ -71,22 +72,11 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         final Path path = Path.fromComponents("tmp", "handler", "re", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
-        final Future<Void> unlinkFuture = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
+        final RunnableFuture<Void> unlink = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
             final AtomicBoolean sent = new AtomicBoolean();
-            final AtomicBoolean unlinked = new AtomicBoolean();
-
-            final Runnable unlink = () -> {
-                if (unlinked.compareAndSet(false, true)) try {
-                    getScheduler().scheduleUnlink(path);
-                } catch (Exception ex) {
-                    logger.error("Caught exception un-linking Resource {}", resourceId, ex);
-                } finally {
-                    unlinkFuture.cancel(false);
-                }
-            };
 
             final Consumer<Throwable> _failure = t -> {
                 try {
