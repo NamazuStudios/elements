@@ -253,19 +253,8 @@ public class XodusResourceService implements ResourceService {
         // the same resource may be high.
 
         if (acquires == 1) {
-
-            // Only read the bytes if we absolutely need to.
             final ByteIterable value = resources.get(txn, resourceIdKey);
-
-            if (value == null) {
-                // This should never happen if the state of the database is consistent.  If this does happen we should
-                // at least vacuum the entries to prevent further inconsistencies.
-                doRemoveResource(txn, resourceIdKey);
-                throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
-            }
-
             return () -> loadAndCache(xodusCacheKey, value);
-
         } else {
             return () -> readFromCache(xodusCacheKey);
         }
@@ -327,7 +316,9 @@ public class XodusResourceService implements ResourceService {
 
             final XodusCacheStorage storage = getStorage();
             final XodusResource existingResource = storage.getResourceIdResourceMap().get(xodusCacheKey);
+
             if (existingResource != null) return existingResource;
+            else if (value == null) throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
 
             try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
                 final XodusResource xodusResource = new XodusResource(getResourceLoader().load(bis));
