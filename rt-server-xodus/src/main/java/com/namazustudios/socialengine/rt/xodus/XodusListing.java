@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.Objects;
 
 import static jetbrains.exodus.bindings.StringBinding.entryToString;
+import static jetbrains.exodus.bindings.StringBinding.stringToEntry;
 
 class XodusListing implements ResourceService.Listing, Serializable {
 
@@ -17,8 +18,14 @@ class XodusListing implements ResourceService.Listing, Serializable {
 
     private final ResourceId resourceId;
 
-    public XodusListing(final ByteIterable key, final ByteIterable value) {
-        this(Path.fromPathString(entryToString(key)), new ResourceId(entryToString(value)));
+    private transient volatile ByteIterable pathKey;
+
+    private transient volatile ByteIterable resourceIdValue;
+
+    public XodusListing(final ByteIterable pathKey, final ByteIterable resourceIdValue) {
+        this(Path.fromPathString(entryToString(pathKey)), new ResourceId(entryToString(resourceIdValue)));
+        this.pathKey = pathKey;
+        this.resourceIdValue = resourceIdValue;
     }
 
     public XodusListing(final Path path, final ResourceId resourceId) {
@@ -44,13 +51,21 @@ class XodusListing implements ResourceService.Listing, Serializable {
                 '}';
     }
 
+    public ByteIterable getPathKey() {
+        return pathKey == null ? (pathKey = stringToEntry(path.toAbsolutePathString())) : pathKey;
+    }
+
+    public ByteIterable getResourceIdValue() {
+        return resourceIdValue == null ? (resourceIdValue = stringToEntry(resourceId.asString())) : resourceIdValue;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof XodusListing)) return false;
         XodusListing that = (XodusListing) o;
         return Objects.equals(getPath(), that.getPath()) &&
-                Objects.equals(getResourceId(), that.getResourceId());
+               Objects.equals(getResourceId(), that.getResourceId());
     }
 
     @Override

@@ -4,15 +4,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.util.List;
+import java.util.concurrent.Future;
+import java.util.concurrent.RunnableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.UUID.randomUUID;
 
 public class SimpleRetainedHandlerService implements RetainedHandlerService {
+
+    private static final int PURGE_BATCH_SIZE = 100;
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleRetainedHandlerService.class);
 
@@ -23,29 +28,55 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
     private ResourceService resourceService;
 
     private ResourceLockService resourceLockService;
+    private final AtomicBoolean running = new AtomicBoolean();
+
+    @Override
+    public void start() {
+        if (running.compareAndSet(false, true)) {
+            purge();
+        } else {
+            throw new IllegalStateException("Already started.");
+        }
+    }
+
+    @Override
+    public void stop() {
+        if (running.compareAndSet(true, false)) {
+            purge();
+        } else {
+            throw new IllegalStateException("Already started.");
+        }
+    }
+
+    private void purge() {
+
+        final Path path = Path.fromComponents("tmp", "handler", "re", "*");
+
+        List<ResourceService.Unlink> unlinkList;
+
+        do {
+            unlinkList = getResourceService().unlinkMultiple(path, PURGE_BATCH_SIZE);
+            logger.info("Purged {} resources.", unlinkList.size());
+            logger.debug("Purged [{}]", unlinkList);
+        } while (!unlinkList.isEmpty());
+
+    }
 
     @Override
     public TaskId perform(
             final Consumer<Object> success, final Consumer<Throwable> failure,
+            final long timeout, final TimeUnit timeoutUnit,
             final String module, final Attributes attributes,
             final String method, final Object... args) {
 
         final Path path = Path.fromComponents("tmp", "handler", "re", randomUUID().toString());
         final Resource resource = acquire(path, module, attributes);
         final ResourceId resourceId = resource.getId();
+        final RunnableFuture<Void> unlink = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
         try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
             final AtomicBoolean sent = new AtomicBoolean();
-            final AtomicBoolean unlinked = new AtomicBoolean();
-
-            final Runnable unlink = () -> {
-                if (unlinked.compareAndSet(false, true)) try {
-                    getScheduler().scheduleUnlink(path);
-                } catch (Exception ex) {
-                    logger.error("Caught exception un-linking Resource {}", resourceId, ex);
-                }
-            };
 
             final Consumer<Throwable> _failure = t -> {
                 try {

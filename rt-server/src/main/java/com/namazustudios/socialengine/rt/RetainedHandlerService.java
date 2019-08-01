@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -8,6 +9,16 @@ import java.util.function.Consumer;
  * itself to ensure that it is retained after this call.
  */
 public interface RetainedHandlerService {
+
+    /**
+     * Starts this {@link RetainedHandlerService}
+     */
+    void start();
+
+    /**
+     * Stops this {@link RetainedHandlerService}
+     */
+    void stop();
 
     /**
      * Creates a new {@link Resource} using the attributes and the module.  Once created, this {@link Resource} will be
@@ -24,6 +35,7 @@ public interface RetainedHandlerService {
      * @return the result of the operation
      */
     TaskId perform(Consumer<Object> success, Consumer<Throwable> failure,
+                   long timeoutDelay, TimeUnit timeoutUnit,
                    String module, Attributes attributes,
                    String method, Object... args);
 

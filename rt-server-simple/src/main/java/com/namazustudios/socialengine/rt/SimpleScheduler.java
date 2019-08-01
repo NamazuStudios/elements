@@ -44,29 +44,42 @@ public class SimpleScheduler implements Scheduler {
     }
 
     @Override
-    public Future<Void> scheduleUnlink(final Path path) {
-        return getDispatcherExecutorService().submit(() -> {
-            getResourceService().unlinkPath(path, resource -> {
+    public RunnableFuture<Void> scheduleUnlink(final Path path, final long delay, final TimeUnit timeUnit) {
+        return shortCircuitFuture(
+            () -> scheduleUnlink(path),
+            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
+    }
 
-                final ResourceId resourceId = resource.getId();
+    private Future<Void> scheduleUnlink(final Path path) {
+        return getDispatcherExecutorService().submit(() -> { getResourceService().unlinkPath(path, resource -> {
 
-                try {
-                    resource.close();
-                } catch (ResourceNotFoundException ex) {
-                    logger.debug("No Resource found at path {}.  Disregarding.", ex);
-                } catch (Exception ex) {
-                    logger.error("Caught exception destroying Resource {}", resourceId, ex);
-                }
+            final ResourceId resourceId = resource.getId();
 
-            });
+            try {
+                resource.close();
+            } catch (ResourceNotFoundException ex) {
+                logger.debug("No Resource found at path {}.  Disregarding.", ex);
+            } catch (Exception ex) {
+                logger.error("Caught exception unlinking resource {}", resourceId, ex);
+            }
+
+        });
         }, null);
     }
 
     @Override
+    public RunnableFuture<Void> scheduleDestruction(final ResourceId resourceId, final long delay, final TimeUnit timeUnit) {
+        return shortCircuitFuture(
+            () -> scheduleDestruction(resourceId),
+            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
+    }
+
     public Future<Void> scheduleDestruction(final ResourceId resourceId) {
         return getDispatcherExecutorService().submit(() -> {
             try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
                 getResourceService().destroy(resourceId);
+            } catch (ResourceNotFoundException ex) {
+                logger.debug("Resource already destroyed {}.  Disregarding.", resourceId, ex);
             } catch (Exception ex) {
                 logger.error("Caught exception destroying Resource {}", resourceId, ex);
             }
@@ -257,6 +270,27 @@ public class SimpleScheduler implements Scheduler {
     @Inject
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
+    }
+
+
+    private static FutureTask<Void> shortCircuitFuture(final Runnable runnable,
+                                                       final Function<Runnable, Future<?>> delegateFutureSupplier) {
+        return new FutureTask<Void>(runnable, null) {
+
+            final Future<?> delegate = delegateFutureSupplier.apply(this);
+
+            @Override
+            public void run() {
+                cancel(false);
+                super.run();
+            }
+
+            @Override
+            public void done() {
+                if (isCancelled()) delegate.cancel(false);
+            }
+
+        };
     }
 
 }

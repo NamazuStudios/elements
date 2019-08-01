@@ -30,11 +30,13 @@ public class SimpleHandlerContext implements HandlerContext {
 
     @Override
     public void start() {
+        getRetainedHandlerService().start();
         getSingleUseHandlerService().start();
     }
 
     @Override
     public void stop() {
+        getRetainedHandlerService().stop();
         getSingleUseHandlerService().stop();
     }
 
@@ -66,8 +68,10 @@ public class SimpleHandlerContext implements HandlerContext {
         };
 
         try {
-            taskId = getSingleUseHandlerService().perform(_success.andThen(success), _failure.andThen(failure),
-                                                          module, attributes, method, args);
+            taskId = getSingleUseHandlerService().perform(
+                    _success.andThen(success), _failure.andThen(failure),
+                    getTimeout(), MILLISECONDS,
+                    module, attributes, method, args);
         } catch (Exception ex) {
             failure.accept(ex);
             throw new InternalException(ex);
@@ -106,6 +110,7 @@ public class SimpleHandlerContext implements HandlerContext {
 
         try {
             taskId = getRetainedHandlerService().perform(_success.andThen(success), _failure.andThen(failure),
+                                                         getTimeout(), MILLISECONDS,
                                                          module, attributes, method, args);
         } catch (Exception ex) {
             failure.accept(ex);
