@@ -6,7 +6,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.CompletionStage;
@@ -24,9 +23,9 @@ import static java.util.stream.Collectors.toList;
  * It is not recommended that this {@link RoutingStrategy} be used for writes if reliability is expected, but only for
  * read operations.
  */
-public abstract class AbstractCombiningRoutingStrategy implements RoutingStrategy {
+public abstract class AbstractAggregateRoutingStrategy implements RoutingStrategy {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractCombiningRoutingStrategy.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractAggregateRoutingStrategy.class);
 
     private UUID defaultApplicationId;
 
@@ -116,16 +115,16 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
         final InvocationErrorConsumer firstInvocationErrorConsumer;
         firstInvocationErrorConsumer = new FirstInvocationErrorConsumer(asyncInvocationErrorConsumer);
 
-        final List<Object> combined = new ArrayList<>();
+        Object combined = newInitialResult();
 
         for (final RemoteInvoker invoker : invokers) {
 
-            final List<Object> o = (List<Object>) invoker.invokeSync(
+            final Object result = invoker.invokeSync(
                 invocation,
                 aggregateResultConsumerList,
                 firstInvocationErrorConsumer);
 
-            combined.addAll(o);
+            combined = combine(combined, result);
 
         }
 
@@ -134,13 +133,26 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
     }
 
     /**
+     * Gets the initial result to be fed into the {@link #combine(Object, Object)} call.  This should represent a
+     * zero-state result.  For example, if combining {@link List} instances, this should ensure that it contains an
+     * initial empty list.
+     *
+     * @return the {@link Object} for the initial aggregate operation.
+     */
+    protected abstract Object newInitialResult();
+
+    /**
      * Creates a new {@link InvocationResult} which is used as the initial value for combining results.  This should be
      * a zero-state {@link InvocationResult}.  For example, if combining {@link List} instances, this should ensure that
      * it contains an initial empty list.
      *
      * @return the {@link InvocationResult} used as the initial value for aggregations
      */
-    protected abstract InvocationResult newInitialInvocationResult();
+    protected InvocationResult newInitialInvocationResult() {
+        final InvocationResult invocationResult = new InvocationResult();
+        invocationResult.setResult(newInitialResult());
+        return invocationResult;
+    }
 
     /**
      * Combines two raw {@link Object} results.
@@ -155,11 +167,16 @@ public abstract class AbstractCombiningRoutingStrategy implements RoutingStrateg
      * Combines two {@link InvocationResult} instances.  Specifically the returned {@link InvocationResult} shoud
      * contain the aggregate result in the {@link InvocationResult#getResult()} and return it.
      *
-     * @param a the first {@link InvocationResult}
-     * @param b the second {@link InvocationResult}
+     * @param ra the first {@link InvocationResult}
+     * @param rb the second {@link InvocationResult}
      * @return the {@link InvocationResult} combining the results of both a and b
      */
-    protected abstract InvocationResult combine(InvocationResult a, InvocationResult b);
+    protected InvocationResult combine(final InvocationResult ra, final InvocationResult rb) {
+        final Object a = ra.getResult();
+        final Object b = rb.getResult();
+        ra.setResult(combine(a, b));
+        return ra;
+    }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {
         return remoteInvokerRegistry;

@@ -1,25 +1,25 @@
 package com.namazustudios.socialengine.rt.routing;
 
 import com.namazustudios.socialengine.rt.remote.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.concurrent.*;
 import java.util.function.Consumer;
 
 import static java.util.Collections.emptyList;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Aggregates all results.  Assumes that all results are derived from {@link List} and the final result is put
  * into a {@link List} combining all results.  When combining results this assumes that all {@link Consumer}s for the
  * asynchronous operations accept a {@link List} as well all method return values if not null/Void).
  */
-public class ListAggregatePathRoutingStrategy extends AbstractCombiningRoutingStrategy {
+public class ListAggregatePathRoutingStrategy extends AbstractAggregateRoutingStrategy {
+
+    @Override
+    protected Object newInitialResult() {
+        return new ArrayList<>();
+    }
 
     @Override
     protected InvocationResult newInitialInvocationResult() {
