@@ -22,7 +22,7 @@ public class CPUCountThreadPoolProvider implements Provider<ExecutorService> {
 
     private static final int MIN_MULTIPLIER = 2;
 
-    private static final int MAX_MULTIPLIER = MIN_MULTIPLIER * 20;
+    private static final int MAX_MULTIPLIER = 100;
 
     private static final int MIN_POOL_SIZE = getRuntime().availableProcessors() * MIN_MULTIPLIER;
 
