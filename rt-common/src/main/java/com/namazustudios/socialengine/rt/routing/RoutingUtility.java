@@ -5,10 +5,26 @@ import com.namazustudios.socialengine.rt.id.HasNodeId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.joining;
 
 public interface RoutingUtility {
+
+    /**
+     * Reduces the {@link List<Object>} address to a {@link Set<NodeId>}
+     *
+     * @param address
+     * @return a {@link Set<NodeId>}
+     */
+    static Set<NodeId> reduceAddressToNodeIds(final List<Object> address) {
+        return address.stream()
+            .filter(o -> o != null)
+            .map(RoutingUtility::checkAddressComponentHasNodeId)
+            .map(h -> h.getNodeId())
+            .collect(Collectors.toSet());
+    }
 
     /**
      * Ensures that the following {@link List<Object>} can be redued to a single {@link NodeId}, throwing the

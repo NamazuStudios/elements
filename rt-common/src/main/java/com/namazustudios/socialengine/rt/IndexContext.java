@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.routing.ListAggregatePathRoutingStrategy;
+import com.namazustudios.socialengine.rt.routing.ListAggregateRoutingStrategy;
 import com.namazustudios.socialengine.rt.routing.SameNodeIdRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 
@@ -51,7 +51,7 @@ public interface IndexContext {
      * @param failure a {@link Consumer<Throwable>} which receives an exception indicating a failure reason.
      * @return a {@link Future<List<Listing>>} which can be used to obtain the result
      */
-    @RemotelyInvokable(routing = @Routing(ListAggregatePathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
     void listAsync(@Serialize Path path,
                    @ResultHandler Consumer<List<Listing>> success,
                    @ErrorHandler  Consumer<Throwable> failure);
@@ -81,7 +81,7 @@ public interface IndexContext {
      *
      *
      */
-    @RemotelyInvokable(routing = @Routing(ListAggregatePathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
     void linkAsync(@ProvidesAddress @Serialize ResourceId resourceId,
                    @ProvidesAddress @Serialize Path destination,
                    @ResultHandler Consumer<Void> success,
@@ -108,7 +108,7 @@ public interface IndexContext {
      * @param failure @ {@link Consumer<Throwable> which will be called on a failure
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
-    @RemotelyInvokable(routing = @Routing(ListAggregatePathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
     void linkPathAsync(@ProvidesAddress @Serialize Path source,
                        @ProvidesAddress @Serialize Path destination,
                        @ResultHandler Consumer<Void> success,

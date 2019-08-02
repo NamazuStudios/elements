@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
 import com.namazustudios.socialengine.rt.remote.RoutingStrategy;
 import org.mockito.Mockito;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.BeforeTest;
 
 import javax.inject.Named;
@@ -20,7 +21,7 @@ public class BaseRoutingStrategyTest {
 
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
-    @BeforeTest
+    @BeforeMethod
     public void resetMocks() {
         reset(getRemoteInvokerRegistry());
     }

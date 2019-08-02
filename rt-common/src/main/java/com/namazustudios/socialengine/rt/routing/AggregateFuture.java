@@ -6,6 +6,7 @@ import java.util.concurrent.*;
 import java.util.function.BiFunction;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 
@@ -14,7 +15,7 @@ public class AggregateFuture<AggregateT> implements Future<AggregateT> {
     private final CompletableFuture<AggregateT> delegate;
 
     public AggregateFuture(final Iterable<CompletionStage<AggregateT>> completionStages,
-                           final AggregateT initial,
+                           final Supplier<AggregateT> initial,
                            final BinaryOperator<AggregateT> aggregator) {
 
         final CompletableFuture<AggregateT> first = new CompletableFuture<>();
@@ -28,7 +29,7 @@ public class AggregateFuture<AggregateT> implements Future<AggregateT> {
         }
 
         delegate = prev.toCompletableFuture();
-        first.complete(initial);
+        first.complete(initial.get());
 
     }
 

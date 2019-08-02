@@ -10,6 +10,12 @@ public class InvocationResult implements Serializable {
 
     private Object result;
 
+    public InvocationResult() {}
+
+    public InvocationResult(Object result) {
+        setResult(result);
+    }
+
     /**
      * Gets the result of the remote {@link Method}, or null if the method failed to invoke.  Null may also indicate
      * that the remote method returned null.

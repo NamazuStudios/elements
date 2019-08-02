@@ -38,16 +38,12 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
-
-        final InvocationResult initial = newInitialInvocationResult();
-
-        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers(getDefaultApplicationId());
+        final List<RemoteInvoker> invokers = getRemoteInvokers(address);
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
             .stream()
-            .map(c -> new AggregateConsumer<>(c, count, initial, this::combine))
+            .map(c -> new AggregateConsumer<>(c, count, this::newInitialInvocationResult, this::combine))
             .collect(toList());
 
         final InvocationErrorConsumer firstInvocationErrorConsumer;
@@ -58,7 +54,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
             .map(ri -> ri.invokeCompletionStage(invocation, aggregateResultConsumerList, firstInvocationErrorConsumer))
             .collect(toList());
 
-        return new AggregateFuture<>(completionStages, emptyList(), this::combine);
+        return new AggregateFuture<>(completionStages, this::newInitialResult, this::combine);
 
     }
 
@@ -69,25 +65,17 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
-
-        final InvocationResult initial = newInitialInvocationResult();
-
-        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers(getDefaultApplicationId());
+        final List<RemoteInvoker> invokers = getRemoteInvokers(address);
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
             .stream()
-            .map(c -> new AggregateConsumer<>(c, count, initial, this::combine))
+            .map(c -> new AggregateConsumer<>(c, count, this::newInitialInvocationResult, this::combine))
             .collect(toList());
 
         final InvocationErrorConsumer firstInvocationErrorConsumer;
         firstInvocationErrorConsumer = new FirstInvocationErrorConsumer(asyncInvocationErrorConsumer);
-
-        invokers
-            .stream()
-            .map(ri -> ri.invokeAsync(invocation, aggregateResultConsumerList, firstInvocationErrorConsumer))
-            .collect(toList());
+        invokers.forEach(ri -> ri.invokeAsync(invocation, aggregateResultConsumerList, firstInvocationErrorConsumer));
 
         return null;
 
@@ -100,16 +88,12 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
 
-        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
-
-        final InvocationResult initial = newInitialInvocationResult();
-
-        final List<RemoteInvoker> invokers = getRemoteInvokerRegistry().getAllRemoteInvokers(defaultApplicationId);
+        final List<RemoteInvoker> invokers = getRemoteInvokers(address);
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
             .stream()
-            .map(c -> new AggregateConsumer<>(c, count, initial, this::combine))
+            .map(c -> new AggregateConsumer<>(c, count, this::newInitialInvocationResult, this::combine))
             .collect(toList());
 
         final InvocationErrorConsumer firstInvocationErrorConsumer;
@@ -130,6 +114,18 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
 
         return combined;
 
+    }
+
+    /**
+     * Gets the {@link List<RemoteInvoker>} for the supplied address.  By default this just gets all instances for a
+     * particular application UUID.
+     *
+     * @param address the address
+     * @return a {@link List<RemoteInvoker>} to use.
+     */
+    protected List<RemoteInvoker> getRemoteInvokers(final List<Object> address) {
+        if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
+        return getRemoteInvokerRegistry().getAllRemoteInvokers(getDefaultApplicationId());
     }
 
     /**

@@ -34,8 +34,8 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
         return getRemoteInvokerRegistry().getAnyRemoteInvoker(getDefaultApplicationId()).invokeFuture(
             invocation,
-                asyncInvocationResultConsumerList,
-                asyncInvocationErrorConsumer);
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer);
     }
 
     @Override
@@ -47,9 +47,9 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
         return getRemoteInvokerRegistry().getAnyRemoteInvoker(getDefaultApplicationId()).invokeAsync(
-                invocation,
-                asyncInvocationResultConsumerList,
-                asyncInvocationErrorConsumer);
+            invocation,
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer);
     }
 
     @Override
@@ -61,9 +61,9 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
         return getRemoteInvokerRegistry().getAnyRemoteInvoker(defaultApplicationId).invokeSync(
-                invocation,
-                asyncInvocationResultConsumerList,
-                asyncInvocationErrorConsumer);
+            invocation,
+            asyncInvocationResultConsumerList,
+            asyncInvocationErrorConsumer);
     }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {

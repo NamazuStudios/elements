@@ -4,6 +4,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BinaryOperator;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 /**
  * Given the expected number of calls, this generates a {@link Consumer<T> which will aggregate all results together
@@ -24,12 +25,12 @@ public class AggregateConsumer<T> implements Consumer<T> {
 
     public AggregateConsumer(final Consumer<T> delegate,
                              final int expected,
-                             final T inital,
+                             final Supplier<T> initalSupplier,
                              final BinaryOperator<T> aggregator) {
         this.count = new AtomicInteger(expected);
         this.delegate = delegate;
         this.aggregator = aggregator;
-        this.aggregate = new AtomicReference<>(inital);
+        this.aggregate = new AtomicReference<>(initalSupplier.get());
     }
 
     @Override
