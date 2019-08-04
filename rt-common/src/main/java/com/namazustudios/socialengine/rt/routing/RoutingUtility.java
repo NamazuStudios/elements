@@ -42,7 +42,7 @@ public interface RoutingUtility {
             .map(h -> h.getNodeId())
             .filter(nid -> nid != null)
             .reduce((nid0, nid1) -> ensureDistinctNode(address, nid0, nid1))
-            .orElseThrow(() -> new RoutingException("Could not determine NodeID from address: "));
+            .orElseThrow(() -> new RoutingException("Could not determine NodeID from address: " + address));
     }
 
     /**
