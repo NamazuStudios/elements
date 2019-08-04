@@ -31,6 +31,8 @@ public class TaskId implements Serializable, HasNodeId {
 
     private transient volatile int hash;
 
+    private transient volatile byte[] bytes;
+
     private transient volatile String string;
 
     private transient volatile NodeId nodeId;
@@ -59,7 +61,19 @@ public class TaskId implements Serializable, HasNodeId {
         v1CompoundId = new V1CompoundId.Builder()
                 .with(stringRepresentation)
                 .only(INSTANCE, APPLICATION, RESOURCE, TASK)
-            .build();
+                .build();
+    }
+
+    /**
+     * Creates the {@link TaskId} from the provided string representation, as obtained from {@link #asBytes()}.
+     *
+     * @param byteRepresentation the string representation
+     */
+    public TaskId(final byte[] byteRepresentation) {
+        v1CompoundId = new V1CompoundId.Builder()
+                .with(byteRepresentation)
+                .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                .build();
     }
 
     /**
@@ -82,6 +96,14 @@ public class TaskId implements Serializable, HasNodeId {
     }
 
     /**
+     * Returns the {@link byte[]} representation of this {@link TaskId}
+     * @return
+     */
+    public byte[] asBytes() {
+        return bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION, RESOURCE, TASK)) : bytes;
+    }
+
+    /**
      * Returns the string representation of this {@link TaskId}
      *
      * @return the string representation
@@ -91,10 +113,10 @@ public class TaskId implements Serializable, HasNodeId {
     }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof TaskId)) return false;
-        final TaskId taskId = (TaskId) object;
+    public boolean equals(final Object o) {
+        if (this == o) return true;
+        if (!TaskId.class.equals(o.getClass())) return false;
+        final TaskId taskId = (TaskId) o;
         return v1CompoundId.equals(taskId.v1CompoundId, INSTANCE, APPLICATION, RESOURCE, TASK);
     }
 

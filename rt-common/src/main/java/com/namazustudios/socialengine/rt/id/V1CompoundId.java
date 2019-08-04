@@ -107,23 +107,23 @@ class V1CompoundId implements Serializable {
                 final int ordinal = byteRepresentation[index++];
 
                 field = FIELDS[ordinal];
-                upper |= ((long)byteRepresentation[index++] << (8 * 7));
-                upper |= ((long)byteRepresentation[index++] << (8 * 6));
-                upper |= ((long)byteRepresentation[index++] << (8 * 5));
-                upper |= ((long)byteRepresentation[index++] << (8 * 4));
-                upper |= ((long)byteRepresentation[index++] << (8 * 3));
-                upper |= ((long)byteRepresentation[index++] << (8 * 2));
-                upper |= ((long)byteRepresentation[index++] << (8 * 1));
-                upper |= ((long)byteRepresentation[index++] << (8 * 0));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 7));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 6));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 5));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 4));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 3));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 2));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 1));
+                upper |= ((byteRepresentation[index++] & 0xFFL) << (8 * 0));
 
-                lower |= ((long)byteRepresentation[index++] << (8 * 7));
-                lower |= ((long)byteRepresentation[index++] << (8 * 6));
-                lower |= ((long)byteRepresentation[index++] << (8 * 5));
-                lower |= ((long)byteRepresentation[index++] << (8 * 4));
-                lower |= ((long)byteRepresentation[index++] << (8 * 3));
-                lower |= ((long)byteRepresentation[index++] << (8 * 2));
-                lower |= ((long)byteRepresentation[index++] << (8 * 1));
-                lower |= ((long)byteRepresentation[index++] << (8 * 0));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 7));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 6));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 5));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 4));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 3));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 2));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 1));
+                lower |= ((byteRepresentation[index++] & 0xFFL) << (8 * 0));
 
                 uuid = new UUID(upper, lower);
                 components[ordinal] = new Component(field, uuid);
@@ -462,6 +462,8 @@ class V1CompoundId implements Serializable {
                 final Component component = components[i];
 
                 for (int j = 0; j < fields.length; ++j) {
+
+                    if (component == null) continue;
 
                     final Field field = fields[j];
 

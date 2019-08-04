@@ -143,7 +143,7 @@ public class NodeId implements Serializable, HasNodeId {
     @Override
     public boolean equals(Object o) {
         if (o == null) return false;
-        if (NodeId.class.equals(o.getClass())) return false;
+        if (!NodeId.class.equals(o.getClass())) return false;
         final NodeId other = (NodeId)o;
         return v1CompoundId.equals(other.v1CompoundId, INSTANCE, APPLICATION);
     }

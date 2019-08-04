@@ -70,7 +70,7 @@ public class InstanceId implements Serializable {
     @Override
     public boolean equals(Object o) {
         if (o == null) return false;
-        if (InstanceId.class.equals(o.getClass())) return false;
+        if (!InstanceId.class.equals(o.getClass())) return false;
         final InstanceId other = (InstanceId)o;
         return v1CompoundId.equals(other.v1CompoundId, INSTANCE);
     }

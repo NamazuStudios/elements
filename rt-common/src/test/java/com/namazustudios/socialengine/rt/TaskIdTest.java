@@ -1,0 +1,82 @@
+package com.namazustudios.socialengine.rt;
+
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
+import org.testng.annotations.Test;
+
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+
+import static java.util.UUID.randomUUID;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
+
+public class TaskIdTest {
+
+    @Test
+    public void testCreate() {
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final ResourceId resourceId = new ResourceId(nodeId);
+        final TaskId taskId = new TaskId(resourceId);
+        assertNotNull(taskId.getNodeId());
+        assertNotNull(taskId.getResourceId());
+        assertNotNull(taskId.getNodeId().getInstanceId());
+        assertNotNull(taskId.getNodeId().getApplicationUuid());
+    }
+
+    @Test
+    public void testEqualsAndHashCodeWithBytes() {
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final ResourceId resourceId = new ResourceId(nodeId);
+        final TaskId taskId = new TaskId(resourceId);
+        final TaskId duplicateTaskId = new TaskId(taskId.asBytes());
+        assertEquals(duplicateTaskId, taskId);
+        assertEquals(duplicateTaskId.hashCode(), taskId.hashCode());
+    }
+
+    @Test
+    public void testEqualsAndHashCodeWithString() {
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final ResourceId resourceId = new ResourceId(nodeId);
+        final TaskId taskId = new TaskId(resourceId);
+        final TaskId duplicateTaskId = new TaskId(taskId.asString());
+        assertEquals(duplicateTaskId, taskId);
+        assertEquals(duplicateTaskId.hashCode(), taskId.hashCode());
+    }
+
+    @Test
+    public void testSerialization() throws Exception {
+
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final ResourceId resourceId = new ResourceId(nodeId);
+        final TaskId taskId = new TaskId(resourceId);
+
+        final byte[] bytes;
+
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+
+            try (final ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                oos.writeObject(taskId);
+            }
+
+            bytes = bos.toByteArray();
+
+        }
+
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             final ObjectInputStream ois = new ObjectInputStream(bis)) {
+            final Object result = ois.readObject();
+            assertEquals(result, taskId);
+        }
+
+    }
+
+}

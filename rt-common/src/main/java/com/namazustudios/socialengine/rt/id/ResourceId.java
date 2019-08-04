@@ -34,6 +34,8 @@ public class ResourceId implements Serializable, HasNodeId {
 
     private transient volatile int hash;
 
+    private transient volatile byte[] bytes;
+
     private transient volatile String string;
 
     private transient volatile NodeId nodeId;
@@ -65,6 +67,19 @@ public class ResourceId implements Serializable, HasNodeId {
     }
 
     /**
+     * Parses a new {@link ResourceId} from the given {@link byte[]}.  The should be the string representation returned
+     * byt {@link #asString()}.
+     *
+     * @param byteRepresentation the  {@link byte[]} representation of the {@link ResourceId} from {@link ResourceId#asBytes()}.
+     */
+    public ResourceId(final byte[] byteRepresentation) {
+        v1CompoundId = new V1CompoundId.Builder()
+                .with(byteRepresentation)
+                .only(INSTANCE, APPLICATION, RESOURCE)
+                .build();
+    }
+
+    /**
      * Implementation detail constructor.
      *
      * @param v1CompoundId the {@link V1CompoundId}
@@ -75,6 +90,15 @@ public class ResourceId implements Serializable, HasNodeId {
                 .without(TASK)
                 .only(INSTANCE, APPLICATION, RESOURCE)
             .build();
+    }
+
+    /**
+     * Returns the byte[] representation of this {@link ResourceId}
+     *
+     * @return the string representation
+     */
+    public byte[] asBytes() {
+        return bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION, RESOURCE)) : bytes;
     }
 
     /**
@@ -99,7 +123,7 @@ public class ResourceId implements Serializable, HasNodeId {
     @Override
     public boolean equals(Object o) {
         if (o == null) return false;
-        if (ResourceId.class.equals(o.getClass())) return false;
+        if (!ResourceId.class.equals(o.getClass())) return false;
         final ResourceId other = (ResourceId)o;
         return v1CompoundId.equals(other.v1CompoundId, INSTANCE, APPLICATION, RESOURCE);
     }
