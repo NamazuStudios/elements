@@ -317,10 +317,10 @@ public class TestListAggregateRoutingStrategy extends BaseRoutingStrategyTest {
         assertEquals(resultList, expectedAggregateList);
 
         final List<InvocationResult> expectedResults = mockResults
-                .stream()
-                .map(lir -> lir.stream().flatMap(ir -> ((List<Object>)ir.getResult()).stream()).collect(toList()))
-                .map(InvocationResult::new)
-                .collect(toList());
+            .stream()
+            .map(lir -> lir.stream().flatMap(ir -> ((List<Object>)ir.getResult()).stream()).collect(toList()))
+            .map(InvocationResult::new)
+            .collect(toList());
 
         for (int i = 0; i < expectedResults.size(); ++i) {
             final InvocationResult expected = expectedResults.get(i);
