@@ -35,10 +35,22 @@ public interface InstanceMetadataContext {
     @RemotelyInvokable
     InstanceId getInstanceId();
 
+    /**
+     * Gets all {@link NodeId}s housed within the instance.
+     *
+     * @return the {@link Set<NodeId>} of all running and active nodes on the instance
+     */
     @RemotelyInvokable
     Set<NodeId> getNodeIds();
 
+    /**
+     * Represents the instance's current load factor.  This returns a double in the range of [0, 1], with the higher
+     * number representing a greater load.  Load represents a single average measurement of how loaded the system is
+     * and this number may not necessary equate to CPU load.
+     *
+     * @return the instance's load
+     */
     @RemotelyInvokable
-    double getInstanceQuality();
+    double getInstanceLoad();
 
 }

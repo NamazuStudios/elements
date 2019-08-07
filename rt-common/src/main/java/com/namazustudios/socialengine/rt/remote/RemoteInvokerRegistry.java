@@ -23,7 +23,7 @@ public interface RemoteInvokerRegistry {
      * underlying implementation to make that determination.
      * @param applicationId
      */
-    RemoteInvoker getAnyRemoteInvoker(UUID applicationId);
+    RemoteInvoker getBestRemoteInvoker(UUID applicationId);
 
     /**
      * Returns a {@link RemoteInvoker} for all known {@link NodeId}s.  This will be a perfect snapshot of the state

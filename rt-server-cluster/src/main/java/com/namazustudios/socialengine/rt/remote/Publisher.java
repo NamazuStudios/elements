@@ -1,79 +1,56 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Subscription;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
-import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 
-import static java.util.stream.Collectors.toList;
+/**
+ * Used to implement a publish/subscribe system.  This allows multiple {@link Subscription}s to be associated with a
+ * specific event.
+ *
+ * @param <T>
+ */
+public interface Publisher<T> {
 
-public class Publisher<T> {
+    /**
+     * Subscribes to a particular event.  The supplied {@link Consumer<T>} will receive zero or more events in the
+     * future until the associated call to {@link Subscription#unsubscribe()}.
+     *
+     * @param consumer the {@link Consumer<T>} which will accept event
+     * @return the {@link Subscription}
+     */
+    Subscription subscribe(Consumer<T> consumer);
 
-    private static final Logger logger = LoggerFactory.getLogger(Publisher.class);
+    /**
+     * Publishes the event synchronously.
+     *
+     * @param t the event
+     */
+    void publish(T t);
 
-    private static Executor dispatch = Executors.newSingleThreadExecutor(r -> {
-        final Thread thread = new Thread(r);
-        thread.setDaemon(true);
-        thread.setName(Publisher.class.getName() + " event dispatch.");
-        thread.setUncaughtExceptionHandler((t, ex) -> logger.error("Error running InstanceConnectionService", ex));
-        return thread;
-    });
+    /**
+     * Publishes the supplied event asynchronously.
+     *
+     * @param t the event
+     */
+    void publishAsync(T t);
 
-    private final Lock lock;
+    /**
+     * Publishes the supplied event synchronously and calls the {@link Consumer<T>} when all {@link Subscription}s have
+     * been notified.
+     *
+     * @param t the event
+     * @param onFinish the {@link Consumer<T>} to be called after all {@link Subscription}s have been notified
+     */
+    void publish(T t, Consumer<T> onFinish);
 
-    private final List<Consumer<T>> subscribers = new ArrayList<Consumer<T>>();
-
-    public Publisher(final Lock lock) {
-        this.lock = lock;
-    }
-
-    public Subscription subscribe(final Consumer<T> consumer) {
-
-        final Subscription subscription = () -> {
-            try {
-                lock.lock();
-                subscribers.removeIf(c -> c == consumer);
-            } finally {
-                lock.unlock();
-            }
-        };
-
-        try {
-            lock.lock();
-            subscribers.add(consumer);
-        } finally {
-            lock.unlock();
-        }
-
-        return subscription;
-    }
-
-    public void publish(final T t) {
-        publish(t, t0 -> {});
-    }
-
-    public void publishAsync(final T t) {
-        publishAsync(t, t0 -> {});
-    }
-
-    public void publish(final T t, final Consumer<T> onFinish) {
-        try {
-            lock.lock();
-            subscribers.stream().collect(toList()).forEach(c -> c.accept(t));
-            onFinish.accept(t);
-        } finally {
-            lock.unlock();
-        }
-    }
-
-    public void publishAsync(final T t,  final Consumer<T> onFinish) {
-        dispatch.execute(() -> publish(t, onFinish));
-    }
+    /**
+     * Publishes the supplied event asynchronously and calls the {@link Consumer<T>} when all {@link Subscription}s have
+     * been notified.
+     *
+     * @param t the event
+     * @param onFinish the {@link Consumer<T>} to be called after all {@link Subscription}s have been notified
+     */
+    void publishAsync(T t, Consumer<T> onFinish);
 
 }

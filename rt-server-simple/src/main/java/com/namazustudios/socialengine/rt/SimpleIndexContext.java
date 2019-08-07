@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.Routing;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.routing.ListAggregateRoutingStrategy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,7 +26,7 @@ public class SimpleIndexContext implements IndexContext {
 
     private ResourceService resourceService;
 
-    @RemotelyInvokable(routing = @Routing(ListAggregatePathRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
     @Override
     public void listAsync(final Path path,
                           final Consumer<List<Listing>> success,

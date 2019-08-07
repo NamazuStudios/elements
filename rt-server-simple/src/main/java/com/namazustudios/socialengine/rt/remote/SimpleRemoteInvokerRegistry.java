@@ -67,7 +67,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     }
 
     @Override
-    public RemoteInvoker getAnyRemoteInvoker(final UUID applicationId) {
+    public RemoteInvoker getBestRemoteInvoker(final UUID applicationId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
         return snapshot.getBestInvokerForApplication(applicationId);
     }
@@ -124,7 +124,14 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private void start() {
 
-            scheduledExecutorService = newSingleThreadScheduledExecutor();
+            scheduledExecutorService = newSingleThreadScheduledExecutor(r -> {
+                final Thread thread = new Thread(r);
+                thread.setDaemon(true);
+                thread.setName(SimpleRemoteInvokerRegistry.class.getSimpleName() + " refresher.");
+                thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Caught exception in {}", t, e)));
+                return thread;
+            });
+
             scheduledExecutorService.scheduleAtFixedRate(this::refresh, 0, REFRESH_RATE, REFRESH_UNITS);
             connect = getInstanceConnectionService().subscribeToConnect(this::add);
             disconnect = getInstanceConnectionService().subscribeToDisconnect(this::remove);
@@ -149,13 +156,15 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                 throw new InternalException(e);
             }
 
+            snapshot.clear();
+
         }
 
         private void add(final InstanceConnection connection) {
             final RefreshBuilder builder = snapshot.refresh();
             add(builder, connection).commit((ri, ex) -> {
                 if (ri != null) {
-                    logger.error("Cleaning up RemoteInvoker {}", ri, ex);
+                    logger.error("Cleaning up {}", ri, ex);
                     ri.stop();
                 }
             });
@@ -168,7 +177,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
             builder.remove(instanceId).commit((ri, ex) -> {
                 if (ri != null) {
-                    logger.error("Cleaning up RemoteInvoker {}", ri, ex);
+                    logger.error("Cleaning up {}", ri, ex);
                     ri.stop();
                 }
             });
@@ -176,33 +185,37 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         }
 
         private void refresh() {
+            try {
 
-            final RefreshBuilder builder = snapshot.refresh();
-            final List<InstanceConnection> connections = getInstanceConnectionService().getActiveConnections();
+                final RefreshBuilder builder = snapshot.refresh();
+                final List<InstanceConnection> connections = getInstanceConnectionService().getActiveConnections();
 
-            for (final InstanceConnection connection : connections) {
-                add(builder, connection);
-            }
-
-            builder.prune().commit((ri, ex) -> {
-                if (ri != null) {
-                    logger.error("Cleaning up RemoteInvoker {}", ri, ex);
-                    ri.stop();
+                for (final InstanceConnection connection : connections) {
+                    add(builder, connection);
                 }
-            });
 
-            latch.countDown();
+                builder.prune().commit((ri, ex) -> {
+                    if (ri != null) {
+                        logger.error("Cleaning up RemoteInvoker {}", ri, ex);
+                        ri.stop();
+                    }
+                });
 
+            } catch (Exception ex) {
+                logger.error("Caught error refreshing instances.", ex);
+            } finally {
+                latch.countDown();
+            }
         }
 
         private RefreshBuilder add(final RefreshBuilder builder, final InstanceConnection connection) {
 
             final double load;
             final Set<NodeId> nodeIdSet;
-            final InstanceId instanceId = connection.getInstanceMetadataContext().getInstanceId();
+            final InstanceId instanceId = connection.getInstanceId();
 
             try {
-                load = connection.getInstanceMetadataContext().getInstanceQuality();
+                load = connection.getInstanceMetadataContext().getInstanceLoad();
             } catch (Exception ex) {
                 logger.error("Could not determine load average for instance {}", instanceId, ex);
                 return builder;

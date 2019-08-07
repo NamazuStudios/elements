@@ -25,7 +25,7 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
     }
 
     @Override
-    public double getInstanceQuality() {
+    public double getInstanceLoad() {
         return getLoadMonitorService().getInstanceQuality();
     }
 

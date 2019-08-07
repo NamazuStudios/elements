@@ -13,7 +13,7 @@ import java.util.function.Consumer;
 
 /**
  * The default {@link RoutingStrategy} which simply selects a {@link RemoteInvoker} from the
- * {@link RemoteInvokerRegistry} using {@link RemoteInvokerRegistry#getAnyRemoteInvoker(java.util.UUID)} and sends the
+ * {@link RemoteInvokerRegistry} using {@link RemoteInvokerRegistry#getBestRemoteInvoker(java.util.UUID)} and sends the
  * {@link Invocation} there.
  */
 public class DefaultRoutingStrategy implements RoutingStrategy {
@@ -32,7 +32,7 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
-        return getRemoteInvokerRegistry().getAnyRemoteInvoker(getDefaultApplicationId()).invokeFuture(
+        return getRemoteInvokerRegistry().getBestRemoteInvoker(getDefaultApplicationId()).invokeFuture(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
@@ -46,7 +46,7 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
-        return getRemoteInvokerRegistry().getAnyRemoteInvoker(getDefaultApplicationId()).invokeAsync(
+        return getRemoteInvokerRegistry().getBestRemoteInvoker(getDefaultApplicationId()).invokeAsync(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
@@ -60,7 +60,7 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
-        return getRemoteInvokerRegistry().getAnyRemoteInvoker(defaultApplicationId).invokeSync(
+        return getRemoteInvokerRegistry().getBestRemoteInvoker(defaultApplicationId).invokeSync(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);

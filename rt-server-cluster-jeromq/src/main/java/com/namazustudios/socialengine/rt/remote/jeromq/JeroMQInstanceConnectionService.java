@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.ConcurrentLockedPublisher;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.Publisher;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
@@ -166,9 +167,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private final BiMap<JeroMQInstanceConnection, InstanceHostInfo> rActiveConnections = activeConnections.inverse();
 
-        private final Publisher<InstanceConnection> onConnect = new Publisher<>(readWriteLock.writeLock());
+        private final Publisher<InstanceConnection> onConnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
 
-        private final Publisher<InstanceConnection> onDisconnect = new Publisher<>(readWriteLock.writeLock());
+        private final Publisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
 
         public void start() {
             onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(i -> getOrCreateNewConnection(i));
