@@ -163,10 +163,15 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         private void add(final InstanceConnection connection) {
             final RefreshBuilder builder = snapshot.refresh();
             add(builder, connection).commit((ri, ex) -> {
-                if (ri != null) {
+
+                if (ex == null) {
+                    logger.info("Cleaning up {}", ri);
+                } else {
                     logger.error("Cleaning up {}", ri, ex);
-                    ri.stop();
                 }
+
+                if (ri != null) ri.stop();
+
             });
         }
 
@@ -176,10 +181,15 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             final InstanceId instanceId = connection.getInstanceId();
 
             builder.remove(instanceId).commit((ri, ex) -> {
-                if (ri != null) {
+
+                if (ex == null) {
+                    logger.info("Cleaning up {}", ri);
+                } else {
                     logger.error("Cleaning up {}", ri, ex);
-                    ri.stop();
                 }
+
+                if (ri != null) ri.stop();
+
             });
 
         }
@@ -195,10 +205,15 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                 }
 
                 builder.prune().commit((ri, ex) -> {
-                    if (ri != null) {
-                        logger.error("Cleaning up RemoteInvoker {}", ri, ex);
-                        ri.stop();
+
+                    if (ex == null) {
+                        logger.info("Cleaning up {}", ri);
+                    } else {
+                        logger.error("Cleaning up {}", ri, ex);
                     }
+
+                    if (ri != null) ri.stop();
+
                 });
 
             } catch (Exception ex) {
@@ -239,6 +254,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         private RemoteInvoker establishNewConnection(final NodeId nodeId, final InstanceConnection connection) {
             final String addr = connection.openRouteToNode(nodeId);
             final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
+            logger.info("Connecting to node {} via address {}", nodeId, addr);
             remoteInvoker.start(addr);
             return remoteInvoker;
         }

@@ -188,7 +188,15 @@ class RemoteInvokerRegistrySnapshot {
             final List<RemoteInvoker> remoteInvokerList = invokersByApplication
                 .computeIfAbsent(applicationUuid, nid -> new ArrayList<>());
 
-            remoteInvokerList.add(new PriorityRemoteInvoker(invoker, load));
+
+            final PriorityRemoteInvoker update = new PriorityRemoteInvoker(invoker, load);
+
+            remoteInvokerList.removeIf(ri -> {
+                final PriorityRemoteInvoker pri = (PriorityRemoteInvoker)ri;
+                return pri.getDelegate() == update.getDelegate();
+            });
+
+            remoteInvokerList.add(update);
 
         }
 
@@ -255,6 +263,7 @@ class RemoteInvokerRegistrySnapshot {
         private Storage begin() {
             final Storage copy = new Storage();
             copy.invokersByNode.putAll(invokersByNode);
+            invokersByApplication.forEach((k,v) -> copy.invokersByApplication.put(k, new ArrayList<>(v)));
             return copy;
         }
 
