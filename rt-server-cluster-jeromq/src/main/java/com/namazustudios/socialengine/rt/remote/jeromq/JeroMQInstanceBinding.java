@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import org.zeromq.ZContext;
 
@@ -33,7 +34,7 @@ public class JeroMQInstanceBinding implements InstanceBinding {
 
     @Override
     public void close() {
-        try (final JeroMQControlClient client = new JeroMQControlClient(zContext, instanceConnectAddress)) {
+        try (final ControlClient client = new JeroMQControlClient(zContext, instanceConnectAddress)) {
             client.closeBinding(nodeId);
         }
     }

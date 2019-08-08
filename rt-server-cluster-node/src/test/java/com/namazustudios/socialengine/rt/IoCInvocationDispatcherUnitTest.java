@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.remote.TestServiceInterface;
+import com.namazustudios.socialengine.rt.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.testng.annotations.AfterMethod;

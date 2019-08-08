@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.remote;
+package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 

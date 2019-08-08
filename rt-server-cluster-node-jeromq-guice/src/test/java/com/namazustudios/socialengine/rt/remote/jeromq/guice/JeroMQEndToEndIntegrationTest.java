@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.remote.TestServiceInterface;
+import com.namazustudios.socialengine.rt.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.NodeLifecycle;

@@ -8,10 +8,7 @@ import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.remote.ConcurrentLockedPublisher;
-import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import com.namazustudios.socialengine.rt.remote.Publisher;
-import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
+import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -21,6 +18,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Exchanger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -100,12 +98,19 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         return context.subscribeToDisconnect(onDisconnect);
     }
 
+    @Override
+    public String getLocalControlAddress() {
+        final InstanceConnectionContext context = getContext();
+        return context.getInternalBindAddress();
+    }
+
     private InstanceConnectionContext getContext() {
         final InstanceConnectionContext context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
         return context;
     }
 
+    @Override
     public InstanceId getInstanceId() {
         return instanceId;
     }
@@ -159,6 +164,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private Subscription onUndisover;
 
+        private final Exchanger<Exception> exceptionExchanger = new Exchanger<>();
+
         private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
         private final String internalBindAddress = format("inproc://control/%s", randomUUID());
@@ -172,13 +179,26 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         private final Publisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
 
         public void start() {
+
             onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(i -> getOrCreateNewConnection(i));
             onUndisover = getInstanceDiscoveryService().subscribeToUndiscovery(i -> disconnect(i));
             server = new Thread(this::server);
             server.setDaemon(true);
-            server.setName(JeroMQInstanceConnectionService.class.getName() + " server.");
+            server.setName(JeroMQInstanceConnectionService.class.getSimpleName() + " server.");
             server.setUncaughtExceptionHandler((t, ex) -> logger.error("Error running InstanceConnectionService", ex));
             server.start();
+
+            try {
+                final Exception ex = exchangeException(null);
+                if (ex != null) throw ex;
+            } catch (RuntimeException ex) {
+                throw ex;
+            } catch (Exception ex) {
+                throw new InternalException(ex);
+            }
+
+            getInstanceDiscoveryService().getKnownHosts().forEach(this::createNewConnection);
+
         }
 
         public void stop() {
@@ -201,10 +221,22 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             final List<String> binds = asList(getInternalBindAddress(), getBindAddress());
 
             try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(), binds)) {
-                getInstanceDiscoveryService().getKnownHosts().forEach(this::createNewConnection);
+                exchangeException(null);
                 server.run();
+            } catch (Exception ex) {
+                logger.error("Exception starting up the routing server.", ex);
+                exchangeException(ex);
             }
 
+        }
+
+        private Exception exchangeException(final Exception ex) {
+            try {
+                return exceptionExchanger.exchange(ex);
+            } catch (InterruptedException e) {
+                logger.error("Interrupted exchaning exceptions to calling thread.", e);
+                throw new InternalException(e);
+            }
         }
 
         public String getInternalBindAddress() {
@@ -245,8 +277,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             final InstanceId instanceId;
             final String instanceConnectAddress = instanceHostInfo.getConnectAddress();
 
-            try (final JeroMQControlClient client = new JeroMQControlClient(getzContext(), instanceConnectAddress)) {
-                final JeroMQInstanceStatus status = client.getInstanceStatus();
+            try (final ControlClient client = new JeroMQControlClient(getzContext(), instanceConnectAddress)) {
+                final InstanceStatus status = client.getInstanceStatus();
                 instanceId = status.getInstanceId();
             }
 
@@ -345,7 +377,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public InstanceBinding openBinding(final NodeId nodeId) {
-            try (final JeroMQControlClient client = new JeroMQControlClient(getzContext(), getInternalBindAddress())) {
+            try (final ControlClient client = new JeroMQControlClient(getzContext(), getInternalBindAddress())) {
                final InstanceBinding instanceBinding = client.openBinding(nodeId);
                return instanceBinding;
             }

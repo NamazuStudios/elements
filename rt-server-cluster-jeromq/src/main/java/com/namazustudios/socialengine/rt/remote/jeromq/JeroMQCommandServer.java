@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -54,7 +55,7 @@ public class JeroMQCommandServer {
 
         try {
             command = JeroMQRoutingCommand.stripCommand(zMsg);
-        } catch (IllegalArgumentException ex) {
+        } catch (Exception ex) {
             final ZMsg response = exceptionError(ex);
             pushIdentity(response, identity);
             response.send(socket);
@@ -105,7 +106,7 @@ public class JeroMQCommandServer {
         final ZMsg response = new ZMsg();
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         final String instanceBindAddress = demultiplex.openBindingForNode(nodeId);
-        OK.pushCommand(response);
+        OK.pushResponseCode(response);
         response.addLast(instanceBindAddress.getBytes(CHARSET));
         return response;
     }
@@ -114,7 +115,7 @@ public class JeroMQCommandServer {
         final ZMsg response = new ZMsg();
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         demultiplex.closeBindingForNode(nodeId);
-        OK.pushCommand(response);
+        OK.pushResponseCode(response);
         return response;
     }
 
@@ -122,7 +123,7 @@ public class JeroMQCommandServer {
         final ZMsg response = new ZMsg();
         final Collection<NodeId> nodeIds = multiplex.getConnectedPeers();
         if (!zMsg.isEmpty()) logger.warn("Unexpected frames in status request: {}", zMsg);
-        OK.pushCommand(response);
+        OK.pushResponseCode(response);
         response.addLast(instanceId.asBytes());
         nodeIds.forEach(nid -> response.addLast(nid.asBytes()));
         return response;
@@ -133,7 +134,7 @@ public class JeroMQCommandServer {
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         final String instanceInvokerAddress = zMsg.removeFirst().getString(CHARSET);
         final String instanceRouteAddress = multiplex.openRouteToNode(nodeId, instanceInvokerAddress);
-        OK.pushCommand(response);
+        OK.pushResponseCode(response);
         response.addLast(instanceRouteAddress.getBytes(CHARSET));
         return response;
     }

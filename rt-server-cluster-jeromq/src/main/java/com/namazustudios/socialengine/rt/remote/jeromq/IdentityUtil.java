@@ -49,7 +49,7 @@ public class IdentityUtil {
 
         final ZMsg identityMsg = new ZMsg();
 
-        while (!msg.isEmpty() && !Arrays.equals(msg.peek().getData(), EMPTY_DELIMITER)) {
+        while (!msg.isEmpty() && msg.peek().getData().length != 0) {
             identityMsg.addLast(msg.removeFirst());
         }
 

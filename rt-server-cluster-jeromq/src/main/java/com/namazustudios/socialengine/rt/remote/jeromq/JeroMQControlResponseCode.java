@@ -31,6 +31,12 @@ public enum JeroMQControlResponseCode {
     EXCEPTION,
 
     /**
+     * Indicates that there was a protocol error.  For example, the server sent malformed data that the client
+     * cannot understand.
+     */
+    PROTOCOL_ERROR,
+
+    /**
      * Indicates an unknown error.
      */
     UNKNOWN_ERROR;
@@ -42,7 +48,7 @@ public enum JeroMQControlResponseCode {
      *
      * @param zMsg the {@link ZMsg} to receive the command
      */
-    public void pushCommand(final ZMsg zMsg) {
+    public void pushResponseCode(final ZMsg zMsg) {
 
         final byte data[] = new byte[Integer.BYTES];
 
@@ -69,8 +75,12 @@ public enum JeroMQControlResponseCode {
      */
     public static JeroMQControlResponseCode stripCode(final ZMsg zMsg) {
 
+        if (zMsg.isEmpty()) throw new IllegalArgumentException("Missing response header frame.");
+
         final ZFrame frame = zMsg.removeFirst();
         final byte[] data = frame.getData();
+
+        if (data.length != Integer.BYTES) throw new IllegalArgumentException("Invalid byte array size: " + data);
 
         try {
 

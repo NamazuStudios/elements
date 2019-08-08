@@ -1,12 +1,19 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
+import com.namazustudios.socialengine.rt.remote.InstanceStatus;
 import org.zeromq.*;
 
+import java.util.concurrent.TimeUnit;
+
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.PROTOCOL_ERROR;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZContext.shadow;
 
@@ -17,13 +24,22 @@ import static org.zeromq.ZContext.shadow;
  *
  * This class is designed to be used by a single thread and destroyed.
  */
-public class JeroMQControlClient implements AutoCloseable {
+public class JeroMQControlClient implements ControlClient {
+
+    public static final long DEFAULT_TIMEOUT = 30;
+
+    public static final TimeUnit DEFAULT_TIMEOUT_UNITS = SECONDS;
 
     private final ZContext zContext;
 
     private final ZMQ.Socket socket;
 
     private final String instanceConnectAdddress;
+
+    public JeroMQControlClient(final ZContext zContext,
+                               final String instanceConnectAddress) {
+        this(zContext, instanceConnectAddress, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS);
+    }
 
     /**
      * Creates a {@link JeroMQControlClient} connecting to the remote instance to perform basic discover and control
@@ -33,37 +49,29 @@ public class JeroMQControlClient implements AutoCloseable {
      * @param zContext the {@link ZContext} used to communicate
      * @param instanceConnectAddress
      */
-    public JeroMQControlClient(final ZContext zContext, final String instanceConnectAddress) {
+    public JeroMQControlClient(final ZContext zContext,
+                               final String instanceConnectAddress,
+                               final long timeout, final TimeUnit timeUnit) {
         this.zContext = shadow(zContext);
         this.socket = zContext.createSocket(DEALER);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAdddress = instanceConnectAddress;
+        this.socket.setReceiveTimeOut((int) MILLISECONDS.convert(timeout, timeUnit));
     }
 
-    /**
-     * Gets the {@link InstanceId} for the remote instance.
-     *
-     * @return the {@link JeroMQInstanceStatus}
-     */
-    public JeroMQInstanceStatus getInstanceStatus() {
+    @Override
+    public InstanceStatus getInstanceStatus() {
 
         final ZMsg request = new ZMsg();
         GET_INSTANCE_STATUS.pushCommand(request);
-        request.send(socket);
+        send(request);
 
         final ZMsg response = recv();
         return new JeroMQInstanceStatus(response);
 
     }
 
-    /**
-     * Issues the command to open up a route to the node.
-     *
-     * @param nodeId the {@link NodeId}
-     * @param instanceInvokerAddress
-     *
-     * @return the connect address for the node
-     */
+    @Override
     public String openRouteToNode(final NodeId nodeId, final String instanceInvokerAddress) {
 
         final ZMsg request = new ZMsg();
@@ -71,20 +79,21 @@ public class JeroMQControlClient implements AutoCloseable {
         OPEN_ROUTE_TO_NODE.pushCommand(request);
         request.add(nodeId.asBytes());
         request.add(instanceInvokerAddress.getBytes(CHARSET));
-        request.send(socket);
+        send(request);
 
         final ZMsg response = recv();
         return response.getFirst().getString(CHARSET);
 
     }
 
+    @Override
     public InstanceConnectionService.InstanceBinding openBinding(final NodeId nodeId) {
 
         final ZMsg request = new ZMsg();
 
         OPEN_BINDING_FOR_NODE.pushCommand(request);
         request.add(nodeId.asBytes());
-        request.send(socket);
+        send(request);
 
         final ZMsg response = recv();
         final String nodeBindAddress = response.removeFirst().getString(CHARSET);
@@ -92,16 +101,22 @@ public class JeroMQControlClient implements AutoCloseable {
 
     }
 
+    @Override
     public void closeBinding(final NodeId nodeId) {
 
         final ZMsg request = new ZMsg();
 
         CLOSE_BINDING_FOR_NODE.pushCommand(request);
         request.add(nodeId.asBytes());
-        request.send(socket);
+        send(request);
 
         recv();
 
+    }
+
+    private void send(final ZMsg zMsg) {
+        zMsg.addFirst(EMPTY_DELIMITER);
+        zMsg.send(socket);
     }
 
     private ZMsg recv() {

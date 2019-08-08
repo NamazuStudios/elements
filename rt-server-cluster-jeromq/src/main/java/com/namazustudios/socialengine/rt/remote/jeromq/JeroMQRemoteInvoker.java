@@ -42,8 +42,6 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private String connectAddress;
 
-    private int timeoutMillis;
-
     private PayloadReader payloadReader;
 
     private PayloadWriter payloadWriter;
@@ -53,15 +51,14 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     private ExecutorService executorService;
 
     @Override
-    public void start(String connectAddress, int timeoutMillis) {
+    public void start(final String connectAddress, final int timeoutMillis) {
         this.connectAddress = connectAddress;
-        this.timeoutMillis = timeoutMillis;
         getConnectionPool().start(zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(DEALER);
-            socket.setReceiveTimeOut(getTimeoutMillis());
-            socket.connect(getConnectAddress());
+            socket.setReceiveTimeOut(timeoutMillis);
+            socket.connect(connectAddress);
             return socket;
-        }, JeroMQRemoteInvoker.class.getName());
+        }, JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress);
     }
 
     @Override
@@ -325,6 +322,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         return responseHeader;
     }
 
+    public String getConnectAddress() {
+        return connectAddress;
+    }
+
     public PayloadReader getPayloadReader() {
         return payloadReader;
     }
@@ -341,14 +342,6 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @Inject
     public void setPayloadWriter(PayloadWriter payloadWriter) {
         this.payloadWriter = payloadWriter;
-    }
-
-    public String getConnectAddress() {
-        return connectAddress;
-    }
-
-    public int getTimeoutMillis() {
-        return timeoutMillis;
     }
 
     public ConnectionPool getConnectionPool() {

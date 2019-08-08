@@ -1,5 +1,7 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.Subscription;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ConcurrentLockedPublisher;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
@@ -22,6 +24,16 @@ public class MockInstanceConnectionService implements InstanceConnectionService 
     private final Publisher<InstanceConnection> onConnectPublisher = spy(new ConcurrentLockedPublisher<>(lock));
 
     private final Publisher<InstanceConnection> onDisconnectPublisher = spy(new ConcurrentLockedPublisher<>(lock));
+
+    @Override
+    public InstanceId getInstanceId() {
+        return null;
+    }
+
+    @Override
+    public String getLocalControlAddress() {
+        return null;
+    }
 
     @Override
     public void start() {}

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
-import com.namazustudios.socialengine.remote.TestServiceInterface;
+import com.namazustudios.socialengine.rt.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

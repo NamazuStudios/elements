@@ -96,6 +96,9 @@ class V1CompoundId implements Serializable {
         int index = 0;
 
         try {
+
+            if (byteRepresentation.length == 0) throw new IllegalArgumentException("Got zero-length ayte array.");
+
             while (index < byteRepresentation.length) {
 
                 long upper = 0;

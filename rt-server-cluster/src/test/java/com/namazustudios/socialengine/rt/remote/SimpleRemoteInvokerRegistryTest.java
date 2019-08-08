@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.remote;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
-import com.namazustudios.socialengine.rt.MockInstanceConnectionService;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceConnection;

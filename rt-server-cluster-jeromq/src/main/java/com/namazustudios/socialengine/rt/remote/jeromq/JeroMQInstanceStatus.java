@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.InstanceStatus;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
@@ -11,7 +12,7 @@ import java.util.List;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.util.Collections.unmodifiableList;
 
-public class JeroMQInstanceStatus {
+public class JeroMQInstanceStatus implements InstanceStatus {
 
     private final InstanceId instanceId;
 
@@ -19,10 +20,10 @@ public class JeroMQInstanceStatus {
 
     public JeroMQInstanceStatus(final ZMsg zMsg) {
 
-        if (zMsg.size() != 1) throw new IllegalArgumentException("Invalid JeroMQInstanceStatus");
+        if (zMsg.size() < 1) throw new IllegalArgumentException("Invalid JeroMQInstanceStatus");
 
-        final String instanceId = zMsg.removeFirst().getString(CHARSET);
-        this.instanceId = new InstanceId(instanceId);
+        final byte[] instanceIdBytes = zMsg.removeFirst().getData();
+        this.instanceId = new InstanceId(instanceIdBytes);
 
         final List<NodeId> nodeIds = new ArrayList<>();
 
@@ -36,10 +37,12 @@ public class JeroMQInstanceStatus {
 
     }
 
+    @Override
     public InstanceId getInstanceId() {
         return instanceId;
     }
 
+    @Override
     public List<NodeId> getNodeIds() {
         return nodeIds;
     }

@@ -68,8 +68,12 @@ public enum JeroMQRoutingCommand {
      */
     public static JeroMQRoutingCommand stripCommand(final ZMsg zMsg) {
 
+        if (zMsg.isEmpty()) throw new IllegalArgumentException("Missing command header frame.");
+
         final ZFrame frame = zMsg.removeFirst();
         final byte[] data = frame.getData();
+
+        if (data.length != Integer.BYTES) throw new IllegalArgumentException("Invalid byte array size: " + data);
 
         try {
 

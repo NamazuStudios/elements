@@ -26,6 +26,13 @@ public interface InstanceConnectionService {
     void stop();
 
     /**
+     * Gets the {@link InstanceId} for this {@link InstanceConnectionService}.
+     *
+     * @return the {@link InstanceId}
+     */
+    InstanceId getInstanceId();
+
+    /**
      * Gets an {@link InstanceBinding} which a node can then use to receive incoming data.  If a binding already exists
      * for the supplied {@link NodeId}, then an exception will be thrown.
      *
@@ -58,6 +65,14 @@ public interface InstanceConnectionService {
      * @return a {@link Subscription} that can be cancled later.
      */
     Subscription subscribeToDisconnect(Consumer<InstanceConnection> onDisconnect);
+
+    /**
+     * Returns the local control address.  This is an address through which the a control client may be used to control
+     * the instance from within the local process space.
+     *
+     * @return the local control address.
+     */
+    String getLocalControlAddress();
 
     /**
      * Represents a connection to a remote instance.
@@ -103,7 +118,7 @@ public interface InstanceConnectionService {
      * a node will then bind on the provided address.  The {@link InstanceConnectionService} will accept connections
      * until the binding is closed.
      */
-    interface InstanceBinding {
+    interface InstanceBinding extends AutoCloseable {
 
         /**
          * Returns the host address to which to bind when receiving incoming data.

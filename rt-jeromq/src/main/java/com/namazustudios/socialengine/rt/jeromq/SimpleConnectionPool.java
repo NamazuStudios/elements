@@ -47,17 +47,12 @@ public class SimpleConnectionPool implements ConnectionPool {
     @Override
     public void start(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) {
 
-        final Context c;
-
-        try {
-            c = new Context(socketSupplier, name);
-        } catch (InterruptedException ex) {
-            logger.error("Interrupted during startup.", ex);
-            throw new InternalException("Interrupted during startup.", ex);
-        }
+        final Context c = new Context(socketSupplier, name);
 
         if (context.compareAndSet(null, c)) {
-            logger.info("Started Context.");
+            logger.info("Starting ...");
+            c.start();
+            logger.info("Started.");
         } else {
             c.stop();
             throw new IllegalStateException("Already started.");
@@ -68,12 +63,14 @@ public class SimpleConnectionPool implements ConnectionPool {
     @Override
     public void stop() {
 
-        final Context c = context.get();
+        final Context c = context.getAndSet(null);
 
-        if (context.compareAndSet(c, null)) {
-            c.stop();
-        } else {
+        if (c == null) {
             throw new IllegalStateException("Not started");
+        } else {
+            logger.info("Stopping: {}", c);
+            c.stop();
+            logger.info("Stopped: {}", c);
         }
 
     }
@@ -134,13 +131,22 @@ public class SimpleConnectionPool implements ConnectionPool {
 
     private class Context {
 
-        private final Pool pool;
+        private Pool pool;
 
-        private final Thread lifecycle;
+        private Thread lifecycle;
+
+        private final String name;
+
+        private final Function<ZContext, ZMQ.Socket> socketSupplier;
 
         private final AtomicBoolean running = new AtomicBoolean(true);
 
-        public Context(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) throws InterruptedException {
+        public Context(final Function<ZContext, ZMQ.Socket> socketSupplier, final String name) {
+            this.name = name;
+            this.socketSupplier = socketSupplier;
+        }
+
+        public void start() {
 
             final Exchanger<Pool> exchanger = new Exchanger();
 
@@ -157,7 +163,12 @@ public class SimpleConnectionPool implements ConnectionPool {
             lifecycle.setUncaughtExceptionHandler((t, ex) -> logger.error("Lifecycle thread threw exception.", ex));
             lifecycle.start();
 
-            pool = exchanger.exchange(null);
+            try {
+                pool = exchanger.exchange(null);
+            } catch (InterruptedException ex) {
+                logger.error("Interrupted during startup.", ex);
+                throw new InternalException(ex);
+            }
 
         }
 
@@ -190,6 +201,13 @@ public class SimpleConnectionPool implements ConnectionPool {
                 throw th;
             }
 
+        }
+
+        @Override
+        public String toString() {
+            return "Context{" +
+                    "name='" + name + '\'' +
+                    '}';
         }
 
     }

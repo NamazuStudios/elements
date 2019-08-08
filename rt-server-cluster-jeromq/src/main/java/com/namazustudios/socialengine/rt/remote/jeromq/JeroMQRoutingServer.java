@@ -47,7 +47,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
         this.poller = zContextShadow.createPoller(0);
 
         final ZMQ.Socket main = zContextShadow.createSocket(ROUTER);
-        for (final String addr : bindAddresses) main.bind(addr);
+        bindAddresses.forEach(main::bind);
 
         final int frontend = poller.register(main, POLLIN | POLLERR);
         this.multiplex = new JeroMQMultiplexRouter(zContextShadow, poller);
@@ -85,7 +85,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     public static ZMsg error(final JeroMQControlResponseCode code, final String message) {
         final ZMsg response = new ZMsg();
-        (code == null ? UNKNOWN_ERROR : code).pushCommand(response);
+        (code == null ? UNKNOWN_ERROR : code).pushResponseCode(response);
         response.addLast(message.getBytes(CHARSET));
         return response;
     }
@@ -100,7 +100,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
         logger.error("Exception processing request.", ex);
         final ZMsg response = new ZMsg();
 
-        EXCEPTION.pushCommand(response);
+        EXCEPTION.pushResponseCode(response);
         response.addLast(ex.getMessage().getBytes(CHARSET));
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote.guice;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.remote.ClusterClientContext;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
 
 import static com.google.inject.name.Names.named;
