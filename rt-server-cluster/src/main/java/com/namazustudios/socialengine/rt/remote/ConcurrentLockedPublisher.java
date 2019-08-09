@@ -80,7 +80,13 @@ public class ConcurrentLockedPublisher<T> implements Publisher<T> {
     public void publish(final T t, final Consumer<T> onFinish) {
         try {
             lock.lock();
-            subscribers.stream().collect(toList()).forEach(c -> c.accept(t));
+            subscribers.stream().collect(toList()).forEach(c -> {
+                    try {
+                    c.accept(t);
+                } catch (Exception ex) {
+                    logger.error("Caught excpetion dispatching event.", ex);
+                }
+            });
             onFinish.accept(t);
         } finally {
             lock.unlock();

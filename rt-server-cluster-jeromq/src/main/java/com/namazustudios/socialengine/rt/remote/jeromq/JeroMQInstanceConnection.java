@@ -54,7 +54,7 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
 
     @Override
     public String openRouteToNode(NodeId nodeId) {
-        try (ControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
+        try (final ControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
             final String address = client.openRouteToNode(nodeId, instanceHostInfo.getConnectAddress());
             return address;
         }
@@ -67,7 +67,11 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
 
     @Override
     public void disconnect() {
-        onDisconnect.accept(this);
+        try (final ControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
+            client.closeRoutesViaInstance(instanceId);
+        } finally {
+            onDisconnect.accept(this);
+        }
     }
 
     /**

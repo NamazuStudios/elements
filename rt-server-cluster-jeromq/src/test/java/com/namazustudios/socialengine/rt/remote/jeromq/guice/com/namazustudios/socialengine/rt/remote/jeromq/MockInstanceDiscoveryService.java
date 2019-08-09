@@ -76,7 +76,7 @@ public class MockInstanceDiscoveryService implements InstanceDiscoveryService {
     public void addHost(final String connectAddress) {
         try {
             lock.lock();
-            final InstanceHostInfo instanceHostInfo = spy(new MockInstanceHostInfo(connectAddress));
+            final InstanceHostInfo instanceHostInfo = new MockInstanceHostInfo(connectAddress);
             knownHosts.add(instanceHostInfo);
             getOnDiscoveryPublisher().publish(instanceHostInfo);
         } finally {
@@ -96,7 +96,7 @@ public class MockInstanceDiscoveryService implements InstanceDiscoveryService {
     public void removeHost(final String connectAddress) {
         try {
             lock.lock();
-            final InstanceHostInfo instanceHostInfo = spy(new MockInstanceHostInfo(connectAddress));
+            final InstanceHostInfo instanceHostInfo = new MockInstanceHostInfo(connectAddress);
             knownHosts.remove(instanceHostInfo);
             getOnUndiscoveryPublisher().publish(instanceHostInfo);
         } finally {
@@ -124,8 +124,8 @@ public class MockInstanceDiscoveryService implements InstanceDiscoveryService {
         @Override
         public boolean equals(Object o) {
             if (this == o) return true;
-            if (!(o instanceof MockInstanceHostInfo)) return false;
-            MockInstanceHostInfo that = (MockInstanceHostInfo) o;
+            if (!(o instanceof InstanceHostInfo)) return false;
+            InstanceHostInfo that = (InstanceHostInfo) o;
             return Objects.equals(getConnectAddress(), that.getConnectAddress());
         }
 

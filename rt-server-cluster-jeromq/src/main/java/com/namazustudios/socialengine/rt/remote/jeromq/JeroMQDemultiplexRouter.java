@@ -10,11 +10,15 @@ import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+import java.util.Collection;
+import java.util.Collections;
+
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableCollection;
+import static java.util.UUID.randomUUID;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
@@ -43,9 +47,9 @@ public class JeroMQDemultiplexRouter {
         rBackends.forEach((index, iid) -> routeToFrontend(index, iid));
     }
 
-    public String openBindingForNode(final NodeId nodeId) {
+    public String openBinding(final NodeId nodeId) {
 
-        if (backends.containsKey(nodeId)) throw new JeroMQControlException(BINDING_ALREDY_EXISTS);
+        if (backends.containsKey(nodeId)) throw new JeroMQControlException(BINDING_ALREADY_EXISTS);
 
         final ZMQ.Socket socket = zContext.createSocket(DEALER);
         final int index = poller.register(socket, POLLIN | POLLERR);
@@ -86,6 +90,8 @@ public class JeroMQDemultiplexRouter {
 
     private void routeToFrontend(final int index, final NodeId nid) {
 
+        if (!poller.pollin(index)) return;
+
         final ZMQ.Socket backend = poller.getSocket(index);
         final ZMQ.Socket frontend = poller.getSocket(this.frontend);
 
@@ -99,8 +105,12 @@ public class JeroMQDemultiplexRouter {
 
     }
 
+    public Collection<NodeId> getConnectedNodeIds() {
+        return unmodifiableCollection(backends.keySet());
+    }
+
     public static String getLocalConnectAddress(final NodeId nodeId) {
-        return format("inproc://demux/%s", nodeId.asString());
+        return format("inproc://demux/%s?%s", nodeId.asString(), randomUUID());
     }
 
 }

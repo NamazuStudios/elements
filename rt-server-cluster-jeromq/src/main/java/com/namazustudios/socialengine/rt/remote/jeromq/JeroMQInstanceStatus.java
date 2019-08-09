@@ -29,7 +29,7 @@ public class JeroMQInstanceStatus implements InstanceStatus {
 
         while (!zMsg.isEmpty()) {
             final ZFrame frame = zMsg.removeFirst();
-            final NodeId nodeId = new NodeId(frame.getString(CHARSET));
+            final NodeId nodeId = new NodeId(frame.getData());
             nodeIds.add(nodeId);
         }
 

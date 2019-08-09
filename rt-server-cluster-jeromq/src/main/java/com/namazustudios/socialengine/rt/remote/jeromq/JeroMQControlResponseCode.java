@@ -23,7 +23,12 @@ public enum JeroMQControlResponseCode {
     /**
      * Indicates a binding already exists.
      */
-    BINDING_ALREDY_EXISTS,
+    BINDING_ALREADY_EXISTS,
+
+    /**
+     * Indicates a socket error occurred, such as network timeout.
+     */
+    SOCKET_ERROR,
 
     /**
      * There was an exception processing the request.

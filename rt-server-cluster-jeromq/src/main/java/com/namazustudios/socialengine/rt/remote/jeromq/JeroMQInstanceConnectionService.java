@@ -180,8 +180,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public void start() {
 
-            onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(i -> getOrCreateNewConnection(i));
-            onUndisover = getInstanceDiscoveryService().subscribeToUndiscovery(i -> disconnect(i));
+            onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(this::getOrCreateNewConnection);
+            onUndisover = getInstanceDiscoveryService().subscribeToUndiscovery(this::disconnect);
             server = new Thread(this::server);
             server.setDaemon(true);
             server.setName(JeroMQInstanceConnectionService.class.getSimpleName() + " server.");
@@ -341,8 +341,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             try {
                 wLock.lock();
-                final InstanceConnection connection = activeConnections.remove(instanceHostInfo);
+
+                final JeroMQInstanceConnection connection = activeConnections.remove(instanceHostInfo);
+                if (connection == null) return;
                 connection.disconnect();
+                logger.info("Disconnected from instance {}", instanceHostInfo.getConnectAddress());
+                onDisconnect.publishAsync(connection, c -> connection.getRemoteInvoker().stop());
+
             } finally {
                 wLock.unlock();
             }

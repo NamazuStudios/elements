@@ -8,14 +8,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 
+import java.net.Socket;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.NO_SUCH_ROUTE;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.FORWARD;
 import static java.lang.String.format;
-import static java.util.Collections.unmodifiableCollection;
+import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZMQ.Poller.POLLERR;
@@ -115,10 +118,6 @@ public class JeroMQMultiplexRouter {
         return poller.getSocket(index);
     }
 
-    public Collection<NodeId> getConnectedPeers() {
-        return unmodifiableCollection(frontends.keySet());
-    }
-
     public String openRouteToNode(final NodeId nodeId, final String instanceInvokerAddress) {
 
         String localBindAddress = localBindAddresses.get(nodeId);
@@ -132,18 +131,59 @@ public class JeroMQMultiplexRouter {
 
         backend.connect(instanceInvokerAddress);
 
-        final int backendIndex = poller.register(frontend, POLLIN | POLLERR);
-        final int frontendIndex = poller.register(backend, POLLIN | POLLERR);
+        final int backendIndex = poller.register(backend, POLLIN | POLLERR);
+        final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
 
         frontends.put(nodeId, frontendIndex);
         backends.put(nodeId.getInstanceId(), backendIndex);
+        localBindAddresses.put(nodeId, localBindAddress);
 
         return localBindAddress;
 
     }
 
+    public void closeRouteToNode(final NodeId nodeId) {
+
+        if (localBindAddresses.remove(nodeId) == null) return;
+
+        logger.info("Closing connection to node {}", nodeId);
+
+        final Integer frontendIndex = frontends.remove(nodeId);
+        final Integer backendIndex = backends.remove(nodeId.getInstanceId());
+
+        close(backendIndex, nodeId);
+        close(frontendIndex, nodeId);
+
+    }
+
+    public void closeRoutesViaInstance(final InstanceId instanceId) {
+        frontends.keySet()
+            .stream()
+            .filter(nid -> nid.getInstanceId().equals(instanceId))
+            .collect(toList())
+            .forEach(this::closeRouteToNode);
+    }
+
+    private void close(final Integer index, final NodeId nodeId) {
+
+        if (index == null) {
+            logger.error("No socket for index {} {}", index, nodeId);
+            return;
+        }
+
+        final ZMQ.Socket socket = poller.getSocket(index);
+        poller.unregister(socket);
+
+        try {
+            socket.close();
+        } catch (Exception ex) {
+            logger.error("Error closing socket for {}", nodeId, ex);
+        }
+
+    }
+
     public static String getLocalBindAddress(final NodeId nodeId) {
-        return format("inproc://mux/%s", nodeId.asString());
+        return format("inproc://mux/%s?%s", nodeId.asString(), randomUUID());
     }
 
 }

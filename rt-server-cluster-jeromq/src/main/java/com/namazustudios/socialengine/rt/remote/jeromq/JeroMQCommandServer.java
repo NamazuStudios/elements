@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -76,11 +75,17 @@ public class JeroMQCommandServer {
                 case OPEN_ROUTE_TO_NODE:
                     response = processOpenRouteToNode(zMsg);
                     break;
+                case CLOSE_ROUTE_TO_NODE:
+                    response = processCloseRouteToNode(zMsg);
+                    break;
                 case OPEN_BINDING_FOR_NODE:
-                    response = openBindingForNode(zMsg);
+                    response = processOpenBindingForNode(zMsg);
                     break;
                 case CLOSE_BINDING_FOR_NODE:
-                    response = closeBindingForNode(zMsg);
+                    response = processCloseBindingForNode(zMsg);
+                    break;
+                case CLOSE_ROUTES_VIA_INSTANCE:
+                    response = processCloseRoutesViaInstance(zMsg);
                     break;
                 default:
                     response = error(UNKNOWN_COMMAND, "Unsupported message type: " + command);
@@ -102,16 +107,16 @@ public class JeroMQCommandServer {
 
     }
 
-    private ZMsg openBindingForNode(final ZMsg zMsg) {
+    private ZMsg processOpenBindingForNode(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
-        final String instanceBindAddress = demultiplex.openBindingForNode(nodeId);
+        final String instanceBindAddress = demultiplex.openBinding(nodeId);
         OK.pushResponseCode(response);
         response.addLast(instanceBindAddress.getBytes(CHARSET));
         return response;
     }
 
-    private ZMsg closeBindingForNode(final ZMsg zMsg) {
+    private ZMsg processCloseBindingForNode(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         demultiplex.closeBindingForNode(nodeId);
@@ -121,7 +126,7 @@ public class JeroMQCommandServer {
 
     private ZMsg processInstanceStatus(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
-        final Collection<NodeId> nodeIds = multiplex.getConnectedPeers();
+        final Collection<NodeId> nodeIds = demultiplex.getConnectedNodeIds();
         if (!zMsg.isEmpty()) logger.warn("Unexpected frames in status request: {}", zMsg);
         OK.pushResponseCode(response);
         response.addLast(instanceId.asBytes());
@@ -136,6 +141,22 @@ public class JeroMQCommandServer {
         final String instanceRouteAddress = multiplex.openRouteToNode(nodeId, instanceInvokerAddress);
         OK.pushResponseCode(response);
         response.addLast(instanceRouteAddress.getBytes(CHARSET));
+        return response;
+    }
+
+    private ZMsg processCloseRouteToNode(final ZMsg zMsg) {
+        final ZMsg response = new ZMsg();
+        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
+        multiplex.closeRouteToNode(nodeId);
+        OK.pushResponseCode(response);
+        return response;
+    }
+
+    private ZMsg processCloseRoutesViaInstance(final ZMsg zMsg) {
+        final ZMsg response = new ZMsg();
+        final InstanceId nodeId = new InstanceId(zMsg.removeFirst().getData());
+        multiplex.closeRoutesViaInstance(nodeId);
+        OK.pushResponseCode(response);
         return response;
     }
 

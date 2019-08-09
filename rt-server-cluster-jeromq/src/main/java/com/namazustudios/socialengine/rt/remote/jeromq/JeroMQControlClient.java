@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
@@ -10,6 +11,7 @@ import java.util.concurrent.TimeUnit;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.PROTOCOL_ERROR;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.SOCKET_ERROR;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -87,6 +89,24 @@ public class JeroMQControlClient implements ControlClient {
     }
 
     @Override
+    public void closeRouteToNode(final NodeId nodeId) {
+        final ZMsg request = new ZMsg();
+        CLOSE_ROUTE_TO_NODE.pushCommand(request);
+        request.add(nodeId.asBytes());
+        send(request);
+        recv();
+    }
+
+    @Override
+    public void closeRoutesViaInstance(final InstanceId instanceId) {
+        final ZMsg request = new ZMsg();
+        CLOSE_ROUTES_VIA_INSTANCE.pushCommand(request);
+        request.add(instanceId.asBytes());
+        send(request);
+        recv();
+    }
+
+    @Override
     public InstanceConnectionService.InstanceBinding openBinding(final NodeId nodeId) {
 
         final ZMsg request = new ZMsg();
@@ -103,15 +123,11 @@ public class JeroMQControlClient implements ControlClient {
 
     @Override
     public void closeBinding(final NodeId nodeId) {
-
         final ZMsg request = new ZMsg();
-
         CLOSE_BINDING_FOR_NODE.pushCommand(request);
         request.add(nodeId.asBytes());
         send(request);
-
         recv();
-
     }
 
     private void send(final ZMsg zMsg) {
@@ -125,6 +141,12 @@ public class JeroMQControlClient implements ControlClient {
     }
 
     private ZMsg check(final ZMsg response) {
+
+        if (response == null) throw new JeroMQControlException(SOCKET_ERROR);
+        if (response.isEmpty()) throw new JeroMQControlException(PROTOCOL_ERROR);
+
+        final ZFrame delimter = response.removeFirst();
+        if (delimter.getData().length != 0) throw new JeroMQControlException(PROTOCOL_ERROR);
 
         JeroMQControlResponseCode code;
 

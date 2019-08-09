@@ -82,7 +82,6 @@ public class JeroMQRoutingServer implements AutoCloseable {
         zContextShadow.close();
     }
 
-
     public static ZMsg error(final JeroMQControlResponseCode code, final String message) {
         final ZMsg response = new ZMsg();
         (code == null ? UNKNOWN_ERROR : code).pushResponseCode(response);
@@ -100,7 +99,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
         logger.error("Exception processing request.", ex);
         final ZMsg response = new ZMsg();
 
-        EXCEPTION.pushResponseCode(response);
+        code.pushResponseCode(response);
         response.addLast(ex.getMessage().getBytes(CHARSET));
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
@@ -116,6 +115,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
         }
 
         return response;
+
     }
 
 }

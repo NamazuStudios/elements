@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceConnection;
 import com.namazustudios.socialengine.rt.remote.InstanceStatus;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlClient;
@@ -19,23 +20,32 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
+import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.UUID.fromString;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.stream.Collectors.toSet;
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
+import static org.zeromq.SocketType.DEALER;
+import static org.zeromq.ZContext.shadow;
 
 @Guice(modules = JeroMQInstanceConnectionServiceIntegrationTest.Module.class)
 public class JeroMQInstanceConnectionServiceIntegrationTest {
@@ -126,8 +136,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
         executorService.submit(() -> {
             try (final JeroMQEchoServer svr = new JeroMQEchoServer(getzContext(), instanceBindingSupplier)) {
-                latch.countDown();
-                svr.run();
+                svr.run(latch::countDown);
             }
         });
 
@@ -149,9 +158,9 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
             final Set<NodeId> instanceStatusSet = new HashSet<>(instanceStatus.getNodeIds());
 
             final Set<NodeId> mockNodeIdSet = mockApplicationUUIDs
-                    .stream()
-                    .map(aid -> new NodeId(instanceConnectionService.getInstanceId(), aid))
-                    .collect(toSet());
+                .stream()
+                .map(aid -> new NodeId(instanceConnectionService.getInstanceId(), aid))
+                .collect(toSet());
 
             assertEquals(instanceStatusSet, mockNodeIdSet);
             assertEquals(instanceStatus.getInstanceId(), instanceConnectionService.getInstanceId());
@@ -161,18 +170,84 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
     }
 
     @Test(dependsOnMethods = "testOpenBindingsWithEchoServers")
-    public void testAddConnections() {
+    public void testAddConnections() throws Exception {
+
+        final CountDownLatch countDownLatch = new CountDownLatch(4 * mockApplicationUUIDs.size());
+
+        getFirstInstanceConnectionService().subscribeToConnect(ic -> mockApplicationUUIDs.forEach(aid -> {
+            final NodeId nodeId = new NodeId(ic.getInstanceId(), aid);
+            testRoundTripForNode(ic, nodeId);
+            countDownLatch.countDown();
+        }));
+
+        getSecondInstanceConnectionService().subscribeToConnect(ic -> mockApplicationUUIDs.forEach(aid -> {
+            final NodeId nodeId = new NodeId(ic.getInstanceId(), aid);
+            testRoundTripForNode(ic, nodeId);
+            countDownLatch.countDown();
+        }));
+
         getMockInstanceDiscoveryService().addHosts(BIND_URL_FIRST, BIND_URL_SECOND);
+        countDownLatch.await();
+
+    }
+
+    public void testRoundTripForNode(final InstanceConnection instanceConnection, final NodeId nodeId) {
+        try (final ZContext context = shadow(getzContext());
+             final ZMQ.Socket socket = context.createSocket(DEALER)) {
+
+            final String connectAddress = instanceConnection.openRouteToNode(nodeId);
+            socket.connect(connectAddress);
+
+            final UUID uuid = randomUUID();
+            final ZMsg zMsg = new ZMsg();
+            zMsg.addFirst(uuid.toString().getBytes(CHARSET));
+            zMsg.addFirst(EMPTY_DELIMITER);
+            zMsg.send(socket);
+
+            final ZMsg response = ZMsg.recvMsg(socket);
+            assertNotNull(response);
+
+            final byte[] delimiter = response.removeFirst().getData();
+            assertEquals(delimiter, EMPTY_DELIMITER);
+            assertEquals(fromString(response.getFirst().getString(CHARSET)), uuid);
+
+        }
+    }
+
+    @Test(dependsOnMethods = "testAddConnections")
+    public void testRemoveConnections() throws Exception {
+
+        final CountDownLatch countDownLatch = new CountDownLatch(4);
+        getFirstInstanceConnectionService().subscribeToDisconnect(ic -> countDownLatch.countDown());
+        getFirstInstanceConnectionService().subscribeToDisconnect(ic -> countDownLatch.countDown());
+
+        getMockInstanceDiscoveryService().removeHosts(BIND_URL_FIRST, BIND_URL_SECOND);
+
+        countDownLatch.await();
+        assertTrue(getFirstInstanceConnectionService().getActiveConnections().isEmpty());
+        assertTrue(getSecondInstanceConnectionService().getActiveConnections().isEmpty());
+
     }
 
     @Test(dependsOnMethods = {
             "testStartTwiceThrowsFirst",
             "testStartTwiceThrowsSecond",
             "testOpenBindingsWithEchoServers",
-            "testAddConnections"
+            "testAddConnections",
+            "testRemoveConnections"
     })
     public void testStop() {
         getFirstInstanceConnectionService().stop();
+        getSecondInstanceConnectionService().stop();
+    }
+
+    @Test(dependsOnMethods = "testStop", expectedExceptions = IllegalStateException.class)
+    public void testDoubleStopFirst() {
+        getFirstInstanceConnectionService().stop();
+    }
+
+    @Test(dependsOnMethods = "testStop", expectedExceptions = IllegalStateException.class)
+    public void testDoubleStopSecond() {
         getSecondInstanceConnectionService().stop();
     }
 

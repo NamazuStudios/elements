@@ -26,11 +26,12 @@ public class JeroMQEchoServer implements AutoCloseable {
         this.instanceBindingSupplier = instanceBindingSupplier;
     }
 
-    public void run() {
+    public void run(final Runnable started) {
         try (final InstanceBinding instanceBinding = instanceBindingSupplier.get();
              final ZMQ.Socket socket = shadowZContext.createSocket(ROUTER)) {
 
             socket.bind(instanceBinding.getBindAddress());
+            started.run();
 
             while (!interrupted()) {
                 final ZMsg zMsg = ZMsg.recvMsg(socket);
