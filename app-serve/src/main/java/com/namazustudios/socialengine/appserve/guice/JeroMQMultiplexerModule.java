@@ -5,8 +5,8 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.SimpleInstanceMetadataContext;
 import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
-import com.namazustudios.socialengine.rt.SpotifySrvInstanceDiscoveryService;
-import com.namazustudios.socialengine.rt.StaticInstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService;
 import org.zeromq.ZContext;
 
 import javax.inject.Named;

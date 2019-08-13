@@ -21,19 +21,19 @@ public class ClusterContextModule extends PrivateModule {
         bindContextAction.run();
 
         bind(IndexContext.class)
-            .toProvider(new RemoteProxyProvider<>(IndexContext.class))
+                .toProvider(new RemoteProxyProvider<>(IndexContext.class))
             .asEagerSingleton();
 
         bind(ResourceContext.class)
-            .toProvider(new RemoteProxyProvider<>(ResourceContext.class))
+                .toProvider(new RemoteProxyProvider<>(ResourceContext.class))
             .asEagerSingleton();
 
         bind(SchedulerContext.class)
-            .toProvider(new RemoteProxyProvider<>(SchedulerContext.class))
+                .toProvider(new RemoteProxyProvider<>(SchedulerContext.class))
             .asEagerSingleton();
 
         bind(HandlerContext.class)
-            .toProvider(new RemoteProxyProvider<>(HandlerContext.class))
+                .toProvider(new RemoteProxyProvider<>(HandlerContext.class))
             .asEagerSingleton();
 
     }
@@ -49,7 +49,7 @@ public class ClusterContextModule extends PrivateModule {
         bindContextAction = () -> bind(Context.class)
                 .annotatedWith(named(contextName))
                 .to(ClusterContext.class)
-                .asEagerSingleton();
+            .asEagerSingleton();
         return this;
     }
 

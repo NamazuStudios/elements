@@ -1,7 +1,8 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.remote.ConcurrentLockedPublisher;
-import com.namazustudios.socialengine.rt.remote.Publisher;
+import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.InstanceHostInfo;
+import com.namazustudios.socialengine.rt.Subscription;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -193,7 +194,7 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         @Override
         public String getConnectAddress() {
-            return format("tcp://%s:%d", lookupResult.host(), lookupResult.port());
+            return String.format("tcp://%s:%d", lookupResult.host(), lookupResult.port());
         }
 
         @Override

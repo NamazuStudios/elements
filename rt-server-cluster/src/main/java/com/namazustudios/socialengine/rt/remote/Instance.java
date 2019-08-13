@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -18,8 +18,8 @@ public interface Instance extends AutoCloseable {
     InstanceId getInstanceId();
 
     /**
-     * Attempts to start each {@link Node}, throwing an instance of {@link MultiException} if any {@link Node} fails
-     * to startup.  A subsequent call to {@link #close()} should follow to ensure resources are cleaned up.
+     * Attempts to start, throwing an instance of {@link MultiException} any failures happen during the startup process.
+     * A subsequent call to {@link #close()} should follow to ensure resources are cleaned up.
      */
     void start();
 

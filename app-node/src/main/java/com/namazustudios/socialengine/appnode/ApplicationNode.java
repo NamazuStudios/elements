@@ -9,10 +9,16 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
-import com.namazustudios.socialengine.rt.Instance;
-import com.namazustudios.socialengine.rt.SimpleInstance;
+import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.WorkerInstance;
+import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
+import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
+import joptsimple.OptionParser;
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,24 +26,30 @@ import org.slf4j.LoggerFactory;
 import static java.lang.Thread.interrupted;
 
 public class ApplicationNode {
+
     private static final Logger logger = LoggerFactory.getLogger(ApplicationNode.class);
 
     private final Injector injector;
 
     public ApplicationNode(DefaultConfigurationSupplier defaultConfigurationSupplier) {
         this.injector = Guice.createInjector(
-                new ConfigurationModule(defaultConfigurationSupplier),
-                new MongoCoreModule(),
-                new MongoDaoModule(),
-                new ValidationModule(),
-                new MongoSearchModule(),
-                new RTFilesystemGitLoaderModule(),
-                new MultiNodeContainerModule(),
-                new FirebaseAppFactoryModule(),
-                new GuiceStandardNotificationFactoryModule(),
-                new JaxRSClientModule(),
-                new VersionModule(),
-                new ServicesModule()
+            new ConfigurationModule(defaultConfigurationSupplier),
+            new PersistentInstanceIdModule(),
+            new ZContextModule(),
+            new JeroMQRemoteInvokerModule(),
+            new JeroMQInstanceConnectionServiceModule(),
+            new InstanceDiscoveryServiceModule(),
+            new MongoCoreModule(),
+            new MongoDaoModule(),
+            new ValidationModule(),
+            new MongoSearchModule(),
+            new RTFilesystemGitLoaderModule(),
+            new WorkerInstanceModule(),
+            new FirebaseAppFactoryModule(),
+            new GuiceStandardNotificationFactoryModule(),
+            new JaxRSClientModule(),
+            new VersionModule(),
+            new ServicesModule()
         );
     }
 
@@ -47,7 +59,7 @@ public class ApplicationNode {
     public void start() {
         final Object lock = new Object();
 
-        try (final Instance container = injector.getInstance(SimpleInstance.class)) {
+        try (final Instance container = injector.getInstance(WorkerInstance.class)) {
 
             logger.info("Starting container.");
 
@@ -66,4 +78,5 @@ public class ApplicationNode {
 
         logger.info("Container shut down.  Exiting process.");
     }
+
 }

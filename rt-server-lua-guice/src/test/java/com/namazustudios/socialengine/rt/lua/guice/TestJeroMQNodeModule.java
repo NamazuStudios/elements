@@ -7,13 +7,14 @@ import com.namazustudios.socialengine.rt.guice.*;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.ContextNodeLifecycle;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.zeromq.ZContext;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class TestJeroMQNodeModule extends PrivateModule {
 

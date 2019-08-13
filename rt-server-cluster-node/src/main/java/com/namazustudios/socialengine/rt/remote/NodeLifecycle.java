@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.remote;
 
 /**
  * Informs the underlying application, contained in the {@link Node}, of the various livecycle events.

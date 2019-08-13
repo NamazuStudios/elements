@@ -27,6 +27,8 @@ class V1CompoundId implements Serializable {
 
     public static final String PREFIX = "V1::";
 
+    public static final byte PREFIX_BYTE = 1;
+
     public static final String  ID_SEPARATOR = ":";
 
     public static final Pattern ID_SEPARATOR_PATTERN = compile(ID_SEPARATOR);
@@ -97,6 +99,9 @@ class V1CompoundId implements Serializable {
         try {
 
             if (byteRepresentation.length == 0) throw new IllegalArgumentException("Got zero-length ayte array.");
+
+            final byte prefix = byteRepresentation[index++];
+            if (prefix != PREFIX_BYTE) throw new IllegalArgumentException("Got invalid prefix byte.");
 
             while (index < byteRepresentation.length) {
 
@@ -230,9 +235,11 @@ class V1CompoundId implements Serializable {
     }
 
     public byte[] asBytes(final Field ... fields) {
-        final byte[] bytes = new byte[fields.length * (16 + 1)];
+        final byte[] bytes = new byte[fields.length * (16 + 1) + 1];
 
         int index = 0;
+
+        bytes[index++] = PREFIX_BYTE;
 
         for (final Field field : fields) {
 

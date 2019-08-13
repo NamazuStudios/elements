@@ -60,4 +60,20 @@ public interface ControlClient extends AutoCloseable {
     @Override
     void close();
 
+    /**
+     * Used to open on-demand instances of the {@link ControlClient}.
+     */
+    @FunctionalInterface
+    interface Factory {
+
+        /**
+         * Opens a {@link ControlClient} with the supplied connect address.
+         *
+         * @param connectAddress the connect address
+         * @return the {@link ControlClient}
+         */
+        ControlClient open(final String connectAddress);
+
+    }
+
 }

@@ -1,8 +1,8 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
-import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import static com.namazustudios.socialengine.rt.Node.MASTER_NODE_NAME;
+import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
@@ -24,9 +24,9 @@ import static java.util.stream.Stream.of;
  * imposes the additional requirement of providing some form of {@link InstanceConnectionService} to route internal
  * requests.
  */
-public class SimpleInstance implements Instance {
+public class WorkerInstance implements Instance {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleInstance.class);
+    private static final Logger logger = LoggerFactory.getLogger(WorkerInstance.class);
 
     private InstanceId instanceId;
 
@@ -52,11 +52,19 @@ public class SimpleInstance implements Instance {
 
         try {
             getInstanceDiscoveryService().start();
-            getInstanceConnectionService().start();
-            exceptionList.addAll(startAllNodes());
         } catch (Exception ex) {
             exceptionList.add(ex);
+            logger.error("Caught exception starting InstanceDiscoveryService.", ex);
         }
+
+        try {
+            getInstanceConnectionService().start();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Caught exception starting InstanceConnectionService.", ex);
+        }
+
+        exceptionList.addAll(startAllNodes());
 
         if (!exceptionList.isEmpty()) {
             throw new MultiException(exceptionList);

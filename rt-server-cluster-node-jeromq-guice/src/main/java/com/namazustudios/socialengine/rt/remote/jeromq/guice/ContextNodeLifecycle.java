@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.NodeLifecycle;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 
 import javax.inject.Inject;
 

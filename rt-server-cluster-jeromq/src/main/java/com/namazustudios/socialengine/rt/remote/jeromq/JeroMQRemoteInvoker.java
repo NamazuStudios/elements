@@ -52,17 +52,22 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     @Override
     public void start(final String connectAddress, final int timeoutMillis) {
+
         this.connectAddress = connectAddress;
+        logger.info("Starting with connect address {} and timeout {}msec", connectAddress, timeoutMillis);
+
         getConnectionPool().start(zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(DEALER);
             socket.setReceiveTimeOut(timeoutMillis);
             socket.connect(connectAddress);
             return socket;
         }, JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress);
+
     }
 
     @Override
     public void stop() {
+        logger.info("Stopping connection to {}", connectAddress);
         getConnectionPool().stop();
         connectAddress = null;
     }

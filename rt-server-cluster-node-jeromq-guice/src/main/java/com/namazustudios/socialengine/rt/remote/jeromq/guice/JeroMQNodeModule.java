@@ -2,19 +2,15 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
-import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
+import com.namazustudios.socialengine.rt.remote.Node;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.BIND_ADDRESS;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NAME;
 
 public class JeroMQNodeModule extends PrivateModule {
-
-    private Runnable bindAddressAction = () -> {};
 
     private Runnable bindNodeIdAction = () -> {};
 
@@ -45,17 +41,6 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withNodeName(final String nodeName) {
         bindNodeNameAction = () -> bind(String.class).annotatedWith(named(NAME)).toInstance(nodeName);
-        return this;
-    }
-
-    /**
-     * Specifies the bind address using the {@link JeroMQNode#BIND_ADDRESS} name.
-     *
-     * @param bindAddress the bind address
-     * @return this instance
-     */
-    public JeroMQNodeModule withBindAddress(final String bindAddress) {
-        bindAddressAction = () -> bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance(bindAddress);
         return this;
     }
 
@@ -103,14 +88,11 @@ public class JeroMQNodeModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        install(new FSTPayloadReaderWriterModule());
-
         bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
         bind(ConnectionPool.class).to(SimpleConnectionPool.class);
 
         bindNodeIdAction.run();
         bindNodeNameAction.run();
-        bindAddressAction.run();
         bindTimeoutAction.run();
         bindMinConnectionsAction.run();
         bindMaxConnectionsAction.run();
@@ -118,4 +100,5 @@ public class JeroMQNodeModule extends PrivateModule {
         expose(Node.class);
 
     }
+
 }

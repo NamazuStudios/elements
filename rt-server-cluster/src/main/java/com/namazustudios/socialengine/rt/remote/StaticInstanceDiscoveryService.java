@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import org.slf4j.Logger;
