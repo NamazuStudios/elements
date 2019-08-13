@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
 import javax.inject.Inject;
 
-public class ClusterClientContext implements Context {
+public class ClusterContext implements Context {
 
     private ResourceContext resourceContext;
 
@@ -16,14 +17,10 @@ public class ClusterClientContext implements Context {
     private HandlerContext handlerContext;
 
     @Override
-    public void start() {
-
-    }
+    public void start() {}
 
     @Override
-    public void shutdown() {
-
-    }
+    public void shutdown() {}
 
     @Override
     public ResourceContext getResourceContext() {

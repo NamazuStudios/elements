@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.exception.RoutingException;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
@@ -15,6 +16,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -167,9 +169,9 @@ public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
     public void testConflictingRoute() throws Exception {
 
         final List<Object> address = asList(
-            new NodeId(new InstanceId(), randomUUID()),
-            new NodeId(new InstanceId(), randomUUID()),
-            new NodeId(new InstanceId(), randomUUID())
+            new NodeId(new InstanceId(), randomApplicationId()),
+            new NodeId(new InstanceId(), randomApplicationId()),
+            new NodeId(new InstanceId(), randomApplicationId())
         );
 
         final Invocation invocation = spy(Invocation.class);
@@ -186,14 +188,14 @@ public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
 
 
     private NodeId generateNodeId() {
-        return new NodeId(instanceId, getDefaultApplicationUuid());
+        return new NodeId(instanceId, getApplicationId());
     }
 
     private List<Object> generateSaneAddress() {
         return asList(
-            new NodeId(instanceId, getDefaultApplicationUuid()),
-            new NodeId(instanceId, getDefaultApplicationUuid()),
-            new NodeId(instanceId, getDefaultApplicationUuid())
+            new NodeId(instanceId, getApplicationId()),
+            new NodeId(instanceId, getApplicationId()),
+            new NodeId(instanceId, getApplicationId())
         );
     }
 

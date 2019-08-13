@@ -3,18 +3,25 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.Provider;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.remote.guice.ClusterClientContextModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+import com.namazustudios.socialengine.rt.remote.RoutingStrategy;
+import com.namazustudios.socialengine.rt.remote.guice.ClusterContextModule;
 import org.zeromq.ZContext;
 
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 
+import static com.namazustudios.socialengine.rt.id.ApplicationId.forUniqueName;
+
 /**
- * Combines {@link JeroMQRemoteInvokerModule} with the {@link ClusterClientContextModule} to make a complete client
+ * Combines {@link JeroMQRemoteInvokerModule} with the {@link ClusterContextModule} to make a complete client
  * module with adjustable parameters.
  */
-public class JeroMQClientModule extends PrivateModule {
+public class JeroMQContextModule extends PrivateModule {
 
     private Runnable contextBindAction = () -> {};
+
+    private Runnable bindApplicationUuid = () -> {};
 
     private final JeroMQRemoteInvokerModule jeroMQRemoteInvokerModule = new JeroMQRemoteInvokerModule();
 
@@ -22,7 +29,8 @@ public class JeroMQClientModule extends PrivateModule {
     protected void configure() {
         expose(Context.class);
         contextBindAction.run();
-        install(new ClusterClientContextModule());
+        bindApplicationUuid.run();
+        install(new ClusterContextModule());
         install(jeroMQRemoteInvokerModule);
     }
 
@@ -32,19 +40,8 @@ public class JeroMQClientModule extends PrivateModule {
      *
      * @return this instance
      */
-    public JeroMQClientModule withZContext(final ZContext zContext) {
+    public JeroMQContextModule withZContext(final ZContext zContext) {
         contextBindAction = () -> bind(ZContext.class).toInstance(zContext);
-        return this;
-    }
-
-    /**
-     * {@see {@link JeroMQClientModule#withConnectAddress(String)}}
-     *
-     * @param connectAddress the connection address
-     * @return this instance
-     */
-    public JeroMQClientModule withConnectAddress(String connectAddress) {
-        jeroMQRemoteInvokerModule.withConnectAddress(connectAddress);
         return this;
     }
 
@@ -54,7 +51,7 @@ public class JeroMQClientModule extends PrivateModule {
      * @param timeoutInSeconds the timeout, in seconds
      * @return this instance
      */
-    public JeroMQClientModule withTimeout(int timeoutInSeconds) {
+    public JeroMQContextModule withTimeout(int timeoutInSeconds) {
         jeroMQRemoteInvokerModule.withTimeout(timeoutInSeconds);
         return this;
     }
@@ -65,7 +62,7 @@ public class JeroMQClientModule extends PrivateModule {
      * @param minimumConnections the minimum number of connections to keep in each connection pool
      * @return this instance
      */
-    public JeroMQClientModule withMinimumConnections(int minimumConnections) {
+    public JeroMQContextModule withMinimumConnections(int minimumConnections) {
         jeroMQRemoteInvokerModule.withMinimumConnections(minimumConnections);
         return this;
     }
@@ -76,7 +73,7 @@ public class JeroMQClientModule extends PrivateModule {
      * @param maximumConnections the minimum number of connections to keep in each connection pool
      * @return this instance
      */
-    public JeroMQClientModule withMaximumConnections(int maximumConnections) {
+    public JeroMQContextModule withMaximumConnections(int maximumConnections) {
         jeroMQRemoteInvokerModule.withMaximumConnections(maximumConnections);
         return this;
     }
@@ -86,7 +83,7 @@ public class JeroMQClientModule extends PrivateModule {
      *
      * @return this instance
      */
-    public JeroMQClientModule withDefaultExecutorServiceProvider() {
+    public JeroMQContextModule withDefaultExecutorServiceProvider() {
         jeroMQRemoteInvokerModule.withDefaultExecutorServiceProvider();
         return this;
     }
@@ -98,8 +95,33 @@ public class JeroMQClientModule extends PrivateModule {
      *
      * @return this instance
      */
-    public JeroMQClientModule withExecutorServiceProvider(Provider<ExecutorService> executorServiceProvider) {
+    public JeroMQContextModule withExecutorServiceProvider(Provider<ExecutorService> executorServiceProvider) {
         jeroMQRemoteInvokerModule.withExecutorServiceProvider(executorServiceProvider);
+        return this;
+    }
+
+    /**
+     * Given a unique string identifier for the application, this will genrate a unique identifier for the application's
+     * unique name using {@link ApplicationId#forUniqueName(String)}.
+     *
+     * @param applicationUniqueName the unique-string representing the application ID
+     * @return this instance
+     */
+    public JeroMQContextModule withApplicationUniqueName(final String applicationUniqueName) {
+        final ApplicationId applicationId = forUniqueName(applicationUniqueName);
+        return withApplicationId(applicationId);
+    }
+
+    /**
+     * Given the supplied {@link ApplicationId}, this will bind it such that it may be used by the various
+     * {@link RoutingStrategy} instances.
+     *
+     * @param applicationId the {@link ApplicationId} for the application
+     * @return this instance
+     */
+    private JeroMQContextModule withApplicationId(final ApplicationId applicationId) {
+        bindApplicationUuid = () -> bind(ApplicationId.class)
+            .toInstance(applicationId);
         return this;
     }
 

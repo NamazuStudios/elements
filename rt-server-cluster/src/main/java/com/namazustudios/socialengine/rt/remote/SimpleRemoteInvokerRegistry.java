@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceConnection;
@@ -67,13 +68,13 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     }
 
     @Override
-    public RemoteInvoker getBestRemoteInvoker(final UUID applicationId) {
+    public RemoteInvoker getBestRemoteInvoker(final ApplicationId applicationId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
         return snapshot.getBestInvokerForApplication(applicationId);
     }
 
     @Override
-    public List<RemoteInvoker> getAllRemoteInvokers(UUID applicationId) {
+    public List<RemoteInvoker> getAllRemoteInvokers(ApplicationId applicationId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
         return snapshot.getAllRemoteInvokersForApplication(applicationId);
     }

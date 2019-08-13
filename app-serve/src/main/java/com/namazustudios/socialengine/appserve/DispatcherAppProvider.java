@@ -7,8 +7,7 @@ import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import com.namazustudios.socialengine.rt.remote.jeromq.RouteRepresentationUtil;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQContextModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
@@ -28,7 +27,6 @@ import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import java.io.File;
 import java.util.EnumSet;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -102,15 +100,11 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private Injector injectorFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
 
-            final String inprocIdentifierString = application.getId();
-            final UUID inprocIdentifier = RouteRepresentationUtil.buildInprocIdentifierFromString(inprocIdentifierString);
 
-// TODO Fix me
-//            getInstanceConnectionService().issueBindInprocCommand(null, inprocIdentifier);
 
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
-            final JeroMQClientModule jeroMQClientModule = new JeroMQClientModule()
+            final JeroMQContextModule jeroMQClientModule = new JeroMQContextModule()
                 .withDefaultExecutorServiceProvider();
 
             return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
@@ -200,4 +194,5 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     public void setConnectionService(InstanceConnectionService connectionService) {
         this.connectionService = connectionService;
     }
+
 }

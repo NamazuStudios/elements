@@ -60,22 +60,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     }
 
     /**
-     * Specifies the issueOpenBackendChannelCommand address used by the underlying {@link JeroMQRemoteInvoker}.  This provides a binding for
-     * the option {@link JeroMQRemoteInvoker}.  Leaving this unspecified will not assign any properties
-     * and leave it to external means to configure the underlying module.
-     *
-     * @param connectAddress the issueOpenBackendChannelCommand address
-     * @return this instance
-     */
-    public JeroMQRemoteInvokerModule withConnectAddress(final String connectAddress) {
-        bindConnectAddressAction = () -> bind(String.class)
-// TODO FIx this
-//            .annotatedWith(named(CONNECT_ADDRESS))
-            .toInstance(connectAddress);
-        return this;
-    }
-
-    /**
      * Specifies the connection timeout.  If a connection isn't used for the specified period of time, the underlying
      * connection is terminated and removed.  Leaving this unspecified will not assign any properties and leave it to
      * external means to configure the underlying module.

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
@@ -35,7 +36,7 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
-    public RemoteInvoker getBestInvokerForApplication(final UUID applicationId) {
+    public RemoteInvoker getBestInvokerForApplication(final ApplicationId applicationId) {
 
         final Lock lock = readWriteLock.readLock();
 
@@ -50,7 +51,7 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
-    public List<RemoteInvoker> getAllRemoteInvokersForApplication(final UUID applicationId) {
+    public List<RemoteInvoker> getAllRemoteInvokersForApplication(final ApplicationId applicationId) {
 
         final Lock lock = readWriteLock.readLock();
 
@@ -171,7 +172,7 @@ class RemoteInvokerRegistrySnapshot {
 
         private final Map<NodeId, RemoteInvoker> invokersByNode = new HashMap<>();
 
-        private final Map<UUID, List<RemoteInvoker>> invokersByApplication = new HashMap<>();
+        private final Map<ApplicationId, List<RemoteInvoker>> invokersByApplication = new HashMap<>();
 
         private void add(final NodeId nodeId, final double load,
                          final Supplier<RemoteInvoker> remoteInvokerSupplier) {
@@ -183,10 +184,10 @@ class RemoteInvokerRegistrySnapshot {
                 invokersByNode.put(nodeId, invoker);
             }
 
-            final UUID applicationUuid = nodeId.getApplicationUuid();
+            final ApplicationId applicationId = nodeId.getApplicationId();
 
             final List<RemoteInvoker> remoteInvokerList = invokersByApplication
-                .computeIfAbsent(applicationUuid, nid -> new ArrayList<>());
+                .computeIfAbsent(applicationId, nid -> new ArrayList<>());
 
 
             final PriorityRemoteInvoker update = new PriorityRemoteInvoker(invoker, load);
@@ -205,7 +206,7 @@ class RemoteInvokerRegistrySnapshot {
             final RemoteInvoker removed = invokersByNode.remove(nodeId);
 
             if (removed != null) {
-                final List<RemoteInvoker> remoteInvokers = invokersByApplication.get(nodeId.getApplicationUuid());
+                final List<RemoteInvoker> remoteInvokers = invokersByApplication.get(nodeId.getApplicationId());
                 remoteInvokers.removeIf(ri -> ((PriorityRemoteInvoker)ri).getDelegate() == removed);
             }
 

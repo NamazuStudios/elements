@@ -2,15 +2,15 @@ package com.namazustudios.socialengine.rt.remote.guice;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.remote.ClusterClientContext;
+import com.namazustudios.socialengine.rt.remote.ClusterContext;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
 
 import static com.google.inject.name.Names.named;
 
-public class ClusterClientContextModule extends PrivateModule {
+public class ClusterContextModule extends PrivateModule {
 
     private Runnable bindContextAction = () -> bind(Context.class)
-            .to(ClusterClientContext.class)
+            .to(ClusterContext.class)
             .asEagerSingleton();
 
     @Override
@@ -36,23 +36,6 @@ public class ClusterClientContextModule extends PrivateModule {
             .toProvider(new RemoteProxyProvider<>(HandlerContext.class))
             .asEagerSingleton();
 
-//        bind(RemoteInvokerRegistry.class)
-//            .to(JeroMQRemoteInvokerRegistry.class)
-//            .asEagerSingleton();
-
-//        bind(InstanceConnectionMonitorService.class)
-//            .to(JeroMQInstanceConnectionMonitorService.class)
-//            .asEagerSingleton();
-//
-//        bind(InstanceResourceMonitorService.class)
-//            .to(JeroMQInstanceResourceMonitorService.class)
-//            .asEagerSingleton();
-
-// TODO Fix this
-//        bind(RemoteAddressRegistry.class)
-//                .to(JeroMQRemoteAddressRegistry.class)
-//                .asEagerSingleton();
-
     }
 
     /**
@@ -62,10 +45,10 @@ public class ClusterClientContextModule extends PrivateModule {
      * @param contextName the {@link Context} name
      * @return this instance
      */
-    public ClusterClientContextModule withContextNamed(final String contextName) {
+    public ClusterContextModule withContextNamed(final String contextName) {
         bindContextAction = () -> bind(Context.class)
                 .annotatedWith(named(contextName))
-                .to(ClusterClientContext.class)
+                .to(ClusterContext.class)
                 .asEagerSingleton();
         return this;
     }

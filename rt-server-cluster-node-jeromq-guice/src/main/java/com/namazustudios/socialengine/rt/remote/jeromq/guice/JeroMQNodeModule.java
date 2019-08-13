@@ -27,16 +27,6 @@ public class JeroMQNodeModule extends PrivateModule {
     private Runnable bindTimeoutAction = () -> {};
 
     /**
-     * Specifes the node unique {@link NodeId}.
-     *
-     * @param nodeId the string representation of the {@link NodeId}
-     * @return this instance
-     */
-    public JeroMQNodeModule withNodeId(final String nodeId) {
-        return withNodeId(new NodeId(nodeId));
-    }
-
-    /**
      * Specifies the node unique id.
      *
      * @param nodeId the node ID

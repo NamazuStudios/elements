@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface RemoteInvokerRegistry {
 
@@ -23,16 +23,16 @@ public interface RemoteInvokerRegistry {
      * underlying implementation to make that determination.
      * @param applicationId
      */
-    RemoteInvoker getBestRemoteInvoker(UUID applicationId);
+    RemoteInvoker getBestRemoteInvoker(ApplicationId applicationId);
 
     /**
      * Returns a {@link RemoteInvoker} for all known {@link NodeId}s.  This will be a perfect snapshot of the state
      * of the registry.
      *
      * @return a {@link List<RemoteInvoker>}
-     * @param defaultApplicationId
+     * @param applicationId
      */
-    List<RemoteInvoker> getAllRemoteInvokers(UUID defaultApplicationId);
+    List<RemoteInvoker> getAllRemoteInvokers(ApplicationId applicationId);
 
     /**
      * Returns the {@link RemoteInvoker} registered under the given NodeId.

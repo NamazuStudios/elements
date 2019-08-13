@@ -5,7 +5,10 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQContextModule;
 import org.zeromq.ZContext;
 
 import javax.ws.rs.client.Client;
@@ -13,6 +16,7 @@ import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static org.zeromq.ZContext.shadow;
 
 /**
@@ -49,12 +53,14 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
     public JeroMQEmbeddedTestService start() {
 
         final ZContext zContext = new ZContext();
+        final InstanceId instanceId = new InstanceId();
+        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
 
         final Injector nodeInjector = Guice.createInjector(new TestJeroMQNodeModule()
             .withNodeModules(nodeModules)
             .withZContext(shadow(zContext))
             .withBindAddress(INTERNAL_NODE_ADDRESS)
-            .withNodeId("integration-test-node")
+            .withNodeId(nodeId)
             .withNodeName("integration-test-node")
             .withMinimumConnections(5)
             .withMaximumConnections(250)
@@ -62,10 +68,9 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
         final List<Module> clientModules = new ArrayList<>(this.clientModules);
 
-        clientModules.add(new JeroMQClientModule()
+        clientModules.add(new JeroMQContextModule()
             .withDefaultExecutorServiceProvider()
             .withZContext(shadow(zContext))
-            .withConnectAddress(INTERNAL_NODE_ADDRESS)
             .withMinimumConnections(5)
             .withMaximumConnections(250)
             .withTimeout(60));

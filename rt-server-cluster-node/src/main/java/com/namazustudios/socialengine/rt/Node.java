@@ -19,7 +19,7 @@ public interface Node extends AutoCloseable {
     /**
      * An indicator of the Node's name to be used with the {@link Named} annotation.
      */
-    String NODE_NAME = "com.namazustudios.socialengine.rt.node.name";
+    String NAME = "com.namazustudios.socialengine.rt.node.name";
 
     /**
      * Designates a master/control {@link Node}.  Each {@link Instance} has a master {@link Node} that handles the basic

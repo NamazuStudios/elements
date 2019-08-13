@@ -71,8 +71,4 @@ public interface Constants {
 
     String STATIC_INSTANCE_CONTROL_ADDRESSES_NAME = "com.namazustudios.socialengine.rt.static_instance_control_addresses";
 
-    String CURRENT_INSTANCE_CONTROL_PORT_NAME = "com.namazustudios.socialengine.rt.current_instance_control_port";
-
-    String CURRENT_INSTANCE_UUID_NAME = "com.namazustudios.socialengine.rt.current_instance_id";
-
 }

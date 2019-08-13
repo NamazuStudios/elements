@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.routing;
 
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +28,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
 
     private static final Logger logger = LoggerFactory.getLogger(AbstractAggregateRoutingStrategy.class);
 
-    private UUID defaultApplicationId;
+    private ApplicationId applicationId;
 
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
@@ -125,7 +126,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
      */
     protected List<RemoteInvoker> getRemoteInvokers(final List<Object> address) {
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
-        return getRemoteInvokerRegistry().getAllRemoteInvokers(getDefaultApplicationId());
+        return getRemoteInvokerRegistry().getAllRemoteInvokers(getApplicationId());
     }
 
     /**
@@ -174,6 +175,15 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
         return ra;
     }
 
+    public ApplicationId getApplicationId() {
+        return applicationId;
+    }
+
+    @Inject
+    public void setApplicationId(ApplicationId applicationId) {
+        this.applicationId = applicationId;
+    }
+
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {
         return remoteInvokerRegistry;
     }
@@ -181,15 +191,6 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
     @Inject
     public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
         this.remoteInvokerRegistry = remoteInvokerRegistry;
-    }
-
-    public UUID getDefaultApplicationId() {
-        return defaultApplicationId;
-    }
-
-    @Inject
-    public void setDefaultApplicationId(@Named(DEFAULT_APPLICATION) UUID defaultApplicationId) {
-        this.defaultApplicationId = defaultApplicationId;
     }
 
 }

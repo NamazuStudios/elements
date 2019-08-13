@@ -30,7 +30,7 @@ public class ListAggregateRoutingStrategy extends AbstractAggregateRoutingStrate
         final Set<NodeId> nodeIdSet = reduceAddressToNodeIds(address);
 
         // Ensures that if anywhere a NodeId is left blank (wildcard) it will route to all remote invokers
-        if (nodeIdSet.contains(null)) return getRemoteInvokerRegistry().getAllRemoteInvokers(getDefaultApplicationId());
+        if (nodeIdSet.contains(null)) return getRemoteInvokerRegistry().getAllRemoteInvokers(getApplicationId());
 
         // Collects the NodeIds to a list of RemoteInvoker
         return nodeIdSet

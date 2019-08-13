@@ -56,6 +56,7 @@ public class InstanceIdTest {
              final ObjectInputStream ois = new ObjectInputStream(bis)) {
             final Object result = ois.readObject();
             assertEquals(result, instanceId);
+            assertEquals(result.hashCode(), instanceId.hashCode());
         }
 
     }

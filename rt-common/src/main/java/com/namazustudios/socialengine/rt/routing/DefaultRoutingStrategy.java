@@ -1,26 +1,25 @@
 package com.namazustudios.socialengine.rt.routing;
 
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 /**
  * The default {@link RoutingStrategy} which simply selects a {@link RemoteInvoker} from the
- * {@link RemoteInvokerRegistry} using {@link RemoteInvokerRegistry#getBestRemoteInvoker(java.util.UUID)} and sends the
+ * {@link RemoteInvokerRegistry} using {@link RemoteInvokerRegistry#getBestRemoteInvoker(ApplicationId)} and sends the
  * {@link Invocation} there.
  */
 public class DefaultRoutingStrategy implements RoutingStrategy {
 
     private static final Logger logger = LoggerFactory.getLogger(com.namazustudios.socialengine.rt.routing.DefaultRoutingStrategy.class);
 
-    private UUID defaultApplicationId;
+    private ApplicationId applicationId;
 
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
@@ -32,7 +31,7 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
-        return getRemoteInvokerRegistry().getBestRemoteInvoker(getDefaultApplicationId()).invokeFuture(
+        return getRemoteInvokerRegistry().getBestRemoteInvoker(getApplicationId()).invokeFuture(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
@@ -46,7 +45,7 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
-        return getRemoteInvokerRegistry().getBestRemoteInvoker(getDefaultApplicationId()).invokeAsync(
+        return getRemoteInvokerRegistry().getBestRemoteInvoker(getApplicationId()).invokeAsync(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
@@ -60,7 +59,7 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
 
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
-        return getRemoteInvokerRegistry().getBestRemoteInvoker(defaultApplicationId).invokeSync(
+        return getRemoteInvokerRegistry().getBestRemoteInvoker(getApplicationId()).invokeSync(
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
@@ -75,13 +74,13 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
         this.remoteInvokerRegistry = remoteInvokerRegistry;
     }
 
-    public UUID getDefaultApplicationId() {
-        return defaultApplicationId;
+    public ApplicationId getApplicationId() {
+        return applicationId;
     }
 
     @Inject
-    public void setDefaultApplicationId(@Named(DEFAULT_APPLICATION) UUID defaultApplicationId) {
-        this.defaultApplicationId = defaultApplicationId;
+    public void setApplicationId(ApplicationId applicationId) {
+        this.applicationId = applicationId;
     }
 
 }

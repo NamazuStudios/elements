@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.id.InstanceId;
-import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.id.*;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
@@ -11,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -20,19 +18,19 @@ public class TaskIdTest {
     @Test
     public void testCreate() {
         final InstanceId instanceId = new InstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         assertNotNull(taskId.getNodeId());
         assertNotNull(taskId.getResourceId());
         assertNotNull(taskId.getNodeId().getInstanceId());
-        assertNotNull(taskId.getNodeId().getApplicationUuid());
+        assertNotNull(taskId.getNodeId().getApplicationId());
     }
 
     @Test
     public void testEqualsAndHashCodeWithBytes() {
         final InstanceId instanceId = new InstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         final TaskId duplicateTaskId = new TaskId(taskId.asBytes());
@@ -43,7 +41,7 @@ public class TaskIdTest {
     @Test
     public void testEqualsAndHashCodeWithString() {
         final InstanceId instanceId = new InstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         final TaskId duplicateTaskId = new TaskId(taskId.asString());
@@ -55,7 +53,7 @@ public class TaskIdTest {
     public void testSerialization() throws Exception {
 
         final InstanceId instanceId = new InstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);
 
@@ -75,6 +73,7 @@ public class TaskIdTest {
              final ObjectInputStream ois = new ObjectInputStream(bis)) {
             final Object result = ois.readObject();
             assertEquals(result, taskId);
+            assertEquals(result.hashCode(), taskId.hashCode());
         }
 
     }

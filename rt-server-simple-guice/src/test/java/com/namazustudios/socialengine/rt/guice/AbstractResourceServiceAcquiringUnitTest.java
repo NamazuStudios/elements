@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
@@ -17,6 +18,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -40,7 +42,7 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
         for (int i = 0; i < 100; ++i) {
             final InstanceId instanceId = new InstanceId();
-            final NodeId nodeId = new NodeId(instanceId, randomUUID());
+            final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
             final ResourceId resourceId = new ResourceId(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
@@ -268,7 +270,7 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         final UUID nodeUuid = randomUUID();
 
         final InstanceId instanceId = new InstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomUUID());
+        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final Resource resource = Mockito.mock(Resource.class);
 

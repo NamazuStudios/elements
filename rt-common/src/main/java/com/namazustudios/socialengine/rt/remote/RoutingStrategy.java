@@ -10,8 +10,6 @@ import java.util.function.Consumer;
  */
 public interface RoutingStrategy {
 
-    String DEFAULT_APPLICATION = "com.namazustudios.socialengine.rt.routing.default.appid";
-
     /**
      * Invokes the method returning a {@link Future<Object>} with the result.
      *

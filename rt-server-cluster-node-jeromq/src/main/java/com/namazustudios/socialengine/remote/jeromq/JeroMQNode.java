@@ -46,8 +46,6 @@ public class JeroMQNode implements Node {
 
     private static final String OUTBOUND_ADDR_FORMAT = "inproc://node.%s.out";
 
-    public static final String NAME = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.name";
-
     public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
@@ -81,7 +79,7 @@ public class JeroMQNode implements Node {
     }
 
     public String getOutboundAddr() {
-        return format(OUTBOUND_ADDR_FORMAT, getNodeId().getApplicationUuid().toString());
+        return format(OUTBOUND_ADDR_FORMAT, getNodeId().getApplicationId().toString());
     }
 
     @Override
@@ -181,9 +179,9 @@ public class JeroMQNode implements Node {
     }
 
     private String loggerName() {
-        return Stream.of(JeroMQNode.class.getName(), getNodeId().getApplicationUuid().toString())
-                     .filter(s -> s != null)
-                     .collect(Collectors.joining("."));
+        return Stream.of(JeroMQNode.class.getName(), getNodeId().getApplicationId().toString())
+             .filter(s -> s != null)
+             .collect(Collectors.joining("."));
     }
 
     private class NodeContext {

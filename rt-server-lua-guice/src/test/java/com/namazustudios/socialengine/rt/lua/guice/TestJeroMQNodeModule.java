@@ -4,6 +4,7 @@ import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.*;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.ContextNodeLifecycle;
@@ -62,12 +63,12 @@ public class TestJeroMQNodeModule extends PrivateModule {
     }
 
     /**
-     * {@see {@link JeroMQNodeModule#withNodeId(String)}}
+     * {@see {@link JeroMQNodeModule#withNodeId(NodeId)}}
      *
      * @param nodeId the node Id
      * @return this instance
      */
-    public TestJeroMQNodeModule withNodeId(String nodeId) {
+    public TestJeroMQNodeModule withNodeId(final NodeId nodeId) {
         jeroMQNodeModule.withNodeId(nodeId);
         return this;
     }

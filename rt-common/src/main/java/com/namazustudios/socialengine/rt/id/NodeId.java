@@ -1,10 +1,8 @@
 package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
-import sun.text.resources.en.FormatData_en_IE;
 
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
@@ -29,13 +27,15 @@ public class NodeId implements Serializable, HasNodeId {
 
     private transient volatile InstanceId instanceId;
 
+    private transient volatile ApplicationId applicationId;
+
     private NodeId() { v1CompoundId = null; }
 
-    public NodeId(final InstanceId instanceId, final UUID applicationId) {
+    public NodeId(final InstanceId instanceId, final ApplicationId applicationId) {
         try {
             v1CompoundId = new V1CompoundId.Builder()
                     .with(instanceId.v1CompoundId)
-                    .with(APPLICATION, applicationId)
+                    .with(applicationId.v1CompoundId.getComponent(APPLICATION))
                     .only(INSTANCE, APPLICATION)
                 .build();
         } catch (IllegalArgumentException ex) {
@@ -71,6 +71,11 @@ public class NodeId implements Serializable, HasNodeId {
         }
     }
 
+    /**
+     * Creates a new {@link NodeId} given the byte representation.
+     *
+     * @param byteRepresentation the byte representation
+     */
     public NodeId(final byte[] byteRepresentation) {
         try {
             v1CompoundId = new V1CompoundId.Builder()
@@ -104,8 +109,8 @@ public class NodeId implements Serializable, HasNodeId {
      *
      * @return the {@link UUID}
      */
-    public UUID getApplicationUuid() {
-        return v1CompoundId.getComponent(APPLICATION).getValue();
+    public ApplicationId getApplicationId() {
+        return (applicationId == null) ? (applicationId = new ApplicationId(v1CompoundId)) : applicationId;
     }
 
     /**

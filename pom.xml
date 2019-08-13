@@ -46,7 +46,6 @@
         <module>rt-server-cluster-node</module>
         <module>rt-server-cluster-node-jeromq</module>
         <module>rt-server-cluster-node-jeromq-guice</module>
-        <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
         <module>rt-server-lua-stress-tests</module>

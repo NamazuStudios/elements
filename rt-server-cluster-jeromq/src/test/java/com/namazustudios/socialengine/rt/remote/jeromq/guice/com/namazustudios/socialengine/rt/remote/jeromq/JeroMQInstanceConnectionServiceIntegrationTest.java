@@ -5,6 +5,7 @@ import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ControlClient;
@@ -33,6 +34,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.function.Supplier;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
@@ -66,8 +68,8 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
     private InstanceConnectionService secondInstanceConnectionService;
 
-    private final List<UUID> mockApplicationUUIDs = unmodifiableList(asList(
-        randomUUID(), randomUUID(), randomUUID(), randomUUID()
+    private final List<ApplicationId> mockApplicationIds = unmodifiableList(asList(
+        randomApplicationId(), randomApplicationId(), randomApplicationId(), randomApplicationId()
     ));
 
     private final Map<String, List<RemoteInvoker>> mockRemoteInvokers = new ConcurrentHashMap<>();
@@ -115,9 +117,9 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
     @Test(dependsOnMethods = "testStart")
     public void testOpenBindingsWithEchoServers() {
 
-        for (final UUID mockApplicationUuid : mockApplicationUUIDs) {
-            runEchoServer(getFirstInstanceConnectionService(), mockApplicationUuid);
-            runEchoServer(getSecondInstanceConnectionService(), mockApplicationUuid);
+        for (final ApplicationId mockApplicationId : mockApplicationIds) {
+            runEchoServer(getFirstInstanceConnectionService(), mockApplicationId);
+            runEchoServer(getSecondInstanceConnectionService(), mockApplicationId);
         }
 
         assertNodeStatusIsCorrect(getFirstInstanceConnectionService());
@@ -125,12 +127,12 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
     }
 
-    private void runEchoServer(final InstanceConnectionService instanceConnectionService, final UUID applicationUuuid) {
+    private void runEchoServer(final InstanceConnectionService instanceConnectionService, final ApplicationId applicationId) {
 
         final CountDownLatch latch = new CountDownLatch(1);
 
         final Supplier<InstanceBinding> instanceBindingSupplier = () -> {
-            final NodeId nodeId = new NodeId(instanceConnectionService.getInstanceId(), applicationUuuid);
+            final NodeId nodeId = new NodeId(instanceConnectionService.getInstanceId(), applicationId);
             return instanceConnectionService.openBinding(nodeId);
         };
 
@@ -157,7 +159,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
             final InstanceStatus instanceStatus = client.getInstanceStatus();
             final Set<NodeId> instanceStatusSet = new HashSet<>(instanceStatus.getNodeIds());
 
-            final Set<NodeId> mockNodeIdSet = mockApplicationUUIDs
+            final Set<NodeId> mockNodeIdSet = mockApplicationIds
                 .stream()
                 .map(aid -> new NodeId(instanceConnectionService.getInstanceId(), aid))
                 .collect(toSet());
@@ -172,15 +174,15 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
     @Test(dependsOnMethods = "testOpenBindingsWithEchoServers")
     public void testAddConnections() throws Exception {
 
-        final CountDownLatch countDownLatch = new CountDownLatch(4 * mockApplicationUUIDs.size());
+        final CountDownLatch countDownLatch = new CountDownLatch(4 * mockApplicationIds.size());
 
-        getFirstInstanceConnectionService().subscribeToConnect(ic -> mockApplicationUUIDs.forEach(aid -> {
+        getFirstInstanceConnectionService().subscribeToConnect(ic -> mockApplicationIds.forEach(aid -> {
             final NodeId nodeId = new NodeId(ic.getInstanceId(), aid);
             testRoundTripForNode(ic, nodeId);
             countDownLatch.countDown();
         }));
 
-        getSecondInstanceConnectionService().subscribeToConnect(ic -> mockApplicationUUIDs.forEach(aid -> {
+        getSecondInstanceConnectionService().subscribeToConnect(ic -> mockApplicationIds.forEach(aid -> {
             final NodeId nodeId = new NodeId(ic.getInstanceId(), aid);
             testRoundTripForNode(ic, nodeId);
             countDownLatch.countDown();

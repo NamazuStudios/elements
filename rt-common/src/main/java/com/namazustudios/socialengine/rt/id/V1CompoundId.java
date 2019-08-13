@@ -9,7 +9,6 @@ import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.FIELD_COUNT;
 import static java.lang.System.arraycopy;
-import static java.lang.System.in;
 import static java.util.Arrays.sort;
 import static java.util.Arrays.stream;
 import static java.util.UUID.fromString;

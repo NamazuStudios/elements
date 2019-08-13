@@ -39,7 +39,7 @@ public class TestDefaultRoutingStrategy extends BaseRoutingStrategyTest {
         ));
 
         when(getRemoteInvokerRegistry()
-            .getBestRemoteInvoker(getDefaultApplicationUuid()))
+            .getBestRemoteInvoker(getApplicationId()))
             .thenReturn(mockRemoteInvoker);
 
         when(mockRemoteInvoker.invokeSync(invocation, asyncConsumers, invocationErrorConsumer))
@@ -66,7 +66,7 @@ public class TestDefaultRoutingStrategy extends BaseRoutingStrategyTest {
         final RemoteInvoker mockRemoteInvoker = mock(RemoteInvoker.class);
 
         when(getRemoteInvokerRegistry()
-            .getBestRemoteInvoker(eq(getDefaultApplicationUuid())))
+            .getBestRemoteInvoker(eq(getApplicationId())))
             .thenReturn(mockRemoteInvoker);
 
         when(mockRemoteInvoker.invokeSync(any(), any(), any())).thenThrow(new BullshitException());
@@ -88,7 +88,7 @@ public class TestDefaultRoutingStrategy extends BaseRoutingStrategyTest {
         ));
 
         when(getRemoteInvokerRegistry()
-            .getBestRemoteInvoker(getDefaultApplicationUuid()))
+            .getBestRemoteInvoker(getApplicationId()))
             .thenReturn(mockRemoteInvoker);
 
         doNothing()
@@ -122,7 +122,7 @@ public class TestDefaultRoutingStrategy extends BaseRoutingStrategyTest {
         ));
 
         when(getRemoteInvokerRegistry()
-                .getBestRemoteInvoker(getDefaultApplicationUuid()))
+                .getBestRemoteInvoker(getApplicationId()))
                 .thenReturn(mockRemoteInvoker);
 
         when(mockRemoteInvoker.invokeFuture(invocation, asyncConsumers, invocationErrorConsumer))
