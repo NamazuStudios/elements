@@ -1,0 +1,35 @@
+package com.namazustudios.socialengine.rt.remote;
+
+import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
+
+public class SimpleInstanceHostInfo implements InstanceHostInfo {
+
+    private final String connectAddress;
+
+    public SimpleInstanceHostInfo(String connectAddress) {
+        this.connectAddress = connectAddress;
+    }
+
+    @Override
+    public String getConnectAddress() {
+        return connectAddress;
+    }
+
+    @Override
+    public int hashCode() {
+        return super.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        return InstanceHostInfo.equals(this, obj);
+    }
+
+    @Override
+    public String toString() {
+        return "SimpleInstanceHostInfo{" +
+                "connectAddress='" + connectAddress + '\'' +
+                '}';
+    }
+
+}

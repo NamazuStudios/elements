@@ -12,8 +12,7 @@ public class SimpleInstanceMetadataContextModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(InstanceMetadataContext.class).to(SimpleInstanceMetadataContext.class);
-        bind(LoadMonitorService.class).to(SimpleLoadMonitorService.class).asEagerSingleton();
+        bind(InstanceMetadataContext.class).to(SimpleInstanceMetadataContext.class).asEagerSingleton();
     }
 
 }

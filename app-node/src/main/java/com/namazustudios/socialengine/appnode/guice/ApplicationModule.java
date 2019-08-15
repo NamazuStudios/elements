@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ContextNodeLifecycle;
+import com.namazustudios.socialengine.rt.remote.ContextNodeLifecycle;
 import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 

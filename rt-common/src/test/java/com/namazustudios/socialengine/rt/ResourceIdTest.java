@@ -12,6 +12,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -20,7 +21,7 @@ public class ResourceIdTest {
 
     @Test
     public void testCreate() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         assertNotNull(resourceId.getNodeId());
@@ -30,7 +31,7 @@ public class ResourceIdTest {
 
     @Test
     public void testEqualsAndHashCodeWithBytes() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final ResourceId duplicateResourceId = new ResourceId(resourceId.asBytes());
@@ -40,7 +41,7 @@ public class ResourceIdTest {
 
     @Test
     public void testEqualsAndHashCodeWithString() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final ResourceId duplicateResourceId = new ResourceId(resourceId.asString());
@@ -51,7 +52,7 @@ public class ResourceIdTest {
     @Test
     public void testSerialization() throws Exception {
 
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
 

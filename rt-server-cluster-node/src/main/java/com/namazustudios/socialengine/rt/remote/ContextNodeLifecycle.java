@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote.jeromq.guice;
+package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;

@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static org.zeromq.ZContext.shadow;
 
 /**
@@ -52,14 +53,11 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
     public JeroMQEmbeddedTestService start() {
 
         final ZContext zContext = new ZContext();
-        final InstanceId instanceId = new InstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final InstanceId instanceId = randomInstanceId();
 
         final Injector nodeInjector = Guice.createInjector(new TestJeroMQNodeModule()
             .withNodeModules(nodeModules)
             .withZContext(shadow(zContext))
-            .withBindAddress(INTERNAL_NODE_ADDRESS)
-            .withNodeId(nodeId)
             .withNodeName("integration-test-node")
             .withMinimumConnections(5)
             .withMaximumConnections(250)
@@ -68,11 +66,8 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         final List<Module> clientModules = new ArrayList<>(this.clientModules);
 
         clientModules.add(new JeroMQContextModule()
-            .withDefaultExecutorServiceProvider()
             .withZContext(shadow(zContext))
-            .withMinimumConnections(5)
-            .withMaximumConnections(250)
-            .withTimeout(60));
+        );
 
         final Injector clientInjector = Guice.createInjector(clientModules);
 

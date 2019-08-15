@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.InstanceHostInfo;
+import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;

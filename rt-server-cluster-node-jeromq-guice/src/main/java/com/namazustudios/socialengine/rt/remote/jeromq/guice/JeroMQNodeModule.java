@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 import com.namazustudios.socialengine.rt.remote.Node;
 
+import javax.inject.Provider;
+
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NAME;
 
@@ -21,17 +23,6 @@ public class JeroMQNodeModule extends PrivateModule {
     private Runnable bindMaxConnectionsAction = () -> {};
 
     private Runnable bindTimeoutAction = () -> {};
-
-    /**
-     * Specifies the node unique id.
-     *
-     * @param nodeId the node ID
-     * @return this instance
-     */
-    public JeroMQNodeModule withNodeId(final NodeId nodeId) {
-        bindNodeIdAction = () -> bind(NodeId.class).toInstance(nodeId);
-        return this;
-    }
 
     /**
      * Specifies the node unique id based {@link JeroMQNode#NAME}.

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
+
 import java.io.Serializable;
 import java.util.UUID;
 
@@ -17,32 +19,49 @@ public class InstanceId implements Serializable {
 
     private transient volatile String string;
 
-    public InstanceId() {
-        v1CompoundId = new Builder()
-                .with(INSTANCE, randomUUID())
-            .build();
+    private InstanceId() {
+        try {
+            v1CompoundId = new Builder()
+                    .with(INSTANCE, randomUUID())
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidInstanceIdException(ex);
+        }
     }
 
     public InstanceId(final String stringRepresentation) {
-        v1CompoundId = new Builder()
-                .with(stringRepresentation)
-                .only(INSTANCE)
-            .build();
+        try {
+            v1CompoundId = new Builder()
+                    .with(stringRepresentation)
+                    .only(INSTANCE)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidInstanceIdException(ex);
+        }
     }
 
     public InstanceId(final byte[] byteRepresentation) {
-        v1CompoundId = new Builder()
-                .with(byteRepresentation)
-                .only(INSTANCE)
-            .build();
+        try {
+            v1CompoundId = new Builder()
+                    .with(byteRepresentation)
+                    .only(INSTANCE)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidInstanceIdException(ex);
+        }
     }
 
     InstanceId(final V1CompoundId v1CompoundId) {
-        this.v1CompoundId = new Builder()
-                .with(v1CompoundId)
-                .without(APPLICATION, RESOURCE, TASK)
-                .only(INSTANCE)
-            .build();
+        try {
+            this.v1CompoundId = new Builder()
+                    .with(v1CompoundId)
+                    .without(APPLICATION, RESOURCE, TASK)
+                    .only(INSTANCE)
+                .build();
+
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidInstanceIdException(ex);
+        }
     }
 
     /**
@@ -83,6 +102,16 @@ public class InstanceId implements Serializable {
     @Override
     public String toString() {
         return asString();
+    }
+
+    /**
+     * Generates a randomly-assigned unique {@link InstanceId}.
+     *
+     * @return the generated {@link InstanceId}
+     */
+    public static InstanceId randomInstanceId() {
+        // Here to protect against implicit bindings in DI Containers.
+        return new InstanceId();
     }
 
 }

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.appserve.guice.JeroMQMultiplexerModule;
 import com.namazustudios.socialengine.appserve.guice.ServerModule;
 import com.namazustudios.socialengine.appserve.guice.ServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
@@ -41,7 +40,8 @@ public class AppServeMain {
             new ValidationModule(),
             new MongoSearchModule(),
             new ZContextModule(),
-            new JeroMQMultiplexerModule(),
+// TODO FIXME
+//            new JeroMQMultiplexerModule(),
             new RTFilesystemGitLoaderModule(),
             new AbstractModule() {
                 @Override

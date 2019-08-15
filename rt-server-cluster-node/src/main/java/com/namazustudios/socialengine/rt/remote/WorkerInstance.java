@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,9 +13,11 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
 
@@ -24,7 +26,7 @@ import static java.util.stream.Stream.of;
  * imposes the additional requirement of providing some form of {@link InstanceConnectionService} to route internal
  * requests.
  */
-public class WorkerInstance implements Instance {
+public class WorkerInstance implements Worker, Instance {
 
     private static final Logger logger = LoggerFactory.getLogger(WorkerInstance.class);
 
@@ -131,6 +133,11 @@ public class WorkerInstance implements Instance {
             throw new MultiException(exceptionList);
         }
 
+    }
+
+    @Override
+    public Set<NodeId> getActiveNodeIds() {
+        return getNodeSet().stream().map(n -> n.getNodeId()).collect(toSet());
     }
 
     public Set<Node> getNodeSet() {

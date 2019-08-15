@@ -27,6 +27,8 @@ import java.util.function.Consumer;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
@@ -304,9 +306,7 @@ public class JeroMQEndToEndIntegrationTest {
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
             bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
 
-            bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance("inproc://integration-test");
-
-            bind(NodeId.class).toInstance(new NodeId(randomUUID(), randomUUID()));
+            bind(NodeId.class).toInstance(new NodeId(randomInstanceId(), randomApplicationId()));
             bind(String.class).annotatedWith(named(NAME)).toInstance("integration-test");
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {

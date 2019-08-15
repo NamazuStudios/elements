@@ -27,7 +27,6 @@ public class RTContextProvider implements Provider<Function<String, Context>> {
             final Application application = applicationDao.getActiveApplication(applicationId);
 
             final JeroMQContextModule jeroMQClientModule = new JeroMQContextModule()
-                .withDefaultExecutorServiceProvider()
                 .withApplicationUniqueName(application.getId());
 
             final Injector contextInjector = getInjectorProvider()

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.exception.InvalidTaskIdException;
 import com.sun.org.apache.regexp.internal.RE;
 
 import java.io.Serializable;
@@ -45,11 +46,15 @@ public class TaskId implements Serializable, HasNodeId {
      * Creates a new unique {@link TaskId}.
      */
     public TaskId(final ResourceId resourceId) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(resourceId.v1CompoundId)
-                .with(TASK, UUID.randomUUID())
-                .only(INSTANCE, APPLICATION, RESOURCE, TASK)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(resourceId.v1CompoundId)
+                    .with(TASK, UUID.randomUUID())
+                    .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidTaskIdException(ex);
+        }
     }
 
     /**
@@ -58,10 +63,14 @@ public class TaskId implements Serializable, HasNodeId {
      * @param stringRepresentation the string representation
      */
     public TaskId(final String stringRepresentation) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(stringRepresentation)
-                .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(stringRepresentation)
+                    .only(INSTANCE, APPLICATION, RESOURCE, TASK)
                 .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidTaskIdException(ex);
+        }
     }
 
     /**
@@ -70,10 +79,14 @@ public class TaskId implements Serializable, HasNodeId {
      * @param byteRepresentation the string representation
      */
     public TaskId(final byte[] byteRepresentation) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(byteRepresentation)
-                .only(INSTANCE, APPLICATION, RESOURCE, TASK)
-                .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(byteRepresentation)
+                    .only(INSTANCE, APPLICATION, RESOURCE, TASK)
+                    .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidTaskIdException(ex);
+        }
     }
 
     /**

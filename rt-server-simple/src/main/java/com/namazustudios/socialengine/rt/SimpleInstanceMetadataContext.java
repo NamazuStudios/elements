@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.Worker;
 
 import javax.inject.Inject;
 import java.util.Set;
@@ -14,15 +15,25 @@ import static java.util.stream.Collectors.toSet;
  */
 public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
 
-    private InstanceId instanceId;
+    private Worker worker;
 
-    private Set<Node> nodeSet;
+    private InstanceId instanceId;
 
     private LoadMonitorService loadMonitorService;
 
     @Override
+    public void start() {
+        getLoadMonitorService().start();
+    }
+
+    @Override
+    public void stop() {
+        getLoadMonitorService().stop();
+    }
+
+    @Override
     public Set<NodeId> getNodeIds() {
-        return getNodeSet().stream().map(n -> n.getNodeId()).collect(toSet());
+        return getWorker().getActiveNodeIds();
     }
 
     @Override
@@ -35,18 +46,18 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
         return instanceId;
     }
 
+    public Worker getWorker() {
+        return worker;
+    }
+
+    @Inject
+    public void setWorker(Worker worker) {
+        this.worker = worker;
+    }
+
     @Inject
     public void setInstanceId(InstanceId instanceId) {
         this.instanceId = instanceId;
-    }
-
-    public Set<Node> getNodeSet() {
-        return nodeSet;
-    }
-
-    @Inject
-    public void setNodeSet(Set<Node> nodeSet) {
-        this.nodeSet = nodeSet;
     }
 
     public LoadMonitorService getLoadMonitorService() {

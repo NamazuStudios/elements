@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ContextNodeLifecycle;
+import com.namazustudios.socialengine.rt.remote.ContextNodeLifecycle;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.zeromq.ZContext;
 
@@ -64,17 +64,6 @@ public class TestJeroMQNodeModule extends PrivateModule {
     }
 
     /**
-     * {@see {@link JeroMQNodeModule#withNodeId(NodeId)}}
-     *
-     * @param nodeId the node Id
-     * @return this instance
-     */
-    public TestJeroMQNodeModule withNodeId(final NodeId nodeId) {
-        jeroMQNodeModule.withNodeId(nodeId);
-        return this;
-    }
-
-    /**
      * {@see {@link JeroMQNodeModule#withNodeName(String)}}
      *
      * @param nodeName the node Id
@@ -82,17 +71,6 @@ public class TestJeroMQNodeModule extends PrivateModule {
      */
     public TestJeroMQNodeModule withNodeName(String nodeName) {
         jeroMQNodeModule.withNodeName(nodeName);
-        return this;
-    }
-
-    /**
-     * {@see {@link JeroMQNodeModule#withBindAddress(String)}}
-     *
-     * @param bindAddress the bind address
-     * @return this instance
-     */
-    public TestJeroMQNodeModule withBindAddress(String bindAddress) {
-        jeroMQNodeModule.withBindAddress(bindAddress);
         return this;
     }
 

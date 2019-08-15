@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +32,8 @@ public class InstanceDiscoveryServiceFactory {
         final Class<?> cls;
         final String className = System.getProperty(INSTANCE_DISCOVERY_SERVICE);
 
+        if (className == null) return DEFAULT_TYPE;
+
         try {
 
             logger.info("Attemting to use InstanceDiscoveryService {}", className);
@@ -42,12 +43,12 @@ public class InstanceDiscoveryServiceFactory {
                 return (Class<? extends InstanceDiscoveryService>) cls;
             } else {
                 logger.warn("Type {} is not a subclass of InstanceDiscoveryService. Using {}", className, DEFAULT_TYPE.getName());
-                return (Class<? extends InstanceDiscoveryService>) DEFAULT_TYPE;
+                return DEFAULT_TYPE;
             }
 
         } catch (ClassNotFoundException ex) {
             logger.warn("Requested InstanceDiscoveryService type not found on classpath. Using {}", DEFAULT_TYPE.getName(), ex);
-            return (Class<? extends InstanceDiscoveryService>) DEFAULT_TYPE;
+            return DEFAULT_TYPE;
         }
 
     }

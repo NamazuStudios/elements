@@ -43,17 +43,6 @@ public class NodeId implements Serializable, HasNodeId {
         }
     }
 
-    public NodeId(final UUID instanceId, final UUID applicationId) {
-        try {
-            v1CompoundId = new V1CompoundId.Builder()
-                    .with(INSTANCE, instanceId)
-                    .with(APPLICATION, applicationId)
-                .build();
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidNodeIdException(ex);
-        }
-    }
-
     /**
      * Parses a new {@link NodeId} from the given {@link String}.  The should be the string representation returned
      * byt {@link #asString()}.
@@ -161,6 +150,31 @@ public class NodeId implements Serializable, HasNodeId {
     @Override
     public String toString() {
         return asString();
+    }
+
+    /**
+     * Creats a {@link NodeId} that is for a master node.  By convention, the master node is the node whose instance
+     * id matches the application ID.  This makes it possible to get information about the rest of the hosted nodes
+     * by only knowing the instance ID.
+     *
+     * @param instanceId the instance ID.
+     *
+     * @return the {@link NodeId} for the instance
+     */
+    public static NodeId forMasterNode(final InstanceId instanceId) {
+        try {
+
+            final V1CompoundId v1CompoundId = new V1CompoundId.Builder()
+                    .with(instanceId.v1CompoundId)
+                    .with(APPLICATION, instanceId.v1CompoundId.getComponent(INSTANCE).getValue())
+                    .only(INSTANCE, APPLICATION)
+                .build();
+
+            return new NodeId(v1CompoundId);
+
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
     }
 
 }

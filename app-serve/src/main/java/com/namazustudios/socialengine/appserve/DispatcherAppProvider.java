@@ -99,16 +99,10 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private Injector injectorFor(final Application application) {
         return applicationInjectorMap.computeIfAbsent(application.getId(), k -> {
-
-
-
             final File codeDirectory = getGitLoader().getCodeDirectory(application);
             final DispatcherModule dispatcherModule = new DispatcherModule(codeDirectory);
-            final JeroMQContextModule jeroMQClientModule = new JeroMQContextModule()
-                .withDefaultExecutorServiceProvider();
-
+            final JeroMQContextModule jeroMQClientModule = new JeroMQContextModule();
             return getInjector().createChildInjector(dispatcherModule, jeroMQClientModule);
-
         });
     }
 

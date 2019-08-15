@@ -7,7 +7,7 @@ public class RandomInstanceIdModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(InstanceId.class).toProvider(InstanceId::new).asEagerSingleton();
+        bind(InstanceId.class).toProvider(InstanceId::randomInstanceId).asEagerSingleton();
     }
 
 }

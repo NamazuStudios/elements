@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
-import com.namazustudios.socialengine.rt.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
@@ -199,15 +197,12 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         @Override
         public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof LookupResultInstanceHostInfo)) return false;
-            LookupResultInstanceHostInfo that = (LookupResultInstanceHostInfo) o;
-            return lookupResult.equals(that.lookupResult);
+            return InstanceHostInfo.equals(this, o);
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(lookupResult);
+            return InstanceHostInfo.hashCode(this);
         }
 
     }

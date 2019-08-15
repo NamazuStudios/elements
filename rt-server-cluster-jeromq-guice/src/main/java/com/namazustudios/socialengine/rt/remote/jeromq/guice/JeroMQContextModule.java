@@ -23,15 +23,12 @@ public class JeroMQContextModule extends PrivateModule {
 
     private Runnable bindApplicationUuid = () -> {};
 
-    private final JeroMQRemoteInvokerModule jeroMQRemoteInvokerModule = new JeroMQRemoteInvokerModule();
-
     @Override
     protected void configure() {
         expose(Context.class);
         contextBindAction.run();
         bindApplicationUuid.run();
         install(new ClusterContextModule());
-        install(jeroMQRemoteInvokerModule);
     }
 
     /**
@@ -42,61 +39,6 @@ public class JeroMQContextModule extends PrivateModule {
      */
     public JeroMQContextModule withZContext(final ZContext zContext) {
         contextBindAction = () -> bind(ZContext.class).toInstance(zContext);
-        return this;
-    }
-
-    /**
-     * {@see {@link JeroMQRemoteInvokerModule#withTimeout(int)}}
-     *
-     * @param timeoutInSeconds the timeout, in seconds
-     * @return this instance
-     */
-    public JeroMQContextModule withTimeout(int timeoutInSeconds) {
-        jeroMQRemoteInvokerModule.withTimeout(timeoutInSeconds);
-        return this;
-    }
-
-    /**
-     * {@see {@link JeroMQRemoteInvokerModule#withMinimumConnections(int)}}
-     *
-     * @param minimumConnections the minimum number of connections to keep in each connection pool
-     * @return this instance
-     */
-    public JeroMQContextModule withMinimumConnections(int minimumConnections) {
-        jeroMQRemoteInvokerModule.withMinimumConnections(minimumConnections);
-        return this;
-    }
-
-    /**
-     * {@see {@link JeroMQRemoteInvokerModule#withMaximumConnections(int)}}
-     *
-     * @param maximumConnections the minimum number of connections to keep in each connection pool
-     * @return this instance
-     */
-    public JeroMQContextModule withMaximumConnections(int maximumConnections) {
-        jeroMQRemoteInvokerModule.withMaximumConnections(maximumConnections);
-        return this;
-    }
-
-    /**
-     * {@see {@link JeroMQRemoteInvokerModule#withDefaultExecutorServiceProvider()}}
-     *
-     * @return this instance
-     */
-    public JeroMQContextModule withDefaultExecutorServiceProvider() {
-        jeroMQRemoteInvokerModule.withDefaultExecutorServiceProvider();
-        return this;
-    }
-
-    /**
-     * {@see {@link JeroMQRemoteInvokerModule#withExecutorServiceProvider(Provider)}}
-     *
-     * @param executorServiceProvider a {@link Provider<ExecutorService>} instance
-     *
-     * @return this instance
-     */
-    public JeroMQContextModule withExecutorServiceProvider(Provider<ExecutorService> executorServiceProvider) {
-        jeroMQRemoteInvokerModule.withExecutorServiceProvider(executorServiceProvider);
         return this;
     }
 

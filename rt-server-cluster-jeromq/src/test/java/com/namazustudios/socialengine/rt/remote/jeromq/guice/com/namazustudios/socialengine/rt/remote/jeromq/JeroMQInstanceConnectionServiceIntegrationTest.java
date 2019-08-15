@@ -4,7 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
@@ -326,7 +327,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                         .annotatedWith(named(BIND_ADDRESS))
                         .toInstance(BIND_URL_FIRST);
 
-                    bind(InstanceId.class).toInstance(new InstanceId());
+                    bind(InstanceId.class).toInstance(randomInstanceId());
 
                 }
             });
@@ -346,7 +347,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                         .annotatedWith(named(BIND_ADDRESS))
                         .toInstance(BIND_URL_SECOND);
 
-                    bind(InstanceId.class).toInstance(new InstanceId());
+                    bind(InstanceId.class).toInstance(randomInstanceId());
 
                 }
             });

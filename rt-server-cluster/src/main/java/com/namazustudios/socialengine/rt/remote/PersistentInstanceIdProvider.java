@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 
 import javax.inject.Inject;
@@ -8,6 +9,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.*;
 
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.io.File.createTempFile;
 
 public class PersistentInstanceIdProvider implements Provider<InstanceId> {
@@ -21,6 +23,8 @@ public class PersistentInstanceIdProvider implements Provider<InstanceId> {
         try (final FileInputStream fis = new FileInputStream(getInstanceIdFilePath());
              final BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
             return read(reader);
+        } catch (InvalidInstanceIdException ex) {
+            return generateAndWrite();
         } catch (FileNotFoundException ex) {
             return generateAndWrite();
         } catch (IOException ex) {
@@ -35,7 +39,7 @@ public class PersistentInstanceIdProvider implements Provider<InstanceId> {
 
     private InstanceId generateAndWrite() {
 
-        final File file = new File(getInstanceIdFilePath());
+        final File file = new File(".", getInstanceIdFilePath());
         file.getParentFile().mkdirs();
 
         final File temp;
@@ -47,7 +51,7 @@ public class PersistentInstanceIdProvider implements Provider<InstanceId> {
             throw new InternalException(ex);
         }
 
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
 
         try (final OutputStream os = new FileOutputStream(temp);
              final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {

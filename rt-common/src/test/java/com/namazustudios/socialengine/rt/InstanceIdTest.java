@@ -8,6 +8,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -15,13 +16,13 @@ public class InstanceIdTest {
 
     @Test
     public void testCreate() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         assertNotNull(instanceId.getUuid());
     }
 
     @Test
     public void testEqualsAndHashCodeWithBytes() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final InstanceId duplicateInstanceId = new InstanceId(instanceId.asBytes());
         assertEquals(duplicateInstanceId, instanceId);
         assertEquals(duplicateInstanceId.hashCode(), instanceId.hashCode());
@@ -29,7 +30,7 @@ public class InstanceIdTest {
 
     @Test
     public void testEqualsAndHashCodeWithString() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final InstanceId duplicateInstanceId = new InstanceId(instanceId.asString());
         assertEquals(duplicateInstanceId, instanceId);
         assertEquals(duplicateInstanceId.hashCode(), instanceId.hashCode());
@@ -38,7 +39,7 @@ public class InstanceIdTest {
     @Test
     public void testSerialization() throws Exception {
 
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
 
         final byte[] bytes;
 

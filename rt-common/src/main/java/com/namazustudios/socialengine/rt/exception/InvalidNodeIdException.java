@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.exception;
 
 import com.namazustudios.socialengine.rt.ResponseCode;
 
-public class InvalidNodeIdException extends RoutingException {
+public class InvalidNodeIdException extends InvalidIdException {
 
     public InvalidNodeIdException() {}
 

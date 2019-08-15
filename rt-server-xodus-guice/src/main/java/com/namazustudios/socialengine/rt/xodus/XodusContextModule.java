@@ -56,7 +56,6 @@ public class XodusContextModule extends PrivateModule {
         // The remaining contexts are fine as their simple equivalents.
         install(new SimpleIndexContextModule());
         install(simpleHandlerContextModule);
-        install(new SimpleInstanceMetadataContextModule());
 
         expose(IndexContext.class);
         expose(ResourceContext.class);

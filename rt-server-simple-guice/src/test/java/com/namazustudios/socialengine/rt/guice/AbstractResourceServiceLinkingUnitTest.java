@@ -18,6 +18,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
@@ -39,7 +40,7 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
         final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 100; ++i) {
-            final InstanceId instanceId = new InstanceId();
+            final InstanceId instanceId = randomInstanceId();
             final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
             final ResourceId resourceId = new ResourceId(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));

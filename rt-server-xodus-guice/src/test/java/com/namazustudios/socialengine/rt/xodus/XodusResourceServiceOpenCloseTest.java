@@ -20,6 +20,7 @@ import java.io.OutputStream;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -126,7 +127,7 @@ public class XodusResourceServiceOpenCloseTest {
     private Resource newMockResource() throws IOException {
 
         final Resource mock = mock(Resource.class);
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
 

@@ -1,20 +1,14 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.namazustudios.socialengine.rt.Subscription;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableSet;
-import static java.util.stream.Collectors.toList;
 
 public class StaticInstanceDiscoveryService implements InstanceDiscoveryService {
 

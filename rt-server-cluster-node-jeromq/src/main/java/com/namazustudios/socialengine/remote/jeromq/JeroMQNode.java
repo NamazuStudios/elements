@@ -1,16 +1,16 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.PayloadReader;
+import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
-import com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil;
 import com.namazustudios.socialengine.rt.remote.*;
-import com.namazustudios.socialengine.rt.remote.RequestHeader;
-import com.namazustudios.socialengine.rt.remote.ResponseHeader;
+import com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMsg;
 
@@ -26,16 +26,18 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
+import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
+import static org.zeromq.SocketType.*;
+import static org.zeromq.SocketType.PULL;
+import static org.zeromq.SocketType.PUSH;
+import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZMQ.*;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
@@ -45,8 +47,6 @@ public class JeroMQNode implements Node {
     private static final Logger staticLogger = LoggerFactory.getLogger(JeroMQNode.class);
 
     private static final String OUTBOUND_ADDR_FORMAT = "inproc://node.%s.out";
-
-    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
@@ -65,8 +65,6 @@ public class JeroMQNode implements Node {
     private Provider<ConnectionPool> connectionPoolProvider;
 
     private NodeLifecycle nodeLifecycle;
-
-    private Logger logger = staticLogger;
 
     @Override
     public String getName() {
@@ -88,27 +86,36 @@ public class JeroMQNode implements Node {
         final NodeContext c = new NodeContext();
 
         if (context.compareAndSet(null, c)) {
-            logger.info("Starting up.");
+            c.logger.info("Starting up.");
             getNodeLifecycle().preStart();
             c.start(binding);
-            logger.info("Started Node.");
+            c.logger.info("Started Node.");
         } else {
             throw new IllegalStateException("Already started.");
         }
 
     }
 
+    private Logger loggerForNode() {
+        final String prefix = JeroMQNode.class.getName();
+        if (getName() != null) return LoggerFactory.getLogger(format("%s.%s", prefix, getName()));
+        else if (getNodeId() != null) return LoggerFactory.getLogger(format("%s.%s", prefix, getNodeId().asString()));
+        else return staticLogger;
+    }
+
     @Override
     public void stop() {
 
-        final NodeContext c = context.get();
+        final NodeContext c = context.getAndSet(null);
 
-        if (context.compareAndSet(c, null)) {
-            logger.info("Shutting down.");
-            c.stop();
-            getNodeLifecycle().postStop();
-        } else {
+        if (c == null) {
             throw new IllegalStateException("Already stopped.");
+        } else {
+            c.logger.info("Shutting down.");
+            c.stop();
+            c.logger.info("Shutdown.  Issuing NodeLifecycle stop command.");
+            getNodeLifecycle().postStop();
+            c.logger.info("Shutdown.  Issued NodeLifecycle stop command.");
         }
 
     }
@@ -166,7 +173,6 @@ public class JeroMQNode implements Node {
     @Inject
     public void setName(@Named(NAME) String name) {
         this.name = name;
-        logger = LoggerFactory.getLogger(loggerName());
     }
 
     public NodeLifecycle getNodeLifecycle() {
@@ -178,13 +184,9 @@ public class JeroMQNode implements Node {
         this.nodeLifecycle = nodeLifecycle;
     }
 
-    private String loggerName() {
-        return Stream.of(JeroMQNode.class.getName(), getNodeId().getApplicationId().toString())
-             .filter(s -> s != null)
-             .collect(Collectors.joining("."));
-    }
-
     private class NodeContext {
+
+        private final Logger logger = loggerForNode();
 
         private final AtomicBoolean running = new AtomicBoolean();
 

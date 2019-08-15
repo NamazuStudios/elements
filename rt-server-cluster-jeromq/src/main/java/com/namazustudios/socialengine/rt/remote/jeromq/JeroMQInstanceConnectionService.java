@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
-import com.namazustudios.socialengine.rt.InstanceDiscoveryService;
-import com.namazustudios.socialengine.rt.InstanceHostInfo;
+import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;

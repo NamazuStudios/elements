@@ -10,7 +10,9 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.rt.remote.WorkerInstance;
+import com.namazustudios.socialengine.rt.remote.guice.NodeIdModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,21 +24,28 @@ import java.util.Set;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.forUniqueName;
+import static com.namazustudios.socialengine.rt.remote.guice.NodeIdModule.forApplicationUniqueName;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
-public class WorkerInstanceModule extends AbstractModule {
+public class WorkerInstanceModule extends PrivateModule {
 
     private static final Logger logger = LoggerFactory.getLogger(WorkerInstanceModule.class);
 
     @Override
     protected void configure() {
 
-        bind(Instance.class).to(WorkerInstance.class).asEagerSingleton();
+        bind(WorkerInstance.class).asEagerSingleton();
+
+        bind(Worker.class).to(WorkerInstance.class);
+        bind(Instance.class).to(WorkerInstance.class);
 
         bind(new TypeLiteral<Set<Node>>(){})
             .toProvider(nodeProvider())
             .asEagerSingleton();
+
+        expose(Worker.class);
+        expose(Instance.class);
 
     }
 
@@ -65,17 +74,14 @@ public class WorkerInstanceModule extends AbstractModule {
                         return null;
                     }
 
-                    final InstanceId instanceId = instanceIdProvider.get();
-                    final ApplicationId applicationId = forUniqueName(application.getId());
-                    final NodeId nodeId = new NodeId(instanceId, applicationId);
+                    final NodeIdModule nodeIdModule = forApplicationUniqueName(instanceIdProvider, application.getId());
 
                     final JeroMQNodeModule nodeModule = new JeroMQNodeModule()
-                        .withNodeId(nodeId)
                         .withNodeName(application.getName());
 
                     final File storageDirectory = getStorageDirectoryForApplication(resourcesStorageBaseDirectoryProvider, application);
                     final ApplicationModule applicationModule = new ApplicationModule(application, codeDirectory, storageDirectory);
-                    final Injector nodeInjector = injector.createChildInjector(applicationModule, nodeModule);
+                    final Injector nodeInjector = injector.createChildInjector(applicationModule, nodeModule, nodeIdModule);
 
                     return nodeInjector.getInstance(Node.class);
 

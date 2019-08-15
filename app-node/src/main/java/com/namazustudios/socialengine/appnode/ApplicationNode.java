@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.WorkerInstance;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
@@ -18,7 +19,6 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConne
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
-import joptsimple.OptionParser;
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,14 +31,15 @@ public class ApplicationNode {
 
     private final Injector injector;
 
-    public ApplicationNode(DefaultConfigurationSupplier defaultConfigurationSupplier) {
+    public ApplicationNode(final DefaultConfigurationSupplier defaultConfigurationSupplier) {
         this.injector = Guice.createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new PersistentInstanceIdModule(),
             new ZContextModule(),
-            new JeroMQRemoteInvokerModule(),
+            new MasterNodeModule(),
+            new JeroMQRemoteInvokerModule().withDefaultExecutorServiceProvider(),
             new JeroMQInstanceConnectionServiceModule(),
-            new InstanceDiscoveryServiceModule(),
+            new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new MongoCoreModule(),
             new MongoDaoModule(),
             new ValidationModule(),
@@ -49,7 +50,8 @@ public class ApplicationNode {
             new GuiceStandardNotificationFactoryModule(),
             new JaxRSClientModule(),
             new VersionModule(),
-            new ServicesModule()
+            new ServicesModule(),
+            new FSTPayloadReaderWriterModule()
         );
     }
 
@@ -59,7 +61,7 @@ public class ApplicationNode {
     public void start() {
         final Object lock = new Object();
 
-        try (final Instance container = injector.getInstance(WorkerInstance.class)) {
+        try (final Instance container = injector.getInstance(Instance.class)) {
 
             logger.info("Starting container.");
 

@@ -17,6 +17,7 @@ import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -30,7 +31,7 @@ import static org.testng.Assert.assertNull;
 @Guice(modules={RoutingTestModule.class, TestSameNodeIdRoutingStrategy.Module.class})
 public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
 
-    private final InstanceId instanceId = new InstanceId();
+    private final InstanceId instanceId = randomInstanceId();
 
     @Test
     public void testInvokeSync() throws Exception {
@@ -169,9 +170,9 @@ public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
     public void testConflictingRoute() throws Exception {
 
         final List<Object> address = asList(
-            new NodeId(new InstanceId(), randomApplicationId()),
-            new NodeId(new InstanceId(), randomApplicationId()),
-            new NodeId(new InstanceId(), randomApplicationId())
+            new NodeId(randomInstanceId(), randomApplicationId()),
+            new NodeId(randomInstanceId(), randomApplicationId()),
+            new NodeId(randomInstanceId(), randomApplicationId())
         );
 
         final Invocation invocation = spy(Invocation.class);

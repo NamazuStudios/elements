@@ -2,6 +2,9 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+
+import java.util.Set;
 
 /**
  * Represents a running {@link Instance} of the application.  Though not strictly required, there ought only be one

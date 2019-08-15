@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine.rt;
+package com.namazustudios.socialengine.rt.remote;
+
+import com.namazustudios.socialengine.rt.Subscription;
 
 import java.util.Collection;
 import java.util.Set;

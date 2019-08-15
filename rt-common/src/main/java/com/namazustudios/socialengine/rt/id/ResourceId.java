@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.Resource;
-import com.sun.org.apache.regexp.internal.RE;
+import com.namazustudios.socialengine.rt.exception.InvalidResourceIdException;
 
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
 
@@ -46,11 +44,15 @@ public class ResourceId implements Serializable, HasNodeId {
      * Creates a new unique {@link ResourceId}.
      */
     public ResourceId(final NodeId nodeId) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(nodeId.v1CompoundId)
-                .with(RESOURCE, UUID.randomUUID())
-                .only(INSTANCE, APPLICATION, RESOURCE)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(nodeId.v1CompoundId)
+                    .with(RESOURCE, UUID.randomUUID())
+                    .only(INSTANCE, APPLICATION, RESOURCE)
+                    .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidResourceIdException(ex);
+        }
     }
 
     /**
@@ -60,10 +62,14 @@ public class ResourceId implements Serializable, HasNodeId {
      * @param stringRepresentation the {@link String} representation of the {@link ResourceId} from {@link ResourceId#asString()}.
      */
     public ResourceId(final String stringRepresentation) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(stringRepresentation)
-                .only(INSTANCE, APPLICATION, RESOURCE)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(stringRepresentation)
+                    .only(INSTANCE, APPLICATION, RESOURCE)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidResourceIdException(ex);
+        }
     }
 
     /**
@@ -85,11 +91,15 @@ public class ResourceId implements Serializable, HasNodeId {
      * @param v1CompoundId the {@link V1CompoundId}
      */
     ResourceId(final V1CompoundId v1CompoundId) {
-        this.v1CompoundId = new V1CompoundId.Builder()
-                .with(v1CompoundId)
-                .without(TASK)
-                .only(INSTANCE, APPLICATION, RESOURCE)
-            .build();
+        try {
+            this.v1CompoundId = new V1CompoundId.Builder()
+                    .with(v1CompoundId)
+                    .without(TASK)
+                    .only(INSTANCE, APPLICATION, RESOURCE)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidResourceIdException(ex);
+        }
     }
 
     /**

@@ -87,7 +87,6 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
             scheduledExecutorService = newSingleThreadScheduledExecutor();
             scheduledExecutorService.scheduleAtFixedRate(this::refresh, 0, REFRESH_RATE, REFRESH_UNITS);
 
-
             try {
                 latch.await();
             } catch (InterruptedException e) {

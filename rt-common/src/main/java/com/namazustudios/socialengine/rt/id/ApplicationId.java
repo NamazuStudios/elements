@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.exception.InvalidApplicationIdException;
+
 import java.io.Serializable;
 import java.nio.charset.Charset;
 import java.util.UUID;
@@ -8,6 +10,9 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
+/**
+ * Uniquely identifies an application.
+ */
 public class ApplicationId implements Serializable {
 
     public static final Charset CHARSET = Charset.forName("UTF-8");
@@ -23,21 +28,29 @@ public class ApplicationId implements Serializable {
     private ApplicationId() { v1CompoundId = null; }
 
     ApplicationId(final V1CompoundId v1CompoundId) {
-        this.v1CompoundId = new V1CompoundId.Builder()
-                .with(v1CompoundId)
-                .without(INSTANCE, RESOURCE, TASK)
-                .only(APPLICATION)
-            .build();
+        try {
+            this.v1CompoundId = new V1CompoundId.Builder()
+                    .with(v1CompoundId)
+                    .without(INSTANCE, RESOURCE, TASK)
+                    .only(APPLICATION)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidApplicationIdException(ex);
+        }
     }
 
     /**
      * Creates a new unique {@link TaskId}.
      */
     public ApplicationId(final UUID applicationUuid) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(APPLICATION, applicationUuid)
-                .only(APPLICATION)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(APPLICATION, applicationUuid)
+                    .only(APPLICATION)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidApplicationIdException(ex);
+        }
     }
 
     /**
@@ -46,10 +59,14 @@ public class ApplicationId implements Serializable {
      * @param stringRepresentation the string representation
      */
     public ApplicationId(final String stringRepresentation) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(stringRepresentation)
-                .only(APPLICATION)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(stringRepresentation)
+                    .only(APPLICATION)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidApplicationIdException(ex);
+        }
     }
 
     /**
@@ -58,10 +75,14 @@ public class ApplicationId implements Serializable {
      * @param byteRepresentation the string representation
      */
     public ApplicationId(final byte[] byteRepresentation) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(byteRepresentation)
-                .only(APPLICATION)
-            .build();
+        try {
+            v1CompoundId = new V1CompoundId.Builder()
+                    .with(byteRepresentation)
+                    .only(APPLICATION)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidApplicationIdException(ex);
+        }
     }
 
     /**

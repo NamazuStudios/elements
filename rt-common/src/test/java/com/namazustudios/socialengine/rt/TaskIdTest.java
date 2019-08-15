@@ -9,6 +9,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -17,7 +18,7 @@ public class TaskIdTest {
 
     @Test
     public void testCreate() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);
@@ -29,7 +30,7 @@ public class TaskIdTest {
 
     @Test
     public void testEqualsAndHashCodeWithBytes() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);
@@ -40,7 +41,7 @@ public class TaskIdTest {
 
     @Test
     public void testEqualsAndHashCodeWithString() {
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);
@@ -52,7 +53,7 @@ public class TaskIdTest {
     @Test
     public void testSerialization() throws Exception {
 
-        final InstanceId instanceId = new InstanceId();
+        final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
         final ResourceId resourceId = new ResourceId(nodeId);
         final TaskId taskId = new TaskId(resourceId);

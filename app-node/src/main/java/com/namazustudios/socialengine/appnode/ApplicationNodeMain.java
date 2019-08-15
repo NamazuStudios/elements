@@ -22,35 +22,29 @@ public class ApplicationNodeMain {
     private static final OptionParser OPTION_PARSER = new OptionParser();
 
     private static final OptionSpec<String> STATUS_CHECK_OPTION = OPTION_PARSER
-        .accepts("--status-check", "Performs a status check against the specified host.")
+        .accepts("status-check", "Performs a status check against the specified host.")
         .withOptionalArg()
         .ofType(String.class);
 
-    private static final OptionSpec<Boolean> RUN_OPTION = OPTION_PARSER
-        .accepts("--run", "Performs a status check against the specified host.")
-        .withOptionalArg()
-        .ofType(Boolean.class);
-
-    public static void main(final String[] args) throws Exception {
+    public static void main(final String[] args) {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
-        final OptionSet optionSet = OPTION_PARSER.parse(args);
 
         try {
+
+            final OptionSet optionSet = OPTION_PARSER.parse(args);
+
             if (optionSet.has(STATUS_CHECK_OPTION)) {
                 final String connectAddress = optionSet.valueOf(STATUS_CHECK_OPTION);
                 final StatusCheck statusCheck = new StatusCheck(connectAddress);
                 statusCheck.run();
-            } else if (optionSet.has(RUN_OPTION)) {
+            } else {
                 final ApplicationNode applicationNode = new ApplicationNode(defaultConfigurationSupplier);
                 applicationNode.start();
-            } else {
-                logger.error("One of --status-check or --run must be specified.");
-                OPTION_PARSER.printHelpOn(System.out);
-                System.exit(1);
             }
+
         } catch (OptionException ex) {
             logger.error("Invalid option.", ex);
             System.exit(1);

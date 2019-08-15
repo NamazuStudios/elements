@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static java.util.UUID.randomUUID;
@@ -78,7 +79,7 @@ public class SimpleRemoteInvokerRegistryTest {
 
         mockActiveConnections.forEach(mockInstanceConnection -> {
 
-            final InstanceId instanceId = new InstanceId();
+            final InstanceId instanceId = randomInstanceId();
 
             final Double load = random.nextDouble();
             final InstanceMetadataContext mockInstanceMetadataContext = mock(InstanceMetadataContext.class);
@@ -251,7 +252,7 @@ public class SimpleRemoteInvokerRegistryTest {
 
         mockActiveConnections.addAll(IntStream.range(0, 5).mapToObj(i -> {
 
-            final InstanceId instanceId = new InstanceId();
+            final InstanceId instanceId = randomInstanceId();
 
             final Double load = random.nextDouble();
             final InstanceConnection mockInstanceConnection = mock(InstanceConnection.class);
@@ -378,7 +379,7 @@ public class SimpleRemoteInvokerRegistryTest {
 
         mockActiveConnections.addAll(IntStream.range(0, 5).mapToObj(i -> {
 
-            final InstanceId instanceId = new InstanceId();
+            final InstanceId instanceId = randomInstanceId();
 
             final Double load = random.nextDouble();
             final InstanceConnection mockInstanceConnection = mock(InstanceConnection.class);

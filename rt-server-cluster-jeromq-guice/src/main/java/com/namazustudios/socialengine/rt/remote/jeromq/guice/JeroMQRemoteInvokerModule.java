@@ -103,8 +103,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        install(new FSTPayloadReaderWriterModule());
-
         bindConnectAddressAction.run();
         bindMinConnectionsAction.run();
         bindMaxConnectionsAction.run();

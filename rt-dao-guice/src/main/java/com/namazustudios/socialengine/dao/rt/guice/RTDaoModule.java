@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.rt.guice;
 
-import com.google.inject.Inject;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.dao.ContextFactory;
@@ -8,15 +7,10 @@ import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.dao.rt.DefaultContextFactory;
 import com.namazustudios.socialengine.dao.rt.RTManifestDao;
 import com.namazustudios.socialengine.guice.ZContextModule;
-import com.namazustudios.socialengine.rt.*;
-//import com.namazustudios.socialengine.rt.srv.SpotifySrvMonitorService;
-//import com.namazustudios.socialengine.rt.srv.SrvMonitorService;
+import com.namazustudios.socialengine.rt.Context;
 import org.zeromq.ZContext;
 
-import javax.inject.Named;
 import java.util.function.Function;
-
-import static com.namazustudios.socialengine.rt.Constants.IS_LOCAL_ENVIRONMENT_NAME;
 
 /**
  * Created by patricktwohig on 8/22/17.
@@ -55,13 +49,4 @@ public class RTDaoModule extends PrivateModule {
 
     }
 
-    public boolean getLocalInstance() {
-        return isLocalInstance;
-    }
-
-    @Inject
-    @Named(IS_LOCAL_ENVIRONMENT_NAME)
-    public void setLocalInstance(boolean localInstance) {
-        isLocalInstance = localInstance;
-    }
 }
