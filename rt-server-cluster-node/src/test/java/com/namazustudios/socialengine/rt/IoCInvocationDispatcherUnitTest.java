@@ -20,7 +20,7 @@ import static org.mockito.Mockito.*;
 @Guice(modules = IoCInvocationDispatcherUnitTest.Module.class)
 public class IoCInvocationDispatcherUnitTest {
 
-    private InvocationDispatcher invocationDispatcher;
+    private LocalInvocationDispatcher invocationDispatcher;
 
     private TestServiceInterface mockTestServiceInterface;
 
@@ -306,12 +306,12 @@ public class IoCInvocationDispatcherUnitTest {
 
     }
 
-    public InvocationDispatcher getInvocationDispatcher() {
+    public LocalInvocationDispatcher getInvocationDispatcher() {
         return invocationDispatcher;
     }
 
     @Inject
-    public void setInvocationDispatcher(InvocationDispatcher invocationDispatcher) {
+    public void setInvocationDispatcher(LocalInvocationDispatcher invocationDispatcher) {
         this.invocationDispatcher = invocationDispatcher;
     }
 
@@ -333,7 +333,7 @@ public class IoCInvocationDispatcherUnitTest {
             bind(TestServiceInterface.class).toInstance(testServiceInterface);
 
             bind(IocResolver.class).toInstance(new GuiceIoCResolver());
-            bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
+            bind(LocalInvocationDispatcher.class).to(IoCLocalInvocationDispatcher.class);
 
         }
 

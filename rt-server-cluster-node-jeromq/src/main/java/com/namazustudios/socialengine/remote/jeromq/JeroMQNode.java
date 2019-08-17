@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.SocketType;
 import org.zeromq.ZContext;
 import org.zeromq.ZMsg;
 
@@ -34,7 +33,6 @@ import static java.lang.Thread.interrupted;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
-import static org.zeromq.SocketType.*;
 import static org.zeromq.SocketType.PULL;
 import static org.zeromq.SocketType.PUSH;
 import static org.zeromq.SocketType.ROUTER;
@@ -56,7 +54,7 @@ public class JeroMQNode implements Node {
 
     private ZContext zContext;
 
-    private InvocationDispatcher invocationDispatcher;
+    private LocalInvocationDispatcher invocationDispatcher;
 
     private PayloadReader payloadReader;
 
@@ -129,12 +127,12 @@ public class JeroMQNode implements Node {
         this.zContext = zContext;
     }
 
-    public InvocationDispatcher getInvocationDispatcher() {
+    public LocalInvocationDispatcher getInvocationDispatcher() {
         return invocationDispatcher;
     }
 
     @Inject
-    public void setInvocationDispatcher(InvocationDispatcher invocationDispatcher) {
+    public void setInvocationDispatcher(LocalInvocationDispatcher invocationDispatcher) {
         this.invocationDispatcher = invocationDispatcher;
     }
 

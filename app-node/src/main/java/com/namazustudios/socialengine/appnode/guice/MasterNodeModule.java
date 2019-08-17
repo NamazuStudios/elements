@@ -33,8 +33,8 @@ public class MasterNodeModule extends PrivateModule {
             .to(MasterNodeLifecycle.class)
             .asEagerSingleton();
 
-        bind(InvocationDispatcher.class)
-            .to(MasterNodeInvocationDispatcher.class)
+        bind(LocalInvocationDispatcher.class)
+            .to(MasterNodeLocalInvocationDispatcher.class)
             .asEagerSingleton();
 
         expose(Key.get(Node.class, named(MASTER_NODE_NAME)));

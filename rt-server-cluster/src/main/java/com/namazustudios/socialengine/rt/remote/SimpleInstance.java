@@ -8,12 +8,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
-public class ClientInstance implements Instance {
+public class SimpleInstance implements Instance {
 
-    private static final Logger logger = LoggerFactory.getLogger(ClientInstance.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleInstance.class);
 
-    private InstanceId instanceId;
+    protected InstanceId instanceId;
 
     private InstanceDiscoveryService instanceDiscoveryService;
 
@@ -38,29 +39,33 @@ public class ClientInstance implements Instance {
             logger.error("Caught exception starting InstanceConnectionService.", ex);
         }
 
+        postStart(exceptionList::add);
+
         if (!exceptionList.isEmpty()) {
             throw new MultiException(exceptionList);
         }
 
     }
+
+    protected void postStart(final Consumer<Exception> exceptionConsumer) {}
 
     @Override
     public void close() {
 
         final List<Exception> exceptionList = new ArrayList<>();
 
+        preClose(exceptionList::add);
+
         try {
-            getInstanceDiscoveryService().start();
+            getInstanceConnectionService().stop();
         } catch (Exception ex) {
             exceptionList.add(ex);
-            logger.error("Caught exception stopping InstanceDiscoveryService.", ex);
         }
 
         try {
-            getInstanceConnectionService().start();
+            getInstanceDiscoveryService().stop();
         } catch (Exception ex) {
             exceptionList.add(ex);
-            logger.error("Caught exception stopping InstanceConnectionService.", ex);
         }
 
         if (!exceptionList.isEmpty()) {
@@ -68,6 +73,8 @@ public class ClientInstance implements Instance {
         }
 
     }
+
+    protected void preClose(final Consumer<Exception> exceptionConsumer) {}
 
     @Override
     public InstanceId getInstanceId() {

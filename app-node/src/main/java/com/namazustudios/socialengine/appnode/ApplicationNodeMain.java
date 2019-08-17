@@ -31,7 +31,6 @@ public class ApplicationNodeMain {
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
-
         try {
 
             final OptionSet optionSet = OPTION_PARSER.parse(args);

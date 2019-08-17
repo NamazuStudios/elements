@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 
 import javax.inject.Inject;
 
-public class MasterNodeInvocationDispatcher extends AbstractInvocationDispatcher {
+public class MasterNodeLocalInvocationDispatcher extends AbstractLocalInvocationDispatcher {
 
     private InstanceMetadataContext instanceMetadataContext;
 

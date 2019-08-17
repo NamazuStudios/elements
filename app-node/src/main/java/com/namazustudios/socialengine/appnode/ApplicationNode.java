@@ -12,7 +12,6 @@ import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
-import com.namazustudios.socialengine.rt.remote.WorkerInstance;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;

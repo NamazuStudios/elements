@@ -19,24 +19,24 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
-import static com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher.*;
+import static com.namazustudios.socialengine.rt.remote.LocalInvocationProcessor.*;
 import static java.util.Arrays.stream;
 
 /**
  * Inspects the attributes, parameters, and annotations of a specific {@link Method} to build an instance of
- * {@link InvocationDispatcher} to dispatch {@link Invocation} instances to a local object in memory.
+ * {@link LocalInvocationDispatcher} to dispatch {@link Invocation} instances to a local object in memory.
  */
-public class LocalInvocationDispatcherBuilder {
+public class LocalInvocationProcessorBuilder {
 
-    private static final Logger logger = LoggerFactory.getLogger(LocalInvocationDispatcherBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(LocalInvocationProcessorBuilder.class);
 
     private final Method method;
 
     private final Dispatch.Type dispatchType;
 
-    private LocalInvocationDispatcher.ReturnValueStrategy returnValueStrategy;
+    private LocalInvocationProcessor.ReturnValueStrategy returnValueStrategy;
 
-    public LocalInvocationDispatcherBuilder(
+    public LocalInvocationProcessorBuilder(
             final Class<?> type, final String name,
             final List<String> parameters) throws ClassNotFoundException { ;
 
@@ -132,11 +132,11 @@ public class LocalInvocationDispatcherBuilder {
     }
 
     /**
-     * Builds a new instance of the {@link InvocationDispatcher}.
+     * Builds a new instance of the {@link LocalInvocationDispatcher}.
      *
-     * @return returns the {@link InvocationDispatcher}
+     * @return returns the {@link LocalInvocationDispatcher}
      */
-    public LocalInvocationDispatcher build() {
+    public LocalInvocationProcessor build() {
 
         final BiConsumer<List<Object>, Object[]> parametersTransformer;
         parametersTransformer = getParametersTransformer();
@@ -150,7 +150,7 @@ public class LocalInvocationDispatcherBuilder {
         final Method method = getMethod();
         final int argCount = method.getParameterCount();
 
-        final LocalInvocationDispatcher.ReturnValueStrategy returnValueStrategy = this.returnValueStrategy;
+        final LocalInvocationProcessor.ReturnValueStrategy returnValueStrategy = this.returnValueStrategy;
 
         return (target, invocation,
                 invocationReturnConsumer, syncInvocationErrorConsumer,

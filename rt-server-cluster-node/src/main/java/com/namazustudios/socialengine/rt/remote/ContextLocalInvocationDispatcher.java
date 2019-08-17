@@ -2,11 +2,10 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.remote.AbstractInvocationDispatcher;
 
 import javax.inject.Inject;
 
-public class ContextInvocationDispatcher extends AbstractInvocationDispatcher {
+public class ContextLocalInvocationDispatcher extends AbstractLocalInvocationDispatcher {
 
     private Context context;
 

@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
 
 public class JeroMQInstanceConnectionServiceModule extends PrivateModule {
 
@@ -32,7 +33,7 @@ public class JeroMQInstanceConnectionServiceModule extends PrivateModule {
      */
     public JeroMQInstanceConnectionServiceModule withBindAddress(final String bindAddress) {
         bindBindAddress = () -> bind(String.class)
-            .annotatedWith(named(JeroMQInstanceConnectionService.BIND_ADDRESS))
+            .annotatedWith(named(BIND_ADDRESS))
             .toInstance(bindAddress);
         return this;
     }

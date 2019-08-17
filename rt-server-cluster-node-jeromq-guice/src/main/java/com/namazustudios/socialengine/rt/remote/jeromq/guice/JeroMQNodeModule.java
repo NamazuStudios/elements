@@ -1,7 +1,11 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
+import com.google.inject.binder.AnnotatedBindingBuilder;
+import com.google.inject.binder.LinkedBindingBuilder;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
@@ -9,8 +13,13 @@ import com.namazustudios.socialengine.rt.remote.Node;
 
 import javax.inject.Provider;
 
+import java.lang.annotation.Annotation;
+import java.util.function.Function;
+
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NAME;
+import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
+import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
 
 public class JeroMQNodeModule extends PrivateModule {
 
@@ -24,8 +33,53 @@ public class JeroMQNodeModule extends PrivateModule {
 
     private Runnable bindTimeoutAction = () -> {};
 
+    private Function<AnnotatedBindingBuilder<Node>, LinkedBindingBuilder<Node>> bindAnnotationAction = a -> a;
+
+    private Runnable exposeNodeAction = () -> expose(Node.class);
+
     /**
-     * Specifies the node unique id based {@link JeroMQNode#NAME}.
+     * Specifies the symbolic name of the node using the {@link JeroMQNode#NAME}.
+     *
+     * @param nodeId the Node ID
+     * @return this instance
+     */
+    public JeroMQNodeModule withNodeId(final NodeId nodeId) {
+        bindNodeIdAction = () -> bind(NodeId.class).toInstance(nodeId);
+        return this;
+    }
+
+    /**
+     * A shortcut for invoking {@link #withNodeId(InstanceId, ApplicationId)} using
+     * {@link NodeId#NodeId(InstanceId, ApplicationId)}.
+     *
+     * @param instanceId the {@link InstanceId}
+     * @param applicationId the {@link ApplicationId}
+     * @return this instance
+     */
+    public JeroMQNodeModule withNodeId(final InstanceId instanceId, final ApplicationId applicationId) {
+        return withNodeId(new NodeId(instanceId, applicationId));
+    }
+
+    /**
+     * Specifies the default symbolic name of the node using the {@link JeroMQNode#NAME}.
+     *
+     * @return this instance
+     */
+    public JeroMQNodeModule withDefaultNodeName() {
+
+        bindNodeNameAction = () -> {
+            final Provider<NodeId> nodeIdProvider = getProvider(NodeId.class);
+            bind(String.class)
+                .annotatedWith(named(NAME))
+                .toProvider(() -> nodeIdProvider.get().asString());
+        };
+
+        return this;
+
+    }
+
+    /**
+     * Specifies the symbolic name of the node using the {@link JeroMQNode#NAME}.
      *
      * @param nodeName the node name
      * @return this instance
@@ -76,10 +130,47 @@ public class JeroMQNodeModule extends PrivateModule {
         return this;
     }
 
+    /**
+     * Specifies an {@link Annotation} to bind to the underlying {@link Node}.
+     *
+     * @param cls the annotation type to bind
+     * @return this instance
+     */
+    public JeroMQNodeModule withAnnotation(final Class<? extends Annotation> cls) {
+        bindAnnotationAction = a -> a.annotatedWith(cls);
+        exposeNodeAction = () -> expose(Node.class).annotatedWith(cls);
+        return this;
+    }
+
+    /**
+     * Specifies an {@link Annotation} to bind to the underlying {@link Node}.
+     *
+     * @param annotation the literal annotation to bind
+     * @return this instance
+     */
+    public JeroMQNodeModule withAnnotation(final Annotation annotation) {
+        bindAnnotationAction = a -> a.annotatedWith(annotation);
+        exposeNodeAction = () -> expose(Node.class).annotatedWith(annotation);
+        return this;
+    }
+
+    /**
+     * Indicates that this instance should bind the {@link Node} as a master node supplying
+     * the {@link InstanceId}
+     *
+     * @param instanceId the {@link InstanceId}
+     * @return this instance
+     */
+    public JeroMQNodeModule withMasterNodeForInstanceId(final InstanceId instanceId) {
+        withNodeId(forMasterNode(instanceId));
+        withAnnotation(named(MASTER_NODE_NAME));
+        return this;
+    }
+
     @Override
     protected void configure() {
 
-        bind(Node.class).to(JeroMQNode.class).asEagerSingleton();
+        bindAnnotationAction.apply(bind(Node.class)).to(JeroMQNode.class).asEagerSingleton();
         bind(ConnectionPool.class).to(SimpleConnectionPool.class);
 
         bindNodeIdAction.run();
@@ -88,7 +179,7 @@ public class JeroMQNodeModule extends PrivateModule {
         bindMinConnectionsAction.run();
         bindMaxConnectionsAction.run();
 
-        expose(Node.class);
+        exposeNodeAction.run();
 
     }
 

@@ -13,17 +13,17 @@ import java.util.function.Consumer;
 
 import static java.util.Collections.unmodifiableList;
 
-public abstract class AbstractInvocationDispatcher implements InvocationDispatcher {
+public abstract class AbstractLocalInvocationDispatcher implements LocalInvocationDispatcher {
 
-    private static final Logger logger = LoggerFactory.getLogger(AbstractInvocationDispatcher.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractLocalInvocationDispatcher.class);
 
-    private final LoadingCache<MethodKey, LocalInvocationDispatcher> localDispatcherCache = CacheBuilder
+    private final LoadingCache<MethodKey, LocalInvocationProcessor> localDispatcherCache = CacheBuilder
         .newBuilder()
         .weakKeys()
-        .build(new CacheLoader<MethodKey, LocalInvocationDispatcher>() {
+        .build(new CacheLoader<MethodKey, LocalInvocationProcessor>() {
             @Override
-            public LocalInvocationDispatcher load(final MethodKey key) throws Exception {
-                return new LocalInvocationDispatcherBuilder(key.getType(), key.getMethod(), key.getParameters()).build();
+            public LocalInvocationProcessor load(final MethodKey key) throws Exception {
+                return new LocalInvocationProcessorBuilder(key.getType(), key.getMethod(), key.getParameters()).build();
             }
         });
 
@@ -63,7 +63,7 @@ public abstract class AbstractInvocationDispatcher implements InvocationDispatch
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final Consumer<InvocationError> asyncInvocationErrorConsumer) throws Exception {
 
-        final LocalInvocationDispatcher localInvocationDispatcher;
+        final LocalInvocationProcessor localInvocationDispatcher;
 
         try {
             final MethodKey methodKey = new MethodKey(type, invocation);
@@ -76,7 +76,7 @@ public abstract class AbstractInvocationDispatcher implements InvocationDispatch
             return;
         }
 
-        localInvocationDispatcher.dispatch(
+        localInvocationDispatcher.processInvocation(
                 object, invocation,
                 syncInvocationResultConsumer, syncInvocationErrorConsumer,
                 asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);

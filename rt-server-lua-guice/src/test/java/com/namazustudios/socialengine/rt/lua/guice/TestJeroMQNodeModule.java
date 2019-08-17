@@ -4,9 +4,8 @@ import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.*;
-import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.IoCLocalInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import com.namazustudios.socialengine.rt.remote.ContextNodeLifecycle;
@@ -40,8 +39,8 @@ public class TestJeroMQNodeModule extends PrivateModule {
         contextBindAction.run();
         handlerTimeoutBindAction.run();
 
-        bind(IoCInvocationDispatcher.class).asEagerSingleton();
-        bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
+        bind(IoCLocalInvocationDispatcher.class).asEagerSingleton();
+        bind(LocalInvocationDispatcher.class).to(IoCLocalInvocationDispatcher.class);
         bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
 
         bind(ContextNodeLifecycle.class).asEagerSingleton();

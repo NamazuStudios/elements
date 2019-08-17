@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.IocResolver;
 
 /**
