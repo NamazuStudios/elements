@@ -9,20 +9,23 @@ public class NodeNotFoundException extends InternalException {
 
     public NodeNotFoundException() { }
 
-    public NodeNotFoundException(String message) {
+    public NodeNotFoundException(final String message) {
         super(message);
     }
 
-    public NodeNotFoundException(String message, Throwable cause) {
+    public NodeNotFoundException(final String message, final Throwable cause) {
         super(message, cause);
     }
 
-    public NodeNotFoundException(Throwable cause) {
-        super(cause);
+    public NodeNotFoundException(final Throwable cause) {
+        this(format("Node with ID not found %s", "<unknown>"), cause);
     }
 
     public NodeNotFoundException(final NodeId nodeId) {
         this(format("Node with ID not found %s", nodeId.asString()));
+    }
+    public NodeNotFoundException(final NodeId nodeId, Throwable cause) {
+        this(format("Node with ID not found %s", nodeId.asString()), cause);
     }
 
     public NodeNotFoundException(String message, Throwable cause, boolean enableSuppression, boolean writableStackTrace) {

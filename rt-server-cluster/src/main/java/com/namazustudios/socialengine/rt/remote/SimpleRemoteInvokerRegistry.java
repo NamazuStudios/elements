@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.Subscription;
+import com.namazustudios.socialengine.rt.exception.InstanceNotFoundException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
@@ -68,6 +69,12 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     }
 
     @Override
+    public void refresh() {
+        final RegistryContext context = getContext();
+        context.refresh();
+    }
+
+    @Override
     public RemoteInvoker getBestRemoteInvoker(final ApplicationId applicationId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
         return snapshot.getBestInvokerForApplication(applicationId);
@@ -85,6 +92,12 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         final RemoteInvoker remoteInvoker = snapshot.getRemoteInvoker(nodeId);
         if (remoteInvoker == null) throw new NodeNotFoundException("No RemoteInvoker for: " + nodeId);
         return remoteInvoker;
+    }
+
+    private RegistryContext getContext() {
+        final RegistryContext context = this.context.get();
+        if (context == null) throw new IllegalStateException("Not running.");
+        return context;
     }
 
     private RemoteInvokerRegistrySnapshot getSnapshot() {
@@ -133,7 +146,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                 return thread;
             });
 
-            scheduledExecutorService.scheduleAtFixedRate(this::refresh, 0, REFRESH_RATE, REFRESH_UNITS);
+            scheduledExecutorService.scheduleAtFixedRate(this::doRefresh, 0, REFRESH_RATE, REFRESH_UNITS);
             connect = getInstanceConnectionService().subscribeToConnect(this::add);
             disconnect = getInstanceConnectionService().subscribeToDisconnect(this::remove);
 
@@ -196,6 +209,23 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         }
 
         private void refresh() {
+
+            final CountDownLatch latch = new CountDownLatch(1);
+            scheduledExecutorService.submit(() -> doRefresh(latch));
+
+            try {
+                latch.await();
+            } catch (InterruptedException ex) {
+                throw new InternalException(ex);
+            }
+
+        }
+
+        private void doRefresh() {
+            doRefresh(latch);
+        }
+
+        private void doRefresh(final CountDownLatch latch) {
             try {
 
                 final RefreshBuilder builder = snapshot.refresh();
@@ -232,6 +262,9 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
             try {
                 load = connection.getInstanceMetadataContext().getInstanceLoad();
+            } catch (InstanceNotFoundException | NodeNotFoundException ex) {
+                logger.debug("Instance or node not found.", ex);
+                return builder;
             } catch (Exception ex) {
                 logger.error("Could not determine load average for instance {}", instanceId, ex);
                 return builder;
@@ -239,6 +272,9 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
             try {
                 nodeIdSet = connection.getInstanceMetadataContext().getNodeIds();
+            } catch (InstanceNotFoundException | NodeNotFoundException ex) {
+                logger.debug("Instance or node not found.", ex);
+                return builder;
             } catch (Exception ex) {
                 logger.error("Could not node id set for instance {}", instanceId, ex);
                 return builder;

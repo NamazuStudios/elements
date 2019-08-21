@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMsg;
 
@@ -16,9 +18,14 @@ public enum JeroMQControlResponseCode {
     UNKNOWN_COMMAND,
 
     /**
-     * Indicates there was no such route.
+     * Indicates there was no such route for the given {@link NodeId}
      */
-    NO_SUCH_ROUTE,
+    NO_SUCH_NODE,
+
+    /**
+     * Indicates there was no such route for the given {@link InstanceId}
+     */
+    NO_SUCH_INSTANCE,
 
     /**
      * Indicates a binding already exists.
@@ -71,18 +78,42 @@ public enum JeroMQControlResponseCode {
     }
 
     /**
-     * Gets the {@link JeroMQControlResponseCode} or throw an {@link IllegalArgumentException} if the command could not
+     * Gets the {@link JeroMQControlResponseCode} or throw an {@link IllegalArgumentException} if the code could not
      * be understood.  This removes the first frame of the message allowing subsequent processing to take place.
      *
      * @param zMsg the message from which to read the command.
      *
-     * @return the {@link JeroMQRoutingCommand}
+     * @return the {@link JeroMQControlResponseCode}
      */
     public static JeroMQControlResponseCode stripCode(final ZMsg zMsg) {
-
         if (zMsg.isEmpty()) throw new IllegalArgumentException("Missing response header frame.");
-
         final ZFrame frame = zMsg.removeFirst();
+        return readCode(frame);
+    }
+
+    /**
+     * Gets the {@link JeroMQControlResponseCode} or throw an {@link IllegalArgumentException} if the code could not
+     * be understood.  This reads the first frame of the message allowing subsequent processing to take place.
+     *
+     * @param zMsg the message from which to read the command.
+     *
+     * @return the {@link JeroMQControlResponseCode}
+     */
+    public static JeroMQControlResponseCode readCode(final ZMsg zMsg) {
+        if (zMsg.isEmpty()) throw new IllegalArgumentException("Missing response header frame.");
+        final ZFrame frame = zMsg.getFirst();
+        return readCode(frame);
+    }
+
+    /**
+     * Gets the {@link JeroMQControlResponseCode} or throw an {@link IllegalArgumentException} if the code could not
+     * be understood.  This reads the first frame of the message allowing subsequent processing to take place.
+     *
+     * @param frame the frame containin the code
+     * @return the {@link JeroMQControlResponseCode}
+     */
+    public static JeroMQControlResponseCode readCode(final ZFrame frame) {
+
         final byte[] data = frame.getData();
 
         if (data.length != Integer.BYTES) throw new IllegalArgumentException("Invalid byte array size: " + data);
@@ -102,5 +133,4 @@ public enum JeroMQControlResponseCode {
         }
 
     }
-
 }

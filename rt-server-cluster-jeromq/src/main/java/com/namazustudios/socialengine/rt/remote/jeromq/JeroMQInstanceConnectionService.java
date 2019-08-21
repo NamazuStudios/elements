@@ -25,6 +25,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
@@ -72,6 +73,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             context.stop();
         }
 
+    }
+
+    @Override
+    public void refresh() {
+        final InstanceConnectionContext context = getContext();
+        context.refresh();
     }
 
     @Override
@@ -216,6 +223,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         }
 
+        public void refresh() {
+            getInstanceDiscoveryService().getKnownHosts().forEach(this::getOrCreateNewConnection);
+        }
+
         private void server() {
 
             final List<String> binds = asList(getInternalBindAddress(), getBindAddress());
@@ -274,44 +285,59 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private JeroMQInstanceConnection createNewConnection(final InstanceHostInfo instanceHostInfo) {
 
-            final InstanceId instanceId;
             final String instanceConnectAddress = instanceHostInfo.getConnectAddress();
 
             try (final ControlClient client = new JeroMQControlClient(getzContext(), instanceConnectAddress)) {
+
                 final InstanceStatus status = client.getInstanceStatus();
-                instanceId = status.getInstanceId();
+
+                final InstanceId instanceId = status.getInstanceId();
+                final NodeId masterNodeId = forMasterNode(instanceId);
+                final String masterNodeConnectAddress = client.openRouteToNode(masterNodeId, instanceConnectAddress);
+
+                final Lock wLock = readWriteLock.writeLock();
+
+                try {
+
+                    JeroMQInstanceConnection connection;
+
+                    wLock.lock();
+                    connection = activeConnections.get(instanceHostInfo);
+                    if (connection != null) return connection;
+
+                    final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
+                    remoteInvoker.start(masterNodeConnectAddress);
+
+                    connection = new JeroMQInstanceConnection(
+                            instanceId,
+                            remoteInvoker,
+                            getzContext(),
+                            getInternalBindAddress(),
+                            instanceHostInfo,
+                            this::disconnect);
+
+                    activeConnections.put(instanceHostInfo, connection);
+                    onConnect.publishAsync(connection);
+
+                    return connection;
+
+                } catch (Exception ex) {
+                    cleanup(client, instanceId);
+                    throw ex;
+                } finally {
+                    wLock.unlock();
+                }
+
             }
 
-            final Lock wLock = readWriteLock.writeLock();
+        }
 
+        private void cleanup(final ControlClient client, final InstanceId instanceId) {
             try {
-
-                JeroMQInstanceConnection connection;
-
-                wLock.lock();
-                connection = activeConnections.get(instanceHostInfo);
-                if (connection != null) return connection;
-
-                final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-                remoteInvoker.start(instanceConnectAddress);
-
-                connection = new JeroMQInstanceConnection(
-                        instanceId,
-                        remoteInvoker,
-                        getzContext(),
-                        getInternalBindAddress(),
-                        instanceHostInfo,
-                        this::disconnect);
-
-                activeConnections.put(instanceHostInfo, connection);
-                onConnect.publishAsync(connection);
-
-                return connection;
-
-            } finally {
-                wLock.unlock();
+                client.closeRoutesViaInstance(instanceId);
+            } catch (Exception ex) {
+                logger.error("Error cleaning up connection to instance {}", instanceId);
             }
-
         }
 
         public void drain() {

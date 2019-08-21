@@ -18,7 +18,7 @@ public class JeroMQInstanceConnectionServiceModule extends PrivateModule {
 
         bind(InstanceConnectionService.class)
             .to(JeroMQInstanceConnectionService.class)
-            .asEagerSingleton();;
+            .asEagerSingleton();
 
         expose(InstanceConnectionService.class);
 

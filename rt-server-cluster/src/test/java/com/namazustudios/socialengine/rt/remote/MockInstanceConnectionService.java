@@ -42,6 +42,9 @@ public class MockInstanceConnectionService implements InstanceConnectionService 
     public void stop() {}
 
     @Override
+    public void refresh() {}
+
+    @Override
     public InstanceBinding openBinding(NodeId nodeId) {
         return null;
     }

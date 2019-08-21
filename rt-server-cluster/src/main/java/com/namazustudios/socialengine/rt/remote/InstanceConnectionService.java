@@ -26,6 +26,13 @@ public interface InstanceConnectionService {
     void stop();
 
     /**
+     * Forces a refresh from the latest source of data immediately.  This will ensure that new
+     * {@link InstanceConnection}s are added and stale ones removed immediately.  All necessary events will be driven
+     * as part of this call.
+     */
+    void refresh();
+
+    /**
      * Gets the {@link InstanceId} for this {@link InstanceConnectionService}.
      *
      * @return the {@link InstanceId}

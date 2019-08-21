@@ -1,16 +1,17 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
-import com.namazustudios.socialengine.rt.exception.HandlerTimeoutException;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.RemoteThrowableException;
+import com.namazustudios.socialengine.rt.exception.*;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.zeromq.SocketType;
+import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 import org.zeromq.ZPoller;
@@ -18,16 +19,22 @@ import zmq.ZError;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.stripCode;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.lang.Thread.interrupted;
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZMQ.SNDMORE;
 
@@ -51,15 +58,18 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     private ExecutorService executorService;
 
     @Override
-    public void start(final String connectAddress, final int timeoutMillis) {
+    public void start(final String connectAddress, final long timeout, final TimeUnit timeoutTimeUnit) {
+
+        final long timeoutMillis = MILLISECONDS.convert(timeout, timeoutTimeUnit);
 
         this.connectAddress = connectAddress;
+
         logger.info("Starting with connect address {} and timeout {}msec", connectAddress, timeoutMillis);
 
         getConnectionPool().start(zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(DEALER);
-            socket.setReceiveTimeOut(timeoutMillis);
             socket.connect(connectAddress);
+            socket.setReceiveTimeOut((int)timeoutMillis);
             return socket;
         }, JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress);
 
@@ -87,9 +97,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
             try {
                 doInvoke(invocation,
-                         hr -> hr.get(completableFuture),
-                         asyncInvocationResultConsumerList,
-                         asyncInvocationErrorConsumer);
+                     hr -> hr.get(completableFuture),
+                     asyncInvocationResultConsumerList,
+                     asyncInvocationErrorConsumer);
             } catch (Exception ex) {
                 completableFuture.completeExceptionally(ex);
                 logger.error("Caught exception processing invocation.", ex);
@@ -139,15 +149,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                         break;
                     }
 
-                    final ZMsg msg = ZMsg.recvMsg(connection.socket());
-                    final int error = connection.socket().errno();
-                    if (msg == null || error != 0) {
-                        if (connection.socket().errno() == ZError.EAGAIN) {
-                            throw new HandlerTimeoutException("Remote invocation timed out for addr: " + getConnectAddress());
-                        }
-                    }
-
-                    msg.pop();
+                    final ZMsg msg = recv(connection.socket());
 
                     final HandleResult result = handleResponse(
                             msg,
@@ -204,7 +206,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         while (!interrupted()) {
 
-            if (poller.poll(5000) < 0) {
+            if (poller.poll(1000) < 0 || interrupted()) {
                 throw new InternalException("Interrupted.  Shutting down.");
             }
 
@@ -220,6 +222,73 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         }
 
         return false;
+
+    }
+
+    private ZMsg recv(final ZMQ.Socket socket) {
+
+        final ZMsg zMsg = ZMsg.recvMsg(socket);
+        final int error = socket.errno();
+
+        if (zMsg == null && error == ZError.EAGAIN) {
+            throw new HandlerTimeoutException("Remote invocation timed out for addr: " + getConnectAddress());
+        } else if (zMsg == null) {
+            throw new InternalException("Got null response from socket.");
+        }
+
+        zMsg.removeFirst();
+        final JeroMQControlResponseCode code = stripCode(zMsg);
+
+
+        switch (code) {
+            case OK: return zMsg;
+            case NO_SUCH_NODE: throwNodeNotFoundException(zMsg);
+            case NO_SUCH_INSTANCE: throwInstanceNotFoundException(zMsg);
+            default: throw extractException(zMsg);
+        }
+
+    }
+
+    private RuntimeException extractException(final ZMsg zMsg) {
+
+        final ZFrame msgFrame = zMsg.removeFirst();
+        final ZFrame exceptionFrame = zMsg.removeFirst();
+        final String message = new String(msgFrame.getData(), CHARSET);
+
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(exceptionFrame.getData());
+             final ObjectInputStream ois = new ObjectInputStream(bis)) {
+            return (RuntimeException)ois.readObject();
+        } catch (IOException ex) {
+            throw new InternalException(message, ex);
+        } catch (Exception ex) {
+            throw new InternalException(message, ex);
+        }
+
+    }
+
+    private void throwNodeNotFoundException(ZMsg zMsg) {
+
+        final Throwable cause = extractException(zMsg);
+
+        try {
+            final NodeId nodeId = new NodeId(zMsg.removeLast().getData());
+            throw new NodeNotFoundException(nodeId, cause);
+        } catch (InvalidNodeIdException ex) {
+            throw new NodeNotFoundException(cause);
+        }
+
+    }
+
+    private void throwInstanceNotFoundException(final ZMsg zMsg) {
+
+        final Throwable cause = extractException(zMsg);
+
+        try {
+            final InstanceId instanceId = new InstanceId(zMsg.removeLast().getData());
+            throw new InstanceNotFoundException(instanceId, cause);
+        } catch (InvalidInstanceIdException ex) {
+            throw new InstanceNotFoundException(cause);
+        }
 
     }
 

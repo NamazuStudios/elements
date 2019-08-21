@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote;
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 class PriorityRemoteInvoker implements RemoteInvoker, Comparable<PriorityRemoteInvoker> {
@@ -22,8 +23,8 @@ class PriorityRemoteInvoker implements RemoteInvoker, Comparable<PriorityRemoteI
     }
 
     @Override
-    public void start(String connectAddress, int timeoutMillis) {
-        delegate.start(connectAddress, timeoutMillis);
+    public void start(String connectAddress, long timeout, TimeUnit timeoutTimeUnit) {
+        delegate.start(connectAddress, timeout, timeoutTimeUnit);
     }
 
     @Override

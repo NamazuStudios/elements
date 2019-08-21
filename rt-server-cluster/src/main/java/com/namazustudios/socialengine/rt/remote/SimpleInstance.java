@@ -16,6 +16,8 @@ public class SimpleInstance implements Instance {
 
     protected InstanceId instanceId;
 
+    private RemoteInvokerRegistry remoteInvokerRegistry;
+
     private InstanceDiscoveryService instanceDiscoveryService;
 
     private InstanceConnectionService instanceConnectionService;
@@ -39,6 +41,13 @@ public class SimpleInstance implements Instance {
             logger.error("Caught exception starting InstanceConnectionService.", ex);
         }
 
+        try {
+            getRemoteInvokerRegistry().start();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Caught exception starting RemoteInvokerRegistry.", ex);
+        }
+
         postStart(exceptionList::add);
 
         if (!exceptionList.isEmpty()) {
@@ -57,15 +66,24 @@ public class SimpleInstance implements Instance {
         preClose(exceptionList::add);
 
         try {
+            getRemoteInvokerRegistry().stop();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Caught exception stopping RemoteInvokerRegistry.", ex);
+        }
+
+        try {
             getInstanceConnectionService().stop();
         } catch (Exception ex) {
             exceptionList.add(ex);
+            logger.error("Caught exception stopping InstanceDiscoveryService.", ex);
         }
 
         try {
             getInstanceDiscoveryService().stop();
         } catch (Exception ex) {
             exceptionList.add(ex);
+            logger.error("Caught exception stopping InstanceDiscoveryService.", ex);
         }
 
         if (!exceptionList.isEmpty()) {
@@ -77,6 +95,12 @@ public class SimpleInstance implements Instance {
     protected void preClose(final Consumer<Exception> exceptionConsumer) {}
 
     @Override
+    public void refreshConnections() {
+        getInstanceConnectionService().refresh();
+        getRemoteInvokerRegistry().refresh();
+    }
+
+    @Override
     public InstanceId getInstanceId() {
         return instanceId;
     }
@@ -84,6 +108,15 @@ public class SimpleInstance implements Instance {
     @Inject
     public void setInstanceId(InstanceId instanceId) {
         this.instanceId = instanceId;
+    }
+
+    public RemoteInvokerRegistry getRemoteInvokerRegistry() {
+        return remoteInvokerRegistry;
+    }
+
+    @Inject
+    public void setRemoteInvokerRegistry(RemoteInvokerRegistry remoteInvokerRegistry) {
+        this.remoteInvokerRegistry = remoteInvokerRegistry;
     }
 
     public InstanceDiscoveryService getInstanceDiscoveryService() {

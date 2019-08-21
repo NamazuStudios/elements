@@ -9,6 +9,7 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -20,6 +21,7 @@ import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
 import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -58,7 +60,7 @@ public class RemoteInvocationHandlerBuilder {
         this.dispatchType = Dispatch.Type.determine(method);
         this.routing = remotelyInvokable.routing();
 
-        this.addressAssemblerSupplier = () -> null;
+        this.addressAssemblerSupplier = () -> o -> emptyList();
         this.returnValueTransformerSupplier = () -> getReturnValueTransformer(remoteInvoker);
 
         switch (dispatchType) {

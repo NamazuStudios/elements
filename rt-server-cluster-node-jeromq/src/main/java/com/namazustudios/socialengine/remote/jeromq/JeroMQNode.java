@@ -44,7 +44,7 @@ public class JeroMQNode implements Node {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(JeroMQNode.class);
 
-    private static final String OUTBOUND_ADDR_FORMAT = "inproc://node.%s.out";
+    private static final String OUTBOUND_ADDR_FORMAT = "inproc://node/%s/out";
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
@@ -75,7 +75,7 @@ public class JeroMQNode implements Node {
     }
 
     public String getOutboundAddr() {
-        return format(OUTBOUND_ADDR_FORMAT, getNodeId().getApplicationId().toString());
+        return format(OUTBOUND_ADDR_FORMAT, getNodeId().asString());
     }
 
     @Override
@@ -295,6 +295,8 @@ public class JeroMQNode implements Node {
                     }
                 }
 
+            } finally {
+                logger.info("Node proxy thread exiting.");
             }
 
         }

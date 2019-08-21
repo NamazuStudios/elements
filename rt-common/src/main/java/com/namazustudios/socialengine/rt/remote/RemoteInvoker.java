@@ -6,28 +6,34 @@ import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.annotation.Dispatch.Type;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * Holds a connection to the remote service and dispatches {@link Invocation}.
  */
 public interface RemoteInvoker {
 
+    long DEFAULT_TIMEOUT = 5;
+
+    TimeUnit DEFAULT_TIMEOUT_UNITS = MINUTES;
+
     /**
      * Starts this {@link RemoteInvoker} and connects to the supplied address.
      *
      * @param connectAddress the connect address
      */
-    default void start(String connectAddress) { start(connectAddress, 5000); }
+    default void start(final String connectAddress) { start(connectAddress, DEFAULT_TIMEOUT, DEFAULT_TIMEOUT_UNITS); }
 
     /**
      * Starts up thin is complete.
      *
      * The default implementation of this method does nothing in case no setup is necessary.
      */
-    default void start(String connectAddress, int timeoutMillis) {}
+    void start(String connectAddress, long timeout, TimeUnit timeoutTimeUnit);
 
     /**
      * Stops this {@link RemoteInvoker}.  This method must gracefully shut down all connections and stop any worker

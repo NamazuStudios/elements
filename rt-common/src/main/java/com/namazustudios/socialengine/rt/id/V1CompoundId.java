@@ -161,6 +161,7 @@ class V1CompoundId implements Serializable {
      */
     String asString() {
         return PREFIX + stream(components)
+            .filter(c -> c != null)
             .map(component -> component.asString())
             .collect(joining(ID_SEPARATOR));
     }

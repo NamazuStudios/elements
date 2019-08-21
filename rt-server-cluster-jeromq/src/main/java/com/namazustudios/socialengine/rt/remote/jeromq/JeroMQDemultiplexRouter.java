@@ -11,7 +11,6 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import java.util.Collection;
-import java.util.Collections;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
@@ -84,7 +83,7 @@ public class JeroMQDemultiplexRouter {
 
     private ZMQ.Socket getSocket(final NodeId nodeId) {
         final Integer backendIndex = backends.get(nodeId);
-        if (backendIndex == null) throw new JeroMQControlException(NO_SUCH_ROUTE);
+        if (backendIndex == null) throw new JeroMQUnroutableNodeException(nodeId);
         return poller.getSocket(backendIndex);
     }
 
@@ -100,6 +99,7 @@ public class JeroMQDemultiplexRouter {
         final ZFrame nodeIdFrame = new ZFrame(nid.asBytes());
 
         zMsg.addFirst(nodeIdFrame);
+        OK.pushResponseCode(zMsg);
         pushIdentity(zMsg, identity);
         zMsg.send(frontend);
 

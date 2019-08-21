@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import zmq.util.Errno;
 
 import javax.inject.Inject;
 import javax.inject.Named;

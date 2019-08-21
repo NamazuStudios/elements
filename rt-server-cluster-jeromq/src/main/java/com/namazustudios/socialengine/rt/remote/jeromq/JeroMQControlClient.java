@@ -158,6 +158,7 @@ public class JeroMQControlClient implements ControlClient {
 
         switch (code) {
             case OK: return response;
+            case NO_SUCH_NODE: throw new JeroMQUnroutableNodeException(response);
             default: throw new JeroMQControlException(code, response);
         }
 

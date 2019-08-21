@@ -32,4 +32,9 @@ public interface Instance extends AutoCloseable {
     @Override
     void close();
 
+    /**
+     * Forces a refresh of the underlying connections as necessary.
+     */
+    void refreshConnections();
+
 }

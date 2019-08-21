@@ -95,6 +95,16 @@ public class JeroMQCommandServer {
             pushIdentity(response, identity);
             response.send(socket);
 
+        } catch (JeroMQUnroutableNodeException ex) {
+            final ZMsg response = exceptionError(ex.getCode(), ex);
+            response.addLast(ex.getNodeId().asBytes());
+            pushIdentity(response, identity);
+            response.send(socket);
+        } catch (JeroMQUnroutableInstanceException ex) {
+            final ZMsg response = exceptionError(ex.getCode(), ex);
+            response.addLast(ex.getInstanceId().asBytes());
+            pushIdentity(response, identity);
+            response.send(socket);
         } catch (JeroMQControlException ex) {
             final ZMsg response = exceptionError(ex.getCode(), ex);
             pushIdentity(response, identity);
