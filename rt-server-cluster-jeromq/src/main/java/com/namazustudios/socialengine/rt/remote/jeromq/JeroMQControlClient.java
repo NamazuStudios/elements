@@ -32,7 +32,7 @@ public class JeroMQControlClient implements ControlClient {
 
     public static final TimeUnit DEFAULT_TIMEOUT_UNITS = SECONDS;
 
-    private final ZContext zContext;
+    private final ZContext shadowContext;
 
     private final ZMQ.Socket socket;
 
@@ -54,7 +54,7 @@ public class JeroMQControlClient implements ControlClient {
     public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress,
                                final long timeout, final TimeUnit timeUnit) {
-        this.zContext = shadow(zContext);
+        this.shadowContext = shadow(zContext);
         this.socket = zContext.createSocket(DEALER);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAdddress = instanceConnectAddress;
@@ -117,7 +117,7 @@ public class JeroMQControlClient implements ControlClient {
 
         final ZMsg response = recv();
         final String nodeBindAddress = response.removeFirst().getString(CHARSET);
-        return new JeroMQInstanceBinding(zContext, nodeId, instanceConnectAdddress, nodeBindAddress);
+        return new JeroMQInstanceBinding(shadowContext, nodeId, instanceConnectAdddress, nodeBindAddress);
 
     }
 
@@ -167,6 +167,6 @@ public class JeroMQControlClient implements ControlClient {
     @Override
     public void close() {
         socket.close();
-        zContext.close();
+        shadowContext.close();
     }
 }

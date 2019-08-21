@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
-import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.*;
@@ -14,7 +13,6 @@ import org.slf4j.MDC;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
-import org.zeromq.ZPoller;
 import zmq.ZError;
 
 import javax.inject.Inject;
@@ -135,7 +133,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             try (final ZMQ.Poller poller = connection.context().createPoller(1)) {
 
                 send(connection.socket(), invocation, asyncInvocationResultConsumerList.size());
-                final int sIndex = poller.register(connection.socket(), ZPoller.READABLE);
+                final int sIndex = poller.register(connection.socket(), ZMQ.Poller.POLLIN | ZMQ.Poller.POLLERR);
 
                 final int expectedResponseCount = asyncInvocationResultConsumerList.size();
 
