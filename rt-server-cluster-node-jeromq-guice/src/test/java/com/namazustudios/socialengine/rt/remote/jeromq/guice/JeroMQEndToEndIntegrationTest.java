@@ -334,7 +334,7 @@ public class JeroMQEndToEndIntegrationTest {
         protected void configure() {
 
             install(new FSTPayloadReaderWriterModule());
-            install(new JeroMQRemoteInvokerModule().withDefaultExecutorServiceProvider());
+            install(new JeroMQRemoteInvokerModule());
 
             bind(ZContext.class).toInstance(zContext);
 
@@ -465,7 +465,7 @@ public class JeroMQEndToEndIntegrationTest {
 
             install(new GuiceIoCResolverModule());
             install(new FSTPayloadReaderWriterModule());
-            install(new JeroMQRemoteInvokerModule().withDefaultExecutorServiceProvider());
+            install(new JeroMQRemoteInvokerModule());
             install(new JeroMQInstanceConnectionServiceModule().withBindAddress(this.instanceBindAddress));
             install(new StaticInstanceDiscoveryServiceModule().withInstanceAddresses(
                 concat(of(instanceBindAddress), instanceIdList

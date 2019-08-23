@@ -36,7 +36,7 @@ public class ApplicationNode {
             new PersistentInstanceIdModule(),
             new ZContextModule(),
             new MasterNodeModule(),
-            new JeroMQRemoteInvokerModule().withDefaultExecutorServiceProvider(),
+            new JeroMQRemoteInvokerModule(),
             new JeroMQInstanceConnectionServiceModule(),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new MongoCoreModule(),

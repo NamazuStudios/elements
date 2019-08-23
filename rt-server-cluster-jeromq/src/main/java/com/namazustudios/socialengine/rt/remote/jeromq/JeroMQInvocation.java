@@ -2,22 +2,25 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.jeromq.AsyncConnection;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.zeromq.ZFrame;
-import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 import zmq.ZError;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
+import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
@@ -33,13 +36,17 @@ public class JeroMQInvocation {
 
     private final PayloadWriter payloadWriter;
 
-    private final ZMQ.Socket socket;
+    private final Map<String, String > mdcContext;
 
-    private final Consumer<HandleResult> handleResultConsumer;
+    private final Consumer<Object> syncResultConsumer;
+
+    private final Consumer<Throwable> syncErrorConsumer;
 
     private final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList;
 
     private final InvocationErrorConsumer asyncInvocationErrorConsumer;
+
+    private int remaining;
 
     private boolean syncCompleted;
 
@@ -47,23 +54,47 @@ public class JeroMQInvocation {
 
     private final int expectedResponseCount;
 
-    public JeroMQInvocation(final PayloadReader payloadReader, final PayloadWriter payloadWriter,
-                            final ZMQ.Socket socket,
-                            final Consumer<HandleResult> handleResultConsumer,
-                            final InvocationErrorConsumer asyncInvocationErrorConsumer,
-                            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList) {
+    private final Subscription subscriptions;
+
+    private final Runnable send;
+
+    public JeroMQInvocation(final AsyncConnection connection,
+                            final Invocation invocation,
+                            final PayloadReader payloadReader, final PayloadWriter payloadWriter,
+                            final Map<String, String > mdcContext,
+                            final Consumer<Object> syncResultConsumer,
+                            final Consumer<Throwable> syncErrorConsumer,
+                            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+
+        // Immutable
+        this.mdcContext = mdcContext;
         this.payloadReader = payloadReader;
         this.payloadWriter = payloadWriter;
-        this.socket = socket;
-        this.handleResultConsumer = handleResultConsumer;
+        this.syncResultConsumer = syncResultConsumer;
+        this.syncErrorConsumer = syncErrorConsumer;
         this.asyncInvocationResultConsumerList = asyncInvocationResultConsumerList;
         this.asyncInvocationErrorConsumer = asyncInvocationErrorConsumer;
         this.expectedResponseCount = asyncInvocationResultConsumerList.size();
-        this.syncCompleted = false;
+
+        // Mutable
+        this.remaining = expectedResponseCount;
         this.asyncCompleted = expectedResponseCount == 0;
+
+        subscriptions = Subscription.begin()
+            .chain(connection.onRead(this::handleRead))
+            .chain(connection.onError(this::handleSocketError));
+
+        send = () -> send(connection, invocation, asyncInvocationResultConsumerList.size());
+
     }
 
-    public void send(final ZMQ.Socket socket, final Invocation invocation, final int additionalCount) {
+    public void send() {
+        if (mdcContext != null) MDC.setContextMap(mdcContext);
+        send.run();
+    }
+
+    private void send(final AsyncConnection connection, final Invocation invocation, final int additionalCount) {
 
         final RequestHeader requestHeader = new RequestHeader();
         requestHeader.additionalParts.set(additionalCount);
@@ -76,50 +107,27 @@ public class JeroMQInvocation {
             throw new InternalException(e);
         }
 
-        socket.send(EMPTY_DELIMITER, SNDMORE);
-        socket.sendByteBuffer(requestHeader.getByteBuffer(), SNDMORE);
-        socket.send(payload);
+        connection.socket().send(EMPTY_DELIMITER, SNDMORE);
+        connection.socket().sendByteBuffer(requestHeader.getByteBuffer(), SNDMORE);
+        connection.socket().send(payload);
 
     }
 
-    public boolean handle() {
+    private void handleRead(final AsyncConnection connection) {
+
+        if (mdcContext != null) MDC.setContextMap(mdcContext);
 
         try {
 
-            final int expectedResponseCount = asyncInvocationResultConsumerList.size();
+            final ZMsg msg = recv(connection);
+            handleResponse(msg);
 
-            HandleResult r = null;
-            boolean syncCompleted = false;
-            boolean asyncCompleted = expectedResponseCount == 0;
-
-            for (int remaining = expectedResponseCount; !(syncCompleted && asyncCompleted);) {
-
-                final ZMsg msg = recv();
-
-                final HandleResult result = handleResponse(msg);
-
-                switch (result.type) {
-                    case SYNC_ERROR:
-                    case SYNC_RESULT:
-                        handleResultConsumer.accept(r = result);
-                        syncCompleted = true;
-                        break;
-                    case ASYNC_RESULT:
-                        if (!asyncCompleted && (--remaining) == 0) {
-                            asyncCompleted = true;
-                        }
-                        break;
-                    case ASYNC_ERROR:
-                        asyncCompleted = true;
-                        break;
-                }
-
+            if (asyncCompleted && syncCompleted) {
+                logger.debug("Finished Invocation.");
+                connection.recycle();
+                logger.debug("Recycled Connection.");
+                subscriptions.unsubscribe();
             }
-
-            logger.debug("Finished Invocation.");
-            if (r == null) throw new InternalException("Got no sync result.");
-
-            return asyncCompleted && syncCompleted;
 
         } catch (Exception ex) {
 
@@ -133,17 +141,23 @@ public class JeroMQInvocation {
 
             final InvocationError invocationError = new InvocationError();
             invocationError.setThrowable(ex);
+
+            // We drive the exception to both places appropriately.
+            syncErrorConsumer.accept(ex);
             asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
-            return true;
+
+            // Cautiously we should nuke this connection because it coule be placed into an undefined state.
+            subscriptions.unsubscribe();
+            connection.close();
 
         }
 
     }
 
-    private ZMsg recv() {
+    private ZMsg recv(final AsyncConnection connection) {
 
-        final ZMsg zMsg = ZMsg.recvMsg(socket);
-        final int error = socket.errno();
+        final ZMsg zMsg = ZMsg.recvMsg(connection.socket());
+        final int error = connection.socket().errno();
 
         if (zMsg == null && error == ZError.EAGAIN) {
             throw new HandlerTimeoutException("Remote invocation timed out for addr.");
@@ -211,15 +225,17 @@ public class JeroMQInvocation {
 
     }
 
-    private HandleResult handleResponse(final ZMsg msg) {
+    private void handleResponse(final ZMsg msg) {
 
         final ResponseHeader responseHeader = receiveHeader(msg);
 
         switch (responseHeader.type.get()) {
             case INVOCATION_RESULT:
-                return handleResult(msg, responseHeader);
+                handleResult(msg, responseHeader);
+                break;
             case INVOCATION_ERROR:
-                return handleError(msg, responseHeader);
+                handleError(msg, responseHeader);
+                break;
             default:
                 logger.error("Invalid response type {}", responseHeader.type.get());
                 throw new InternalException("Invalid response type " + responseHeader.type.get());
@@ -233,7 +249,7 @@ public class JeroMQInvocation {
         return responseHeader;
     }
 
-    private HandleResult handleResult(final ZMsg msg, final ResponseHeader responseHeader) {
+    private void handleResult(final ZMsg msg, final ResponseHeader responseHeader) {
 
         final InvocationResult invocationResult;
 
@@ -247,16 +263,22 @@ public class JeroMQInvocation {
         final int part = responseHeader.part.get();
 
         if (part == 0) {
-            return new HandleResult(HandleResult.Type.SYNC_RESULT, invocationResult.getResult());
+            syncCompleted = true;
+            syncResultConsumer.accept(invocationResult.getResult());
         } else {
+
+            if (!asyncCompleted && (--remaining) == 0) {
+                asyncCompleted = true;
+            }
+
             asyncInvocationResultConsumerList.get(part - 1).accept(invocationResult);
-            return new HandleResult(HandleResult.Type.ASYNC_RESULT);
+
         }
 
     }
 
-    private HandleResult handleError(final ZMsg msg,
-                                     final ResponseHeader responseHeader) {
+    private void handleError(final ZMsg msg,
+                             final ResponseHeader responseHeader) {
 
         final int part = responseHeader.part.get();
         final InvocationError invocationError = extractInvocationError(msg);
@@ -269,12 +291,12 @@ public class JeroMQInvocation {
                     (Exception) throwable :
                     new RemoteInvocationException(throwable);
 
-            return new HandleResult(HandleResult.Type.SYNC_ERROR, exception);
+            syncErrorConsumer.accept(exception);
 
         } else if (part == 1) {
             asyncInvocationErrorConsumer.accept(invocationError);
-            return new HandleResult(HandleResult.Type.ASYNC_ERROR);
         } else {
+            asyncCompleted = true;
             throw new InternalException("Invalid error part " + responseHeader.part.get());
         }
 
@@ -291,78 +313,37 @@ public class JeroMQInvocation {
         }
     }
 
-    public static class HandleResult {
+    private void handleSocketError(final AsyncConnection connection) {
 
-        private final HandleResult.Type type;
+        if (mdcContext != null) MDC.setContextMap(mdcContext);
 
-        private final Object value;
-
-        public HandleResult(final HandleResult.Type type) {
-
-            if (type == null) throw new InternalException("Must specify type.");
-
-            switch (type) {
-                case SYNC_ERROR:
-                case SYNC_RESULT:
-                    throw new InternalException("Must specify ASYNC_ERROR or ASYNC_RESULT");
-            }
-
-            this.type = type;
-            this.value = null;
-
-        }
-
-        public HandleResult(final HandleResult.Type type, final Object value) {
-
-            if (type == null) throw new InternalException("Must specify type.");
-
-            switch (type) {
-                case ASYNC_ERROR:
-                case ASYNC_RESULT:
-                    throw new InternalException("Must specify SYNC_ERROR or SYNC_RESULT");
-                case SYNC_ERROR:
-                    if (!(value instanceof Throwable)) throw new InternalException("Must specify Throwable for sync errors.");
-            }
-
-            this.type = type;
-            this.value = value;
-
-        }
-
-        public Object get() throws Exception {
-            switch (type) {
-                case SYNC_ERROR:
-                    throw ( (value instanceof Exception) ? (Exception) value : new RemoteThrowableException((Throwable)value) );
-                case SYNC_RESULT:
-                    return value;
-                default:
-                    throw new InternalException("Unexpected result type.");
-            }
-        }
-
-        public void get(final CompletableFuture<Object> completableFuture) {
-            switch (type) {
-                case SYNC_ERROR:
-                    completableFuture.completeExceptionally((Throwable)value);
-                    break;
-                case SYNC_RESULT:
-                    completableFuture.complete(value);
-                    break;
-                default:
-                    completableFuture.completeExceptionally(new InternalException("Unexpected result type."));
-                    break;
-            }
-        }
-
-        private enum Type {
-            SYNC_RESULT,
-            SYNC_ERROR,
-            ASYNC_RESULT,
-            ASYNC_ERROR,
-            TIMEOUT_ERROR,
-        }
+        final int errno = connection.socket().errno();
+        final InternalException ex = new InternalException("Socket error - errno " + errno);
+        final InvocationError invocationError = new InvocationError();
+        invocationError.setThrowable(ex);
+        asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
+        connection.recycle();
+        subscriptions.unsubscribe();
 
     }
 
+    @Override
+    public String toString() {
+        return "JeroMQInvocation{" +
+                "payloadReader=" + payloadReader +
+                ", payloadWriter=" + payloadWriter +
+                ", mdcContext=" + mdcContext +
+                ", syncResultConsumer=" + syncResultConsumer +
+                ", syncErrorConsumer=" + syncErrorConsumer +
+                ", asyncInvocationResultConsumerList=" + asyncInvocationResultConsumerList +
+                ", asyncInvocationErrorConsumer=" + asyncInvocationErrorConsumer +
+                ", remaining=" + remaining +
+                ", syncCompleted=" + syncCompleted +
+                ", asyncCompleted=" + asyncCompleted +
+                ", expectedResponseCount=" + expectedResponseCount +
+                ", subscriptions=" + subscriptions +
+                ", send=" + send +
+                '}';
+    }
 
 }

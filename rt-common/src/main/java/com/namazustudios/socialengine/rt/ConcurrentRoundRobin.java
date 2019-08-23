@@ -9,7 +9,7 @@ public class ConcurrentRoundRobin<T> implements RoundRobin<T> {
 
     private final AtomicInteger next = new AtomicInteger();
 
-    private ConcurrentRoundRobin(final T[] objects, int size) {
+    public ConcurrentRoundRobin(final T[] objects, int size) {
         this.objects = Arrays.copyOf(objects, size);
     }
 

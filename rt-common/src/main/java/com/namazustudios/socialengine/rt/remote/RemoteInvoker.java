@@ -17,8 +17,14 @@ import static java.util.concurrent.TimeUnit.MINUTES;
  */
 public interface RemoteInvoker {
 
+    /**
+     * The default timeout for the {@link RemoteInvoker}
+     */
     long DEFAULT_TIMEOUT = 5;
 
+    /**
+     * The default time unit for the {@link RemoteInvoker}.
+     */
     TimeUnit DEFAULT_TIMEOUT_UNITS = MINUTES;
 
     /**

@@ -11,4 +11,24 @@ public interface Subscription {
      */
     void unsubscribe();
 
+    /**
+     * Chains this {@link Subscription to the other so that both will be unsubscribed.}
+     *
+     * @param other the other {@link Subscription} to which to chain this
+     * @return a new {@link Subscription} that chains the this and the other.
+     */
+    default Subscription chain(final Subscription other) {
+        return () -> {
+            unsubscribe();
+            other.unsubscribe();};
+    }
+
+    /**
+     * Used to start a chain of {@link Subscription} instances.
+     * @return a dummy {@link Subscription}
+     */
+    static Subscription begin() {
+        return () -> {};
+    }
+
 }

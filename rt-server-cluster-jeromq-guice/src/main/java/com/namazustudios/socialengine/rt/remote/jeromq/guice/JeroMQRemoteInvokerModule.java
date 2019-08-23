@@ -27,39 +27,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     private Runnable bindExecutorServiceAction = () -> {};
 
     /**
-     * Binds the default {@link ExecutorService} which is used to handle background tasks in the {@link RemoteInvoker}.
-     *
-     * @return this instance
-     */
-    public JeroMQRemoteInvokerModule withDefaultExecutorServiceProvider() {
-        return withExecutorServiceProvider(() -> {
-
-            final AtomicInteger count = new AtomicInteger();
-
-            return newCachedThreadPool(r -> {
-                final Thread thread = new Thread(r);
-                thread.setDaemon(true);
-                thread.setName(JeroMQRemoteInvoker.class.getSimpleName() + "-" + count.getAndIncrement());
-                return thread;
-            });
-
-        });
-    }
-
-    /**
-     * Specifies the {@link Provider<ExecutorService>} used by the {@link RemoteInvoker} instance.
-     *
-     * @param executorServiceProvider the {@link Provider<ExecutorService>}
-     * @return this instance
-     */
-    public JeroMQRemoteInvokerModule withExecutorServiceProvider(final Provider<ExecutorService> executorServiceProvider) {
-        bindExecutorServiceAction = () -> bind(ExecutorService.class)
-            .annotatedWith(named(JeroMQRemoteInvoker.ASYNC_EXECUTOR_SERVICE))
-            .toProvider(executorServiceProvider);
-        return this;
-    }
-
-    /**
      * Specifies the connection timeout.  If a connection isn't used for the specified period of time, the underlying
      * connection is terminated and removed.  Leaving this unspecified will not assign any properties and leave it to
      * external means to configure the underlying module.
