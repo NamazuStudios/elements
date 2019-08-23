@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.namazustudios.socialengine.rt.AsyncPublisher;
+import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
 import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.Subscription;
@@ -181,9 +183,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private final BiMap<JeroMQInstanceConnection, InstanceHostInfo> rActiveConnections = activeConnections.inverse();
 
-        private final Publisher<InstanceConnection> onConnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
+        private final AsyncPublisher<InstanceConnection> onConnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
 
-        private final Publisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
+        private final AsyncPublisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
 
         public void start() {
 

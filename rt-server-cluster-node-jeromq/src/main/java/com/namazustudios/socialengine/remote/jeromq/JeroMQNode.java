@@ -44,6 +44,8 @@ public class JeroMQNode implements Node {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(JeroMQNode.class);
 
+    private static final int POLL_TIMEOUT = 1000;
+
     private static final String OUTBOUND_ADDR_FORMAT = "inproc://node/%s/out";
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
@@ -197,7 +199,7 @@ public class JeroMQNode implements Node {
         private final ExecutorService dispatchExecutorService = Executors.newCachedThreadPool(r -> {
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
-            thread.setName(format("%s.in #%d", getName(), dispatcherCount.incrementAndGet()));
+            thread.setName(format("%s %s.in #%d", getClass().getSimpleName(), getName(), dispatcherCount.incrementAndGet()));
             thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
             return thread;
         });
@@ -208,7 +210,10 @@ public class JeroMQNode implements Node {
 
             proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork(instanceBinding));
             proxyThread.setDaemon(true);
-            proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatch");
+            proxyThread.setName(format("%s %s %s dispatch.",
+                JeroMQNode.this.getClass().getSimpleName(),
+                getName(),
+                getNodeId().asString()));
             proxyThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
 
             running.set(true);
@@ -270,9 +275,10 @@ public class JeroMQNode implements Node {
                 proxyStartupLatch.countDown();
                 logger.info("Started up.");
 
-                while (running.get() && !interrupted()) {
+                while (running.get()) {
                     try {
-                        if (poller.poll(10000) < 0) {
+
+                        if (!running.get() || poller.poll(POLL_TIMEOUT) < 0) {
                             logger.info("Poller signaled interruption.  Terminating frontend socket.");
                             break;
                         }

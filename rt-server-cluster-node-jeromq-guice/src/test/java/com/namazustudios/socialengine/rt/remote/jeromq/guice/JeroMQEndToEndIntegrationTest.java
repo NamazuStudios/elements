@@ -35,6 +35,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
@@ -81,7 +82,13 @@ public class JeroMQEndToEndIntegrationTest {
     @Test
     public void startWorkers() throws Exception {
 
-        final ExecutorService executor = newCachedThreadPool();
+        final ExecutorService executor = newCachedThreadPool(r -> {
+            final Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            thread.setUncaughtExceptionHandler((t, e) -> logger.error("Caught exception.", e));
+            thread.setName(JeroMQEndToEndIntegrationTest.class.getSimpleName() + " startup.");
+            return thread;
+        });
 
         try {
 

@@ -1,6 +1,5 @@
-package com.namazustudios.socialengine.rt.remote;
+package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.Subscription;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,17 +13,17 @@ import java.util.function.Consumer;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Implements a {@link Publisher<T>} using a {@link Lock} to control concurrency.  For each published event, the
+ * Implements a {@link AsyncPublisher <T>} using a {@link Lock} to control concurrency.  For each published event, the
  * supplied {@link Lock} will be acquired and then released when all associated {@link Subscription}s have been
  * notified.
  *
  * @param <T> the type of event to publish
  */
-public class ConcurrentLockedPublisher<T> implements Publisher<T> {
+public class ConcurrentLockedPublisher<T> implements AsyncPublisher<T> {
 
     private static final Logger logger = LoggerFactory.getLogger(ConcurrentLockedPublisher.class);
 
-    private static Executor dispatch = Executors.newSingleThreadExecutor(r -> {
+    static Executor dispatch = Executors.newSingleThreadExecutor(r -> {
         final Thread thread = new Thread(r);
         thread.setDaemon(true);
         thread.setName(ConcurrentLockedPublisher.class.getName() + " event dispatch.");
@@ -34,9 +33,10 @@ public class ConcurrentLockedPublisher<T> implements Publisher<T> {
 
     private final Lock lock;
 
-    private final List<Consumer<T>> subscribers = new ArrayList<Consumer<T>>();
+    private final SimplePublisher<T> publisher = new SimplePublisher<>();
 
     /**
+     * Creates a new {@link ConcurrentLockedPublisher} with the supplied {@link Lock}.
      *
      * @param lock
      */
@@ -46,24 +46,12 @@ public class ConcurrentLockedPublisher<T> implements Publisher<T> {
 
     @Override
     public Subscription subscribe(final Consumer<T> consumer) {
-
-        final Subscription subscription = () -> {
-            try {
-                lock.lock();
-                subscribers.removeIf(c -> c == consumer);
-            } finally {
-                lock.unlock();
-            }
-        };
-
         try {
             lock.lock();
-            subscribers.add(consumer);
+            return publisher.subscribe(consumer);
         } finally {
             lock.unlock();
         }
-
-        return subscription;
     }
 
     @Override
@@ -80,14 +68,10 @@ public class ConcurrentLockedPublisher<T> implements Publisher<T> {
     public void publish(final T t, final Consumer<T> onFinish) {
         try {
             lock.lock();
-            subscribers.stream().collect(toList()).forEach(c -> {
-                    try {
-                    c.accept(t);
-                } catch (Exception ex) {
-                    logger.error("Caught excpetion dispatching event.", ex);
-                }
-            });
+            publisher.publish(t);
             onFinish.accept(t);
+        } catch (Exception ex) {
+            logger.info("Caught exception dispatching event to {}", onFinish, ex);
         } finally {
             lock.unlock();
         }
@@ -96,6 +80,11 @@ public class ConcurrentLockedPublisher<T> implements Publisher<T> {
     @Override
     public void publishAsync(final T t, final Consumer<T> onFinish) {
         dispatch.execute(() -> publish(t, onFinish));
+    }
+
+    @Override
+    public void clear() {
+        publisher.clear();
     }
 
 }

@@ -29,7 +29,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRoutingServer.class);
 
-    private static final long POLL_TIMEOUT_MILLISECONDS = 5000;
+    private static final long POLL_TIMEOUT_MILLISECONDS = 1000;
 
     private final ZContext zContextShadow;
 
@@ -61,7 +61,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
     public void run() {
         while (!interrupted()) {
 
-            if (poller.poll(POLL_TIMEOUT_MILLISECONDS) < 0) {
+            if (poller.poll(POLL_TIMEOUT_MILLISECONDS) < 0 || interrupted()) {
                 logger.info("Poller signaled interruption.  Exiting.");
                 break;
             }

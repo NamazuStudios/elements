@@ -45,6 +45,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvoker.class);
 
+    private static final int POLL_TIMEOUT = 1000;
+
     private String connectAddress;
 
     private PayloadReader payloadReader;
@@ -204,7 +206,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         while (!interrupted()) {
 
-            if (poller.poll(1000) < 0 || interrupted()) {
+            if (poller.poll(POLL_TIMEOUT) < 0 || interrupted()) {
                 throw new InternalException("Interrupted.  Shutting down.");
             }
 

@@ -3,11 +3,9 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.remote.ConcurrentLockedPublisher;
-import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import com.namazustudios.socialengine.rt.remote.Publisher;
+import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
+import com.namazustudios.socialengine.rt.Publisher;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.AsyncPublisher;
+import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
@@ -106,9 +108,9 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         private final Lock lock = new ReentrantLock();
 
-        private final Publisher<InstanceHostInfo> onDisovery = new ConcurrentLockedPublisher<>(lock);
+        private final AsyncPublisher<InstanceHostInfo> onDisovery = new ConcurrentLockedPublisher<>(lock);
 
-        private final Publisher<InstanceHostInfo> onUndiscovery = new ConcurrentLockedPublisher<>(lock);
+        private final AsyncPublisher<InstanceHostInfo> onUndiscovery = new ConcurrentLockedPublisher<>(lock);
 
         public void start() {
 

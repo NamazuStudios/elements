@@ -29,10 +29,6 @@ public interface Connection extends AutoCloseable {
      */
     Socket socket();
 
-    default void sendMessage(ZMsg msg) {
-        msg.send(socket());
-    }
-
     /**
      * Closes the {@link Connection} an destroys the associated underlying {@link Socket}.
      */
@@ -61,7 +57,7 @@ public interface Connection extends AutoCloseable {
      * The {@link Function<ZContext, Socket>} is only called once and the return value cached in the provided
      * {@link Connection}.
      *
-     * @param context the {@link DynamicConnectionPool.Context}
+     * @param context the {@link ZContext}
      * @param socketSupplier the {@link Function<ZContext, Socket>}
      * @param logger the {@link Logger} to use
      * @return the {@link Connection}

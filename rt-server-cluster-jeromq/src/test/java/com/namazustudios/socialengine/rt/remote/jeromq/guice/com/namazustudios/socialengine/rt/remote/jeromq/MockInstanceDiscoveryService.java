@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice.com.namazustudios.
 import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.Subscription;
-import com.namazustudios.socialengine.rt.remote.ConcurrentLockedPublisher;
+import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
 
 import java.util.ArrayList;
 import java.util.Collection;
