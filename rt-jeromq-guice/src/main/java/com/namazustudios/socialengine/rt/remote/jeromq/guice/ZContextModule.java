@@ -1,12 +1,8 @@
-package com.namazustudios.socialengine.guice;
+package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.jeromq.ZContextProvider;
 import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
-
-import java.util.function.Consumer;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;

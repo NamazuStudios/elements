@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
-import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;

@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.appnode;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceStatus;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQControlClientModule;

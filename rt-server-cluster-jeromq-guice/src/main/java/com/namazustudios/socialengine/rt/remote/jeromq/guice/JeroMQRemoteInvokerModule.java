@@ -1,18 +1,13 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
-import com.google.inject.Provider;
-import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvoker;
-import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
-import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.SimpleAsyncConnectionPool;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
+import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvoker;
 
 import static com.google.inject.name.Names.named;
-import static java.util.concurrent.Executors.newCachedThreadPool;
+import static com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool.*;
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
 
@@ -36,7 +31,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withTimeout(final int timeoutInSeconds) {
         bindTimeoutAction = () -> bind(Integer.class)
-            .annotatedWith(named(ConnectionPool.TIMEOUT))
+            .annotatedWith(named(TIMEOUT))
             .toInstance(timeoutInSeconds);
         return this;
     }
@@ -49,7 +44,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withMinimumConnections(final int minimumConnections) {
         bindMinConnectionsAction = () -> bind(Integer.class)
-            .annotatedWith(named(ConnectionPool.MIN_CONNECTIONS))
+            .annotatedWith(named(MIN_CONNECTIONS))
             .toInstance(minimumConnections);
         return this;
     }
@@ -62,7 +57,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withMaximumConnections(int maximumConnections) {
         bindMaxConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(ConnectionPool.MAX_CONNECTIONS))
+                .annotatedWith(named(MAX_CONNECTIONS))
                 .toInstance(maximumConnections);
         return this;
     }
@@ -77,7 +72,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         bindTimeoutAction.run();
 
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class);
-        bind(ConnectionPool.class).to(SimpleConnectionPool.class);
+        bind(AsyncConnectionPool.class).to(SimpleAsyncConnectionPool.class);
 
         expose(RemoteInvoker.class);
 

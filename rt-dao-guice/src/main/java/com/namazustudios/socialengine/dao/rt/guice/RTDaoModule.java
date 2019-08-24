@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.dao.rt.DefaultContextFactory;
 import com.namazustudios.socialengine.dao.rt.RTManifestDao;
-import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.Context;
 import org.zeromq.ZContext;
 
