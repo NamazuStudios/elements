@@ -15,6 +15,8 @@ public class SimplePooledAsyncConnection implements PooledAsyncConnection {
 
     private final ZMQ.Socket socket;
 
+    private final BiConsumer<SimplePooledAsyncConnection, Consumer<SimplePooledAsyncConnection>> signalHandler;
+
     private final Publisher<SimplePooledAsyncConnection> onClose = new SimplePublisher<>();
 
     private final Publisher<SimplePooledAsyncConnection> onRead = new SimplePublisher<>();
@@ -27,34 +29,41 @@ public class SimplePooledAsyncConnection implements PooledAsyncConnection {
 
     public SimplePooledAsyncConnection(
             final ZContext zContext,
-            final ZMQ.Socket socket) {
+            final ZMQ.Socket socket,
+            final BiConsumer<SimplePooledAsyncConnection, Consumer<SimplePooledAsyncConnection>> signalHandler) {
         this.zContext = zContext;
         this.socket = socket;
+        this.signalHandler = signalHandler;
     }
 
     @Override
     public <T extends AsyncConnection> Subscription onRead(final Consumer<? super T> asyncConnectionConsumer) {
-        return onRead.subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
+        return getOnRead().subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
     }
 
     @Override
     public <T extends AsyncConnection> Subscription onWrite(Consumer<? super T> asyncConnectionConsumer) {
-        return onWrite.subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
+        return getOnWrite().subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
     }
 
     @Override
     public <T extends AsyncConnection> Subscription onError(Consumer<? super T> asyncConnectionConsumer) {
-        return onError.subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
+        return getOnError().subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
     }
 
     @Override
     public <T extends AsyncConnection> Subscription onClose(Consumer<? super T> asyncConnectionConsumer) {
-        return onClose.subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
+        return getOnClose().subscribe((Consumer<? super SimplePooledAsyncConnection>) asyncConnectionConsumer);
     }
 
     @Override
     public <T extends PooledAsyncConnection> Subscription onRecycle(Consumer<? super T> pooledAsyncConnectionConsumer) {
-        return onRecycle.subscribe((Consumer<? super SimplePooledAsyncConnection>) pooledAsyncConnectionConsumer);
+        return getOnRecycle().subscribe((Consumer<? super SimplePooledAsyncConnection>) pooledAsyncConnectionConsumer);
+    }
+
+    @Override
+    public <T extends AsyncConnection> void signal(Consumer<? super T> asyncConnectionConsumer) {
+        signalHandler.accept(this, (Consumer<SimplePooledAsyncConnection>) asyncConnectionConsumer);
     }
 
     @Override
@@ -75,11 +84,7 @@ public class SimplePooledAsyncConnection implements PooledAsyncConnection {
     @Override
     public void close() {
         socket().close();
-        onClose.publish(this);
-    }
-
-    public void publishOnRecycle() {
-        onRecycle.publish(this);
+        getOnClose().publish(this);
     }
 
     public Publisher<SimplePooledAsyncConnection> getOnClose() {

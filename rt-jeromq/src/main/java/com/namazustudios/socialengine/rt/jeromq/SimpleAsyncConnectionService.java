@@ -334,7 +334,10 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
             final ZMQ.Socket socket = socketSupplier.apply(zContext);
             final int index = poller.register(socket, POLLIN| POLLOUT|POLLERR);
-            final SimplePooledAsyncConnection connection = new SimplePooledAsyncConnection(zContext, socket);
+
+            final SimplePooledAsyncConnection connection = new SimplePooledAsyncConnection(
+                    zContext, socket,
+                    (conn, consumer) -> doInThread(() -> consumer.accept(conn)));
 
             connection.onClose(c -> onPostLoop.subscribe((subscriber, v) -> {
                 poller.unregister(socket);

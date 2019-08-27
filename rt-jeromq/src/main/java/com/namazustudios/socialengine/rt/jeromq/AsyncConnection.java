@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.jeromq;
 
 import com.namazustudios.socialengine.rt.Subscription;
 import org.zeromq.ZMQ;
-import zmq.socket.pubsub.Sub;
 
 import java.util.function.Consumer;
 
@@ -48,5 +47,14 @@ public interface AsyncConnection extends Connection {
      */
     <T extends AsyncConnection>
     Subscription onClose(Consumer<? super T> asyncConnectionConsumer);
+
+    /**
+     * Sends a signal to this {@link AsyncConnection}.  The signal will run on the {@link AsyncConnection}'s thread
+     * and can be used to safely manipulate the {@link AsyncConnection} from an outside thread.
+     *
+     * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
+     * @param <T>
+     */
+    <T extends AsyncConnection> void signal(Consumer<? super T> asyncConnectionConsumer);
 
 }
