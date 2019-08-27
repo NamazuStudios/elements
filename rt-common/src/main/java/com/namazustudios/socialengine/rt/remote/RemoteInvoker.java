@@ -28,6 +28,16 @@ public interface RemoteInvoker {
     TimeUnit DEFAULT_TIMEOUT_UNITS = MINUTES;
 
     /**
+     * The minimum underlying connections to maintain.
+     */
+    String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.remote.RemoteInvoker.minConnections";
+
+    /**
+     * The maximum underlying connections to maintain.
+     */
+    String MAX_CONNECTIONS = "com.namazustudios.socialengine.rt.remote.RemoteInvoker.maxConnections";
+
+    /**
      * Starts this {@link RemoteInvoker} and connects to the supplied address.
      *
      * @param connectAddress the connect address

@@ -11,12 +11,16 @@ import org.zeromq.ZMsg;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static org.testng.Assert.assertEquals;
 import static org.zeromq.SocketType.REP;
 import static org.zeromq.SocketType.REQ;
@@ -37,7 +41,11 @@ public class SimpleAsyncConnectionServiceTest {
 
     private Thread mockServer;
 
-    private List<AsyncConnectionService.ManagedPool> managedPoolList;
+    private List<AsyncConnectionService.Pool> managedPoolList;
+
+    private final Set<String> sent = newKeySet();
+
+    private final Set<String> received = newKeySet();
 
     @DataProvider
     private Object[][] getManagedPools() {
@@ -68,8 +76,8 @@ public class SimpleAsyncConnectionServiceTest {
             socket.bind(TEST_URL);
 
             while (!interrupted()) {
-                final ZMsg zMsg = ZMsg.recvMsg(socket);
-                if (zMsg != null) zMsg.send(socket);
+                final String msg = socket.recvStr();
+                if (msg != null) socket.send(received.add(msg) ? msg : "error - " + msg);
             }
 
         }
@@ -89,7 +97,7 @@ public class SimpleAsyncConnectionServiceTest {
     @BeforeClass(dependsOnMethods = "startService")
     public void acquireManagedPools() {
         for (int i = 0; i < POOL_COUNT; ++i) {
-            final AsyncConnectionService.ManagedPool managedPool = getAsyncConnectionService().allocatePool(
+            final AsyncConnectionService.Pool managedPool = getAsyncConnectionService().allocatePool(
                 "TestPool: " + (i+1),
                 20,
                 1000,
@@ -109,7 +117,7 @@ public class SimpleAsyncConnectionServiceTest {
     }
 
     @Test(dataProvider = "getManagedPools", invocationCount = 250, threadPoolSize = 100)
-    public void testPool(final AsyncConnectionService.ManagedPool managedPool) throws InterruptedException {
+    public void testPool(final AsyncConnectionService.Pool managedPool) throws InterruptedException {
 
         final String msg = randomUUID().toString();
         final CountDownLatch latch = new CountDownLatch(2);
@@ -120,6 +128,7 @@ public class SimpleAsyncConnectionServiceTest {
         managedPool.acquireNextAvailableConnection(c -> {
 
             c.onWrite(c0 -> {
+                sent.add(msg);
                 c.socket().send(msg);
                 latch.countDown();
             });
@@ -142,6 +151,11 @@ public class SimpleAsyncConnectionServiceTest {
         assertEquals(response.get(), msg);
         assertEquals(errno.get(), 0);
 
+    }
+
+    @Test(dependsOnMethods = "testPool")
+    public void verifyPostconditions() {
+        assertEquals(sent, received);
     }
 
     public ZContext getzContext() {

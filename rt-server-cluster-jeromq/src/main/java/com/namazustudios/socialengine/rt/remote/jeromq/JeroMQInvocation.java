@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.AsyncConnection;
+import com.namazustudios.socialengine.rt.jeromq.PooledAsyncConnection;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,7 +19,6 @@ import zmq.ZError;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -46,6 +46,10 @@ public class JeroMQInvocation {
 
     private final InvocationErrorConsumer asyncInvocationErrorConsumer;
 
+    private final Invocation invocation;
+
+    private final int additionalCount;
+
     private int remaining;
 
     private boolean syncCompleted;
@@ -56,9 +60,7 @@ public class JeroMQInvocation {
 
     private final Subscription subscriptions;
 
-    private final Runnable send;
-
-    public JeroMQInvocation(final AsyncConnection connection,
+    public JeroMQInvocation(final PooledAsyncConnection connection,
                             final Invocation invocation,
                             final PayloadReader payloadReader, final PayloadWriter payloadWriter,
                             final Map<String, String > mdcContext,
@@ -76,6 +78,8 @@ public class JeroMQInvocation {
         this.asyncInvocationResultConsumerList = asyncInvocationResultConsumerList;
         this.asyncInvocationErrorConsumer = asyncInvocationErrorConsumer;
         this.expectedResponseCount = asyncInvocationResultConsumerList.size();
+        this.invocation = invocation;
+        this.additionalCount = asyncInvocationResultConsumerList.size();
 
         // Mutable
         this.remaining = expectedResponseCount;
@@ -83,37 +87,12 @@ public class JeroMQInvocation {
 
         subscriptions = Subscription.begin()
             .chain(connection.onRead(this::handleRead))
-            .chain(connection.onError(this::handleSocketError));
-
-        send = () -> send(connection, invocation, asyncInvocationResultConsumerList.size());
-
-    }
-
-    public void send() {
-        if (mdcContext != null) MDC.setContextMap(mdcContext);
-        send.run();
-    }
-
-    private void send(final AsyncConnection connection, final Invocation invocation, final int additionalCount) {
-
-        final RequestHeader requestHeader = new RequestHeader();
-        requestHeader.additionalParts.set(additionalCount);
-
-        final byte[] payload;
-
-        try {
-            payload = payloadWriter.write(invocation);
-        } catch (IOException e) {
-            throw new InternalException(e);
-        }
-
-        connection.socket().send(EMPTY_DELIMITER, SNDMORE);
-        connection.socket().sendByteBuffer(requestHeader.getByteBuffer(), SNDMORE);
-        connection.socket().send(payload);
+            .chain(connection.onError(this::handleSocketError))
+            .chain(connection.onWrite(this::handleWrite));
 
     }
 
-    private void handleRead(final AsyncConnection connection) {
+    private void handleRead(final PooledAsyncConnection connection) {
 
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 
@@ -151,6 +130,25 @@ public class JeroMQInvocation {
             connection.close();
 
         }
+
+    }
+
+    private void handleWrite(final PooledAsyncConnection connection) {
+
+        final RequestHeader requestHeader = new RequestHeader();
+        requestHeader.additionalParts.set(additionalCount);
+
+        final byte[] payload;
+
+        try {
+            payload = payloadWriter.write(invocation);
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
+
+        connection.socket().send(EMPTY_DELIMITER, SNDMORE);
+        connection.socket().sendByteBuffer(requestHeader.getByteBuffer(), SNDMORE);
+        connection.socket().send(payload);
 
     }
 
@@ -313,7 +311,7 @@ public class JeroMQInvocation {
         }
     }
 
-    private void handleSocketError(final AsyncConnection connection) {
+    private void handleSocketError(final PooledAsyncConnection connection) {
 
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 
@@ -337,12 +335,13 @@ public class JeroMQInvocation {
                 ", syncErrorConsumer=" + syncErrorConsumer +
                 ", asyncInvocationResultConsumerList=" + asyncInvocationResultConsumerList +
                 ", asyncInvocationErrorConsumer=" + asyncInvocationErrorConsumer +
+                ", invocation=" + invocation +
+                ", additionalCount=" + additionalCount +
                 ", remaining=" + remaining +
                 ", syncCompleted=" + syncCompleted +
                 ", asyncCompleted=" + asyncCompleted +
                 ", expectedResponseCount=" + expectedResponseCount +
                 ", subscriptions=" + subscriptions +
-                ", send=" + send +
                 '}';
     }
 

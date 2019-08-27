@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
+import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.InvocationErrorConsumer;
 import com.namazustudios.socialengine.rt.remote.InvocationResult;
@@ -18,6 +18,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -33,7 +34,9 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private PayloadWriter payloadWriter;
 
-    private AsyncConnectionPool asyncConnectionPool;
+    private AsyncConnectionService asyncConnectionService;
+
+    private final AtomicReference<AsyncConnectionService.Pool> pool = new AtomicReference<>();
 
     @Override
     public void start(final String connectAddress, final long timeout, final TimeUnit timeoutTimeUnit) {
@@ -43,20 +46,34 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.connectAddress = connectAddress;
         logger.info("Starting with connect address {} and timeout {}msec", connectAddress, timeoutMillis);
 
-        getAsyncConnectionPool().start(zContext -> {
+        final String name = JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress;
+
+        final AsyncConnectionService.Pool pool = getAsyncConnectionService().allocatePool(
+            name, 0, 0,
+            zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(DEALER);
             socket.connect(connectAddress);
             socket.setReceiveTimeOut((int)timeoutMillis);
             return socket;
-        }, JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress);
+        });
+
+        if (!this.pool.compareAndSet(null, pool)) {
+            pool.close();
+            throw new IllegalStateException("Already started.");
+        }
 
     }
 
     @Override
     public void stop() {
-        getAsyncConnectionPool().stop();
+
         logger.info("Stopping connection to {}", connectAddress);
         connectAddress = null;
+
+        final AsyncConnectionService.Pool pool = this.pool.getAndSet(null);
+        if (pool == null) throw new IllegalStateException("Not running.");
+        pool.close();
+
     }
 
     @Override
@@ -67,7 +84,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         final Map<String, String > mdcContext = MDC.getCopyOfContextMap();
 
-        getAsyncConnectionPool().acquireNextAvailableConnection(connection -> {
+        getPool().acquireNextAvailableConnection(connection -> {
 
             final JeroMQInvocation jeroMQInvocation = new JeroMQInvocation(
                 connection,
@@ -82,7 +99,6 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             );
 
             logger.debug("Sending {} asynchronously.", jeroMQInvocation);
-            jeroMQInvocation.send();
 
         });
 
@@ -98,7 +114,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         final Map<String, String > mdcContext = MDC.getCopyOfContextMap();
         final CompletableFuture<Object> completableFuture = new CompletableFuture<>();
 
-        getAsyncConnectionPool().acquireNextAvailableConnection(connection -> {
+        getPool().acquireNextAvailableConnection(connection -> {
 
             final JeroMQInvocation jeroMQInvocation = new JeroMQInvocation(
                 connection,
@@ -113,12 +129,17 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             );
 
             logger.debug("Sending {} asynchronously.", jeroMQInvocation);
-            jeroMQInvocation.send();
 
         });
 
         return completableFuture;
 
+    }
+
+    private AsyncConnectionService.Pool getPool() {
+        final AsyncConnectionService.Pool pool = this.pool.get();
+        if (pool == null) throw new IllegalStateException("Not currently running.");
+        return pool;
     }
 
     public PayloadReader getPayloadReader() {
@@ -139,13 +160,13 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.payloadWriter = payloadWriter;
     }
 
-    public AsyncConnectionPool getAsyncConnectionPool() {
-        return asyncConnectionPool;
+    public AsyncConnectionService getAsyncConnectionService() {
+        return asyncConnectionService;
     }
 
     @Inject
-    public void setAsyncConnectionPool(AsyncConnectionPool asyncConnectionPool) {
-        this.asyncConnectionPool = asyncConnectionPool;
+    public void setAsyncConnectionService(AsyncConnectionService asyncConnectionService) {
+        this.asyncConnectionService = asyncConnectionService;
     }
 
 }

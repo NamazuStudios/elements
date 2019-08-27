@@ -8,6 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -72,7 +73,14 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
     }
 
     @Override
-    public ManagedPool allocatePool(
+    public void open(final Function<ZContext, ZMQ.Socket> socketSupplier,
+                     final Consumer<AsyncConnection> asyncConnectionConsumer) {
+        // TODO For Now.
+        throw new NotImplementedException();
+    }
+
+    @Override
+    public Pool allocatePool(
             final String name,
             final int minConnections, final int maxConnextions,
             final Function<ZContext, ZMQ.Socket> socketSupplier) {
@@ -175,7 +183,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
             }
         }
 
-        public ManagedPool allocatePool(
+        public Pool allocatePool(
                 final String name,
                 final int minConnections, final int maxConnextions,
                 final Function<ZContext, ZMQ.Socket> socketSupplier) {
@@ -208,9 +216,9 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         private final Map<Integer, Runnable> commands = new ConcurrentSkipListMap<>();
 
-        private final BiMap<Integer, SimpleAsyncConnection> asyncConnectionMap = HashBiMap.create();
+        private final BiMap<Integer, SimplePooledAsyncConnection> asyncConnectionMap = HashBiMap.create();
 
-        private final BiMap<SimpleAsyncConnection, Integer> rAsyncConnectionMap = asyncConnectionMap.inverse();
+        private final BiMap<SimplePooledAsyncConnection, Integer> rAsyncConnectionMap = asyncConnectionMap.inverse();
 
         public ThreadContext(final ZContext zContext, final ZMQ.Poller poller) {
 
@@ -316,7 +324,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
             final ZMQ.Socket socket = socketSupplier.apply(zContext);
             final int index = poller.register(socket, POLLIN| POLLOUT|POLLERR);
-            final SimpleAsyncConnection connection = new SimpleAsyncConnection(zContext, socket);
+            final SimplePooledAsyncConnection connection = new SimplePooledAsyncConnection(zContext, socket);
 
             connection.getOnClose().subscribe(c -> onPostLoop.subscribe((subscriber, v) -> {
                 poller.unregister(socket);
@@ -331,7 +339,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         }
 
-        public SimpleAsyncConnection getConnection(final int index) {
+        public SimplePooledAsyncConnection getConnection(final int index) {
             return asyncConnectionMap.get(index);
         }
 
@@ -341,7 +349,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
     }
 
-    private static class SimpleManagedPool implements ManagedPool {
+    private static class SimpleManagedPool implements Pool {
 
         private final int min;
 
@@ -380,7 +388,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
                 while (connectionHandles.size() < min && (added++ < (min / THREAD_POOL_SIZE))) {
                     final ConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-                    final SimpleAsyncConnection connection = context.getConnection(handle.index);
+                    final SimplePooledAsyncConnection connection = context.getConnection(handle.index);
                     addConnection(handle, connection);
                     semaphore.release();
                 }
@@ -395,7 +403,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
         }
 
         @Override
-        public void acquireNextAvailableConnection(final Consumer<AsyncConnection> asyncConnectionConsumer) {
+        public void acquireNextAvailableConnection(final Consumer<PooledAsyncConnection> asyncConnectionConsumer) {
 
             if (!open.get()) throw new IllegalStateException("Pool is closed.");
 
@@ -415,20 +423,20 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         }
 
-        private void doAcqureNew(final Consumer<AsyncConnection> asyncConnectionConsumer) {
+        private void doAcqureNew(final Consumer<PooledAsyncConnection> asyncConnectionConsumer) {
 
             final ThreadContext context = this.context.threadContextRoundRobin.getNext();
 
             context.doInThread(() -> {
                 final ConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-                final SimpleAsyncConnection connection = context.getConnection(handle.index);
+                final SimplePooledAsyncConnection connection = context.getConnection(handle.index);
                 addConnection(handle, connection);
                 asyncConnectionConsumer.accept(connection);
             });
 
         }
 
-        private void addConnection(final ConnectionHandle handle, final SimpleAsyncConnection connection) {
+        private void addConnection(final ConnectionHandle handle, final SimplePooledAsyncConnection connection) {
 
             connectionHandles.add(handle);
 
@@ -447,10 +455,10 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         }
 
-        private void doReuseConnection(final Consumer<AsyncConnection> asyncConnectionConsumer,
+        private void doReuseConnection(final Consumer<PooledAsyncConnection> asyncConnectionConsumer,
                                        final ConnectionHandle handle) {
             handle.context.doInThread(() -> {
-                final AsyncConnection connection = handle.context.getConnection(handle.index);
+                final PooledAsyncConnection connection = handle.context.getConnection(handle.index);
                 asyncConnectionConsumer.accept(connection);
             });
         }
