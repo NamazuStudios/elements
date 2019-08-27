@@ -1,13 +1,13 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.SimpleAsyncConnectionPool;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvoker;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool.*;
+import static com.namazustudios.socialengine.rt.jeromq.ConnectionPool.TIMEOUT;
+import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MAX_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MIN_CONNECTIONS;
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
 
@@ -72,7 +72,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
         bindTimeoutAction.run();
 
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class);
-        bind(AsyncConnectionPool.class).to(SimpleAsyncConnectionPool.class);
 
         expose(RemoteInvoker.class);
 

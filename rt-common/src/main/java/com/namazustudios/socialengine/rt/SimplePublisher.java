@@ -15,7 +15,7 @@ public class SimplePublisher<T> implements AsyncPublisher<T> {
     private LinkedConsumer<T> last = first;
 
     @Override
-    public Subscription subscribe(final BiConsumer<Subscription, T> consumer) {
+    public <U extends T> Subscription subscribe(final BiConsumer<Subscription, ? super U> consumer) {
         final LinkedConsumer<T> current = last = last.andThenTry(consumer);
         return () -> current.remove();
     }
@@ -64,7 +64,7 @@ public class SimplePublisher<T> implements AsyncPublisher<T> {
 
     private class LinkedConsumer<ConsumedT> {
 
-        private final BiConsumer<Subscription, ConsumedT> delegate;
+        private final BiConsumer<Subscription, ? super ConsumedT> delegate;
 
         private LinkedConsumer<ConsumedT> prev = this;
 
@@ -76,16 +76,17 @@ public class SimplePublisher<T> implements AsyncPublisher<T> {
             this.delegate = (s, t) -> {};
         }
 
-        public LinkedConsumer(final BiConsumer<Subscription, ConsumedT> delegate) {
-            this.delegate = delegate;
+
+        public <U extends ConsumedT>LinkedConsumer(final BiConsumer<Subscription, ? super U> delegate) {
+            this.delegate = (BiConsumer<Subscription, ? super ConsumedT>) delegate;
         }
 
         public void tryAcceptAll(final ConsumedT t) {
 
-            LinkedConsumer<ConsumedT> current = this;
+            LinkedConsumer<? super ConsumedT> current = this;
 
             do {
-                final LinkedConsumer<ConsumedT> next = current.next;
+                final LinkedConsumer<? super ConsumedT> next = current.next;
                 current.tryAccept(t);
                 current = next;
             } while(current != null);
@@ -100,7 +101,9 @@ public class SimplePublisher<T> implements AsyncPublisher<T> {
             }
         }
 
-        public LinkedConsumer<ConsumedT> andThenTry(final BiConsumer<Subscription, ConsumedT> next) {
+
+        public <U extends ConsumedT>
+        LinkedConsumer<ConsumedT> andThenTry(final BiConsumer<Subscription, ? super U> next) {
             return andThenTry(new LinkedConsumer<>(next));
         }
 

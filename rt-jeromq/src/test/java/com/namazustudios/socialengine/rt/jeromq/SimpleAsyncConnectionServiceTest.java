@@ -6,15 +6,12 @@ import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
-import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 

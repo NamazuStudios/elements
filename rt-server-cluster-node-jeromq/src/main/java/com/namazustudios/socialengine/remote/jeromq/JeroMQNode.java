@@ -372,6 +372,8 @@ public class JeroMQNode implements Node {
                 final InvocationError invocationError = new InvocationError();
                 invocationError.setThrowable(e);
                 asyncInvocationErrorConsumer.accept(invocationError);
+            } finally {
+
             }
 
         }

@@ -8,7 +8,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -75,8 +74,8 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
     @Override
     public void open(final Function<ZContext, ZMQ.Socket> socketSupplier,
                      final Consumer<AsyncConnection> asyncConnectionConsumer) {
-        // TODO For Now.
-        throw new NotImplementedException();
+        final SimpleAsyncConnectionServiceContext context = getContext();
+        context.open(socketSupplier, asyncConnectionConsumer);
     }
 
     @Override
@@ -181,6 +180,17 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
             } finally {
                 logger.info("Exiting IO thread.");
             }
+        }
+
+        public void open(final Function<ZContext, ZMQ.Socket> socketSupplier,
+                         final Consumer<AsyncConnection> asyncConnectionConsumer) {
+
+            final ThreadContext context = threadContextRoundRobin.getNext();
+
+            context.doInThread(() -> {
+
+            });
+
         }
 
         public Pool allocatePool(
@@ -326,7 +336,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
             final int index = poller.register(socket, POLLIN| POLLOUT|POLLERR);
             final SimplePooledAsyncConnection connection = new SimplePooledAsyncConnection(zContext, socket);
 
-            connection.getOnClose().subscribe(c -> onPostLoop.subscribe((subscriber, v) -> {
+            connection.onClose(c -> onPostLoop.subscribe((subscriber, v) -> {
                 poller.unregister(socket);
                 rAsyncConnectionMap.remove(connection);
                 socket.close();
@@ -440,12 +450,12 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
             connectionHandles.add(handle);
 
-            connection.getOnClose().subscribe(c -> {
+            connection.onClose(c -> {
                 connectionHandles.remove(handle);
                 semaphore.release();
             });
 
-            connection.getOnRecycle().subscribe(c -> {
+            connection.onRecycle(c -> {
                 connection.getOnError().clear();
                 connection.getOnRead().clear();
                 connection.getOnWrite().clear();
