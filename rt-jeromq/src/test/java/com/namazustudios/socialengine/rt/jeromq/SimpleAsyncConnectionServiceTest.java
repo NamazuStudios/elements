@@ -38,7 +38,7 @@ public class SimpleAsyncConnectionServiceTest {
 
     private Thread mockServer;
 
-    private List<AsyncConnectionService.Pool> managedPoolList;
+    private List<AsyncConnectionPool> managedPoolList;
 
     private final Set<String> sent = newKeySet();
 
@@ -94,7 +94,7 @@ public class SimpleAsyncConnectionServiceTest {
     @BeforeClass(dependsOnMethods = "startService")
     public void acquireManagedPools() {
         for (int i = 0; i < POOL_COUNT; ++i) {
-            final AsyncConnectionService.Pool managedPool = getAsyncConnectionService().allocatePool(
+            final AsyncConnectionPool managedPool = getAsyncConnectionService().allocatePool(
                 "TestPool: " + (i+1),
                 20,
                 1000,
@@ -114,7 +114,7 @@ public class SimpleAsyncConnectionServiceTest {
     }
 
     @Test(dataProvider = "getManagedPools", invocationCount = 250, threadPoolSize = 100)
-    public void testPool(final AsyncConnectionService.Pool managedPool) throws InterruptedException {
+    public void testPool(final AsyncConnectionPool managedPool) throws InterruptedException {
 
         final String msg = randomUUID().toString();
         final CountDownLatch latch = new CountDownLatch(2);

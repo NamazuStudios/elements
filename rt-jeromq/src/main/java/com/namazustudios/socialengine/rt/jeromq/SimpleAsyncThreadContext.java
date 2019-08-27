@@ -1,0 +1,183 @@
+package com.namazustudios.socialengine.rt.jeromq;
+
+import com.namazustudios.socialengine.rt.Publisher;
+import com.namazustudios.socialengine.rt.SimplePublisher;
+import com.namazustudios.socialengine.rt.Subscription;
+import com.namazustudios.socialengine.rt.exception.InternalException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
+
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.Pipe;
+import java.util.SortedMap;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+
+import static org.zeromq.ZMQ.Poller.POLLERR;
+import static org.zeromq.ZMQ.Poller.POLLIN;
+
+class SimpleAsyncThreadContext implements AutoCloseable {
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncThreadContext.class);
+    
+    private final int commandIndex;
+
+    private final int connectionIndexStart;
+
+    private final Pipe pipe;
+
+    private final ZMQ.Poller poller;
+
+    private final ZContext zContext;
+
+    private final Lock writeLock = new ReentrantLock();
+
+    private final AtomicInteger next = new AtomicInteger();
+
+    private final Publisher<Void> onPostLoop = new SimplePublisher<>();
+
+    private final ByteBuffer incoming = ByteBuffer.allocate(Integer.BYTES);
+
+    private final SortedMap<Integer, Runnable> commands = new ConcurrentSkipListMap<>();
+
+    public SimpleAsyncThreadContext(final ZContext zContext, final ZMQ.Poller poller) {
+
+        try {
+            this.pipe = Pipe.open();
+            this.pipe.source().configureBlocking(false);
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
+
+        this.poller = poller;
+        this.commandIndex = poller.register(pipe.source(), (POLLIN | POLLERR));
+        this.connectionIndexStart = poller.getNext();
+        this.zContext = zContext;
+
+    }
+
+    public void doInThread(final Runnable command) {
+
+        final int index = next.getAndIncrement();
+        final ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
+
+        commands.put(index, command);
+        output.putInt(index);
+        output.flip();
+
+        try {
+            writeLock.lock();
+            while(output.remaining() > 0) pipe.sink().write(output);
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        } finally {
+            writeLock.unlock();
+        }
+
+    }
+
+    public void poll() {
+        pollCommands();
+        pollManagedConnections();
+        onPostLoop.publish(null);
+    }
+
+    private void pollCommands() {
+
+        if (!poller.pollin(commandIndex)) return;
+        incoming.position(0).limit(Integer.BYTES);
+
+        try {
+            while (pipe.source().read(incoming) > 0) {
+                if (incoming.remaining() == 0) {
+                    incoming.flip();
+                    process(incoming.getInt());
+                    incoming.flip();
+                }
+            }
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        }
+
+    }
+
+    private void pollManagedConnections() {
+
+        final int next = poller.getNext();
+
+        for (int index = connectionIndexStart; index < next; ++index) {
+            final SimpleAsyncConnection connection = (SimpleAsyncConnection) poller.getItem(index);
+            if (connection != null) {
+                if (poller.pollin(index)) connection.getOnRead().publish(connection);
+                if (poller.pollout(index)) connection.getOnWrite().publish(connection);
+                if (poller.pollerr(index)) connection.getOnError().publish(connection);
+            }
+        }
+
+    }
+
+    private void process(final int command) {
+        final Runnable runnable = commands.remove(command);
+        if (runnable == null) {
+            logger.error("Unable to process command at index {}", command);
+        } else {
+            try {
+                runnable.run();
+            } catch (Exception ex) {
+                logger.error("Caught exception processing command {}.", runnable, ex);
+            }
+        }
+    }
+
+    @Override
+    public void close() {
+
+        try {
+            pipe.sink().close();
+        } catch (IOException ex) {
+            logger.error("Error closing sink.", ex);
+        }
+
+        try {
+            pipe.source().close();
+        } catch (IOException ex) {
+            logger.error("Error closing source.", ex);
+        }
+
+    }
+
+    public SimpleAsyncConnectionHandle allocateNewConnection(final Function<ZContext, ZMQ.Socket> socketSupplier) {
+
+        final ZMQ.Socket socket = socketSupplier.apply(zContext);
+
+        final SimpleAsyncConnection connection = new SimpleAsyncConnection(
+                zContext, socket,
+                (conn, consumer) -> doInThread(() -> consumer.accept(conn)));
+
+        connection.onClose(c -> onPostLoop.subscribe((subscriber, v) -> {
+            poller.unregister(socket);
+            socket.close();
+            subscriber.unsubscribe();
+        }));
+
+        final int index = poller.register(connection);
+        return new SimpleAsyncConnectionHandle(index, this);
+
+    }
+
+    public SimpleAsyncConnection getConnection(final int index) {
+        return (SimpleAsyncConnection) poller.getItem(index);
+    }
+
+    public Subscription onPostLoop(final BiConsumer<Subscription, Void> consumer) {
+        return onPostLoop.subscribe(consumer);
+    }
+
+}

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionService;
+import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,13 +29,13 @@ public class JeroMQNodeInvocation {
 
     private final PayloadWriter payloadWriter;
 
-    private final AsyncConnectionService.Pool outbound;
+    private final PayloadReader payloadReader;
+
+    private final AsyncConnectionPool outbound;
 
     private final ZMsg identity;
 
     private final AtomicBoolean sync = new AtomicBoolean();
-
-    private final Invocation invocation;
 
     private final AtomicInteger remaining;
 
@@ -47,14 +47,17 @@ public class JeroMQNodeInvocation {
 
     private final Consumer<InvocationError> asyncInvocationErrorConsumer;
 
+    private final byte[] payload;
+
     public JeroMQNodeInvocation(final ZMsg incoming,
                                 final LocalInvocationDispatcher localInvocationDispatcher,
                                 final PayloadReader payloadReader,
                                 final PayloadWriter payloadWriter,
-                                final AsyncConnectionService.Pool outbound) throws IOException {
+                                final AsyncConnectionPool outbound) {
 
         this.localInvocationDispatcher = localInvocationDispatcher;
         this.payloadWriter = payloadWriter;
+        this.payloadReader = payloadReader;
         this.outbound = outbound;
         this.identity = popIdentity(incoming);
 
@@ -64,8 +67,7 @@ public class JeroMQNodeInvocation {
         final int remaining = requestHeader.additionalParts.get();
         this.remaining = new AtomicInteger(remaining);
 
-        final byte[] payload = incoming.remove().getData();
-        invocation = payloadReader.read(Invocation.class, payload);
+        payload = incoming.remove().getData();
 
         this.syncInvocationResultConsumer = r -> {
             if (sync.getAndSet(true)) {
@@ -104,6 +106,17 @@ public class JeroMQNodeInvocation {
 
     public void dispatch() {
 
+        final Invocation invocation;
+
+        try {
+            invocation = payloadReader.read(Invocation.class, payload);
+        } catch (final IOException ex) {
+            final InvocationError invocationError = new InvocationError();
+            invocationError.setThrowable(ex);
+            sendError(invocationError, 0);
+            return;
+        }
+
         localInvocationDispatcher.dispatch(
             invocation,
             syncInvocationResultConsumer, syncInvocationErrorConsumer,
@@ -124,28 +137,29 @@ public class JeroMQNodeInvocation {
         final byte[] responseHeaderBytes = new byte[responseHeader.size()];
         responseHeader.getByteBuffer().get(responseHeaderBytes);
 
+        final byte[] payload;
+
         try {
-
-            final byte[] payload = payloadWriter.write(invocationResult);
-            final ZMsg msg = identity.duplicate();
-
-            msg.addLast(EMPTY_DELIMITER);
-            msg.addLast(responseHeaderBytes);
-            msg.addLast(payload);
-
-            write(msg);
-
+            payload = payloadWriter.write(invocationResult);
         } catch (IOException e) {
             logger.error("Could not write payload to byte stream.  Sending empty.", e);
             final InvocationError invocationError = new InvocationError();
             invocationError.setThrowable(e);
             sendError(invocationError, part);
+            return;
         }
+
+        final ZMsg msg = identity.duplicate();
+
+        msg.addLast(EMPTY_DELIMITER);
+        msg.addLast(responseHeaderBytes);
+        msg.addLast(payload);
+
+        write(msg);
 
     }
 
-    private void sendError(final InvocationError invocationError,
-                           final int part) {
+    private void sendError(final InvocationError invocationError, final int part) {
 
         final ResponseHeader responseHeader = new ResponseHeader();
         responseHeader.type.set(INVOCATION_ERROR);

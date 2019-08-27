@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.InvocationErrorConsumer;
@@ -36,7 +37,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private AsyncConnectionService asyncConnectionService;
 
-    private final AtomicReference<AsyncConnectionService.Pool> pool = new AtomicReference<>();
+    private final AtomicReference<AsyncConnectionPool> pool = new AtomicReference<>();
 
     @Override
     public void start(final String connectAddress, final long timeout, final TimeUnit timeoutTimeUnit) {
@@ -48,7 +49,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         final String name = JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress;
 
-        final AsyncConnectionService.Pool pool = getAsyncConnectionService().allocatePool(
+        final AsyncConnectionPool pool = getAsyncConnectionService().allocatePool(
             name, 0, 0,
             zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(DEALER);
@@ -70,7 +71,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         logger.info("Stopping connection to {}", connectAddress);
         connectAddress = null;
 
-        final AsyncConnectionService.Pool pool = this.pool.getAndSet(null);
+        final AsyncConnectionPool pool = this.pool.getAndSet(null);
         if (pool == null) throw new IllegalStateException("Not running.");
         pool.close();
 
@@ -136,8 +137,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private AsyncConnectionService.Pool getPool() {
-        final AsyncConnectionService.Pool pool = this.pool.get();
+    private AsyncConnectionPool getPool() {
+        final AsyncConnectionPool pool = this.pool.get();
         if (pool == null) throw new IllegalStateException("Not currently running.");
         return pool;
     }
