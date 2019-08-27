@@ -7,7 +7,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
- * A system-wide service to house {@link PooledAsyncConnection} instances.  Each instance of {@link PooledAsyncConnection} is
+ * A system-wide service to house {@link AsyncConnection} instances.  Each instance of {@link AsyncConnection} is
  * managed internally and callbacks issued on a background thread dedicated to that as well as other {@link Connection}
  * instances.
  */
@@ -24,14 +24,14 @@ public interface AsyncConnectionService {
     void stop();
 
     /**
-     * Opens an {@link PooledAsyncConnection} instance.  Once assigned a {@link Thread}, the given
-     * {@link Function<ZContext,  Socket>} will be called along with the {@link Consumer< PooledAsyncConnection >}
+     * Opens an {@link AsyncConnection} instance.  Once assigned a {@link Thread}, the given
+     * {@link Function<ZContext,  Socket>} will be called along with the {@link Consumer< AsyncConnection >}
      * allowing the caller to begin making async network calls.
      *
-     * The {@link PooledAsyncConnection} must be explictly closed later using {@link PooledAsyncConnection#close()}.
+     * The {@link AsyncConnection} must be explictly closed later using {@link AsyncConnection#close()}.
      *
      * @param socketSupplier the {@link Function<ZContext,  Socket>} which will supply the {@link Socket}
-     * @param asyncConnectionConsumer the {@link Consumer< PooledAsyncConnection >} which will receive the socket events.
+     * @param asyncConnectionConsumer the {@link Consumer< AsyncConnection >} which will receive the socket events.
      */
     void open(Function<ZContext, Socket> socketSupplier, Consumer<AsyncConnection> asyncConnectionConsumer);
 
@@ -54,16 +54,16 @@ public interface AsyncConnectionService {
     interface Pool extends AutoCloseable {
 
         /**
-         * Acquires a new {@link PooledAsyncConnection}.  Once assigned to a thread, the supplied {@link Consumer} will be
-         * called by the IO Thread with an allocated instance of {@link PooledAsyncConnection}.  This method will block until
-         * an {@link PooledAsyncConnection} is available.
+         * Acquires a new {@link AsyncConnection}.  Once assigned to a thread, the supplied {@link Consumer} will be
+         * called by the IO Thread with an allocated instance of {@link AsyncConnection}.  This method will block until
+         * an {@link AsyncConnection} is available.
          *
-         * @param asyncConnectionConsumer the {@link Consumer} which will accept the {@link PooledAsyncConnection}
+         * @param asyncConnectionConsumer the {@link Consumer} which will accept the {@link AsyncConnection}
          */
-        void acquireNextAvailableConnection(Consumer<PooledAsyncConnection> asyncConnectionConsumer);
+        void acquireNextAvailableConnection(Consumer<AsyncConnection> asyncConnectionConsumer);
 
         /**
-         * Closes this {@link Pool} and releases all {@link PooledAsyncConnection} resources stored therein.
+         * Closes this {@link Pool} and releases all {@link AsyncConnection} resources stored therein.
          */
         void close();
 

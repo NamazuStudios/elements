@@ -6,11 +6,27 @@ import org.zeromq.ZMQ;
 import java.util.function.Consumer;
 
 /**
- * Represents an asynchornous type of {@link Connection}.  Note that instances of {@link PooledAsyncConnection} aren't
- * thread-safe.  Therefore you must ensure that all manipulation of the {@link PooledAsyncConnection} instance is
+ * Represents an asynchornous type of {@link Connection}.  Note that instances of {@link AsyncConnection} aren't
+ * thread-safe.  Therefore you must ensure that all manipulation of the {@link AsyncConnection} instance is
  * performed within a callback from the subscribed events.
  */
 public interface AsyncConnection extends Connection {
+
+    /**
+     * Sends a signal to this {@link AsyncConnection}.  The signal will run on the {@link AsyncConnection}'s thread
+     * and can be used to safely manipulate the {@link AsyncConnection} from an outside thread.
+     *
+     * This is the only method that may be called from any thread.
+     *
+     * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
+     */
+    void signal(Consumer<AsyncConnection> asyncConnectionConsumer);
+
+    /**
+     * Returns this {@link AsyncConnection}.  This hints to the underlying {@link AsyncConnectionService} that the
+     * client code is done using the connection.  Depending on circumstances, this may simply close the connection.
+     */
+    void recycle();
 
     /**
      * Registers a {@link Subscription} for when a {@link ZMQ.Socket} has read data.
@@ -18,8 +34,8 @@ public interface AsyncConnection extends Connection {
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
      * @return {@link Subscription}
      */
-    <T extends AsyncConnection>
-    Subscription onRead(Consumer<? super T> asyncConnectionConsumer);
+    
+    Subscription onRead(Consumer<AsyncConnection> asyncConnectionConsumer);
 
     /**
      * Registers a {@link Subscription} for when a {@link ZMQ.Socket} is ready to write data.
@@ -27,8 +43,8 @@ public interface AsyncConnection extends Connection {
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
      * @return {@link Subscription}
      */
-    <T extends AsyncConnection>
-    Subscription onWrite(Consumer<? super T> asyncConnectionConsumer);
+    
+    Subscription onWrite(Consumer<AsyncConnection> asyncConnectionConsumer);
 
     /**
      * Registers a {@link Subscription} for when a {@link ZMQ.Socket} has encountered an error.
@@ -36,8 +52,8 @@ public interface AsyncConnection extends Connection {
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
      * @return {@link Subscription}
      */
-    <T extends AsyncConnection>
-    Subscription onError(Consumer<? super T> asyncConnectionConsumer);
+    
+    Subscription onError(Consumer<AsyncConnection> asyncConnectionConsumer);
 
     /**
      * Registers a {@link Subscription for when the underlying connection was closed.
@@ -45,16 +61,16 @@ public interface AsyncConnection extends Connection {
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
      * @return {@link Subscription}
      */
-    <T extends AsyncConnection>
-    Subscription onClose(Consumer<? super T> asyncConnectionConsumer);
+    
+    Subscription onClose(Consumer<AsyncConnection> asyncConnectionConsumer);
 
     /**
-     * Sends a signal to this {@link AsyncConnection}.  The signal will run on the {@link AsyncConnection}'s thread
-     * and can be used to safely manipulate the {@link AsyncConnection} from an outside thread.
+     * Subscribes to an event indicating that the connection was recycled.
      *
-     * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
-     * @param <T>
+     * @param pooledAsyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event.
+     *
+     * @return a {@link Subscription} to the event
      */
-    <T extends AsyncConnection> void signal(Consumer<? super T> asyncConnectionConsumer);
+    Subscription onRecycle(Consumer<AsyncConnection> pooledAsyncConnectionConsumer);
 
 }

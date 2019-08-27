@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
@@ -177,7 +175,10 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
                 }
 
-            } finally {
+            } catch (Exception ex) {
+                logger.error("Uncaught exception in IO thread.", ex);
+                throw ex;
+            }finally {
                 logger.info("Exiting IO thread.");
             }
         }
@@ -188,7 +189,8 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
             final ThreadContext context = threadContextRoundRobin.getNext();
 
             context.doInThread(() -> {
-
+                final ConnectionHandle handle = context.allocateNewConnection(socketSupplier);
+                final AsyncConnection asyncConnection = context.getConnection(context.commandIndex);
             });
 
         }
@@ -208,7 +210,9 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
     private static class ThreadContext implements AutoCloseable {
 
-        private final int index;
+        private final int commandIndex;
+
+        private final int connectionIndexStart;
 
         private final Pipe pipe;
 
@@ -224,11 +228,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         private final ByteBuffer incoming = ByteBuffer.allocate(Integer.BYTES);
 
-        private final Map<Integer, Runnable> commands = new ConcurrentSkipListMap<>();
-
-        private final BiMap<Integer, SimplePooledAsyncConnection> asyncConnectionMap = HashBiMap.create();
-
-        private final BiMap<SimplePooledAsyncConnection, Integer> rAsyncConnectionMap = asyncConnectionMap.inverse();
+        private final SortedMap<Integer, Runnable> commands = new ConcurrentSkipListMap<>();
 
         public ThreadContext(final ZContext zContext, final ZMQ.Poller poller) {
 
@@ -240,7 +240,8 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
             }
 
             this.poller = poller;
-            this.index = poller.register(pipe.source(), (POLLIN | POLLERR));
+            this.commandIndex = poller.register(pipe.source(), (POLLIN | POLLERR));
+            this.connectionIndexStart = poller.getNext();
             this.zContext = zContext;
 
         }
@@ -273,7 +274,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         public void pollCommands() {
 
-            if (!poller.pollin(index)) return;
+            if (!poller.pollin(commandIndex)) return;
             incoming.position(0).limit(Integer.BYTES);
 
             try {
@@ -292,11 +293,16 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         public void pollManagedConnections() {
 
-            asyncConnectionMap.forEach((index, connection) -> {
-                if (poller.pollin(index)) connection.getOnRead().publish(connection);
-                if (poller.pollout(index)) connection.getOnWrite().publish(connection);
-                if (poller.pollerr(index)) connection.getOnError().publish(connection);
-            });
+            final int next = poller.getNext();
+
+            for (int index = connectionIndexStart; index < next; ++index) {
+                final SimpleAsyncConnection connection = (SimpleAsyncConnection) poller.getItem(index);
+                if (connection != null) {
+                    if (poller.pollin(index)) connection.getOnRead().publish(connection);
+                    if (poller.pollout(index)) connection.getOnWrite().publish(connection);
+                    if (poller.pollerr(index)) connection.getOnError().publish(connection);
+                }
+            }
 
         }
 
@@ -333,27 +339,24 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
         public ConnectionHandle allocateNewConnection(final Function<ZContext, ZMQ.Socket> socketSupplier) {
 
             final ZMQ.Socket socket = socketSupplier.apply(zContext);
-            final int index = poller.register(socket, POLLIN| POLLOUT|POLLERR);
 
-            final SimplePooledAsyncConnection connection = new SimplePooledAsyncConnection(
+            final SimpleAsyncConnection connection = new SimpleAsyncConnection(
                     zContext, socket,
                     (conn, consumer) -> doInThread(() -> consumer.accept(conn)));
 
             connection.onClose(c -> onPostLoop.subscribe((subscriber, v) -> {
                 poller.unregister(socket);
-                rAsyncConnectionMap.remove(connection);
                 socket.close();
                 subscriber.unsubscribe();
             }));
 
-            asyncConnectionMap.put(index, connection);
-
+            final int index = poller.register(connection);
             return new ConnectionHandle(index, this);
 
         }
 
-        public SimplePooledAsyncConnection getConnection(final int index) {
-            return asyncConnectionMap.get(index);
+        public SimpleAsyncConnection getConnection(final int index) {
+            return (SimpleAsyncConnection) poller.getItem(index);
         }
 
         public Subscription onPostLoop(final BiConsumer<Subscription, Void> consumer) {
@@ -401,7 +404,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
                 while (connectionHandles.size() < min && (added++ < (min / THREAD_POOL_SIZE))) {
                     final ConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-                    final SimplePooledAsyncConnection connection = context.getConnection(handle.index);
+                    final SimpleAsyncConnection connection = context.getConnection(handle.index);
                     addConnection(handle, connection);
                     semaphore.release();
                 }
@@ -416,7 +419,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
         }
 
         @Override
-        public void acquireNextAvailableConnection(final Consumer<PooledAsyncConnection> asyncConnectionConsumer) {
+        public void acquireNextAvailableConnection(final Consumer<AsyncConnection> asyncConnectionConsumer) {
 
             if (!open.get()) throw new IllegalStateException("Pool is closed.");
 
@@ -436,20 +439,20 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         }
 
-        private void doAcqureNew(final Consumer<PooledAsyncConnection> asyncConnectionConsumer) {
+        private void doAcqureNew(final Consumer<AsyncConnection> asyncConnectionConsumer) {
 
             final ThreadContext context = this.context.threadContextRoundRobin.getNext();
 
             context.doInThread(() -> {
                 final ConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-                final SimplePooledAsyncConnection connection = context.getConnection(handle.index);
+                final SimpleAsyncConnection connection = context.getConnection(handle.index);
                 addConnection(handle, connection);
                 asyncConnectionConsumer.accept(connection);
             });
 
         }
 
-        private void addConnection(final ConnectionHandle handle, final SimplePooledAsyncConnection connection) {
+        private void addConnection(final ConnectionHandle handle, final SimpleAsyncConnection connection) {
 
             connectionHandles.add(handle);
 
@@ -468,10 +471,10 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
         }
 
-        private void doReuseConnection(final Consumer<PooledAsyncConnection> asyncConnectionConsumer,
+        private void doReuseConnection(final Consumer<AsyncConnection> asyncConnectionConsumer,
                                        final ConnectionHandle handle) {
             handle.context.doInThread(() -> {
-                final PooledAsyncConnection connection = handle.context.getConnection(handle.index);
+                final AsyncConnection connection = handle.context.getConnection(handle.index);
                 asyncConnectionConsumer.accept(connection);
             });
         }
@@ -516,7 +519,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
 
     }
 
-    private static class ConnectionHandle {
+    private static class ConnectionHandle implements Comparable<ConnectionHandle> {
 
         public final int index;
 
@@ -532,13 +535,17 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
             if (this == o) return true;
             if (!(o instanceof ConnectionHandle)) return false;
             ConnectionHandle handle = (ConnectionHandle) o;
-            return index == handle.index &&
-                    context.equals(handle.context);
+            return index == handle.index && context.equals(handle.context);
         }
 
         @Override
         public int hashCode() {
             return Objects.hash(index, context);
+        }
+
+        @Override
+        public int compareTo(final ConnectionHandle other) {
+            return Integer.compare(index, other.index);
         }
 
     }
