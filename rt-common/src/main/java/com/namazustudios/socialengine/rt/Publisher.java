@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -17,7 +18,18 @@ public interface Publisher<T> {
      * @param consumer the {@link Consumer< T >} which will accept event
      * @return the {@link Subscription}
      */
-    Subscription subscribe(Consumer<T> consumer);
+    default Subscription subscribe(Consumer<T> consumer) {
+        return subscribe((s, t) -> consumer.accept(t));
+    }
+
+    /**
+     * Subscribes to a particular event.  The supplied {@link BiConsumer < T >} will receive zero or more events in the
+     * future until the associated call to {@link Subscription#unsubscribe()}.
+     *
+     * @param consumer the {@link BiConsumer< T >} which will accept event
+     * @return the {@link Subscription}
+     */
+    Subscription subscribe(BiConsumer<Subscription, T> consumer);
 
     /**
      * Publishes the event synchronously.

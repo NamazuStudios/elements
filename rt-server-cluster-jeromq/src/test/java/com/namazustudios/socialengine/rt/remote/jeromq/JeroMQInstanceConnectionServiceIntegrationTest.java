@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote.jeromq.guice.com.namazustudios.socialengine.rt.remote.jeromq;
+package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
@@ -14,8 +14,6 @@ import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.Instan
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceConnection;
 import com.namazustudios.socialengine.rt.remote.InstanceStatus;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
-import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlClient;
-import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Guice;

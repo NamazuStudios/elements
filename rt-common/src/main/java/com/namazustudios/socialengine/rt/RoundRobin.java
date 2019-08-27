@@ -1,12 +1,14 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.stream.Stream;
+
 /**
  * Implements a round-robin data structure which will repeatedly select from a set of values ensuring an even
  * distribution across all values.
  *
  * @param <T>
  */
-public interface RoundRobin<T> {
+public interface RoundRobin<T> extends Iterable<T> {
 
     /**
      * Gets the next object in this {@link RoundRobin}
@@ -31,4 +33,11 @@ public interface RoundRobin<T> {
      * @return the object
      */
     T get(int index);
+
+    /**
+     * Gets a {@link Stream<T>} from this {@link RoundRobin<T>}.
+     *
+     * @return the {@link Stream<T>} of all elements
+     */
+    Stream<T> stream();
 }

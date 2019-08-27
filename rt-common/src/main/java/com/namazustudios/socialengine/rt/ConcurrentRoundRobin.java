@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 public class ConcurrentRoundRobin<T> implements RoundRobin<T> {
 
@@ -27,6 +29,30 @@ public class ConcurrentRoundRobin<T> implements RoundRobin<T> {
     public T getNext() {
         final int next = this.next.getAndIncrement();
         return objects[next % objects.length];
+    }
+
+    @Override
+    public Iterator<T> iterator() {
+        return new Iterator<T>() {
+
+            int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < objects.length;
+            }
+
+            @Override
+            public T next() {
+                return objects[i++];
+            }
+
+        };
+    }
+
+    @Override
+    public Stream<T> stream() {
+        return Arrays.stream(objects);
     }
 
 }

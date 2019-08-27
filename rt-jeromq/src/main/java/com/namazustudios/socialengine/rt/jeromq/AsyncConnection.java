@@ -20,7 +20,7 @@ public interface AsyncConnection extends Connection {
     Subscription onRead(Consumer<AsyncConnection> asyncConnectionConsumer);
 
     /**
-     * Registers a {@link Subscription} for when a {@link Socket} has completed writing data.
+     * Registers a {@link Subscription} for when a {@link Socket} is ready to write data.
      *
      * @return a {@link Subscription} to the event.
      */

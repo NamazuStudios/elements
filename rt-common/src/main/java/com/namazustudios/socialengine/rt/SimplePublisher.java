@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class SimplePublisher<T> implements AsyncPublisher<T> {
@@ -14,7 +15,7 @@ public class SimplePublisher<T> implements AsyncPublisher<T> {
     private LinkedConsumer<T> last = first;
 
     @Override
-    public Subscription subscribe(final Consumer<T> consumer) {
+    public Subscription subscribe(final BiConsumer<Subscription, T> consumer) {
         final LinkedConsumer<T> current = last = last.andThenTry(consumer);
         return () -> current.remove();
     }
@@ -63,17 +64,19 @@ public class SimplePublisher<T> implements AsyncPublisher<T> {
 
     private class LinkedConsumer<ConsumedT> {
 
-        private final Consumer<ConsumedT> delegate;
+        private final BiConsumer<Subscription, ConsumedT> delegate;
 
         private LinkedConsumer<ConsumedT> prev = this;
 
         private LinkedConsumer<ConsumedT> next = null;
 
+        private final Subscription subscription = () -> remove();
+
         public LinkedConsumer() {
-            this.delegate = t -> {};
+            this.delegate = (s, t) -> {};
         }
 
-        public LinkedConsumer(final Consumer<ConsumedT> delegate) {
+        public LinkedConsumer(final BiConsumer<Subscription, ConsumedT> delegate) {
             this.delegate = delegate;
         }
 
@@ -91,26 +94,28 @@ public class SimplePublisher<T> implements AsyncPublisher<T> {
 
         public void tryAccept(ConsumedT t) {
             try {
-                delegate.accept(t);
+                delegate.accept(subscription, t);
             } catch (Exception ex) {
                 logger.error("Unexpected exception dispatching consumer.", ex);
             }
         }
 
-        public LinkedConsumer<ConsumedT> andThenTry(final Consumer<ConsumedT> next) {
+        public LinkedConsumer<ConsumedT> andThenTry(final BiConsumer<Subscription, ConsumedT> next) {
             return andThenTry(new LinkedConsumer<>(next));
         }
 
         public LinkedConsumer<ConsumedT> andThenTry(final LinkedConsumer<ConsumedT> next) {
-            if (next != null) throw new IllegalStateException();
+            if (this.next != null) throw new IllegalStateException();
             this.next = next;
             next.prev = this;
             return next;
         }
 
         public void remove() {
-            prev.next = next;
-            next.prev = prev;
+            if (prev != null) prev.next = next;
+            if (next != null) next.prev = prev;
+            next = null;
+            prev = null;
         }
 
         public void clear() {

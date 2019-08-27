@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.remote.jeromq.guice.com.namazustudios.socialengine.rt.remote.jeromq;
+package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import org.slf4j.Logger;

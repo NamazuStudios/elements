@@ -3,14 +3,11 @@ package com.namazustudios.socialengine.rt;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
 import java.util.concurrent.locks.Lock;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-
-import static java.util.stream.Collectors.toList;
 
 /**
  * Implements a {@link AsyncPublisher <T>} using a {@link Lock} to control concurrency.  For each published event, the
@@ -45,7 +42,7 @@ public class ConcurrentLockedPublisher<T> implements AsyncPublisher<T> {
     }
 
     @Override
-    public Subscription subscribe(final Consumer<T> consumer) {
+    public Subscription subscribe(final BiConsumer<Subscription, T> consumer) {
         try {
             lock.lock();
             return publisher.subscribe(consumer);

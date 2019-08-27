@@ -27,10 +27,10 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.google.inject</groupId>
-            <artifactId>guice</artifactId>
-            <version>${guice.version}</version>
-            <scope>test</scope>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-jeromq</artifactId>
+            <version>${project.version}</version>
+            <classifier>test</classifier>
         </dependency>
         <dependency>
             <groupId>org.mockito</groupId>
