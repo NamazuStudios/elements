@@ -12,15 +12,15 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class SimpleAsyncConnectionGroup implements AsyncConnectionGroup<ZContext, ZMQ.Socket> {
+public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext, ZMQ.Socket> {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncConnectionGroup.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnectionGroup.class);
 
     private final List<AsyncConnection> connectionList;
 
     private final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler;
 
-    public SimpleAsyncConnectionGroup(
+    public JeroMQAsyncConnectionGroup(
             final List<AsyncConnection> connectionList,
             final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler) {
         this.connectionList = connectionList;

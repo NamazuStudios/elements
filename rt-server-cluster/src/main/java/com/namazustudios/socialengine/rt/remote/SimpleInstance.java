@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.AsyncConnection;
+import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import org.slf4j.Logger;
@@ -22,10 +24,19 @@ public class SimpleInstance implements Instance {
 
     private InstanceConnectionService instanceConnectionService;
 
+    private AsyncConnectionService<?, ?> asyncConnectionService;
+
     @Override
     public void start() {
 
         final List<Exception> exceptionList = new ArrayList<>();
+
+        try {
+            getAsyncConnectionService().start();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Caught exception starting AsyncConnectionService.", ex);
+        }
 
         try {
             getInstanceDiscoveryService().start();
@@ -86,6 +97,13 @@ public class SimpleInstance implements Instance {
             logger.error("Caught exception stopping InstanceDiscoveryService.", ex);
         }
 
+        try {
+            getAsyncConnectionService().stop();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Caught exception stopping AsyncConnectionService.", ex);
+        }
+
         if (!exceptionList.isEmpty()) {
             throw new MultiException(exceptionList);
         }
@@ -135,6 +153,15 @@ public class SimpleInstance implements Instance {
     @Inject
     public void setInstanceConnectionService(InstanceConnectionService instanceConnectionService) {
         this.instanceConnectionService = instanceConnectionService;
+    }
+
+    public AsyncConnectionService<?, ?> getAsyncConnectionService() {
+        return asyncConnectionService;
+    }
+
+    @Inject
+    public void setAsyncConnectionService(AsyncConnectionService<?, ?> asyncConnectionService) {
+        this.asyncConnectionService = asyncConnectionService;
     }
 
 }

@@ -22,11 +22,11 @@ import java.util.function.Function;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 
-class SimpleAsyncThreadContext implements AutoCloseable {
+class JeroMQAsyncThreadContext implements AutoCloseable {
 
     private static final int COMMAND_QUEUE_MAX = 4096;
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncThreadContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncThreadContext.class);
     
     private final int commandIndex;
 
@@ -50,7 +50,7 @@ class SimpleAsyncThreadContext implements AutoCloseable {
 
     private final Semaphore semaphore = new Semaphore(COMMAND_QUEUE_MAX);
 
-    public SimpleAsyncThreadContext(final ZContext zContext, final ZMQ.Poller poller) {
+    public JeroMQAsyncThreadContext(final ZContext zContext, final ZMQ.Poller poller) {
 
         try {
             this.pipe = Pipe.open();
@@ -67,9 +67,14 @@ class SimpleAsyncThreadContext implements AutoCloseable {
     }
 
     public void doInThread(final Runnable command) {
-        try {
 
+        try {
             semaphore.acquire();
+        } catch (InterruptedException e) {
+            throw new InternalException(e);
+        }
+
+        try {
 
             final int index = next.getAndIncrement();
             final ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
@@ -77,20 +82,18 @@ class SimpleAsyncThreadContext implements AutoCloseable {
             output.putInt(index);
             output.flip();
 
-            try {
-                lock.lock();
-                if (commands[index] != null) throw new IllegalStateException("Unable to place command at index :" + index);
-                commands[index] = command;
-                while(output.remaining() > 0) pipe.sink().write(output);
-            } catch (IOException ex) {
-                throw new InternalException(ex);
-            } finally {
-                lock.unlock();
-            }
+            lock.lock();
 
-        } catch (InterruptedException e) {
-            throw new InternalException(e);
+            if (commands[index] != null) throw new IllegalStateException("Unable to place command at index :" + index);
+            commands[index] = command;
+            while(output.remaining() > 0) pipe.sink().write(output);
+
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        } finally {
+            lock.unlock();
         }
+
     }
 
     public void poll() {
@@ -123,7 +126,7 @@ class SimpleAsyncThreadContext implements AutoCloseable {
         final int next = poller.getNext();
 
         for (int index = connectionIndexStart; index < next; ++index) {
-            final SimpleAsyncConnection connection = (SimpleAsyncConnection) poller.getItem(index);
+            final JeroMQAsyncConnection connection = (JeroMQAsyncConnection) poller.getItem(index);
             if (connection != null) {
                 if (poller.pollin(index)) connection.getOnRead().publish(connection);
                 if (poller.pollout(index)) connection.getOnWrite().publish(connection);
@@ -179,11 +182,11 @@ class SimpleAsyncThreadContext implements AutoCloseable {
 
     }
 
-    public SimpleAsyncConnectionHandle allocateNewConnection(final Function<ZContext, ZMQ.Socket> socketSupplier) {
+    public JeroMQAsyncConnectionHandle allocateNewConnection(final Function<ZContext, ZMQ.Socket> socketSupplier) {
 
         final ZMQ.Socket socket = socketSupplier.apply(zContext);
 
-        final SimpleAsyncConnection connection = new SimpleAsyncConnection(
+        final JeroMQAsyncConnection connection = new JeroMQAsyncConnection(
                 zContext, socket,
                 (conn, consumer) -> doInThread(() -> consumer.accept(conn)));
 
@@ -194,12 +197,12 @@ class SimpleAsyncThreadContext implements AutoCloseable {
         }));
 
         final int index = poller.register(connection);
-        return new SimpleAsyncConnectionHandle(index, this);
+        return new JeroMQAsyncConnectionHandle(index, this);
 
     }
 
-    public SimpleAsyncConnection getConnection(final int index) {
-        return (SimpleAsyncConnection) poller.getItem(index);
+    public JeroMQAsyncConnection getConnection(final int index) {
+        return (JeroMQAsyncConnection) poller.getItem(index);
     }
 
     public Subscription onPostLoop(final BiConsumer<Subscription, Void> consumer) {

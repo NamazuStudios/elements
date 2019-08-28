@@ -41,7 +41,7 @@ import static org.testng.Assert.*;
 
 public class JeroMQEndToEndIntegrationTest {
 
-    private static final int TEST_NODE_COUNT = 5;
+    private static final int TEST_NODE_COUNT = 3;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQEndToEndIntegrationTest.class);
 
@@ -55,6 +55,8 @@ public class JeroMQEndToEndIntegrationTest {
     public void setup() {
 
         final ZContext zContext = new ZContext();
+        zContext.getContext().setMaxSockets(8192);
+
         final ApplicationId applicationId = randomApplicationId();
         final List<InstanceId> instanceIdList = IntStream.range(0, TEST_NODE_COUNT)
             .mapToObj(i -> randomInstanceId())
@@ -113,17 +115,17 @@ public class JeroMQEndToEndIntegrationTest {
         client.refreshConnections();
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testRemoteInvokeSync() {
         getTestServiceInterface().testSyncVoid("Hello");
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10, expectedExceptions = IllegalArgumentException.class)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5, expectedExceptions = IllegalArgumentException.class)
     public void testRemoteInvokeSyncException() {
         getTestServiceInterface().testSyncVoid("testSyncVoid");
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testRemoteInvokeSyncReturn() {
         final double result = getTestServiceInterface().testSyncReturn("Hello");
         assertEquals(result, 40.42);
@@ -135,7 +137,7 @@ public class JeroMQEndToEndIntegrationTest {
         fail("Did not expect return.");
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnVoid() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -151,7 +153,7 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnVoidException() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -167,14 +169,14 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnFuture() throws ExecutionException, InterruptedException {
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello");
         final int result = integerFuture.get();
         assertEquals(result, 42);
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnFutureException() throws InterruptedException {
 
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("testAsyncReturnFuture");
@@ -187,7 +189,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnFutureWithConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -208,7 +210,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnFutureWithConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -234,7 +236,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnFutureWithCustomConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -255,7 +257,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testAsyncReturnFutureWithCustomConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -283,14 +285,14 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testEcho() {
         final UUID uuid = randomUUID();
         final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
         assertEquals(result, uuid.toString());
     }
 
-    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 10, threadPoolSize = 5)
     public void testEchoWithSomeErrors() {
 
         final UUID uuid = randomUUID();
@@ -333,15 +335,13 @@ public class JeroMQEndToEndIntegrationTest {
         protected void configure() {
 
             install(new FSTPayloadReaderWriterModule());
-            install(new JeroMQRemoteInvokerModule());
-            install(new SimpleAsyncConnectionServiceModule());
 
             bind(ZContext.class).toInstance(zContext);
 
             bind(String.class).annotatedWith(named(JeroMQNode.MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(JeroMQNode.MAX_CONNECTIONS)).toInstance("500");
+            bind(String.class).annotatedWith(named(JeroMQNode.MAX_CONNECTIONS)).toInstance("25");
             bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("250");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("25");
 
             instanceIdList.forEach(i -> install(new NodeModule(i, instanceIdList, applicationId)));
             instanceIdList.forEach(i -> expose(Instance.class).annotatedWith(named(i.asString())));
@@ -375,6 +375,9 @@ public class JeroMQEndToEndIntegrationTest {
             final NodeId nodeId = new NodeId(instanceId, applicationId);
             final Named nodeNamedAnnotation = named(nodeId.asString());
             final Named instanceNamedAnnotation = named(instanceId.asString());
+
+            install(new JeroMQRemoteInvokerModule());
+            install(new JeroMQAsyncConnectionServiceModule());
 
             install(new JeroMQNodeModule()
                 .withNodeId(nodeId)
@@ -467,7 +470,7 @@ public class JeroMQEndToEndIntegrationTest {
             install(new GuiceIoCResolverModule());
             install(new FSTPayloadReaderWriterModule());
             install(new JeroMQRemoteInvokerModule());
-            install(new SimpleAsyncConnectionServiceModule());
+            install(new JeroMQAsyncConnectionServiceModule());
             install(new JeroMQInstanceConnectionServiceModule().withBindAddress(this.instanceBindAddress));
             install(new StaticInstanceDiscoveryServiceModule().withInstanceAddresses(
                 concat(of(instanceBindAddress), instanceIdList
@@ -489,7 +492,7 @@ public class JeroMQEndToEndIntegrationTest {
             bind(Instance.class).to(SimpleInstance.class).asEagerSingleton();
 
             bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("250");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("25");
 
         }
 

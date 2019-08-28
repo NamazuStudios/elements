@@ -179,7 +179,7 @@ public class SimpleAsyncConnectionServiceTest {
         @Override
         protected void configure() {
             bind(ZContext.class).asEagerSingleton();
-            bind(AsyncConnectionService.class).to(SimpleAsyncConnectionService.class).asEagerSingleton();
+            bind(AsyncConnectionService.class).to(JeroMQAsyncConnectionService.class).asEagerSingleton();
         }
     }
 

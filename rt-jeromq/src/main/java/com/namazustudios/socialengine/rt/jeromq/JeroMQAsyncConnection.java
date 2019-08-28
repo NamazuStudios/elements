@@ -12,28 +12,28 @@ import java.util.function.Consumer;
 
 import static org.zeromq.ZMQ.Poller.*;
 
-public class SimpleAsyncConnection extends ZMQ.PollItem implements AsyncConnection<ZContext, ZMQ.Socket> {
+public class JeroMQAsyncConnection extends ZMQ.PollItem implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     private final ZContext zContext;
 
     private final ZMQ.Socket socket;
 
-    private final BiConsumer<SimpleAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler;
+    private final BiConsumer<JeroMQAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler;
 
-    private final Publisher<SimpleAsyncConnection> onClose = new SimplePublisher<>();
+    private final Publisher<JeroMQAsyncConnection> onClose = new SimplePublisher<>();
 
-    private final Publisher<SimpleAsyncConnection> onRead = new SimplePublisher<>();
+    private final Publisher<JeroMQAsyncConnection> onRead = new SimplePublisher<>();
 
-    private final Publisher<SimpleAsyncConnection> onWrite = new SimplePublisher<>();
+    private final Publisher<JeroMQAsyncConnection> onWrite = new SimplePublisher<>();
 
-    private final Publisher<SimpleAsyncConnection> onError = new SimplePublisher<>();
+    private final Publisher<JeroMQAsyncConnection> onError = new SimplePublisher<>();
 
-    private final Publisher<SimpleAsyncConnection> onRecycle = new SimplePublisher<>();
+    private final Publisher<JeroMQAsyncConnection> onRecycle = new SimplePublisher<>();
 
-    public SimpleAsyncConnection(
+    public JeroMQAsyncConnection(
             final ZContext zContext,
             final ZMQ.Socket socket,
-            final BiConsumer<SimpleAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler) {
+            final BiConsumer<JeroMQAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler) {
         super(socket, POLLIN| POLLOUT | POLLERR);
         this.zContext = zContext;
         this.socket = socket;
@@ -91,23 +91,23 @@ public class SimpleAsyncConnection extends ZMQ.PollItem implements AsyncConnecti
         getOnClose().publish(this);
     }
 
-    public Publisher<SimpleAsyncConnection> getOnClose() {
+    public Publisher<JeroMQAsyncConnection> getOnClose() {
         return onClose;
     }
 
-    public Publisher<SimpleAsyncConnection> getOnRead() {
+    public Publisher<JeroMQAsyncConnection> getOnRead() {
         return onRead;
     }
 
-    public Publisher<SimpleAsyncConnection> getOnWrite() {
+    public Publisher<JeroMQAsyncConnection> getOnWrite() {
         return onWrite;
     }
 
-    public Publisher<SimpleAsyncConnection> getOnError() {
+    public Publisher<JeroMQAsyncConnection> getOnError() {
         return onError;
     }
 
-    public Publisher<SimpleAsyncConnection> getOnRecycle() {
+    public Publisher<JeroMQAsyncConnection> getOnRecycle() {
         return onRecycle;
     }
 

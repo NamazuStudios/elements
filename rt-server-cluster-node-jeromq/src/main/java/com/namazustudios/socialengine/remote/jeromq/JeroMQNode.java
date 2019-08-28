@@ -25,8 +25,10 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newCachedThreadPool;
+import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.zeromq.SocketType.*;
 import static org.zeromq.ZMQ.Socket;
@@ -200,7 +202,7 @@ public class JeroMQNode implements Node {
 
         private final AtomicInteger dispatcherCount = new AtomicInteger();
 
-        private final ExecutorService dispatchExecutorService = newCachedThreadPool(r -> {
+        private final ExecutorService dispatchExecutorService = newFixedThreadPool(getRuntime().availableProcessors() * 2, r -> {
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
             thread.setName(format("%s %s.in #%d", getClass().getSimpleName(), getName(), dispatcherCount.incrementAndGet()));

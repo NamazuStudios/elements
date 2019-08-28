@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.InvocationErrorConsumer;
 import com.namazustudios.socialengine.rt.remote.InvocationResult;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
+import com.sun.corba.se.spi.legacy.connection.GetEndPointInfoAgainException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -15,6 +16,7 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -38,6 +40,10 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
 
+    private int minConnections;
+
+    private int maxConnections;
+
     private final AtomicReference<AsyncConnectionPool> pool = new AtomicReference<>();
 
     @Override
@@ -51,7 +57,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         final String name = JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress;
 
         final AsyncConnectionPool<ZContext, ZMQ.Socket> pool = getAsyncConnectionService().allocatePool(
-            name, 0, 0,
+            name, getMinConnections(), getMaxConnections(),
             zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(DEALER);
             socket.connect(connectAddress);
@@ -169,6 +175,24 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     @Inject
     public void setAsyncConnectionService(AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService) {
         this.asyncConnectionService = asyncConnectionService;
+    }
+
+    public int getMinConnections() {
+        return minConnections;
+    }
+
+    @Inject
+    public void setMinConnections(@Named(MIN_CONNECTIONS) int minConnections) {
+        this.minConnections = minConnections;
+    }
+
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    @Inject
+    public void setMaxConnections(@Named(MAX_CONNECTIONS) int maxConnections) {
+        this.maxConnections = maxConnections;
     }
 
 }

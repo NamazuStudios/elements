@@ -17,13 +17,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.namazustudios.socialengine.rt.jeromq.SimpleAsyncConnectionService.THREAD_POOL_SIZE;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.THREAD_POOL_SIZE;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static java.util.stream.Collectors.toList;
 
-class SimpleAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Socket> {
+class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Socket> {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncConnectionPool.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnectionPool.class);
 
     private final int min;
 
@@ -35,17 +35,18 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
     private final Function<ZContext, ZMQ.Socket> socketSupplier;
 
-    private final SimpleAsyncConnectionService.SimpleAsyncConnectionServiceContext context;
+    private final JeroMQAsyncConnectionService.SimpleAsyncConnectionServiceContext context;
 
     private final AtomicBoolean open = new AtomicBoolean(true);
 
-    private final Set<SimpleAsyncConnectionHandle> connectionHandles = newKeySet();
+    private final Set<JeroMQAsyncConnectionHandle> connectionHandles = newKeySet();
 
-    private final Queue<SimpleAsyncConnectionHandle> available = new ConcurrentLinkedQueue<>();
+    private final Queue<JeroMQAsyncConnectionHandle> available = new ConcurrentLinkedQueue<>();
 
-    public SimpleAsyncConnectionPool(final String name, final int min, final int max,
+    public JeroMQAsyncConnectionPool(final String name, final int min, final int max,
                                      final Function<ZContext, ZMQ.Socket> socketSupplier,
-                                     final SimpleAsyncConnectionService.SimpleAsyncConnectionServiceContext parentContext) {
+                                     final JeroMQAsyncConnectionService.SimpleAsyncConnectionServiceContext parentContext) {
+        if (min >= max) throw new IllegalArgumentException("min must be < max");
         this.min = min;
         this.max = max;
         this.name = name;
@@ -55,14 +56,14 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         parentContext.getThreadContextRoundRobin().forEach(c -> c.onPostLoop((s, v) -> ensureMinimum(s, c)));
     }
 
-    private void ensureMinimum(final Subscription subscription, final SimpleAsyncThreadContext context) {
+    private void ensureMinimum(final Subscription subscription, final JeroMQAsyncThreadContext context) {
         if (open.get()) {
 
             int added = 0;
 
             while (connectionHandles.size() < min && (added++ < (min / THREAD_POOL_SIZE))) {
-                final SimpleAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-                final SimpleAsyncConnection connection = context.getConnection(handle.index);
+                final JeroMQAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
+                final JeroMQAsyncConnection connection = context.getConnection(handle.index);
                 addConnection(handle, connection);
                 semaphore.release();
             }
@@ -87,7 +88,7 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
             throw new InternalException(ex);
         }
 
-        final SimpleAsyncConnectionHandle entry = available.poll();
+        final JeroMQAsyncConnectionHandle entry = available.poll();
 
         if (entry == null) {
             doAcqureNew(asyncConnectionConsumer);
@@ -99,18 +100,18 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
     private void doAcqureNew(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
-        final SimpleAsyncThreadContext context = this.context.getThreadContextRoundRobin().getNext();
+        final JeroMQAsyncThreadContext context = this.context.getThreadContextRoundRobin().getNext();
 
         context.doInThread(() -> {
-            final SimpleAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-            final SimpleAsyncConnection connection = context.getConnection(handle.index);
+            final JeroMQAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
+            final JeroMQAsyncConnection connection = context.getConnection(handle.index);
             addConnection(handle, connection);
             asyncConnectionConsumer.accept(connection);
         });
 
     }
 
-    private void addConnection(final SimpleAsyncConnectionHandle handle, final SimpleAsyncConnection connection) {
+    private void addConnection(final JeroMQAsyncConnectionHandle handle, final JeroMQAsyncConnection connection) {
 
         connectionHandles.add(handle);
 
@@ -130,7 +131,7 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     }
 
     private void doReuseConnection(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer,
-                                   final SimpleAsyncConnectionHandle handle) {
+                                   final JeroMQAsyncConnectionHandle handle) {
         handle.context.doInThread(() -> {
             final AsyncConnection connection = handle.context.getConnection(handle.index);
             asyncConnectionConsumer.accept(connection);

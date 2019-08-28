@@ -17,7 +17,7 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.zeromq.ZContext.shadow;
 
-public class MonitorThread extends Thread implements AutoCloseable {
+public class JeroMQMonitorThread extends Thread implements AutoCloseable {
 
     private static final long EVENT_LOG_TIME_MSEC = MILLISECONDS.convert(10, SECONDS);
 
@@ -27,7 +27,7 @@ public class MonitorThread extends Thread implements AutoCloseable {
 
     private final ZMQ.Socket monitored;
 
-    public MonitorThread(final String name, final Logger logger, final ZContext zContext, final ZMQ.Socket monitored) {
+    public JeroMQMonitorThread(final String name, final Logger logger, final ZContext zContext, final ZMQ.Socket monitored) {
         setName(name);
         setDaemon(true);
         this.logger = logger;
