@@ -113,7 +113,7 @@ public class SimpleAsyncConnectionServiceTest {
         managedPoolList.forEach(p -> p.close());
     }
 
-    @Test(dataProvider = "getManagedPools", invocationCount = 250, threadPoolSize = 100)
+    @Test(dataProvider = "getManagedPools", invocationCount = 5000, threadPoolSize = 25)
     public void testPool(final AsyncConnectionPool managedPool) throws InterruptedException {
 
         final String msg = randomUUID().toString();

@@ -7,8 +7,6 @@ import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.SimpleConnectionPool;
 import com.namazustudios.socialengine.rt.remote.Node;
 
 import javax.inject.Provider;
@@ -17,7 +15,7 @@ import java.lang.annotation.Annotation;
 import java.util.function.Function;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.NAME;
+import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
 
@@ -90,21 +88,6 @@ public class JeroMQNodeModule extends PrivateModule {
     }
 
     /**
-     * Specifies the connection timeout.  If a connection isn't used for the specified period of time, the underlying
-     * connection is terminated and removed.  Leaving this unspecified will not assign any properties and leave it to
-     * external means to configure the underlying module.
-     *
-     * @param timeoutInSeconds the timeout value, in seconds.
-     * @return this instance
-     */
-    public JeroMQNodeModule withTimeout(final int timeoutInSeconds) {
-        bindTimeoutAction = () -> bind(Integer.class)
-                .annotatedWith(named(ConnectionPool.TIMEOUT))
-                .toInstance(timeoutInSeconds);
-        return this;
-    }
-
-    /**
      * Specifies the minimum number of connections to keep active, even if the timeout has expired.
      *
      * @param minimumConnections the minimum number of connections to keep issueOpenInprocChannelCommand
@@ -112,7 +95,7 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMinimumConnections(final int minimumConnections) {
         bindMinConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(ConnectionPool.MIN_CONNECTIONS))
+                .annotatedWith(named(MIN_CONNECTIONS))
                 .toInstance(minimumConnections);
         return this;
     }
@@ -125,7 +108,7 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMaximumConnections(int maximumConnections) {
         bindMaxConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(ConnectionPool.MAX_CONNECTIONS))
+                .annotatedWith(named(MAX_CONNECTIONS))
                 .toInstance(maximumConnections);
         return this;
     }
@@ -171,7 +154,6 @@ public class JeroMQNodeModule extends PrivateModule {
     protected void configure() {
 
         bindAnnotationAction.apply(bind(Node.class)).to(JeroMQNode.class).asEagerSingleton();
-        bind(ConnectionPool.class).to(SimpleConnectionPool.class);
 
         bindNodeIdAction.run();
         bindNodeNameAction.run();

@@ -9,49 +9,45 @@ import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionGroup;
 import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
-import com.namazustudios.socialengine.rt.remote.*;
-import com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil;
+import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.zeromq.ZContext;
 import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
-import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.IntStream.range;
-import static org.zeromq.SocketType.PULL;
-import static org.zeromq.SocketType.PUSH;
-import static org.zeromq.SocketType.ROUTER;
-import static org.zeromq.ZMQ.*;
-import static org.zeromq.ZMQ.Poller.POLLERR;
-import static org.zeromq.ZMQ.Poller.POLLIN;
+import static org.zeromq.SocketType.*;
+import static org.zeromq.ZMQ.Socket;
 
 public class JeroMQNode implements Node {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(JeroMQNode.class);
-    
+
     private static final String OUTBOUND_ADDR_FORMAT = "inproc://node/%s/out";
+
+    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.min.connections";
+
+    public static final String MAX_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.max.connections";
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
     private String name;
 
     private NodeId nodeId;
+
+    private int minConnections;
+
+    private int maxConnections;
 
     private LocalInvocationDispatcher invocationDispatcher;
 
@@ -163,6 +159,24 @@ public class JeroMQNode implements Node {
         this.name = name;
     }
 
+    public int getMinConnections() {
+        return minConnections;
+    }
+
+    @Inject
+    public void setMinConnections(@Named(MIN_CONNECTIONS) int minConnections) {
+        this.minConnections = minConnections;
+    }
+
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    @Inject
+    public void setMaxConnections(@Named(MAX_CONNECTIONS) int maxConnections) {
+        this.maxConnections = maxConnections;
+    }
+
     public NodeLifecycle getNodeLifecycle() {
         return nodeLifecycle;
     }
@@ -201,8 +215,8 @@ public class JeroMQNode implements Node {
             // TODO Make Connection Pool Size Adjustable.
             outboundConnectionPool = getAsyncConnectionService().allocatePool(
                 "JeroMQNode Outbound",
-                100,
-                10000,
+                getMinConnections(),
+                getMaxConnections(),
                 z -> {
                     final Socket socket = z.createSocket(PUSH);
                     socket.connect(getOutboundAddr());

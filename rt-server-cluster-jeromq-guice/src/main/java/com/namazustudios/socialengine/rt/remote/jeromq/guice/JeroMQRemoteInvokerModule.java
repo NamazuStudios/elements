@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvoker;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.jeromq.ConnectionPool.TIMEOUT;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MIN_CONNECTIONS;
 
@@ -20,21 +19,6 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
     private Runnable bindMaxConnectionsAction = () -> {};
 
     private Runnable bindExecutorServiceAction = () -> {};
-
-    /**
-     * Specifies the connection timeout.  If a connection isn't used for the specified period of time, the underlying
-     * connection is terminated and removed.  Leaving this unspecified will not assign any properties and leave it to
-     * external means to configure the underlying module.
-     *
-     * @param timeoutInSeconds the timeout value, in seconds.
-     * @return this instance
-     */
-    public JeroMQRemoteInvokerModule withTimeout(final int timeoutInSeconds) {
-        bindTimeoutAction = () -> bind(Integer.class)
-            .annotatedWith(named(TIMEOUT))
-            .toInstance(timeoutInSeconds);
-        return this;
-    }
 
     /**
      * Specifies the minimum number of connections to keep active, even if the timeout has expired.

@@ -26,7 +26,6 @@ import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
-import static com.namazustudios.socialengine.rt.jeromq.ConnectionPool.*;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.UUID.randomUUID;
@@ -35,7 +34,6 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
@@ -335,12 +333,12 @@ public class JeroMQEndToEndIntegrationTest {
 
             install(new FSTPayloadReaderWriterModule());
             install(new JeroMQRemoteInvokerModule());
+            install(new SimpleAsyncConnectionServiceModule());
 
             bind(ZContext.class).toInstance(zContext);
 
-            bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("60");
-            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(MAX_CONNECTIONS)).toInstance("250");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("250");
 
             instanceIdList.forEach(i -> install(new NodeModule(i, instanceIdList, applicationId)));
             instanceIdList.forEach(i -> expose(Instance.class).annotatedWith(named(i.asString())));
@@ -466,6 +464,7 @@ public class JeroMQEndToEndIntegrationTest {
             install(new GuiceIoCResolverModule());
             install(new FSTPayloadReaderWriterModule());
             install(new JeroMQRemoteInvokerModule());
+            install(new SimpleAsyncConnectionServiceModule());
             install(new JeroMQInstanceConnectionServiceModule().withBindAddress(this.instanceBindAddress));
             install(new StaticInstanceDiscoveryServiceModule().withInstanceAddresses(
                 concat(of(instanceBindAddress), instanceIdList
@@ -486,9 +485,8 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(Instance.class).to(SimpleInstance.class).asEagerSingleton();
 
-            bind(String.class).annotatedWith(named(TIMEOUT)).toInstance("60");
-            bind(String.class).annotatedWith(named(MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(MAX_CONNECTIONS)).toInstance("250");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("250");
 
         }
 

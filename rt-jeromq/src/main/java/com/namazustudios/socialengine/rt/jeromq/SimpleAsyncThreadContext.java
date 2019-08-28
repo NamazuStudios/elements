@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 import com.namazustudios.socialengine.rt.Publisher;
+import com.namazustudios.socialengine.rt.Rollover;
 import com.namazustudios.socialengine.rt.SimplePublisher;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -12,9 +13,7 @@ import org.zeromq.ZMQ;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
-import java.util.SortedMap;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
@@ -24,6 +23,8 @@ import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 
 class SimpleAsyncThreadContext implements AutoCloseable {
+
+    private static final int COMMAND_QUEUE_MAX = 4096;
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncThreadContext.class);
     
@@ -37,15 +38,17 @@ class SimpleAsyncThreadContext implements AutoCloseable {
 
     private final ZContext zContext;
 
-    private final Lock writeLock = new ReentrantLock();
-
-    private final AtomicInteger next = new AtomicInteger();
-
     private final Publisher<Void> onPostLoop = new SimplePublisher<>();
+
+    private final Lock lock = new ReentrantLock();
 
     private final ByteBuffer incoming = ByteBuffer.allocate(Integer.BYTES);
 
-    private final SortedMap<Integer, Runnable> commands = new ConcurrentSkipListMap<>();
+    private final Rollover next = new Rollover(COMMAND_QUEUE_MAX);
+
+    private final Runnable[] commands = new Runnable[COMMAND_QUEUE_MAX];
+
+    private final Semaphore semaphore = new Semaphore(COMMAND_QUEUE_MAX);
 
     public SimpleAsyncThreadContext(final ZContext zContext, final ZMQ.Poller poller) {
 
@@ -64,23 +67,30 @@ class SimpleAsyncThreadContext implements AutoCloseable {
     }
 
     public void doInThread(final Runnable command) {
-
-        final int index = next.getAndIncrement();
-        final ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
-
-        commands.put(index, command);
-        output.putInt(index);
-        output.flip();
-
         try {
-            writeLock.lock();
-            while(output.remaining() > 0) pipe.sink().write(output);
-        } catch (IOException ex) {
-            throw new InternalException(ex);
-        } finally {
-            writeLock.unlock();
-        }
 
+            semaphore.acquire();
+
+            final int index = next.getAndIncrement();
+            final ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
+
+            output.putInt(index);
+            output.flip();
+
+            try {
+                lock.lock();
+                if (commands[index] != null) throw new IllegalStateException("Unable to place command at index :" + index);
+                commands[index] = command;
+                while(output.remaining() > 0) pipe.sink().write(output);
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            } finally {
+                lock.unlock();
+            }
+
+        } catch (InterruptedException e) {
+            throw new InternalException(e);
+        }
     }
 
     public void poll() {
@@ -124,16 +134,32 @@ class SimpleAsyncThreadContext implements AutoCloseable {
     }
 
     private void process(final int command) {
-        final Runnable runnable = commands.remove(command);
-        if (runnable == null) {
-            logger.error("Unable to process command at index {}", command);
-        } else {
-            try {
-                runnable.run();
-            } catch (Exception ex) {
-                logger.error("Caught exception processing command {}.", runnable, ex);
-            }
+
+        final Runnable runnable;
+
+        try {
+            lock.lock();
+            runnable = commands[command];
+            commands[command] = null;
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            logger.error("Invalid command index.", ex);
+            return;
+        } finally {
+            lock.unlock();
         }
+
+        try {
+            if (runnable == null) {
+                logger.error("Unable to process command at index {}", command);
+            } else {
+                runnable.run();
+            }
+        } catch (Exception ex) {
+            logger.error("Caught exception processing command {}.", runnable, ex);
+        } finally {
+            semaphore.release();
+        }
+
     }
 
     @Override

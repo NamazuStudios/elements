@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.AsyncConnection;
-import com.namazustudios.socialengine.rt.jeromq.PooledAsyncConnection;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,7 +59,7 @@ public class JeroMQInvocation {
 
     private final Subscription subscriptions;
 
-    public JeroMQInvocation(final PooledAsyncConnection connection,
+    public JeroMQInvocation(final AsyncConnection connection,
                             final Invocation invocation,
                             final PayloadReader payloadReader, final PayloadWriter payloadWriter,
                             final Map<String, String > mdcContext,
@@ -92,7 +91,7 @@ public class JeroMQInvocation {
 
     }
 
-    private void handleRead(final PooledAsyncConnection connection) {
+    private void handleRead(final AsyncConnection connection) {
 
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 
@@ -133,7 +132,7 @@ public class JeroMQInvocation {
 
     }
 
-    private void handleWrite(final PooledAsyncConnection connection) {
+    private void handleWrite(final AsyncConnection connection) {
 
         final RequestHeader requestHeader = new RequestHeader();
         requestHeader.additionalParts.set(additionalCount);
@@ -311,7 +310,7 @@ public class JeroMQInvocation {
         }
     }
 
-    private void handleSocketError(final PooledAsyncConnection connection) {
+    private void handleSocketError(final AsyncConnection connection) {
 
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 

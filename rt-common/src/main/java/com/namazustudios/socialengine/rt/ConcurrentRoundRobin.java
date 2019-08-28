@@ -9,9 +9,10 @@ public class ConcurrentRoundRobin<T> implements RoundRobin<T> {
 
     private final T[] objects;
 
-    private final AtomicInteger next = new AtomicInteger();
+    private final Rollover next;
 
     public ConcurrentRoundRobin(final T[] objects, int size) {
+        this.next = new Rollover(size);
         this.objects = Arrays.copyOf(objects, size);
     }
 
@@ -28,7 +29,7 @@ public class ConcurrentRoundRobin<T> implements RoundRobin<T> {
     @Override
     public T getNext() {
         final int next = this.next.getAndIncrement();
-        return objects[next % objects.length];
+        return objects[next];
     }
 
     @Override
