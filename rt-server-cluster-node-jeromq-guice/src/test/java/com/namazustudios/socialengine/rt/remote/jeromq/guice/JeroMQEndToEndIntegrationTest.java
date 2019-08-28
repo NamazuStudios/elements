@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.*;
 import com.google.inject.name.Named;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
@@ -337,6 +338,8 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(ZContext.class).toInstance(zContext);
 
+            bind(String.class).annotatedWith(named(JeroMQNode.MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(JeroMQNode.MAX_CONNECTIONS)).toInstance("500");
             bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
             bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("250");
 

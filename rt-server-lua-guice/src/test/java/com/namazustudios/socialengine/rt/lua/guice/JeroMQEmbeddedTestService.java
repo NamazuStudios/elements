@@ -60,8 +60,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             .withZContext(shadow(zContext))
             .withNodeName("integration-test-node")
             .withMinimumConnections(5)
-            .withMaximumConnections(250)
-            .withTimeout(60));
+            .withMaximumConnections(250));
 
         final List<Module> clientModules = new ArrayList<>(this.clientModules);
 

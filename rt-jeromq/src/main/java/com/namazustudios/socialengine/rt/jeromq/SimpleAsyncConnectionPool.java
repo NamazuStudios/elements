@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import com.namazustudios.socialengine.rt.AsyncConnection;
+import com.namazustudios.socialengine.rt.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
@@ -19,7 +21,7 @@ import static com.namazustudios.socialengine.rt.jeromq.SimpleAsyncConnectionServ
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static java.util.stream.Collectors.toList;
 
-class SimpleAsyncConnectionPool implements AsyncConnectionPool {
+class SimpleAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Socket> {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncConnectionPool.class);
 
@@ -75,7 +77,7 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool {
     }
 
     @Override
-    public void acquireNextAvailableConnection(final Consumer<AsyncConnection> asyncConnectionConsumer) {
+    public void acquireNextAvailableConnection(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
         if (!open.get()) throw new IllegalStateException("Pool is closed.");
 
@@ -95,7 +97,7 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool {
 
     }
 
-    private void doAcqureNew(final Consumer<AsyncConnection> asyncConnectionConsumer) {
+    private void doAcqureNew(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
         final SimpleAsyncThreadContext context = this.context.getThreadContextRoundRobin().getNext();
 
@@ -127,7 +129,7 @@ class SimpleAsyncConnectionPool implements AsyncConnectionPool {
 
     }
 
-    private void doReuseConnection(final Consumer<AsyncConnection> asyncConnectionConsumer,
+    private void doReuseConnection(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer,
                                    final SimpleAsyncConnectionHandle handle) {
         handle.context.doInThread(() -> {
             final AsyncConnection connection = handle.context.getConnection(handle.index);

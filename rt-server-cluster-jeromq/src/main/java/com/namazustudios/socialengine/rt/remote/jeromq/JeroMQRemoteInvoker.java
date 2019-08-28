@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionService;
+import com.namazustudios.socialengine.rt.AsyncConnectionPool;
+import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.InvocationErrorConsumer;
 import com.namazustudios.socialengine.rt.remote.InvocationResult;
@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.inject.Inject;
@@ -35,7 +36,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private PayloadWriter payloadWriter;
 
-    private AsyncConnectionService asyncConnectionService;
+    private AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
 
     private final AtomicReference<AsyncConnectionPool> pool = new AtomicReference<>();
 
@@ -49,7 +50,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         final String name = JeroMQRemoteInvoker.class.getSimpleName() + ": " + connectAddress;
 
-        final AsyncConnectionPool pool = getAsyncConnectionService().allocatePool(
+        final AsyncConnectionPool<ZContext, ZMQ.Socket> pool = getAsyncConnectionService().allocatePool(
             name, 0, 0,
             zContext -> {
             final ZMQ.Socket socket = zContext.createSocket(DEALER);
@@ -137,7 +138,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     }
 
-    private AsyncConnectionPool getPool() {
+    private AsyncConnectionPool<ZContext, ZMQ.Socket> getPool() {
         final AsyncConnectionPool pool = this.pool.get();
         if (pool == null) throw new IllegalStateException("Not currently running.");
         return pool;
@@ -161,12 +162,12 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.payloadWriter = payloadWriter;
     }
 
-    public AsyncConnectionService getAsyncConnectionService() {
+    public AsyncConnectionService<ZContext, ZMQ.Socket> getAsyncConnectionService() {
         return asyncConnectionService;
     }
 
     @Inject
-    public void setAsyncConnectionService(AsyncConnectionService asyncConnectionService) {
+    public void setAsyncConnectionService(AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService) {
         this.asyncConnectionService = asyncConnectionService;
     }
 

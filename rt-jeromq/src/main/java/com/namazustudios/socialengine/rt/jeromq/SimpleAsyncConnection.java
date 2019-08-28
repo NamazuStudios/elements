@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.Publisher;
 import com.namazustudios.socialengine.rt.SimplePublisher;
 import com.namazustudios.socialengine.rt.Subscription;
@@ -11,13 +12,13 @@ import java.util.function.Consumer;
 
 import static org.zeromq.ZMQ.Poller.*;
 
-public class SimpleAsyncConnection extends ZMQ.PollItem implements AsyncConnection {
+public class SimpleAsyncConnection extends ZMQ.PollItem implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     private final ZContext zContext;
 
     private final ZMQ.Socket socket;
 
-    private final BiConsumer<SimpleAsyncConnection, Consumer<AsyncConnection>> signalHandler;
+    private final BiConsumer<SimpleAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler;
 
     private final Publisher<SimpleAsyncConnection> onClose = new SimplePublisher<>();
 
@@ -32,7 +33,7 @@ public class SimpleAsyncConnection extends ZMQ.PollItem implements AsyncConnecti
     public SimpleAsyncConnection(
             final ZContext zContext,
             final ZMQ.Socket socket,
-            final BiConsumer<SimpleAsyncConnection, Consumer<AsyncConnection>> signalHandler) {
+            final BiConsumer<SimpleAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler) {
         super(socket, POLLIN| POLLOUT | POLLERR);
         this.zContext = zContext;
         this.socket = socket;
@@ -40,32 +41,32 @@ public class SimpleAsyncConnection extends ZMQ.PollItem implements AsyncConnecti
     }
 
     @Override
-    public  Subscription onRead(final Consumer<AsyncConnection> asyncConnectionConsumer) {
+    public  Subscription onRead(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
         return onRead.subscribe(asyncConnectionConsumer);
     }
 
     @Override
-    public  Subscription onWrite(Consumer<AsyncConnection> asyncConnectionConsumer) {
+    public  Subscription onWrite(Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
         return onWrite.subscribe(asyncConnectionConsumer);
     }
 
     @Override
-    public  Subscription onError(Consumer<AsyncConnection> asyncConnectionConsumer) {
+    public  Subscription onError(Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
         return onError.subscribe(asyncConnectionConsumer);
     }
 
     @Override
-    public  Subscription onClose(Consumer<AsyncConnection> asyncConnectionConsumer) {
+    public  Subscription onClose(Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
         return onClose.subscribe(asyncConnectionConsumer);
     }
 
     @Override
-    public Subscription onRecycle(Consumer<AsyncConnection> pooledAsyncConnectionConsumer) {
+    public Subscription onRecycle(Consumer<AsyncConnection<ZContext, ZMQ.Socket>> pooledAsyncConnectionConsumer) {
         return onRecycle.subscribe(pooledAsyncConnectionConsumer);
     }
 
     @Override
-    public void signal(final Consumer<AsyncConnection> asyncConnectionConsumerConsumer) {
+    public void signal(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumerConsumer) {
         signalHandler.accept(this, asyncConnectionConsumerConsumer);
     }
 

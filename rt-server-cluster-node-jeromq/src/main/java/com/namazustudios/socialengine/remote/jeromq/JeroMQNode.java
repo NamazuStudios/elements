@@ -4,16 +4,18 @@ import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnection;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionGroup;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionService;
+import com.namazustudios.socialengine.rt.AsyncConnection;
+import com.namazustudios.socialengine.rt.AsyncConnectionGroup;
+import com.namazustudios.socialengine.rt.AsyncConnectionPool;
+import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
@@ -57,7 +59,7 @@ public class JeroMQNode implements Node {
 
     private NodeLifecycle nodeLifecycle;
 
-    private AsyncConnectionService asyncConnectionService;
+    private AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
 
     @Override
     public String getName() {
@@ -140,12 +142,12 @@ public class JeroMQNode implements Node {
         this.payloadWriter = payloadWriter;
     }
 
-    public AsyncConnectionService getAsyncConnectionService() {
+    public AsyncConnectionService<ZContext, ZMQ.Socket> getAsyncConnectionService() {
         return asyncConnectionService;
     }
 
     @Inject
-    public void setAsyncConnectionService(AsyncConnectionService asyncConnectionService) {
+    public void setAsyncConnectionService(AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService) {
         this.asyncConnectionService = asyncConnectionService;
     }
 
@@ -190,13 +192,11 @@ public class JeroMQNode implements Node {
 
         private final Logger logger = loggerForNode();
 
-        private AsyncConnection backendConnection;
-
-        private AsyncConnection frontendConnection;
+        private AsyncConnection<ZContext, ZMQ.Socket> frontendConnection;
 
         private AsyncConnectionGroup mainConnectionGroup;
 
-        private AsyncConnectionPool outboundConnectionPool;
+        private AsyncConnectionPool<ZContext, ZMQ.Socket> outboundConnectionPool;
 
         private final AtomicInteger dispatcherCount = new AtomicInteger();
 
@@ -239,7 +239,6 @@ public class JeroMQNode implements Node {
                     socket.bind(getOutboundAddr());
                     return socket;
                 }, connection -> {
-                    backendConnection = connection;
                     connection.onRead(this::onBackendRead);
                     connection.onError(this::onBackendError);
                     latch.countDown();
@@ -256,22 +255,22 @@ public class JeroMQNode implements Node {
 
         }
 
-        private void onFrontendRead(final AsyncConnection connection) {
+        private void onFrontendRead(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
             final ZMsg msg = ZMsg.recvMsg(connection.socket());
             dispatchExecutorService.submit(() -> dispatch(msg));
 
         }
 
-        private void onFrontendError(final AsyncConnection connection) {
+        private void onFrontendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
             logger.error("Frontend Connection Error {} - errno {}", connection, connection.socket().errno());
         }
 
-        private void onBackendRead(final AsyncConnection connection) {
+        private void onBackendRead(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
             final ZMsg msg = ZMsg.recvMsg(connection.socket());
             msg.send(frontendConnection.socket());
         }
 
-        private void onBackendError(final AsyncConnection connection) {
+        private void onBackendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
             logger.error("Backend Connection Error {} - errno {}", connection, connection.socket().errno());
         }
 

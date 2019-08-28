@@ -3,10 +3,12 @@ package com.namazustudios.socialengine.remote.jeromq;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnectionPool;
+import com.namazustudios.socialengine.rt.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import java.io.IOException;
@@ -31,7 +33,7 @@ public class JeroMQNodeInvocation {
 
     private final PayloadReader payloadReader;
 
-    private final AsyncConnectionPool outbound;
+    private final AsyncConnectionPool<ZContext, ZMQ.Socket> outbound;
 
     private final ZMsg identity;
 
@@ -53,7 +55,7 @@ public class JeroMQNodeInvocation {
                                 final LocalInvocationDispatcher localInvocationDispatcher,
                                 final PayloadReader payloadReader,
                                 final PayloadWriter payloadWriter,
-                                final AsyncConnectionPool outbound) {
+                                final AsyncConnectionPool<ZContext, ZMQ.Socket> outbound) {
 
         this.localInvocationDispatcher = localInvocationDispatcher;
         this.payloadWriter = payloadWriter;

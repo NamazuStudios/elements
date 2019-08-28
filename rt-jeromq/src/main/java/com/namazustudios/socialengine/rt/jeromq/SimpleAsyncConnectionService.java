@@ -8,8 +8,12 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.inject.Inject;
-import java.util.*;
-import java.util.concurrent.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,13 +22,12 @@ import java.util.function.Function;
 
 import static java.lang.Runtime.getRuntime;
 import static java.lang.Thread.interrupted;
-import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
 import static org.zeromq.ZContext.shadow;
 
-public class SimpleAsyncConnectionService implements AsyncConnectionService {
+public class SimpleAsyncConnectionService implements AsyncConnectionService<ZContext, ZMQ.Socket> {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncConnectionService.class);
 
@@ -63,18 +66,18 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
     }
 
     @Override
-    public AsyncConnectionGroup.Builder group() {
+    public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group() {
         final SimpleAsyncConnectionServiceContext context = getContext();
         return context.group();
     }
 
     @Override
-    public AsyncConnectionPool allocatePool(
+    public AsyncConnectionPool<ZContext, ZMQ.Socket> allocatePool(
             final String name,
-            final int minConnections, final int maxConnextions,
+            final int minConnections, final int maxConnections,
             final Function<ZContext, ZMQ.Socket> socketSupplier) {
         final SimpleAsyncConnectionServiceContext context = getContext();
-        return context.allocatePool(name, minConnections, maxConnextions, socketSupplier);
+        return context.allocatePool(name, minConnections, maxConnections, socketSupplier);
     }
 
     private SimpleAsyncConnectionServiceContext getContext() {
@@ -177,14 +180,15 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
             }
         }
 
-        public AsyncConnectionGroup.Builder group() {
-            return new AsyncConnectionGroup.Builder() {
+        public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group() {
+            return new AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket>() {
 
                 private List<Function<SimpleAsyncThreadContext, AsyncConnection>> connectionSupplierList = new ArrayList<>();
 
                 @Override
-                public AsyncConnectionGroup.Builder connection(final Function<ZContext, ZMQ.Socket> socketSupplier,
-                                                               final Consumer<AsyncConnection> asyncConnectionConsumer) {
+                public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket>
+                        connection(final Function<ZContext, ZMQ.Socket> socketSupplier,
+                                   final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
                     connectionSupplierList.add(context -> {
                         final SimpleAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
@@ -198,7 +202,7 @@ public class SimpleAsyncConnectionService implements AsyncConnectionService {
                 }
 
                 @Override
-                public void build(final Consumer<AsyncConnectionGroup> consumer) {
+                public void build(final Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>> consumer) {
 
                     final SimpleAsyncThreadContext context = threadContextRoundRobin.getNext();
 

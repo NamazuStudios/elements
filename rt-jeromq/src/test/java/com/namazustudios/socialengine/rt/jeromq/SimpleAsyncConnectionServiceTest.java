@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.rt.AsyncConnectionPool;
+import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
@@ -94,7 +96,7 @@ public class SimpleAsyncConnectionServiceTest {
     @BeforeClass(dependsOnMethods = "startService")
     public void acquireManagedPools() {
         for (int i = 0; i < POOL_COUNT; ++i) {
-            final AsyncConnectionPool managedPool = getAsyncConnectionService().allocatePool(
+            final AsyncConnectionPool<ZContext, ZMQ.Socket> managedPool = getAsyncConnectionService().allocatePool(
                 "TestPool: " + (i+1),
                 20,
                 1000,
@@ -114,7 +116,7 @@ public class SimpleAsyncConnectionServiceTest {
     }
 
     @Test(dataProvider = "getManagedPools", invocationCount = 5000, threadPoolSize = 25)
-    public void testPool(final AsyncConnectionPool managedPool) throws InterruptedException {
+    public void testPool(final AsyncConnectionPool<ZContext, ZMQ.Socket> managedPool) throws InterruptedException {
 
         final String msg = randomUUID().toString();
         final CountDownLatch latch = new CountDownLatch(2);
@@ -164,7 +166,7 @@ public class SimpleAsyncConnectionServiceTest {
         this.zContext = zContext;
     }
 
-    public AsyncConnectionService getAsyncConnectionService() {
+    public AsyncConnectionService<ZContext, ZMQ.Socket> getAsyncConnectionService() {
         return asyncConnectionService;
     }
 

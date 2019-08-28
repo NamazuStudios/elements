@@ -1,23 +1,28 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import com.namazustudios.socialengine.rt.AsyncConnection;
+import com.namazustudios.socialengine.rt.AsyncConnectionGroup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
-public class SimpleAsyncConnectionGroup implements AsyncConnectionGroup {
+public class SimpleAsyncConnectionGroup implements AsyncConnectionGroup<ZContext, ZMQ.Socket> {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncConnectionGroup.class);
 
     private final List<AsyncConnection> connectionList;
 
-    private final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup>> signalHandler;
+    private final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler;
 
-    public SimpleAsyncConnectionGroup(final List<AsyncConnection> connectionList,
-                                      final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup>> signalHandler) {
+    public SimpleAsyncConnectionGroup(
+            final List<AsyncConnection> connectionList,
+            final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler) {
         this.connectionList = connectionList;
         this.signalHandler = signalHandler;
         connectionList.forEach(c -> c.onClose(c0 -> connectionList.remove(c)));
@@ -38,7 +43,7 @@ public class SimpleAsyncConnectionGroup implements AsyncConnectionGroup {
 
         final CountDownLatch latch = new CountDownLatch(1);
 
-        signal(G -> {
+        signal(g -> {
 
             connectionList.forEach(c -> {
                 try {
@@ -61,7 +66,7 @@ public class SimpleAsyncConnectionGroup implements AsyncConnectionGroup {
     }
 
     @Override
-    public void signal(final Consumer<AsyncConnectionGroup> consumer) {
+    public void signal(final Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>> consumer) {
         signalHandler.accept(this, consumer);
     }
 

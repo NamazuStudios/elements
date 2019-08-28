@@ -1,0 +1,43 @@
+package com.namazustudios.socialengine.rt;
+
+import java.util.function.Function;
+
+/**
+ * A system-wide service to house {@link AsyncConnection} instances.  Each instance of {@link AsyncConnection} is
+ * managed internally and callbacks issued on a background thread dedicated to that as well as other {@link Connection}
+ * instances.
+ */
+public interface AsyncConnectionService<ContextT, SocketT> {
+
+    /**
+     * Starts the {@link AsyncConnectionService<ContextT, SocketT> }.
+     */
+    void start();
+
+    /**
+     * Stops the {@link AsyncConnectionService<ContextT, SocketT> }.
+     */
+    void stop();
+
+    /**
+     * Returns a {@link AsyncConnectionGroup.Builder} which can be used to build an instance of
+     * {@link AsyncConnectionGroup} for managing closely related {@link AsyncConnection} instances.
+     *
+     * @return the {@link AsyncConnectionGroup.Builder}
+     */
+    AsyncConnectionGroup.Builder<ContextT, SocketT> group();
+
+    /**
+     * Allocates an instance of {@link AsyncConnectionPool}.
+     *
+     * @param name
+     * @param minConnections
+     * @param maxConnections
+     * @param socketSupplier
+     * @return
+     */
+    AsyncConnectionPool<ContextT, SocketT>  allocatePool(String name,
+                                                         int minConnections, int maxConnections,
+                                                         Function<ContextT, SocketT> socketSupplier);
+
+}

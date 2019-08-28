@@ -1,7 +1,4 @@
-package com.namazustudios.socialengine.rt.jeromq;
-
-import org.zeromq.ZContext;
-import org.zeromq.ZMQ;
+package com.namazustudios.socialengine.rt;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -11,7 +8,7 @@ import java.util.function.Function;
  * each {@link AsyncConnection} may call directly into another.  Closing the group will close all
  * {@link AsyncConnection} instances contained therein.  However it is not necessary to close the group explicitly.
  */
-public interface AsyncConnectionGroup extends AutoCloseable {
+public interface AsyncConnectionGroup<ContextT, SocketT> extends AutoCloseable {
 
     /**
      * Returns the number of {@link AsyncConnection} instances in this {@link AsyncConnectionGroup}.
@@ -28,7 +25,7 @@ public interface AsyncConnectionGroup extends AutoCloseable {
      *
      * @return the {@link AsyncConnection}
      */
-    AsyncConnection get(int index);
+    AsyncConnection<ContextT, SocketT> get(int index);
 
     /**
      * Similar to {@link AsyncConnection#signal(Consumer)}, this executes the the supplied {@link Consumer< AsyncConnectionGroup >}
@@ -37,7 +34,7 @@ public interface AsyncConnectionGroup extends AutoCloseable {
      *
      * @param consumer
      */
-    void signal(Consumer<AsyncConnectionGroup> consumer);
+    void signal(Consumer<AsyncConnectionGroup<ContextT, SocketT>> consumer);
 
     /**
      * Closes all {@link Connection} instances assocaited with this {@link AsyncConnectionGroup}.  Safe to call from any
@@ -45,24 +42,26 @@ public interface AsyncConnectionGroup extends AutoCloseable {
      */
     void close();
 
-    interface Builder {
+    interface Builder<ContextT, BuilderSocketT> {
 
         /**
          * Adds a {@link AsyncConnection} with the supplied creation and consumer function.
          *
-         * @param socketSupplier the {@link Function< ZContext ,  ZMQ.Socket >} to supply the {@link ZMQ.Socket}
-         * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} which will be called when the connection is ready
+         * @param socketSupplier the {@link Function< ContextT ,  BuilderSocketT >} to supply the
+         * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection<BuilderSocketT>} which will be called when
+         *                                the connection is ready
          * @return this instance
          */
-        Builder connection(Function<ZContext, ZMQ.Socket> socketSupplier,
-                           Consumer<AsyncConnection> asyncConnectionConsumer);
+        Builder<ContextT, BuilderSocketT> connection(
+                Function<ContextT, BuilderSocketT> socketSupplier,
+                Consumer<AsyncConnection<ContextT, BuilderSocketT>> asyncConnectionConsumer);
 
         /**
-         * Builds the {@link AsyncConnectionGroup}.
+         * Builds the {@link AsyncConnectionGroup<BuilderSocketT>}.
          *
-         * @return the {@link AsyncConnectionGroup}.
+         * @return the {@link AsyncConnectionGroup<BuilderSocketT>}.
          */
-        void build(Consumer<AsyncConnectionGroup> group);
+        void build(Consumer<AsyncConnectionGroup<ContextT, BuilderSocketT>> group);
 
     }
 

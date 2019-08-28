@@ -74,17 +74,6 @@ public class TestJeroMQNodeModule extends PrivateModule {
     }
 
     /**
-     * {@see {@link JeroMQNodeModule#withTimeout(int)}}
-     *
-     * @param timeoutInSeconds the timeout, in seconds
-     * @return this instance
-     */
-    public TestJeroMQNodeModule withTimeout(int timeoutInSeconds) {
-        jeroMQNodeModule.withTimeout(timeoutInSeconds);
-        return this;
-    }
-
-    /**
      * {@see {@link JeroMQNodeModule#withMinimumConnections(int)}}
      *
      * @param minimumConnections the minimum number of connections to keep in each connection pool

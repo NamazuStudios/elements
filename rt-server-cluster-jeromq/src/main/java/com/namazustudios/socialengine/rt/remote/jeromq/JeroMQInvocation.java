@@ -6,12 +6,14 @@ import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.*;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.jeromq.AsyncConnection;
+import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.remote.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.zeromq.ZContext;
 import org.zeromq.ZFrame;
+import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 import zmq.ZError;
 
@@ -59,7 +61,7 @@ public class JeroMQInvocation {
 
     private final Subscription subscriptions;
 
-    public JeroMQInvocation(final AsyncConnection connection,
+    public JeroMQInvocation(final AsyncConnection<ZContext, ZMQ.Socket> connection,
                             final Invocation invocation,
                             final PayloadReader payloadReader, final PayloadWriter payloadWriter,
                             final Map<String, String > mdcContext,
@@ -91,7 +93,7 @@ public class JeroMQInvocation {
 
     }
 
-    private void handleRead(final AsyncConnection connection) {
+    private void handleRead(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
 
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 
@@ -132,7 +134,7 @@ public class JeroMQInvocation {
 
     }
 
-    private void handleWrite(final AsyncConnection connection) {
+    private void handleWrite(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
 
         final RequestHeader requestHeader = new RequestHeader();
         requestHeader.additionalParts.set(additionalCount);
@@ -151,7 +153,7 @@ public class JeroMQInvocation {
 
     }
 
-    private ZMsg recv(final AsyncConnection connection) {
+    private ZMsg recv(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
 
         final ZMsg zMsg = ZMsg.recvMsg(connection.socket());
         final int error = connection.socket().errno();
@@ -310,7 +312,7 @@ public class JeroMQInvocation {
         }
     }
 
-    private void handleSocketError(final AsyncConnection connection) {
+    private void handleSocketError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
 
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 
