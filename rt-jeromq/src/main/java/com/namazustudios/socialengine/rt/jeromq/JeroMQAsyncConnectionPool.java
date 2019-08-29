@@ -53,7 +53,11 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         this.socketSupplier = socketSupplier;
         this.context = parentContext;
         this.semaphore = new Semaphore(max);
-        parentContext.getThreadContextRoundRobin().forEach(c -> c.onPostLoop((s, v) -> ensureMinimum(s, c)));
+
+        parentContext.getThreadContextRoundRobin().forEach(c -> c.doInThread(() -> {
+            c.onPostLoop((s, v) -> ensureMinimum(s, c));
+        }));
+
     }
 
     private void ensureMinimum(final Subscription subscription, final JeroMQAsyncThreadContext context) {
@@ -65,7 +69,6 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
                 final JeroMQAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
                 final JeroMQAsyncConnection connection = context.getConnection(handle.index);
                 addConnection(handle, connection);
-                semaphore.release();
             }
 
             if (connectionHandles.size() > max) {

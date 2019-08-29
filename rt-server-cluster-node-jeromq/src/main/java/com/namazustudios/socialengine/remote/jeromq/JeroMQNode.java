@@ -202,7 +202,7 @@ public class JeroMQNode implements Node {
 
         private final AtomicInteger dispatcherCount = new AtomicInteger();
 
-        private final ExecutorService dispatchExecutorService = newFixedThreadPool(getRuntime().availableProcessors() * 2, r -> {
+        private final ExecutorService dispatchExecutorService = newCachedThreadPool(r -> {
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
             thread.setName(format("%s %s.in #%d", getClass().getSimpleName(), getName(), dispatcherCount.incrementAndGet()));

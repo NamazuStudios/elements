@@ -19,7 +19,7 @@ public class IntegrationTestService implements TestServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(IntegrationTestService.class);
 
-    private final ScheduledExecutorService scheduledExecutorService = newScheduledThreadPool(50);
+    private final ScheduledExecutorService scheduledExecutorService = newScheduledThreadPool(1);
 
     @Override
     public void testSyncVoid(final String msg) {

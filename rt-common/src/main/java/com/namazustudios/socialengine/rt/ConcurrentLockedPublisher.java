@@ -42,7 +42,7 @@ public class ConcurrentLockedPublisher<T> implements AsyncPublisher<T> {
     }
 
     @Override
-    public <U extends T> Subscription subscribe(BiConsumer<Subscription, ? super U> consumer) {
+    public Subscription subscribe(BiConsumer<Subscription, ? super T> consumer) {
         try {
             lock.lock();
             return publisher.subscribe(consumer);
@@ -62,7 +62,7 @@ public class ConcurrentLockedPublisher<T> implements AsyncPublisher<T> {
     }
 
     @Override
-    public void publish(final T t, final Consumer<T> onFinish) {
+    public void publish(final T t, final Consumer<? super T> onFinish) {
         try {
             lock.lock();
             publisher.publish(t);

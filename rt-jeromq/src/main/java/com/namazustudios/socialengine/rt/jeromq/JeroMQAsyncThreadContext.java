@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
 import java.util.concurrent.Semaphore;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
@@ -46,7 +47,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
     private final Rollover next = new Rollover(COMMAND_QUEUE_MAX);
 
-    private final Runnable[] commands = new Runnable[COMMAND_QUEUE_MAX];
+    private final AtomicReferenceArray<Runnable> commands = new AtomicReferenceArray<>(COMMAND_QUEUE_MAX);
 
     private final Semaphore semaphore = new Semaphore(COMMAND_QUEUE_MAX);
 
@@ -74,20 +75,19 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
             throw new InternalException(e);
         }
 
+        final int index = next.getAndIncrement();
+        final ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
+
+        if (!commands.compareAndSet(index, null, command)) {
+            logger.info("Buffer overflow at index {}.", index);
+            throw new IllegalStateException("Buffer overflow: " + index);
+        }
+
         try {
-
-            final int index = next.getAndIncrement();
-            final ByteBuffer output = ByteBuffer.allocate(Integer.BYTES);
-
             output.putInt(index);
             output.flip();
-
             lock.lock();
-
-            if (commands[index] != null) throw new IllegalStateException("Unable to place command at index :" + index);
-            commands[index] = command;
             while(output.remaining() > 0) pipe.sink().write(output);
-
         } catch (IOException ex) {
             throw new InternalException(ex);
         } finally {
@@ -136,29 +136,18 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
     }
 
-    private void process(final int command) {
+    private void process(final int index) {
 
-        final Runnable runnable;
-
-        try {
-            lock.lock();
-            runnable = commands[command];
-            commands[command] = null;
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            logger.error("Invalid command index.", ex);
-            return;
-        } finally {
-            lock.unlock();
-        }
+        final Runnable command = commands.getAndSet(index, null);
 
         try {
-            if (runnable == null) {
+            if (command == null) {
                 logger.error("Unable to process command at index {}", command);
             } else {
-                runnable.run();
+                command.run();
             }
         } catch (Exception ex) {
-            logger.error("Caught exception processing command {}.", runnable, ex);
+            logger.error("Caught exception processing command {}.", command, ex);
         } finally {
             semaphore.release();
         }

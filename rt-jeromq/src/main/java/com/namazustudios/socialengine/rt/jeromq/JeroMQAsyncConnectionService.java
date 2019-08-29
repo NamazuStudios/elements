@@ -18,6 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.Thread.interrupted;
 import static java.util.stream.Collectors.toList;
@@ -30,9 +31,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
     private static final int POLL_INTERVAL = 1000;
 
-    static final int THREAD_POOL_SIZE = getRuntime().availableProcessors() + 1;
-
-    private static final AtomicInteger threadGroupNumber = new AtomicInteger();
+    static final int THREAD_POOL_SIZE = max(getRuntime().availableProcessors()/ 4, 1);
 
     private final AtomicReference<SimpleAsyncConnectionServiceContext> context = new AtomicReference<>();
 
@@ -108,16 +107,15 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
         public void start() {
 
-            final int threadGroupNumber = JeroMQAsyncConnectionService.threadGroupNumber.getAndIncrement();
             final AtomicInteger threadCount = new AtomicInteger();
-//            threadGroup = new ThreadGroup(JeroMQAsyncConnectionService.class.getSimpleName() + " "+ threadGroupNumber.getAndIncrement());
+            threadGroup = new ThreadGroup(JeroMQAsyncConnectionService.class.getSimpleName());
 
             final CountDownLatch latch = new CountDownLatch(THREAD_POOL_SIZE);
             threadContextRoundRobin = new ConcurrentRoundRobin<>(new JeroMQAsyncThreadContext[0], THREAD_POOL_SIZE);
 
             range(0, THREAD_POOL_SIZE).forEach(i -> {
                 final String name = JeroMQAsyncConnectionService.class.getSimpleName() + " " + threadCount.getAndIncrement();
-                final Thread thread = new Thread(() -> runIOThread(latch, i));
+                final Thread thread = new Thread(threadGroup, () -> runIOThread(latch, i));
                 thread.setDaemon(true);
                 thread.setUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception in thread {}", e));
                 thread.setName(name);

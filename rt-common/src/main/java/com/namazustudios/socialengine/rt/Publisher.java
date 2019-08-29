@@ -19,8 +19,8 @@ public interface Publisher<T> {
      * @return the {@link Subscription}
      */
 
-    default <U extends T> Subscription subscribe(final Consumer<? super U> consumer) {
-        return subscribe((Subscription s, U u) -> consumer.accept(u));
+    default Subscription subscribe(final Consumer<? super T> consumer) {
+        return subscribe((Subscription s, T t) -> consumer.accept(t));
     }
 
     /**
@@ -30,7 +30,7 @@ public interface Publisher<T> {
      * @param consumer the {@link BiConsumer< T >} which will accept event
      * @return the {@link Subscription}
      */
-    <U extends T> Subscription subscribe(BiConsumer<Subscription, ? super U> consumer);
+    Subscription subscribe(BiConsumer<Subscription, ? super T> consumer);
 
     /**
      * Publishes the event synchronously.
@@ -46,44 +46,11 @@ public interface Publisher<T> {
      * @param t the event
      * @param onFinish the {@link Consumer< T >} to be called after all {@link Subscription}s have been notified
      */
-    void publish(T t, Consumer<T> onFinish);
+    void publish(T t, Consumer<? super T> onFinish);
 
     /**
      * Clears all {@link Subscription}s and implicitly removes them from the internal pool.
      */
     void clear();
-
-    /**
-     * Singleton dummy {@link Publisher}
-     */
-    Publisher<Object> DUMMY = new Publisher<Object>() {
-
-        private final Subscription subscription = () -> {};
-
-        @Override
-        public <U> Subscription subscribe(BiConsumer<Subscription, ? super U> consumer) {
-            return subscription;
-        }
-
-        @Override
-        public void publish(Object dummy) {}
-
-        @Override
-        public void publish(Object dummy, Consumer<Object> onFinish) {}
-
-        @Override
-        public void clear() {}
-
-    };
-
-    /**
-     * Returns a dummy {@link Publisher}
-     *
-     * @param <DummyT> a new dummy publisher
-     * @return
-     */
-    static <DummyT> Publisher<DummyT> dummy() {
-        return (Publisher<DummyT>) DUMMY;
-    }
 
 }
