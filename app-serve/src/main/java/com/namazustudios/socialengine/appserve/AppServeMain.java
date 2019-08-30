@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.appserve;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
@@ -19,11 +17,6 @@ import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
-
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
 
 import static com.namazustudios.socialengine.rt.PersistenceStrategy.getNullPersistence;
 
@@ -49,7 +42,7 @@ public class AppServeMain {
             new AbstractModule() {
                 @Override
                 protected void configure() {
-                    bind(ResourceAcquisition.class).to(NullResourceAcquisition.class);
+                    bind(PersistenceStrategy.class).toInstance(getNullPersistence());
                 }
             }
         );

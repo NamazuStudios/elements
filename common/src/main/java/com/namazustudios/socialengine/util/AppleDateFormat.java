@@ -8,8 +8,6 @@ import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
 
-import static java.time.format.DateTimeFormatter.ISO_ZONED_DATE_TIME;
-
 public class AppleDateFormat extends DateFormat {
 
     private static final Calendar CALENDAR = new GregorianCalendar();
