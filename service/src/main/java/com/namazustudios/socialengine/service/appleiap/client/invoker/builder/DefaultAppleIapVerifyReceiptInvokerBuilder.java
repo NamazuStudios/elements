@@ -31,10 +31,6 @@ public class DefaultAppleIapVerifyReceiptInvokerBuilder implements Builder {
     @Override
     public AppleIapVerifyReceiptInvoker build() {
 
-        if (appleIapVerifyReceiptEnvironment == null) {
-            throw new IllegalStateException("appleIapVerifyReceiptEnvironment is null.");
-        }
-
         if (receiptData == null) {
             throw new IllegalStateException("receiptData is null.");
         }

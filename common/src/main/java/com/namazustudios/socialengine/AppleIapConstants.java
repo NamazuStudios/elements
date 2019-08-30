@@ -6,8 +6,7 @@ public interface AppleIapConstants {
     /**
      * The base url for sandbox receipt verification.
      */
-//    String SANDBOX_BASE_API_URL = "https://sandbox.itunes.apple.com";
-    String SANDBOX_BASE_API_URL = "https://localhost:50438";
+    String SANDBOX_BASE_API_URL = "https://sandbox.itunes.apple.com";
 
     /**
      * The base url for production receipt verification.
@@ -28,5 +27,14 @@ public interface AppleIapConstants {
      * Status code in the JSON response indicating that the receipt given in the request is valid.
      */
     int VALID_STATUS_CODE = 0;
+
+    /**
+     * Status code indicating that the IAP environment is incorrect.  That is, a production receipt was passed to a
+     * sandbox URL.  This is used to signal a re-try of validation to avoid having to make iOS/Bundle changes.
+     *
+     * {@see https://developer.apple.com/documentation/storekit/in-app_purchase/validating_receipts_with_the_app_store?language=objc}
+     *
+     */
+    int INCORRECT_ENVIRONMENT = 21007;
 
 }
