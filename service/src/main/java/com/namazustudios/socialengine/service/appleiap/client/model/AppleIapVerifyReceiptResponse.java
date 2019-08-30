@@ -5,10 +5,10 @@ import io.swagger.annotations.ApiModel;
 
 import java.util.Objects;
 
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 @ApiModel
-@ClientSerializationStrategy(SNAKE)
+@ClientSerializationStrategy(APPLE_ITUNES)
 public class AppleIapVerifyReceiptResponse {
     private Integer status;
 

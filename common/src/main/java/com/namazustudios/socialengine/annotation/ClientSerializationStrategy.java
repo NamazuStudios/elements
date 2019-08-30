@@ -19,9 +19,9 @@ import java.lang.annotation.Target;
 public @interface ClientSerializationStrategy {
 
     /**
-     * Implies serialized fields use snake_case
+     * Implies serialized fields follow the Apple/iTunes Style
      */
-    String SNAKE = "com.namazustudios.socialengine.annotation.SerializationStrategy.snake";
+    String APPLE_ITUNES = "com.namazustudios.socialengine.annotation.SerializationStrategy.apple.itunes";
 
     /**
      * Implies that serialized fields use lowerCamelCase

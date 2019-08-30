@@ -26,11 +26,12 @@ import org.apache.bval.guice.ValidationModule;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
+import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -110,8 +111,10 @@ public class GuiceMain extends GuiceServletContextListener {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
                 return objectMapper;
-            }).withNamedObjectMapperProvider(SNAKE, () -> {
+            }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
                 final ObjectMapper objectMapper = new ObjectMapper();
+                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                objectMapper.setDateFormat(simpleDateFormat);
                 objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
                 return objectMapper;

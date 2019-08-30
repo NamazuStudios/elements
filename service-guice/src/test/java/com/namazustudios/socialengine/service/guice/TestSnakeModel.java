@@ -2,9 +2,9 @@ package com.namazustudios.socialengine.service.guice;
 
 import com.namazustudios.socialengine.annotation.ClientSerializationStrategy;
 
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
-@ClientSerializationStrategy(SNAKE)
+@ClientSerializationStrategy(APPLE_ITUNES)
 public class TestSnakeModel {
 
     private String testProperty;

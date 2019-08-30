@@ -13,11 +13,12 @@ import org.testng.annotations.Test;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.core.MediaType;
+import java.text.SimpleDateFormat;
 import java.util.Map;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.SNAKE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 import static org.testng.Assert.assertEquals;
 
 @Guice(modules = JacksonHttpClientModuleTest.Module.class)
@@ -117,8 +118,10 @@ public class JacksonHttpClientModuleTest {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.LOWER_CAMEL_CASE);
                 return objectMapper;
-            }).withNamedObjectMapperProvider(SNAKE, () -> {
+            }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
                 final ObjectMapper objectMapper = new ObjectMapper();
+                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                objectMapper.setDateFormat(simpleDateFormat);
                 objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
                 return objectMapper;
