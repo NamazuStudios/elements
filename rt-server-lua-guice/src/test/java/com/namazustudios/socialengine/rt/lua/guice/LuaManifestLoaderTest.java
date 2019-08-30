@@ -74,7 +74,6 @@ public class LuaManifestLoaderTest {
 
             bind(Context.class).toInstance(mock(Context.class));
             bind(Client.class).toInstance(mock(Client.class));
-            bind(ResourceAcquisition.class).toInstance(mock(ResourceAcquisition.class));
 
             install(new LuaModule() {
                 @Override

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.Future;
+import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -45,28 +46,33 @@ public interface Scheduler {
     <T> Future<T> submit(Callable<T> tCallable);
 
     /**
-     * Provided the {@link Path}, this will schedule an unlink operation at some point in the near future.  This allows
-     * any pending operations to relase their locks gracefully unlink an potentially destroy any {@link Resource}s
-     * associated with the supplied {@Link Path}.  If the {@link Resource} is removed this will ensure that the
-     * {@link Resource#close()} method is called appropriately.
+     * Provided the {@link Path}, this will schedule an unlink operation at some point in the near future, but not
+     * before the delay time specified in the parameters of this method.  Any pending operations to relase their locks
+     * gracefully unlink an potentially destroy any {@link Resource}s associated with the supplied {@Link Path}.  If
+     * the {@link Resource} is removed this will ensure that the {@link Resource#close()} method is called
+     * appropriately.
+     *
+     * This returns a {@link RunnableFuture<Void>} which may be run sooner to short-circuit the unlink operation
      *
      * @param path the {@link Path} to unlink
-     * @return a {@link Future<Void>} used to signal detruction.
+     * @return a {@link RunnableFuture<Void>} used to signal destruction, may be run sooner by the calling code
      */
-    Future<Void> scheduleUnlink(Path path);
+    RunnableFuture<Void> scheduleUnlink(Path path, long delay, TimeUnit timeUnit);
 
     /**
-     * Provided the {@link ResourceId}, this will schedule destruction at some point in the near future.  This allows
-     * any pending operations to scheduleRelease their locks gracefully and destroy the {@link Resource} associated with the
-     * supplied. {@link ResourceId}.
+     * Provided the {@link ResourceId}, this will schedule destruction at some point in the near future, but not before.
+     * the delay specified in the arguments to this method.  This allows any pending operations to scheduleRelease their
+     * locks gracefully and destroy the {@link Resource} associated with the supplied. {@link ResourceId}.
      *
      * This ensures that the underlying {@link Resource} is removed from the {@link ResourceService} and its
      * {@link Resource#close()} method invoked.
      *
+     * This returns a {@link RunnableFuture<Void>} which may be run sooner to short-circuit the unlink operation
+     *
      * @param resourceId the {@link ResourceId}
-     * @return a {@link Future<Void>} used to signal detruction.
+     * @return a {@link RunnableFuture<Void>} used to signal destruction, may be run sooner by the calling code
      */
-    Future<Void> scheduleDestruction(ResourceId resourceId);
+    RunnableFuture<Void> scheduleDestruction(ResourceId resourceId, long delay, TimeUnit timeUnit);
 
     /**
      * Performs an action against the resource with the provided {@link ResourceId}.

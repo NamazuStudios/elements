@@ -32,8 +32,12 @@ public class ClusterClientContextModule extends PrivateModule {
             .asEagerSingleton();
 
         bind(HandlerContext.class)
-                .toProvider(new RemoteProxyProvider<>(HandlerContext.class))
-                .asEagerSingleton();
+            .toProvider(new RemoteProxyProvider<>(HandlerContext.class))
+            .asEagerSingleton();
+
+        bind(TaskContext.class)
+            .toProvider(new RemoteProxyProvider<>(TaskContext.class))
+            .asEagerSingleton();
 
     }
 

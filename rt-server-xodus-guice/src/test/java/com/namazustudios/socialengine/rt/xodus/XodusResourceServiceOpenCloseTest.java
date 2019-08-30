@@ -42,7 +42,7 @@ public class XodusResourceServiceOpenCloseTest {
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             rs.addAndReleaseResource(path, original);
-            verify(original, times(1)).close();
+            verify(original, times(1)).unload();
             verify(original, times(1)).serialize(any());
         }
 
@@ -63,7 +63,7 @@ public class XodusResourceServiceOpenCloseTest {
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             rs.addAndReleaseResource(path, original);
-            verify(original, times(1)).close();
+            verify(original, times(1)).unload();
             verify(original, times(1)).serialize(any());
         }
 
@@ -86,7 +86,7 @@ public class XodusResourceServiceOpenCloseTest {
             rs.addAndAcquireResource(path, original);
         }
 
-        verify(original, times(1)).close();
+        verify(original, times(1)).unload();
         verify(original, times(1)).serialize(any());
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
@@ -108,7 +108,7 @@ public class XodusResourceServiceOpenCloseTest {
             rs.addAndAcquireResource(path, original);
         }
 
-        verify(original, times(1)).close();
+        verify(original, times(1)).unload();
         verify(original, times(1)).serialize(any());
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {

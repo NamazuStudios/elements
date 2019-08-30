@@ -42,12 +42,12 @@ public class DeadResource implements Resource {
     }
 
     @Override
-    public void serialize(OutputStream os) throws IOException {
+    public void serialize(OutputStream os) {
         throw new IllegalStateException("resource is closed");
     }
 
     @Override
-    public void deserialize(InputStream is) throws IOException {
+    public void deserialize(InputStream is) {
         throw new IllegalStateException("resource is closed");
     }
 
@@ -58,5 +58,8 @@ public class DeadResource implements Resource {
 
     @Override
     public void close() {}
+
+    @Override
+    public void unload() {}
 
 }

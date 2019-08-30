@@ -5,22 +5,22 @@ import com.namazustudios.socialengine.rt.TaskId;
 
 import static java.lang.String.format;
 
-public class NoSuchTaskException extends BaseException {
+public class DuplicateTaskException extends BaseException {
 
     private final TaskId taskId;
 
-    public NoSuchTaskException(final TaskId taskId) {
-        super(format("Task with id %s not found.", taskId));
+    public DuplicateTaskException(TaskId taskId) {
+        super(format("Task with id %s already exists.", taskId));
         this.taskId = taskId;
-    }
-
-    public TaskId getTaskId() {
-        return taskId;
     }
 
     @Override
     public ResponseCode getResponseCode() {
-        return ResponseCode.TASK_NOT_FOUND;
+        return ResponseCode.DUPLICATE_TASK;
+    }
+
+    public TaskId getTaskId() {
+        return taskId;
     }
 
 }

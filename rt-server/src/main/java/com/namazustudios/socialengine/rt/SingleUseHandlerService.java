@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Used to implement handler types.  Handlers are {@link Resource} instances that are meant to handle one-time requests
@@ -24,7 +24,8 @@ public interface SingleUseHandlerService {
      * code.
      */
     TaskId perform(Consumer<Object> success, Consumer<Throwable> failure,
-                 String module, Attributes attributes,
-                 String method, Object... args);
+                   long timeoutDelay, TimeUnit timeoutUnit,
+                   String module, Attributes attributes,
+                   String method, Object... args);
 
 }

@@ -5,7 +5,7 @@ import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.ResourceContext;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.SimpleResourceContext;
-import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
+import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
 
 import java.util.concurrent.ExecutorService;
 
@@ -25,7 +25,7 @@ public class XodusResourceContextModule extends PrivateModule {
 
         bind(ExecutorService.class)
             .annotatedWith(Names.named(EXECUTOR_SERVICE))
-            .toProvider(new CachedThreadPoolProvider(SimpleResourceContext.class));
+            .toProvider(new CPUCountThreadPoolProvider(SimpleResourceContext.class));
 
     }
 

@@ -1,30 +1,32 @@
 package com.namazustudios.socialengine.rt.lua.converter;
 
 import com.namazustudios.socialengine.jnlua.LuaState;
-
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.jnlua.LuaValueProxy;
-import com.namazustudios.socialengine.rt.lua.Constants;
-import com.namazustudios.socialengine.rt.manifest.model.Type;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
-import static com.namazustudios.socialengine.jnlua.DefaultConverter.*;
+import static com.namazustudios.socialengine.jnlua.DefaultConverter.getInstance;
 import static com.namazustudios.socialengine.jnlua.LuaType.TABLE;
-import static com.namazustudios.socialengine.rt.lua.Constants.*;
-import static com.namazustudios.socialengine.rt.manifest.model.Type.ARRAY;
-import static com.namazustudios.socialengine.rt.manifest.model.Type.OBJECT;
+import static com.namazustudios.socialengine.rt.lua.Constants.MANIFEST_TYPE_METAFIELD;
+import static com.namazustudios.socialengine.rt.manifest.model.Type.*;
 
 public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT> {
 
+    private static final Logger logger = LoggerFactory.getLogger(CopyCollectionConverter.class);
+
     @Override
     public <T> T convertLuaValue(final LuaState luaState, final int index, final Class<T> formalType) {
-        if (isArray(luaState, index) && formalType.isAssignableFrom(Iterable.class)) {
-            final List<?> proxyList = getInstance().convertLuaValue(luaState, index, List.class);
-            return (T) new ArrayList<Object>(proxyList);
-        } else if (formalType.isAssignableFrom(Map.class)) {
-            final Map<?, ?> proxyMap = getInstance().convertLuaValue(luaState, index, Map.class);
-            return (T) new LinkedHashMap<Object, Object>(proxyMap);
+        if (Iterable.class.isAssignableFrom(formalType)) {
+            return (T) copyList(luaState, index);
+        } else if (Map.class.isAssignableFrom(formalType)) {
+            return (T) copyMap(luaState, index);
+        } else if (Object.class.equals(formalType)) {
+            return isArray(luaState, index) ? (T) copyList(luaState, index) : (T) copyMap(luaState, index);
+        } else if (Object[].class.equals(formalType)) {
+            return (T) copyArray(luaState, index);
         } else {
             final LuaType luaType = luaState.type(index);
             throw new IllegalArgumentException("Unexpected " + luaType + " on the Lua stack requested conversion.");
@@ -36,18 +38,17 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
         final int top = luaState.getTop();
 
         try {
+            if (luaState.getMetatable(index)) {
+                luaState.getField(-1, MANIFEST_TYPE_METAFIELD);
 
-            luaState.getMetatable(index);
-            luaState.getField(-1, MANIFEST_TYPE_METAFIELD);
+                final String value = luaState.toString(-1);
 
-            final String value = luaState.toString(-1);
-
-            if (ARRAY.value.equals(value)) {
-                return true;
-            } else if (OBJECT.value.equals(value)) {
-                return false;
+                if (ARRAY.value.equals(value)) {
+                    return true;
+                } else if (OBJECT.value.equals(value)) {
+                    return false;
+                }
             }
-
         } finally {
             luaState.setTop(top);
         }
@@ -87,45 +88,197 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
     }
 
+    private Map<?, ?> copyMap(final LuaState luaState, final int index) {
+
+        final int abs = luaState.absIndex(index);
+        final Map<Object, Object> out = new LinkedHashMap<>();
+
+        luaState.pushJavaFunction(l -> {
+
+            l.pushNil();
+
+            while (l.next(1)) {
+                l.pushValue(-2);
+                final Object k = l.toJavaObject(-1, Object.class);
+                final Object v = l.toJavaObject(-2, Object.class);
+                out.put(k, v);
+                l.pop(2);
+            }
+
+            logger.trace("Copied Map Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.entrySet().toArray()));
+            return 0;
+
+        });
+
+        luaState.pushValue(abs);
+        luaState.call(1, 0);
+
+        return out;
+
+    }
+
+    private List<?> copyList(final LuaState luaState, final int index) {
+
+        final int abs = luaState.absIndex(index);
+        final List<Object> out = new ArrayList<>();
+
+        luaState.pushJavaFunction(l -> {
+
+            final int len = luaState.rawLen(1);
+
+            l.pushNil();
+
+            for (int i = 0; l.next(1) && i < len; ++i) {
+                l.pushValue(-2);
+                final Object v = l.toJavaObject(-2, Object.class);
+                out.add(v);
+                l.pop(2);
+            }
+
+            logger.trace("Copied List Out.\nSize: {}\nContents: {}", out.size(), Arrays.toString(out.toArray()));
+            return 0;
+
+        });
+        luaState.pushValue(abs);
+        luaState.call(1, 0);
+
+        return out;
+
+    }
+
+    private Object[] copyArray(final LuaState luaState, final int index) {
+
+        final int top = luaState.getTop();
+        final int abs = luaState.absIndex(index);
+
+        try {
+
+            final int length = luaState.rawLen(index);
+            final Object[] array = new Object[length];
+
+            luaState.pushJavaFunction(l -> {
+
+                for (int i = 0; i < length; i++) {
+
+                    luaState.rawGet(1, i + 1);
+
+                    try {
+                        array[i] = luaState.toJavaObject(-1, Object.class);
+                    } finally {
+                        luaState.pop(1);
+                    }
+
+                }
+
+                logger.trace("Copied Array Out.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
+
+                return 0;
+
+            });
+            luaState.pushValue(abs);
+            luaState.call(1, 0);
+
+            return array;
+
+        } finally {
+            luaState.setTop(top);
+        }
+
+    }
+
     @Override
-    public void convertJavaObject(LuaState luaState, Object object) {
+    public void convertJavaObject(final LuaState luaState, final Object object) {
         if (object instanceof LuaValueProxy && luaState.equals(((LuaValueProxy) object).getLuaState())) {
             getInstance().convertJavaObject(luaState, object);
         } else if (object instanceof Map) {
 
             final Map<?, ?> map = (Map<?,?>)object;
 
-            luaState.newTable();
+            logger.trace("Copied Collection In.\nSize: {}\nContents: {}", map.size(), Arrays.toString(map.entrySet().toArray()));
 
-            map.forEach((k, v) -> {
-                luaState.pushJavaObject(k);
-                luaState.pushJavaObject(v);
-                luaState.setTable(-3);
+            luaState.pushJavaFunction(l -> {
+                l.newTable();
+
+                map.forEach((k, v) -> {
+                    l.pushJavaObject(k);
+                    l.pushJavaObject(v);
+                    l.setTable(-3);
+                });
+
+                l.newTable();
+                l.pushString(OBJECT.value);
+                l.setField(2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(1);
+                l.setTop(1);
+
+                return 1;
             });
 
-            luaState.newTable();
-            luaState.pushString(OBJECT.value);
-            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
-            luaState.setMetatable(-2);
+            luaState.call(0, 1);
 
         } else if (object instanceof Iterable) {
 
-            int index = 0;
-            final Iterable<?> list = (Iterable<?>)object;
-            final Iterator<?> listIterator = list.iterator();
 
-            luaState.newTable();
+            luaState.pushJavaFunction(l -> {
 
-            while (listIterator.hasNext()) {
-                final Object element = listIterator.next();
-                luaState.pushJavaObject(element);
-                luaState.rawSet(-2, ++index);
-            }
+                int index = 0;
 
-            luaState.newTable();
-            luaState.pushString(ARRAY.value);
-            luaState.setField(-2, MANIFEST_TYPE_METAFIELD);
-            luaState.setMetatable(-2);
+                final Iterable<?> list = (Iterable<?>)object;
+                final Iterator<?> listIterator = list.iterator();
+
+                l.newTable();
+
+
+                final List<Object> ll = new ArrayList<>();
+
+                while (listIterator.hasNext()) {
+                    final Object element = listIterator.next();
+                    l.pushJavaObject(element);
+                    l.rawSet(-2, ++index);
+
+                    ll.add(element);
+                }
+
+                logger.trace("Copied Collection In.\nSize: {}\nContents: {}", ll.size(), Arrays.toString(ll.toArray()));
+
+                l.newTable();
+                l.pushString(ARRAY.value);
+                l.setField(2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(1);
+                l.setTop(1);
+
+                return 1;
+
+            });
+
+            luaState.call(0, 1);
+
+        } else if (object != null && object.getClass().isArray()) {
+            final Object[] array = (Object[])object;
+
+            logger.trace("Copied Array In.\nSize: {}\nContents: {}", array.length, Arrays.toString(array));
+
+            luaState.pushJavaFunction(l -> {
+
+                l.newTable();
+
+                for (int index = 0; index < array.length; ++index) {
+                    final Object element = array[index];
+                    l.pushJavaObject(element);
+                    l.rawSet(-2, (index + 1));
+                }
+
+                l.newTable();
+                l.pushString(ARRAY.value);
+                l.setField(-2, MANIFEST_TYPE_METAFIELD);
+                l.setMetatable(1);
+                l.setTop(1);
+
+                return 1;
+
+            });
+
+            luaState.call(0, 1);
 
         } else {
             throw new IllegalArgumentException("Unexpected object " + object + " attempted to convert.");
@@ -139,7 +292,12 @@ public class CopyCollectionConverter<ObjectT> implements TypedConverter<ObjectT>
 
     @Override
     public boolean isConvertibleFromLua(final LuaState luaState, final int index, final Class<?> formalType) {
-        return luaState.type(index) == TABLE && (formalType.isAssignableFrom(Map.class) || formalType.isAssignableFrom(Iterable.class));
+        return luaState.type(index) == TABLE && (
+            Map.class.isAssignableFrom(formalType) ||
+            Iterable.class.isAssignableFrom(formalType) ||
+            Object[].class.equals(formalType) ||
+            Object.class.equals(formalType)
+        );
     }
 
 }

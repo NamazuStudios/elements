@@ -16,8 +16,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.ZContextModule;
-import com.namazustudios.socialengine.rt.NullResourceAcquisition;
-import com.namazustudios.socialengine.rt.ResourceAcquisition;
+import com.namazustudios.socialengine.rt.PersistenceStrategy;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 
@@ -25,6 +24,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
+
+import static com.namazustudios.socialengine.rt.PersistenceStrategy.getNullPersistence;
 
 public class AppServeMain {
 

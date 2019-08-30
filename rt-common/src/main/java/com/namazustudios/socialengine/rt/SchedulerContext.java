@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Serialize;
+import com.namazustudios.socialengine.rt.exception.DuplicateTaskException;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * This is the {@link Proxyable} for scheduling tasks within the cluster.
@@ -25,15 +27,15 @@ public interface SchedulerContext {
     /**
      * Resumes the task associated with the supplied {@link TaskId}.  This allows for the specification of a delay
      * after a specified period of time.
-     *  @param time the time delay
-     * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
      * @param taskId the {@link TaskId} of the task
+     * @param time the time delay
+     * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
      *
      */
     @RemotelyInvokable
-    void resumeTaskAfterDelay(@Serialize long time,
-                              @Serialize TimeUnit timeUnit,
-                              @Serialize TaskId taskId);
+    void resumeTaskAfterDelay(@Serialize TaskId taskId,
+                              @Serialize long time,
+                              @Serialize TimeUnit timeUnit);
 
     /**
      * Resumes the supplied task with the {@link TaskId} supplying multiple results to the destination.
