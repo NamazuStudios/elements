@@ -47,6 +47,7 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 
 @Singleton
 public class MongoProgressDao implements ProgressDao {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoProgressDao.class);
 
     private StandardQueryParser standardQueryParser;
@@ -246,7 +247,9 @@ public class MongoProgressDao implements ProgressDao {
             throw new TooBusyException(e);
         }
 
-        getObjectIndex().index(result);
+// TODO: Per SOC-364
+// Disabling this For Now SOC-364
+//        getObjectIndex().index(result);
         return getDozerMapper().map(result, Progress.class);
 
     }

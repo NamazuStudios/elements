@@ -21,6 +21,7 @@ public class MongoProgressId {
 
     private static final int OBJECT_ID_LENGTH = 12;
 
+    @Indexed
     private ObjectId profileId;
 
     @Indexed
