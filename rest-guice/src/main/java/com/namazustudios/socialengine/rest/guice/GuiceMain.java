@@ -21,11 +21,13 @@ import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryM
 import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.NotificationServiceModule;
+import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.apache.bval.guice.ValidationModule;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
+import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Properties;
 
@@ -113,8 +115,8 @@ public class GuiceMain extends GuiceServletContextListener {
                 return objectMapper;
             }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
                 final ObjectMapper objectMapper = new ObjectMapper();
-                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
-                objectMapper.setDateFormat(simpleDateFormat);
+                final DateFormat dateFormat = new AppleDateFormat();
+                objectMapper.setDateFormat(dateFormat);
                 objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
                 return objectMapper;
