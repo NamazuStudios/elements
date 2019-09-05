@@ -35,7 +35,7 @@ public interface AppleIapConstants {
      * {@see https://developer.apple.com/documentation/storekit/in-app_purchase/validating_receipts_with_the_app_store?language=objc}
      *
      */
-    int USE_TEST_INSTEAD = 21007;
+    int USE_SANDBOX_INSTEAD = 21007;
 
     /**
      * Status code indicating that the IAP environment is incorrect.  That is, a sandbox receipt was passed to a

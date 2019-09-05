@@ -45,11 +45,9 @@ public class DefaultAppleIapVerifyReceiptInvoker implements AppleIapVerifyReceip
 
         if (appleIapVerifyReceiptEnvironment == null) {
 
-            response = doInvoke(SANDBOX);
+            response = doInvoke(PRODUCTION);
 
-            if (response.getStatus() == USE_TEST_INSTEAD) {
-                response = doInvoke(PRODUCTION);
-            } else if (response.getStatus() == USE_PROD_INSTEAD) {
+            if (response.getStatus() == USE_SANDBOX_INSTEAD) {
                 response = doInvoke(SANDBOX);
             }
 
