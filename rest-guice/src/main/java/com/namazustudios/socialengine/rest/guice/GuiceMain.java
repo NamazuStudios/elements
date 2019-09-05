@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest.guice;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
@@ -15,7 +16,9 @@ import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
 import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
+import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
 import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.notification.guice.NotificationServiceModule;
 import org.apache.bval.guice.ValidationModule;
@@ -23,7 +26,12 @@ import org.apache.bval.guice.ValidationModule;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
+import java.text.SimpleDateFormat;
 import java.util.Properties;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -96,8 +104,21 @@ public class GuiceMain extends GuiceServletContextListener {
             new RTGitApplicationModule(),
             new ValidationModule(),
             new GameOnInvokerModule(),
-            new HttpClientModule(),
-            new AppleIapReceiptInvokerModule()
+            new AppleIapReceiptInvokerModule(),
+            new JacksonHttpClientModule()
+            .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
+            .withDefaultObjectMapperProvider(() -> {
+                final ObjectMapper objectMapper = new ObjectMapper();
+                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                return objectMapper;
+            }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
+                final ObjectMapper objectMapper = new ObjectMapper();
+                final SimpleDateFormat simpleDateFormat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+                objectMapper.setDateFormat(simpleDateFormat);
+                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                return objectMapper;
+            })
         );
 
     }
