@@ -64,10 +64,9 @@ public class JeroMQEndToEndIntegrationTest {
                     @Override
                     protected void configure() {
 
+                        final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
 
                         bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
-
-                        final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
 
                         bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
                                 .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))

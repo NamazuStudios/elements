@@ -107,6 +107,7 @@ public class JeroMQInvocation {
                 connection.recycle();
                 logger.debug("Recycled Connection.");
                 subscriptions.unsubscribe();
+                logger.debug("Unsubscribed Events.");
             }
 
         } catch (Exception ex) {
@@ -287,12 +288,14 @@ public class JeroMQInvocation {
             final Throwable throwable = invocationError.getThrowable();
 
             final Exception exception = throwable instanceof Exception ?
-                    (Exception) throwable :
-                    new RemoteInvocationException(throwable);
+                (Exception) throwable :
+                new RemoteInvocationException(throwable);
 
+            syncCompleted = true;
             syncErrorConsumer.accept(exception);
 
         } else if (part == 1) {
+            asyncCompleted = true;
             asyncInvocationErrorConsumer.accept(invocationError);
         } else {
             asyncCompleted = true;

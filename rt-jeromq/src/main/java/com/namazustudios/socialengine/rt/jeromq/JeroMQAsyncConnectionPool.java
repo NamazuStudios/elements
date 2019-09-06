@@ -18,8 +18,10 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.THREAD_POOL_SIZE;
+import static java.lang.Math.min;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static java.util.stream.Collectors.toList;
+import static org.zeromq.ZFrame.DONTWAIT;
 
 class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Socket> {
 
@@ -64,8 +66,9 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         if (open.get()) {
 
             int added = 0;
+            final int toAdd = min((min - connectionHandles.size()), max) / THREAD_POOL_SIZE;
 
-            while (connectionHandles.size() < min && (added++ < (min / THREAD_POOL_SIZE))) {
+            while (connectionHandles.size() < max && connectionHandles.size() < min && (++added < toAdd)) {
                 final JeroMQAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
                 final JeroMQAsyncConnection connection = context.getConnection(handle.index);
                 addConnection(handle, connection);
@@ -119,11 +122,12 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         connectionHandles.add(handle);
 
         connection.onClose(c -> {
-            connectionHandles.remove(handle);
+            if (!available.remove(handle)) logger.warn("Could not remove available handle {}", handle);
+            if (!connectionHandles.remove(handle)) logger.warn("Could not remove handle {}", handle);
             semaphore.release();
         });
 
-        connection.onRecycle(c -> {
+        connection.onRecycle(c0 -> {
             connection.getOnError().clear();
             connection.getOnRead().clear();
             connection.getOnWrite().clear();
@@ -136,7 +140,7 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     private void doReuseConnection(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer,
                                    final JeroMQAsyncConnectionHandle handle) {
         handle.context.doInThread(() -> {
-            final AsyncConnection connection = handle.context.getConnection(handle.index);
+            final JeroMQAsyncConnection connection = handle.context.getConnection(handle.index);
             asyncConnectionConsumer.accept(connection);
         });
     }
