@@ -47,7 +47,9 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     public JeroMQAsyncConnectionPool(final String name, final int min, final int max,
                                      final Function<ZContext, ZMQ.Socket> socketSupplier,
                                      final JeroMQAsyncConnectionService.SimpleAsyncConnectionServiceContext parentContext) {
+
         if (min >= max) throw new IllegalArgumentException("min must be < max");
+
         this.min = min;
         this.max = max;
         this.name = name;
@@ -67,9 +69,10 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
             int added = 0;
             final int toAdd = min((min - connections.size()), max) / THREAD_POOL_SIZE;
 
-            while (connections.size() < max && connections.size() < min && (++added < toAdd)) {
+            while (connections.size() < max && connections.size() < min && (added++ < toAdd)) {
                 final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
                 addConnection(connection);
+                available.add(connection);
             }
 
             if (connections.size() > max) {

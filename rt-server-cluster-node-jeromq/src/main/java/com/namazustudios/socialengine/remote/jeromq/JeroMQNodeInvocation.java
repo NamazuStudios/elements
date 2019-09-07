@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
+import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.PayloadWriter;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -17,6 +18,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.ERROR;
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.WRITE;
 import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
@@ -190,10 +193,21 @@ public class JeroMQNodeInvocation {
     }
 
     private void write(final ZMsg msg) {
-        outbound.acquireNextAvailableConnection(c -> c.onWrite(c0 -> {
-            msg.send(c.socket());
-            c.recycle();
-        }));
+        outbound.acquireNextAvailableConnection(c -> {
+
+            c.setEvents(WRITE, ERROR);
+
+            c.onWrite(c0 -> {
+                msg.send(c.socket());
+                c.recycle();
+            });
+
+            c.onError(c0 -> {
+                logger.error("Got error writing response to connection {} (errno: {})", c, c.socket().errno());
+                c.close();
+            });
+
+        });
     }
 
 }

@@ -7,6 +7,7 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
@@ -16,12 +17,12 @@ public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnectionGroup.class);
 
-    private final List<AsyncConnection> connectionList;
+    private final List<AsyncConnection<ZContext, ZMQ.Socket>> connectionList;
 
     private final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler;
 
     public JeroMQAsyncConnectionGroup(
-            final List<AsyncConnection> connectionList,
+            final List<AsyncConnection<ZContext, ZMQ.Socket>> connectionList,
             final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler) {
         this.connectionList = connectionList;
         this.signalHandler = signalHandler;
@@ -45,7 +46,9 @@ public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext
 
         signal(g -> {
 
-            connectionList.forEach(c -> {
+            final List<AsyncConnection<ZContext, ZMQ.Socket>> copy = new ArrayList<>(connectionList);
+
+            copy.forEach(c -> {
                 try {
                     c.close();
                 } catch (Exception ex) {

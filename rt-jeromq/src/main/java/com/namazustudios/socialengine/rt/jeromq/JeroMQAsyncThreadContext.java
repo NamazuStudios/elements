@@ -122,14 +122,10 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
     }
 
     private void pollManagedConnections() {
-
-        final int next = poller.getNext();
-
         for (int index = connectionIndexStart; index < poller.getNext(); ++index) {
             final ThreadContextPollItem item = (ThreadContextPollItem) poller.getItem(index);
-            if (item != null) item.poll(index, poller);
+            if (item != null) item.poll();
         }
-
     }
 
     private void process(final int index) {
@@ -171,7 +167,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
         final ZMQ.Socket socket = socketSupplier.apply(zContext);
 
-        final JeroMQAsyncConnection.FlagChangeHandler flagChangeHandler = (conn, flags) -> {
+        final JeroMQAsyncConnection.FlagChangeHandler flagChangeHandler = (conn, flags) -> onPostLoop.subscribe((subscription, v) ->  {
 
             poller.unregister(socket);
 
@@ -180,12 +176,14 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
                 poller.register(item);
             }
 
-        };
+            subscription.unsubscribe();
+
+        });
 
         final JeroMQAsyncConnection connection = new JeroMQAsyncConnection(
-                zContext, socket,
-                flagChangeHandler,
-                (conn, consumer) -> doInThread(() -> consumer.accept(conn)));
+            zContext, socket,
+            flagChangeHandler,
+            (conn, consumer) -> doInThread(() -> consumer.accept(conn)));
 
         connection.onClose(c -> onPostLoop.subscribe((subscriber, v) -> {
             poller.unregister(socket);
@@ -210,10 +208,10 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
             this.connection = connection;
         }
 
-        public void poll(final int index, final ZMQ.Poller poller) {
-            if (isReadable() && poller.pollin(index)) connection.getOnRead().publish(connection);
-            if (isWritable() && poller.pollout(index)) connection.getOnWrite().publish(connection);
-            if (isError() && poller.pollerr(index)) connection.getOnError().publish(connection);
+        public void poll() {
+            if (isError()) connection.getOnError().publish(connection);
+            if (isReadable()) connection.getOnRead().publish(connection);
+            if (isWritable()) connection.getOnWrite().publish(connection);
         }
 
     }

@@ -264,7 +264,6 @@ public class JeroMQNode implements Node {
         private void onFrontendRead(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
             final ZMsg msg = ZMsg.recvMsg(connection.socket());
             dispatchExecutorService.submit(() -> dispatch(msg));
-
         }
 
         private void onFrontendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
@@ -282,18 +281,9 @@ public class JeroMQNode implements Node {
 
         public void stop() {
 
-            final CountDownLatch latch = new CountDownLatch(2);
-
-            dispatchExecutorService.shutdownNow();
-
             mainConnectionGroup.close();
             outboundConnectionPool.close();
-
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                logger.error("Interrupted while shutting down Node Thread Pool", e);
-            }
+            dispatchExecutorService.shutdownNow();
 
             try {
                 if (!dispatchExecutorService.awaitTermination(10, MINUTES)) {

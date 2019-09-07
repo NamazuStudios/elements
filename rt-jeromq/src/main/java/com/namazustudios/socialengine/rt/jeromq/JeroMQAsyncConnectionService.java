@@ -18,7 +18,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static java.lang.Math.max;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.Thread.interrupted;
 import static java.util.stream.Collectors.toList;
@@ -31,7 +30,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
     private static final int POLL_INTERVAL = 1000;
 
-    static final int THREAD_POOL_SIZE = max(getRuntime().availableProcessors()/ 4, 1);
+    static final int THREAD_POOL_SIZE = getRuntime().availableProcessors() + 1;
 
     private final AtomicReference<SimpleAsyncConnectionServiceContext> context = new AtomicReference<>();
 
@@ -95,7 +94,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
     class SimpleAsyncConnectionServiceContext {
 
-        private ThreadGroup threadGroup;
+        private List<Thread> ioThreads;
 
         private RoundRobin<JeroMQAsyncThreadContext> threadContextRoundRobin;
 
@@ -108,19 +107,19 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
         public void start() {
 
             final AtomicInteger threadCount = new AtomicInteger();
-            threadGroup = new ThreadGroup(JeroMQAsyncConnectionService.class.getSimpleName());
 
             final CountDownLatch latch = new CountDownLatch(THREAD_POOL_SIZE);
             threadContextRoundRobin = new ConcurrentRoundRobin<>(new JeroMQAsyncThreadContext[0], THREAD_POOL_SIZE);
 
-            range(0, THREAD_POOL_SIZE).forEach(i -> {
+            ioThreads = range(0, THREAD_POOL_SIZE).mapToObj(i -> {
                 final String name = JeroMQAsyncConnectionService.class.getSimpleName() + " " + threadCount.getAndIncrement();
-                final Thread thread = new Thread(threadGroup, () -> runIOThread(latch, i));
+                final Thread thread = new Thread(() -> runIOThread(latch, i));
                 thread.setDaemon(true);
                 thread.setUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception in thread {}", e));
                 thread.setName(name);
                 thread.start();
-            });
+                return thread;
+            }).collect(toList());
 
             try {
                 latch.await();
@@ -132,19 +131,17 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
         public void stop() {
 
-            simpleManagedPoolList.forEach(pool -> pool.doClose());
             running.set(false);
+            simpleManagedPoolList.forEach(pool -> pool.doClose());
 
-            try {
-                final Thread[] threads = new Thread[threadGroup.activeCount()];
-                final int count = threadGroup.enumerate(threads);
-                for (int i = 0; i < count; ++i) threads[i].interrupt();
-                for (int i = 0; i < count; ++i) threads[i].join();
-            } catch (InterruptedException ex) {
-                throw new InternalException(ex);
-            }
-
-            threadGroup.destroy();
+            ioThreads.forEach(t -> t.interrupt());
+            ioThreads.forEach(t -> {
+                try {
+                    t.join();
+                } catch (InterruptedException e) {
+                    logger.error("Interrupted while joining IO thread {}", t);
+                }
+            });
 
         }
 
@@ -178,7 +175,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
         public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group() {
             return new AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket>() {
 
-                private List<Function<JeroMQAsyncThreadContext, AsyncConnection>> connectionSupplierList = new ArrayList<>();
+                private List<Function<JeroMQAsyncThreadContext, AsyncConnection<ZContext, ZMQ.Socket>>> connectionSupplierList = new ArrayList<>();
 
                 @Override
                 public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket>
@@ -202,7 +199,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
                     context.doInThread(() -> {
 
-                        final List<AsyncConnection> connectionList = connectionSupplierList
+                        final List<AsyncConnection<ZContext, ZMQ.Socket>> connectionList = connectionSupplierList
                             .stream()
                             .map(supplier -> supplier.apply(context))
                             .collect(toList());
