@@ -27,6 +27,21 @@ public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT,
     void recycle();
 
     /**
+     * Clears all events until a subsequent call to {@link #setEvents(Event...)} is made.  This may be a shortcut for
+     * simply passing no arguments to {@link #setEvents(Event...)}.
+     */
+    default void clearEvents() {
+        setEvents();
+    }
+
+    /**
+     * Ensures that the {@link AsyncConnection} is registered for the supplied events.
+     *
+     * @param events one of many {@link Event}s
+     */
+    void setEvents(Event ... events);
+
+    /**
      * Registers a {@link Subscription} for when a socket has read data.
      *
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection<ContextT, SocketT>>} to receive the event
@@ -41,7 +56,7 @@ public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT,
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection<ContextT, SocketT>>} to receive the event
      * @return {@link Subscription}
      */
-    
+
     Subscription onWrite(Consumer<AsyncConnection<ContextT, SocketT>> asyncConnectionConsumer);
 
     /**
@@ -70,5 +85,27 @@ public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT,
      * @return a {@link Subscription} to the event
      */
     Subscription onRecycle(Consumer<AsyncConnection<ContextT, SocketT>> pooledAsyncConnectionConsumer);
+
+    /**
+     * Enumeration of events for which to listen.
+     */
+    enum Event {
+
+        /**
+         * Corresponds to the calls related to {@link AsyncConnection#onRead(Consumer)}
+         */
+        READ,
+
+        /**
+         * Corresponds to the calls related to {@link AsyncConnection#onWrite(Consumer)}
+         */
+        WRITE,
+
+        /**
+         * Corresponds to the calls related to {@link AsyncConnection#onError(Consumer)}
+         */
+        ERROR
+
+    }
 
 }

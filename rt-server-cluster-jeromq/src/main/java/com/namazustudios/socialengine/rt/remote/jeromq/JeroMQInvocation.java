@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.stripCode;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
@@ -86,6 +87,8 @@ public class JeroMQInvocation {
         this.remaining = expectedResponseCount;
         this.asyncCompleted = expectedResponseCount == 0;
 
+        connection.setEvents(READ, WRITE, ERROR);
+
         subscriptions = Subscription.begin()
             .chain(connection.onRead(this::handleRead))
             .chain(connection.onError(this::handleSocketError))
@@ -127,7 +130,7 @@ public class JeroMQInvocation {
             syncErrorConsumer.accept(ex);
             asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
 
-            // Cautiously we should nuke this connection because it coule be placed into an undefined state.
+            // Cautiously we should nuke this connection because it could be placed into an undefined state.
             subscriptions.unsubscribe();
             connection.close();
 
@@ -151,6 +154,7 @@ public class JeroMQInvocation {
         connection.socket().send(EMPTY_DELIMITER, SNDMORE);
         connection.socket().sendByteBuffer(requestHeader.getByteBuffer(), SNDMORE);
         connection.socket().send(payload);
+        connection.setEvents(READ, ERROR);
 
     }
 

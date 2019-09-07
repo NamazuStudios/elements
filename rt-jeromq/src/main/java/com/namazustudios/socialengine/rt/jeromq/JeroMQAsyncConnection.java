@@ -9,14 +9,15 @@ import org.zeromq.ZMQ;
 
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
-import static org.zeromq.ZMQ.Poller.*;
-
-public class JeroMQAsyncConnection extends ZMQ.PollItem implements AsyncConnection<ZContext, ZMQ.Socket> {
+class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     private final ZContext zContext;
 
     private final ZMQ.Socket socket;
+
+    private final FlagChangeHandler flagChangeHandler;
 
     private final BiConsumer<JeroMQAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler;
 
@@ -33,11 +34,34 @@ public class JeroMQAsyncConnection extends ZMQ.PollItem implements AsyncConnecti
     public JeroMQAsyncConnection(
             final ZContext zContext,
             final ZMQ.Socket socket,
+            final FlagChangeHandler flagChangeHandler,
             final BiConsumer<JeroMQAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler) {
-        super(socket, POLLIN| POLLOUT | POLLERR);
+        this.flagChangeHandler = flagChangeHandler;
         this.zContext = zContext;
         this.socket = socket;
         this.signalHandler = signalHandler;
+    }
+
+    @Override
+    public void clearEvents() {
+        flagChangeHandler.onFlagChange(this, 0);
+    }
+
+    @Override
+    public void setEvents(final Event ... events) {
+
+        int flags = 0;
+
+        for (final Event event : events) {
+            switch (event) {
+                case READ:  flags |= ZMQ.Poller.POLLIN; break;
+                case WRITE: flags |= ZMQ.Poller.POLLOUT; break;
+                case ERROR: flags |= ZMQ.Poller.POLLERR; break;
+            }
+        }
+
+        flagChangeHandler.onFlagChange(this, flags);
+
     }
 
     @Override
@@ -109,6 +133,13 @@ public class JeroMQAsyncConnection extends ZMQ.PollItem implements AsyncConnecti
 
     public Publisher<JeroMQAsyncConnection> getOnRecycle() {
         return onRecycle;
+    }
+
+    @FunctionalInterface
+    interface FlagChangeHandler {
+
+        void onFlagChange(JeroMQAsyncConnection connection, int flags);
+
     }
 
 }

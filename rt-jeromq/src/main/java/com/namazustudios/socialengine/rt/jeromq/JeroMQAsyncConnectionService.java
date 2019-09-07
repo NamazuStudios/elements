@@ -170,7 +170,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
             } catch (Exception ex) {
                 logger.error("Uncaught exception in IO thread.", ex);
                 throw ex;
-            }finally {
+            } finally {
                 logger.info("Exiting IO thread.");
             }
         }
@@ -186,8 +186,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
                                    final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
                     connectionSupplierList.add(context -> {
-                        final JeroMQAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-                        final JeroMQAsyncConnection connection = context.getConnection(handle.index);
+                        final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
                         asyncConnectionConsumer.accept(connection);
                         connection.getOnRecycle().subscribe(c -> connection.close());
                         return connection;
@@ -219,8 +218,6 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
                 }
 
             };
-
-
 
         }
 

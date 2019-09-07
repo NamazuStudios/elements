@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import org.slf4j.Logger;
@@ -17,6 +18,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
@@ -130,6 +132,7 @@ public class SimpleAsyncConnectionServiceTest {
                 sent.add(msg);
                 c.socket().send(msg);
                 latch.countDown();
+                c.setEvents(READ, ERROR);
             });
 
             c.onError(c0 -> {
@@ -143,6 +146,8 @@ public class SimpleAsyncConnectionServiceTest {
                 latch.countDown();
                 c.recycle();
             });
+
+            c.setEvents(READ, WRITE, ERROR);
 
         });
 

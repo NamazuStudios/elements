@@ -21,7 +21,6 @@ import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionServ
 import static java.lang.Math.min;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static java.util.stream.Collectors.toList;
-import static org.zeromq.ZFrame.DONTWAIT;
 
 class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Socket> {
 
@@ -41,9 +40,9 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
     private final AtomicBoolean open = new AtomicBoolean(true);
 
-    private final Set<JeroMQAsyncConnectionHandle> connectionHandles = newKeySet();
+    private final Set<JeroMQAsyncConnection> connections = newKeySet();
 
-    private final Queue<JeroMQAsyncConnectionHandle> available = new ConcurrentLinkedQueue<>();
+    private final Queue<JeroMQAsyncConnection> available = new ConcurrentLinkedQueue<>();
 
     public JeroMQAsyncConnectionPool(final String name, final int min, final int max,
                                      final Function<ZContext, ZMQ.Socket> socketSupplier,
@@ -66,16 +65,15 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         if (open.get()) {
 
             int added = 0;
-            final int toAdd = min((min - connectionHandles.size()), max) / THREAD_POOL_SIZE;
+            final int toAdd = min((min - connections.size()), max) / THREAD_POOL_SIZE;
 
-            while (connectionHandles.size() < max && connectionHandles.size() < min && (++added < toAdd)) {
-                final JeroMQAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-                final JeroMQAsyncConnection connection = context.getConnection(handle.index);
-                addConnection(handle, connection);
+            while (connections.size() < max && connections.size() < min && (++added < toAdd)) {
+                final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
+                addConnection(connection);
             }
 
-            if (connectionHandles.size() > max) {
-                logger.warn("Exceeded connection pool size of {} (actual {})", connectionHandles.size(), max);
+            if (connections.size() > max) {
+                logger.warn("Exceeded connection pool size of {} (actual {})", connections.size(), max);
             }
 
         } else {
@@ -94,12 +92,12 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
             throw new InternalException(ex);
         }
 
-        final JeroMQAsyncConnectionHandle entry = available.poll();
+        final JeroMQAsyncConnection connection = available.poll();
 
-        if (entry == null) {
+        if (connection == null) {
             doAcqureNew(asyncConnectionConsumer);
         } else {
-            doReuseConnection(asyncConnectionConsumer, entry);
+            connection.signal(asyncConnectionConsumer);
         }
 
     }
@@ -109,40 +107,32 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         final JeroMQAsyncThreadContext context = this.context.getThreadContextRoundRobin().getNext();
 
         context.doInThread(() -> {
-            final JeroMQAsyncConnectionHandle handle = context.allocateNewConnection(socketSupplier);
-            final JeroMQAsyncConnection connection = context.getConnection(handle.index);
-            addConnection(handle, connection);
+            final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
+            addConnection(connection);
             asyncConnectionConsumer.accept(connection);
         });
 
     }
 
-    private void addConnection(final JeroMQAsyncConnectionHandle handle, final JeroMQAsyncConnection connection) {
+    private void addConnection(final JeroMQAsyncConnection connection) {
 
-        connectionHandles.add(handle);
+        connections.add(connection);
 
         connection.onClose(c -> {
-            if (!available.remove(handle)) logger.warn("Could not remove available handle {}", handle);
-            if (!connectionHandles.remove(handle)) logger.warn("Could not remove handle {}", handle);
+            if (available.remove(connection)) logger.warn("Should not removed available connection {}", connection);
+            if (!connections.remove(connection)) logger.warn("Could not remove connection {}", connection);
             semaphore.release();
         });
 
         connection.onRecycle(c0 -> {
+            connection.clearEvents();
             connection.getOnError().clear();
             connection.getOnRead().clear();
             connection.getOnWrite().clear();
-            available.add(handle);
+            available.add(connection);
             semaphore.release();
         });
 
-    }
-
-    private void doReuseConnection(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer,
-                                   final JeroMQAsyncConnectionHandle handle) {
-        handle.context.doInThread(() -> {
-            final JeroMQAsyncConnection connection = handle.context.getConnection(handle.index);
-            asyncConnectionConsumer.accept(connection);
-        });
     }
 
     @Override
@@ -160,12 +150,8 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
             logger.error("Could not acquire all remaining connections.", e);
         }
 
-        connectionHandles.stream().collect(toList()).forEach(ch -> ch.getContext().doInThread(() -> {
-            final AsyncConnection connection = ch.context.getConnection(ch.index);
-            connection.close();
-        }));
-
-        connectionHandles.clear();
+        connections.stream().collect(toList()).forEach(c -> c.signal(z -> c.close()));
+        connections.clear();
 
     }
 

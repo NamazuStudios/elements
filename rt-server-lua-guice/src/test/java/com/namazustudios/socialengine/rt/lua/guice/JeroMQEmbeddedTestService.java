@@ -4,9 +4,8 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.id.InstanceId;
-import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQContextModule;
 import org.zeromq.ZContext;
 
@@ -15,7 +14,6 @@ import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static org.zeromq.ZContext.shadow;
 

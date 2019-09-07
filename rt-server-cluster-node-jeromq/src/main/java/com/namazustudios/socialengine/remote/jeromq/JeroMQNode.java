@@ -25,6 +25,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.ERROR;
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.READ;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newCachedThreadPool;
@@ -232,6 +234,7 @@ public class JeroMQNode implements Node {
                     return socket;
                 }, connection -> {
                     frontendConnection = connection;
+                    connection.setEvents(READ, ERROR);
                     connection.onRead(this::onFrontendRead);
                     connection.onError(this::onFrontendError);
                     latch.countDown();
@@ -241,6 +244,7 @@ public class JeroMQNode implements Node {
                     socket.bind(getOutboundAddr());
                     return socket;
                 }, connection -> {
+                    connection.setEvents(READ, ERROR);
                     connection.onRead(this::onBackendRead);
                     connection.onError(this::onBackendError);
                     latch.countDown();

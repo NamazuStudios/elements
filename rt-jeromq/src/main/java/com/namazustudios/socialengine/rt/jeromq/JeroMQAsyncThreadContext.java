@@ -125,13 +125,9 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
         final int next = poller.getNext();
 
-        for (int index = connectionIndexStart; index < next; ++index) {
-            final JeroMQAsyncConnection connection = (JeroMQAsyncConnection) poller.getItem(index);
-            if (connection != null) {
-                if (poller.pollin(index)) connection.getOnRead().publish(connection);
-                if (poller.pollout(index)) connection.getOnWrite().publish(connection);
-                if (poller.pollerr(index)) connection.getOnError().publish(connection);
-            }
+        for (int index = connectionIndexStart; index < poller.getNext(); ++index) {
+            final ThreadContextPollItem item = (ThreadContextPollItem) poller.getItem(index);
+            if (item != null) item.poll(index, poller);
         }
 
     }
@@ -171,12 +167,24 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
     }
 
-    public JeroMQAsyncConnectionHandle allocateNewConnection(final Function<ZContext, ZMQ.Socket> socketSupplier) {
+    public JeroMQAsyncConnection allocateNewConnection(final Function<ZContext, ZMQ.Socket> socketSupplier) {
 
         final ZMQ.Socket socket = socketSupplier.apply(zContext);
 
+        final JeroMQAsyncConnection.FlagChangeHandler flagChangeHandler = (conn, flags) -> {
+
+            poller.unregister(socket);
+
+            if (flags != 0) {
+                final ThreadContextPollItem item = new ThreadContextPollItem(conn, flags);
+                poller.register(item);
+            }
+
+        };
+
         final JeroMQAsyncConnection connection = new JeroMQAsyncConnection(
                 zContext, socket,
+                flagChangeHandler,
                 (conn, consumer) -> doInThread(() -> consumer.accept(conn)));
 
         connection.onClose(c -> onPostLoop.subscribe((subscriber, v) -> {
@@ -185,17 +193,29 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
             subscriber.unsubscribe();
         }));
 
-        final int index = poller.register(connection);
-        return new JeroMQAsyncConnectionHandle(index, this);
+        return connection;
 
-    }
-
-    public JeroMQAsyncConnection getConnection(final int index) {
-        return (JeroMQAsyncConnection) poller.getItem(index);
     }
 
     public Subscription onPostLoop(final BiConsumer<Subscription, Void> consumer) {
         return onPostLoop.subscribe(consumer);
+    }
+
+    private static class ThreadContextPollItem extends ZMQ.PollItem {
+
+        private final JeroMQAsyncConnection connection;
+
+        public ThreadContextPollItem(final JeroMQAsyncConnection connection, int ops) {
+            super(connection.socket(), ops);
+            this.connection = connection;
+        }
+
+        public void poll(final int index, final ZMQ.Poller poller) {
+            if (isReadable() && poller.pollin(index)) connection.getOnRead().publish(connection);
+            if (isWritable() && poller.pollout(index)) connection.getOnWrite().publish(connection);
+            if (isError() && poller.pollerr(index)) connection.getOnError().publish(connection);
+        }
+
     }
 
 }
