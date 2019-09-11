@@ -1,12 +1,5 @@
 package com.namazustudios.socialengine.appnode;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
-import com.namazustudios.socialengine.appnode.guice.MultiNodeContainerModule;
-import com.namazustudios.socialengine.appnode.guice.ServicesModule;
-import com.namazustudios.socialengine.appnode.guice.VersionModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
@@ -14,9 +7,6 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.swing.text.html.Option;
-import java.util.Properties;
 
 /**
  * Hello world!

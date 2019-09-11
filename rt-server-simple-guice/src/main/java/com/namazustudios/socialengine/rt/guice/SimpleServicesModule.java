@@ -14,6 +14,7 @@ import java.util.concurrent.ScheduledExecutorService;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static com.namazustudios.socialengine.rt.PersistenceStrategy.getNullPersistence;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.DISPATCHER_EXECUTOR_SERVICE;
 import static com.namazustudios.socialengine.rt.SimpleScheduler.SCHEDULED_EXECUTOR_SERVICE;
 
@@ -51,10 +52,9 @@ public class SimpleServicesModule extends PrivateModule {
         bind(ResourceService.class).to(SimpleResourceService.class).asEagerSingleton();
         bind(RetainedHandlerService.class).to(SimpleRetainedHandlerService.class).asEagerSingleton();
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
-        bind(ResourceAcquisition.class).to(NullResourceAcquisition.class).asEagerSingleton();
         bind(LoadMonitorService.class).to(SimpleLoadMonitorService.class).asEagerSingleton();
         bind(TaskService.class).to(SimpleTaskService.class);
-        bind(PersistenceStrategy.class).toInstance(PersistenceStrategy.getNullPersistence());
+        bind(PersistenceStrategy.class).toInstance(getNullPersistence());
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
             .toProvider(() -> new ProxyLockService<>(Deque.class));

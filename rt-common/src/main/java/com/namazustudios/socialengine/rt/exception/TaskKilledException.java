@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.exception;
 
 import com.namazustudios.socialengine.rt.ResponseCode;
-import com.namazustudios.socialengine.rt.TaskId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 
 import static java.lang.String.format;
 
@@ -12,6 +12,10 @@ public class TaskKilledException extends BaseException {
     public TaskKilledException(TaskId taskId) {
         super(format("Task with id %s was killed.", taskId));
         this.taskId = taskId;
+    }
+
+    public TaskId getTaskId() {
+        return taskId;
     }
 
     @Override

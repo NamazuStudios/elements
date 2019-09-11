@@ -36,9 +36,9 @@ public interface SchedulerContext {
      *
      */
     @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
-    void resumeTaskAfterDelay(@Serialize long time,
-                              @Serialize TimeUnit timeUnit,
-                              @ProvidesAddress @Serialize TaskId taskId);
+    void resumeTaskAfterDelay(@ProvidesAddress @Serialize TaskId taskId,
+                              @Serialize long time,
+                              @Serialize TimeUnit timeUnit);
 
     /**
      * Resumes the supplied task with the {@link TaskId} supplying multiple results to the destination.

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.TaskId;
+
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 

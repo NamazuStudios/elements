@@ -48,8 +48,6 @@ public class LuaResource implements Resource {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
-    private final Map<TaskId, PendingTask> taskIdPendingTaskMap = new HashMap<>();
-
     private ResourceId resourceId;
 
     private Attributes attributes = Attributes.emptyAttributes();
@@ -92,10 +90,11 @@ public class LuaResource implements Resource {
     public LuaResource(
             final LuaState luaState,
             final Context context,
-            final ResourceAcquisition resourceAcquisition,
+            final PersistenceStrategy persistenceStrategy,
             final NodeId nodeId) {
         try {
 
+            this.resourceId = new ResourceId(nodeId);
             this.context = context;
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);

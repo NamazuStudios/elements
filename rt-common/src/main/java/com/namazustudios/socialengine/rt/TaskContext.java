@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.DuplicateTaskException;
+import com.namazustudios.socialengine.rt.id.TaskId;
 
 import java.util.function.Consumer;
 
