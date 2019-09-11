@@ -47,7 +47,13 @@
             <groupId>com.spotify</groupId>
             <artifactId>dns</artifactId>
             <version>${spotify.dns.version}</version>
-            <scope>optional</scope>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.spotify</groupId>
+            <artifactId>dns</artifactId>
+            <version>${spotify.dns.version}</version>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

@@ -34,7 +34,7 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-fst-guice</artifactId>
             <version>${project.version}</version>
-            <scope>optional</scope>
+            <optional>true</optional>
         </dependency>
     </dependencies>
 

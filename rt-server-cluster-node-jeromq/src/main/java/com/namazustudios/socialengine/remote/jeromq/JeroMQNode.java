@@ -216,7 +216,6 @@ public class JeroMQNode implements Node {
 
             final CountDownLatch latch = new CountDownLatch(3);
 
-            // TODO Make Connection Pool Size Adjustable.
             outboundConnectionPool = getAsyncConnectionService().allocatePool(
                 "JeroMQNode Outbound",
                 getMinConnections(),

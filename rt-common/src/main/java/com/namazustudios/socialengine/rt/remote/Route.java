@@ -50,4 +50,13 @@ public class Route  {
         return Objects.hash(getAddress(), getRoutingStrategyName(), getRoutingStrategyType());
     }
 
+    @Override
+    public String toString() {
+        return "Route{" +
+                "address=" + address +
+                ", routingStrategyName='" + routingStrategyName + '\'' +
+                ", routingStrategyType=" + routingStrategyType +
+                '}';
+    }
+
 }

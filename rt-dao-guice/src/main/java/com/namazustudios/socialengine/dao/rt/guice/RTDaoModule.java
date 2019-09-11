@@ -16,6 +16,7 @@ import java.util.function.Function;
  * Created by patricktwohig on 8/22/17.
  */
 public class RTDaoModule extends PrivateModule {
+
     private boolean isLocalInstance;
 
     @Override
@@ -31,7 +32,6 @@ public class RTDaoModule extends PrivateModule {
 
         bind(ManifestDao.class).to(RTManifestDao.class).asEagerSingleton();
         bind(ZContext.class).asEagerSingleton();
-//        bind(SrvMonitorService.class).to(SpotifySrvMonitorService.class).asEagerSingleton();
         bind(ContextFactory.class).to(DefaultContextFactory.class).asEagerSingleton();
         bind(new TypeLiteral<Function<String, Context>>(){}).toProvider(RTContextProvider.class);
 

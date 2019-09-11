@@ -20,6 +20,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.rt.Reflection.*;
+import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -176,12 +177,15 @@ public class RemoteInvocationHandlerBuilder {
         final List<String> parameters;
         parameters = stream(method.getParameterTypes()).map(c -> c.getName()).collect(toList());
 
+        final Class<? extends RoutingStrategy> routingStrategyType = routing.value();
+        final String routingStrategyName = routing.name().isEmpty() ? null : routing.name();
+
         return (proxy, method1, args) -> {
 
             final Route route = new Route();
             route.setAddress(addressAssembler.apply(args));
-            route.setRoutingStrategyType(routing.value());
-            route.setRoutingStrategyName(routing.name());
+            route.setRoutingStrategyType(routingStrategyType);
+            route.setRoutingStrategyName(routingStrategyName);
 
             final Invocation invocation = new Invocation();
 
