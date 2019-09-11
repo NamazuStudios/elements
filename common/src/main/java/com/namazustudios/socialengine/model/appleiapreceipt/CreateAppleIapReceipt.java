@@ -9,13 +9,11 @@ import java.util.Objects;
 
 @ApiModel
 public class CreateAppleIapReceipt implements Serializable {
+
     @NotNull
     @ApiModelProperty("The base64-encoded string of the raw IAP receipt.")
     private String receiptData;
 
-    @NotNull
-    @ApiModelProperty("Whether to point to Apple's Sandbox or Production servers. Value should be either SANDBOX " +
-            "or PRODUCTION.")
     private CreateAppleIapReceiptEnvironment createAppleIapReceiptEnvironment;
 
     public String getReceiptData() {

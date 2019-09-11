@@ -28,8 +28,7 @@ public class SimpleSchedulerContext implements SchedulerContext {
     }
 
     @Override
-    public void resumeTaskAfterDelay(final long time, final TimeUnit timeUnit,
-                                     final TaskId taskId) {
+    public void resumeTaskAfterDelay(final TaskId taskId, final long time, final TimeUnit timeUnit) {
         getScheduler().resumeTaskAfterDelay(
             taskId, time, timeUnit,
             () -> logger.trace("Resumed task {}:{}", taskId),

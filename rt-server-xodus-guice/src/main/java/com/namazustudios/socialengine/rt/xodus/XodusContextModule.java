@@ -2,7 +2,10 @@ package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.guice.*;
+import com.namazustudios.socialengine.rt.guice.SimpleHandlerContextModule;
+import com.namazustudios.socialengine.rt.guice.SimpleIndexContextModule;
+import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
+import com.namazustudios.socialengine.rt.guice.SimpleTaskContextModule;
 
 import java.util.concurrent.TimeUnit;
 
@@ -54,19 +57,19 @@ public class XodusContextModule extends PrivateModule {
         install(new XodusResourceContextModule());
 
         // The remaining contexts are fine as their simple equivalents.
+        install(new SimpleTaskContextModule());
         install(new SimpleIndexContextModule());
         install(simpleHandlerContextModule);
 
+        // Exposes everything
         expose(IndexContext.class);
         expose(ResourceContext.class);
         expose(HandlerContext.class);
         expose(SchedulerContext.class);
-        expose(ResourceAcquisition.class);
+        expose(TaskContext.class);
+        expose(PersistenceStrategy.class);
 
     }
-
-
-
 
     /**
      * {@see {@link SimpleHandlerContextModule#withTimeout(long, TimeUnit)}}

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
+import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
 import com.namazustudios.socialengine.rt.provider.ScheduledExecutorServiceProvider;
 
 import java.util.Deque;
@@ -41,9 +41,9 @@ public class XodusServicesModule extends PrivateModule {
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
 
-        bind(ResourceService.class).to(XodusResourceService.class);
-        bind(ResourceAcquisition.class).to(XodusResourceAcquisition.class);
         bind(XodusResourceService.class).asEagerSingleton();
+        bind(ResourceService.class).to(XodusResourceService.class);
+        bind(PersistenceStrategy.class).to(XodusPersistenceStrategy.class);
 
         bind(ScheduledExecutorService.class)
             .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
@@ -51,7 +51,7 @@ public class XodusServicesModule extends PrivateModule {
 
         bind(ExecutorService.class)
             .annotatedWith(named(DISPATCHER_EXECUTOR_SERVICE))
-            .toProvider(new CachedThreadPoolProvider(SimpleScheduler.class, "dispatch"));
+            .toProvider(new CPUCountThreadPoolProvider(SimpleScheduler.class, "dispatch"));
 
         bind(SingleUseHandlerService.class)
             .to(SimpleSingleUseHandlerService.class)
@@ -61,11 +61,16 @@ public class XodusServicesModule extends PrivateModule {
             .to(SimpleRetainedHandlerService.class)
             .asEagerSingleton();
 
+        bind(TaskService.class)
+            .to(SimpleTaskService.class)
+            .asEagerSingleton();
+
         expose(Scheduler.class);
+        expose(TaskService.class);
         expose(ResourceService.class);
         expose(SingleUseHandlerService.class);
         expose(RetainedHandlerService.class);
-        expose(ResourceAcquisition.class);
+        expose(PersistenceStrategy.class);
 
     }
 

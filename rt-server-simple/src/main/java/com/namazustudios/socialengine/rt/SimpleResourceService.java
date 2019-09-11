@@ -18,6 +18,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static java.lang.Thread.yield;
+import static java.util.Collections.emptyList;
 import static java.util.Spliterator.CONCURRENT;
 import static java.util.Spliterator.IMMUTABLE;
 import static java.util.Spliterator.NONNULL;
@@ -357,6 +358,12 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
+    public List<Unlink> unlinkMultiple(final Path path, final int max, final Consumer<Resource> removed) {
+        logger.error("unlinkMultiple(Path, int, Consumer) not available for this implementation.");
+        return emptyList();
+    }
+
+    @Override
     public Resource removeResource(final ResourceId resourceId) {
 
         final Deque<Path> pathLock = getPathOptimisticLockService().createLock();
@@ -419,6 +426,12 @@ public class SimpleResourceService implements ResourceService {
 
         });
 
+    }
+
+    @Override
+    public List<ResourceId> removeResources(final Path path, final int max, final Consumer<Resource> removed) {
+        logger.error("removeResources(Path, int, Consumer) not available for this implementation.");
+        return emptyList();
     }
 
     @Override

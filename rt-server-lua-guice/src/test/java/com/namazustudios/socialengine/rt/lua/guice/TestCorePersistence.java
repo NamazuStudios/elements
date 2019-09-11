@@ -12,9 +12,7 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.ws.rs.client.Client;
 import java.io.ByteArrayInputStream;
@@ -40,6 +38,18 @@ public class TestCorePersistence {
     private static final Logger logger = LoggerFactory.getLogger(TestCorePersistence.class);
 
     private ResourceLoader resourceLoader;
+
+    private Context context;
+
+    @BeforeClass
+    private void start() {
+        getContext().start();
+    }
+
+    @AfterClass
+    private void stop() {
+        getContext().shutdown();
+    }
 
     @DataProvider
     public static Object[][] allLuaResources() {
@@ -245,6 +255,15 @@ public class TestCorePersistence {
     @Inject
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    @Inject
+    public void setContext(Context context) {
+        this.context = context;
     }
 
     public static class Module extends AbstractModule {

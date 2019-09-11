@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.provider.CachedThreadPoolProvider;
 import com.namazustudios.socialengine.rt.provider.ScheduledExecutorServiceProvider;
@@ -52,6 +53,8 @@ public class SimpleServicesModule extends PrivateModule {
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
         bind(ResourceAcquisition.class).to(NullResourceAcquisition.class).asEagerSingleton();
         bind(LoadMonitorService.class).to(SimpleLoadMonitorService.class).asEagerSingleton();
+        bind(TaskService.class).to(SimpleTaskService.class);
+        bind(PersistenceStrategy.class).toInstance(PersistenceStrategy.getNullPersistence());
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
             .toProvider(() -> new ProxyLockService<>(Deque.class));
@@ -65,13 +68,14 @@ public class SimpleServicesModule extends PrivateModule {
 
         bind(ExecutorService.class)
             .annotatedWith(named(DISPATCHER_EXECUTOR_SERVICE))
-            .toProvider(new CachedThreadPoolProvider(SimpleScheduler.class, "dispatch"));
+            .toProvider(new CPUCountThreadPoolProvider(SimpleScheduler.class, "dispatch"));
 
         expose(Scheduler.class);
         expose(ResourceService.class);
         expose(RetainedHandlerService.class);
         expose(SingleUseHandlerService.class);
-        expose(ResourceAcquisition.class);
+        expose(PersistenceStrategy.class);
+        expose(TaskService.class);
 
     }
 

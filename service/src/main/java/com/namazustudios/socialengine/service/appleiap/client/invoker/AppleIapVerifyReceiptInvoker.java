@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.service.appleiap.client.model.AppleIapVeri
 import com.namazustudios.socialengine.service.gameon.client.model.EnterMatchRequest;
 
 public interface AppleIapVerifyReceiptInvoker {
+
     AppleIapGrandUnifiedReceipt invoke();
 
     enum AppleIapVerifyReceiptEnvironment {
@@ -22,6 +23,7 @@ public interface AppleIapVerifyReceiptInvoker {
     }
 
     interface Builder {
+
         /**
          * Specifies the Apple environment against which to validate.
          *
@@ -44,5 +46,7 @@ public interface AppleIapVerifyReceiptInvoker {
          * @return the newly created {@link AppleIapVerifyReceiptInvoker}
          */
         AppleIapVerifyReceiptInvoker build();
+
     }
+
 }

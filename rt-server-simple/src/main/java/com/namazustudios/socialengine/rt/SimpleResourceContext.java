@@ -40,7 +40,7 @@ public class SimpleResourceContext implements ResourceContext {
                                        final Attributes attributes, final Object... args) {
         logger.debug("Loading module {} -> {}", module, path);
         final Resource resource = getResourceLoader().load(module, attributes, args);
-        getResourceService().addAndReleaseResource(path, resource);
+        getResourceService().addAndAcquireResource(path, resource);
         return resource.getId();
     }
 

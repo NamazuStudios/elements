@@ -1,10 +1,11 @@
 package com.namazustudios.socialengine.rt.exception;
 
-import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.ResponseCode;
+import com.namazustudios.socialengine.rt.TaskId;
 
 import static java.lang.String.format;
 
-public class NoSuchTaskException extends RuntimeException {
+public class NoSuchTaskException extends BaseException {
 
     private final TaskId taskId;
 
@@ -15,6 +16,11 @@ public class NoSuchTaskException extends RuntimeException {
 
     public TaskId getTaskId() {
         return taskId;
+    }
+
+    @Override
+    public ResponseCode getResponseCode() {
+        return ResponseCode.TASK_NOT_FOUND;
     }
 
 }

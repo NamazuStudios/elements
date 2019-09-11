@@ -46,13 +46,18 @@ public class CoroutineBuiltin implements Builtin {
 
     private final LuaResource luaResource;
 
-    private final SchedulerContext schedulerContext;
+    private final Context context;
+
+    private final PersistenceStrategy persistenceStrategy;
 
     private TaskId runningTaskId;
 
-    public CoroutineBuiltin(final LuaResource luaResource, final SchedulerContext schedulerContext) {
+    public CoroutineBuiltin(final LuaResource luaResource,
+                            final Context context,
+                            final PersistenceStrategy persistenceStrategy) {
         this.luaResource = luaResource;
-        this.schedulerContext = schedulerContext;
+        this.context = context;
+        this.persistenceStrategy = persistenceStrategy;
     }
 
     /**
@@ -144,73 +149,79 @@ public class CoroutineBuiltin implements Builtin {
     };
 
     private int resume(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
-
         try {
+            do {
 
-            // Execute the coroutine/thread.  Remember, if the thread is not in the right state, this may cause
-            // the thread to fail.  This shouldn't happen because it should be deregistered.
+                // Execute the coroutine/thread.  Remember, if the thread is not in the right state, this may cause the
+                // thread to fail.  This shouldn't happen because it should be deregistered.
 
-            final int returned;
-            final TaskId existingRunningTaskId = this.runningTaskId;
+                final int returned;
+                final TaskId existingRunningTaskId = this.runningTaskId;
 
-            try {
-                runningTaskId = taskId;
-                returned = luaState.resume(1, luaState.getTop() - 1);
-            } finally {
-                runningTaskId = existingRunningTaskId;
-            }
+                try {
+                    runningTaskId = taskId;
+                    returned = luaState.resume(1, luaState.getTop() - 1);
+                } finally {
+                    runningTaskId = existingRunningTaskId;
+                }
 
-            // Check the status of the coroutine.  If it is a yield, then we process the yield instructions which will
-            // reschedule the task if necessary.  If there's a successful completion, then we collect the results
-            // of the method and push them on the stack.
+                // Check the status of the coroutine.  If it is a yield, then we process the yield instructions which
+                // will reschedule the task if necessary.  If there's a successful completion, then we collect the
+                // results of the method and push them on the stack.
 
-            final int status = luaState.status(1);
+                final int status = luaState.status(1);
 
-            if (status == YIELD) {
+                if (status == YIELD) {
 
-                // If we yielded, then we start looking for the yield instructions and process them.  If the yield
-                // instructions weren't passed properly, an exception will result.
+                    // If we yielded, then we start looking for the yield instructions and process them.  If the yield
+                    // instructions weren't passed properly, an exception will result.
 
-                luaState.remove(1);
-                processYieldInstruction(taskId, luaState, logAssist);
+                    if (processYieldInstruction(taskId, luaState, logAssist)) {
+                        // If the yield instruction indicates that we need to continue execution after the yield, we
+                        // will do exactly that.  All arguments returned from the yield will be simply passed back
+                        // through the yield if the situation warrants it.  The next iteration will simply process
+                        // the instructions as they were.
+                        continue;
+                    }
 
-                // Now that all instructions are processed, we return the status and the task id.
+                    // Now that all instructions are processed, we return the status and the task id.
 
-                luaState.setTop(0);
-                luaState.pushString(taskId.asString());
-                luaState.pushInteger(status);
+                    luaState.setTop(0);
+                    luaState.pushString(taskId.asString());
+                    luaState.pushInteger(status);
 
-                return 2;
+                    return 2;
 
-            } else {
+                } else {
 
-                // If the coroutine wasn't yielded because it finished normally, then we simply take what's on the stack
-                // and return it to the caller.  The caller then will collect the values that are returned.  However,
-                // we do prepend the task ID and status so the caller can make sense of the execution result.
+                    // If the coroutine wasn't yielded because it finished normally, then we simply take what's on the
+                    // stack and return it to the caller.  The caller then will collect the values that are returned.
+                    // However, we do prepend the task ID and status so the caller can make sense of the execution
+                    // result.
 
-                luaState.remove(1);
-                cleanup(taskId, luaState);
+                    luaState.remove(1);
+                    cleanup(taskId, luaState);
 
-                luaState.pushInteger(status);
-                luaState.insert(1);
+                    luaState.pushInteger(status);
+                    luaState.insert(1);
 
-                luaState.pushString(taskId.asString());
-                luaState.insert(1);
+                    luaState.pushString(taskId.asString());
+                    luaState.insert(1);
 
-                final Object result = luaState.getTop() == 2 ? null : luaState.checkJavaObject(3, Object.class);
-                getLuaResource().finishPendingTask(taskId, result);
+                    final Object result = luaState.getTop() == 2 ? null : luaState.checkJavaObject(3, Object.class);
+                    getContext().getTaskContext().finishWithResult(taskId, result);
 
-                return returned + 2;
+                    return returned + 2;
 
-            }
+                }
 
+            } while (true);
         } catch (Throwable th) {
             // All exceptions will clean up the coroutine such that it will no longer be in the table.
             cleanup(taskId, luaState);
-            getLuaResource().failPendingTask(taskId, th);
+            getContext().getTaskContext().finishWithError(taskId, th);
             throw th;
         }
-
     }
 
     private void cleanup(final TaskId taskId, final LuaState luaState) {
@@ -220,26 +231,29 @@ public class CoroutineBuiltin implements Builtin {
         luaState.pop(1);
     }
 
-    private void processYieldInstruction(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
+    private boolean processYieldInstruction(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
 
         final YieldInstruction instruction;
-        instruction = luaState.getTop() > 0 ? luaState.checkEnum(1, YieldInstruction.values()) : IMMEDIATE;
+        instruction = luaState.getTop() > 0 ? luaState.checkEnum(2, YieldInstruction.values()) : IMMEDIATE;
 
         switch (instruction) {
             case FOR:
                 scheduleFor(taskId, luaState, logAssist);
-                break;
+                return false;
             case UNTIL_TIME:
                 scheduleUntil(taskId, luaState, logAssist);
-                break;
+                return false;
             case IMMEDIATE:
                 scheduleImmediate(taskId, logAssist);
-                break;
+                return false;
             case UNTIL_NEXT:
                 scheduleUntilNextCron(taskId, luaState, logAssist);
-                break;
+                return false;
             case INDEFINITELY:
-                break;
+                return false;
+            case COMMIT:
+                persist(taskId, luaState, logAssist);
+                return true;
             default:
                 throw new InternalException("unknown enum value " + instruction);
         }
@@ -247,12 +261,12 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private void scheduleImmediate(final TaskId taskId, final LogAssist logAssist) {
-        getSchedulerContext().resumeTaskAfterDelay(0, MILLISECONDS, taskId);
+        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, 0, MILLISECONDS);
     }
 
     private void scheduleUntil(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
+        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
     }
 
     private long delayUntilMilliseconds(final LuaState luaState) {
@@ -263,29 +277,29 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleFor(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = timeValueInMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
+        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
     }
 
     private long timeValueInMilliseconds(final LuaState luaState) {
 
-         if (luaState.getTop() < 2) {
+         if (luaState.getTop() < 3) {
             throw new IllegalArgumentException("time value must be specified");
         }
 
         final TimeUnit timeUnit = timeUnit(luaState);
-        final double value = luaState.checkNumber(2) * TIME_UNIT_CORRECTION_FACTOR_D;
+        final double value = luaState.checkNumber(3) * TIME_UNIT_CORRECTION_FACTOR_D;
 
         return MILLISECONDS.convert(round(value), timeUnit) / TIME_UNIT_CORRECTION_FACTOR_L;
 
     }
 
     private TimeUnit timeUnit(final LuaState luaState) {
-        return luaState.getTop() > 2 ? luaState.checkEnum(3, TimeUnit.values()) : TimeUnit.SECONDS;
+        return luaState.getTop() > 2 ? luaState.checkEnum(4, TimeUnit.values()) : TimeUnit.SECONDS;
     }
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilNextCronMilliseconds(luaState);
-        getSchedulerContext().resumeTaskAfterDelay(delay, MILLISECONDS, taskId);
+        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
     }
 
     private long delayUntilNextCronMilliseconds(final LuaState luaState) {
@@ -294,7 +308,7 @@ public class CoroutineBuiltin implements Builtin {
             throw new IllegalArgumentException("time value must be specified");
         }
 
-        final String expression = luaState.checkString(2);
+        final String expression = luaState.checkString(3);
         final CronExpression cronExpression;
 
         try {
@@ -306,6 +320,11 @@ public class CoroutineBuiltin implements Builtin {
         final Date when = cronExpression.getNextValidTimeAfter(new Date());
         return max(0l, when.getTime() - currentTimeMillis());
 
+    }
+
+    private void persist(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
+        final ResourceId resourceId = getLuaResource().getId();
+        getPersistenceStrategy().persist(resourceId);
     }
 
     @Override
@@ -369,12 +388,16 @@ public class CoroutineBuiltin implements Builtin {
         persistence.addPermanentJavaObject(currentTaskId, CoroutineBuiltin.class, CURRENT_TASK_ID);
     }
 
-    public SchedulerContext getSchedulerContext() {
-        return schedulerContext;
+    public Context getContext() {
+        return context;
     }
 
     public LuaResource getLuaResource() {
         return luaResource;
+    }
+
+    public PersistenceStrategy getPersistenceStrategy() {
+        return persistenceStrategy;
     }
 
 }

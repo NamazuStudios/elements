@@ -30,7 +30,6 @@ import java.util.stream.Stream;
 
 import static java.lang.Integer.max;
 import static java.lang.System.getProperty;
-import static java.util.Collections.unmodifiableSet;
 import static java.util.Spliterator.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -85,29 +84,6 @@ public class XodusResourceService implements ResourceService {
      * is removed entirely.
      */
     public static final String STORE_ACQUIRES = "acquires";
-
-    public static final Set<String> TEXT_STORES;
-
-    public static final Set<String> BINARY_STORES;
-
-    public static final Set<String> INTEGER_STORES;
-
-    static {
-
-        final Set<String> binaryStores = new HashSet<>();
-        binaryStores.add(STORE_RESOURCES);
-        BINARY_STORES = unmodifiableSet(binaryStores);
-
-        final Set<String> integerStores = new HashSet<>();
-        integerStores.add(STORE_ACQUIRES);
-        INTEGER_STORES = unmodifiableSet(integerStores);
-
-        final Set<String> textStores = new HashSet<>();
-        textStores.add(STORE_PATHS);
-        textStores.add(STORE_RESOURCE_IDS);
-        TEXT_STORES = unmodifiableSet(textStores);
-
-    }
 
     /**
      * The acquire condition for use with the {@link Monitor} instance used to obtain access to the cached instance
@@ -278,19 +254,8 @@ public class XodusResourceService implements ResourceService {
         // the same resource may be high.
 
         if (acquires == 1) {
-
-            // Only read the bytes if we absolutely need to.
             final ByteIterable value = resources.get(txn, resourceIdKey);
-
-            if (value == null) {
-                // This should never happen if the state of the database is consistent.  If this does happen we should
-                // at least vacuum the entries to prevent further inconsistencies.
-                doRemoveResource(txn, resourceIdKey);
-                throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
-            }
-
             return () -> loadAndCache(xodusCacheKey, value);
-
         } else {
             return () -> readFromCache(xodusCacheKey);
         }
@@ -350,19 +315,51 @@ public class XodusResourceService implements ResourceService {
             final int length = value.getLength();
             final byte[] bytes = value.getBytesUnsafe();
 
+            final XodusCacheStorage storage = getStorage();
+            final XodusResource existingResource = storage.getResourceIdResourceMap().get(xodusCacheKey);
+
+            if (existingResource != null) return existingResource;
+            else if (value == null) throw new InternalException("Inconsistent state.  Newly acquired resource has no value.");
+
             try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
-
                 final XodusResource xodusResource = new XodusResource(getResourceLoader().load(bis));
-
-                if (getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource) != null) {
-                    logger.error("Consistency error.  Expecting no existing resource in cache.");
-                }
-
+                storage.getResourceIdResourceMap().put(xodusCacheKey, xodusResource);
                 return xodusResource;
-
             } catch (IOException ex) {
                 throw new InternalException(ex);
             }
+
+        }
+    }
+
+    private XodusResource getOrLoad(final XodusCacheKey xodusCacheKey, final ByteIterable value) {
+        try (final Monitor monitor = getResourceLockService().getMonitor(xodusCacheKey.getResourceId())) {
+
+            final Map<XodusCacheKey, XodusResource> cache = getStorage().getResourceIdResourceMap();
+
+            XodusResource xodusResource = cache.get(xodusCacheKey);
+
+            if (xodusResource == null) {
+
+                if (value == null) throw new InternalException("No data for resource: " + xodusCacheKey.getResourceId());
+
+                final int length = value.getLength();
+                final byte[] bytes = value.getBytesUnsafe();
+
+                try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes, 0, length)) {
+
+                    xodusResource = new XodusResource(getResourceLoader().load(bis));
+
+                    if (getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource) != null) {
+                        logger.error("Consistency error.  Expecting no existing resource in cache.");
+                    }
+
+                } catch (IOException ex) {
+                    throw new InternalException(ex);
+                }
+            }
+
+            return xodusResource;
 
         }
     }
@@ -514,7 +511,7 @@ public class XodusResourceService implements ResourceService {
 
             return () -> {
 
-                try (final Monitor monitor = getResourceLockService().getMonitor(xodusResource.getId())) {
+                try (final Monitor _ = getResourceLockService().getMonitor(xodusResource.getId())) {
 
                     final XodusResource removed;
                     removed = getStorage().getResourceIdResourceMap().remove(xodusResource.getXodusCacheKey());
@@ -527,10 +524,10 @@ public class XodusResourceService implements ResourceService {
                     }
 
                     try {
-                        // Ensure that it's closed once it's persisted to avoi memory leaks.
-                        xodusResource.close();
+                        // Ensure that it's closed once it's persisted to avoid memory leaks.
+                        xodusResource.unload();
                     } catch (Exception ex) {
-                        logger.error("Could not close resource.", ex);
+                        logger.error("Could not unload resource.", ex);
                     }
 
                 }
@@ -554,43 +551,48 @@ public class XodusResourceService implements ResourceService {
 
         checkOpen();
 
-        final List<XodusListing> result = new ArrayList<>();
+        final List<XodusListing> result = getEnvironment().computeInTransaction(txn -> {
+            final List<XodusListing> l = new ArrayList<>();
+            doList(txn, path, Integer.MAX_VALUE, l::add);
+            debugList.report(txn, path, l);
+            return l;
+        });
 
-        getEnvironment().executeInTransaction(txn -> {
+        return Spliterators.spliterator(result, CONCURRENT | IMMUTABLE | NONNULL);
 
-            final Store store = openPaths(txn);
+    }
 
-            try (final Cursor cursor = store.openCursor(txn)) {
+    private void doList(final Transaction txn,
+                        final Path path,
+                        final int maxResults,
+                        final Consumer<XodusListing> listingConsumer) {
+        final Store store = openPaths(txn);
 
-                ByteIterable key = stringToEntry(path.stripWildcard().toNormalizedPathString());
-                ByteIterable value = cursor.getSearchKeyRange(key);
+        try (final Cursor cursor = store.openCursor(txn)) {
 
-                while (value != null) {
+            ByteIterable key = stringToEntry(path.stripWildcard().toNormalizedPathString());
+            ByteIterable value = cursor.getSearchKeyRange(key);
 
-                    key = cursor.getKey();
-                    value = cursor.getValue();
+            while (value != null) {
 
-                    final XodusListing xodusListing = new XodusListing(key, value);
+                key = cursor.getKey();
+                value = cursor.getValue();
 
-                    if (path.matches(xodusListing.getPath())) {
-                        result.add(xodusListing);
-                    } else {
-                        break;
-                    }
+                final XodusListing xodusListing = new XodusListing(key, value);
 
-                    if (!cursor.getNext()) {
-                        break;
-                    }
+                if (path.matches(xodusListing.getPath())) {
+                    listingConsumer.accept(xodusListing);
+                } else {
+                    break;
+                }
 
+                if (!cursor.getNext()) {
+                    break;
                 }
 
             }
 
-            debugList.report(txn, path, result);
-
-        });
-
-        return Spliterators.spliterator(result, CONCURRENT | IMMUTABLE | NONNULL);
+        }
 
     }
 
@@ -685,26 +687,49 @@ public class XodusResourceService implements ResourceService {
     }
 
     @Override
-    public Unlink unlinkPath(final Path path, final Consumer<Resource> reovedResourceConsumer) {
+    public Unlink unlinkPath(final Path path, final Consumer<Resource> removedResourceConsumer) {
 
         checkOpen();
 
+        if (path.isWildcard()) {
+            throw new IllegalArgumentException("Must not pass wildcard path. (use unlinkMultiple instead).");
+        }
+
         final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
         final Unlink unlink = getEnvironment().computeInTransaction(txn -> doUnlink(txn, pathKey));
-
-        if (unlink.isRemoved()) {
-            try (final Monitor m = getResourceLockService().getMonitor(unlink.getResourceId())) {
-                final XodusCacheStorage xodusCacheStorage = getStorage();
-                final XodusCacheKey cacheKey = new XodusCacheKey(unlink.getResourceId());
-                final XodusResource xodusResource = xodusCacheStorage.getResourceIdResourceMap().remove(cacheKey);
-                reovedResourceConsumer.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
-            } finally {
-                getResourceLockService().delete(unlink.getResourceId());
-            }
-        }
+        if (unlink.isRemoved()) doPostRemoval(unlink, removedResourceConsumer);
 
         return unlink;
 
+    }
+
+    @Override
+    public List<Unlink> unlinkMultiple(final Path path, final int max,
+                                       final Consumer<Resource> removedResourceConsumer) {
+
+        final List<Unlink> unlinkList = getEnvironment().computeInTransaction(txn -> {
+            final List<XodusListing> listings = new ArrayList<>();
+            doList(txn, path, max, listings::add);
+            return listings.stream().map(l -> doUnlink(txn, l.getPathKey())).collect(toList());
+        });
+
+        unlinkList.stream()
+                  .filter(unlink -> unlink.isRemoved())
+                  .forEach(unlink -> doPostRemoval(unlink, removedResourceConsumer));
+
+        return unlinkList;
+
+    }
+
+    private void doPostRemoval(final Unlink unlink, final Consumer<Resource> removedResourceConsumer) {
+        try (final Monitor m = getResourceLockService().getMonitor(unlink.getResourceId())) {
+            final XodusCacheStorage xodusCacheStorage = getStorage();
+            final XodusCacheKey cacheKey = new XodusCacheKey(unlink.getResourceId());
+            final XodusResource xodusResource = xodusCacheStorage.getResourceIdResourceMap().remove(cacheKey);
+            removedResourceConsumer.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
+        } finally {
+            getResourceLockService().delete(unlink.getResourceId());
+        }
     }
 
     private Unlink doUnlink(final Transaction txn, final ByteIterable pathKey) {
@@ -808,6 +833,33 @@ public class XodusResourceService implements ResourceService {
         } finally {
             getResourceLockService().delete(resourceId);
         }
+
+    }
+
+    @Override
+    public List<ResourceId> removeResources(final Path path, int max, final Consumer<Resource> removed) {
+
+        checkOpen();
+
+        final List<ResourceId> resourceIdList = new ArrayList<>();
+
+        getEnvironment().computeInTransaction(txn -> {
+             final List<XodusListing> listings = new ArrayList<>();
+            doList(txn, path, max, listings::add);
+            return listings;
+        }).forEach(listing -> {
+
+             final XodusCacheKey cacheKey = new XodusCacheKey(listing.getResourceId());
+            resourceIdList.add(cacheKey.getResourceId());
+
+             try (final Monitor m = getResourceLockService().getMonitor(listing.getResourceId())) {
+                 final XodusResource xodusResource = getStorage().getResourceIdResourceMap().remove(cacheKey);
+                 removed.accept(xodusResource == null ? DeadResource.getInstance() : xodusResource.getDelegate());
+             }
+
+        });
+
+        return resourceIdList;
 
     }
 
@@ -944,9 +996,9 @@ public class XodusResourceService implements ResourceService {
 
         }).forEach(xr -> {
             try {
-                xr.close();
+                xr.unload();
             } catch (Exception ex) {
-                logger.error("Caught exception closing Resource {}", xr.getId(), ex);
+                logger.error("Caught exception unloading Resource {}", xr.getId(), ex);
             }
         });
 
@@ -954,30 +1006,29 @@ public class XodusResourceService implements ResourceService {
 
     }
 
-    public void acquire(final ResourceId resourceId) {
-        getEnvironment().executeInTransaction(txn -> {
+    public void persist(final ResourceId resourceId) {
 
-            final Store acquiresStore = openAcquires(txn);
-            final ByteIterable resourceIdKey = stringToEntry(resourceId.asString());
-            final ByteIterable value = acquiresStore.get(txn, resourceIdKey);
-
-            // This is only called to increment the acquire count, so it may not need to actually manipulate the
-            // cache.  Trying to increment the count otherwise is an error.
-            if (value == null) {
-                throw new IllegalStateException("Attempting to acquire resource which has no acquires.");
-            }
-
-            final int acquires = entryToInt(value);
-            acquiresStore.put(txn, resourceIdKey, intToEntry(acquires + 1));
-
-        });
-    }
-
-    public void release(final ResourceId resourceId) {
         final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceId);
-        final XodusResource xodusResource = getStorage().getResourceIdResourceMap().get(xodusCacheKey);
-        if (xodusResource == null) return;
-        release(xodusResource);
+
+        try (final Monitor monitor = getResourceLockService().getMonitor(resourceId)) {
+            getEnvironment().executeInTransaction(txn -> {
+
+                final Store acquiresStore = openAcquires(txn);
+                final Store resourcesStore = openResources(txn);
+                final ByteIterable acquiresByteIterable = acquiresStore.get(txn, xodusCacheKey.getKey());
+                final int acquires = entryToInt(acquiresByteIterable);
+
+                if (acquires < 1) {
+                    logger.warn("Resource with ID '{}' not acquired.  No persistence necessary.", resourceId);
+                    return;
+                }
+
+                final XodusResource xodusResource = readFromCache(xodusCacheKey);
+                xodusResource.persist(txn, resourcesStore);
+
+            });
+        }
+
     }
 
     private Store openResources(final Transaction txn) {
@@ -1013,79 +1064,7 @@ public class XodusResourceService implements ResourceService {
      * @return the {@link StringBuilder} that was supplied to the method.
      */
     public StringBuilder dumpStoreData(final StringBuilder stringBuilder) {
-
-        return getEnvironment().computeInReadonlyTransaction(txn -> {
-
-            final List<String> stores = getEnvironment().getAllStoreNames(txn);
-
-            stores.stream().filter(BINARY_STORES::contains).forEach(storeName -> {
-
-                final Store store = getEnvironment().openStore(storeName, USE_EXISTING, txn);
-
-                stringBuilder.append("Binary Store: ").append(store.getName()).append('\n')
-                             .append("Configuration: ").append(store.getConfig()).append('\n');
-
-                int count = 0;
-
-                try (final Cursor cursor  = store.openCursor(txn)) {
-                    while (cursor.getNext()) {
-                        final String key = entryToString(cursor.getKey());
-                        stringBuilder.append("Record # ").append(count++).append(": ")
-                                     .append(key).append(" -> ").append("<binary>").append('\n');
-                    }
-                }
-
-            });
-
-            stringBuilder.append('\n');
-
-            stores.stream().filter(INTEGER_STORES::contains).forEach(storeName -> {
-
-                final Store store = getEnvironment().openStore(storeName, USE_EXISTING, txn);
-
-                stringBuilder.append("Integer Store: ").append(store.getName()).append('\n')
-                             .append("Configuration: ").append(store.getConfig()).append('\n');
-
-                int count = 0;
-
-                try (final Cursor cursor  = store.openCursor(txn)) {
-                    while (cursor.getNext()) {
-                        final String key = entryToString(cursor.getKey());
-                        final Integer value = entryToInt(cursor.getValue());
-                        stringBuilder.append("Record # ").append(count++).append(": ")
-                                     .append(key).append(" -> ").append(value).append('\n');
-                    }
-                }
-
-            });
-
-            stringBuilder.append('\n');
-
-            stores.stream().filter(TEXT_STORES::contains).forEach(storeName -> {
-
-                final Store store = getEnvironment().openStore(storeName, USE_EXISTING, txn);
-
-                stringBuilder.append("Text Store: ").append(store.getName()).append('\n')
-                             .append("Configuration: ").append(store.getConfig()).append('\n');
-
-                int count = 0;
-
-                try (final Cursor cursor  = store.openCursor(txn)) {
-                    while (cursor.getNext()) {
-                        final String key = entryToString(cursor.getKey());
-                        final String value = entryToString(cursor.getValue());
-                        stringBuilder.append("Record # ").append(count++).append(": ")
-                                     .append(key).append(" -> ").append(value).append('\n');
-                    }
-                }
-
-            });
-
-            stringBuilder.append('\n');
-
-            return stringBuilder;
-
-        });
+        return XodusDebug.dumpStoreData(getEnvironment(), stringBuilder);
     }
 
     public Environment getEnvironment() {
@@ -1130,7 +1109,7 @@ public class XodusResourceService implements ResourceService {
         try {
             return (XodusResource) resource;
         } catch (ClassCastException ex) {
-            throw new IllegalArgumentException("Not a Xodus managed Resource.", ex);
+            throw new IllegalArgumentException("Not an Xodus managed Resource.", ex);
         }
     }
 

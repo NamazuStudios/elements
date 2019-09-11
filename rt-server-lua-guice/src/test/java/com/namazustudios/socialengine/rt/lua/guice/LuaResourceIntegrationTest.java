@@ -94,6 +94,14 @@ public class LuaResourceIntegrationTest {
             {"test.javamodule", "test_overload_1"},
             {"test.javamodule", "test_overload_2"},
             {"test.response", "test_simple_response"},
+            {"test.yield_commit", "test_commit"},
+            {"test.yield_commit", "test_complex_commit"},
+            {"test.yield_commit", "test_repeat_commit"},
+            {"test.pass_table", "pass_simple_table"},
+            {"test.pass_table", "pass_simple_array"},
+            {"test.pass_table", "pass_complex_array"},
+            {"test.pass_table", "pass_complex_table"},
+            {"test.pass_table", "pass_complex_table_to_multiple_resources"}
         };
     }
 

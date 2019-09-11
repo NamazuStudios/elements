@@ -34,6 +34,12 @@ public enum YieldInstruction {
      * kill the running {@link Resource}
      * }
      */
-    INDEFINITELY
+    INDEFINITELY,
+
+    /***
+     * Indicates that the {@link Resource} should yield immediately just to save the state.  This will not release the
+     * lock on the {@link Resource} and will ensure that the contents are written to disk before returning.
+     */
+    COMMIT
 
 }

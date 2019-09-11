@@ -99,4 +99,9 @@ public class SimpleDelegateResource implements Resource {
         delegate.close();
     }
 
+    @Override
+    public void unload() {
+        delegate.unload();
+    }
+
 }

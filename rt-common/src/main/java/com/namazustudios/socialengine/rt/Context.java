@@ -53,4 +53,11 @@ public interface Context {
      */
     HandlerContext getHandlerContext();
 
+    /**
+     * Gets the {@link TaskContext}.
+     *
+     * @return the {@link TaskContext}
+     */
+    TaskContext getTaskContext();
+
 }

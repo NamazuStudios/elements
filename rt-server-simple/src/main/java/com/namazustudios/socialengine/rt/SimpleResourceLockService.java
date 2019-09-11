@@ -111,7 +111,7 @@ public class SimpleResourceLockService implements ResourceLockService {
         if (resourceIdLockMap.remove(resourceId) == null) {
             logger.warn("Attempting to clean up lock which was already cleaned up {}.", resourceId);
         } else {
-            logger.trace("Cleaned up orphaned lock {}.", resourceId);
+            logger.warn("Cleaned up orphaned lock {}.", resourceId);
         }
     }
 

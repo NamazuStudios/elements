@@ -44,15 +44,20 @@ public class AppleIapReceiptResource {
 
         final AppleIapVerifyReceiptEnvironment appleIapVerifyReceiptEnvironment;
 
-        switch (createAppleIapReceiptEnvironment) {
-            case PRODUCTION:
-                appleIapVerifyReceiptEnvironment = AppleIapVerifyReceiptEnvironment.PRODUCTION;
-                break;
-            case SANDBOX:
-            default:
-                appleIapVerifyReceiptEnvironment = AppleIapVerifyReceiptEnvironment.SANDBOX;
-                break;
+        if (createAppleIapReceiptEnvironment == null) {
+            appleIapVerifyReceiptEnvironment = null;
+        } else {
+            switch (createAppleIapReceiptEnvironment) {
+                case PRODUCTION:
+                    appleIapVerifyReceiptEnvironment = AppleIapVerifyReceiptEnvironment.PRODUCTION;
+                    break;
+                case SANDBOX:
+                default:
+                    appleIapVerifyReceiptEnvironment = AppleIapVerifyReceiptEnvironment.SANDBOX;
+                    break;
+            }
         }
+
 
         final List<AppleIapReceipt> resultAppleIapReceipts = getAppleIapReceiptService()
                 .verifyAndCreateAppleIapReceiptsIfNeeded(appleIapVerifyReceiptEnvironment, receiptData);
