@@ -17,22 +17,19 @@ import static java.util.UUID.randomUUID;
  */
 public class SimpleResourceIdOptimisticLockService implements OptimisticLockService<ResourceId> {
 
-    private static final NodeId MOCK_NODE_ID = new NodeId(randomInstanceId(), randomApplicationId());
+    // This is a uniquely assigned NodeId which, being composed of two random UUIDs, constitutes a fictional
+    // Node and Application which should exist nowhere else.  Thereby guaranteeing that only ResourceId instances
+    // issued here will ever be visible here.
+    private static final NodeId LOCK_NODE_ID = new NodeId(randomInstanceId(), randomApplicationId());
 
     @Override
     public ResourceId createLock() {
-        return new LockingId();
+        return new ResourceId(LOCK_NODE_ID);
     }
 
     @Override
     public boolean isLock(final ResourceId resourceId) {
-        return resourceId != null && Objects.equals(LockingId.class, resourceId.getClass());
-    }
-
-    private static class LockingId extends ResourceId {
-        public LockingId() {
-            super(MOCK_NODE_ID);
-        }
+        return resourceId != null && resourceId.getNodeId().equals(LOCK_NODE_ID);
     }
 
 }
