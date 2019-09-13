@@ -35,6 +35,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.util.Arrays.asList;
@@ -210,6 +211,10 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
             final byte[] delimiter = response.removeFirst().getData();
             assertEquals(delimiter, EMPTY_DELIMITER);
+
+            final JeroMQControlResponseCode code = JeroMQControlResponseCode.stripCode(response);
+
+            assertEquals(code, OK);
             assertEquals(fromString(response.getFirst().getString(CHARSET)), uuid);
 
         }
