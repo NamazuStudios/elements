@@ -237,8 +237,8 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
             return threadContextRoundRobin;
         }
 
-        void remove(final JeroMQAsyncConnectionPool simpleManagedPool) {
-            simpleManagedPoolList.remove(simpleManagedPool);
+        boolean remove(final JeroMQAsyncConnectionPool simpleManagedPool) {
+            return simpleManagedPoolList.remove(simpleManagedPool);
         }
 
     }

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.rt.AsyncConnection;
+import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import org.slf4j.Logger;
@@ -27,10 +27,10 @@ import static org.zeromq.SocketType.REP;
 import static org.zeromq.SocketType.REQ;
 import static org.zeromq.ZContext.shadow;
 
-@Guice(modules = SimpleAsyncConnectionServiceTest.Module.class)
-public class SimpleAsyncConnectionServiceTest {
+@Guice(modules = JeroMQAsyncConnectionServiceTest.Module.class)
+public class JeroMQAsyncConnectionServiceTest {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimpleAsyncConnectionServiceTest.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnectionServiceTest.class);
 
     private static final int POOL_COUNT = 10;
 
@@ -38,7 +38,7 @@ public class SimpleAsyncConnectionServiceTest {
 
     private ZContext zContext;
 
-    private AsyncConnectionService asyncConnectionService;
+    private AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
 
     private Thread mockServer;
 
@@ -56,7 +56,7 @@ public class SimpleAsyncConnectionServiceTest {
     @BeforeClass
     public void setupSimpleServer() {
         mockServer = new Thread(this::runMockServer);
-        mockServer.setName(SimpleAsyncConnectionServiceTest.class.getSimpleName() + " mock server.");
+        mockServer.setName(JeroMQAsyncConnectionServiceTest.class.getSimpleName() + " mock server.");
         mockServer.setUncaughtExceptionHandler(((t, e) -> logger.error("Caught exception {}", t, e)));
         mockServer.setDaemon(true);
         mockServer.start();
@@ -117,7 +117,7 @@ public class SimpleAsyncConnectionServiceTest {
         managedPoolList.forEach(p -> p.close());
     }
 
-    @Test(dataProvider = "getManagedPools", invocationCount = 5000, threadPoolSize = 25)
+    @Test(dataProvider = "getManagedPools", invocationCount = 100, threadPoolSize = 25)
     public void testPool(final AsyncConnectionPool<ZContext, ZMQ.Socket> managedPool) throws InterruptedException {
 
         final String msg = randomUUID().toString();
@@ -176,15 +176,23 @@ public class SimpleAsyncConnectionServiceTest {
     }
 
     @Inject
-    public void setAsyncConnectionService(AsyncConnectionService asyncConnectionService) {
+    public void setAsyncConnectionService(AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService) {
         this.asyncConnectionService = asyncConnectionService;
     }
 
     public static class Module extends AbstractModule {
         @Override
         protected void configure() {
-            bind(ZContext.class).asEagerSingleton();
-            bind(AsyncConnectionService.class).to(JeroMQAsyncConnectionService.class).asEagerSingleton();
+
+            bind(ZContext.class).toProvider(() -> {
+                final ZContext zContext = new ZContext();
+                zContext.getContext().setMaxSockets(1024 * 8);
+                return zContext;
+            }).asEagerSingleton();
+
+            bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
+                .to(JeroMQAsyncConnectionService.class).asEagerSingleton();
+
         }
     }
 

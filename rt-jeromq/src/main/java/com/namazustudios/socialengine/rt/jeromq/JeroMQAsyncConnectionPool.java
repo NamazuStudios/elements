@@ -9,16 +9,17 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
-import java.util.Queue;
-import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.Semaphore;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.THREAD_POOL_SIZE;
-import static java.lang.Math.min;
+import static java.lang.Math.*;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
 import static java.util.stream.Collectors.toList;
 
@@ -26,23 +27,25 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnectionPool.class);
 
+    private boolean open = true;
+
     private final int min;
 
     private final int max;
 
     private final String name;
 
-    private final Semaphore semaphore;
-
     private final Function<ZContext, ZMQ.Socket> socketSupplier;
 
     private final JeroMQAsyncConnectionService.SimpleAsyncConnectionServiceContext context;
 
-    private final AtomicBoolean open = new AtomicBoolean(true);
+    private final Lock lock = new ReentrantLock();
 
-    private final Set<JeroMQAsyncConnection> connections = newKeySet();
+    private final Condition condition = lock.newCondition();
 
-    private final Queue<JeroMQAsyncConnection> available = new ConcurrentLinkedQueue<>();
+    private final Queue<JeroMQAsyncConnection> available = new LinkedList<>();
+
+    private final List<JeroMQAsyncConnection> connections = new ArrayList<>();
 
     public JeroMQAsyncConnectionPool(final String name, final int min, final int max,
                                      final Function<ZContext, ZMQ.Socket> socketSupplier,
@@ -55,7 +58,6 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         this.name = name;
         this.socketSupplier = socketSupplier;
         this.context = parentContext;
-        this.semaphore = new Semaphore(max);
 
         parentContext.getThreadContextRoundRobin().forEach(c -> c.doInThread(() -> {
             c.onPostLoop((s, v) -> ensureMinimum(s, c));
@@ -64,97 +66,168 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     }
 
     private void ensureMinimum(final Subscription subscription, final JeroMQAsyncThreadContext context) {
-        if (open.get()) {
+
+        try {
+
+            lock.lock();
 
             int added = 0;
-            final int toAdd = min((min - connections.size()), max) / THREAD_POOL_SIZE;
+            final int toAdd = max((min - connections.size()) / THREAD_POOL_SIZE, 0);
 
-            while (connections.size() < max && connections.size() < min && (added++ < toAdd)) {
+            while (open && connections.size() < min && connections.size() < max && (added++ < toAdd)) {
                 final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
-                addConnection(connection);
-                available.add(connection);
+                doAddConnection(connection);
             }
 
-            if (connections.size() > max) {
-                logger.warn("Exceeded connection pool size of {} (actual {})", connections.size(), max);
-            }
+            if (!open) subscription.unsubscribe();
 
-        } else {
-            subscription.unsubscribe();
+        } finally {
+            lock.unlock();
         }
+
     }
 
     @Override
     public void acquireNextAvailableConnection(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
-        if (!open.get()) throw new IllegalStateException("Pool is closed.");
+        JeroMQAsyncConnection connection;
+
+        requestConnection();
 
         try {
-            semaphore.acquire();
-        } catch (InterruptedException ex) {
-            throw new InternalException(ex);
+
+            lock.lock();
+
+            while ((connection = available.poll()) == null) {
+                checkOpen();
+                condition.await();
+            }
+
+        } catch (InterruptedException e) {
+            throw new InternalError(e);
+        } finally {
+            lock.unlock();
         }
 
-        final JeroMQAsyncConnection connection = available.poll();
+        connection.signal(asyncConnectionConsumer);
 
-        if (connection == null) {
-            doAcqureNew(asyncConnectionConsumer);
-        } else {
-            connection.signal(asyncConnectionConsumer);
+    }
+
+    private void requestConnection() {
+
+        final boolean acquire;
+
+        try {
+            lock.lock();
+            checkOpen();
+            acquire = connections.size() < max;
+        } finally {
+            lock.unlock();
+        }
+
+        if (acquire) {
+
+            final JeroMQAsyncThreadContext context = this.context.getThreadContextRoundRobin().getNext();
+
+            context.doInThread(() -> {
+
+
+                boolean close = true;
+                final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
+
+                try {
+
+                    lock.lock();
+
+                    if (open) {
+                        close = false;
+                        doAddConnection(connection);
+                    }
+
+                } finally {
+                    lock.unlock();
+                    if (close) connection.close();
+                }
+
+            });
+
         }
 
     }
 
-    private void doAcqureNew(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
+    private void doAddConnection(final JeroMQAsyncConnection connection) {
 
-        final JeroMQAsyncThreadContext context = this.context.getThreadContextRoundRobin().getNext();
-
-        context.doInThread(() -> {
-            final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
-            addConnection(connection);
-            asyncConnectionConsumer.accept(connection);
-        });
-
-    }
-
-    private void addConnection(final JeroMQAsyncConnection connection) {
-
+        condition.signal();
         connections.add(connection);
+        available.offer(connection);
 
         connection.onClose(c -> {
-            if (available.remove(connection)) logger.warn("Should not removed available connection {}", connection);
-            if (!connections.remove(connection)) logger.warn("Could not remove connection {}", connection);
-            semaphore.release();
+            try {
+                lock.lock();
+                logger.trace("Closed connection {}", c);
+                if (open && available.remove(connection)) logger.warn("Should not have removed available connection {}", c);
+                if (open && !connections.remove(connection)) logger.warn("Could not remove connection {}", c);
+            } finally {
+                lock.unlock();
+            }
         });
 
-        connection.onRecycle(c0 -> {
-            connection.clearEvents();
-            connection.getOnError().clear();
-            connection.getOnRead().clear();
-            connection.getOnWrite().clear();
-            available.add(connection);
-            semaphore.release();
+        connection.onRecycle(c -> {
+            try {
+
+                lock.lock();
+                condition.signalAll();
+
+                connection.clearEvents();
+                connection.getOnError().clear();
+                connection.getOnRead().clear();
+                connection.getOnWrite().clear();
+
+                if (open && available.offer(connection)) {
+                    logger.trace("Recycled connection {}", c);
+                }
+
+            } finally {
+                lock.unlock();
+            }
         });
 
+    }
+
+    private void checkOpen() {
+        if (!open) throw new IllegalStateException("Not open.");
     }
 
     @Override
     public void close() {
-        if (!open.compareAndSet(true, false)) throw new IllegalStateException("Pool is closed.");
-        context.remove(this);
+
+        if (!context.remove(this)) {
+            logger.warn("Already removed from the parent AsyncConnectionService: {}", this);
+        }
+
         doClose();
+
     }
 
     public void doClose() {
 
         try {
-            semaphore.acquire(max);
+            lock.lock();
+            checkOpen();
+            open = false;
+            condition.signalAll();
+            while (available.size() < connections.size()) condition.await();
         } catch (InterruptedException e) {
             logger.error("Could not acquire all remaining connections.", e);
+        } finally {
+            lock.unlock();
         }
 
-        connections.stream().collect(toList()).forEach(c -> c.signal(z -> c.close()));
-        connections.clear();
+        connections.stream().forEach(c -> c.signal(z -> {
+                c.getOnClose().clear();
+                c.close();
+            }
+        ));
 
     }
 
