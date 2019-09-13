@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.exception.RoutingException;
-import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
@@ -21,7 +20,6 @@ import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
