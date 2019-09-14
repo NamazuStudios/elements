@@ -8,11 +8,15 @@ import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.ProxyBuilder;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 
 import java.util.function.Consumer;
 
 class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConnection {
+
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnection.class);
 
     private final ZContext zContext;
 
@@ -69,7 +73,9 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
     public void disconnect() {
         try (final ControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
             client.closeRoutesViaInstance(instanceId);
-        } finally {
+        } catch (Exception ex) {
+            logger.error("Caught exception issuing disconnect command for instance {}", instanceId, ex);
+        }finally {
             onDisconnect.accept(this);
         }
     }
