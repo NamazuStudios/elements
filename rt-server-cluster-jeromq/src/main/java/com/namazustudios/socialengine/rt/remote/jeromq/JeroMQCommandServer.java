@@ -14,10 +14,11 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushI
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_COMMAND;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.*;
+import static java.lang.String.format;
 
 public class JeroMQCommandServer {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQCommandServer.class);
+    private final Logger logger;
 
     private final InstanceId instanceId;
 
@@ -34,6 +35,7 @@ public class JeroMQCommandServer {
                                final JeroMQMultiplexRouter multiplex,
                                final JeroMQDemultiplexRouter demultiplex) {
         this.instanceId = instanceId;
+        this.logger = getLogger(getClass(), instanceId);
         this.poller = poller;
         this.frontend = frontend;
         this.multiplex = multiplex;
@@ -55,7 +57,7 @@ public class JeroMQCommandServer {
         try {
             command = JeroMQRoutingCommand.stripCommand(zMsg);
         } catch (Exception ex) {
-            final ZMsg response = exceptionError(ex);
+            final ZMsg response = exceptionError(logger, ex);
             pushIdentity(response, identity);
             response.send(socket);
             return;
@@ -96,21 +98,21 @@ public class JeroMQCommandServer {
             response.send(socket);
 
         } catch (JeroMQUnroutableNodeException ex) {
-            final ZMsg response = exceptionError(ex.getCode(), ex);
+            final ZMsg response = exceptionError(logger, ex.getCode(), ex);
             response.addLast(ex.getNodeId().asBytes());
             pushIdentity(response, identity);
             response.send(socket);
         } catch (JeroMQUnroutableInstanceException ex) {
-            final ZMsg response = exceptionError(ex.getCode(), ex);
+            final ZMsg response = exceptionError(logger, ex.getCode(), ex);
             response.addLast(ex.getInstanceId().asBytes());
             pushIdentity(response, identity);
             response.send(socket);
         } catch (JeroMQControlException ex) {
-            final ZMsg response = exceptionError(ex.getCode(), ex);
+            final ZMsg response = exceptionError(logger, ex.getCode(), ex);
             pushIdentity(response, identity);
             response.send(socket);
         } catch (Exception ex) {
-            final ZMsg response = exceptionError(ex);
+            final ZMsg response = exceptionError(logger, ex);
             pushIdentity(response, identity);
             response.send(socket);
         }
@@ -121,6 +123,7 @@ public class JeroMQCommandServer {
         final ZMsg response = new ZMsg();
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         final String instanceBindAddress = demultiplex.openBinding(nodeId);
+        logger.info("Opened binding for node {} via {}", nodeId, instanceBindAddress);
         OK.pushResponseCode(response);
         response.addLast(instanceBindAddress.getBytes(CHARSET));
         return response;
@@ -130,6 +133,7 @@ public class JeroMQCommandServer {
         final ZMsg response = new ZMsg();
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         demultiplex.closeBindingForNode(nodeId);
+        logger.info("Closed binding for node {}");
         OK.pushResponseCode(response);
         return response;
     }
@@ -138,6 +142,7 @@ public class JeroMQCommandServer {
         final ZMsg response = new ZMsg();
         final Collection<NodeId> nodeIds = demultiplex.getConnectedNodeIds();
         if (!zMsg.isEmpty()) logger.warn("Unexpected frames in status request: {}", zMsg);
+        logger.debug("Got instance status.");
         OK.pushResponseCode(response);
         response.addLast(instanceId.asBytes());
         nodeIds.forEach(nid -> response.addLast(nid.asBytes()));
@@ -149,6 +154,7 @@ public class JeroMQCommandServer {
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         final String instanceInvokerAddress = zMsg.removeFirst().getString(CHARSET);
         final String instanceRouteAddress = multiplex.openRouteToNode(nodeId, instanceInvokerAddress);
+        logger.info("Opened route to {} via {} -> {}", nodeId, instanceRouteAddress, instanceInvokerAddress);
         OK.pushResponseCode(response);
         response.addLast(instanceRouteAddress.getBytes(CHARSET));
         return response;
@@ -158,14 +164,16 @@ public class JeroMQCommandServer {
         final ZMsg response = new ZMsg();
         final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
         multiplex.closeRouteToNode(nodeId);
+        logger.info("Closed route to {}.", nodeId);
         OK.pushResponseCode(response);
         return response;
     }
 
     private ZMsg processCloseRoutesViaInstance(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
-        final InstanceId nodeId = new InstanceId(zMsg.removeFirst().getData());
-        multiplex.closeRoutesViaInstance(nodeId);
+        final InstanceId instanceId = new InstanceId(zMsg.removeFirst().getData());
+        multiplex.closeRoutesViaInstance(instanceId);
+        logger.info("Closed routes via instance {}.", instanceId);
         OK.pushResponseCode(response);
         return response;
     }

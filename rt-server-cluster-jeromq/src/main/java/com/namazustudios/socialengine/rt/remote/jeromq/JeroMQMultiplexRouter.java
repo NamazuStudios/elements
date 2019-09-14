@@ -16,8 +16,7 @@ import java.util.Map;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.stripCode;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.FORWARD;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.exceptionError;
 import static java.lang.String.format;
@@ -30,7 +29,7 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQMultiplexRouter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQMultiplexRouter.class);
+    private final Logger logger;
 
     private final ZContext zContext;
 
@@ -46,7 +45,8 @@ public class JeroMQMultiplexRouter {
 
     private final BiMap<Integer, InstanceId> rBackends = backends.inverse();
 
-    public JeroMQMultiplexRouter(final ZContext zContext, final ZMQ.Poller poller) {
+    public JeroMQMultiplexRouter(final InstanceId instanceId, final ZContext zContext, final ZMQ.Poller poller) {
+        this.logger = JeroMQRoutingServer.getLogger(getClass(), instanceId);
         this.poller = poller;
         this.zContext = zContext;
     }
@@ -141,11 +141,11 @@ public class JeroMQMultiplexRouter {
 
         } catch (JeroMQControlException ex) {
             logger.error("No such instance for node {}", nid, ex);
-            final ZMsg response = exceptionError(ex.getCode(), ex);
+            final ZMsg response = exceptionError(logger, ex.getCode(), ex);
             response.send(frontend);
         } catch (Exception ex) {
             logger.error("Caught exception routing outgoing message to {}", nid, ex);
-            final ZMsg response = exceptionError(ex);
+            final ZMsg response = exceptionError(logger, ex);
             response.send(frontend);
         }
 
@@ -158,6 +158,8 @@ public class JeroMQMultiplexRouter {
     }
 
     public String openRouteToNode(final NodeId nodeId, final String instanceInvokerAddress) {
+
+        logger.info("Opening route to node {}", nodeId);
 
         String localBindAddress = localBindAddresses.get(nodeId);
         if (localBindAddress != null) return localBindAddress;
@@ -183,9 +185,9 @@ public class JeroMQMultiplexRouter {
 
     public void closeRouteToNode(final NodeId nodeId) {
 
-        if (localBindAddresses.remove(nodeId) == null) return;
+        logger.info("Closing route to node {}", nodeId);
 
-        logger.info("Closing connection to node {}", nodeId);
+        if (localBindAddresses.remove(nodeId) == null) return;
 
         final Integer frontendIndex = frontends.remove(nodeId);
         final Integer backendIndex = backends.remove(nodeId.getInstanceId());
@@ -207,7 +209,9 @@ public class JeroMQMultiplexRouter {
 
         if (index == null) {
             logger.error("No socket for index {} {}", index, nodeId);
-            return;
+            throw new JeroMQControlException(NO_SUCH_NODE_ROUTE);
+        } else {
+            logger.info("Closing socket for node sockets[{}] for {}", index, nodeId);
         }
 
         final ZMQ.Socket socket = poller.getSocket(index);

@@ -21,7 +21,7 @@ import javax.inject.Provider;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Exchanger;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -174,6 +174,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private Subscription onUndisover;
 
+        private final AtomicBoolean running = new AtomicBoolean(true);
+
         private final Exchanger<Exception> exceptionExchanger = new Exchanger<>();
 
         private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
@@ -218,7 +220,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             drain();
 
             try {
-                server.interrupt();
+                if (!running.compareAndSet(true, false)) logger.warn("Expected running state of true.  Got false.");
                 server.join();
             } catch (InterruptedException e) {
                 throw new InternalException(e);
@@ -236,9 +238,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(), binds)) {
                 exchangeException(null);
-                server.run();
+                server.run(() -> running.get());
+                logger.info("Got signal to stop running.  Shutting down IO thread.");
             } catch (Exception ex) {
-                logger.error("Exception starting up the routing server.", ex);
+                logger.error("Exception running the routing server.", ex);
                 exchangeException(ex);
             }
 

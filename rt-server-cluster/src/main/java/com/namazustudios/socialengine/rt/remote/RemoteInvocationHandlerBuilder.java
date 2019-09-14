@@ -220,9 +220,9 @@ public class RemoteInvocationHandlerBuilder {
                 return (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae);
             case HYBRID:
             case CONSUMER:
-                return isVoidMethod()    ? (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
-                        isFutureMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae) :
-                                           (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
+                return isVoidMethod()   ? (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
+                       isFutureMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae) :
+                                          (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
             default:
                 throw new IllegalArgumentException("Unknown dispatch type: " + type);
         }

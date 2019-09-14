@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,7 +25,7 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQDemultiplexRouter {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQDemultiplexRouter.class);
+    private final Logger logger;
 
     private final ZContext zContext;
 
@@ -36,7 +37,11 @@ public class JeroMQDemultiplexRouter {
 
     private final BiMap<Integer, NodeId> rBackends = backends.inverse();
 
-    public JeroMQDemultiplexRouter(final ZContext zContext, final ZMQ.Poller poller, final int frontend) {
+    public JeroMQDemultiplexRouter(final InstanceId instanceId,
+                                   final ZContext zContext,
+                                   final ZMQ.Poller poller,
+                                   final int frontend) {
+        this.logger = JeroMQRoutingServer.getLogger(getClass(), instanceId);
         this.zContext = zContext;
         this.poller = poller;
         this.frontend = frontend;
@@ -48,7 +53,7 @@ public class JeroMQDemultiplexRouter {
 
     public String openBinding(final NodeId nodeId) {
 
-        if (backends.containsKey(nodeId)) throw new JeroMQControlException(BINDING_ALREADY_EXISTS);
+        if (backends.containsKey(nodeId)) throw new JeroMQControlException(DUPLICATE_NODE_BINDING);
 
         final ZMQ.Socket socket = zContext.createSocket(DEALER);
         final int index = poller.register(socket, POLLIN | POLLERR);
@@ -65,8 +70,10 @@ public class JeroMQDemultiplexRouter {
 
         if (index == null) {
             logger.warn("No such binding {}", nodeId);
+            throw new JeroMQControlException(NO_SUCH_NODE_BINDING);
         } else {
             final ZMQ.Socket socket = poller.getSocket(index);
+            poller.unregister(socket);
             socket.close();
             logger.info("Removed binding for node {}", nodeId);
         }

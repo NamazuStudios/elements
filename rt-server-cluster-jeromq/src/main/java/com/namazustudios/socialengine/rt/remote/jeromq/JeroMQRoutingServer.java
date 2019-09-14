@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.jeromq.JeroMQMonitorThread;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -14,9 +16,12 @@ import java.nio.charset.Charset;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BooleanSupplier;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_ERROR;
+import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
@@ -27,7 +32,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     public static final Charset CHARSET = Charset.forName("UTF-8");
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQRoutingServer.class);
+    private final Logger logger;
 
     private static final long POLL_TIMEOUT_MILLISECONDS = 1000;
 
@@ -41,10 +46,13 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     private final JeroMQDemultiplexRouter demultiplex;
 
+    private final JeroMQMonitorThread monitorThread;
+
     public JeroMQRoutingServer(final InstanceId instanceId,
                                final ZContext zContext,
                                final List<String> bindAddresses) {
 
+        this.logger = getLogger(instanceId);
         this.zContextShadow = shadow(zContext);
         this.poller = zContextShadow.createPoller(0);
 
@@ -52,14 +60,16 @@ public class JeroMQRoutingServer implements AutoCloseable {
         bindAddresses.forEach(main::bind);
 
         final int frontend = poller.register(main, POLLIN | POLLERR);
-        this.multiplex = new JeroMQMultiplexRouter(zContextShadow, poller);
-        this.demultiplex = new JeroMQDemultiplexRouter(zContextShadow, poller, frontend);
+        this.multiplex = new JeroMQMultiplexRouter(instanceId, zContextShadow, poller);
+        this.demultiplex = new JeroMQDemultiplexRouter(instanceId, zContextShadow, poller, frontend);
         this.control = new JeroMQCommandServer(instanceId, poller, frontend, multiplex, demultiplex);
+        this.monitorThread = new JeroMQMonitorThread(JeroMQRoutingServer.class.getSimpleName(), logger, zContext, main);
+        this.monitorThread.start();
 
     }
 
-    public void run() {
-        while (!interrupted()) {
+    public void run(final BooleanSupplier running) {
+        while (running.getAsBoolean()) {
 
             if (poller.poll(POLL_TIMEOUT_MILLISECONDS) < 0 || interrupted()) {
                 logger.info("Poller signaled interruption.  Exiting.");
@@ -91,12 +101,12 @@ public class JeroMQRoutingServer implements AutoCloseable {
         return response;
     }
 
-    public static ZMsg exceptionError(final Exception ex) {
-        final ZMsg response = exceptionError(EXCEPTION, ex);
+    public static ZMsg exceptionError(final Logger logger, final Exception ex) {
+        final ZMsg response = exceptionError(logger, EXCEPTION, ex);
         return response;
     }
 
-    public static ZMsg exceptionError(final JeroMQControlResponseCode code, final Exception ex) {
+    public static ZMsg exceptionError(final Logger logger, final JeroMQControlResponseCode code, final Exception ex) {
 
         logger.error("Exception processing request.", ex);
         final ZMsg response = new ZMsg();
@@ -118,6 +128,14 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
         return response;
 
+    }
+
+    private static Logger getLogger(final InstanceId instanceId) {
+        return getLogger(JeroMQRoutingServer.class, instanceId);
+    }
+
+    public static Logger getLogger(final Class<?> componentClass, final InstanceId instanceId) {
+        return LoggerFactory.getLogger(format("%s.%s", componentClass.getSimpleName(), instanceId.asString()));
     }
 
 }

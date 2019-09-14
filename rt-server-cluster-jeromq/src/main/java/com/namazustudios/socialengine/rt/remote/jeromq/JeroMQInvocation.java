@@ -176,7 +176,7 @@ public class JeroMQInvocation {
         switch (code) {
             case OK:
                 return zMsg;
-            case NO_SUCH_NODE:
+            case NO_SUCH_NODE_ROUTE:
                 throw extractNodeNotFoundException(zMsg);
             case NO_SUCH_INSTANCE:
                 throw extractInstanceNotFoundException(zMsg);

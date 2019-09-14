@@ -20,7 +20,7 @@ public enum JeroMQControlResponseCode {
     /**
      * Indicates there was no such route for the given {@link NodeId}
      */
-    NO_SUCH_NODE,
+    NO_SUCH_NODE_ROUTE,
 
     /**
      * Indicates there was no such route for the given {@link InstanceId}
@@ -28,9 +28,14 @@ public enum JeroMQControlResponseCode {
     NO_SUCH_INSTANCE,
 
     /**
+     * Indicates there is no binding for the supplied {@link NodeId}.
+     */
+    NO_SUCH_NODE_BINDING,
+
+    /**
      * Indicates a binding already exists.
      */
-    BINDING_ALREADY_EXISTS,
+    DUPLICATE_NODE_BINDING,
 
     /**
      * Indicates a socket error occurred, such as network timeout.

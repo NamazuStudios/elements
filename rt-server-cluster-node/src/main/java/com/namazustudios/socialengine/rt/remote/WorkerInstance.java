@@ -65,7 +65,7 @@ public class WorkerInstance extends SimpleInstance implements Worker {
                 node.stop();
                 return null;
             } catch (Exception ex) {
-                logger.error("Error stopping node.", ex);
+                logger.error("Error stopping node {}.", node, ex);
                 return ex;
             }
         }).filter(ex -> ex != null).forEach(exceptionConsumer::accept);
@@ -75,7 +75,7 @@ public class WorkerInstance extends SimpleInstance implements Worker {
                 binding.close();
                 return null;
             } catch (Exception ex) {
-                WorkerInstance.logger.error("Error stopping node.", ex);
+                WorkerInstance.logger.error("Error closing binding {}.", binding, ex);
                 return ex;
             }
         }).filter(ex -> ex != null).forEach(exceptionConsumer::accept);

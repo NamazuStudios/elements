@@ -125,14 +125,16 @@ public class JeroMQEndToEndIntegrationTest {
             workers.forEach(w -> futureSet.add(completionService.submit(() -> w.start(), null)));
             while (!futureSet.isEmpty()) futureSet.remove(completionService.take());
 
-            workers.forEach(w -> futureSet.add(completionService.submit(() -> w.refreshConnections(), null)));
-            while (!futureSet.isEmpty()) futureSet.remove(completionService.take());
-
         } finally {
             executor.shutdown();
             executor.awaitTermination(1, MINUTES);
         }
 
+    }
+
+    @Test(dependsOnMethods = "startWorkers")
+    void refreshPeers() throws Exception {
+        workers.forEach(w -> w.refreshConnections());
     }
 
     @Test(dependsOnMethods = "startWorkers")

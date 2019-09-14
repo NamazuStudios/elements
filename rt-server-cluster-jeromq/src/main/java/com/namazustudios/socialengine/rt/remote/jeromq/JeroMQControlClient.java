@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 
 import java.util.concurrent.TimeUnit;
@@ -27,6 +29,8 @@ import static org.zeromq.ZContext.shadow;
  * This class is designed to be used by a single thread and destroyed.
  */
 public class JeroMQControlClient implements ControlClient {
+
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQControlClient.class);
 
     public static final long DEFAULT_TIMEOUT = 30;
 
@@ -55,7 +59,7 @@ public class JeroMQControlClient implements ControlClient {
                                final String instanceConnectAddress,
                                final long timeout, final TimeUnit timeUnit) {
         this.shadowContext = shadow(zContext);
-        this.socket = zContext.createSocket(DEALER);
+        this.socket = shadowContext.createSocket(DEALER);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAdddress = instanceConnectAddress;
         this.socket.setReceiveTimeOut((int) MILLISECONDS.convert(timeout, timeUnit));
@@ -76,6 +80,8 @@ public class JeroMQControlClient implements ControlClient {
     @Override
     public String openRouteToNode(final NodeId nodeId, final String instanceInvokerAddress) {
 
+        logger.debug("Opening route to node {} at {}", nodeId, instanceInvokerAddress);
+
         final ZMsg request = new ZMsg();
 
         OPEN_ROUTE_TO_NODE.pushCommand(request);
@@ -90,6 +96,9 @@ public class JeroMQControlClient implements ControlClient {
 
     @Override
     public void closeRouteToNode(final NodeId nodeId) {
+
+        logger.debug("Closing route to node {}", nodeId);
+
         final ZMsg request = new ZMsg();
         CLOSE_ROUTE_TO_NODE.pushCommand(request);
         request.add(nodeId.asBytes());
@@ -99,6 +108,9 @@ public class JeroMQControlClient implements ControlClient {
 
     @Override
     public void closeRoutesViaInstance(final InstanceId instanceId) {
+
+        logger.debug("Closing all routes for instance {}", instanceId);
+
         final ZMsg request = new ZMsg();
         CLOSE_ROUTES_VIA_INSTANCE.pushCommand(request);
         request.add(instanceId.asBytes());
@@ -108,6 +120,8 @@ public class JeroMQControlClient implements ControlClient {
 
     @Override
     public InstanceConnectionService.InstanceBinding openBinding(final NodeId nodeId) {
+
+        logger.debug("Opening binding for {}", nodeId);
 
         final ZMsg request = new ZMsg();
 
@@ -123,11 +137,15 @@ public class JeroMQControlClient implements ControlClient {
 
     @Override
     public void closeBinding(final NodeId nodeId) {
+
+        logger.debug("Closing binding for {}", nodeId);
+
         final ZMsg request = new ZMsg();
         CLOSE_BINDING_FOR_NODE.pushCommand(request);
         request.add(nodeId.asBytes());
         send(request);
         recv();
+
     }
 
     private void send(final ZMsg zMsg) {
@@ -158,7 +176,7 @@ public class JeroMQControlClient implements ControlClient {
 
         switch (code) {
             case OK: return response;
-            case NO_SUCH_NODE: throw new JeroMQUnroutableNodeException(response);
+            case NO_SUCH_NODE_ROUTE: throw new JeroMQUnroutableNodeException(response);
             default: throw new JeroMQControlException(code, response);
         }
 
