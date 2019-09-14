@@ -83,4 +83,11 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
         return remoteInvoker;
     }
 
+    @Override
+    public String toString() {
+        return "JeroMQInstanceConnection{" +
+                "instanceId=" + instanceId +
+                '}';
+    }
+
 }

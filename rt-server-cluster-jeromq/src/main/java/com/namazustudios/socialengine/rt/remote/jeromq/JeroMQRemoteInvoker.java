@@ -195,4 +195,11 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         this.maxConnections = maxConnections;
     }
 
+    @Override
+    public String toString() {
+        return "JeroMQRemoteInvoker{" +
+                "connectAddress='" + connectAddress + '\'' +
+                '}';
+    }
+
 }

@@ -29,6 +29,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.NO_SUCH_NODE_ROUTE;
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
@@ -357,8 +358,14 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 connectionList.forEach(c -> {
                     try {
                         c.disconnect();
+                    } catch (JeroMQControlException ex) {
+                        if (NO_SUCH_NODE_ROUTE.equals(ex.getCode())) {
+                            logger.info("Route already closed for connection {}", c, ex);
+                        } else {
+                            logger.error("Could not drain connection {}", c, ex);
+                        }
                     } catch (Exception ex) {
-                        logger.error("Could not drain connection {}", ex);
+                        logger.error("Could not drain connection {}", c, ex);
                     }
                 });
 
