@@ -10,16 +10,22 @@ import com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import static com.google.inject.matcher.Matchers.only;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.joining;
 
 public class StaticInstanceDiscoveryServiceModule extends PrivateModule {
 
     private Runnable bindAddresses = () -> {};
+
+    public StaticInstanceDiscoveryServiceModule withInstanceAddresses(final String ... instanceAddresses) {
+        return withInstanceAddresses(Stream.of(instanceAddresses).collect(joining(",")));
+    }
 
     public StaticInstanceDiscoveryServiceModule withInstanceAddresses(final List<String> instanceAddresses) {
         return withInstanceAddresses(instanceAddresses.stream().collect(joining(",")));

@@ -75,7 +75,6 @@ public class JeroMQEndToEndIntegrationTest {
                         bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
                             .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
 
-
                     }
                 });
 

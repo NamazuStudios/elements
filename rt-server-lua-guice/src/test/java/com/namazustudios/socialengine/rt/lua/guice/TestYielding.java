@@ -19,12 +19,12 @@ public class TestYielding {
     private static final Logger logger = LoggerFactory.getLogger(TestYielding.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withNodeModule(new LuaModule())
+        .withWorkerModule(new LuaModule())
         .withDefaultHttpClient()
-        .withNodeModule(new XodusContextModule()
+        .withWorkerModule(new XodusContextModule()
             .withSchedulerThreads(1)
             .withHandlerTimeout(3, MINUTES))
-        .withNodeModule(new XodusEnvironmentModule()
+        .withWorkerModule(new XodusEnvironmentModule()
             .withTempEnvironments())
         .start();
 

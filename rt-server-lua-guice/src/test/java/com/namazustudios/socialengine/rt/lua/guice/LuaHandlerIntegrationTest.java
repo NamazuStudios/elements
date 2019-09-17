@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
@@ -17,16 +17,14 @@ public class LuaHandlerIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaHandlerIntegrationTest.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withNodeModule(new LuaModule())
-        .withNodeModule(new XodusContextModule()
+        .withWorkerModule(new LuaModule())
+        .withWorkerModule(new XodusContextModule()
             .withSchedulerThreads(1)
             .withHandlerTimeout(3, MINUTES))
-        .withNodeModule(new XodusEnvironmentModule()
+        .withWorkerModule(new XodusEnvironmentModule()
             .withTempEnvironments())
         .withDefaultHttpClient()
         .start();
-
-    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -64,10 +62,6 @@ public class LuaHandlerIntegrationTest {
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

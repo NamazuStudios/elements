@@ -4,6 +4,16 @@ import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 
+/**
+ * A type of {@link AsyncConnectionService} which uses an internal reference count to ensure that the backed
+ * {@link AsyncConnectionService} is opened and closed properly.
+ *
+ * This is mainly intended for testing as production level code should share a single global-instance of
+ * {@link AsyncConnectionService}
+ *
+ * @param <ContextT>
+ * @param <SocketT>
+ */
 public class SharedAsyncConnectionService<ContextT, SocketT> implements AsyncConnectionService<ContextT, SocketT> {
 
     private final AtomicInteger count = new AtomicInteger();
@@ -11,7 +21,7 @@ public class SharedAsyncConnectionService<ContextT, SocketT> implements AsyncCon
     private final AsyncConnectionService<ContextT, SocketT> delegate;
 
     @Inject
-    public SharedAsyncConnectionService(AsyncConnectionService<ContextT, SocketT> delegate) {
+    public SharedAsyncConnectionService(final AsyncConnectionService<ContextT, SocketT> delegate) {
         this.delegate = delegate;
     }
 

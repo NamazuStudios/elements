@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
@@ -22,16 +21,14 @@ public class LuaResourceLinkingAdvancedTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withNodeModule(new LuaModule())
-            .withNodeModule(new XodusContextModule()
+            .withWorkerModule(new LuaModule())
+            .withWorkerModule(new XodusContextModule()
                 .withSchedulerThreads(1)
                 .withHandlerTimeout(3, MINUTES))
-            .withNodeModule(new XodusEnvironmentModule()
+            .withWorkerModule(new XodusEnvironmentModule()
                 .withTempEnvironments())
             .withDefaultHttpClient()
         .start();
-
-    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -40,8 +37,8 @@ public class LuaResourceLinkingAdvancedTest {
         getEmbeddedTestService().close();
     }
 
-    @Test()
-    public void performAdvancedLinkingTest() throws Exception {
+    @Test
+    public void performAdvancedLinkingTest() {
 
         final String pathASuffix = UUID.randomUUID().toString();
         final String pathBSuffix = UUID.randomUUID().toString();
@@ -83,10 +80,6 @@ public class LuaResourceLinkingAdvancedTest {
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

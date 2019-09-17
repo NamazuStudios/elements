@@ -4,7 +4,6 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
@@ -33,16 +32,14 @@ public class LuaResourceIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withNodeModule(new LuaModule())
-        .withNodeModule(new XodusContextModule()
+        .withWorkerModule(new LuaModule())
+        .withWorkerModule(new XodusContextModule()
             .withSchedulerThreads(1)
             .withHandlerTimeout(3, MINUTES))
-        .withNodeModule(new XodusEnvironmentModule()
+        .withWorkerModule(new XodusEnvironmentModule()
             .withTempEnvironments())
         .withDefaultHttpClient()
         .start();
-
-    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -189,10 +186,6 @@ public class LuaResourceIntegrationTest {
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {
