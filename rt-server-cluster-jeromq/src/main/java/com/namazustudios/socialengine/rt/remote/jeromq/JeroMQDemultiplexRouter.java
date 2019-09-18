@@ -53,7 +53,9 @@ public class JeroMQDemultiplexRouter {
 
     public String openBinding(final NodeId nodeId) {
 
-        if (backends.containsKey(nodeId)) throw new JeroMQControlException(DUPLICATE_NODE_BINDING);
+        if (backends.containsKey(nodeId)) {
+            throw new JeroMQControlException(DUPLICATE_NODE_BINDING);
+        }
 
         final ZMQ.Socket socket = zContext.createSocket(DEALER);
         final int index = poller.register(socket, POLLIN | POLLERR);

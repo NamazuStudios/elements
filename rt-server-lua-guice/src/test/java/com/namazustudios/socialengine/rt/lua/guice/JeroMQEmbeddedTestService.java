@@ -73,8 +73,8 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         final InstanceId workerInstanceId = randomInstanceId();
         final ApplicationId applicationId = randomApplicationId();
 
-        final String clientBindAddress = format("inproc://integration-test/%s", clientInstanceId.asString());
-        final String workerBindAddress = format("inproc://integration-test/%s", workerInstanceId.asString());
+        final String clientBindAddress = format("inproc://integration-test-client/%s", clientInstanceId.asString());
+        final String workerBindAddress = format("inproc://integration-test-worker/%s", workerInstanceId.asString());
 
         final Module commonModule = new AbstractModule() {
             @Override
@@ -97,6 +97,12 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 bind(SimpleRemoteInvokerRegistry.class).asEagerSingleton();
                 bind(RemoteInvokerRegistry.class).to(SimpleRemoteInvokerRegistry.class);
 
+                install(new StaticInstanceDiscoveryServiceModule()
+                    .withInstanceAddresses(workerBindAddress));
+
+                install(new JeroMQRemoteInvokerModule()
+                    .withMinimumConnections(MINIMUM_CONNECTIONS)
+                    .withMaximumConnections(MAXIMUM_CONNECTIONS));
 
             }
         };
@@ -105,46 +111,46 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             @Override
             protected void configure() {
 
-                bind(NodeId.class).toInstance(new NodeId(workerInstanceId, applicationId));
                 bind(InstanceId.class).toInstance(workerInstanceId);
 
-                bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(getClass().getClassLoader()));
+                bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(ClassLoader.getSystemClassLoader()));
                 bind(LocalInvocationDispatcher.class).to(IoCLocalInvocationDispatcher.class).asEagerSingleton();
 
                 install(commonModule);
-                workerModules.forEach(this::install);
                 install(new GuiceIoCResolverModule());
                 install(new FSTPayloadReaderWriterModule());
-                install(new TestApplicationWorkerInstanceModule());
-                install(new TestMasterNodeModule());
-                install(new TestWorkerNodeModule());
-                install(new StaticInstanceDiscoveryServiceModule()
-                    .withInstanceAddresses(workerBindAddress, clientBindAddress));
-
+                install(new TestWorkerInstanceModule());
+                install(new TestMasterNodeModule(workerInstanceId));
+                install(new TestWorkerNodeModule(workerInstanceId, applicationId, workerModules));
                 install(new JeroMQInstanceConnectionServiceModule()
                     .withBindAddress(workerBindAddress));
 
-                install(new JeroMQRemoteInvokerModule()
-                    .withMinimumConnections(MINIMUM_CONNECTIONS)
-                    .withMaximumConnections(MAXIMUM_CONNECTIONS));
             }
         };
 
         final Module clientModule = new AbstractModule() {
             @Override
             protected void configure() {
+
+                bind(NodeId.class).toInstance(new NodeId(clientInstanceId, applicationId));
+                bind(InstanceId.class).toInstance(clientInstanceId);
+
                 install(commonModule);
                 clientModules.forEach(this::install);
+
                 install(new FSTPayloadReaderWriterModule());
-                install(commonModule);
+                install(new TestClientInstanceModule());
+                install(new JeroMQInstanceConnectionServiceModule()
+                    .withBindAddress(clientBindAddress));
+
             }
         };
 
         final Injector workerInjector = Guice.createInjector(workerModule);
         worker = workerInjector.getInstance(Instance.class);
 
-//        final Injector clientInjector = Guice.createInjector(clientModule);
-//        client = clientInjector.getInstance(Instance.class);
+        final Injector clientInjector = Guice.createInjector(clientModule);
+        client = clientInjector.getInstance(Instance.class);
 
         final List<Exception> exceptionList = new ArrayList<>();
 
@@ -160,6 +166,13 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Exception starting test client instance.", ex);
+        }
+
+        try {
+            getClient().refreshConnections();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Exception refreshing test client instance.", ex);
         }
 
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);

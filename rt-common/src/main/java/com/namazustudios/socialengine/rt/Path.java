@@ -457,9 +457,9 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
 
         public static ContextAndComponents contextAndComponentsFromPath(final String path, final String pathSeparator) {
-            if (!path.contains(CONTEXT_SEPARATOR)) {
-                final List<String> components = componentsFromPath(path);
 
+            if (!path.contains(CONTEXT_SEPARATOR)) {
+                final List<String> components = componentsFromPath(path, pathSeparator);
                 return new ContextAndComponents(null, components);
             }
 
@@ -479,8 +479,8 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
             }
 
             final List<String> components = componentsFromPath(path, pathSeparator);
-
             return new ContextAndComponents(context, components);
+
         }
 
         /**
@@ -612,10 +612,6 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     public static Path fromPathString(final String pathString, final String pathSeparator) {
         final ContextAndComponents contextAndComponents = contextAndComponentsFromPath(pathString, pathSeparator);
         return new Path(contextAndComponents.getContext(), contextAndComponents.getComponents());
-    }
-
-    public String getRoutingAddress() {
-        return context;
     }
 
 }

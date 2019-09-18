@@ -15,7 +15,7 @@ import java.util.Set;
 
 import static java.util.Collections.singleton;
 
-public class TestApplicationWorkerInstanceModule extends PrivateModule {
+public class TestWorkerInstanceModule extends PrivateModule {
 
     @Override
     protected void configure() {
