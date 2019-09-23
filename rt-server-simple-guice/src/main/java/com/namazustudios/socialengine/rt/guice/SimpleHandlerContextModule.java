@@ -1,16 +1,18 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.HandlerContext;
 import com.namazustudios.socialengine.rt.SimpleHandlerContext;
 
 import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
-public class SimpleHandlerContextModule extends AbstractModule {
+public class SimpleHandlerContextModule extends PrivateModule {
 
     private Runnable bindTimeout = () -> {};
 
@@ -29,9 +31,17 @@ public class SimpleHandlerContextModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
         bindTimeout.run();
-        bind(SimpleHandlerContext.class).asEagerSingleton();
-        bind(HandlerContext.class).to(SimpleHandlerContext.class);
+
+        expose(HandlerContext.class)
+            .annotatedWith(named(LOCAL));
+
+        bind(HandlerContext.class)
+            .annotatedWith(named(LOCAL))
+            .to(SimpleHandlerContext.class)
+            .asEagerSingleton();
+
     }
 
 }

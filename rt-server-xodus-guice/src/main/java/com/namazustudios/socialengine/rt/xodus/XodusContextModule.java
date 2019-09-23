@@ -10,13 +10,9 @@ import com.namazustudios.socialengine.rt.guice.SimpleTaskContextModule;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 
 public class XodusContextModule extends PrivateModule {
-
-    private Runnable bindContextAction = () -> {
-        expose(Context.class);
-        bind(Context.class).to(SimpleContext.class).asEagerSingleton();
-    };
 
     private Runnable handlerTimeoutBindAction = () -> {};
 
@@ -24,29 +20,14 @@ public class XodusContextModule extends PrivateModule {
 
     private final SimpleHandlerContextModule simpleHandlerContextModule = new SimpleHandlerContextModule();
 
-    /**
-     * Specifies the {@link javax.inject.Named} value for the bound {@link Context}.  The context is left unnamed if
-     * this is not specified.
-     *
-     * @param contextName the {@link Context} name
-     * @return this instance
-     */
-    public XodusContextModule withContextNamed(final String contextName) {
-
-        bindContextAction = () -> {
-            expose(Context.class).annotatedWith(named(contextName));
-            bind(Context.class).annotatedWith(named(contextName)).to(SimpleContext.class).asEagerSingleton();
-        };
-
-        return this;
-
-    }
 
     @Override
     protected void configure() {
 
-        bindContextAction.run();
         handlerTimeoutBindAction.run();
+
+        // Binds the SimpleContext
+        bind(Context.class).annotatedWith(named(LOCAL)).to(SimpleContext.class).asEagerSingleton();
 
         // Configures all services to be backed by Xodus.  Many of them are the Simple services, but this installs
         // just the Xodus required
@@ -62,11 +43,12 @@ public class XodusContextModule extends PrivateModule {
         install(simpleHandlerContextModule);
 
         // Exposes everything
-        expose(IndexContext.class);
-        expose(ResourceContext.class);
-        expose(HandlerContext.class);
-        expose(SchedulerContext.class);
-        expose(TaskContext.class);
+        expose(Context.class).annotatedWith(named(LOCAL));
+        expose(IndexContext.class).annotatedWith(named(LOCAL));
+        expose(ResourceContext.class).annotatedWith(named(LOCAL));
+        expose(HandlerContext.class).annotatedWith(named(LOCAL));
+        expose(SchedulerContext.class).annotatedWith(named(LOCAL));
+        expose(TaskContext.class).annotatedWith(named(LOCAL));
         expose(PersistenceStrategy.class);
 
     }

@@ -4,6 +4,9 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 
 import javax.inject.Inject;
+import javax.inject.Named;
+
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 
 public class ContextNodeLifecycle implements NodeLifecycle {
 
@@ -24,7 +27,7 @@ public class ContextNodeLifecycle implements NodeLifecycle {
     }
 
     @Inject
-    public void setContext(Context context) {
+    public void setContext(@Named(LOCAL) Context context) {
         this.context = context;
     }
 

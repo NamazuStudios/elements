@@ -6,55 +6,46 @@ import com.namazustudios.socialengine.rt.remote.ClusterContext;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Context.*;
 
 public class ClusterContextModule extends PrivateModule {
-
-    private Runnable bindContextAction = () -> bind(Context.class)
-            .to(ClusterContext.class)
-            .asEagerSingleton();
 
     @Override
     protected void configure() {
 
-        expose(Context.class);
+        expose(Context.class)
+            .annotatedWith(named(REMOTE));
 
-        bindContextAction.run();
+        bind(Context.class)
+            .annotatedWith(named(REMOTE))
+            .to(ClusterContext.class)
+            .asEagerSingleton();
 
         bind(IndexContext.class)
-                .toProvider(new RemoteProxyProvider<>(IndexContext.class))
+            .annotatedWith(named(REMOTE))
+            .toProvider(new RemoteProxyProvider<>(IndexContext.class, REMOTE))
             .asEagerSingleton();
 
         bind(ResourceContext.class)
-                .toProvider(new RemoteProxyProvider<>(ResourceContext.class))
+            .annotatedWith(named(REMOTE))
+            .toProvider(new RemoteProxyProvider<>(ResourceContext.class, REMOTE))
             .asEagerSingleton();
 
         bind(SchedulerContext.class)
-                .toProvider(new RemoteProxyProvider<>(SchedulerContext.class))
+            .annotatedWith(named(REMOTE))
+            .toProvider(new RemoteProxyProvider<>(SchedulerContext.class, REMOTE))
             .asEagerSingleton();
 
         bind(HandlerContext.class)
-            .toProvider(new RemoteProxyProvider<>(HandlerContext.class))
+            .annotatedWith(named(REMOTE))
+            .toProvider(new RemoteProxyProvider<>(HandlerContext.class, REMOTE))
             .asEagerSingleton();
 
         bind(TaskContext.class)
-            .toProvider(new RemoteProxyProvider<>(TaskContext.class))
+            .annotatedWith(named(REMOTE))
+            .toProvider(new RemoteProxyProvider<>(TaskContext.class, REMOTE))
             .asEagerSingleton();
 
-    }
-
-    /**
-     * Specifies the {@link javax.inject.Named} value for the bound {@link Context}.  The context is left unnamed if
-     * this is not specified.
-     *
-     * @param contextName the {@link Context} name
-     * @return this instance
-     */
-    public ClusterContextModule withContextNamed(final String contextName) {
-        bindContextAction = () -> bind(Context.class)
-                .annotatedWith(named(contextName))
-                .to(ClusterContext.class)
-            .asEagerSingleton();
-        return this;
     }
 
 }

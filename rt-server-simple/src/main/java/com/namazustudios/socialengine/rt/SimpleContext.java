@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.Map;
 import java.util.function.Consumer;
@@ -123,11 +124,6 @@ public class SimpleContext implements Context {
         return resourceContext;
     }
 
-    @Inject
-    public void setResourceContext(ResourceContext resourceContext) {
-        this.resourceContext = resourceContext;
-    }
-
     @Override
     public SchedulerContext getSchedulerContext() {
         return schedulerContext;
@@ -143,9 +139,34 @@ public class SimpleContext implements Context {
         return handlerContext;
     }
 
+    @Override
+    public TaskContext getTaskContext() {
+        return taskContext;
+    }
+
     @Inject
-    public void setSchedulerContext(SchedulerContext schedulerContext) {
+    public void setResourceContext(@Named(LOCAL) ResourceContext resourceContext) {
+        this.resourceContext = resourceContext;
+    }
+
+    @Inject
+    public void setSchedulerContext(@Named(LOCAL) SchedulerContext schedulerContext) {
         this.schedulerContext = schedulerContext;
+    }
+
+    @Inject
+    public void setIndexContext(@Named(LOCAL) IndexContext indexContext) {
+        this.indexContext = indexContext;
+    }
+
+    @Inject
+    public void setHandlerContext(@Named(LOCAL) HandlerContext handlerContext) {
+        this.handlerContext = handlerContext;
+    }
+
+    @Inject
+    public void setTaskContext(@Named(LOCAL) TaskContext taskContext) {
+        this.taskContext = taskContext;
     }
 
     public Scheduler getScheduler() {
@@ -182,26 +203,6 @@ public class SimpleContext implements Context {
     @Inject
     public void setAssetLoader(AssetLoader assetLoader) {
         this.assetLoader = assetLoader;
-    }
-
-    @Inject
-    public void setIndexContext(IndexContext indexContext) {
-        this.indexContext = indexContext;
-    }
-
-    @Inject
-    public void setHandlerContext(HandlerContext handlerContext) {
-        this.handlerContext = handlerContext;
-    }
-
-    @Override
-    public TaskContext getTaskContext() {
-        return taskContext;
-    }
-
-    @Inject
-    public void setTaskContext(TaskContext taskContext) {
-        this.taskContext = taskContext;
     }
 
     public ManifestLoader getManifestLoader() {

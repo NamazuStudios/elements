@@ -3,9 +3,14 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
+import com.sun.org.apache.regexp.internal.RE;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 
+/**
+ * A type of {@link Context} which is used to house remotely invokable instances.
+ */
 public class ClusterContext implements Context {
 
     private ResourceContext resourceContext;
@@ -30,7 +35,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setResourceContext(ResourceContext resourceContext) {
+    public void setResourceContext(@Named(REMOTE)ResourceContext resourceContext) {
         this.resourceContext = resourceContext;
     }
 
@@ -40,7 +45,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setIndexContext(IndexContext indexContext) {
+    public void setIndexContext(@Named(REMOTE) IndexContext indexContext) {
         this.indexContext = indexContext;
     }
 
@@ -50,7 +55,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setSchedulerContext(SchedulerContext schedulerContext) {
+    public void setSchedulerContext(@Named(REMOTE) SchedulerContext schedulerContext) {
         this.schedulerContext = schedulerContext;
     }
 
@@ -60,7 +65,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setHandlerContext(HandlerContext handlerContext) {
+    public void setHandlerContext(@Named(REMOTE) HandlerContext handlerContext) {
         this.handlerContext = handlerContext;
     }
 
@@ -70,7 +75,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setTaskContext(TaskContext taskContext) {
+    public void setTaskContext(@Named(REMOTE) TaskContext taskContext) {
         this.taskContext = taskContext;
     }
 

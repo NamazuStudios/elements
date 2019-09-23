@@ -183,6 +183,32 @@ public class JeroMQMultiplexRouter {
 
     }
 
+    public void openLoopbackToNode(final NodeId nodeId, final String nodeBindAddress) {
+
+        logger.info("Opening loopback route to node {} -> {}", nodeId, nodeBindAddress);
+
+        String localBindAddress = localBindAddresses.get(nodeId);
+
+        if (localBindAddress != null) {
+            logger.warn("Duplicate route to node {}", nodeId);
+            return;
+        }
+
+        final ZMQ.Socket backend = zContext.createSocket(DEALER);
+        final ZMQ.Socket frontend = zContext.createSocket(ROUTER);
+
+        localBindAddress = getLocalBindAddress(nodeId);
+        frontend.bind(localBindAddress);
+
+        final int backendIndex = poller.register(backend, POLLIN | POLLERR);
+        final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
+
+        frontends.put(nodeId, frontendIndex);
+        backends.put(nodeId.getInstanceId(), backendIndex);
+        localBindAddresses.put(nodeId, localBindAddress);
+
+    }
+
     public void closeRouteToNode(final NodeId nodeId) {
 
         logger.info("Closing route to node {}", nodeId);

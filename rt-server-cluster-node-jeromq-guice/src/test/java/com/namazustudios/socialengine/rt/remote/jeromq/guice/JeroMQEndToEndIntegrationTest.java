@@ -471,7 +471,7 @@ public class JeroMQEndToEndIntegrationTest {
             bind(WorkerInstance.class).asEagerSingleton();
             bind(Worker.class).to(WorkerInstance.class);
             bind(Instance.class).annotatedWith(instanceNamedAnnotation).to(WorkerInstance.class);
-            expose(Instance.class).annotatedWith(instanceNamedAnnotation);;
+            expose(Instance.class).annotatedWith(instanceNamedAnnotation);
 
         }
 

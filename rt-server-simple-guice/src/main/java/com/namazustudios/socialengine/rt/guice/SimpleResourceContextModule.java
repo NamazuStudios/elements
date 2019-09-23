@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
 
 import java.util.concurrent.ExecutorService;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.SimpleResourceContext.*;
 
 public class SimpleResourceContextModule extends PrivateModule {
@@ -15,12 +17,16 @@ public class SimpleResourceContextModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        expose(ResourceContext.class);
+        expose(ResourceContext.class)
+            .annotatedWith(named(LOCAL));
 
-        bind(ResourceContext.class).to(SimpleResourceContext.class).asEagerSingleton();
+        bind(ResourceContext.class)
+            .annotatedWith(named(LOCAL))
+            .to(SimpleResourceContext.class)
+            .asEagerSingleton();
 
         bind(ExecutorService.class)
-            .annotatedWith(Names.named(EXECUTOR_SERVICE))
+            .annotatedWith(named(EXECUTOR_SERVICE))
             .toProvider(new CPUCountThreadPoolProvider(SimpleResourceContext.class));
 
     }
