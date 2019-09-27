@@ -18,6 +18,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
@@ -42,7 +43,7 @@ public class XodusResourceServicePersistenceTest {
         for (int i = 0; i < 10; ++i) {
             final InstanceId instanceId = randomInstanceId();
             final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-            final ResourceId resourceId = new ResourceId(nodeId);
+            final ResourceId resourceId = randomResourceIdForNode(nodeId);
             final Path path = new Path(asList("test", resourceId.asString()));
             testData.add(new Object[]{resourceId, path});
         }

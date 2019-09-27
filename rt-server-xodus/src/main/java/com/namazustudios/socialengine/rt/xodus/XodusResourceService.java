@@ -28,6 +28,7 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static java.lang.Integer.max;
 import static java.lang.System.getProperty;
 import static java.util.Spliterator.*;
@@ -110,7 +111,7 @@ public class XodusResourceService implements ResourceService {
         (txn, resourceIdKey) -> {
 
             final StringBuilder report = new StringBuilder();
-            final ResourceId resourceId = new ResourceId(entryToString(resourceIdKey));
+            final ResourceId resourceId = resourceIdFromString(entryToString(resourceIdKey));
 
             report.append('\n').append("Removing Resource: ").append(resourceId.asString()).append("\n\n");
             dumpStoreData(report);
@@ -123,7 +124,7 @@ public class XodusResourceService implements ResourceService {
         (txn, resourceIdKey) -> {
 
             final StringBuilder report = new StringBuilder();
-            final ResourceId resourceId = new ResourceId(entryToString(resourceIdKey));
+            final ResourceId resourceId = resourceIdFromString(entryToString(resourceIdKey));
 
             report.append('\n').append("Removed Resource: ").append(resourceId.asString()).append("\n\n");
             dumpStoreData(report);
@@ -757,7 +758,7 @@ public class XodusResourceService implements ResourceService {
             } else if (cursor.deleteCurrent()) {
                 if (logger.isTraceEnabled()) {
                     final Path path = Path.fromPathString(entryToString(pathKey));
-                    final ResourceId resourceId = new ResourceId(entryToString(resourceIdValue));
+                    final ResourceId resourceId = resourceIdFromString(entryToString(resourceIdValue));
                     logger.trace("Unlinked Path Entry {} -> {}", path.toNormalizedPathString(), resourceId);
                 }
             } else {
@@ -799,7 +800,7 @@ public class XodusResourceService implements ResourceService {
             resources.delete(txn, resourceIdValue);
         }
 
-        final ResourceId resourceId = new ResourceId(entryToString(resourceIdValue));
+        final ResourceId resourceId = resourceIdFromString(entryToString(resourceIdValue));
 
         debugPostUnlink.report(txn, pathKey, remove);
 

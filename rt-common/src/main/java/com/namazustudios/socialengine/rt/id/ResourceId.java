@@ -41,51 +41,6 @@ public class ResourceId implements Serializable, HasNodeId {
     private ResourceId() { v1CompoundId = null; }
 
     /**
-     * Creates a new unique {@link ResourceId}.
-     */
-    public ResourceId(final NodeId nodeId) {
-        try {
-            v1CompoundId = new V1CompoundId.Builder()
-                    .with(nodeId.v1CompoundId)
-                    .with(RESOURCE, UUID.randomUUID())
-                    .only(INSTANCE, APPLICATION, RESOURCE)
-                    .build();
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidResourceIdException(ex);
-        }
-    }
-
-    /**
-     * Parses a new {@link ResourceId} from the given {@link String}.  The should be the string representation returned
-     * byt {@link #asString()}.
-     *
-     * @param stringRepresentation the {@link String} representation of the {@link ResourceId} from {@link ResourceId#asString()}.
-     */
-    public ResourceId(final String stringRepresentation) {
-        try {
-            v1CompoundId = new V1CompoundId.Builder()
-                    .with(stringRepresentation)
-                    .only(INSTANCE, APPLICATION, RESOURCE)
-                .build();
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidResourceIdException(ex);
-        }
-    }
-
-    /**
-     * Parses a new {@link ResourceId} from the given {@link byte[]}.  The should be the string representation returned
-     * byt {@link #asString()}.
-     *
-     * @param byteRepresentation the  {@link byte[]} representation of the {@link ResourceId} from {@link ResourceId#asBytes()}.
-     */
-    public ResourceId(final byte[] byteRepresentation) {
-        v1CompoundId = new V1CompoundId.Builder()
-                .with(byteRepresentation)
-                .only(INSTANCE, APPLICATION, RESOURCE)
-                .build();
-    }
-
-    /**
      * Implementation detail constructor.
      *
      * @param v1CompoundId the {@link V1CompoundId}
@@ -146,6 +101,55 @@ public class ResourceId implements Serializable, HasNodeId {
     @Override
     public String toString() {
         return asString();
+    }
+
+    /**
+     * Creates a new unique {@link ResourceId}, specifying the {@link NodeId}
+     */
+    public static ResourceId randomResourceIdForNode(final NodeId nodeId) {
+        try {
+            return new ResourceId(new V1CompoundId.Builder()
+                .with(nodeId.v1CompoundId)
+                .with(RESOURCE, UUID.randomUUID())
+                .only(INSTANCE, APPLICATION, RESOURCE)
+                .build()
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidResourceIdException(ex);
+        }
+    }
+
+
+    /**
+     * Parses a new {@link ResourceId} from the given {@link String}.  The should be the string representation returned
+     * byt {@link #asString()}.
+     *
+     * @param stringRepresentation the {@link String} representation of the {@link ResourceId} from {@link ResourceId#asString()}.
+     */
+    public static ResourceId resourceIdFromString(final String stringRepresentation) {
+        try {
+            return new ResourceId(new V1CompoundId.Builder()
+                .with(stringRepresentation)
+                .only(INSTANCE, APPLICATION, RESOURCE)
+                .build()
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidResourceIdException(ex);
+        }
+    }
+
+    /**
+     * Parses a new {@link ResourceId} from the given {@link byte[]}.  The should be the string representation returned
+     * byt {@link #asString()}.
+     *
+     * @param byteRepresentation the  {@link byte[]} representation of the {@link ResourceId} from {@link ResourceId#asBytes()}.
+     */
+    public static ResourceId resourceIdFromBytes(final byte[] byteRepresentation) {
+        return new ResourceId(new V1CompoundId.Builder()
+            .with(byteRepresentation)
+            .only(INSTANCE, APPLICATION, RESOURCE)
+            .build()
+        );
     }
 
 }

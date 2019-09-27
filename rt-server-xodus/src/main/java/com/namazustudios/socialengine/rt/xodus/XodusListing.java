@@ -8,6 +8,7 @@ import jetbrains.exodus.ByteIterable;
 import java.io.Serializable;
 import java.util.Objects;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static jetbrains.exodus.bindings.StringBinding.entryToString;
 import static jetbrains.exodus.bindings.StringBinding.stringToEntry;
 
@@ -22,7 +23,7 @@ class XodusListing implements ResourceService.Listing, Serializable {
     private transient volatile ByteIterable resourceIdValue;
 
     public XodusListing(final ByteIterable pathKey, final ByteIterable resourceIdValue) {
-        this(Path.fromPathString(entryToString(pathKey)), new ResourceId(entryToString(resourceIdValue)));
+        this(Path.fromPathString(entryToString(pathKey)), resourceIdFromString(entryToString(resourceIdValue)));
         this.pathKey = pathKey;
         this.resourceIdValue = resourceIdValue;
     }

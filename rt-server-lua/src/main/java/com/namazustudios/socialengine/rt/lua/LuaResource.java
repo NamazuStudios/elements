@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import static com.namazustudios.socialengine.jnlua.LuaState.*;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.COROUTINES_TABLE;
 
@@ -96,7 +97,7 @@ public class LuaResource implements Resource {
             final NodeId nodeId) {
         try {
 
-            this.resourceId = new ResourceId(nodeId);
+            this.resourceId = randomResourceIdForNode(nodeId);
             this.context = context;
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);

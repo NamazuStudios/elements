@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.UUID.randomUUID;
 
 /**
@@ -24,7 +25,7 @@ public class SimpleResourceIdOptimisticLockService implements OptimisticLockServ
 
     @Override
     public ResourceId createLock() {
-        return new ResourceId(LOCK_NODE_ID);
+        return randomResourceIdForNode(LOCK_NODE_ID);
     }
 
     @Override

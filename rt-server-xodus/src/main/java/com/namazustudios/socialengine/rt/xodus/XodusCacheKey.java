@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import jetbrains.exodus.ByteIterable;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static jetbrains.exodus.bindings.StringBinding.entryToString;
 import static jetbrains.exodus.bindings.StringBinding.stringToEntry;
 
@@ -19,7 +20,7 @@ class XodusCacheKey {
 
     public XodusCacheKey(final ByteIterable key) {
         this.key = key;
-        this.resourceId = new ResourceId(entryToString(key));
+        this.resourceId = resourceIdFromString(entryToString(key));
     }
 
     public ByteIterable getKey() {

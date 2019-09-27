@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static java.util.stream.Collectors.toList;
 
@@ -73,7 +74,7 @@ public class IndexDetailBuiltin implements Builtin {
 
         try {
 
-            final ResourceId resourceId = new ResourceId(luaState.checkString(1));
+            final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
             final Path path = new Path(luaState.checkString(2));
 
             final TaskId taskId = currentTaskId(luaState);

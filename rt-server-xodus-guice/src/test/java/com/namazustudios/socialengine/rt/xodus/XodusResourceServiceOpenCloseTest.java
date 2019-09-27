@@ -21,6 +21,8 @@ import java.io.OutputStream;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -129,7 +131,7 @@ public class XodusResourceServiceOpenCloseTest {
         final Resource mock = mock(Resource.class);
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
 
         when(mock.getId()).thenReturn(resourceId);
         doAnswer(invocation -> {
@@ -167,7 +169,7 @@ public class XodusResourceServiceOpenCloseTest {
                 final InputStream is = invocation.getArgument(0);
                 final byte[] bytes = ByteStreams.toByteArray(is);
 
-                final ResourceId resourceId = new ResourceId(new String(bytes, UTF_8));
+                final ResourceId resourceId = resourceIdFromString(new String(bytes, UTF_8));
                 final Resource resource = mock(Resource.class);
                 when(resource.getId()).thenReturn(resourceId);
 

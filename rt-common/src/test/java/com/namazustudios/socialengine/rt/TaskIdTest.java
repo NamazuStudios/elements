@@ -10,6 +10,7 @@ import java.io.ObjectOutputStream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -20,7 +21,7 @@ public class TaskIdTest {
     public void testCreate() {
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         assertNotNull(taskId.getNodeId());
         assertNotNull(taskId.getResourceId());
@@ -32,7 +33,7 @@ public class TaskIdTest {
     public void testEqualsAndHashCodeWithBytes() {
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         final TaskId duplicateTaskId = new TaskId(taskId.asBytes());
         assertEquals(duplicateTaskId, taskId);
@@ -43,7 +44,7 @@ public class TaskIdTest {
     public void testEqualsAndHashCodeWithString() {
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         final TaskId duplicateTaskId = new TaskId(taskId.asString());
         assertEquals(duplicateTaskId, taskId);
@@ -55,7 +56,7 @@ public class TaskIdTest {
 
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
 
         final byte[] bytes;

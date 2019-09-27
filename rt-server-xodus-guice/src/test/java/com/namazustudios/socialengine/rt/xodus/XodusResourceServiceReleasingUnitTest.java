@@ -11,6 +11,7 @@ import javax.inject.Inject;
 
 import java.io.*;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.*;
 
@@ -51,7 +52,7 @@ public class XodusResourceServiceReleasingUnitTest extends AbstractResourceServi
                 final ByteArrayOutputStream bos = new ByteArrayOutputStream();
                 for (int b = is.read(); b >= 0; b = is.read()) bos.write((byte)b);
                 final String resourceIdString = new String(bos.toByteArray(), UTF_8);
-                final ResourceId resourceId = new ResourceId(resourceIdString);
+                final ResourceId resourceId = resourceIdFromString(resourceIdString);
                 return doGetMockResource(resourceId);
             }).when(resourceLoader).load(any());
 

@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.assertEquals;
 
@@ -50,7 +51,7 @@ public class LuaResourceLinkingAdvancedTest {
                 "test.link.handler", "test_create", pathASuffix, pathBSuffix);
 
         final Path root = new Path(results.get(0));
-        final ResourceId resourceId = new ResourceId(results.get(1));
+        final ResourceId resourceId = resourceIdFromString(results.get(1));
 
         final Map<String, String> resultsA = (Map<String, String>) getContext()
             .getHandlerContext()

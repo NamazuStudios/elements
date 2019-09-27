@@ -22,11 +22,11 @@ end
 
 function test_resource.test_create()
 
-    local ResourceId = java.require "com.namazustudios.socialengine.rt.ResourceId"
+    local ResourceId = java.require "com.namazustudios.socialengine.rt.id.ResourceId"
 
     local rid = make_resource()
     assert(type(rid) == "string", "Expected string for resource_id got: " .. type(rid))
-    ResourceId:new(rid);
+    ResourceId:resourceIdFromString(rid);
 
 end
 

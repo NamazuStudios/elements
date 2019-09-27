@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
@@ -13,7 +12,7 @@ import java.io.ObjectOutputStream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
-import static java.util.UUID.randomUUID;
+import static com.namazustudios.socialengine.rt.id.ResourceId.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -23,7 +22,7 @@ public class ResourceIdTest {
     public void testCreate() {
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
         assertNotNull(resourceId.getNodeId());
         assertNotNull(resourceId.getNodeId().getInstanceId());
         assertNotNull(resourceId.getNodeId().getApplicationId());
@@ -33,8 +32,8 @@ public class ResourceIdTest {
     public void testEqualsAndHashCodeWithBytes() {
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
-        final ResourceId duplicateResourceId = new ResourceId(resourceId.asBytes());
+        final ResourceId resourceId =randomResourceIdForNode(nodeId);
+        final ResourceId duplicateResourceId = resourceIdFromBytes(resourceId.asBytes());
         assertEquals(duplicateResourceId, resourceId);
         assertEquals(duplicateResourceId.hashCode(), resourceId.hashCode());
     }
@@ -43,8 +42,8 @@ public class ResourceIdTest {
     public void testEqualsAndHashCodeWithString() {
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
-        final ResourceId duplicateResourceId = new ResourceId(resourceId.asString());
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
+        final ResourceId duplicateResourceId = resourceIdFromString(resourceId.asString());
         assertEquals(duplicateResourceId, resourceId);
         assertEquals(duplicateResourceId.hashCode(), resourceId.hashCode());
     }
@@ -54,7 +53,7 @@ public class ResourceIdTest {
 
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final ResourceId resourceId = new ResourceId(nodeId);
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
 
         final byte[] bytes;
 

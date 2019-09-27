@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.util.SyncWait;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 
 /**
  * The interface for manipulating {@link Resource}s in the cluster.
@@ -199,7 +200,7 @@ public interface ResourceContext {
     default void destroyAsync(@ResultHandler Consumer<Void> success,
                               @ErrorHandler  Consumer<Throwable> failure,
                               @Serialize     String resourceIdString) {
-        destroyAsync(success, failure, new ResourceId(resourceIdString));
+        destroyAsync(success, failure, resourceIdFromString(resourceIdString));
     }
 
     /**

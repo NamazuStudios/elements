@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 
 /**
@@ -79,7 +80,7 @@ public class ResourceDetailBuiltin implements Builtin {
 
         try {
 
-            final ResourceId resourceId = new ResourceId(luaState.checkString(1));
+            final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
             final String methodName = luaState.checkString(2);
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
 
@@ -131,7 +132,7 @@ public class ResourceDetailBuiltin implements Builtin {
 
         try {
 
-            final ResourceId resourceId = new ResourceId(luaState.checkString(1));
+            final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
 
             final TaskId taskId = currentTaskId(luaState);
 

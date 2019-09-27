@@ -15,6 +15,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
+
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This contains code to handle a
  * the path hierarchy for the resources housed in the service.
@@ -283,7 +285,8 @@ public interface ResourceService extends AutoCloseable {
      *
      */
     default Resource removeResource(final  String resoureIdString) {
-        return removeResource(new ResourceId(resoureIdString));
+        final ResourceId resourceId = resourceIdFromString(resoureIdString);
+        return removeResource(resourceId);
     }
 
     /**
