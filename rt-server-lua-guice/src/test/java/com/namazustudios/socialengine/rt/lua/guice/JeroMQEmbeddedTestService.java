@@ -26,6 +26,9 @@ import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.inject.Key.get;
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.lang.String.format;
@@ -156,6 +159,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
         final Injector clientInjector = Guice.createInjector(clientModule);
         client = clientInjector.getInstance(Instance.class);
+        context = clientInjector.getInstance(get(Context.class, named(REMOTE)));
 
         final List<Exception> exceptionList = new ArrayList<>();
 
