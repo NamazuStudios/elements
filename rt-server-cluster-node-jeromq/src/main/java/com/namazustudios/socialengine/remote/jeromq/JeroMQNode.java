@@ -1,13 +1,8 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.PayloadReader;
-import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.AsyncConnection;
-import com.namazustudios.socialengine.rt.AsyncConnectionGroup;
-import com.namazustudios.socialengine.rt.AsyncConnectionPool;
-import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.Node;
@@ -27,10 +22,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.ERROR;
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.READ;
-import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newCachedThreadPool;
-import static java.util.concurrent.Executors.newFixedThreadPool;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.zeromq.SocketType.*;
 import static org.zeromq.ZMQ.Socket;
@@ -80,19 +73,117 @@ public class JeroMQNode implements Node {
     }
 
     @Override
-    public void start(final InstanceBinding binding) {
+    public Startup beginStartup() {
 
         final NodeContext c = new NodeContext();
 
-        if (context.compareAndSet(null, c)) {
-            c.logger.info("Starting up.");
-            getNodeLifecycle().preStart();
-            c.start(binding);
-            c.logger.info("Started Node.");
-        } else {
+        c.logger.info("Begging startup.");
+
+        if (!context.compareAndSet(null, c)) {
             throw new IllegalStateException("Already started.");
         }
 
+        return new Startup() {
+
+            @Override
+            public Node getNode() {
+                return JeroMQNode.this;
+            }
+
+            @Override
+            public void preStart() {
+                try {
+                    check();
+                    c.logger.info("Issuing pre-start command.");
+                    getNodeLifecycle().nodePreStart(getNode());
+                } catch (Exception ex) {
+                    c.logger.error("Caught excpetion issuing pre-start command.", ex);
+                    throw ex;
+                }
+            }
+
+            @Override
+            public void start(InstanceBinding binding) {
+                try {
+                    check();
+                    c.logger.info("Issuing start command with binding {}.", binding);
+                    c.start(binding);
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing start command.", ex);
+                    throw ex;
+                }
+            }
+
+            @Override
+            public void postStart() {
+                try {
+                    check();
+                    c.logger.info("Issuing post-start command with binding.");
+                    getNodeLifecycle().nodePostStart(getNode());
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing post-start command.  Terminating node.", ex);
+                    throw ex;
+                }
+            }
+
+            @Override
+            public void cancel() {
+
+                try {
+                    c.stop();
+                } catch (Exception ex) {
+                    c.logger.error("Error Canceling startup.", ex);
+                }
+
+                if (!context.compareAndSet(c, null)) {
+                    c.logger.error("Inconsistent state.  Startup does not reflect current state.");
+                }
+
+            }
+
+            private void check() {
+                if (context.get() != c) throw new IllegalStateException("Incorrect/mismatched startup routine.");
+            }
+
+        };
+    }
+
+    @Override
+    public Shutdown beginShutdown() {
+
+        final NodeContext c = context.getAndSet(null);
+        return new Shutdown() {
+
+            @Override
+            public void preStop() {
+                try {
+                    c.logger.info("Issuing NodeLifecycle pre-stop command.");
+                    getNodeLifecycle().nodePreStop(JeroMQNode.this);
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing pre-stop command.", ex);
+                }
+            }
+
+            @Override
+            public void stop() {
+                try {
+                    c.stop();
+                    c.logger.info("Shutdown.  Issuing NodeLifecycle post-stop command.");
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing stop command.", ex);
+                }
+            }
+
+            @Override
+            public void postStop() {
+                try {
+                    c.logger.info("Shutdown.  Issued NodeLifecycle stop command.");
+                    getNodeLifecycle().nodePostStop(JeroMQNode.this);
+                } catch (Exception ex) {
+                    c.logger.error("Caught excpetion issuing post-stop command.", ex);
+                }
+            }
+        };
     }
 
     private Logger loggerForNode() {
@@ -100,23 +191,6 @@ public class JeroMQNode implements Node {
         if (getName() != null) return LoggerFactory.getLogger(format("%s.%s", prefix, getName()));
         else if (getNodeId() != null) return LoggerFactory.getLogger(format("%s.%s", prefix, getNodeId().asString()));
         else return staticLogger;
-    }
-
-    @Override
-    public void stop() {
-
-        final NodeContext c = context.getAndSet(null);
-
-        if (c == null) {
-            throw new IllegalStateException("Already stopped.");
-        } else {
-            c.logger.info("Shutting down.");
-            c.stop();
-            c.logger.info("Shutdown.  Issuing NodeLifecycle stop command.");
-            getNodeLifecycle().postStop();
-            c.logger.info("Shutdown.  Issued NodeLifecycle stop command.");
-        }
-
     }
 
     public LocalInvocationDispatcher getInvocationDispatcher() {

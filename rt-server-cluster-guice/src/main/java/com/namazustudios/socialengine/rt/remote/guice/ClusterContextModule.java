@@ -2,11 +2,14 @@ package com.namazustudios.socialengine.rt.remote.guice;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.remote.ClusterContext;
+import com.namazustudios.socialengine.rt.remote.RemoteInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
+import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvocationDispatcher;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.Context.*;
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 
 public class ClusterContextModule extends PrivateModule {
 
@@ -15,6 +18,11 @@ public class ClusterContextModule extends PrivateModule {
 
         expose(Context.class)
             .annotatedWith(named(REMOTE));
+
+        install(new GuiceIoCResolverModule());
+
+        bind(RemoteInvocationDispatcher.class)
+            .to(SimpleRemoteInvocationDispatcher.class);
 
         bind(Context.class)
             .annotatedWith(named(REMOTE))

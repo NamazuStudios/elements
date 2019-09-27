@@ -6,13 +6,27 @@ package com.namazustudios.socialengine.rt.remote;
 public interface NodeLifecycle {
 
     /**
-     * Starts the lifecycle.
+     * Called before the {@link Node} is up and accepting connections
+     * @param node
      */
-    void preStart();
+    default void nodePreStart(final Node node) {}
 
     /**
-     * Shutdowns or stops the lifecycle.
+     * Called after the {@link Node} is up and accepting connections.
+     * @param node
      */
-    void postStop();
+    default void nodePostStart(final Node node) {}
+
+    /**
+     * Called just before the {@link Node} will stop accepting connections and shut down
+     * @param node
+     */
+    default void nodePreStop(final Node node) {}
+
+    /**
+     * Called just after the {@link Node} has stopped accepting connections.
+     * @param node
+     */
+    default void nodePostStop(final Node node) {}
 
 }

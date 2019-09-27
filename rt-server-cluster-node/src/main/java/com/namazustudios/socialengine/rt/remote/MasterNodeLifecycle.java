@@ -9,12 +9,12 @@ public class MasterNodeLifecycle implements NodeLifecycle {
     private InstanceMetadataContext instanceMetadataContext;
 
     @Override
-    public void preStart() {
+    public void nodePreStart(Node node) {
         getInstanceMetadataContext().start();
     }
 
     @Override
-    public void postStop() {
+    public void nodePostStop(Node node) {
         getInstanceMetadataContext().stop();
     }
 

@@ -9,11 +9,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
@@ -40,35 +42,107 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
     @Override
     protected void postStart(final Consumer<Exception> exceptionConsumer) {
-        concat(of(getMasterNode()), getNodeSet().stream()).map(node -> {
 
-            final InstanceBinding binding = getInstanceConnectionService().openBinding(node.getNodeId());
+        List<Node.Startup> startupList;
+
+        startupList = concat(of(getMasterNode()), getNodeSet().stream()).map(node -> {
+            try {
+                return node.beginStartup();
+            } catch (Exception ex) {
+                logger.error("Error beginning node startup process.", ex);
+                exceptionConsumer.accept(ex);
+                return null;
+            }
+        }).filter(s -> s != null).collect(toList());
+
+        startupList = startupList.stream().map(s -> {
+            try {
+                s.preStart();
+                return s;
+            } catch (Exception ex) {
+                logger.error("Error in node pre-startup process.", ex);
+                exceptionConsumer.accept(ex);
+                s.cancel();
+                return null;
+            }
+        }).filter(s -> s != null).collect(toList());
+
+        startupList = startupList.stream().map(s -> {
+
+            final InstanceBinding binding = getInstanceConnectionService().openBinding(s.getNodeId());
             bindingSet.add(binding);
 
             try {
-                node.start(binding);
+                s.start(binding);
+                return s;
+            } catch (Exception ex) {
+                logger.error("Error in node startup process.", ex);
+                exceptionConsumer.accept(ex);
+                s.cancel();
+                binding.close();
+                return null;
+            }
+        }).filter(s -> s != null).collect(toList());
+
+        // Performs a refresh of all connections to ensure that the underlying registries are all ready to go
+        // by the time the rest of the system is started up.
+        refreshConnections();
+
+        startupList.stream().map(s -> {
+            try {
+                s.postStart();
                 return null;
             } catch (Exception ex) {
-                logger.error("Error starting node closing {}", ex, binding);
-                binding.close();
+                logger.error("Error in node post-startup process.", ex);
+                exceptionConsumer.accept(ex);
+                s.cancel();
                 return ex;
             }
+        }).filter(ex -> ex != null).forEach(exceptionConsumer);
 
-        }).filter(ex -> ex != null).forEach(exceptionConsumer::accept);
     }
 
     @Override
     protected void preClose(final Consumer<Exception> exceptionConsumer) {
 
-        concat(Stream.of(getMasterNode()), getNodeSet().stream()).map(node -> {
+        final List<Node.Shutdown> shutdownList;
+
+        shutdownList = concat(of(getMasterNode()), getNodeSet().stream()).map(node -> {
             try {
-                node.stop();
-                return null;
+                return node.beginShutdown();
             } catch (Exception ex) {
-                logger.error("Error stopping node {}.", node, ex);
-                return ex;
+                logger.error("Error beginning node shutdown process.", ex);
+                exceptionConsumer.accept(ex);
+                return null;
             }
-        }).filter(ex -> ex != null).forEach(exceptionConsumer::accept);
+        }).filter(s -> s != null).collect(toList());
+
+        shutdownList.forEach(s -> {
+            try {
+                s.preStop();
+            } catch (Exception ex) {
+                logger.error("Error issuing node pre-shutdown process.", ex);
+                exceptionConsumer.accept(ex);
+            }
+        });
+
+        shutdownList.forEach(s -> {
+            try {
+                s.stop();
+            } catch (Exception ex) {
+                logger.error("Error issuing node shutdown process.", ex);
+                exceptionConsumer.accept(ex);
+            }
+        });
+
+        shutdownList.forEach(s -> {
+            try {
+                s.postStop();
+            } catch (Exception ex) {
+                logger.error("Error issuing node post-shutdown process.", ex);
+                exceptionConsumer.accept(ex);
+            }
+        });
 
         bindingSet.stream().map(binding -> {
             try {
@@ -79,7 +153,6 @@ public class WorkerInstance extends SimpleInstance implements Worker {
                 return ex;
             }
         }).filter(ex -> ex != null).forEach(exceptionConsumer::accept);
-
 
     }
 

@@ -4,12 +4,14 @@ import com.google.inject.*;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService;
-import com.namazustudios.socialengine.rt.remote.*;
+import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
+import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextModule;
 import com.namazustudios.socialengine.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
@@ -106,10 +108,6 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                     .withMinimumConnections(MINIMUM_CONNECTIONS)
                     .withMaximumConnections(MAXIMUM_CONNECTIONS));
 
-                bind(RemoteInvocationDispatcher.class)
-                    .to(SimpleRemoteInvocationDispatcher.class)
-                    .asEagerSingleton();
-
             }
         };
 
@@ -118,13 +116,11 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             protected void configure() {
 
                 bind(InstanceId.class).toInstance(workerInstanceId);
-
+                bind(ApplicationId.class).toInstance(applicationId);
                 bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(ClassLoader.getSystemClassLoader()));
-                bind(LocalInvocationDispatcher.class).to(IoCLocalInvocationDispatcher.class).asEagerSingleton();
 
                 install(commonModule);
                 install(new ClusterContextModule());
-                install(new GuiceIoCResolverModule());
                 install(new FSTPayloadReaderWriterModule());
                 install(new TestWorkerInstanceModule());
                 install(new TestMasterNodeModule(workerInstanceId));
@@ -139,14 +135,14 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             @Override
             protected void configure() {
 
-                bind(NodeId.class).toInstance(new NodeId(clientInstanceId, applicationId));
                 bind(InstanceId.class).toInstance(clientInstanceId);
+                bind(ApplicationId.class).toInstance(applicationId);
+                bind(NodeId.class).toInstance(new NodeId(clientInstanceId, applicationId));
 
                 install(commonModule);
                 clientModules.forEach(this::install);
 
                 install(new ClusterContextModule());
-                install(new GuiceIoCResolverModule());
                 install(new FSTPayloadReaderWriterModule());
                 install(new TestClientInstanceModule());
                 install(new JeroMQInstanceConnectionServiceModule()
@@ -175,20 +171,6 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Exception starting test client instance.", ex);
-        }
-
-        try {
-            getClient().refreshConnections();
-        } catch (Exception ex) {
-            exceptionList.add(ex);
-            logger.error("Exception refreshing test client instance.", ex);
-        }
-
-        try {
-            getWorker().refreshConnections();
-        } catch (Exception ex) {
-            exceptionList.add(ex);
-            logger.error("Exception refreshing test client instance.", ex);
         }
 
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);

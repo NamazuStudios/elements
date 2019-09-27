@@ -2,12 +2,11 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.Module;
 import com.google.inject.PrivateModule;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.remote.ContextNodeLifecycle;
-import com.namazustudios.socialengine.rt.remote.Node;
-import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
+import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 
 import java.util.List;
@@ -32,18 +31,25 @@ public class TestWorkerNodeModule extends PrivateModule {
     protected void configure() {
 
         expose(Node.class);
-        bind(NodeId.class).toInstance(nodeId);
 
         workerModules.forEach(this::install);
 
-        bind(NodeLifecycle.class)
-            .to(ContextNodeLifecycle.class)
-            .asEagerSingleton();
+        install(new GuiceIoCResolverModule());
 
         install(new JeroMQNodeModule()
             .withNodeName("integration-test-node")
             .withMinimumConnections(MINIMUM_CONNECTIONS)
             .withMaximumConnections(MAXIMUM_CONNECTIONS));
+
+        bind(NodeId.class).toInstance(nodeId);
+
+        bind(LocalInvocationDispatcher.class)
+            .to(ContextLocalInvocationDispatcher.class)
+            .asEagerSingleton();
+
+        bind(RemoteInvocationDispatcher.class)
+            .to(SimpleRemoteInvocationDispatcher.class)
+            .asEagerSingleton();
 
     }
 

@@ -2,14 +2,12 @@ package com.namazustudios.socialengine.appnode.guice;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.dao.ApplicationDao;
-import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
-import com.namazustudios.socialengine.rt.remote.ContextLocalInvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
+import com.namazustudios.socialengine.rt.remote.ContextLocalInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.ContextNodeLifecycle;
 import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 
@@ -40,8 +38,6 @@ public class ApplicationModule extends AbstractModule {
 
         install(new LuaModule());
         install(new XodusContextModule());
-
-        bind(NodeLifecycle.class).to(ContextNodeLifecycle.class).asEagerSingleton();
 
         final File resources = new File(storageDirectory, RESOURCES_PATH);
         final File scheduler = new File(storageDirectory, SCHEDULER_PATH);

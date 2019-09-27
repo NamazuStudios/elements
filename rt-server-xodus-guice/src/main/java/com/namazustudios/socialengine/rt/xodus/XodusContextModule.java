@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.guice.SimpleHandlerContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleIndexContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleServicesModule;
 import com.namazustudios.socialengine.rt.guice.SimpleTaskContextModule;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 
 import java.util.concurrent.TimeUnit;
 
@@ -27,7 +28,9 @@ public class XodusContextModule extends PrivateModule {
         handlerTimeoutBindAction.run();
 
         // Binds the SimpleContext
-        bind(Context.class).annotatedWith(named(LOCAL)).to(SimpleContext.class).asEagerSingleton();
+        bind(SimpleContext.class).asEagerSingleton();
+        bind(NodeLifecycle.class).to(SimpleContext.class);
+        bind(Context.class).annotatedWith(named(LOCAL)).to(SimpleContext.class);
 
         // Configures all services to be backed by Xodus.  Many of them are the Simple services, but this installs
         // just the Xodus required
@@ -43,6 +46,7 @@ public class XodusContextModule extends PrivateModule {
         install(simpleHandlerContextModule);
 
         // Exposes everything
+        expose(NodeLifecycle.class);
         expose(Context.class).annotatedWith(named(LOCAL));
         expose(IndexContext.class).annotatedWith(named(LOCAL));
         expose(ResourceContext.class).annotatedWith(named(LOCAL));

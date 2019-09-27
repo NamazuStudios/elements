@@ -454,12 +454,12 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {
                 @Override
-                public void preStart() {
+                public void nodePreStart(Node node) {
                     logger.info("Starting test node lifecycle.");
                 }
 
                 @Override
-                public void postStop() {
+                public void nodePostStop(Node node) {
                     logger.info("Shutting down test node lifecycle.");
                 }
             });

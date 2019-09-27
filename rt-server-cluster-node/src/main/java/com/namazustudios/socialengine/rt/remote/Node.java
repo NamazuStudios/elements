@@ -14,7 +14,7 @@ import javax.inject.Named;
  * Additionally the node itself is responsible for opening and maintaining the connection.  The logic housed in the
  * node will receive incoming messages and dispatch them to local services.
  */
-public interface Node extends AutoCloseable {
+public interface Node {
 
     /**
      * An indicator of the Node's name to be used with the {@link Named} annotation.
@@ -45,29 +45,86 @@ public interface Node extends AutoCloseable {
     NodeId getNodeId();
 
     /**
-     * Starts the service. This sets up any network listeners and begins accepting threads.  Once the service is up and
-     * running, the service can begin to accept connections from clients.
+     * Begins the startup process by returning an instance of {@link Startup}.
      *
-     * @param binding an {@link InstanceBinding} representing an open connection used by this {@link Node} to communicate
-     * @throws IllegalStateException if the node has already been started
+     * @return the pending {@link Startup} object
      */
-    void start(InstanceBinding binding);
+    Startup beginStartup();
 
     /**
-     * Stops the service.  This gracefully shuts down any worker threads, closes sockets, and takes the node offline.
-     * Once this method returns, the service is completely offline.
+     * Begins the shutdown process.
      *
-     * @throws IllegalStateException if the node has already been stopped
+     * @return the {@link Shutdown} object
      */
-    void stop();
+    Shutdown beginShutdown();
 
     /**
-     * Equivalent to calling {@link #stop()}, but allows this {@link Node} to be used in the instance of an
-     * try-with-resources block.
+     * Represents a pending node start-up process.
      */
-    @Override
-    default void close() {
-        stop();
+    interface Startup {
+
+        /**
+         * Gets the {@link Node} starting up.
+         * @return
+         */
+        Node getNode();
+
+        /**
+         * Gets the {@link NodeId} being started-up.
+         * @return
+         */
+        default NodeId getNodeId() {
+            return getNode().getNodeId();
+        }
+
+        /**
+         * Performs any pre-start operations.
+         */
+        void preStart();
+
+        /**
+         * Starts the service. This sets up any network listeners and begins accepting threads.  Once the service is up and
+         * running, the service can begin to accept connections from clients.
+         *
+         * @param binding an {@link InstanceBinding} representing an open connection used by this {@link Node} to communicate
+         * @throws IllegalStateException if the node has already been started
+         */
+        void start(InstanceBinding binding);
+
+        /**
+         * Performs any post-start operations.
+         */
+        void postStart();
+
+        /**
+         * Cancels the operation.
+         */
+        void cancel();
+    }
+
+    /**
+     * Represents a pending node shut-down process.
+     */
+    interface Shutdown {
+
+        /**
+         * Performs any pre-start operations.
+         */
+        void preStop();
+
+        /**
+         * Stops the service.  This gracefully shuts down any worker threads, closes sockets, and takes the node offline.
+         * Once this method returns, the service is completely offline.
+         *
+         * @throws IllegalStateException if the node has already been stopped
+         */
+        void stop();
+
+        /**
+         * Performs any post-start operations. {@link NodeLifecycle#nodePostStop(Node)}
+         */
+        void postStop();
+
     }
 
 }

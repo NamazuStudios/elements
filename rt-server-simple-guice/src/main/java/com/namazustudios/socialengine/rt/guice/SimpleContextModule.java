@@ -4,6 +4,7 @@ import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
 import com.namazustudios.socialengine.rt.SimpleContext;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.LOCAL;
@@ -24,7 +25,9 @@ public class SimpleContextModule extends PrivateModule {
         install(new SimpleHandlerContextModule());
         install(new SimpleTaskContextModule());
 
-        bind(Context.class).annotatedWith(named(LOCAL)).to(SimpleContext.class).asEagerSingleton();
+        bind(SimpleContext.class).asEagerSingleton();
+        bind(NodeLifecycle.class).to(SimpleContext.class);
+        bind(Context.class).annotatedWith(named(LOCAL)).to(SimpleContext.class);
 
     }
 

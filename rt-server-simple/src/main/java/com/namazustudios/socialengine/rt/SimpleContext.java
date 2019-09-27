@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupModule;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupOperation;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +17,7 @@ import java.util.function.Consumer;
 import static java.lang.Runtime.getRuntime;
 
 @Singleton
-public class SimpleContext implements Context {
+public class SimpleContext implements Context, NodeLifecycle {
 
     private Scheduler scheduler;
 
@@ -50,7 +52,6 @@ public class SimpleContext implements Context {
         getIndexContext().start();
         getHandlerContext().start();
         getManifestLoader().loadAndRunIfNecessary();
-        runStartupManifest();
     }
 
     private void runStartupManifest() {
@@ -117,6 +118,16 @@ public class SimpleContext implements Context {
         getAssetLoader().close();
         getManifestLoader().close();
 
+    }
+
+    @Override
+    public void nodePreStart(final Node node) {
+        start();
+    }
+
+    @Override
+    public void nodePostStart(final Node node) {
+        runStartupManifest();
     }
 
     @Override
