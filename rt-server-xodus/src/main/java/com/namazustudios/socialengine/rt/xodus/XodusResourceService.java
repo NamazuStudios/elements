@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.ResourceLockService.Monitor;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.env.Cursor;
@@ -30,6 +31,7 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static java.lang.Integer.max;
+import static java.lang.String.format;
 import static java.lang.System.getProperty;
 import static java.util.Spliterator.*;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -97,6 +99,8 @@ public class XodusResourceService implements ResourceService {
      * another thread to acquire it.
      */
     public static final long ACQUIRE_TIMEOUT_MS = MILLISECONDS.convert(5, SECONDS);
+
+    private NodeId nodeId;
 
     private Environment environment;
 
@@ -374,20 +378,22 @@ public class XodusResourceService implements ResourceService {
             throw new IllegalArgumentException("Cannot fetch single resource with wildcard path " + path);
         }
 
+        final Path fullyQualifiedPath = fullyQualifyPath(path);
+
         return getEnvironment().computeInTransaction(txn -> {
 
             final Store store = openPaths(txn);
-            final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
+            final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
             final ByteIterable resourceIdKey = store.get(txn, pathKey);
 
             if (resourceIdKey == null) {
-                throw new ResourceNotFoundException("Resource at path not found: " + path);
+                throw new ResourceNotFoundException("Resource at path not found: " + fullyQualifiedPath);
             }
 
             final Supplier<XodusResource> xodusResourceSupplier = doGetAndAcquireResource(txn, resourceIdKey);
 
             if (xodusResourceSupplier == null) {
-                throw new ResourceNotFoundException("Resource at path not found: " + path);
+                throw new ResourceNotFoundException("Resource at path not found: " + fullyQualifiedPath);
             }
 
             return xodusResourceSupplier;
@@ -405,12 +411,13 @@ public class XodusResourceService implements ResourceService {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
         }
 
+        final Path fullyQualifiedPath = fullyQualifyPath(path);
         final XodusResource xodusResource = new XodusResource(resource);
 
         getEnvironment().computeInTransaction(txn -> {
 
             final Store paths = openPaths(txn);
-            final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
+            final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
             final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
 
             doLink(txn, paths, resourceIdKey, pathKey);
@@ -430,11 +437,12 @@ public class XodusResourceService implements ResourceService {
         }
 
         final ResourceId resourceId = resource.getId();
+        final Path fullyQualifiedPath = fullyQualifyPath(path);
 
         return getEnvironment().computeInTransaction(txn -> {
 
             final Store paths = openPaths(txn);
-            final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
+            final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
             final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
             doLink(txn, paths, resourceIdKey, pathKey);
 
@@ -552,10 +560,12 @@ public class XodusResourceService implements ResourceService {
 
         checkOpen();
 
+        final Path fullyQualifiedPath = fullyQualifyPath(path);
+
         final List<XodusListing> result = getEnvironment().computeInTransaction(txn -> {
             final List<XodusListing> l = new ArrayList<>();
-            doList(txn, path, Integer.MAX_VALUE, l::add);
-            debugList.report(txn, path, l);
+            doList(txn, fullyQualifiedPath, l::add);
+            debugList.report(txn, fullyQualifiedPath, l);
             return l;
         });
 
@@ -565,7 +575,6 @@ public class XodusResourceService implements ResourceService {
 
     private void doList(final Transaction txn,
                         final Path path,
-                        final int maxResults,
                         final Consumer<XodusListing> listingConsumer) {
         final Store store = openPaths(txn);
 
@@ -604,24 +613,26 @@ public class XodusResourceService implements ResourceService {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
         }
 
-        final ByteIterable destinationPathKey = stringToEntry(destination.toNormalizedPathString());
+        final Path fullyQualifiedSource = fullyQualifyPath(source);
+        final Path fullyQualifiedDestination = fullyQualifyPath(destination);
+        final ByteIterable destinationPathKey = stringToEntry(fullyQualifiedDestination.toNormalizedPathString());
 
         getEnvironment().executeInTransaction(txn -> {
 
             final Store paths = openPaths(txn);
 
-            final ByteIterable sourcePathKey = stringToEntry(source.toNormalizedPathString());
+            final ByteIterable sourcePathKey = stringToEntry(fullyQualifiedSource.toNormalizedPathString());
             final ByteIterable resourceIdKey = paths.get(txn, sourcePathKey);
 
             if (resourceIdKey == null) {
-                throw new ResourceNotFoundException("No resource at path: " + source);
+                throw new ResourceNotFoundException("No resource at path: " + fullyQualifiedSource);
             }
 
             final ByteIterable existing = paths.get(txn, destinationPathKey);
 
             if (existing != null) {
                 final String existingResourceId = entryToString(resourceIdKey);
-                throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + destination);
+                throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + fullyQualifiedDestination);
             }
 
             doLink(txn, paths, resourceIdKey, destinationPathKey);
@@ -639,8 +650,10 @@ public class XodusResourceService implements ResourceService {
             throw new IllegalArgumentException("Cannot add resources with wildcard path.");
         }
 
+        final Path fullyQualifiedDestination = fullyQualifyPath(destination);
+
         final ByteIterable resourceIdKey = stringToEntry(sourceResourceId.asString());
-        final ByteIterable destinationPathKey = stringToEntry(destination.toNormalizedPathString());
+        final ByteIterable destinationPathKey = stringToEntry(fullyQualifiedDestination.toNormalizedPathString());
 
         getEnvironment().executeInTransaction(txn -> {
 
@@ -649,7 +662,7 @@ public class XodusResourceService implements ResourceService {
 
                 if (existing != null) {
                     final String existingResourceId = entryToString(resourceIdKey);
-                    throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + destination);
+                    throw new DuplicateException("Resource with id " + existingResourceId + " already exists at path " + fullyQualifiedDestination);
                 }
 
             doLink(txn, paths, resourceIdKey, destinationPathKey);
@@ -696,7 +709,9 @@ public class XodusResourceService implements ResourceService {
             throw new IllegalArgumentException("Must not pass wildcard path. (use unlinkMultiple instead).");
         }
 
-        final ByteIterable pathKey = stringToEntry(path.toNormalizedPathString());
+        final Path fullyQualifiedPath = fullyQualifyPath(path);
+
+        final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
         final Unlink unlink = getEnvironment().computeInTransaction(txn -> doUnlink(txn, pathKey));
         if (unlink.isRemoved()) doPostRemoval(unlink, removedResourceConsumer);
 
@@ -708,9 +723,11 @@ public class XodusResourceService implements ResourceService {
     public List<Unlink> unlinkMultiple(final Path path, final int max,
                                        final Consumer<Resource> removedResourceConsumer) {
 
+        final Path fullyQualifiedPath = fullyQualifyPath(path);
+
         final List<Unlink> unlinkList = getEnvironment().computeInTransaction(txn -> {
             final List<XodusListing> listings = new ArrayList<>();
-            doList(txn, path, max, listings::add);
+            doList(txn, fullyQualifiedPath, listings::add);
             return listings.stream().map(l -> doUnlink(txn, l.getPathKey())).collect(toList());
         });
 
@@ -842,11 +859,12 @@ public class XodusResourceService implements ResourceService {
 
         checkOpen();
 
+        final Path fullyQualifiedPath = fullyQualifyPath(path);
         final List<ResourceId> resourceIdList = new ArrayList<>();
 
         getEnvironment().computeInTransaction(txn -> {
              final List<XodusListing> listings = new ArrayList<>();
-            doList(txn, path, max, listings::add);
+            doList(txn, fullyQualifiedPath, listings::add);
             return listings;
         }).forEach(listing -> {
 
@@ -1068,6 +1086,15 @@ public class XodusResourceService implements ResourceService {
         return XodusDebug.dumpStoreData(getEnvironment(), stringBuilder);
     }
 
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+
+    @Inject
+    public void setNodeId(NodeId nodeId) {
+        this.nodeId = nodeId;
+    }
+
     public Environment getEnvironment() {
         return environment;
     }
@@ -1104,6 +1131,21 @@ public class XodusResourceService implements ResourceService {
     @Inject
     public void setResourceLockService(ResourceLockService resourceLockService) {
         this.resourceLockService = resourceLockService;
+    }
+
+    private Path fullyQualifyPath(final Path path) {
+
+        final NodeId pathNodeId = path.getNodeId();
+
+        if (pathNodeId == null) {
+            return new Path(getNodeId().asString(), path.getComponents());
+        } else if (pathNodeId.equals(getNodeId())) {
+            return path;
+        } else {
+            final String msg = format("Path context mismatch %s!=%s", pathNodeId.asString(), getNodeId().asString());
+            throw new IllegalArgumentException(msg);
+        }
+
     }
 
     private XodusResource checkXodusResource(final Resource resource) {

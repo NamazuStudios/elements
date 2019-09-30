@@ -135,7 +135,6 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     public Path(final String context, final List<String> components) {
         this.context = context;
 
-
         final int idx = components.indexOf(WILDCARD);
 
         wildcard = idx >= 0;

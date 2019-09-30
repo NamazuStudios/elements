@@ -100,7 +100,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 getPayloadReader(),
                 getPayloadWriter(),
                 mdcContext,
-                o -> logger.warn("Async method returned value."),
+                o -> { if (o != null) logger.warn("Async method returned value."); },
                 ex -> logger.warn("Async method threw exception.", ex),
                 asyncInvocationResultConsumerList,
                 asyncInvocationErrorConsumer
