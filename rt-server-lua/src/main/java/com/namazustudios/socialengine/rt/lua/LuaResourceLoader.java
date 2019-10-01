@@ -4,21 +4,17 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
 import com.namazustudios.socialengine.rt.lua.persist.PersistenceAwareIocResolver;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.w3c.dom.Attr;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.IocResolver.IOC_RESOLVER_MODULE_NAME;
-import static com.namazustudios.socialengine.rt.lua.Constants.ATTRIBUTES_MODULE;
 
 public class LuaResourceLoader implements ResourceLoader {
 

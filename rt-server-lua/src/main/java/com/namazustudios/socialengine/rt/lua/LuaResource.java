@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
+import com.namazustudios.socialengine.rt.id.HasNodeId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
@@ -28,6 +29,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.*;
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
@@ -55,7 +57,9 @@ public class LuaResource implements Resource {
 
     private Attributes attributes = Attributes.emptyAttributes();
 
-    private final Context context;
+    private final Context localContext;
+
+    private final Context remoteContext;
 
     private final LuaState luaState;
 
@@ -92,13 +96,15 @@ public class LuaResource implements Resource {
     @Inject
     public LuaResource(
             final LuaState luaState,
-            final @Named(REMOTE) Context context,
+            final @Named(LOCAL) Context localContext,
+            final @Named(REMOTE) Context remoteContext,
             final PersistenceStrategy persistenceStrategy,
             final NodeId nodeId) {
         try {
 
             this.resourceId = randomResourceIdForNode(nodeId);
-            this.context = context;
+            this.localContext = localContext;
+            this.remoteContext = remoteContext;
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);
@@ -107,9 +113,9 @@ public class LuaResource implements Resource {
             openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context, persistenceStrategy));
-            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context));
-            getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this, context));
+            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, localContext, persistenceStrategy));
+            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this));
+            getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
             getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
             getBuiltinManager().installBuiltin(new LoggerDetailBuiltin(this::getScriptLog));
@@ -313,7 +319,7 @@ public class LuaResource implements Resource {
 
         getTasks().forEach(taskId -> {
             final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
-            context.getTaskContext().finishWithError(taskId, resourceDestroyedException);
+            localContext.getTaskContext().finishWithError(taskId, resourceDestroyedException);
         });
 
         getLuaState().close();
@@ -358,7 +364,7 @@ public class LuaResource implements Resource {
                 final int status = luaState.checkInteger(2);                          // thread status
 
                 if (status == YIELD) {
-                    context.getTaskContext().register(taskId, consumer, throwableConsumer);
+                    localContext.getTaskContext().register(taskId, consumer, throwableConsumer);
                 } else {
                     final Object result = luaState.checkJavaObject(3, Object.class);      // result
                     finish(taskId, consumer, result);
@@ -420,7 +426,7 @@ public class LuaResource implements Resource {
             throw ex;
         } catch (Exception ex) {
             getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
-            getContext().getTaskContext().finishWithError(taskId, ex);
+            getLocalContext().getTaskContext().finishWithError(taskId, ex);
             throw ex;
         } finally {
             finalOperation.perform();
@@ -450,12 +456,31 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * Gets the {@link Context} associated with this {@link LuaResource}.
+     * Gets the remote {@link Context} associated with this {@link LuaResource}.
      *
      * @return the {@link Context}.
      */
-    public Context getContext() {
-        return context;
+    public Context getLocalContext() {
+        return localContext;
+    }
+
+    /**
+     * Gets the local {@link Context} associated with this {@link LuaResource}.
+     *
+     * @return the {@link Context}.
+     */
+    public Context getRemoteContext() {
+        return remoteContext;
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}.
+     *
+     * @param hasNodeId the {@link HasNodeId} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getContextFor(final HasNodeId hasNodeId) {
+        return resourceId.getNodeId().equals(hasNodeId) ? getLocalContext() : getRemoteContext();
     }
 
     /**
