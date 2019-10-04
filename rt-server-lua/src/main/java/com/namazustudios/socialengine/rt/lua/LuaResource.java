@@ -374,6 +374,7 @@ public class LuaResource implements Resource {
 
             } catch (Exception ex) {
                 logAssist.error("Error dispatching method: " + name, ex);
+                throwableConsumer.accept(ex);
                 throw ex;
             } finally {
                 finalOperation.perform();
@@ -480,7 +481,7 @@ public class LuaResource implements Resource {
      * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
      */
     public Context getContextFor(final HasNodeId hasNodeId) {
-        return resourceId.getNodeId().equals(hasNodeId) ? getLocalContext() : getRemoteContext();
+        return resourceId.getNodeId().equals(hasNodeId.getNodeId()) ? getLocalContext() : getRemoteContext();
     }
 
     /**

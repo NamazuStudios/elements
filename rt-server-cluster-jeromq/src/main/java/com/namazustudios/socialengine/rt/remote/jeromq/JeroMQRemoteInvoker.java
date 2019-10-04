@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.rt.remote.Invocation;
 import com.namazustudios.socialengine.rt.remote.InvocationErrorConsumer;
 import com.namazustudios.socialengine.rt.remote.InvocationResult;
 import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
-import com.sun.corba.se.spi.legacy.connection.GetEndPointInfoAgainException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -94,7 +93,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         getPool().acquireNextAvailableConnection(connection -> {
 
-            final JeroMQInvocation jeroMQInvocation = new JeroMQInvocation(
+            final JeroMQRemoteInvocation jeroMQInvocation = new JeroMQRemoteInvocation(
                 connection,
                 invocation,
                 getPayloadReader(),
@@ -124,7 +123,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         getPool().acquireNextAvailableConnection(connection -> {
 
-            final JeroMQInvocation jeroMQInvocation = new JeroMQInvocation(
+            final JeroMQRemoteInvocation jeroMQInvocation = new JeroMQRemoteInvocation(
                 connection,
                 invocation,
                 getPayloadReader(),

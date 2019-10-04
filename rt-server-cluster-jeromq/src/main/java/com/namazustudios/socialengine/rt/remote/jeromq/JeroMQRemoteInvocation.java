@@ -30,9 +30,9 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlRespo
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static org.zeromq.ZMQ.SNDMORE;
 
-public class JeroMQInvocation {
+public class JeroMQRemoteInvocation {
 
-    private static final Logger logger = LoggerFactory.getLogger(JeroMQInvocation.class);
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvocation.class);
 
     private final PayloadReader payloadReader;
 
@@ -62,14 +62,14 @@ public class JeroMQInvocation {
 
     private final Subscription subscriptions;
 
-    public JeroMQInvocation(final AsyncConnection<ZContext, ZMQ.Socket> connection,
-                            final Invocation invocation,
-                            final PayloadReader payloadReader, final PayloadWriter payloadWriter,
-                            final Map<String, String > mdcContext,
-                            final Consumer<Object> syncResultConsumer,
-                            final Consumer<Throwable> syncErrorConsumer,
-                            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public JeroMQRemoteInvocation(final AsyncConnection<ZContext, ZMQ.Socket> connection,
+                                  final Invocation invocation,
+                                  final PayloadReader payloadReader, final PayloadWriter payloadWriter,
+                                  final Map<String, String > mdcContext,
+                                  final Consumer<Object> syncResultConsumer,
+                                  final Consumer<Throwable> syncErrorConsumer,
+                                  final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                                  final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         // Immutable
         this.mdcContext = mdcContext;
@@ -101,6 +101,8 @@ public class JeroMQInvocation {
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 
         try {
+
+            logger.info("Received message {}", this);
 
             final ZMsg msg = recv(connection);
             handleResponse(msg);
@@ -255,6 +257,8 @@ public class JeroMQInvocation {
 
     private void handleResult(final ZMsg msg, final ResponseHeader responseHeader) {
 
+        logger.info("Got invocation result.");
+
         final InvocationResult invocationResult;
 
         try {
@@ -265,6 +269,7 @@ public class JeroMQInvocation {
         }
 
         final int part = responseHeader.part.get();
+        logger.info("{} Processing InvocationResult {} for part {}", this, invocationResult, part);
 
         if (part == 0) {
             syncCompleted = true;
@@ -284,8 +289,12 @@ public class JeroMQInvocation {
     private void handleError(final ZMsg msg,
                              final ResponseHeader responseHeader) {
 
+        logger.info("Got invocation error.");
+
         final int part = responseHeader.part.get();
         final InvocationError invocationError = extractInvocationError(msg);
+
+        logger.info("Processing InvocationError {} for part {}", invocationError, part);
 
         if (part == 0) {
 

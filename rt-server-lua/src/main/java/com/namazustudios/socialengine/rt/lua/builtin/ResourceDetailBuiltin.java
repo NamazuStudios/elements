@@ -43,6 +43,7 @@ public class ResourceDetailBuiltin implements Builtin {
 
     private JavaFunction create = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
@@ -51,8 +52,6 @@ public class ResourceDetailBuiltin implements Builtin {
             final Path path = new Path(luaState.checkString(2));
             final Map<?, ?> attributesMap = luaState.checkJavaObject(3, Map.class);
             final Object[] params = luaState.checkJavaObject(4, Object[].class);
-
-            final TaskId taskId = currentTaskId(luaState);
 
             final Attributes attributes = attributesMap == null ? emptyAttributes() : new SimpleAttributes.Builder()
                 .setAttributes(attributesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue())))
@@ -65,15 +64,17 @@ public class ResourceDetailBuiltin implements Builtin {
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
 
     private JavaFunction invoke = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
@@ -81,8 +82,6 @@ public class ResourceDetailBuiltin implements Builtin {
             final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
             final String methodName = luaState.checkString(2);
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
-
-            final TaskId taskId = currentTaskId(luaState);
 
             logger.trace("Invoking {} {} {}", resourceId, methodName, params);
 
@@ -93,15 +92,17 @@ public class ResourceDetailBuiltin implements Builtin {
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
 
     private JavaFunction invokePath = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
@@ -110,8 +111,6 @@ public class ResourceDetailBuiltin implements Builtin {
             final String methodName = luaState.checkString(2);
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
 
-            final TaskId taskId = currentTaskId(luaState);
-
             getLuaResource().getContextFor(path).getResourceContext().invokePathAsync(
                     object -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, object),
                     throwable -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
@@ -119,21 +118,22 @@ public class ResourceDetailBuiltin implements Builtin {
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
 
     private JavaFunction destroy = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
 
             final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
-            final TaskId taskId = currentTaskId(luaState);
 
             getLuaResource().getContextFor(resourceId).getResourceContext().destroyAsync(
                 object -> {
@@ -162,9 +162,10 @@ public class ResourceDetailBuiltin implements Builtin {
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
