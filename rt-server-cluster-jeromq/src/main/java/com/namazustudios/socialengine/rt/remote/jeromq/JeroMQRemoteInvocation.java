@@ -25,6 +25,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
+import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.stripCode;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
@@ -210,7 +211,7 @@ public class JeroMQRemoteInvocation {
         final Throwable cause = extractException(zMsg);
 
         try {
-            final NodeId nodeId = new NodeId(zMsg.removeLast().getData());
+            final NodeId nodeId = nodeIdFromBytes(zMsg.removeLast().getData());
             return new NodeNotFoundException(nodeId, cause);
         } catch (InvalidNodeIdException ex) {
             return new NodeNotFoundException(cause);

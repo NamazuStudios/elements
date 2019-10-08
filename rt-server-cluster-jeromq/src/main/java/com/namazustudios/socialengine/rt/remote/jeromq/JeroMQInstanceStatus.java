@@ -9,6 +9,7 @@ import org.zeromq.ZMsg;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.util.Collections.unmodifiableList;
 
@@ -29,7 +30,7 @@ public class JeroMQInstanceStatus implements InstanceStatus {
 
         while (!zMsg.isEmpty()) {
             final ZFrame frame = zMsg.removeFirst();
-            final NodeId nodeId = new NodeId(frame.getData());
+            final NodeId nodeId = nodeIdFromBytes(frame.getData());
             nodeIds.add(nodeId);
         }
 

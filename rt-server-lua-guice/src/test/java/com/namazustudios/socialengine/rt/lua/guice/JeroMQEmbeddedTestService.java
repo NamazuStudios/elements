@@ -31,6 +31,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static java.lang.String.format;
 import static org.zeromq.ZContext.shadow;
 
@@ -140,7 +141,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
                 bind(InstanceId.class).toInstance(clientInstanceId);
                 bind(ApplicationId.class).toInstance(applicationId);
-                bind(NodeId.class).toInstance(new NodeId(clientInstanceId, applicationId));
+                bind(NodeId.class).toInstance(forInstanceAndApplication(clientInstanceId, applicationId));
 
                 install(commonModule);
                 clientModules.forEach(this::install);

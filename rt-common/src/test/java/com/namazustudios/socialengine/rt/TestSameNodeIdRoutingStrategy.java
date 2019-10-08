@@ -17,6 +17,7 @@ import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
@@ -168,9 +169,9 @@ public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
     public void testConflictingRoute() throws Exception {
 
         final List<Object> address = asList(
-            new NodeId(randomInstanceId(), randomApplicationId()),
-            new NodeId(randomInstanceId(), randomApplicationId()),
-            new NodeId(randomInstanceId(), randomApplicationId())
+            forInstanceAndApplication(randomInstanceId(), randomApplicationId()),
+            forInstanceAndApplication(randomInstanceId(), randomApplicationId()),
+            forInstanceAndApplication(randomInstanceId(), randomApplicationId())
         );
 
         final Invocation invocation = spy(Invocation.class);
@@ -187,14 +188,14 @@ public class TestSameNodeIdRoutingStrategy extends BaseRoutingStrategyTest {
 
 
     private NodeId generateNodeId() {
-        return new NodeId(instanceId, getApplicationId());
+        return forInstanceAndApplication(instanceId, getApplicationId());
     }
 
     private List<Object> generateSaneAddress() {
         return asList(
-            new NodeId(instanceId, getApplicationId()),
-            new NodeId(instanceId, getApplicationId()),
-            new NodeId(instanceId, getApplicationId())
+            forInstanceAndApplication(instanceId, getApplicationId()),
+            forInstanceAndApplication(instanceId, getApplicationId()),
+            forInstanceAndApplication(instanceId, getApplicationId())
         );
     }
 

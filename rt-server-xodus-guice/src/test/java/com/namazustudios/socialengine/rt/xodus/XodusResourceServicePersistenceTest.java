@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.common.io.ByteStreams;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.testng.annotations.DataProvider;
@@ -16,14 +15,14 @@ import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
-import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 @Guice(modules = XodusResourceServicePersistenceTest.Module.class)
 public class XodusResourceServicePersistenceTest {
@@ -41,8 +40,7 @@ public class XodusResourceServicePersistenceTest {
         final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 10; ++i) {
-            final InstanceId instanceId = randomInstanceId();
-            final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+            final NodeId nodeId = randomNodeId();
             final ResourceId resourceId = randomResourceIdForNode(nodeId);
             final Path path = new Path(asList("test", resourceId.asString()));
             testData.add(new Object[]{resourceId, path});
@@ -164,6 +162,7 @@ public class XodusResourceServicePersistenceTest {
             });
 
             install(new XodusEnvironmentModule().withTempEnvironments());
+            bind(NodeId.class).toInstance(randomNodeId());
             bind(ResourceService.class).to(XodusResourceService.class);
             bind(ResourceLockService.class).to(SimpleResourceLockService.class);
             bind(ResourceLoader.class).toInstance(mockResourceLoader);

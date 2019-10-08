@@ -13,6 +13,7 @@ import org.zeromq.ZMsg;
 
 import java.util.Collection;
 
+import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
@@ -84,7 +85,7 @@ public class JeroMQDemultiplexRouter {
 
     public void forward(final ZMsg zMsg, final ZMsg identity) {
         final ZFrame nodeIdFrame = zMsg.removeFirst();
-        final NodeId nodeId = new NodeId(nodeIdFrame.getData());
+        final NodeId nodeId = nodeIdFromBytes(nodeIdFrame.getData());
         final ZMQ.Socket socket = getSocket(nodeId);
         pushIdentity(zMsg, identity);
         zMsg.send(socket);

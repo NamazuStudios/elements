@@ -14,6 +14,7 @@ import org.zeromq.ZMsg;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
@@ -85,7 +86,7 @@ public class JeroMQMultiplexRouter {
     private void respondWithSuccess(final ZMsg zMsg, final ZMsg identity) {
 
         final ZFrame nodeIdHeader = zMsg.removeFirst();
-        final NodeId nodeId = new NodeId(nodeIdHeader.getData());
+        final NodeId nodeId = nodeIdFromBytes(nodeIdHeader.getData());
         final ZMQ.Socket frontend = getFrontend(nodeId);
 
         OK.pushResponseCode(zMsg);
@@ -100,7 +101,7 @@ public class JeroMQMultiplexRouter {
         final ZFrame exceptionCauseFrame = zMsg.removeFirst();
         final ZFrame nodeIdHeader = zMsg.removeFirst();
 
-        final NodeId nodeId = new NodeId(nodeIdHeader.getData());
+        final NodeId nodeId = nodeIdFromBytes(nodeIdHeader.getData());
         final ZMQ.Socket frontend = getFrontend(nodeId);
 
         zMsg.addFirst(nodeIdHeader);

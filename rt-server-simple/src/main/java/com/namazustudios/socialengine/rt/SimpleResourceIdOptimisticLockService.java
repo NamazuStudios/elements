@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.UUID.randomUUID;
 
@@ -21,7 +22,7 @@ public class SimpleResourceIdOptimisticLockService implements OptimisticLockServ
     // This is a uniquely assigned NodeId which, being composed of two random UUIDs, constitutes a fictional
     // Node and Application which should exist nowhere else.  Thereby guaranteeing that only ResourceId instances
     // issued here will ever be visible here.
-    private static final NodeId LOCK_NODE_ID = new NodeId(randomInstanceId(), randomApplicationId());
+    private static final NodeId LOCK_NODE_ID = forInstanceAndApplication(randomInstanceId(), randomApplicationId());
 
     @Override
     public ResourceId createLock() {

@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
@@ -132,7 +133,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
         final CountDownLatch latch = new CountDownLatch(1);
 
         final Supplier<InstanceBinding> instanceBindingSupplier = () -> {
-            final NodeId nodeId = new NodeId(instanceConnectionService.getInstanceId(), applicationId);
+            final NodeId nodeId = forInstanceAndApplication(instanceConnectionService.getInstanceId(), applicationId);
             return instanceConnectionService.openBinding(nodeId);
         };
 
@@ -161,7 +162,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
             final Set<NodeId> mockNodeIdSet = mockApplicationIds
                 .stream()
-                .map(aid -> new NodeId(instanceConnectionService.getInstanceId(), aid))
+                .map(aid -> forInstanceAndApplication(instanceConnectionService.getInstanceId(), aid))
                 .collect(toSet());
 
             assertEquals(instanceStatusSet, mockNodeIdSet);
@@ -177,13 +178,13 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
         final CountDownLatch countDownLatch = new CountDownLatch(4 * mockApplicationIds.size());
 
         getFirstInstanceConnectionService().subscribeToConnect(ic -> mockApplicationIds.forEach(aid -> {
-            final NodeId nodeId = new NodeId(ic.getInstanceId(), aid);
+            final NodeId nodeId = forInstanceAndApplication(ic.getInstanceId(), aid);
             testRoundTripForNode(ic, nodeId);
             countDownLatch.countDown();
         }));
 
         getSecondInstanceConnectionService().subscribeToConnect(ic -> mockApplicationIds.forEach(aid -> {
-            final NodeId nodeId = new NodeId(ic.getInstanceId(), aid);
+            final NodeId nodeId = forInstanceAndApplication(ic.getInstanceId(), aid);
             testRoundTripForNode(ic, nodeId);
             countDownLatch.countDown();
         }));

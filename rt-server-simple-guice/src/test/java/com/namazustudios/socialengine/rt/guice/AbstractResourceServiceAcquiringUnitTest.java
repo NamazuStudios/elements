@@ -43,8 +43,7 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 100; ++i) {
-            final InstanceId instanceId = randomInstanceId();
-            final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+            final NodeId nodeId = NodeId.randomNodeId();
             final ResourceId resourceId = randomResourceIdForNode(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
@@ -269,10 +268,7 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         List<ResourceService.Listing> listingList = listingStream.collect(toList());
         assertEquals(listingList.size(), 0, "Expected empty dataset to start.");
 
-        final UUID nodeUuid = randomUUID();
-
-        final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = NodeId.randomNodeId();
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final Resource resource = Mockito.mock(Resource.class);
 

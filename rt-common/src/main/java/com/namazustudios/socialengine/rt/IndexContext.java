@@ -81,7 +81,7 @@ public interface IndexContext {
      *
      *
      */
-    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
     void linkAsync(@ProvidesAddress @Serialize ResourceId resourceId,
                    @ProvidesAddress @Serialize Path destination,
                    @ResultHandler Consumer<Void> success,

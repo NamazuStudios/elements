@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
+import com.namazustudios.socialengine.rt.exception.InvalidResourceIdException;
 
 import java.io.Serializable;
 import java.util.UUID;
@@ -30,51 +31,6 @@ public class NodeId implements Serializable, HasNodeId {
     private transient volatile ApplicationId applicationId;
 
     private NodeId() { v1CompoundId = null; }
-
-    public NodeId(final InstanceId instanceId, final ApplicationId applicationId) {
-        try {
-            v1CompoundId = new V1CompoundId.Builder()
-                    .with(instanceId.v1CompoundId)
-                    .with(applicationId.v1CompoundId.getComponent(APPLICATION))
-                    .only(INSTANCE, APPLICATION)
-                .build();
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidNodeIdException(ex);
-        }
-    }
-
-    /**
-     * Parses a new {@link NodeId} from the given {@link String}.  The should be the string representation returned
-     * byt {@link #asString()}.
-     *
-     * @param stringRepresentation the {@link String} representation of the {@link NodeId} from {@link #asString()}.
-     */
-    public NodeId(final String stringRepresentation) {
-        try {
-            v1CompoundId = new V1CompoundId.Builder()
-                    .with(stringRepresentation)
-                    .only(INSTANCE, APPLICATION)
-                .build();
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidNodeIdException(ex);
-        }
-    }
-
-    /**
-     * Creates a new {@link NodeId} given the byte representation.
-     *
-     * @param byteRepresentation the byte representation
-     */
-    public NodeId(final byte[] byteRepresentation) {
-        try {
-            v1CompoundId = new V1CompoundId.Builder()
-                    .with(byteRepresentation)
-                    .only(INSTANCE, APPLICATION)
-                    .build();
-        } catch (IllegalArgumentException ex) {
-            throw new InvalidNodeIdException(ex);
-        }
-    }
 
     /**
      * Implementation detail.  This is used by other IDs to properly instantiate the id.
@@ -153,6 +109,19 @@ public class NodeId implements Serializable, HasNodeId {
     }
 
     /**
+     * Generates a completely random {@link NodeId}.  Used mostly for testing.
+     *
+     * @return a newly constructued {@link NodeId}
+     */
+    public static NodeId randomNodeId() {
+        return new NodeId(new V1CompoundId.Builder()
+                .with(INSTANCE, UUID.randomUUID())
+                .with(APPLICATION, UUID.randomUUID())
+                .build()
+        );
+    }
+
+    /**
      * Creats a {@link NodeId} that is for a master node.  By convention, the master node is the node whose instance
      * id matches the application ID.  This makes it possible to get information about the rest of the hosted nodes
      * by only knowing the instance ID.
@@ -177,4 +146,55 @@ public class NodeId implements Serializable, HasNodeId {
         }
     }
 
+    /**
+     * Constructs a {@link NodeId} for the given {@link InstanceId} as well as {@link ApplicationId}.
+     *
+     * @param instanceId the {@link InstanceId}
+     * @param applicationId the {@link ApplicationId}
+     * @return a new {@link NodeId}
+     */
+    public static NodeId forInstanceAndApplication(final InstanceId instanceId, final ApplicationId applicationId) {
+        try {
+            return new NodeId(new V1CompoundId.Builder()
+                .with(instanceId.v1CompoundId)
+                .with(applicationId.v1CompoundId.getComponent(APPLICATION))
+                .only(INSTANCE, APPLICATION)
+                .build()
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
+    }
+
+    /**
+     * Parses a new {@link NodeId} from the given {@link String}.  The should be the string representation returned
+     * byt {@link #asString()}.
+     *
+     * @param stringRepresentation the {@link String} representation of the {@link NodeId} from {@link NodeId#asString()}.
+     */
+    public static NodeId nodeIdFromString(final String stringRepresentation) {
+        try {
+            return new NodeId(new V1CompoundId.Builder()
+                    .with(stringRepresentation)
+                    .only(INSTANCE, APPLICATION)
+                .build()
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidNodeIdException(ex);
+        }
+    }
+
+    /**
+     * Parses a new {@link NodeId} from the given {@link byte[]}.  The should be the string representation returned
+     * byt {@link #asString()}.
+     *
+     * @param byteRepresentation the  {@link byte[]} representation of the {@link NodeId} from {@link NodeId#asBytes()}.
+     */
+    public static NodeId nodeIdFromBytes(final byte[] byteRepresentation) {
+        return new NodeId(new V1CompoundId.Builder()
+                .with(byteRepresentation)
+                .only(INSTANCE, APPLICATION)
+            .build()
+        );
+    }
 }

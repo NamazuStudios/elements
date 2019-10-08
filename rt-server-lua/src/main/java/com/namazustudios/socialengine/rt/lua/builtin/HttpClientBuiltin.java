@@ -21,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.INDEFINITELY;
@@ -297,7 +298,7 @@ public class HttpClientBuiltin implements Builtin {
     }
 
     @Inject
-    public void setContext(@Named(REMOTE) Context context) {
+    public void setContext(@Named(LOCAL) Context context) {
         this.context = context;
     }
 

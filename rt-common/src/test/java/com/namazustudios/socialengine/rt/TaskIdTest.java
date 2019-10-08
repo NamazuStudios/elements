@@ -10,6 +10,7 @@ import java.io.ObjectOutputStream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
@@ -20,7 +21,7 @@ public class TaskIdTest {
     @Test
     public void testCreate() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         assertNotNull(taskId.getNodeId());
@@ -32,7 +33,7 @@ public class TaskIdTest {
     @Test
     public void testEqualsAndHashCodeWithBytes() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         final TaskId duplicateTaskId = new TaskId(taskId.asBytes());
@@ -43,7 +44,7 @@ public class TaskIdTest {
     @Test
     public void testEqualsAndHashCodeWithString() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
         final TaskId duplicateTaskId = new TaskId(taskId.asString());
@@ -55,7 +56,7 @@ public class TaskIdTest {
     public void testSerialization() throws Exception {
 
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final TaskId taskId = new TaskId(resourceId);
 

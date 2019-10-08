@@ -11,6 +11,7 @@ import java.io.ObjectOutputStream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 
@@ -19,7 +20,7 @@ public class NodeIdTest {
     @Test
     public void testCreate() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
         assertNotNull(nodeId.getInstanceId());
         assertNotNull(nodeId.getApplicationId());
     }
@@ -27,8 +28,8 @@ public class NodeIdTest {
     @Test
     public void testEqualsAndHashCodeWithBytes() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final NodeId duplicateNodeId = new NodeId(nodeId.asBytes());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
+        final NodeId duplicateNodeId = nodeIdFromBytes(nodeId.asBytes());
         assertEquals(duplicateNodeId, nodeId);
         assertEquals(duplicateNodeId.hashCode(), nodeId.hashCode());
     }
@@ -36,8 +37,8 @@ public class NodeIdTest {
     @Test
     public void testEqualsAndHashCodeWithString() {
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
-        final NodeId duplicateNodeId = new NodeId(nodeId.asString());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
+        final NodeId duplicateNodeId = nodeIdFromString(nodeId.asString());
         assertEquals(duplicateNodeId, nodeId);
         assertEquals(duplicateNodeId.hashCode(), nodeId.hashCode());
     }
@@ -46,7 +47,7 @@ public class NodeIdTest {
     public void testSerialization() throws Exception {
 
         final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
 
         final byte[] bytes;
 

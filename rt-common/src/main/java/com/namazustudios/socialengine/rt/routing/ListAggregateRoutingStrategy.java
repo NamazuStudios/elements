@@ -57,7 +57,7 @@ public class ListAggregateRoutingStrategy extends AbstractAggregateRoutingStrate
         final List<Object> la = (List<Object>)a;
         final List<Object> lb = (List<Object>)b;
         final List<Object> aggregate = new ArrayList<>(la);
-        aggregate.addAll(lb);
+        aggregate.addAll(lb == null ? emptyList() : lb);
         return aggregate;
     }
 
@@ -68,7 +68,7 @@ public class ListAggregateRoutingStrategy extends AbstractAggregateRoutingStrate
         final List<Object> lb = (List<Object>)b.getResult();
 
         final List<Object> aggregate = new ArrayList<>(la);
-        aggregate.addAll(lb);
+        aggregate.addAll(lb == null ? emptyList() : lb);
 
         final InvocationResult result = new InvocationResult();
         result.setResult(aggregate);

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceReleasingUnitTest;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
 import org.testng.annotations.Guice;
@@ -11,6 +12,7 @@ import javax.inject.Inject;
 
 import java.io.*;
 
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.Mockito.*;
@@ -56,6 +58,7 @@ public class XodusResourceServiceReleasingUnitTest extends AbstractResourceServi
                 return doGetMockResource(resourceId);
             }).when(resourceLoader).load(any());
 
+            bind(NodeId.class).toInstance(randomNodeId());
             bind(ResourceLoader.class).toInstance(resourceLoader);
 
         }

@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static java.util.Arrays.asList;
@@ -41,9 +42,8 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
     @DataProvider
     public static Object[][] initialDataProvider() {
 
+        final NodeId nodeId = randomNodeId();
         final List<Object[]> testData = new ArrayList<>();
-        final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(randomInstanceId(), randomApplicationId());
 
         for (int i = 0; i < 100; ++i) {
             final ResourceId resourceId = randomResourceIdForNode(nodeId);
@@ -266,8 +266,7 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
     @Test(dependsOnMethods = "testAllPathsUnlinked")
     public void testDeleteWithPaths() {
 
-        final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = randomNodeId();
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final Resource resource = Mockito.mock(Resource.class);
 

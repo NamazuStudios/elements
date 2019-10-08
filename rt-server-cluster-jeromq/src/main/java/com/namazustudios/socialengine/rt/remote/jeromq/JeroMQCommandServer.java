@@ -9,6 +9,7 @@ import org.zeromq.ZMsg;
 
 import java.util.Collection;
 
+import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
@@ -121,7 +122,7 @@ public class JeroMQCommandServer {
 
     private ZMsg processOpenBindingForNode(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
-        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
+        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
         final String instanceBindAddress = demultiplex.openBinding(nodeId);
         logger.info("Opened binding for node {} via {}", nodeId, instanceBindAddress);
         OK.pushResponseCode(response);
@@ -131,7 +132,7 @@ public class JeroMQCommandServer {
 
     private ZMsg processCloseBindingForNode(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
-        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
+        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
         demultiplex.closeBindingForNode(nodeId);
         logger.info("Closed binding for node {}");
         OK.pushResponseCode(response);
@@ -151,7 +152,7 @@ public class JeroMQCommandServer {
 
     private ZMsg processOpenRouteToNode(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
-        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
+        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
         final String instanceInvokerAddress = zMsg.removeFirst().getString(CHARSET);
         final String instanceRouteAddress = multiplex.openRouteToNode(nodeId, instanceInvokerAddress);
         logger.info("Opened route to {} via {} -> {}", nodeId, instanceRouteAddress, instanceInvokerAddress);
@@ -162,7 +163,7 @@ public class JeroMQCommandServer {
 
     private ZMsg processCloseRouteToNode(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
-        final NodeId nodeId = new NodeId(zMsg.removeFirst().getData());
+        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
         multiplex.closeRouteToNode(nodeId);
         logger.info("Closed route to {}.", nodeId);
         OK.pushResponseCode(response);

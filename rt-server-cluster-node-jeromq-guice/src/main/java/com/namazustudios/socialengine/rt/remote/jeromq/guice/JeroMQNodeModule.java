@@ -16,6 +16,7 @@ import java.util.function.Function;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
 
@@ -48,14 +49,14 @@ public class JeroMQNodeModule extends PrivateModule {
 
     /**
      * A shortcut for invoking {@link #withNodeId(InstanceId, ApplicationId)} using
-     * {@link NodeId#NodeId(InstanceId, ApplicationId)}.
+     * {@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}.
      *
      * @param instanceId the {@link InstanceId}
      * @param applicationId the {@link ApplicationId}
      * @return this instance
      */
     public JeroMQNodeModule withNodeId(final InstanceId instanceId, final ApplicationId applicationId) {
-        return withNodeId(new NodeId(instanceId, applicationId));
+        return withNodeId(forInstanceAndApplication(instanceId, applicationId));
     }
 
     /**

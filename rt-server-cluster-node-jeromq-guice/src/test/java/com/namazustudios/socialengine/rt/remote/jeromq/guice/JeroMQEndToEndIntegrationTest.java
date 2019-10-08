@@ -31,6 +31,7 @@ import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.UUID.randomUUID;
@@ -408,7 +409,7 @@ public class JeroMQEndToEndIntegrationTest {
         @Override
         protected void configure() {
 
-            final NodeId nodeId = new NodeId(instanceId, applicationId);
+            final NodeId nodeId = forInstanceAndApplication(instanceId, applicationId);
             final Named nodeNamedAnnotation = named(nodeId.asString());
             final Named instanceNamedAnnotation = named(instanceId.asString());
 
@@ -449,7 +450,7 @@ public class JeroMQEndToEndIntegrationTest {
             bind(InstanceMetadataContext.class).toInstance(mock);
 
             when(mock.getInstanceId()).thenReturn(instanceId);
-            when(mock.getNodeIds()).thenReturn(singleton(new NodeId(instanceId, applicationId)));
+            when(mock.getNodeIds()).thenReturn(singleton(forInstanceAndApplication(instanceId, applicationId)));
             when(mock.getInstanceLoad()).thenReturn(threadLocalRandom.nextDouble());
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {

@@ -20,6 +20,7 @@ import java.util.regex.Pattern;
 import static com.google.common.collect.Iterators.limit;
 import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.rt.Path.Util.*;
+import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromString;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
@@ -202,12 +203,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
     public boolean hasContext() {
-        if (context != null) {
-            return true;
-        }
-        else {
-            return false;
-        }
+        return context != null;
     }
 
     public boolean hasWildcardContext() {
@@ -324,8 +320,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
     @Override
     public NodeId getNodeId() throws InvalidNodeIdException {
-        return !hasContext() ? null :
-                nodeId == null ? (nodeId = new NodeId(getContext())) : nodeId;
+        return !hasContext() ? null : nodeId == null ? (nodeId = nodeIdFromString(getContext())) : nodeId;
     }
 
     @Override

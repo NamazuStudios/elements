@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import javax.inject.Provider;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.forUniqueName;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 
 public class NodeIdModule extends PrivateModule {
 
@@ -46,13 +47,13 @@ public class NodeIdModule extends PrivateModule {
     }
 
     /**
-     * Supplies a {@link NodeId} for a master node using using{@link NodeId#NodeId(InstanceId, ApplicationId)}
+     * Supplies a {@link NodeId} for a master node using using{@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
      *
      * @param instanceIdProvider the {@link Provider<InstanceId>}
      */
     public static NodeIdModule forApplication(final Provider<InstanceId> instanceIdProvider,
                                               final ApplicationId applicationId) {
-        return new NodeIdModule(() -> new NodeId(instanceIdProvider.get(), applicationId));
+        return new NodeIdModule(() -> forInstanceAndApplication(instanceIdProvider.get(), applicationId));
     }
 
 }

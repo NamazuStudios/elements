@@ -21,6 +21,7 @@ import java.io.OutputStream;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
@@ -129,8 +130,7 @@ public class XodusResourceServiceOpenCloseTest {
     private Resource newMockResource() throws IOException {
 
         final Resource mock = mock(Resource.class);
-        final InstanceId instanceId = randomInstanceId();
-        final NodeId nodeId = new NodeId(instanceId, randomApplicationId());
+        final NodeId nodeId = randomNodeId();
         final ResourceId resourceId = randomResourceIdForNode(nodeId);
 
         when(mock.getId()).thenReturn(resourceId);
@@ -177,6 +177,7 @@ public class XodusResourceServiceOpenCloseTest {
 
             });
 
+            bind(NodeId.class).toInstance(randomNodeId());
             bind(ResourceService.class).to(XodusResourceService.class);
             bind(ResourceLockService.class).to(SimpleResourceLockService.class);
             bind(ResourceLoader.class).toInstance(mockResourceLoader);

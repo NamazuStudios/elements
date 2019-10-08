@@ -79,9 +79,7 @@ public class LuaResource implements Resource {
     /**
      * Redirects the print function to the logger returned by {@link #getScriptLog()}.
      */
-    // TODO: undo this (commented out to clean out debug logs)
-//    private final JavaFunction printToScriptLog = new ScriptLogger(s -> getScriptLog().info("{}", s));
-    private final JavaFunction printToScriptLog = new ScriptLogger(s -> {});
+    private final JavaFunction printToScriptLog = new ScriptLogger(s -> getScriptLog().info("{}", s));
 
     /**
      * Creates an instance of {@link LuaResource} with the given {@link LuaState}
@@ -113,7 +111,7 @@ public class LuaResource implements Resource {
             openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, localContext, persistenceStrategy));
+            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, persistenceStrategy));
             getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this));
             getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
