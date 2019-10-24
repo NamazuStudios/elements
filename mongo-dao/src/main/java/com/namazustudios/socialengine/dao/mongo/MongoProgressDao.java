@@ -366,7 +366,6 @@ public class MongoProgressDao implements ProgressDao {
                     issuance.setUser(user);
                     issuance.setType(PERSISTENT);
                     issuance.setSource(MISSION_PROGRESS_SOURCE);
-                    issuance.setContext(context);
                     issuance.setMetadata(metadata);
                     issuance.setTags(tags);
 

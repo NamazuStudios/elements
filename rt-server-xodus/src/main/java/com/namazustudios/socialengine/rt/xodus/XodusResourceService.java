@@ -182,6 +182,29 @@ public class XodusResourceService implements ResourceService {
             verboseLogger.trace("{}", report);
         };
 
+    private final BiConsumer<ResourceId, Path> debugPreAdd =
+        !verboseLogger.isTraceEnabled() ? (t, p) -> {} :
+        (t, p) -> {
+
+            final StringBuilder report = new StringBuilder();
+            report.append('\n').append("Adding resource at path: ").append(p.toNormalizedPathString()).append("\n\n");
+            dumpStoreData(report);
+            verboseLogger.trace("{}", report);
+
+        };
+
+    private final BiConsumer<ResourceId, Path> debugPostAdd =
+        !verboseLogger.isTraceEnabled() ? (t, p) -> {} :
+        (t, p) -> {
+
+            final StringBuilder report = new StringBuilder();
+            report.append('\n').append("Added resource at path: ").append(p.toNormalizedPathString()).append("\n\n");
+            dumpStoreData(report);
+            verboseLogger.trace("{}", report);
+
+        };
+
+
     @Override
     public void start() {
         getEnvironment().executeInExclusiveTransaction(txn -> {
@@ -382,8 +405,10 @@ public class XodusResourceService implements ResourceService {
 
         return getEnvironment().computeInTransaction(txn -> {
 
+            final String normalized = fullyQualifiedPath.toNormalizedPathString();
+
             final Store store = openPaths(txn);
-            final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
+            final ByteIterable pathKey = stringToEntry(normalized);
             final ByteIterable resourceIdKey = store.get(txn, pathKey);
 
             if (resourceIdKey == null) {
@@ -414,16 +439,22 @@ public class XodusResourceService implements ResourceService {
         final Path fullyQualifiedPath = fullyQualifyPath(path);
         final XodusResource xodusResource = new XodusResource(resource);
 
+        debugPreAdd.accept(resource.getId(), path);
+
         getEnvironment().computeInTransaction(txn -> {
 
+            final String normalized = fullyQualifiedPath.toNormalizedPathString();
+
             final Store paths = openPaths(txn);
-            final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
+            final ByteIterable pathKey = stringToEntry(normalized);
             final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
 
             doLink(txn, paths, resourceIdKey, pathKey);
             return doReleaseResource(txn, xodusResource);
 
         }).getAsBoolean();
+
+        debugPostAdd.accept(resource.getId(), path);
 
     }
 
@@ -439,28 +470,34 @@ public class XodusResourceService implements ResourceService {
         final ResourceId resourceId = resource.getId();
         final Path fullyQualifiedPath = fullyQualifyPath(path);
 
-        return getEnvironment().computeInTransaction(txn -> {
+        debugPreAdd.accept(resource.getId(), path);
 
-            final Store paths = openPaths(txn);
-            final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
-            final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
-            doLink(txn, paths, resourceIdKey, pathKey);
+        try {
+            return getEnvironment().computeInTransaction(txn -> {
 
-            int acquires = doAcquire(txn, resourceIdKey);
-            if (acquires != 1) throw new IllegalStateException("Expecting newly acquired resource count of 1.  Got: " + acquires);
+                final Store paths = openPaths(txn);
+                final ByteIterable pathKey = stringToEntry(fullyQualifiedPath.toNormalizedPathString());
+                final ByteIterable resourceIdKey = stringToEntry(resource.getId().asString());
+                doLink(txn, paths, resourceIdKey, pathKey);
 
-            return (Supplier<XodusResource>) () -> {
-                try (final Monitor monitor = getResourceLockService().getMonitor(resourceId)) {
-                    final XodusResource xodusResource = new XodusResource(resource);
-                    final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceId);
-                    final Condition condition = monitor.getCondition(CONDITION_ACQUIRE);
-                    condition.signalAll();
-                    getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource);
-                    return xodusResource;
-                }
-            };
+                int acquires = doAcquire(txn, resourceIdKey);
+                if (acquires != 1) throw new IllegalStateException("Expecting newly acquired resource count of 1.  Got: " + acquires);
 
-        }).get();
+                return (Supplier<XodusResource>) () -> {
+                    try (final Monitor monitor = getResourceLockService().getMonitor(resourceId)) {
+                        final XodusResource xodusResource = new XodusResource(resource);
+                        final XodusCacheKey xodusCacheKey = new XodusCacheKey(resourceId);
+                        final Condition condition = monitor.getCondition(CONDITION_ACQUIRE);
+                        condition.signalAll();
+                        getStorage().getResourceIdResourceMap().put(xodusCacheKey, xodusResource);
+                        return xodusResource;
+                    }
+                };
+
+            }).get();
+        } finally {
+            debugPostAdd.accept(resource.getId(), path);
+        }
 
     }
 
