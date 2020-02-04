@@ -1,4 +1,4 @@
-FROM jetty
+FROM jetty:9.4.26-jre8
 
 ARG REST_WAR
 
