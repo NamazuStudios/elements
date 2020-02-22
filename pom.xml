@@ -47,7 +47,6 @@
         <module>rt-server-cluster-client</module>
         <module>rt-server-cluster-client-jeromq</module>
         <module>rt-server-cluster-client-jeromq-guice</module>
-        <module>rt-mina</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
         <module>rt-server-lua-stress-tests</module>

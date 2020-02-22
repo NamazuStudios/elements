@@ -20,24 +20,9 @@ provided separately.
 build spec triggers the build and is referenced in the master maven build, so it 
 should all "just work" when you do a build.
 
-## 2) Clone and install mina-guice
+## 2) Clone Project
 
-mina-guice is a library which enables Apache Mina to integrate with Guice. Its
-usage in Elements is completely deprecated and not used, however it is required
-to build.  This must be built and installed before building the main project.
-
-The following steps will clone an install mina-guice into your local maven 
-repository
-
-```
-git clone ssh://git@bitbucket.namazustudios.net:7999/soc/mina-guice.git
-cd mina-guice
-mvn clean test install
-```
-
-## 3) Clone Project
-
-After installing mina-guice, you must initialize submodules for elements, this
+After cloning the project, you must initialize submodules for elements, this
 ensures that dependent code is checked out an placed inside the directory under
 the source code for the main Elements project. 
 
@@ -46,7 +31,7 @@ git clone ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-serve
 cd socialengine-java-server
 ```
 
-## 4) Initialize Submodules
+## 3) Initialize Submodules
 
 When inside the cloned directory, you must fetch the submodules the project
 that the project needs.  Occasionally, you must repeat this step if changes and
@@ -57,7 +42,7 @@ git submodule init
 git submodule update
 ```
 
-## 5) Build the Code
+## 4) Build the Code
 
 Now that all prerequisities are installed it is time to make a build.  This may
 take a few minutes becuase the unit tests are sometimes quite long.  To do
@@ -74,7 +59,7 @@ Optionally, you can speed up the build by skipping unit and integration tests.
 mvn clean install -DskipTests
 ```
 
-## 6) Build and Run Local Services
+## 5) Build and Run Local Services
 
 All dependent servcies are run inside Docker.  This eliminates the need to use
 a shared and central service to develop against.  When running these services,
