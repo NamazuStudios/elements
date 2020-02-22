@@ -1,9 +1,10 @@
 [submodule "socialengine-jnlua"]
 	path = socialengine-jnlua
-	url = ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-jnlua.git
+	url = http://bitbucket.namazustudios.net/scm/soc/socialengine-jnlua.git
 [submodule "search-tools"]
 	path = search-tools
-	url = ssh://git@bitbucket.namazustudios.net:7999/soc/search-tools.git
+	url = http://bitbucket.namazustudios.net/scm/soc/search-tools.git
 [submodule "index-storage"]
 	path = index-storage
-	url = ssh://git@bitbucket.namazustudios.net:7999/soc/index-storage.git
+	url = http://bitbucket.namazustudios.net/scm/soc/index-storage.git
+
