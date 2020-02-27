@@ -6,7 +6,7 @@ DOCKER_TAG=docker tag
 DOCKER_PUSH=docker push
 DOCKER_LOGIN=docker login
 
-BRANCH_TAG=$(echo $(GIT_BRANCH) | tr -cd '[:alnum:]._-')
+BRANCH_TAG=$(echo $(GIT_LOCAL_BRANCH) | tr -cd '[:alnum:]._-')
 
 
 push: tag
