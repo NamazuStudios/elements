@@ -9,7 +9,7 @@ DOCKER_LOGIN=docker login
 BRANCH_TAG=$(echo $GIT_BRANCH | tr -cd '[:alnum:]._-')
 
 login:
-	$(shell echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net	)
+	echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net
 
 tag: login
 	$(DOCKER_TAG) namazu-socialengine-api:latest docker.namazustudios.net/namazu-socialengine-api
