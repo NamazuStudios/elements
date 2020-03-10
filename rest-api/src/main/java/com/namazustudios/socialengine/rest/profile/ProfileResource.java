@@ -1,7 +1,6 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.rest.profile;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -10,7 +9,6 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ProfileService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -53,9 +51,11 @@ public class ProfileResource {
     public Pagination<Profile> getProfiles(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("search") final String search,
-            @QueryParam("before") @DefaultValue("-1") final long beforeTimestamp,
-            @QueryParam("after") @DefaultValue("-1") final long afterTimestamp) {
+            @QueryParam("before") final Long beforeTimestamp,
+            @QueryParam("after")  final Long afterTimestamp,
+            @QueryParam("application") final String applicationNameOrId,
+            @QueryParam("user") final String userId,
+            @QueryParam("search") final String search) {
         // Note: afterTimestamp => lower bound of time range, beforeTimestamp => upper bound of time range, i.e.:
         // [afterTimestamp, beforeTimestamp]
 
@@ -66,7 +66,6 @@ public class ProfileResource {
         if (count < 0) {
             throw new InvalidParameterException("Count must have positive value.");
         }
-
 
         if (beforeTimestamp >= 0 && afterTimestamp >= 0 && afterTimestamp > beforeTimestamp) {
             throw new InvalidParameterException("Invalid range: afterTimestamp should be less than or " +
@@ -80,7 +79,10 @@ public class ProfileResource {
         }
 
         return query.isEmpty() ?
-                getProfileService().getProfiles(offset, count, afterTimestamp, beforeTimestamp) :
+                getProfileService().getProfiles(
+                        offset, count,
+                        applicationNameOrId, userId,
+                        afterTimestamp, beforeTimestamp) :
                 getProfileService().getProfiles(offset, count, search);
     }
 

@@ -1,7 +1,8 @@
 package com.namazustudios.socialengine.service.profile;
 
+
 import com.namazustudios.socialengine.dao.ProfileDao;
-import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -25,10 +26,20 @@ public class UserProfileService implements ProfileService {
     private Supplier<Profile> currentProfileSupplier;
 
     @Override
-    public Pagination<Profile> getProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp) {
+    public Pagination<Profile> getProfiles(final int offset, final int count,
+                                           final String applicationNameOrId, final String userId,
+                                           final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
+
+        if (!Objects.equals(userId, getUser().getId())) {
+            throw new ForbiddenException();
+        }
+
         return getProfileDao()
-            .getActiveProfiles(offset, count, lowerBoundTimestamp, upperBoundTimestamp)
+            .getActiveProfiles(offset, count,
+                               applicationNameOrId, userId,
+                               lowerBoundTimestamp, upperBoundTimestamp)
             .transform(this::redactPrivateInformation);
+
     }
 
     @Override

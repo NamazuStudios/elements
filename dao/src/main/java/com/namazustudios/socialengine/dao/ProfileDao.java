@@ -24,13 +24,17 @@ public interface ProfileDao {
      *
      * @param offset the offset
      * @param count the count
+     * @param applicationNameOrId the application name or ID (may be null)
+     * @param userId the user ID (may be null)
      * @param lowerBoundTimestamp optional last login lower bound cutoff in ms (inclusive). If negative valued, defaults
      *                            to unix epoch.
      * @param upperBoundTimestamp optional last login upper bound cutoff in ms (inclusive). If negative valued, defaults
      *                            to current server time.
      * @return a {@link Pagination} of {@link Profile} objects.
      */
-    Pagination<Profile> getActiveProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp);
+    Pagination<Profile> getActiveProfiles(int offset, int count,
+                                          String applicationNameOrId, String userId,
+                                          Long lowerBoundTimestamp, Long upperBoundTimestamp);
 
     /**
      * Gets actives profiles specifying the offset and the count, specifying a search filter.

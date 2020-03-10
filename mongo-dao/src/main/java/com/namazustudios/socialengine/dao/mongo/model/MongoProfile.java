@@ -42,9 +42,11 @@ public class MongoProfile {
     @Property
     private boolean active;
 
+    @Indexed
     @Reference
     private MongoUser user;
 
+    @Indexed
     @Reference
     private MongoApplication application;
 
