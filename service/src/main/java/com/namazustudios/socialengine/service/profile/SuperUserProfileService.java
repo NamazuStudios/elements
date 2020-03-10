@@ -22,9 +22,12 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
-                                           String applicationNameOrId, final String userId,
+                                           final String applicationNameOrId, final String userId,
                                            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
-        return getProfileDao().getActiveProfiles(offset, count, userId, lowerBoundTimestamp, upperBoundTimestamp);
+        return getProfileDao().getActiveProfiles(
+                offset, count,
+                applicationNameOrId, userId,
+                lowerBoundTimestamp, upperBoundTimestamp);
     }
 
     @Override
@@ -33,7 +36,7 @@ public class SuperUserProfileService implements ProfileService {
             int count,
             String search
     ) {
-        return getProfileDao().getActiveProfiles(offset, count, applicationNameOrId, search, lowerBoundTimestamp, upperBoundTimestamp);
+        return getProfileDao().getActiveProfiles(offset, count, search);
     }
 
     @Override

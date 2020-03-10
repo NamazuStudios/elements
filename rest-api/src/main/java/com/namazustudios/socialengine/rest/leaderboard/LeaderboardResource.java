@@ -15,12 +15,14 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(value = "Leaderboards",
      description = "Allows for the manipulation of the leaderboard metadata.  This allows admin users to implement new" +
                    "add/remove or disable leaderboards in the system.   Regular users may have limited access to read " +
                    "leaderboard metadata.",
-        authorizations = {@Authorization(EnhancedApiListingResource.SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("leaderboard")
 public class LeaderboardResource {
 

@@ -20,6 +20,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 3/19/15.
@@ -29,7 +30,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
                    "campaigns are essentially simple promotions which allow a user to " +
                    "receive some sort of reward or incentive for sharing a specific link " +
                    "which is tracked through a short linker.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("campaign/{name}")
 public class EntrantResource {
 

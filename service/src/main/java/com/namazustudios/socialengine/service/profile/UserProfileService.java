@@ -29,17 +29,23 @@ public class UserProfileService implements ProfileService {
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
                                            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
-
-        if (!Objects.equals(userId, getUser().getId())) {
+        if (userId != null && !userId.equals(getUser().getId())) {
             throw new ForbiddenException();
+        } else if (userId != null) {
+            return getProfileDao()
+                .getActiveProfiles(
+                        offset, count,
+                        applicationNameOrId, userId,
+                        lowerBoundTimestamp, upperBoundTimestamp)
+                .transform(this::redactPrivateInformation);
+        } else {
+            return getProfileDao()
+                .getActiveProfiles(
+                        offset, count,
+                        applicationNameOrId, null,
+                        lowerBoundTimestamp, upperBoundTimestamp)
+                .transform(this::redactPrivateInformation);
         }
-
-        return getProfileDao()
-            .getActiveProfiles(offset, count,
-                               applicationNameOrId, userId,
-                               lowerBoundTimestamp, upperBoundTimestamp)
-            .transform(this::redactPrivateInformation);
-
     }
 
     @Override

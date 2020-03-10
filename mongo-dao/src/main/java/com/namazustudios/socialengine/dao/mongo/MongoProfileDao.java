@@ -59,12 +59,34 @@ public class MongoProfileDao implements ProfileDao {
 
     @Override
     public Profile findActiveProfile(final String profileId) {
-        return null;
+
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+
+        query.and(
+            query.criteria("_id").equal(profileId),
+            query.criteria("active").equal(true)
+        );
+
+        final MongoProfile mongoProfile = query.get();
+        return mongoProfile == null ? null : transform(mongoProfile);
+
     }
 
     @Override
     public Profile findActiveProfileForUser(final String profileId, final String userId) {
-        return null;
+
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+
+        query.and(
+            query.criteria("_id").equal(profileId),
+            query.criteria("active").equal(true),
+            query.criteria("user").equal(mongoUser)
+        );
+
+        final MongoProfile mongoProfile = query.get();
+        return mongoProfile == null ? null : transform(mongoProfile);
+
     }
 
     public Pagination<Profile> getActiveProfiles(

@@ -22,6 +22,7 @@ import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -29,7 +30,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 @Api(value = "Users",
      description = "Manages users in the server.  Users are single-end users typically associated " +
                    "with a login name or email address.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("user")
 public class UserResource {
 

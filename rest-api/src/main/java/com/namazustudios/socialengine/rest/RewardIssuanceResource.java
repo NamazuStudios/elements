@@ -16,11 +16,12 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Path("reward_issuance")
 @Api(value = "Reward Issuances",
         description = "Manages reward issuances",
-        authorizations = {@Authorization(SESSION_SECRET)})
+        authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Produces(MediaType.APPLICATION_JSON)
 public class RewardIssuanceResource {
 

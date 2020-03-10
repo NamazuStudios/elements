@@ -18,13 +18,14 @@ import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 4/2/15.
  */
 @Api(value = "FacebookSession",
      description = "Creates a Session instance from a username and password.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("facebook_session")
 public class FacebookAuthResource {
 
