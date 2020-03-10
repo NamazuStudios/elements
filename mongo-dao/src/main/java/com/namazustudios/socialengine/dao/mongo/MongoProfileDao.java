@@ -57,6 +57,16 @@ public class MongoProfileDao implements ProfileDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
+    @Override
+    public Profile findActiveProfile(final String profileId) {
+        return null;
+    }
+
+    @Override
+    public Profile findActiveProfileForUser(final String profileId, final String userId) {
+        return null;
+    }
+
     public Pagination<Profile> getActiveProfiles(
             final int offset,
             final int count,

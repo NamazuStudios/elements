@@ -14,6 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.application.Application.APPLICATION_ATTRIUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
@@ -38,7 +39,7 @@ public class SessionIdAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
-        final String sessionSecret = request.getHeader(SESSION_SECRET);
+        final String sessionSecret = getSessionSecret(request);
 
         if (sessionSecret == null) {
             chain.doFilter(request, response);
@@ -54,7 +55,7 @@ public class SessionIdAuthenticationFilter implements Filter {
             }
 
             final User user = session.getUser();
-            final Profile profile = session.getProfile();
+            final Profile profile = getProfile(request, session);
             final Application application = session.getApplication();
 
             request.setAttribute(SESSION_ATTRIBUTE, session);
@@ -66,6 +67,16 @@ public class SessionIdAuthenticationFilter implements Filter {
 
         }
 
+    }
+
+    @SuppressWarnings("deprecated")
+    private String getSessionSecret(final HttpServletRequest request) {
+        final String secret = request.getHeader(SESSION_SECRET);
+        return secret == null ? request.getHeader(SOCIALENGINE_SESSION_SECRET) : secret;
+    }
+
+    private Profile getProfile(final HttpServletRequest request, final Session session) {
+        return session.getProfile();
     }
 
     public SessionService getSessionService() {

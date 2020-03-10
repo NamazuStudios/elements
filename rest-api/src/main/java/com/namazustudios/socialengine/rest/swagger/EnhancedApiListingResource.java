@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.swagger;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.service.ApplicationService;
 import io.swagger.annotations.ApiKeyAuthDefinition;
 import io.swagger.annotations.SecurityDefinition;
@@ -9,8 +8,6 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -22,6 +19,7 @@ import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static io.swagger.models.Scheme.forValue;
 import static java.util.Arrays.asList;
 
@@ -30,13 +28,19 @@ import static java.util.Arrays.asList;
  */
 @SwaggerDefinition(
     securityDefinition = @SecurityDefinition(
-        apiKeyAuthDefinitions = {@ApiKeyAuthDefinition(
-            name = SESSION_SECRET,
-            description = "Uses a server-assigned session key which is generated from various POST /session and " +
-                          "POST /facebook_session endpoints in the API.",
-            in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
-            key = EnhancedApiListingResource.SESSION_SECRET
-        )}
+        apiKeyAuthDefinitions = {
+            @ApiKeyAuthDefinition(
+                name = SESSION_SECRET,
+                description = "Uses a server-assigned session key which is generated from various POST /session and " +
+                              "POST /facebook_session endpoints in the API.",
+                in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
+                key = EnhancedApiListingResource.SESSION_SECRET),
+            @ApiKeyAuthDefinition(
+                name = SOCIALENGINE_SESSION_SECRET,
+                description = "Functionally Identical to using Elements-SessionSecret (Deprecated).",
+                in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
+                key = EnhancedApiListingResource.SESSION_SECRET)
+        }
     )
 )
 public class EnhancedApiListingResource extends ApiListingResource {

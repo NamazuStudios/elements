@@ -24,7 +24,7 @@ public class HttpRequestAttributeProfileIdentificationMethod implements ProfileI
             throw new UnidentifiedProfileException();
         } else if (!(profile instanceof Profile)) {
             logger.error("{} is not instance of {}", profile, Profile.class.getName());
-            return null;
+            throw new UnidentifiedProfileException();
         }
 
         return (Profile) profile;
