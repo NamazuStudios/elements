@@ -15,10 +15,16 @@ then
     exit 1
 fi
 
+module_pom_xml=$(pwd)/${artifact}/pom.xml
+module_pom_xml_tmp=$(mktemp)
+
+XMLLINT_INDENT="    " xmllint --format ${module_pom_xml} > ${module_pom_xml_tmp}
+cp ${module_pom_xml_tmp} ${module_pom_xml}
+
 pom_xml=$(pwd)/pom.xml
 pom_xml_tmp=$(mktemp)
 
-XMLLINT_INDENT="    " xmllint --format pom.xml > ${pom_xml_tmp}
+XMLLINT_INDENT="    " xmllint --format ${pom_xml} > ${pom_xml_tmp}
 
 diff ${pom_xml} ${pom_xml_tmp}
 

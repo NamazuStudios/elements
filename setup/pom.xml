@@ -67,7 +67,7 @@
                 <configuration>
                     <archive>
                         <manifest>
-                            <mainClass>com.namazustudios.socialengine.Setup</mainClass>
+                            <mainClass>com.namazustudios.socialengine.rest.RestAPIMain</mainClass>
                         </manifest>
                     </archive>
                     <descriptorRefs>
