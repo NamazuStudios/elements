@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rest;
 
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.google.inject.Module;
+import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.rest.guice.RestAPIModule;
 import joptsimple.OptionException;
@@ -11,27 +13,26 @@ import joptsimple.OptionSpec;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.Loader;
-import org.eclipse.jetty.util.resource.Resource;
 import org.slf4j.Logger;
 
 import javax.servlet.DispatcherType;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import static com.google.inject.Stage.DEVELOPMENT;
 import static com.namazustudios.socialengine.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
+import static java.util.Collections.emptyList;
 import static java.util.EnumSet.allOf;
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
 import static org.eclipse.jetty.util.Loader.getResource;
-import static org.eclipse.jetty.util.resource.Resource.newClassPathResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class RestAPIMain implements Callable<Void>, Runnable {
@@ -40,23 +41,37 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
     private static final OptionParser optionParser = new OptionParser();
 
+    public static String DEFAULT_BIND_ADDRESS = "0.0.0.0";
+
+    public static int DEFAULT_PORT = 8080;
+
+    public static Stage DEFAULT_STAGE = DEVELOPMENT;
+
+    public static String DEFAULT_API_CONTEXT = "/api";
+
     private static final OptionSpec<String> bindOptionSpec = optionParser
             .accepts("bind", "The bind address.")
             .withOptionalArg()
             .ofType(String.class)
-            .defaultsTo("0.0.0.0");
+            .defaultsTo(DEFAULT_BIND_ADDRESS);
 
     private static final OptionSpec<Integer> portOptionSpec = optionParser
             .accepts("port", "The TCP Port upon which to bind.")
             .withOptionalArg()
             .ofType(Integer.class)
-            .defaultsTo(8080);
+            .defaultsTo(DEFAULT_PORT);
 
     private static final OptionSpec<String> apiContextOptionsSpec = optionParser
             .accepts("api-context", "The context upon which to run the api.")
             .withOptionalArg()
             .ofType(String.class)
-            .defaultsTo("/api");
+            .defaultsTo(DEFAULT_API_CONTEXT);
+
+    private static final OptionSpec<Stage> stageOptionSpec = optionParser
+            .accepts("stage", "Is this running in development or production?")
+            .withOptionalArg()
+            .ofType(Stage.class)
+            .defaultsTo(DEFAULT_STAGE);
 
     private static final OptionSpec<Void> helpOptionSpec = optionParser
             .accepts("help", "Displays the help message.")
@@ -69,6 +84,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         int port;
         String bind;
         String apiContext;
+        Stage stage;
 
         try {
 
@@ -83,20 +99,25 @@ public class RestAPIMain implements Callable<Void>, Runnable {
             apiContext = options.valueOf(apiContextOptionsSpec);
             apiContext = apiContext.startsWith("/") ? apiContext : "/" + apiContext;
 
+            stage = options.valueOf(stageOptionSpec);
+
         } catch (OptionException ex) {
             throw new ProgramArgumentException(ex);
         }
 
-        init(port, bind, apiContext);
+        init(port, bind, apiContext, stage, emptyList());
 
     }
 
     public RestAPIMain(final int port, final String bind,
-                       final String apiContext) {
-        init(port, bind, apiContext);
+                       final String apiContext,
+                       final Stage stage, final List<Module> additionalModules) {
+        init(port, bind, apiContext, stage, additionalModules);
     }
 
-    private void init(final int port, final String bind, final String apiContext) {
+    private void init(final int port, final String bind,
+                      final String apiContext,
+                      final Stage stage, final List<Module> additionalModules) {
 
         final ServerConnector connector = new ServerConnector(server);
         connector.setHost(bind);
@@ -107,7 +128,11 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         final ServletContextHandler servletHandler = new ServletContextHandler(SESSIONS);
         servletHandler.setContextPath(apiContext);
 
-        final Injector injector = Guice.createInjector(new RestAPIModule());
+        final List<Module> moduleAggregate = new ArrayList<>();
+        moduleAggregate.add(new RestAPIModule());
+        moduleAggregate.addAll(additionalModules);
+
+        final Injector injector = Guice.createInjector(stage, moduleAggregate);
         servletHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
 
         final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
