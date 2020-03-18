@@ -131,12 +131,14 @@ public class MongoProfileDao implements ProfileDao {
 
         if (applicationNameOrId != null) {
             final MongoApplication mongoApplication;
-            mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+            mongoApplication = getMongoApplicationDao().findActiveMongoApplication(applicationNameOrId);
+            if (mongoApplication == null) return new Pagination<>();
             query.and(query.criteria("application").equal(mongoApplication));
         }
 
         if (userId != null) {
-            final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
+            final MongoUser mongoUser = getMongoUserDao().findActiveMongoUser(userId);
+            if (mongoUser == null) return new Pagination<>();
             query.and(query.criteria("user").equal(mongoUser));
         }
 

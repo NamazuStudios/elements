@@ -21,6 +21,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static java.lang.Math.min;
 import static java.util.stream.Collectors.*;
@@ -66,17 +67,46 @@ public class MongoDBUtils {
      *
      * @param objectId the object ID to parse
      * @return an {@link ObjectId} (never null)
+     *
+     * @deprecated Use {@link #parseOrThrow(String, Function)}
      */
+    @Deprecated
     public ObjectId parseOrThrowNotFoundException(final String objectId) {
+        return parseOrThrow(objectId, NotFoundException::new);
+    }
 
-        if (objectId == null || !ObjectId.isValid(objectId)) {
-            throw new NotFoundException("Object with ID " + objectId + " not found.");
+    /**
+     * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this throws the appropriate exception
+     * type of {@link NotFoundException}.
+     *
+     * @param objectId the object ID to parse
+     * @return an {@link ObjectId} (never null)
+     */
+    public <ExceptionT extends NotFoundException>
+    ObjectId parseOrThrow(final String objectId,
+                          final Function<String, ExceptionT> exceptionTSupplier) throws ExceptionT {
+
+        final ObjectId oid = parseOrReturnNull(objectId);
+
+        if (oid == null) {
+            throw exceptionTSupplier.apply("Object with ID " + objectId + " not found.");
         }
 
         return new ObjectId(objectId);
 
     }
 
+
+    /**
+     * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this throws the appropriate exception
+     * type of {@link NotFoundException}.
+     *
+     * @param objectId the object ID to parse
+     * @return an {@link ObjectId} (never null)
+     */
+    public ObjectId parseOrReturnNull(final String objectId) {
+        return objectId == null || !ObjectId.isValid(objectId) ? null : new ObjectId(objectId);
+    }
 
     /**
      * Transforms the given {@link Query} to the resulting {@link Pagination}.

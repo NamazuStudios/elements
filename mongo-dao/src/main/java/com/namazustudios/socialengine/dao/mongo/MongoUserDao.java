@@ -69,8 +69,13 @@ public class MongoUserDao implements UserDao {
         return getActiveMongoUser(user.getId());
     }
 
+    public MongoUser findActiveMongoUser(final String userId) {
+        final ObjectId objectId = getMongoDBUtils().parseOrReturnNull(userId);
+        return objectId == null ? null : getActiveMongoUser(objectId);
+    }
+
     public MongoUser getActiveMongoUser(final String userId) {
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(userId, UserNotFoundException::new);
         return getActiveMongoUser(objectId);
     }
 
@@ -311,7 +316,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -350,7 +355,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -391,7 +396,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
