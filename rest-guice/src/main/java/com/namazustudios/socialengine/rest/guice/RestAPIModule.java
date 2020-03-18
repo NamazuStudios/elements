@@ -38,8 +38,13 @@ public class RestAPIModule extends AbstractModule {
 
     private final Supplier<List<FacebookPermission>> facebookPermissionSupplier;
 
+    @SuppressWarnings("unused")
     public RestAPIModule() {
-        this(ClassLoader.getSystemClassLoader());
+        this(new DefaultConfigurationSupplier());
+    }
+
+    public RestAPIModule(final Supplier<Properties> propertiesSupplier) {
+        this(propertiesSupplier, new FacebookBuiltinPermissionsSupplier());
     }
 
     public RestAPIModule(final ClassLoader classLoader) {
@@ -58,7 +63,7 @@ public class RestAPIModule extends AbstractModule {
         final Properties properties = configurationSupplier.get();
         final String apiRoot = properties.getProperty(Constants.API_PREFIX);
 
-        install(new ConfigurationModule(configurationSupplier));
+        install(new ConfigurationModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
         install(new JerseyModule(apiRoot) {
             @Override

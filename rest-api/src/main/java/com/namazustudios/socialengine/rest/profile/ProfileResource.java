@@ -68,14 +68,14 @@ public class ProfileResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        if (beforeTimestamp >= 0 && afterTimestamp >= 0 && afterTimestamp > beforeTimestamp) {
+        if (beforeTimestamp != null && afterTimestamp != null && afterTimestamp > beforeTimestamp) {
             throw new InvalidParameterException("Invalid range: afterTimestamp should be less than or " +
                     "equal to beforeTimestamp.");
         }
 
         final String query = nullToEmpty(search).trim();
 
-        if ((beforeTimestamp >= 0 || afterTimestamp >= 0) && !query.isEmpty()) {
+        if ((beforeTimestamp != null || afterTimestamp != null) && !query.isEmpty()) {
             throw new InvalidParameterException("Time range and search parameters may not be combined.");
         }
 

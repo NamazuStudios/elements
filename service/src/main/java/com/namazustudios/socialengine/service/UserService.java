@@ -1,13 +1,18 @@
 package com.namazustudios.socialengine.service;
 
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.UserCreateRequest;
+
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 3/19/15.
  */
 public interface UserService {
+
+    String CURRENT_USER_ALIAS = "me";
 
     /**
      * Gets the currently logged in user.
@@ -17,15 +22,37 @@ public interface UserService {
     User getCurrentUser();
 
     /**
+     * Returns true if the specified user ID is the alias for the current user.
+     *
+     * @param userId the userId as returned by {@link User#getId()}
+     * @return true if alias, false otherwise
+     */
+    default boolean isCurrentUserAlias(final String userId) {
+        return CURRENT_USER_ALIAS.equals(userId);
+    }
+
+    /**
+     * Given the userId, which may be either username, email address, or "me" this will check for the current user.
+     *
+     * @param userId the userId, which could be either email, name, "me", or null
+     * @return true if matches current user, false otherwise
+     */
+    default boolean isCurrentUser(final String userId) {
+        return isCurrentUserAlias(userId) || Objects.equals(getCurrentUser().getId(), userId);
+    }
+
+    /**
      * Given the userId, which may be either username or email address,
      * will check for the current user.  If the current user does not match,
      * then this throws an exception to indicate that the current user does not
-     * match.s
+     * match.
      *
      * @param userId the userId, which could be either email or name
      * @throws com.namazustudios.socialengine.exception.NotFoundException if the current user does not match
      */
-    void checkForCurrentUser(final String userId);
+    default void checkForCurrentUser(final String userId) {
+        if (!isCurrentUser(userId)) throw new NotFoundException("User with id " + userId + " not found.");
+    }
 
     /**
      * Gets a user with unique user ID.

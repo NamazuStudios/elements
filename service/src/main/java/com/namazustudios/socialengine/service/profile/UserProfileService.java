@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.ProfileService;
+import com.namazustudios.socialengine.service.UserService;
 
 import javax.inject.Inject;
 import java.util.Objects;
@@ -21,6 +22,8 @@ public class UserProfileService implements ProfileService {
 
     private User user;
 
+    private UserService userService;
+
     private ProfileDao profileDao;
 
     private Supplier<Profile> currentProfileSupplier;
@@ -29,22 +32,22 @@ public class UserProfileService implements ProfileService {
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
                                            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
-        if (userId != null && !userId.equals(getUser().getId())) {
-            throw new ForbiddenException();
-        } else if (userId != null) {
+        if (getUserService().isCurrentUserAlias(userId)) {
             return getProfileDao()
                 .getActiveProfiles(
                         offset, count,
-                        applicationNameOrId, userId,
+                        applicationNameOrId, getUserService().getCurrentUser().getId(),
                         lowerBoundTimestamp, upperBoundTimestamp)
+                .transform(this::redactPrivateInformation);
+        } else if (userId == null || getUserService().isCurrentUser(userId)) {
+            return getProfileDao()
+                .getActiveProfiles(
+                    offset, count,
+                    applicationNameOrId, userId,
+                    lowerBoundTimestamp, upperBoundTimestamp)
                 .transform(this::redactPrivateInformation);
         } else {
-            return getProfileDao()
-                .getActiveProfiles(
-                        offset, count,
-                        applicationNameOrId, null,
-                        lowerBoundTimestamp, upperBoundTimestamp)
-                .transform(this::redactPrivateInformation);
+            return new Pagination<>();
         }
     }
 
@@ -106,6 +109,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public UserService getUserService() {
+        return userService;
+    }
+
+    @Inject
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     public ProfileDao getProfileDao() {

@@ -20,13 +20,4 @@ public abstract class AbstractUserService implements UserService {
         return currentUser;
     }
 
-    @Override
-    public void checkForCurrentUser(final String userId) {
-        if (!Objects.equals(getCurrentUser().getEmail(), userId) &&
-            !Objects.equals(getCurrentUser().getName(), userId)  &&
-            !Objects.equals(getCurrentUser().getId(), userId)) {
-            throw new NotFoundException("User with id " + userId + " not found.");
-        }
-    }
-
 }
