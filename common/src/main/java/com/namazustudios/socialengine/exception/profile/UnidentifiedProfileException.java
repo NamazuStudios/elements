@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.exception.profile;
+
+import com.namazustudios.socialengine.exception.NotFoundException;
 
 public class UnidentifiedProfileException extends NotFoundException {
 

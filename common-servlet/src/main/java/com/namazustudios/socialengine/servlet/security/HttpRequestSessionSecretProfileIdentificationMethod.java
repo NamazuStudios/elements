@@ -3,14 +3,15 @@ package com.namazustudios.socialengine.servlet.security;
 import com.namazustudios.socialengine.exception.profile.UnidentifiedProfileException;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.security.ProfileIdentificationMethod;
+import com.namazustudios.socialengine.security.SessionSecretHeader;
 import com.namazustudios.socialengine.service.ProfileOverrideService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 
-import static com.namazustudios.socialengine.Headers.PROFILE_ID;
-
-public class HttpRequestHeaderProfileIdentificationMethod implements ProfileIdentificationMethod {
+public class HttpRequestSessionSecretProfileIdentificationMethod implements ProfileIdentificationMethod {
 
     private HttpServletRequest httpServletRequest;
 
@@ -19,7 +20,7 @@ public class HttpRequestHeaderProfileIdentificationMethod implements ProfileIden
     @Override
     public Profile attempt() throws UnidentifiedProfileException {
 
-        final String profileId = getHttpServletRequest().getHeader(PROFILE_ID);
+        final String profileId = new SessionSecretHeader(getHttpServletRequest()::getHeader).getOverrideProfileId();
         if (profileId == null) throw new UnidentifiedProfileException();
 
         final Profile profile = getProfileOverrideService().findOverrideProfile(profileId);

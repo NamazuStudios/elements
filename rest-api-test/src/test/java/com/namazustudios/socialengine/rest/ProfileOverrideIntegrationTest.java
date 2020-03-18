@@ -12,6 +12,7 @@ import java.util.concurrent.ExecutionException;
 
 import static com.namazustudios.socialengine.Headers.PROFILE_ID;
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
@@ -77,6 +78,23 @@ public class ProfileOverrideIntegrationTest {
             .buildGet()
             .submit(Profile.class)
             .get();
+
+        assertEquals(current.getId(), profile.getId());
+
+    }
+
+    @Test(dataProvider = "provideProfiles", dependsOnMethods = "testOverrideProfileFailure")
+    public void testOverrideProfileSessionSecretHeader(final Profile profile) throws Exception {
+
+        final String sessionSecretHeader = format("%s p%s", clientContext.getSessionSecret(), profile.getId());
+
+        final Profile current = client
+                .target("http://localhost:8080/api/rest/profile/current")
+                .request()
+                .header(SESSION_SECRET, sessionSecretHeader)
+                .buildGet()
+                .submit(Profile.class)
+                .get();
 
         assertEquals(current.getId(), profile.getId());
 

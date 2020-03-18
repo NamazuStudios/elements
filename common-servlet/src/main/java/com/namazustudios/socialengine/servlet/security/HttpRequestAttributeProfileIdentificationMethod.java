@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.servlet.security;
 
-import com.namazustudios.socialengine.exception.UnidentifiedProfileException;
+import com.namazustudios.socialengine.exception.profile.UnidentifiedProfileException;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.security.ProfileIdentificationMethod;
 import org.slf4j.Logger;

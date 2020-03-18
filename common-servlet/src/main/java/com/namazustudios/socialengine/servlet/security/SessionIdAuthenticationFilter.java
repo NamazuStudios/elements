@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.servlet.security;
 
+import com.google.common.base.Splitter;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.security.SessionSecretHeader;
 import com.namazustudios.socialengine.service.SessionService;
 
 import javax.inject.Inject;
@@ -39,7 +41,7 @@ public class SessionIdAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
-        final String sessionSecret = getSessionSecret(request);
+        final String sessionSecret = new SessionSecretHeader(request::getHeader).getSessionSecret();
 
         if (sessionSecret == null) {
             chain.doFilter(request, response);
@@ -67,12 +69,6 @@ public class SessionIdAuthenticationFilter implements Filter {
 
         }
 
-    }
-
-    @SuppressWarnings("deprecated")
-    private String getSessionSecret(final HttpServletRequest request) {
-        final String secret = request.getHeader(SESSION_SECRET);
-        return secret == null ? request.getHeader(SOCIALENGINE_SESSION_SECRET) : secret;
     }
 
     private Profile getProfile(final HttpServletRequest request, final Session session) {

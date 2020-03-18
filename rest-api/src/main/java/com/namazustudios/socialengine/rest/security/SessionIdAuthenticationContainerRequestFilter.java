@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.security.SessionSecretHeader;
 import com.namazustudios.socialengine.service.SessionService;
 
 import javax.inject.Inject;
@@ -27,7 +28,7 @@ public class SessionIdAuthenticationContainerRequestFilter implements ContainerR
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
-        final String sessionId = requestContext.getHeaderString(SESSION_SECRET);
+        final String sessionId = new SessionSecretHeader(requestContext::getHeaderString).getSessionSecret();
         if (sessionId != null) checkSessionAndSetAttributes(requestContext, sessionId);
     }
 

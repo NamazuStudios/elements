@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.exception.security;
+
+import com.namazustudios.socialengine.exception.ForbiddenException;
 
 public class InsufficientPermissionException extends ForbiddenException {
 

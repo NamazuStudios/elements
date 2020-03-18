@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.application;
 
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
-import com.namazustudios.socialengine.exception.InsufficientPermissionException;
+import com.namazustudios.socialengine.exception.security.InsufficientPermissionException;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.service.GameOnApplicationConfigurationService;
 
