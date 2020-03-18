@@ -9,9 +9,12 @@ import javax.inject.Provider;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
 
+import java.util.concurrent.ExecutionException;
+
 import static com.namazustudios.socialengine.Headers.PROFILE_ID;
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertTrue;
 
 
 @Guice(modules = {EmbeddedRestApiIntegrationTestModule.class})
@@ -50,15 +53,18 @@ public class ProfileOverrideIntegrationTest {
             .toArray(Object[][]::new);
     }
 
-    @Test(expectedExceptions = NotFoundException.class)
+    @Test
     public void testOverrideProfile() throws Exception {
-        client
-            .target("http://localhost:8080/api/rest/profile/current")
-            .request()
-            .header(SESSION_SECRET, clientContext.getSessionSecret())
-            .buildGet()
-            .submit(Profile.class)
-            .get();
+        try {
+            client.target("http://localhost:8080/api/rest/profile/current")
+                  .request()
+                  .header(SESSION_SECRET, clientContext.getSessionSecret())
+                  .buildGet()
+                  .submit(Profile.class)
+                  .get();
+        } catch (ExecutionException ex) {
+            assertTrue(ex.getCause() instanceof NotFoundException, "Expected " + NotFoundException.class.getName());
+        }
     }
 
     @Test(dataProvider = "provideProfiles")
@@ -76,7 +82,5 @@ public class ProfileOverrideIntegrationTest {
         assertEquals(current.getId(), profile.getId());
 
     }
-
-    private static class ProfilePagination extends Pagination<Profile> {}
 
 }

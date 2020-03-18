@@ -1,9 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.dao.ApplicationDao;
-import com.namazustudios.socialengine.dao.ProfileDao;
-import com.namazustudios.socialengine.dao.SessionDao;
-import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -175,7 +171,5 @@ public class GetProfilesIntegrationTest {
         assertEquals(profiles.getObjects().size(), 0);
 
     }
-
-    private static class ProfilePagination extends Pagination<Profile> {}
 
 }
