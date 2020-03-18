@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
 import org.testng.annotations.*;
 
@@ -45,16 +44,8 @@ public class ProfileOverrideIntegrationTest {
         embeddedRestApi.stop();
     }
 
-    @DataProvider
-    public Object[][] provideProfiles() {
-        return clientContext.getProfiles()
-            .stream()
-            .map(p -> new Object[]{p})
-            .toArray(Object[][]::new);
-    }
-
     @Test
-    public void testOverrideProfile() throws Exception {
+    public void testOverrideProfileFailure() throws Exception {
         try {
             client.target("http://localhost:8080/api/rest/profile/current")
                   .request()
@@ -67,8 +58,16 @@ public class ProfileOverrideIntegrationTest {
         }
     }
 
-    @Test(dataProvider = "provideProfiles")
-    public void testOverrideProfile(final Profile profile) throws Exception {
+    @DataProvider
+    public Object[][] provideProfiles() {
+        return clientContext.getProfiles()
+            .stream()
+            .map(p -> new Object[]{p})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "provideProfiles", dependsOnMethods = "testOverrideProfileFailure")
+    public void testOverrideProfileProfileIdHeader(final Profile profile) throws Exception {
 
         final Profile current = client
             .target("http://localhost:8080/api/rest/profile/current")

@@ -28,18 +28,21 @@ import static java.util.Arrays.asList;
  * Created by patricktwohig on 7/14/17.
  */
 @SwaggerDefinition(
-
     securityDefinition = @SecurityDefinition(
         apiKeyAuthDefinitions = {
             @ApiKeyAuthDefinition(
                 name = SESSION_SECRET,
                 description = "Uses a server-assigned session key which is generated from various POST /session and " +
-                              "POST /facebook_session endpoints in the API.",
+                              "POST /facebook_session endpoints in the API.  This header accepts an optional " +
+                              "additional parameters which may be 'p{ProfileId}' override the Profile attached to the " +
+                              "session.  The full format is as follows: " +
+                              "Elements-SessionSecret: {SessionSecret} [p{ProfileId}]",
                 in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
                 key = EnhancedApiListingResource.SESSION_SECRET),
             @ApiKeyAuthDefinition(
                 name = SOCIALENGINE_SESSION_SECRET,
-                description = "Functionally Identical to using Elements-SessionSecret (Deprecated).",
+                description = "Functionally Identical to using Elements-SessionSecret.  Provided for backwards " +
+                              "compatibility from before Elements had an identity crisis.  Deprecated.",
                 in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
                 key = EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET)
         }
