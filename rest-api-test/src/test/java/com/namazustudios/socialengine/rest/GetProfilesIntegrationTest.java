@@ -29,18 +29,6 @@ public class GetProfilesIntegrationTest {
     private EmbeddedRestApi embeddedRestApi;
 
     @Inject
-    private UserDao userDao;
-
-    @Inject
-    private ProfileDao profileDao;
-
-    @Inject
-    private ApplicationDao applicationDao;
-
-    @Inject
-    private SessionDao sessionDao;
-
-    @Inject
     private Client client;
 
     @Inject
@@ -53,8 +41,14 @@ public class GetProfilesIntegrationTest {
     @BeforeClass
     private void setUp() throws Exception {
         embeddedRestApi.start();
-        client0 = clientContextProvider.get().newTestClientContext("GetProfileIntegrationTest0", 5);
-        client1 = clientContextProvider.get().newTestClientContext("GetProfileIntegrationTest1", 5);
+        client0 = clientContextProvider.get()
+            .createUser("GetProfileIntegrationTest0")
+            .createProfiles(5)
+            .createSession();
+        client1 = clientContextProvider.get()
+            .createUser("GetProfileIntegrationTest1")
+            .createProfiles(5)
+            .createSession();
     }
 
     @AfterClass

@@ -77,7 +77,7 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         bind(Application.class).annotatedWith(named(CONTEXT_APPLICATION)).toProvider(() -> {
             final Application application = new Application();
-            application.setName("CONTEXTAPPLICATION");
+            application.setName("CXTTAPP");
             application.setDescription("Context Test Application");
             return applicationDaoProvider.get().createOrUpdateInactiveApplication(application);
         }).in(SINGLETON);

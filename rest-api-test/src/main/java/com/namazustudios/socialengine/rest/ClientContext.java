@@ -39,22 +39,6 @@ class ClientContext {
 
     private SessionCreation sessionCreation;
 
-    public ClientContext newTestClientContext(final String userName, int profileCount) {
-
-        createUser(userName);
-
-        for (int i = 0; i< profileCount; ++i) createProfile(format("%s profile %d", userName, i));
-
-        if (profileCount <= 0) {
-            sessionCreation = createSession();
-        } else {
-            sessionCreation = createSession(getDefaultProfile());
-        }
-
-        return this;
-
-    }
-
     public User getUser() {
         return user;
     }
@@ -70,48 +54,48 @@ class ClientContext {
         return sessionCreation.getSessionSecret();
     }
 
-    public User createUser(final String name) {
+    public ClientContext createUser(final String name) {
         try {
             final User user = new User();
             user.setName(name);
             user.setEmail(format("%s@example.com", name));
             user.setLevel(USER);
             user.setActive(true);
-            return this.user = userDao.createUserWithPasswordStrict(user, "password");
+            this.user = userDao.createUserWithPasswordStrict(user, "password");
+            return this;
         } finally {
             profiles.clear();
             sessionCreation = null;
         }
     }
 
-    public Profile createProfile(final String display) {
-        Profile profile = new Profile();
+    public ClientContext createProfiles(int count) {
+        for (int i = 0; i< count; ++i) createProfile(format("%s profile %d", count, i));
+        return this;
+    }
+
+    public ClientContext createProfile(final String display) {
+        final Profile profile = new Profile();
         profile.setUser(user);
         profile.setDisplayName(display);
         profile.setApplication(application);
-
-        profile = profileDao.createOrReactivateProfile(profile);
-        profiles.add(profile);
-        return profile;
+        profiles.add(profileDao.createOrReactivateProfile(profile));
+        return this;
     }
 
-    public SessionCreation createSession() {
-        final Session session = new Session();
-        final long expiry = MILLISECONDS.convert(1, DAYS) + currentTimeMillis();
-        session.setUser(user);
-        session.setExpiry(expiry);
-        session.setApplication(application);
-        return sessionCreation = sessionDao.create(session);
+    public ClientContext createSession() {
+        return createSession(null);
     }
 
-    public SessionCreation createSession(final Profile profile) {
+    public ClientContext createSession(final Profile profile) {
         final Session session = new Session();
         final long expiry = MILLISECONDS.convert(1, DAYS) + currentTimeMillis();
         session.setUser(user);
         session.setExpiry(expiry);
         session.setProfile(profile);
         session.setApplication(application);
-        return sessionCreation = sessionDao.create(session);
+        sessionCreation = sessionDao.create(session);
+        return this;
     }
 
     public UserDao getUserDao() {
