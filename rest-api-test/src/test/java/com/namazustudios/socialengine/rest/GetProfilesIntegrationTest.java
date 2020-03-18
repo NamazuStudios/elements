@@ -1,8 +1,11 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
+import org.eclipse.jetty.deploy.App;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;
@@ -28,7 +31,12 @@ public class GetProfilesIntegrationTest {
     private Client client;
 
     @Inject
+    private ApplicationDao applicationDao;
+
+    @Inject
     private Provider<ClientContext> clientContextProvider;
+
+    private Application other;
 
     private ClientContext client0;
 
@@ -37,6 +45,12 @@ public class GetProfilesIntegrationTest {
     @BeforeClass
     private void setUp() throws Exception {
         embeddedRestApi.start();
+
+        other = new Application();
+        other.setName("OTHER");
+        other.setDescription("Other Application (not under test)");
+        other = applicationDao.createOrUpdateInactiveApplication(other);
+
         client0 = clientContextProvider.get()
             .createUser("GetProfileIntegrationTest0")
             .createProfiles(5)
@@ -109,6 +123,55 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
+    public void testGetProfilesFilteredByUserIdAndApplicationId(final ClientContext clientContext) throws Exception {
+
+        Pagination<Profile> profiles;
+
+        profiles = client
+                .target("http://localhost:8080/api/rest/profile")
+                .queryParam("count", 20)
+                .queryParam("user", clientContext.getUser().getId())
+                .queryParam("application", clientContext.getApplication().getId())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .buildGet()
+                .submit(ProfilePagination.class)
+                .get();
+
+        final Set<String> profileIds = clientContext.getProfiles().stream().map(p -> p.getId()).collect(toSet());
+
+        assertEquals(profiles.getTotal(), 5);
+        assertEquals(profiles.getObjects().size(), 5);
+        profiles.getObjects().forEach(p -> assertTrue(profileIds.contains(p.getId())));
+
+    }
+
+    @Test(dataProvider = "provideClientContexts")
+    public void testGetProfilesFilteredByUserIdAndApplicationName(final ClientContext clientContext) throws Exception {
+
+        Pagination<Profile> profiles;
+
+        profiles = client
+                .target("http://localhost:8080/api/rest/profile")
+                .queryParam("count", 20)
+                .queryParam("user", clientContext.getUser().getId())
+                .queryParam("application", clientContext.getApplication().getName())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .buildGet()
+                .submit(ProfilePagination.class)
+                .get();
+
+        final Set<String> profileIds = clientContext.getProfiles().stream().map(p -> p.getId()).collect(toSet());
+
+        assertEquals(profiles.getTotal(), 5);
+        assertEquals(profiles.getObjects().size(), 5);
+        profiles.getObjects().forEach(p -> assertTrue(profileIds.contains(p.getId())));
+
+    }
+
+
+    @Test(dataProvider = "provideClientContexts")
     public void testGetProfilesFilteredByUserIdMe(final ClientContext clientContext) throws Exception {
 
         Pagination<Profile> profiles;
@@ -154,13 +217,62 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByInvalidNonMatchingUserId(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByValidNonmatchingApplicationId(final ClientContext clientContext) throws Exception {
+
+        Pagination<Profile> profiles;
+
+        profiles = client
+                .target("http://localhost:8080/api/rest/profile")
+                .queryParam("application", other.getId())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .buildGet()
+                .submit(ProfilePagination.class)
+                .get();
+
+        assertEquals(profiles.getTotal(), 0);
+        assertEquals(profiles.getObjects().size(), 0);
+
+        profiles = client
+                .target("http://localhost:8080/api/rest/profile")
+                .queryParam("application", other.getName())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .buildGet()
+                .submit(ProfilePagination.class)
+                .get();
+
+        assertEquals(profiles.getTotal(), 0);
+        assertEquals(profiles.getObjects().size(), 0);
+
+    }
+
+    @Test(dataProvider = "provideClientContexts")
+    public void testGetProfilesFilteredByValidNonmatchingApplicationName(final ClientContext clientContext) throws Exception {
+
+        Pagination<Profile> profiles;
+
+        profiles = client
+                .target("http://localhost:8080/api/rest/profile")
+                .queryParam("application", other.getName())
+                .request()
+                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .buildGet()
+                .submit(ProfilePagination.class)
+                .get();
+
+        assertEquals(profiles.getTotal(), 0);
+        assertEquals(profiles.getObjects().size(), 0);
+
+    }
+
+    @Test(dataProvider = "provideClientContexts")
+    public void testGetProfilesFilteredByInvalidNonmatchingApplicationId(final ClientContext clientContext) throws Exception {
 
         Pagination<Profile> profiles;
         profiles = client
                 .target("http://localhost:8080/api/rest/profile")
-                .queryParam("count", 20)
-                .queryParam("user", "bogo")
+                .queryParam("application", "bogo")
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
                 .buildGet()
