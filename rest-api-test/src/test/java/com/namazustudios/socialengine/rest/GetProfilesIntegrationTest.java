@@ -24,9 +24,6 @@ import static org.testng.Assert.*;
 public class GetProfilesIntegrationTest {
 
     @Inject
-    private EmbeddedRestApi embeddedRestApi;
-
-    @Inject
     private Client client;
 
     @Inject
