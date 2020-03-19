@@ -2,22 +2,43 @@ package com.namazustudios.socialengine.rest;
 
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.embedded.RedisServer;
 
 import javax.inject.Inject;
 
+import static java.lang.Runtime.getRuntime;
+
 public class EmbeddedRestApi {
 
-    private RestAPIMain restAPIMain;
+    private static final Logger logger = LoggerFactory.getLogger(EmbeddedRestApi.class);
 
-    private RedisServer redisServer;
+    private final RestAPIMain restAPIMain;
 
-    private MongodProcess mongodProcess;
+    private final RedisServer redisServer;
 
-    private MongodExecutable mongodExecutable;
+    private final MongodProcess mongodProcess;
 
-    public void start() throws Exception {
+    private final MongodExecutable mongodExecutable;
+
+    @Inject
+    public EmbeddedRestApi(final RestAPIMain restAPIMain,
+                           final RedisServer redisServer,
+                           final MongodProcess mongodProcess,
+                           final MongodExecutable mongodExecutable) throws Exception {
+        this.restAPIMain = restAPIMain;
+        this.redisServer = redisServer;
+        this.mongodProcess = mongodProcess;
+        this.mongodExecutable = mongodExecutable;
         getRestAPIMain().start();
+        getRuntime().addShutdownHook(new Thread(() ->{
+            try {
+                stop();
+            } catch (Exception ex) {
+                logger.error("Could not stop services.", ex);
+            }
+        }));
     }
 
     public void stop() throws Exception {
@@ -30,36 +51,15 @@ public class EmbeddedRestApi {
         return restAPIMain;
     }
 
-    @Inject
-    public void setRestAPIMain(RestAPIMain restAPIMain) {
-        this.restAPIMain = restAPIMain;
-    }
-
     public RedisServer getRedisServer() {
         return redisServer;
-    }
-
-    @Inject
-    public void setRedisServer(RedisServer redisServer) {
-        this.redisServer = redisServer;
     }
 
     public MongodProcess getMongodProcess() {
         return mongodProcess;
     }
 
-    @Inject
-    public void setMongodProcess(MongodProcess mongodProcess) {
-        this.mongodProcess = mongodProcess;
-    }
-
     public MongodExecutable getMongodExecutable() {
         return mongodExecutable;
     }
-
-    @Inject
-    public void setMongodExecutable(MongodExecutable mongodExecutable) {
-        this.mongodExecutable = mongodExecutable;
-    }
-
 }

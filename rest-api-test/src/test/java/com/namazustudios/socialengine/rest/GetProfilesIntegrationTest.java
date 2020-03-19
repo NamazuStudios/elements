@@ -5,21 +5,19 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.eclipse.jetty.deploy.App;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.ws.rs.client.Client;
-
 import java.util.Set;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
-import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
-import static javax.ws.rs.client.ClientBuilder.newClient;
 import static org.testng.Assert.*;
-
 
 @Guice(modules = {EmbeddedRestApiIntegrationTestModule.class})
 public class GetProfilesIntegrationTest {
@@ -43,8 +41,7 @@ public class GetProfilesIntegrationTest {
     private ClientContext client1;
 
     @BeforeClass
-    private void setUp() throws Exception {
-        embeddedRestApi.start();
+    private void setUp() {
 
         other = new Application();
         other.setName("OTHER");
@@ -59,11 +56,7 @@ public class GetProfilesIntegrationTest {
             .createUser("GetProfileIntegrationTest1")
             .createProfiles(5)
             .createSession();
-    }
 
-    @AfterClass
-    public void tearDown() throws Exception {
-        embeddedRestApi.stop();
     }
 
     @DataProvider

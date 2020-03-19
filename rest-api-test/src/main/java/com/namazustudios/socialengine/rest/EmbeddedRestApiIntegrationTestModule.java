@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.rest;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Provider;
-import com.google.inject.Scopes;
+import com.google.inject.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
@@ -52,25 +50,15 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
             return;
         }
 
-        final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-        install(new RestAPIModule(() -> {
-            final Properties properties = defaultConfigurationSupplier.get();
-            properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
-            properties.put(MONGO_DB_URLS, format("mongo://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
-            return properties;
-        }));
-
         final RedisServer redisServer;
 
         try {
             redisServer = new RedisServer(TEST_REDIS_PORT);
             redisServer.start();
-            getRuntime().addShutdownHook(new Thread(() -> redisServer.stop()));
             bind(RedisServer.class).toInstance(redisServer);
         } catch (IOException e) {
             addError(e);
+            return;
         }
 
         final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
@@ -81,6 +69,16 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
             application.setDescription("Context Test Application");
             return applicationDaoProvider.get().createOrUpdateInactiveApplication(application);
         }).in(SINGLETON);
+
+        final DefaultConfigurationSupplier defaultConfigurationSupplier;
+        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+
+        install(new RestAPIModule(() -> {
+            final Properties properties = defaultConfigurationSupplier.get();
+            properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
+            properties.put(MONGO_DB_URLS, format("mongo://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
+            return properties;
+        }));
 
         bind(RestAPIMain.class).asEagerSingleton();
         bind(EmbeddedRestApi.class).asEagerSingleton();
