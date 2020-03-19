@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
+import org.testng.Assert;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -87,8 +88,8 @@ public class GetProfilesIntegrationTest {
               .submit(ProfilePagination.class)
               .get();
 
-        assertEquals(profiles.getTotal(), 10);
-        assertEquals(profiles.getObjects().size(), 10);
+        assertTrue(profiles.getTotal() >= 10);
+        assertTrue(profiles.getObjects().size() >= 10);
         for (final Profile profile : profiles.getObjects()) assertNull(profile.getUser());
 
     }
