@@ -82,6 +82,9 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
             return applicationDaoProvider.get().createOrUpdateInactiveApplication(application);
         }).in(SINGLETON);
 
+        bind(RestAPIMain.class).asEagerSingleton();
+        bind(EmbeddedRestApi.class).asEagerSingleton();
+
     }
 
     public MongodExecutable mongodExecutable() throws IOException {

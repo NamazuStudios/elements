@@ -144,4 +144,5 @@ public class MongoAppleIapReceiptDaoTest {
     public void setAppleIapReceiptDao(AppleIapReceiptDao appleIapReceiptDao) {
         this.appleIapReceiptDao = appleIapReceiptDao;
     }
+
 }
