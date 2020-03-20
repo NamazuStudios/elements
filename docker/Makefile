@@ -17,7 +17,7 @@ push:
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-setup
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-ui
 
-build: login
+revision: login
 	$(DOCKER_BUILD) namazu-socialengine-api \
 		--tag namazu-socialengine-api:$(TAG) \
 		--tag docker.namazustudios.net/namazu-socialengine-api:$(TAG)
