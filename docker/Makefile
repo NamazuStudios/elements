@@ -2,7 +2,8 @@
 .DEFAULT=push
 .PHONY=login,tag,push
 
-TAG ?= $(shell git rev-parse --short --verify HEAD)
+TAG ?= $(shell git rev-parse --verify HEAD)
+TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 
 DOCKER_TAG=docker tag
 DOCKER_PUSH=docker push
@@ -20,22 +21,28 @@ push:
 revision: login
 	$(DOCKER_BUILD) namazu-socialengine-api \
 		--tag namazu-socialengine-api:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-api:$(TAG)
+		--tag docker.namazustudios.net/namazu-socialengine-api:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-api:$(TAG_SHORT)
 	$(DOCKER_BUILD) namazu-socialengine-app-node \
 		--tag namazu-socialengine-app-node:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-node:$(TAG)
+		--tag docker.namazustudios.net/namazu-socialengine-app-node:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-app-node:$(TAG_SHORT)
 	$(DOCKER_BUILD) namazu-socialengine-app-serve \
 		--tag namazu-socialengine-app-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-serve:$(TAG)
+		--tag docker.namazustudios.net/namazu-socialengine-app-serve:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-app-serve:$(TAG_SHORT)
 	$(DOCKER_BUILD) namazu-socialengine-code-serve \
 		--tag namazu-socialengine-code-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-code-serve:$(TAG)
+		--tag docker.namazustudios.net/namazu-socialengine-code-serve:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-code-serve:$(TAG_SHORT)
 	$(DOCKER_BUILD) namazu-socialengine-setup \
 		--tag namazu-socialengine-setup:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-setup:$(TAG)
+		--tag docker.namazustudios.net/namazu-socialengine-setup:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-setup:$(TAG_SHORT)
 	$(DOCKER_BUILD) namazu-socialengine-ui \
 		--tag namazu-socialengine-ui:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG)
+		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG_SHORT)
 
 latest: login
 	$(DOCKER_BUILD) namazu-socialengine-api --tag docker.namazustudios.net/namazu-socialengine-api
