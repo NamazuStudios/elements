@@ -10,7 +10,7 @@ DOCKER_PUSH=docker push
 DOCKER_BUILD=docker build
 DOCKER_LOGIN=docker login
 
-MAVEN_PROJECT_VERSION=$(shell mvn org.apache.maven.plugins:maven-help-plugin:3.1.0:evaluate -Dexpression=project.version -q -DforceStdout)
+MAVEN_PROJECT_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
 REST_WAR=target/lib/rest-war-$(MAVEN_PROJECT_VERSION).war
 APP_NODE_JAR=target/lib/app-node-$(MAVEN_PROJECT_VERSION)-jar-with-dependencies.jar
