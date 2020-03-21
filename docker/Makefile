@@ -53,4 +53,4 @@ latest: login
 	$(DOCKER_BUILD) namazu-socialengine-ui --tag docker.namazustudios.net/namazu-socialengine-ui
 
 login:
-	- echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net
+	echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net
