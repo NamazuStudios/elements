@@ -36,8 +36,12 @@ public class SessionSecretHeader {
 
     /**
      * Given the supplied {@link Function<String, String>}, this will extract the session secret value and return parse
-     * it using the alternte constructor {@link #SessionSecretHeader(String)}.
-     * @param headerSupplierFunction
+     * it using the alternte constructor {@link #SessionSecretHeader(String)}.  The supplied function will be passed
+     * with the argument {@link Headers#SESSION_SECRET} and must either return the value of the session secret or it
+     * must return null.  If value returned does not fit the format of the session secret header, then this will raise
+     * and instance of {@Link BadSessionSecretException}.
+     *
+     * @param headerSupplierFunction, may return null
      */
     public SessionSecretHeader(final Function<String, String> headerSupplierFunction) {
         this(getSessionSecretHeader(headerSupplierFunction));
@@ -53,9 +57,16 @@ public class SessionSecretHeader {
      * Parses out the session secret header and validates all tokens therein.  This will raise an instance of
      * {@link BadSessionSecretException} in the event of parse failure.
      *
-     * @param header the header value
+     * @param header the header value, may be null
      */
     public SessionSecretHeader(final String header) {
+
+        if (header == null) {
+            sessionSecret = null;
+            overrideUserId = null;
+            overrideProfileId = null;
+            return;
+        }
 
         final Iterator<String> tokens = Splitter.on(SEPARATOR)
                 .trimResults()
