@@ -68,7 +68,7 @@ public class IntegrationTestModule extends AbstractModule {
     public MongodExecutable mongodExecutable() throws IOException {
 
         final IMongodConfig config = new MongodConfigBuilder()
-            .version(Version.V3_4_1)
+            .version(Version.V3_4_5)
             .net(new Net(TEST_BIND_IP, TEST_MONGO_PORT, localhostIsIPv6()))
             .build();
 
