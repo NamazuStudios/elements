@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.ProfileNotFoundException;
+import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -19,7 +19,6 @@ import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.*;
-import org.apache.lucene.util.BytesRef;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
@@ -28,14 +27,11 @@ import org.mongodb.morphia.query.*;
 import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static java.lang.System.currentTimeMillis;
 
 /**
  *
@@ -61,42 +57,89 @@ public class MongoProfileDao implements ProfileDao {
 
     private MongoConcurrentUtils mongoConcurrentUtils;
 
+    @Override
+    public Profile findActiveProfile(final String profileId) {
+
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+
+        query.and(
+            query.criteria("_id").equal(profileId),
+            query.criteria("active").equal(true)
+        );
+
+        final MongoProfile mongoProfile = query.get();
+        return mongoProfile == null ? null : transform(mongoProfile);
+
+    }
+
+    @Override
+    public Profile findActiveProfileForUser(final String profileId, final String userId) {
+
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
+
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+        query.field("_id").equal(objectId);
+        query.field("active").equal(true);
+        query.field("user").equal(mongoUser);
+
+        final MongoProfile mongoProfile = query.get();
+        return mongoProfile == null ? null : transform(mongoProfile);
+
+    }
+
     public Pagination<Profile> getActiveProfiles(
             final int offset,
             final int count,
-            final long lowerBoundTimestamp,
-            final long upperBoundTimestamp) {
+            final String applicationNameOrId, final String userId,
+            final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(query.criteria("active").equal(true));
 
-        if (lowerBoundTimestamp >= 0 && upperBoundTimestamp >= 0 && lowerBoundTimestamp > upperBoundTimestamp) {
+        if (lowerBoundTimestamp != null && upperBoundTimestamp != null && lowerBoundTimestamp > upperBoundTimestamp) {
             throw new IllegalArgumentException("Invalid range: upper bound should be less than or " +
                     "equal to lower bound.");
         }
 
-        if (lowerBoundTimestamp >= 0) {
+        if (lowerBoundTimestamp != null) {
+
             final Date lowerBoundDate;
+
             if (lowerBoundTimestamp >= 0) {
                 lowerBoundDate = new Date(lowerBoundTimestamp);
-            }
-            else {
+            } else {
                 lowerBoundDate = new Date(0);
             }
 
             query.and(query.criteria("lastLogin").greaterThanOrEq(lowerBoundDate));
         }
 
-        if (upperBoundTimestamp >= 0) {
+        if (upperBoundTimestamp != null) {
+
             final Date upperBoundDate;
+
             if (upperBoundTimestamp >= 0) {
                 upperBoundDate = new Date(upperBoundTimestamp);
-            }
-            else {
+            } else {
                 upperBoundDate = new Date();
             }
 
             query.and(query.criteria("lastLogin").lessThanOrEq(upperBoundDate));
+
+        }
+
+        if (applicationNameOrId != null) {
+            final MongoApplication mongoApplication;
+            mongoApplication = getMongoApplicationDao().findActiveMongoApplication(applicationNameOrId);
+            if (mongoApplication == null) return new Pagination<>();
+            query.and(query.criteria("application").equal(mongoApplication));
+        }
+
+        if (userId != null) {
+            final MongoUser mongoUser = getMongoUserDao().findActiveMongoUser(userId);
+            if (mongoUser == null) return new Pagination<>();
+            query.and(query.criteria("user").equal(mongoUser));
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input));

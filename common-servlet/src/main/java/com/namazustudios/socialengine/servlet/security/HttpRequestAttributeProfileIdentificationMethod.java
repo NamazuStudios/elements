@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.servlet.security;
 
-import com.namazustudios.socialengine.exception.UnidentifiedProfileException;
+import com.namazustudios.socialengine.exception.profile.UnidentifiedProfileException;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.security.ProfileIdentificationMethod;
 import org.slf4j.Logger;
@@ -24,7 +24,7 @@ public class HttpRequestAttributeProfileIdentificationMethod implements ProfileI
             throw new UnidentifiedProfileException();
         } else if (!(profile instanceof Profile)) {
             logger.error("{} is not instance of {}", profile, Profile.class.getName());
-            return null;
+            throw new UnidentifiedProfileException();
         }
 
         return (Profile) profile;

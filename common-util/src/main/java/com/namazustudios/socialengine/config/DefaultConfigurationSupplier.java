@@ -29,16 +29,26 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private final Properties defaultProperties;
 
+    /**
+     * Uses all default configuration.  This scans the classpath using the {@link ClassLoader} from
+     * {@link ClassLoader#getSystemClassLoader()} to scan for defaults and will load properties according to the default
+     * configuration {@see {@link #loadProperties()}}.
+     */
     public DefaultConfigurationSupplier() {
-        this(ClassLoader.getSystemClassLoader());
+        this(loadProperties());
     }
 
-    public DefaultConfigurationSupplier(final ClassLoader classLoader) {
-
-        defaultProperties = scanForDefaults(classLoader);
-        final Properties properties = new Properties(defaultProperties);
-
+    /**
+     * Loads and returns properties using a variety of fallbacks.  This first attempts to read from the default the
+     * default properties file.  If no such file exists, this will use the value of {@link System#getProperties()} as
+     * the application configuration.
+     *
+     * @return the {@link Properties} used to configure the application.
+     */
+    public static Properties loadProperties() {
         final File propertiesFile = new File(getProperties().getProperty(PROPERTIES_FILE, DEFAULT_PROPERTIES_FILE));
+
+        final Properties properties = new Properties();
 
         try (final InputStream is = new FileInputStream(propertiesFile)) {
             final Properties loadedProperties = new Properties();
@@ -53,7 +63,28 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
             logger.warn("Could not load properties from {}.  Using system properties.", propertiesFile.getAbsolutePath(), ex);
         }
 
-        this.properties = properties;
+        return properties;
+    }
+
+    /**
+     * This scans the classpath using the {@link ClassLoader} from {@link ClassLoader#getSystemClassLoader()} to scan
+     * for defaults and will use the supplied properties.  The configured properties are loaded using
+     * {@link #loadProperties()}
+     * @param properties the
+     */
+    public DefaultConfigurationSupplier(final Properties properties) {
+        this(ClassLoader.getSystemClassLoader(), properties);
+    }
+
+    public DefaultConfigurationSupplier(final ClassLoader classLoader) {
+        this(classLoader, loadProperties());
+    }
+
+    public DefaultConfigurationSupplier(final ClassLoader classLoader, final Properties properties) {
+
+        defaultProperties = scanForDefaults(classLoader);
+        this.properties = new Properties(defaultProperties);
+        this.properties.putAll(properties);
 
         final StringBuilder sb = new StringBuilder();
         sb.append("Application Properties:\n");
@@ -66,6 +97,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     }
 
+    @Override
     public Properties get() {
         final Properties properties = new Properties(defaultProperties);
         properties.putAll(this.properties);

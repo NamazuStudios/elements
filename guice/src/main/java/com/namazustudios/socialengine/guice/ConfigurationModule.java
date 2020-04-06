@@ -38,6 +38,7 @@ public class ConfigurationModule extends AbstractModule {
         install(new FileConverter());
 
         final Properties properties = propertiesSupplier.get();
+        if (properties == null) addError("Supplier supplied null properties.");
         logger.info("Using configuration properties {} from {}", properties, propertiesSupplier.getClass().getName());
         bindProperties(binder(), properties);
 

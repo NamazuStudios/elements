@@ -10,7 +10,9 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoSessionSecret;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
 
-import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.exception.security.BadSessionSecretException;
+import com.namazustudios.socialengine.exception.security.NoSessionException;
+import com.namazustudios.socialengine.exception.security.SessionExpiredException;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.util.ValidationHelper;

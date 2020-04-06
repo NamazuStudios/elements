@@ -11,6 +11,9 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+
 /**
  * Handles the management of {@link PSNApplicationConfiguration} instances.
  *
@@ -18,7 +21,7 @@ import javax.ws.rs.core.MediaType;
  */
 @Api(value = "PSN Application Configurations",
     description = "Operations for the management of ApplictionConfigurations for the Playstation Network.",
-    authorizations = {@Authorization(EnhancedApiListingResource.SESSION_SECRET)})
+    authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/psn")
 public class PSNApplicationConfigurationResource {
 

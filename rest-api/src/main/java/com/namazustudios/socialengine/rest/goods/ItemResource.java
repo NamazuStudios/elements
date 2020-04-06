@@ -22,11 +22,12 @@ import java.util.List;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Path("item")
 @Api(value = "Items",
     description = "Manages items, also known as digital goods",
-    authorizations = {@Authorization(SESSION_SECRET)})
+    authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Produces(MediaType.APPLICATION_JSON)
 public class ItemResource {
 

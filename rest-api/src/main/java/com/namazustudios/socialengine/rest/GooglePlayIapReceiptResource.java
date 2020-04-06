@@ -18,6 +18,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(value = "Google Play IAPs",
      description = "A REST interface where Google Play IAP receipt tokens are POSTed for the purposes of generating " +
@@ -27,7 +28,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
              "receives a RewardIssuance, then the mobile app should submit a consumption request " +
              "to Google Play (assuming the product may be purchased more than once). I.e., the product is considered " +
              "consumed as soon as an issuance has been successfully generated on the server.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("google")
 public class GooglePlayIapReceiptResource {
 

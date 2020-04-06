@@ -18,7 +18,6 @@
 
     <properties>
         <morphia.version>1.3.2</morphia.version>
-        <flapdoodle.mongo.version>2.2.0</flapdoodle.mongo.version>
     </properties>
 
     <dependencies>

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service.gameon;
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
-import com.namazustudios.socialengine.exception.ProfileNotFoundException;
+import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.exception.gameon.GameOnRegistrationNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.User;

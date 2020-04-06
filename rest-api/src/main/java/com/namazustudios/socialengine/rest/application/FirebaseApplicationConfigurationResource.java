@@ -14,11 +14,12 @@ import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(
     value = "Firebase Application Configuration",
     description = "Operations for the management of ApplictionConfigurations for Firebase Applications.",
-    authorizations = {@Authorization(SESSION_SECRET)})
+    authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/firebase")
 public class FirebaseApplicationConfigurationResource {
 

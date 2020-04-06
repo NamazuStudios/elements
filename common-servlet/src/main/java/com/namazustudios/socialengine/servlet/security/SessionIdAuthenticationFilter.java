@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.servlet.security;
 
+import com.google.common.base.Splitter;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.security.SessionSecretHeader;
 import com.namazustudios.socialengine.service.SessionService;
 
 import javax.inject.Inject;
@@ -14,6 +16,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.application.Application.APPLICATION_ATTRIUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
@@ -38,7 +41,7 @@ public class SessionIdAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
-        final String sessionSecret = request.getHeader(SESSION_SECRET);
+        final String sessionSecret = new SessionSecretHeader(request::getHeader).getSessionSecret();
 
         if (sessionSecret == null) {
             chain.doFilter(request, response);
@@ -54,7 +57,7 @@ public class SessionIdAuthenticationFilter implements Filter {
             }
 
             final User user = session.getUser();
-            final Profile profile = session.getProfile();
+            final Profile profile = getProfile(request, session);
             final Application application = session.getApplication();
 
             request.setAttribute(SESSION_ATTRIBUTE, session);
@@ -66,6 +69,10 @@ public class SessionIdAuthenticationFilter implements Filter {
 
         }
 
+    }
+
+    private Profile getProfile(final HttpServletRequest request, final Session session) {
+        return session.getProfile();
     }
 
     public SessionService getSessionService() {

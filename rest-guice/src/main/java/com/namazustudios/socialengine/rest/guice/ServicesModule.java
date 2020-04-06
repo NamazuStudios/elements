@@ -26,6 +26,7 @@ import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
 import com.namazustudios.socialengine.service.mission.*;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
+import com.namazustudios.socialengine.service.profile.ProfileOverrideServiceProvider;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
 import com.namazustudios.socialengine.service.progress.ProgressService;
 import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
@@ -206,6 +207,10 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(GooglePlayIapReceiptServiceProvider.class)
                 .in(ServletScopes.REQUEST);
 
+        bind(ProfileOverrideService.class)
+                .toProvider(ProfileOverrideServiceProvider.class)
+                .in(ServletScopes.REQUEST);
+
         bind(SessionService.class).to(AnonSessionService.class);
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
 
@@ -228,6 +233,7 @@ public class ServicesModule extends PrivateModule {
         expose(IosApplicationConfigurationService.class);
         expose(GooglePlayApplicationConfigurationService.class);
         expose(ProfileService.class);
+        expose(ProfileOverrideService.class);
         expose(MatchService.class);
         expose(ManifestService.class);
         expose(FCMRegistrationService.class);

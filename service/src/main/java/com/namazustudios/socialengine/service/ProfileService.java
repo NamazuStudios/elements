@@ -16,11 +16,15 @@ public interface ProfileService {
      *
      * @param offset the offset
      * @param count the count
+     * @param applicationNameOrId the application name or ID to use when fetching the profiles
+     * @param userId the userId which to use when filtering.  If null, then no filtering will be applied.
      * @param lowerBoundTimestamp
      * @param upperBoundTimestamp
      * @return a {@link Pagination} of {@link Profile} instances
      */
-    Pagination<Profile> getProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp);
+    Pagination<Profile> getProfiles(int offset, int count,
+                                    String applicationNameOrId, String userId,
+                                    Long lowerBoundTimestamp, Long upperBoundTimestamp);
 
     /**
      * Lists all {@link Profile} instances, specifying a search query.

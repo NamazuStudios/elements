@@ -1,7 +1,6 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.rest.profile;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -10,7 +9,6 @@ import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.ProfileService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,6 +21,7 @@ import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 /**
  * Created by patricktwohig on 6/27/17.
@@ -31,7 +30,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
      description = "Allows for the manipulation of Profile objects.  Profile objects store the " +
                    "basic information for the users in the system as they are associated with " +
                    "Applications.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("profile")
 public class ProfileResource {
 
@@ -53,9 +52,11 @@ public class ProfileResource {
     public Pagination<Profile> getProfiles(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("search") final String search,
-            @QueryParam("before") @DefaultValue("-1") final long beforeTimestamp,
-            @QueryParam("after") @DefaultValue("-1") final long afterTimestamp) {
+            @QueryParam("before") final Long beforeTimestamp,
+            @QueryParam("after")  final Long afterTimestamp,
+            @QueryParam("application") final String applicationNameOrId,
+            @QueryParam("user") final String userId,
+            @QueryParam("search") final String search) {
         // Note: afterTimestamp => lower bound of time range, beforeTimestamp => upper bound of time range, i.e.:
         // [afterTimestamp, beforeTimestamp]
 
@@ -67,20 +68,22 @@ public class ProfileResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-
-        if (beforeTimestamp >= 0 && afterTimestamp >= 0 && afterTimestamp > beforeTimestamp) {
+        if (beforeTimestamp != null && afterTimestamp != null && afterTimestamp > beforeTimestamp) {
             throw new InvalidParameterException("Invalid range: afterTimestamp should be less than or " +
                     "equal to beforeTimestamp.");
         }
 
         final String query = nullToEmpty(search).trim();
 
-        if ((beforeTimestamp >= 0 || afterTimestamp >= 0) && !query.isEmpty()) {
+        if ((beforeTimestamp != null || afterTimestamp != null) && !query.isEmpty()) {
             throw new InvalidParameterException("Time range and search parameters may not be combined.");
         }
 
         return query.isEmpty() ?
-                getProfileService().getProfiles(offset, count, afterTimestamp, beforeTimestamp) :
+                getProfileService().getProfiles(
+                        offset, count,
+                        applicationNameOrId, userId,
+                        afterTimestamp, beforeTimestamp) :
                 getProfileService().getProfiles(offset, count, search);
     }
 

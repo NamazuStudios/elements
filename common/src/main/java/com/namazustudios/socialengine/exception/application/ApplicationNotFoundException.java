@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.exception.application;
+
+import com.namazustudios.socialengine.exception.NotFoundException;
 
 public class ApplicationNotFoundException extends NotFoundException {
 

@@ -51,8 +51,8 @@ public abstract class JerseyModule extends ServletModule {
         bind(ServletContainer.class).in(Singleton.class);
 
         final Map<String, String> params = new ImmutableMap.Builder<String, String>()
-                    .put("javax.ws.rs.Application", GuiceResourceConfig.class.getName())
-                .build();
+                .put("javax.ws.rs.Application", GuiceResourceConfig.class.getName())
+            .build();
 
         serve(apiRoot).with(ServletContainer.class, params);
 

@@ -18,11 +18,12 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(value = "Apple IAPs",
      description = "A REST interface where Apple IAP receipts are POSTed for the purposes of generating " +
              "RewardIssuances.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("ios")
 public class AppleIapReceiptResource {
 

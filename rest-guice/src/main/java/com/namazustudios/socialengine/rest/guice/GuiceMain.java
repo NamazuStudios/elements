@@ -28,7 +28,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -73,56 +72,8 @@ public class GuiceMain extends GuiceServletContextListener {
 
     @Override
     protected Injector getInjector() {
-
-        final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier(servletContext.getClassLoader());
-
-        final Properties properties = defaultConfigurationSupplier.get();
-        final String apiRoot = properties.getProperty(Constants.API_PREFIX);
-
-        final FacebookBuiltinPermissionsSupplier facebookBuiltinPermissionsSupplier;
-        facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier(servletContext.getClassLoader());
-
-        return injector = Guice.createInjector(
-            new ConfigurationModule(defaultConfigurationSupplier),
-            new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),
-            new JerseyModule(apiRoot) {
-                @Override
-                protected void configureResoures() {
-                    enableAllResources();
-                }
-            },
-            new ServicesModule(),
-            new NotificationServiceModule(),
-            new GuiceStandardNotificationFactoryModule(),
-            new FirebaseAppFactoryModule(),
-            new RedissonServicesModule(),
-            new SecurityModule(),
-            new MongoCoreModule(),
-            new MongoDaoModule(),
-            new MongoSearchModule(),
-            new RTFilesystemGitLoaderModule(),
-            new RTDaoModule(),
-            new RTGitApplicationModule(),
-            new ValidationModule(),
-            new GameOnInvokerModule(),
-            new AppleIapReceiptInvokerModule(),
-            new JacksonHttpClientModule()
-            .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-            .withDefaultObjectMapperProvider(() -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                final DateFormat dateFormat = new AppleDateFormat();
-                objectMapper.setDateFormat(dateFormat);
-                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            })
-        );
-
+        final RestAPIModule restAPIModule = new RestAPIModule(servletContext.getClassLoader());
+        return injector = Guice.createInjector(restAPIModule);
     }
 
 }

@@ -16,11 +16,12 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(value = "User Signup",
-        description = "Manages users in the server.  Users are single-end users typically associated " +
-                      "with a login name or email address.",
-        authorizations = {@Authorization(SESSION_SECRET)})
+     description = "Manages users in the server.  Users are single-end users typically associated " +
+                   "with a login name or email address.",
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("signup")
 public class SignupResource {
 

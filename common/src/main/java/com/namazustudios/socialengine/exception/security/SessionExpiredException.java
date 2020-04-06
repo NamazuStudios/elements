@@ -1,4 +1,6 @@
-package com.namazustudios.socialengine.exception;
+package com.namazustudios.socialengine.exception.security;
+
+import com.namazustudios.socialengine.exception.UnauthorizedException;
 
 public class SessionExpiredException extends UnauthorizedException {
     public SessionExpiredException() {

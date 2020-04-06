@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.security;
 
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.UnidentifiedProfileException;
+import com.namazustudios.socialengine.exception.profile.UnidentifiedProfileException;
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 

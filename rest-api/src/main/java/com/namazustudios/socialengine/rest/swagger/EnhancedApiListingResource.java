@@ -9,8 +9,7 @@ import io.swagger.annotations.SwaggerDefinition;
 import io.swagger.jaxrs.listing.ApiListingResource;
 import io.swagger.models.Scheme;
 import io.swagger.models.Swagger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import io.swagger.models.parameters.HeaderParameter;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -21,7 +20,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
-import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.*;
 import static io.swagger.models.Scheme.forValue;
 import static java.util.Arrays.asList;
 
@@ -30,18 +29,32 @@ import static java.util.Arrays.asList;
  */
 @SwaggerDefinition(
     securityDefinition = @SecurityDefinition(
-        apiKeyAuthDefinitions = {@ApiKeyAuthDefinition(
-            name = SESSION_SECRET,
-            description = "Uses a server-assigned session key which is generated from various POST /session and " +
-                          "POST /facebook_session endpoints in the API.",
-            in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
-            key = EnhancedApiListingResource.SESSION_SECRET
-        )}
+        apiKeyAuthDefinitions = {
+            @ApiKeyAuthDefinition(
+                name = SESSION_SECRET,
+                description = "Uses a server-assigned session key which is generated from various POST /session and " +
+                              "POST /facebook_session endpoints in the API.  This header accepts an optional " +
+                              "additional parameters which may be 'p{ProfileId}' override the Profile attached to the " +
+                              "session.  The full format is as follows: " +
+                              "Elements-SessionSecret: {SessionSecret} [p{ProfileId}]",
+                in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
+                key = EnhancedApiListingResource.SESSION_SECRET),
+            @ApiKeyAuthDefinition(
+                name = SOCIALENGINE_SESSION_SECRET,
+                description = "Functionally Identical to using Elements-SessionSecret.  Provided for backwards " +
+                              "compatibility from before Elements had an identity crisis.  Deprecated.",
+                in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
+                key = EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET)
+        }
     )
 )
 public class EnhancedApiListingResource extends ApiListingResource {
 
+    public static final String PROFILE_ID = "profile_id";
+
     public static final String SESSION_SECRET = "session_secret";
+
+    public static final String SOCIALENGINE_SESSION_SECRET = "socialengine_session_secret";
 
     private URI apiOutsideUrl;
 
@@ -51,6 +64,7 @@ public class EnhancedApiListingResource extends ApiListingResource {
     protected Swagger process(Application app, ServletContext servletContext, ServletConfig sc, HttpHeaders headers, UriInfo uriInfo) {
         final Swagger swagger = super.process(app, servletContext, sc, headers, uriInfo);
         appendHostInformation(swagger);
+        appendHeaderInformation(swagger);
         return swagger;
     }
 
@@ -81,6 +95,12 @@ public class EnhancedApiListingResource extends ApiListingResource {
             swagger.setSchemes(asList(scheme));
         }
 
+    }
+
+    private void appendHeaderInformation(final Swagger swagger) {
+        final HeaderParameter profileId = new HeaderParameter();
+        profileId.setName(Headers.PROFILE_ID);
+        swagger.addParameter(PROFILE_ID, profileId);
     }
 
     public URI getApiOutsideUrl() {

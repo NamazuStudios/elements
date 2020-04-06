@@ -12,6 +12,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(value = "Matchmaking Application Configuration",
         description = "These operations manage any variety of client side applications which " +
@@ -20,7 +21,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
                 "profiles.  Application metadata is typically used for client side apps to determine " +
                 "the latest version or to resolve any compatiblity issues.  This can also be used to " +
                 "perform force upgrades.",
-        authorizations = {@Authorization(SESSION_SECRET)})
+        authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/matchmaking")
 public class MatchmakingApplicationConfigurationResource {
 

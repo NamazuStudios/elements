@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.common.base.Strings;
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
@@ -69,8 +69,13 @@ public class MongoUserDao implements UserDao {
         return getActiveMongoUser(user.getId());
     }
 
+    public MongoUser findActiveMongoUser(final String userId) {
+        final ObjectId objectId = getMongoDBUtils().parseOrReturnNull(userId);
+        return objectId == null ? null : getActiveMongoUser(objectId);
+    }
+
     public MongoUser getActiveMongoUser(final String userId) {
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(userId, UserNotFoundException::new);
         return getActiveMongoUser(objectId);
     }
 
@@ -311,7 +316,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -350,7 +355,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
@@ -391,7 +396,7 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
         final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
