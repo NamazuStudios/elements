@@ -32,7 +32,7 @@ public class SimpleResourceContext implements ResourceContext {
 
     @Override
     public void stop() {
-        getResourceService().close();
+        getResourceService().stop();
     }
 
     @Override

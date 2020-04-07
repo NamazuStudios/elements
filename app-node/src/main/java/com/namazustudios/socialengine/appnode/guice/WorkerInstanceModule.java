@@ -5,9 +5,7 @@ import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
-import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
@@ -23,7 +21,6 @@ import java.util.Set;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
-import static com.namazustudios.socialengine.rt.id.ApplicationId.forUniqueName;
 import static com.namazustudios.socialengine.rt.remote.guice.NodeIdModule.forApplicationUniqueName;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;

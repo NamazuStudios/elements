@@ -1,0 +1,488 @@
+package com.namazustudios.socialengine.rt.transact;
+
+import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.exception.ContentionException;
+import com.namazustudios.socialengine.rt.exception.DuplicateException;
+import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import javax.inject.Provider;
+import java.io.IOException;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
+
+import static java.util.Spliterator.*;
+import static java.util.stream.Collectors.toList;
+
+public class TransactionalResourceService implements ResourceService {
+
+    private static final int RETRY_COUNT = 1000;
+
+    private static final Logger logger = LoggerFactory.getLogger(TransactionalResourceService.class);
+
+    private ResourceLoader resourceLoader;
+
+    private Provider<TransactionalResourceServicePersistence> persistenceProvider;
+
+    private final AtomicReference<Context> context = new AtomicReference<>();
+
+    @Override
+    public void start() {
+
+        final Context context = new Context();
+
+        if (this.context.compareAndSet(null, context)) {
+            logger.info("Started.");
+        } else {
+            context.close();
+            throw new IllegalStateException("Already running.");
+        }
+
+    }
+
+    @Override
+    public void stop() {
+        final Context context = this.context.getAndSet(null);
+        if (context == null) throw new IllegalStateException("Not currently running.");
+        context.close();
+    }
+
+    @Override
+    public boolean exists(final ResourceId resourceId) {
+        return computeRO(txn -> txn.exists(resourceId));
+    }
+
+    @Override
+    public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
+        return computeRO((acm, txn) -> {
+            if (!txn.exists(resourceId)) throw new ResourceNotFoundException();
+            return acm.acquire(resourceId);
+        });
+    }
+
+    @Override
+    public Resource getAndAcquireResourceAtPath(final Path path) {
+        return computeRO((acm, txn) -> {
+            final ResourceId resourceId = txn.getResourceId(path);
+            return acm.acquire(resourceId);
+        });
+    }
+
+    @Override
+    public Resource addAndAcquireResource(final Path path, final Resource resource) {
+        return computeRW((acm, txn) -> {
+            txn.linkNewResource(path, resource.getId());
+            return acm.acquire(resource);
+        });
+    }
+
+    @Override
+    public void addAndReleaseResource(final Path path, final Resource resource) {
+        executeRW(txn -> {
+            try (final Resource r = resource;
+                 final WritableByteChannel wbc = txn.saveNewResource(path, r.getId())) {
+                r.serialize(wbc);
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            }
+        });
+    }
+
+    @Override
+    public boolean tryRelease(final Resource resource) {
+
+        final TransactionalResource transactionalResource;
+
+        try {
+            transactionalResource = (TransactionalResource) resource;
+        } catch (ClassCastException ex) {
+            throw new IllegalArgumentException("Resource not owned by this ResourceService", ex);
+        }
+
+        return computeRW((acm, txn) -> {
+            if (txn.exists(resource.getId())) {
+                return acm.tryRelease(transactionalResource);
+            } else {
+                return false;
+            }
+        });
+
+    }
+
+    @Override
+    public Spliterator<Listing> list(final Path path) {
+        return computeRO(txn -> {
+            final List<Listing> listings = txn.list(path).collect(toList());
+            return Spliterators.spliterator(listings, SUBSIZED | CONCURRENT | NONNULL);
+        });
+    }
+
+    @Override
+    public void link(final ResourceId sourceResourceId, final Path destination) {
+        executeRW(txn -> txn.linkExistingResource(sourceResourceId, destination));
+    }
+
+    @Override
+    public Unlink unlinkPath(final Path path, final Consumer<Resource> removed) {
+        return computeRW(txn -> txn.unlinkPath(path));
+    }
+
+    @Override
+    public List<Unlink> unlinkMultiple(final Path path, final int max, final Consumer<Resource> removed) {
+        return computeRW(txn -> txn.unlinkMultiple(path, max));
+    }
+
+    @Override
+    public Resource removeResource(final ResourceId resourceId) {
+        return computeRW(txn -> txn.removeResource(resourceId));
+    }
+
+    @Override
+    public List<ResourceId> removeResources(final Path path, final int max, final Consumer<Resource> removed) {
+        return computeRW(txn -> txn.removeResources(path, max, removed));
+    }
+
+    @Override
+    public Stream<Resource> removeAllResources() {
+        return computeRW(txn -> txn.removeAllResources());
+    }
+
+    @Override
+    public long getInMemoryResourceCount() {
+        final Context context = getContext();
+        return context.acquires.size();
+    }
+
+    public ResourceLoader getResourceLoader() {
+        return resourceLoader;
+    }
+
+    @Inject
+    public void setResourceLoader(ResourceLoader resourceLoader) {
+        this.resourceLoader = resourceLoader;
+    }
+
+    public Provider<TransactionalResourceServicePersistence> getPersistenceProvider() {
+        return persistenceProvider;
+    }
+
+    @Inject
+    public void setPersistenceProvider(Provider<TransactionalResourceServicePersistence> persistenceProvider) {
+        this.persistenceProvider = persistenceProvider;
+    }
+
+    private Context getContext() {
+        final Context context = getContext();
+        if (context == null) throw new IllegalStateException("Not started.");
+        return context;
+    }
+
+    private <T> T computeRO(final Function<ReadOnlyTransaction, T> operation) {
+
+        final Context context = getContext();
+
+        try (final ReadOnlyTransaction txn = context.persistence.openRO()) {
+            final T value = operation.apply(txn);
+            return value;
+        }
+
+    }
+
+    private <T> T computeRO(final BiFunction<AcquiresCacheMutator, ReadOnlyTransaction, T> operation) {
+
+        final Context context = getContext();
+
+        try (final ReadOnlyTransaction txn = context.persistence.openRO();
+             final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
+            final T value = operation.apply(acm, txn);
+            return value;
+        }
+
+    }
+
+    private void executeRW(final Consumer<ReadWriteTransaction> operation) {
+
+        final Context context = getContext();
+
+        for (int i = 0; i < RETRY_COUNT; ++i) {
+            try (final ReadWriteTransaction txn = context.persistence.openRW()) {
+                operation.accept(txn);
+                txn.commit();
+            } catch (TransactionConflictException ex) {
+                continue;
+            }
+        }
+
+        throw new ContentionException();
+
+    }
+
+    private void executeRW(final BiConsumer<AcquiresCacheMutator, ReadWriteTransaction> operation) {
+
+        final Context context = getContext();
+
+        for (int i = 0; i < RETRY_COUNT; ++i) {
+            try (final ReadWriteTransaction txn = context.persistence.openRW();
+                 final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
+                operation.accept(acm, txn);
+                txn.commit();
+            } catch (TransactionConflictException ex) {
+                continue;
+            }
+        }
+
+        throw new ContentionException();
+
+    }
+
+    private <T> T computeRW(final Function<ReadWriteTransaction, T> operation) {
+
+        final Context context = getContext();
+
+        for (int i = 0; i < RETRY_COUNT; ++i) {
+            try (final ReadWriteTransaction txn = context.persistence.openRW()) {
+                final T value = operation.apply(txn);
+                txn.commit();
+                return value;
+            } catch (TransactionConflictException ex) {
+                continue;
+            }
+        }
+
+        throw new ContentionException();
+
+    }
+
+    private <T> T computeRW(final BiFunction<AcquiresCacheMutator, ReadWriteTransaction, T> operation) {
+
+        final Context context = getContext();
+
+        for (int i = 0; i < RETRY_COUNT; ++i) {
+            try (final ReadWriteTransaction txn = context.persistence.openRW();
+                 final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
+                final T value = operation.apply(acm, txn);
+                txn.commit();
+                return value;
+            } catch (TransactionConflictException ex) {
+                continue;
+            }
+        }
+
+        throw new ContentionException();
+
+    }
+
+    private class Context {
+
+        private final TransactionalResourceServicePersistence persistence = getPersistenceProvider().get();
+
+        private final ConcurrentMap<ResourceId, TransactionalResource> acquires = new ConcurrentHashMap<>();
+
+        void close() {
+            persistence.close();
+        }
+
+    }
+
+    /**
+     * A light-weight in-memory utility used to maniuplate the acquires cache.  This is somewhat like a transaction
+     * but lacks the ability to roll back.  It implements it's logic using a optimistic appraoch combined with
+     * the concept of "roll-forward" mechanics.
+     *
+     * This may implicity acquire and release a single resource many times but makes efforts to ensure that the net
+     * result of all operations result in precisely one acquire or one release.
+     */
+    private class AcquiresCacheMutator implements AutoCloseable {
+
+        private final Context context;
+
+        private final ReadOnlyTransaction txn;
+
+        private final ReadWriteTransaction rwtxn;
+
+        private final List<TransactionalResource> toClose = new ArrayList<>();
+
+        private final List<TransactionalResource> toAcquire = new ArrayList<>();
+
+        private final List<TransactionalResource> toRelease = new ArrayList<>();
+
+        public AcquiresCacheMutator(final Context context, final ReadWriteTransaction txn) {
+            this(context, txn, txn);
+        }
+
+        public AcquiresCacheMutator(final Context context, final ReadOnlyTransaction txn) {
+            this(context, txn, null);
+        }
+
+        public AcquiresCacheMutator(final Context context,
+                                    final ReadOnlyTransaction txn,
+                                    final ReadWriteTransaction rwtxn) {
+            this.txn = txn;
+            this.rwtxn = rwtxn;
+            this.context = context;
+        }
+
+        @Override
+        public void close() {
+
+            toAcquire.forEach(r -> {
+                // This should never fail because we conservatively acquire each resource as we encounter it even
+                // among all the contention (which should be rare).
+                if (!r.acquire()) logger.error("Failed to acquire {} in post-acquire loop.");
+            });
+
+            toRelease.forEach(r -> {
+                // This should also never fail because of the same reason above.  Each of the acquires happens before
+                // this, so even any overlaps should have been acquired.  Any of these will be purged after the
+                // reference count hits zero.
+                if (!r.release()) logger.error("Failed to release {} in post-acquire loop.");
+            });
+
+            toClose.forEach(r -> {
+                try {
+                    // We should only allow nascent-state resources to force close. acquire/release should handle
+                    // all other cases as the resoures specified here were extraneously created and just need to be
+                    // destroyed.
+                    if (!r.isNascent()) logger.error("Forcibly closing non-nascent Resource {}", r);
+                    r.close();
+                } catch (Exception ex) {
+                    logger.error("Caught exception closing resource {}", r, ex);
+                }
+            });
+
+        }
+
+        public TransactionalResource acquire(final Resource resource) {
+
+            final ResourceId resourceId = resource.getId();
+
+            final TransactionalResource transactionalResource;
+            transactionalResource = new TransactionalResource(Revision.zero(), resource, this::purge);
+
+            final TransactionalResource result = context.acquires.putIfAbsent(resourceId, transactionalResource);
+            if (result != null) throw new DuplicateException("Resource already acquired.");
+
+            return transactionalResource;
+
+        }
+
+        private TransactionalResource acquire(final ResourceId resourceId) {
+
+            final TransactionalResource result = context.acquires.compute(resourceId, (k, existing) -> {
+                if (existing == null || !existing.acquire()) {
+                    // Either this Resource does not exist in the cache, or somebody else recently released it, so
+                    // the solution is to load it in either case.
+                    return load(resourceId);
+                } else if (existing.getRevision().isBefore(txn.getRevision())) {
+
+                    // Since we have conservatively acquired the above resource, we must ensure that it will be
+                    // released when the operation completes.  We can't be sure we need to close it as it may still
+                    // ultimately be the valid resource.  Therefore, we flag it to released later.
+                    releaseOnClose(existing);
+
+                    // The same caveat applies to load as above.  We may not ultimately use this resource we have loaded
+                    // so we must conservatively flag it for potential destruction later.
+                    return load(resourceId);
+
+                } else {
+                    // Lastly we must simply release the resource upon the close as we have conservatively acquired
+                    // it above.  Ultimately, if this resource is the result, the acquire will be handled later.
+                    return existing;
+                }
+            });
+
+            // We must make sure that it won't be closed with the cache mutuator
+            keep(result);
+
+            // And we also must make sure that the resource will definitely be acquired.
+            acquireOnClose(result);
+
+            return result;
+
+        }
+
+        public boolean tryRelease(final TransactionalResource resource) {
+
+            // This isn't a valid use-case for this method.  Any resource that is nascent state, we really can't make
+            // sense of this so we throw an exception to avoid corrupting the cache.  This would only happen if
+            // the coe to this class was modified.
+            if (resource.isNascent()) throw new IllegalArgumentException("Nascent-state Resource supplied to tryRelease");
+
+            final ResourceId resourceId = resource.getId();
+            final TransactionalResource result = context.acquires.get(resourceId);
+
+            // If the object in the map does not equal the supplied resource, then we simply fail the operation.  This
+            // would only happen if the caller didn't have balanced code as we guarantee a memory-resident Resource to
+            // be valid as long as it has a positive reference count.
+            if (result != resource) return false;
+
+            // Finally return true if the operation was successful.  IF this happens before an acquire, then the
+            // concurrently-happening will see a dead resource and reload, or it will see an active resource and
+            // acquire meaning that this release will not happen immedaitely.
+            return resource.release();
+
+        }
+
+        private TransactionalResource load(final ResourceId resourceId) {
+            try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
+                return load(rbc);
+            } catch (IOException e) {
+                throw new InternalException(e);
+            }
+        }
+
+        private TransactionalResource load(final ReadableByteChannel rbc) {
+            final Resource resource = getResourceLoader().load(rbc, false);
+
+            final TransactionalResource transactionalResource;
+            transactionalResource = new TransactionalResource(txn.getRevision(), resource, this::purge);
+
+            toClose.add(transactionalResource);
+            return transactionalResource;
+        }
+
+        private void purge(final TransactionalResource transactionalResource) {
+
+            if (context.acquires.remove(transactionalResource.getId()) == null) {
+                logger.error("Unable to evict {} from resource cache.");
+            }
+
+            try {
+                transactionalResource.close();
+            } catch (Exception ex) {
+                logger.error("Error closing resource {}", transactionalResource, ex);
+            }
+
+        }
+
+        private void keep(final TransactionalResource transactionalResource) {
+            toClose.removeIf(r -> r == transactionalResource);
+        }
+
+        private void acquireOnClose(final TransactionalResource transactionalResource) {
+            toAcquire.add(transactionalResource);
+        }
+
+        private void releaseOnClose(final TransactionalResource transactionalResource) {
+            toRelease.add(transactionalResource);
+        }
+
+    }
+
+}

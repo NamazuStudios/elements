@@ -1006,7 +1006,7 @@ public class XodusResourceService implements ResourceService {
     }
 
     @Override
-    public void close() {
+    public void stop() {
 
         final List<Stream<XodusResource>> streams = new ArrayList<>();
 

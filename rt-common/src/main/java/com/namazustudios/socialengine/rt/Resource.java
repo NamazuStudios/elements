@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.rt.exception.ResourceDestroyedException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -116,6 +118,28 @@ public interface Resource extends AutoCloseable {
      * @throws IOException if something failed during deserialization
      */
     void deserialize(final InputStream is) throws IOException;
+
+    /**
+     * Dumps the entire contents of this {@link Resource} to the supplied {@link WritableByteChannel} where it can be
+     * reconstituted later using the {@link #deserialize(InputStream)} method.
+     *
+     * @param wbc the {@link OutputStream} used to receive the serialized {@link Resource}
+     * @throws IOException if something failed during serialization
+     */
+    default void serialize(final WritableByteChannel wbc) throws IOException {
+        // TODO Implement This
+    }
+
+    /**
+     * Restores the entire state of this {@link Resource} from the supplied {@link InputStream}.  This assumes the
+     * {@link InputStream} was produced by a call to {@link #serialize(OutputStream)}.
+     *
+     * @param is the {@link InputStream} from which to read the serialized resource
+     * @throws IOException if something failed during deserialization
+     */
+    default void deserialize(final ReadableByteChannel is) throws IOException {
+        // TODO Implement This
+    }
 
     /**
      * Sets the verbose mode.  This will enable enhanced logging for debug purposes.

@@ -32,13 +32,23 @@ import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromStri
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface ResourceService extends AutoCloseable {
+public interface ResourceService {
 
     /**
      * Called on start-up to ensure that the {@link ResourceService} has created and started any internal processes
      * that it may need to perform its work.
      */
     default void start() {};
+
+
+    /**
+     * Releases all memory associated with this {@link ResourceService}.  The actual action that happens here is
+     * dependent on the specific implementation.  For in-memory implementations, this will simply close all resources
+     * and exit.  For persistence-backed implementations this should flush all resources to disk before closing all.
+     *
+     * Once closed this instance may only be used after it has been restarted.
+     */
+    default void stop() {}
 
     /**
      * Without affecting acquisition or releases, this performs a simple check to see if the {@link Resource} with the
@@ -109,6 +119,9 @@ public interface ResourceService extends AutoCloseable {
      * therefore forcing it to stay in memory until a subsequent call to {@link #release(Resource)} is made.  This is
      * useful for {@link Resource} instances that are short-lived and may never need to be serialized (such as those
      * {@link Resource}s used by the {@link HandlerContext}).
+     *
+     * This is only safe to use with freshly created {@link Resource} instances whose {@link ResourceId} has never
+     * before been seen by the system.
      *
      * @param path
      * @param resource
@@ -346,16 +359,6 @@ public interface ResourceService extends AutoCloseable {
      * operation may lock the whole {@link ResourceService} to accomplish its task.
      */
     Stream<Resource> removeAllResources();
-
-    /**
-     * Releases all memory associated with this {@link ResourceService}.  The actual action that happens here is
-     * dependent on the specific implementation.  For in-memory implementations, this will simply close all resources
-     * and exit.  For persistence-backed implementations this should flush all resources to disk before closing all.
-     *
-     * Once closed this instance may no longer be used.
-     */
-    @Override
-    void close();
 
     /**
      * Removes all resources from the service and closes them.  Any exceptions encountered are logged and all resources

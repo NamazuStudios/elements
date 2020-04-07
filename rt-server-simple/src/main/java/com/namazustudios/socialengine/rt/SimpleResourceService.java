@@ -445,7 +445,7 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public void close() {
+    public void stop() {
 
         final Storage storage = storageAtomicReference.getAndSet(null);
 
