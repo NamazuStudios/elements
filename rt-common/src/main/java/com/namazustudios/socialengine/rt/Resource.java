@@ -37,13 +37,6 @@ public interface Resource extends AutoCloseable {
     ResourceId getId();
 
     /**
-     * Gets a {@link Monitor} which can be used to lock access to this {@link Resource}.
-     *
-     * @return the {@link Monitor}
-     */
-    Monitor getMonitor();
-
-    /**
      * Gets the {@link Attributes} associated with this {@link Resource}
      *
      * @return this instance's {@link Attributes}

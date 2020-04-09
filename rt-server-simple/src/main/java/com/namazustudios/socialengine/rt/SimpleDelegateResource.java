@@ -35,11 +35,6 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
-    public Monitor getMonitor() {
-        return delegate.getMonitor();
-    }
-
-    @Override
     public Attributes getAttributes() {
         return getDelegate().getAttributes();
     }

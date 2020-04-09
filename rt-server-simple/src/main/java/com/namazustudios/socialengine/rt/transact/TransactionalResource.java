@@ -27,10 +27,6 @@ public class TransactionalResource implements Resource {
 
     private static final Consumer<TransactionalResource> ON_DESTROY_DEAD = _t -> {};
 
-    private Resource delegate;
-
-    private final Monitor monitor;
-
     private final AtomicReference<Context> context;
 
     private final AtomicReference<Consumer<TransactionalResource>> onDestroy;
@@ -47,7 +43,6 @@ public class TransactionalResource implements Resource {
     public TransactionalResource(final Revision<?> revision,
                                  final Resource delegate,
                                  final Consumer<TransactionalResource> onDestroy) {
-        this.monitor = delegate.getMonitor();
         this.onDestroy = new AtomicReference<>(onDestroy);
         this.context = new AtomicReference<>(new Context(delegate, revision));
     }
@@ -108,11 +103,6 @@ public class TransactionalResource implements Resource {
     @Override
     public ResourceId getId() {
         return getDelegate().getId();
-    }
-
-    @Override
-    public Monitor getMonitor() {
-        return monitor;
     }
 
     @Override
@@ -206,29 +196,30 @@ public class TransactionalResource implements Resource {
         };
     }
 
-    private List<Resource> update(final Resource update, final Revision<?> revision) {
-
-        final List<Resource> resources = new ArrayList<>();
-        resources.add(update);
+    public Resource update(final Resource update, final Revision<?> revision) {
 
         final Context replacement = new Context(update, revision);
 
-        final Context old = context.getAndUpdate(existing -> {
-            if (existing.revision.isBefore(revision)) {
-                return replacement;
-            } else {
-                return existing;
-            }
-        });
+        boolean success;
+        Context existing;
 
-        resources.removeIf(r -> r == old.delegate);
-        return resources;
+        do {
+            existing = context.get();
+            success = existing.revision.isBefore(revision);
+        } while(!context.compareAndSet(existing, success ? replacement : existing));
+
+        return success ? existing.delegate : update;
 
     }
 
     private Resource getDelegate() {
         final Context context = this.context.get();
-        return delegate;
+        return context.delegate;
+    }
+
+    public Revision<?> getRevision() {
+        final Context context = this.context.get();
+        return context.revision;
     }
 
     public static class Context {

@@ -385,29 +385,43 @@ public class TransactionalResourceService implements ResourceService {
         private TransactionalResource acquire(final ResourceId resourceId) {
 
             final TransactionalResource result = context.acquires.compute(resourceId, (k, existing) -> {
+
                 if (existing == null || !existing.acquire()) {
                     // Either this Resource does not exist in the cache, or somebody else recently released it, so
                     // the solution is to load it in either case.
-                    return load(resourceId);
-                } else if (existing.getRevision().isBefore(txn.getRevision())) {
-
-                    // Since we have conservatively acquired the above resource, we must ensure that it will be
-                    // released when the operation completes.  We can't be sure we need to close it as it may still
-                    // ultimately be the valid resource.  Therefore, we flag it to released later.
-                    releaseOnClose(existing);
-
-                    // The same caveat applies to load as above.  We may not ultimately use this resource we have loaded
-                    // so we must conservatively flag it for potential destruction later.
-                    return load(resourceId);
-
-                } else {
-                    // Lastly we must simply release the resource upon the close as we have conservatively acquired
-                    // it above.  Ultimately, if this resource is the result, the acquire will be handled later.
-                    return existing;
+                    return loadTransactionalResource(resourceId);
                 }
+
+                // Since we have conservatively acquired the above resource, we must ensure that it will be
+                // released when the operation completes.
+                releaseOnClose(existing);
+
+                // Revisions will only ever move forward.  Therefore, we can skip an allocation completely if we check
+                // this first and just return the existing value.  We can safely assume that at some point some other
+                // thread will be in the proess of applying a later revision.  In any case, the version we currently
+                // have will soon be replaced and it's not worth it.  However we have to check again to ensure we don't
+                // leak memorry.
+                if (txn.getRevision().isBefore(existing.getRevision())) return existing;
+
+                // Take the penalty allocating a large resource.  This may still fail, but the above check should avoid
+                // any several iterations.
+                final Resource update = loadResource(resourceId);
+
+                 try (final Resource stale = existing.update(update, txn.getRevision())) {
+                     // Even though we may make several allocations, it's okay.  We are guaranteed to make and destroy
+                     // one resource per iteration.
+                     logger.debug("Updated resource {} -> {}", update, stale);
+                } catch (Exception ex) {
+                    logger.error("Caught exception closing out stale resource.", ex);
+                }
+
+                return existing;
+
             });
 
-            // We must make sure that it won't be closed with the cache mutuator
+            // We must make sure that it won't be closed with this cache manipulation.  This is side-effect free if we
+            // didn't ever allocate a new resource in the first place.
+
             keep(result);
 
             // And we also must make sure that the resource will definitely be acquired.
@@ -439,22 +453,28 @@ public class TransactionalResourceService implements ResourceService {
 
         }
 
-        private TransactionalResource load(final ResourceId resourceId) {
+        private Resource loadResource(final ResourceId resourceId) {
             try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
-                return load(rbc);
+                return getResourceLoader().load(rbc, false);
             } catch (IOException e) {
                 throw new InternalException(e);
             }
         }
 
-        private TransactionalResource load(final ReadableByteChannel rbc) {
-            final Resource resource = getResourceLoader().load(rbc, false);
+        private TransactionalResource loadTransactionalResource(final ResourceId resourceId) {
+            try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
 
-            final TransactionalResource transactionalResource;
-            transactionalResource = new TransactionalResource(txn.getRevision(), resource, this::purge);
+                final Resource resource = getResourceLoader().load(rbc, false);
 
-            toClose.add(transactionalResource);
-            return transactionalResource;
+                final TransactionalResource transactionalResource;
+                transactionalResource = new TransactionalResource(txn.getRevision(), resource, this::purge);
+
+                toClose.add(transactionalResource);
+                return transactionalResource;
+
+            } catch (IOException e) {
+                throw new InternalException(e);
+            }
         }
 
         private void purge(final TransactionalResource transactionalResource) {

@@ -30,6 +30,11 @@ public class DeadResource implements Resource {
     }
 
     @Override
+    public Monitor getMonitor() {
+        throw new IllegalArgumentException("resource is closed;");
+    }
+
+    @Override
     public Attributes getAttributes() {
         throw new IllegalStateException("resource is closed");
     }
