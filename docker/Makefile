@@ -62,16 +62,16 @@ revision: login
 latest: login
 	$(DOCKER_BUILD) namazu-socialengine-api \
 		--build-arg REST_WAR=$(REST_WAR) \
-		--tag docker.namazustudios.net/namazu-socialengine-api:latest
+		--tag docker.namazustudios.net/namazu-socialengine-api
 	$(DOCKER_BUILD) namazu-socialengine-app-node \
 		--build-arg APP_NODE_JAR=$(APP_NODE_JAR) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-node:latest
+		--tag docker.namazustudios.net/namazu-socialengine-app-node
 	$(DOCKER_BUILD) namazu-socialengine-app-serve \
 		--build-arg APP_SERVE_JAR=$(APP_SERVE_JAR) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-serve:latest
+		--tag docker.namazustudios.net/namazu-socialengine-app-serve
 	$(DOCKER_BUILD) namazu-socialengine-code-serve \
 		--build-arg CODE_SERVE_WAR=$(CODE_SERVE_WAR) \
-		--tag docker.namazustudios.net/namazu-socialengine-code-serve:latest
+		--tag docker.namazustudios.net/namazu-socialengine-code-serve
 	$(DOCKER_BUILD) namazu-socialengine-setup \
 		--build-arg SETUP_JAR=$(SETUP_JAR) \
 		--tag docker.namazustudios.net/namazu-socialengine-setup
