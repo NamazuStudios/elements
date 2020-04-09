@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -76,7 +75,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         final ResourceId resourceId = resource.getId();
         final RunnableFuture<Void> unlink = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
-        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+        try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
             final AtomicBoolean sent = new AtomicBoolean();
 

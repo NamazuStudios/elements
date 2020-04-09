@@ -69,6 +69,8 @@ public class LuaResource implements Resource {
 
     private final BuiltinManager builtinManager;
 
+    private final ResourceLockService resourceLockService;
+
     private Logger scriptLog = logger;
 
     /**
@@ -97,12 +99,14 @@ public class LuaResource implements Resource {
             final @Named(LOCAL) Context localContext,
             final @Named(REMOTE) Context remoteContext,
             final PersistenceStrategy persistenceStrategy,
+            final ResourceLockService resourceLockService,
             final NodeId nodeId) {
         try {
 
             this.resourceId = randomResourceIdForNode(nodeId);
             this.localContext = localContext;
             this.remoteContext = remoteContext;
+            this.resourceLockService = resourceLockService;
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
             this.persistence = new Persistence(this, this::getScriptLog);
@@ -173,6 +177,11 @@ public class LuaResource implements Resource {
     @Override
     public ResourceId getId() {
         return resourceId;
+    }
+
+    @Override
+    public Monitor getMonitor() {
+        return null;
     }
 
     @Override

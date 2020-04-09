@@ -37,6 +37,13 @@ public interface Resource extends AutoCloseable {
     ResourceId getId();
 
     /**
+     * Gets a {@link Monitor} which can be used to lock access to this {@link Resource}.
+     *
+     * @return the {@link Monitor}
+     */
+    Monitor getMonitor();
+
+    /**
      * Gets the {@link Attributes} associated with this {@link Resource}
      *
      * @return this instance's {@link Attributes}
@@ -156,7 +163,7 @@ public interface Resource extends AutoCloseable {
     default boolean isVerbose() {return false; }
 
     /**
-     * Gets a {@link Set} of active tasks.
+     * Gets a {@link Set<TaskId>} representing active tasks at the current state.
      *
      * @return the running tasks as a {@link Set}
      */
@@ -164,7 +171,11 @@ public interface Resource extends AutoCloseable {
 
     /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.  Any tasks pending on the
-     * resource will be completed with a {@link ResourceDestroyedException} immediately.
+     * resource will be completed with a {@link ResourceDestroyedException} immediately.  This is simlar to
+     * {@link #close()} in that it frees up memory associated with this {@link Resource}.  However, its key difference
+     * is that it also propagates exceptions which indicate that it has reached a final state.  In contrast to
+     * {@link #unload()} which indicates that the {@link Resource} my be reconstituted later to continue performing
+     * work.
      */
     void close();
 

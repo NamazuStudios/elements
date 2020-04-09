@@ -33,12 +33,44 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     };
 
     /**
+     * Represents a revision in the far-flung future. This is a special {@link Revision} that is newer than every other
+     * revision, except itself, to which it is equal.
+     */
+    Revision<Void> INFINITY = new Revision<Void>() {
+
+        @Override
+        public String getUniqueIdentifier() {
+            return "<infinity>";
+        }
+
+        @Override
+        public int compareTo(Revision<?> o) {
+            return this == o ? 0 : 1;
+        }
+
+        @Override
+        public <T> Revision<T> comparableTo() {
+            return (Revision<T>) this;
+        }
+
+    };
+
+    /**
      * A special type of Revision that is before all other {@link Revision} instances
      *
      * @return the zero revision
      */
     static <U> Revision<U> zero() {
-        return (Revision<U>)ZERO;
+        return ZERO.comparableTo();
+    }
+
+    /**
+     * A special type of Reviisioin that is after all other {@link Revision} nistances.
+     *
+     * @return the infinity revision
+     */
+    static Revision<?> infinity() {
+        return INFINITY.comparableTo();
     }
 
     /**

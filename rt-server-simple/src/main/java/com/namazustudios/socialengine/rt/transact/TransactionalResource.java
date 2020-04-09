@@ -1,10 +1,17 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.namazustudios.socialengine.rt.DeadResource;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.SimpleDelegateResource;
+import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 
-import java.util.concurrent.Callable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -12,13 +19,19 @@ import java.util.function.Consumer;
 import static java.lang.Integer.MIN_VALUE;
 import static java.lang.Math.max;
 
-public class TransactionalResource extends SimpleDelegateResource {
+public class TransactionalResource implements Resource {
 
     private static final int NASCENT_MAGIC = MIN_VALUE;
 
+    private static final Context DEAD_CONTEXT = new Context(DeadResource.getInstance(), Revision.infinity());
+
     private static final Consumer<TransactionalResource> ON_DESTROY_DEAD = _t -> {};
 
-    private final AtomicReference<Revision<?>> revision;
+    private Resource delegate;
+
+    private final Monitor monitor;
+
+    private final AtomicReference<Context> context;
 
     private final AtomicReference<Consumer<TransactionalResource>> onDestroy;
 
@@ -34,18 +47,9 @@ public class TransactionalResource extends SimpleDelegateResource {
     public TransactionalResource(final Revision<?> revision,
                                  final Resource delegate,
                                  final Consumer<TransactionalResource> onDestroy) {
-        super(delegate);
-        this.revision = new AtomicReference<>(revision);
+        this.monitor = delegate.getMonitor();
         this.onDestroy = new AtomicReference<>(onDestroy);
-    }
-
-    /**
-     * Gets the {@link Revision<?>} of this {@link Resource}.
-     *
-     * @return the {@link Revision<?>}
-     */
-    public Revision<?> getRevision() {
-        return revision.get();
+        this.context = new AtomicReference<>(new Context(delegate, revision));
     }
 
     /**
@@ -84,7 +88,6 @@ public class TransactionalResource extends SimpleDelegateResource {
 
             // Tests if the destructor was supplied to the constructor of this object, or if it is the singleton
             // dead on-destroy routine.  If it was indeed the object's destructor then we consider the operation
-            // a success and return true.
             return onDestroy != ON_DESTROY_DEAD;
         } else {
             return true;
@@ -102,6 +105,91 @@ public class TransactionalResource extends SimpleDelegateResource {
         return acquires.get() == NASCENT_MAGIC;
     }
 
+    @Override
+    public ResourceId getId() {
+        return getDelegate().getId();
+    }
+
+    @Override
+    public Monitor getMonitor() {
+        return monitor;
+    }
+
+    @Override
+    public Attributes getAttributes() {
+        return getDelegate().getAttributes();
+    }
+
+    @Override
+    public MethodDispatcher getMethodDispatcher(String name) {
+        return getDelegate().getMethodDispatcher(name);
+    }
+
+    @Override
+    public void resume(TaskId taskId, Object... results) {
+        getDelegate().resume(taskId, results);
+    }
+
+    @Override
+    public void resumeFromNetwork(TaskId taskId, Object result) {
+        getDelegate().resumeFromNetwork(taskId, result);
+    }
+
+    @Override
+    public void resumeWithError(TaskId taskId, Throwable throwable) {
+        getDelegate().resumeWithError(taskId, throwable);
+    }
+
+    @Override
+    public void resumeFromScheduler(TaskId taskId, double elapsedTime) {
+        getDelegate().resumeFromScheduler(taskId, elapsedTime);
+    }
+
+    @Override
+    public void serialize(OutputStream os) throws IOException {
+        getDelegate().serialize(os);
+    }
+
+    @Override
+    public void deserialize(InputStream is) throws IOException {
+        getDelegate().deserialize(is);
+    }
+
+    @Override
+    public void serialize(WritableByteChannel wbc) throws IOException {
+        getDelegate().serialize(wbc);
+    }
+
+    @Override
+    public void deserialize(ReadableByteChannel is) throws IOException {
+        getDelegate().deserialize(is);
+    }
+
+    @Override
+    public void setVerbose(boolean verbose) {
+        getDelegate().setVerbose(verbose);
+    }
+
+    @Override
+    public boolean isVerbose() {
+        return getDelegate().isVerbose();
+    }
+
+    @Override
+    public Set<TaskId> getTasks() {
+        return getDelegate().getTasks();
+    }
+
+    @Override
+    public void close() {
+        getDelegate().close();
+    }
+
+    @Override
+    public void unload() {
+        getDelegate().unload();
+    }
+
     public static TransactionalResource deadResource(final Consumer<TransactionalResource> onDestroy) {
         return new TransactionalResource(Revision.zero(), DeadResource.getInstance(), onDestroy) {
 
@@ -116,6 +204,44 @@ public class TransactionalResource extends SimpleDelegateResource {
             }
 
         };
+    }
+
+    private List<Resource> update(final Resource update, final Revision<?> revision) {
+
+        final List<Resource> resources = new ArrayList<>();
+        resources.add(update);
+
+        final Context replacement = new Context(update, revision);
+
+        final Context old = context.getAndUpdate(existing -> {
+            if (existing.revision.isBefore(revision)) {
+                return replacement;
+            } else {
+                return existing;
+            }
+        });
+
+        resources.removeIf(r -> r == old.delegate);
+        return resources;
+
+    }
+
+    private Resource getDelegate() {
+        final Context context = this.context.get();
+        return delegate;
+    }
+
+    public static class Context {
+
+        private final Resource delegate;
+
+        private final Revision<?> revision;
+
+        public Context(Resource delegate, Revision<?> revision) {
+            this.delegate = delegate;
+            this.revision = revision;
+        }
+
     }
 
 }

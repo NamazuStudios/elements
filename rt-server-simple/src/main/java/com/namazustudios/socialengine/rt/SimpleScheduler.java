@@ -77,7 +77,7 @@ public class SimpleScheduler implements Scheduler {
 
     public Future<Void> scheduleDestruction(final ResourceId resourceId) {
         return getDispatcherExecutorService().submit(() -> {
-            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+            try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
                 getResourceService().destroy(resourceId);
             } catch (ResourceNotFoundException ex) {
                 logger.debug("Resource already destroyed {}.  Disregarding.", resourceId, ex);
@@ -148,7 +148,7 @@ public class SimpleScheduler implements Scheduler {
 
             final Resource resource;
 
-            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+            try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
                 try {
                     resource = getResourceService().getAndAcquireResourceWithId(resourceId);
@@ -199,7 +199,7 @@ public class SimpleScheduler implements Scheduler {
 
     private <T> T performProtected(final Resource resource,
                                    final Function<Resource, T> operation) {
-        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resource.getId())){
+        try (final Monitor m = getResourceLockService().getMonitor(resource.getId())){
             logger.trace("Applying operation for resource {}", resource.getId());
             return operation.apply(resource);
         } catch (Throwable th) {

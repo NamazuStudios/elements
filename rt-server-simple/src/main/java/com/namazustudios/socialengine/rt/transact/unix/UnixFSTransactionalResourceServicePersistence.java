@@ -8,15 +8,10 @@ import com.namazustudios.socialengine.rt.transact.*;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
-import java.util.Optional;
-import java.util.Spliterator;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
@@ -153,9 +148,15 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
             @Override
             public Stream<ResourceService.Listing> list(final Path path) {
+
                 final Revision<Stream<ResourceService.Listing>> journaled = entry.list(path);
-                final Revision<Stream<ResourceService.Listing>> indexed = getRevisionDataStore().list(entry.getRevision(), path);
+
+                final Revision<Stream<ResourceService.Listing>> indexed = getRevisionDataStore()
+                        .getPathIndex()
+                        .list(entry.getRevision().comparableTo(), path);
+
                 return concat(journaled.getValue(), indexed.getValue());
+
             }
 
             @Override
@@ -179,6 +180,15 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
             }
 
         };
+    }
+
+    @Override
+    public void close() {
+        try {
+            getRevisionDataStore().close();
+        } catch (Exception ex) {
+            logger.error("Caught exception closing {}", getClass().getName(), ex);
+        }
     }
 
     public TransactionJournal getJournal() {

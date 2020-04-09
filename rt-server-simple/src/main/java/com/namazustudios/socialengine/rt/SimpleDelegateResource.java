@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.id.TaskId;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Set;
 
 /**
@@ -30,6 +32,11 @@ public class SimpleDelegateResource implements Resource {
     @Override
     public ResourceId getId() {
         return delegate.getId();
+    }
+
+    @Override
+    public Monitor getMonitor() {
+        return delegate.getMonitor();
     }
 
     @Override
@@ -68,7 +75,17 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
+    public void serialize(WritableByteChannel wbc) throws IOException {
+        delegate.serialize(wbc);
+    }
+
+    @Override
     public void deserialize(InputStream is) throws IOException {
+        delegate.deserialize(is);
+    }
+
+    @Override
+    public void deserialize(ReadableByteChannel is) throws IOException {
         delegate.deserialize(is);
     }
 

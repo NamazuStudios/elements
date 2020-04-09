@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.ResourceLockService.Monitor;
+import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
