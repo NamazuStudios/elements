@@ -1,10 +1,16 @@
 package com.namazustudios.socialengine.rt.transact;
 
+import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
+import java.io.IOException;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
+import java.util.List;
 import java.util.Spliterator;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Stream;
@@ -27,6 +33,21 @@ public interface TransactionJournal extends AutoCloseable {
      * @return
      */
     MutableEntry newEntry();
+
+    /**
+     * Nukes the entire collection of data.  This may lock the entire database to accomplish this task.  Once complete,
+     * it will be as if the system was freshly instantiated (though some garbage may still exist.)
+     *
+     * @return a stream of {@link ResourceId} that were destroyed as part of this operation
+     */
+    Stream<ResourceId> removeAllResources();
+
+    /**
+     * Returns a Monitor which is able to lock the entire journal.
+     *
+     * @return the exclusive monitor on the journal
+     */
+    Monitor getExclusiveMonitor();
 
     /**
      * Represents a journal entry for read only purposes.   This will include the most recent most complete entry, if
@@ -67,8 +88,56 @@ public interface TransactionJournal extends AutoCloseable {
          */
         Revision<Stream<ResourceService.Listing>> list(Path path);
 
+        /**
+         * Gets the {@link ResourceId} associated with the path, if it is available in the current journal entry.
+         *
+         * @param path the path to fetch.
+         *
+         * @return the {@link ResourceId} revision
+         */
+        Revision<ResourceId> getResourceId(Path path);
+
+        /**
+         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} at the supplied {@link Path}
+         * @param path the path to load
+         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
+         * @throws IOException
+         * @throws ResourceNotFoundException
+         */
+        Revision<ReadableByteChannel> loadResourceContents(Path path) throws IOException;
+
+        /**
+         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} with the supplied
+         * {@link ResourceId}.
+         *
+         * @param resourceId the respirce id to load
+         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
+         * @throws IOException
+         * @throws ResourceNotFoundException
+         */
+        Revision<ReadableByteChannel> loadResourceContents(ResourceId resourceId) throws IOException;
+
     }
 
-    interface MutableEntry extends Entry {}
+    interface MutableEntry extends Entry {
+
+        WritableByteChannel saveNewResource(Path path, ResourceId resourceId) throws IOException;
+
+        void linkNewResource(Path path, ResourceId id);
+
+        void linkExistingResource(ResourceId sourceResourceId, Path destination);
+
+        ResourceService.Unlink unlinkPath(Path path);
+
+        List<ResourceService.Unlink> unlinkMultiple(Path path, int max);
+
+        void removeResource(ResourceId resourceId);
+
+        List<ResourceId> removeResources(Path path, int max);
+
+        void commit();
+
+        boolean isCommitted();
+    }
 
  }

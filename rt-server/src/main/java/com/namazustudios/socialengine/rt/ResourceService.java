@@ -283,7 +283,7 @@ public interface ResourceService {
      *
      * @param resourceId the path to the resource
      *
-     * @throws {@l  ink ResourceNotFoundException} if no resource exists at that path
+     * @throws {@link ResourceNotFoundException} if no resource exists at that path
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     Resource removeResource(ResourceId resourceId);

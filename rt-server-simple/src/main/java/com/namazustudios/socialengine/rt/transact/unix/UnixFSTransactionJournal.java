@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
 import javolution.io.Struct;
 import org.slf4j.Logger;
@@ -18,6 +20,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Stream;
 
 import static java.lang.Math.min;
 import static java.lang.String.format;
@@ -138,6 +141,18 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     @Override
     public MutableEntry newEntry() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Stream<ResourceId> removeAllResources() {
+        // TODO
+        return null;
+    }
+
+    @Override
+    public Monitor getExclusiveMonitor() {
         // TODO
         return null;
     }

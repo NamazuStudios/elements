@@ -75,6 +75,11 @@ public enum ResponseCode {
     RESOURCE_DESTROYED,
 
     /**
+     * A resource has been destroyed and the client code is now operating with a dead handle to a Resource.
+     */
+    RESOURCE_DEAD,
+
+    /**
      * Indicates that the requested asset is not found.
      */
     ASSET_NOT_FOUND,

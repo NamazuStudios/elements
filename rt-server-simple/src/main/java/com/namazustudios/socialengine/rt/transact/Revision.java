@@ -82,21 +82,12 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     String getUniqueIdentifier();
 
     /**
-     * Equivalent for invoking the result of {@link #getOptionalValue()} {@link Optional#get()} value.
-     *
-     * @return
-     */
-    default ValueT getValue() {
-        return getOptionalValue().get();
-    }
-
-    /**
      * Returns the value at this particular revision.  The supplied value may not exist, hence this returns an instance
      * of {@link Optional<ValueT>}.
      *
      * @return the optional value
      */
-    default Optional<ValueT> getOptionalValue() {
+    default Optional<ValueT> getValue() {
         return empty();
     }
 

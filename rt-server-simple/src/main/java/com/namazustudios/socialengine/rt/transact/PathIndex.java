@@ -11,10 +11,6 @@ public interface PathIndex {
 
     RevisionMap<Path, ResourceId> getRevisionMap();
 
-    default Revision<ResourceId> getValueAt(final Revision<ResourceId> revision, final Path path) {
-        return getRevisionMap().getValueAt(revision, path);
-    }
-
-    Revision<Stream<ResourceService.Listing>> list(Revision<Object> comparableTo, Path path);
+    Revision<Stream<ResourceService.Listing>> list(Revision<?> revision, Path path);
 
 }

@@ -1,15 +1,12 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 public interface ReadWriteTransaction extends ReadOnlyTransaction {
@@ -24,11 +21,9 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
 
     List<ResourceService.Unlink> unlinkMultiple(Path path, int max);
 
-    Resource removeResource(ResourceId resourceId);
+    void removeResource(ResourceId resourceId);
 
-    List<ResourceId> removeResources(Path path, int max, Consumer<Resource> removed);
-
-    Stream<Resource> removeAllResources();
+    List<ResourceId> removeResources(Path path, int max);
 
     void commit() throws TransactionConflictException;
 

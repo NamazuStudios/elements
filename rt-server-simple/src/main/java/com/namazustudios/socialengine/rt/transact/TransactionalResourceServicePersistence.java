@@ -12,6 +12,8 @@ public interface TransactionalResourceServicePersistence extends AutoCloseable {
 
     ReadWriteTransaction openRW();
 
+    ExclusiveReadWriteTransaction openExclusiveRW();
+
     @Override
     void close();
 

@@ -6,8 +6,10 @@ public interface RevisionDataStore extends AutoCloseable {
 
     ReversePathIndex getReversePathIndex();
 
-    ResourceIndex getResourceIndex();
+    ResourceIdIndex getResourceIndex();
 
     void close();
+
+    void apply(TransactionJournal.MutableEntry entry);
 
 }

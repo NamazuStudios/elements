@@ -212,7 +212,7 @@ public class TransactionalResource implements Resource {
 
     }
 
-    private Resource getDelegate() {
+    public Resource getDelegate() {
         final Context context = this.context.get();
         return context.delegate;
     }

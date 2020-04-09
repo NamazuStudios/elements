@@ -14,10 +14,7 @@ import javax.inject.Provider;
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Spliterator;
-import java.util.Spliterators;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -150,17 +147,32 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public Resource removeResource(final ResourceId resourceId) {
-        return computeRW(txn -> txn.removeResource(resourceId));
+        return computeRW((acm, txn) -> {
+            txn.removeResource(resourceId);
+            return acm.evict(resourceId);
+        });
     }
 
     @Override
     public List<ResourceId> removeResources(final Path path, final int max, final Consumer<Resource> removed) {
-        return computeRW(txn -> txn.removeResources(path, max, removed));
+        return computeRW((acm, txn) -> {
+            final List<ResourceId> resourceIds = txn.removeResources(path, max);
+            resourceIds.forEach(resourceId -> acm.evict(resourceId, removed));
+            return resourceIds;
+        });
     }
 
     @Override
     public Stream<Resource> removeAllResources() {
-        return computeRW(txn -> txn.removeAllResources());
+
+        final Context context = getContext();
+
+        try (final ExclusiveReadWriteTransaction txn = context.persistence.openExclusiveRW()) {
+            final Context old = this.context.getAndSet(context.clear());
+            txn.removeAllResources();
+            return old.acquires.values().stream().map(tr -> tr.getDelegate());
+        }
+
     }
 
     @Override
@@ -290,9 +302,21 @@ public class TransactionalResourceService implements ResourceService {
 
     private class Context {
 
-        private final TransactionalResourceServicePersistence persistence = getPersistenceProvider().get();
+        private final TransactionalResourceServicePersistence persistence;
 
         private final ConcurrentMap<ResourceId, TransactionalResource> acquires = new ConcurrentHashMap<>();
+
+        private Context() {
+            persistence = getPersistenceProvider().get();
+        }
+
+        private Context(final TransactionalResourceServicePersistence persistence) {
+            this.persistence = persistence;
+        }
+
+        public Context clear() {
+            return new Context(persistence);
+        }
 
         void close() {
             persistence.close();
@@ -501,6 +525,15 @@ public class TransactionalResourceService implements ResourceService {
 
         private void releaseOnClose(final TransactionalResource transactionalResource) {
             toRelease.add(transactionalResource);
+        }
+
+        public Resource evict(final ResourceId resourceId) {
+            // TODO Implement
+            return null;
+        }
+
+        public void evict(final ResourceId resourceId, final Consumer<Resource> removed) {
+            // TODO Implement
         }
 
     }
