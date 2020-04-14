@@ -8,7 +8,7 @@ import java.nio.channels.ReadableByteChannel;
 
 public interface ResourceIdIndex {
 
-    Revision<Boolean> existsAt(Revision<Void> revision, ResourceId resourceId);
+    Revision<Boolean> existsAt(Revision<?> revision, ResourceId resourceId);
 
     ReadableByteChannel loadResourceContentsAt(Revision<ReadableByteChannel> comparableTo, Path path) throws IOException;
 
