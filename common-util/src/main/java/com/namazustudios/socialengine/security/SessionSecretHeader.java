@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.exception.security.BadSessionSecretExcepti
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.SessionCreation;
-import com.sun.xml.internal.ws.handler.SOAPMessageContextImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
