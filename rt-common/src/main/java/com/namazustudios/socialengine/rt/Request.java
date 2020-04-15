@@ -22,7 +22,7 @@ public interface Request {
      *
      * @return the {@link Attributes}
      */
-    Attributes getAttributes();
+    MutableAttributes getAttributes();
 
     /**
      * Gets ths {@link RequestHeader} object for this particular request.

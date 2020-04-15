@@ -15,7 +15,7 @@ import static java.util.Collections.unmodifiableSet;
 /**
  * Simple implementation of {@link Attributes} backed by a {@link Map<String, Object>}.
  */
-public class SimpleAttributes implements Attributes, Serializable {
+public class SimpleAttributes implements MutableAttributes, Serializable {
 
     private Map<String, Object> attributes;
 
@@ -32,6 +32,11 @@ public class SimpleAttributes implements Attributes, Serializable {
     @Override
     public Map<String, Object> asMap() {
         return Collections.unmodifiableMap(getAttributes());
+    }
+
+    @Override
+    public void setAttribute(String name, Object obj) {
+        attributes.put(name, obj);
     }
 
     public Map<String, Object> getAttributes() {

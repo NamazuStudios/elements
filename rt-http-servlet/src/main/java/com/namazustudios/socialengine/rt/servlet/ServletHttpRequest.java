@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.MutableAttributes;
 import com.namazustudios.socialengine.rt.RequestHeader;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.http.CompositeHttpManifestMetadata;
@@ -74,7 +75,7 @@ public class ServletHttpRequest implements HttpRequest {
     }
 
     @Override
-    public Attributes getAttributes() {
+    public MutableAttributes getAttributes() {
         return servletRequestAttributes;
     }
 

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.servlet;
 
 import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.MutableAttributes;
 
 import javax.servlet.ServletRequest;
 import java.util.*;
@@ -8,7 +9,7 @@ import java.util.function.Supplier;
 
 import static java.util.Collections.emptySet;
 
-public class ServletRequestAttributes implements Attributes {
+public class ServletRequestAttributes implements MutableAttributes {
 
     private final Supplier<ServletRequest> servletRequestSupplier;
 
@@ -34,6 +35,11 @@ public class ServletRequestAttributes implements Attributes {
     @Override
     public Object getAttribute(final String name) {
         return servletRequestSupplier.get().getAttribute(name);
+    }
+
+    @Override
+    public void setAttribute(final String name, final Object obj) {
+        servletRequestSupplier.get().setAttribute(name, obj);
     }
 
 }

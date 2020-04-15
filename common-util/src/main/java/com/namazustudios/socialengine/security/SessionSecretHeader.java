@@ -6,6 +6,9 @@ import com.namazustudios.socialengine.exception.security.BadSessionSecretExcepti
 import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.SessionCreation;
+import com.sun.xml.internal.ws.handler.SOAPMessageContextImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.function.Function;
@@ -19,6 +22,8 @@ import static java.util.regex.Pattern.compile;
  * Parses the value in the session secret header specified in {@link Headers#SESSION_SECRET}.
  */
 public class SessionSecretHeader {
+
+    private static final Logger logger = LoggerFactory.getLogger(SessionSecretHeader.class);
 
     private static final Pattern SEPARATOR = compile("\\s+");
 
@@ -43,14 +48,24 @@ public class SessionSecretHeader {
      *
      * @param headerSupplierFunction, may return null
      */
-    public SessionSecretHeader(final Function<String, String> headerSupplierFunction) {
+    public <T> SessionSecretHeader(final Function<String, T> headerSupplierFunction) {
         this(getSessionSecretHeader(headerSupplierFunction));
     }
 
     @SuppressWarnings("deprecated") // This is here to provide backwards compatibility.
-    private static String getSessionSecretHeader(final Function<String, String> headerSupplierFunction) {
-        final String secret = headerSupplierFunction.apply(SESSION_SECRET);
-        return secret == null ? headerSupplierFunction.apply(SOCIALENGINE_SESSION_SECRET) : secret;
+    private static <T> String getSessionSecretHeader(final Function<String, T> headerSupplierFunction) {
+        final String secret = getHeader(headerSupplierFunction, SESSION_SECRET);
+        return secret == null ? getHeader(headerSupplierFunction, SOCIALENGINE_SESSION_SECRET) : secret;
+
+    }
+
+    private static <T> String getHeader(final Function<String, T> headerSupplierFunction, final String header) {
+        try  {
+            return (String) headerSupplierFunction.apply(header);
+        } catch (ClassCastException ex) {
+            logger.warn("Fetched non-string header for header {}", header);
+            return null;
+        }
     }
 
     /**

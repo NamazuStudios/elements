@@ -23,6 +23,7 @@ public class FilterModule extends AbstractModule {
 
     @Override
     protected final void configure() {
+
         bind(new TypeLiteral<List<Filter>>(){}).toProvider(new Provider<List<Filter>>() {
 
                 @Inject
@@ -31,6 +32,7 @@ public class FilterModule extends AbstractModule {
                 @Override
                 public List<Filter> get() {
                     return Lists.transform(filterNames, input -> {
+
                         final Key<Filter> edgeFilterKey = Key.get(Filter.class, Names.named(input));
                         return injector.getInstance(edgeFilterKey);
                     });
@@ -58,6 +60,8 @@ public class FilterModule extends AbstractModule {
 
     private FilterSequenceBindingBuilder bindFilterNamed(final String name) {
 
+        if (name == null) throw new IllegalArgumentException("name must not be null");
+
         return new FilterSequenceBindingBuilder() {
 
             @Override
@@ -68,6 +72,8 @@ public class FilterModule extends AbstractModule {
                 if (index >= 0) {
                     throw new IllegalArgumentException("Filter named " + name + " already exists.");
                 }
+
+                filterNames.addFirst(name);
 
                 return binder().bind(Filter.class)
                                .annotatedWith(Names.named(name));
@@ -124,12 +130,11 @@ public class FilterModule extends AbstractModule {
             @Override
             public LinkedBindingBuilder<Filter> atEndOfFilterChain() {
 
-                final int index = filterNames.indexOf(name);
-
-                if (index >= 0) {
+                if (filterNames.contains(name)) {
                     throw new IllegalArgumentException("Filter named " + name + " already exists.");
                 }
 
+                filterNames.addLast(name);
                 return binder().bind(Filter.class)
                                .annotatedWith(Names.named(name));
 
