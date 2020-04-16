@@ -15,19 +15,67 @@ import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
+
+import static com.google.inject.Guice.createInjector;
 import static com.namazustudios.socialengine.rt.PersistenceStrategy.getNullPersistence;
 
-public class AppServeMain {
+public class AppServeMain implements Runnable {
+
+    private static final Logger logger = LoggerFactory.getLogger(AppServeMain.class);
+
+    private final Server server;
+
+    public AppServeMain(final String[] args) {
+        this(createServer(args));
+    }
+
+    @Inject
+    public AppServeMain(final Server server) {
+        this.server = server;
+    }
+
+    public void start() throws Exception {
+        server.start();
+    }
+
+    public void stop() throws Exception {
+        server.stop();
+        join();
+    }
+
+    public void join() throws InterruptedException {
+        server.join();
+    }
+
+    @Override
+    public void run() {
+        try {
+            start();
+            join();
+        } catch (Exception ex) {
+            logger.error("Encountered error running server.", ex);
+        }
+    }
 
     public static void main(final String[] args) throws Exception {
+        final AppServeMain main = new AppServeMain(args);
+        main.start();
+        main.join();
+    }
+
+    private static Server createServer(final String[] args) {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
-        final Injector injector = Guice.createInjector(
+        return createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new MongoCoreModule(),
             new ServerModule(),
@@ -45,11 +93,7 @@ public class AppServeMain {
                     bind(PersistenceStrategy.class).toInstance(getNullPersistence());
                 }
             }
-        );
-
-        final Server server = injector.getInstance(Server.class);
-        server.start();
-        server.join();
+        ).getInstance(Server.class);
 
     }
 
