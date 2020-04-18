@@ -44,7 +44,7 @@ public class UserProvider implements Provider<User> {
     }
 
     @Inject
-    public void setSupportedAuthenticationMethods(Set<UserAuthenticationMethod> supportedAuthenticationMethods) {
+    public void setSupportedAuthenticationMethods(final Set<UserAuthenticationMethod> supportedAuthenticationMethods) {
         this.supportedAuthenticationMethods = supportedAuthenticationMethods;
     }
 

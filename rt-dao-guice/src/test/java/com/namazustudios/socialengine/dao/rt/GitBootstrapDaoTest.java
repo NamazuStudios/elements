@@ -23,11 +23,6 @@ import java.io.File;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static com.google.common.io.Files.fileTreeTraverser;
-import static com.namazustudios.socialengine.Constants.GIT_STORAGE_DIRECTORY;
-import static com.namazustudios.socialengine.dao.rt.FilesystemGitLoader.getBareStorageDirectory;
-import static org.testng.Assert.assertTrue;
-
 /**
  * Created by patricktwohig on 8/23/17.
  */

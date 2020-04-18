@@ -22,10 +22,9 @@ public class HttpRequestHeaderProfileIdentificationMethod implements ProfileIden
         final String profileId = getHttpServletRequest().getHeader(PROFILE_ID);
         if (profileId == null) throw new UnidentifiedProfileException();
 
-        final Profile profile = getProfileOverrideService().findOverrideProfile(profileId);
-        if (profile == null) throw new UnidentifiedProfileException();
-
-        return profile;
+        return getProfileOverrideService()
+            .findOverrideProfile(profileId)
+            .orElseThrow(() -> new UnidentifiedProfileException());
 
     }
 

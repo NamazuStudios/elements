@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.ProfileOverrideService;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 /**
  * Implementation for users with {@link User.Level#SUPERUSER} users.
@@ -21,7 +22,7 @@ public class SuperUserProfileOverrideService implements ProfileOverrideService {
      * @return the profile or null, if it doesn't exist.
      */
     @Override
-    public Profile findOverrideProfile(String profileId) {
+    public Optional<Profile> findOverrideProfile(final String profileId) {
         return getProfileDao().findActiveProfile(profileId);
     }
 

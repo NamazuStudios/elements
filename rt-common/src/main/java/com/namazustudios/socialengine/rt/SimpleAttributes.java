@@ -3,14 +3,13 @@ package com.namazustudios.socialengine.rt;
 import org.w3c.dom.Attr;
 
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.function.BiPredicate;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /**
  * Simple implementation of {@link Attributes} backed by a {@link Map<String, Object>}.
@@ -25,8 +24,9 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
     }
 
     @Override
-    public Object getAttribute(String name) {
-        return getAttributes().get(name);
+    public Optional<Object> getAttribute(final String name) {
+        final Object object = getAttributes().get(name);
+        return object == null ? empty() : of(object);
     }
 
     @Override
@@ -35,7 +35,7 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
     }
 
     @Override
-    public void setAttribute(String name, Object obj) {
+    public void setAttribute(final String name, final Object obj) {
         attributes.put(name, obj);
     }
 
@@ -43,8 +43,13 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
         return attributes;
     }
 
-    public void setAttributes(Map<String, Object> attributes) {
+    public void setAttributes(final Map<String, Object> attributes) {
         this.attributes = attributes;
+    }
+
+    @Override
+    public void copyToMap(final Map<String, Object> simpleAttributesMap) {
+        simpleAttributesMap.putAll(attributes);
     }
 
     @Override

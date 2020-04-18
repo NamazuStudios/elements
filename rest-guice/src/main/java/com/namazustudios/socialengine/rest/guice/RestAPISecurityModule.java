@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 /**
  * Created by patricktwohig on 6/26/17.
  */
-public class SecurityModule extends AbstractModule {
+public class RestAPISecurityModule extends AbstractModule {
 
     @Override
     protected void configure() {

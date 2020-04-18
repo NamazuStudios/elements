@@ -106,7 +106,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
         final NamedHeaders namedHeaders = toWrite.getResponseHeader();
 
         for (final String header : namedHeaders.getHeaderNames()) {
-            namedHeaders.getHeaders(header).forEach(o -> destination.addHeader(header, o.toString()));
+            namedHeaders.getHeaders(header).get().forEach(o -> destination.addHeader(header, o.toString()));
         }
 
     }

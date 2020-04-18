@@ -14,6 +14,7 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Optional;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
@@ -41,16 +42,13 @@ public class SessionIdAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
-        final String sessionSecret = new SessionSecretHeader(request::getHeader).getSessionSecret();
+        final Optional<String> sessionSecret = new SessionSecretHeader(request::getHeader).getSessionSecret();
 
-        if (sessionSecret == null) {
-            chain.doFilter(request, response);
-        } else {
-
+        sessionSecret.ifPresent(ss -> {
             final Session session;
 
             try {
-                session = getSessionService().checkAndRefreshSessionIfNecessary(sessionSecret);
+                session = getSessionService().checkAndRefreshSessionIfNecessary(ss);
             } catch (final ForbiddenException ex) {
                 response.setStatus(SC_FORBIDDEN);
                 return;
@@ -65,9 +63,9 @@ public class SessionIdAuthenticationFilter implements Filter {
             if (profile != null) request.setAttribute(PROFILE_ATTRIBUTE, profile);
             if (application != null) request.setAttribute(APPLICATION_ATTRIUTE, application);
 
-            chain.doFilter(request, response);
+        });
 
-        }
+        chain.doFilter(request, response);
 
     }
 

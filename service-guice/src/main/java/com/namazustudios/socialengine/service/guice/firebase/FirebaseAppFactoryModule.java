@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.firebase.guice;
+package com.namazustudios.socialengine.service.guice.firebase;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.service.firebase.FirebaseAppFactory;

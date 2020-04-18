@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.notification.guice;
+package com.namazustudios.socialengine.service.guice;
 
 
 import com.google.inject.Injector;

@@ -4,6 +4,10 @@ import com.namazustudios.socialengine.model.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.ProfileOverrideService;
 
+import java.util.Optional;
+
+import static java.util.Optional.empty;
+
 /**
  * Implementation for users with {@link User.Level#UNPRIVILEGED} users.
  */
@@ -16,8 +20,8 @@ public class AnonProfileOverrideService implements ProfileOverrideService {
      * @return null always
      */
     @Override
-    public Profile findOverrideProfile(final String profileId) {
-        return null;
+    public Optional<Profile> findOverrideProfile(final String profileId) {
+        return empty();
     }
 
 }

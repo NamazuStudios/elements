@@ -14,7 +14,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class AnonSessionService implements SessionService {
+public class DefaultSessionService implements SessionService {
 
     private SessionDao sessionDao;
 
@@ -34,13 +34,13 @@ public class AnonSessionService implements SessionService {
     }
 
     @Override
-    public void destroySessions() {
-        throw new ForbiddenException();
+    public void destroySessions(final String userId) {
+        getSessionDao().deleteAllSessionsForUser(userId);
     }
 
     @Override
-    public void destroySession(String session) {
-        throw new ForbiddenException();
+    public void destroySession(final String userId, final String sessionSecret) {
+        getSessionDao().delete(userId, sessionSecret);
     }
 
     public SessionDao getSessionDao() {

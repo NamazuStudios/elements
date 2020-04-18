@@ -29,6 +29,7 @@ import org.mongodb.morphia.query.Query;
 import javax.inject.Inject;
 import java.util.Date;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -58,7 +59,7 @@ public class MongoProfileDao implements ProfileDao {
     private MongoConcurrentUtils mongoConcurrentUtils;
 
     @Override
-    public Profile findActiveProfile(final String profileId) {
+    public Optional<Profile> findActiveProfile(final String profileId) {
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
@@ -68,12 +69,12 @@ public class MongoProfileDao implements ProfileDao {
         );
 
         final MongoProfile mongoProfile = query.get();
-        return mongoProfile == null ? null : transform(mongoProfile);
+        return mongoProfile == null ? Optional.empty() : Optional.of(transform(mongoProfile));
 
     }
 
     @Override
-    public Profile findActiveProfileForUser(final String profileId, final String userId) {
+    public Optional<Profile> findActiveProfileForUser(final String profileId, final String userId) {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
@@ -84,7 +85,7 @@ public class MongoProfileDao implements ProfileDao {
         query.field("user").equal(mongoUser);
 
         final MongoProfile mongoProfile = query.get();
-        return mongoProfile == null ? null : transform(mongoProfile);
+        return mongoProfile == null ? Optional.empty() : Optional.of(transform(mongoProfile));
 
     }
 

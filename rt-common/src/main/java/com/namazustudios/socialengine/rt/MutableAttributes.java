@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.Optional;
+import java.util.function.Supplier;
+
 /**
  * Represents a set of mutable attributes.
  */

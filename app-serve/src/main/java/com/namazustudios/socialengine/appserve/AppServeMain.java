@@ -1,12 +1,7 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.namazustudios.socialengine.appserve.guice.JaxRSClientModule;
-import com.namazustudios.socialengine.appserve.guice.JeroMQMultiplexerModule;
-import com.namazustudios.socialengine.appserve.guice.ServerModule;
-import com.namazustudios.socialengine.appserve.guice.ServicesModule;
+import com.namazustudios.socialengine.appserve.guice.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
@@ -15,7 +10,6 @@ import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
-import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
@@ -79,7 +73,7 @@ public class AppServeMain implements Runnable {
             new ConfigurationModule(defaultConfigurationSupplier),
             new MongoCoreModule(),
             new ServerModule(),
-            new ServicesModule(),
+            new AppServeServicesModule(),
             new MongoDaoModule(),
             new ValidationModule(),
             new MongoSearchModule(),
@@ -87,6 +81,8 @@ public class AppServeMain implements Runnable {
             new JeroMQMultiplexerModule(),
             new RTFilesystemGitLoaderModule(),
             new JaxRSClientModule(),
+            new AppServeSecurityModule(),
+            new AppServeFilterModule(),
             new AbstractModule() {
                 @Override
                 protected void configure() {

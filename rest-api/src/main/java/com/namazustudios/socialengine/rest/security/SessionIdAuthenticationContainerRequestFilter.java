@@ -15,10 +15,8 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 
 import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
-import static com.namazustudios.socialengine.model.application.Application.APPLICATION_ATTRIUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
-import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 
 @Provider
 @PreMatching
@@ -27,9 +25,10 @@ public class SessionIdAuthenticationContainerRequestFilter implements ContainerR
     private SessionService sessionService;
 
     @Override
-    public void filter(final ContainerRequestContext requestContext) throws IOException {
-        final String sessionId = new SessionSecretHeader(requestContext::getHeaderString).getSessionSecret();
-        if (sessionId != null) checkSessionAndSetAttributes(requestContext, sessionId);
+    public void filter(final ContainerRequestContext requestContext) {
+        new SessionSecretHeader(requestContext::getHeaderString)
+            .getSessionSecret()
+            .ifPresent(sessionId -> checkSessionAndSetAttributes(requestContext, sessionId));
     }
 
     private void checkSessionAndSetAttributes(final ContainerRequestContext requestContext, final String sessionId) {
@@ -40,11 +39,9 @@ public class SessionIdAuthenticationContainerRequestFilter implements ContainerR
 
         final User user = session.getUser();
         final Profile profile = session.getProfile();
-        final Application application = session.getApplication();
 
         if (user != null) requestContext.setProperty(USER_ATTRIBUTE, user);
         if (profile != null) requestContext.setProperty(PROFILE_ATTRIBUTE, profile);
-        if (application != null) requestContext.setProperty(APPLICATION_ATTRIUTE, application);
 
     }
 

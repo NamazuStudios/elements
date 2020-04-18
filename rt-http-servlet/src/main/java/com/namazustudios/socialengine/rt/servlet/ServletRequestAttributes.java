@@ -8,6 +8,8 @@ import java.util.*;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptySet;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 public class ServletRequestAttributes implements MutableAttributes {
 
@@ -33,8 +35,9 @@ public class ServletRequestAttributes implements MutableAttributes {
     }
 
     @Override
-    public Object getAttribute(final String name) {
-        return servletRequestSupplier.get().getAttribute(name);
+    public Optional<Object> getAttribute(final String name) {
+        final Object value = servletRequestSupplier.get().getAttribute(name);
+        return value == null ? empty() : of(value);
     }
 
     @Override

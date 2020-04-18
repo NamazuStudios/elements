@@ -17,6 +17,18 @@ import java.util.Map;
 public interface Request {
 
     /**
+     * Uniquely identifies the {@link Request} in {@link Attributes}.
+     */
+    String REQUEST_ID_ATTRIBUTE = Request.class.getName() + ".request.id";
+
+    /**
+     * Gets a system-wide globally unique ID for this {@link Request}.
+     *
+     * @return the request UUID
+     */
+    String getId();
+
+    /**
      * Gets the {@link Attributes} of this {@link Request}.  The {@link Attributes} are set by the container as part of
      * processing the {@link Request}.
      *

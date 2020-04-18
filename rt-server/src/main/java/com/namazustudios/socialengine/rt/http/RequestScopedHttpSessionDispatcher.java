@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -22,7 +21,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
 
     private static final Logger logger = LoggerFactory.getLogger(RequestScopedHttpSessionDispatcher.class);
 
-    private List<Filter> filterList;
+    private Filter.Chain.Builder filterChainBuilder;
 
     private ExceptionMapper.Resolver exceptionMapperResolver;
 
@@ -33,15 +32,15 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
                          final HttpRequest httpRequest,
                          final Consumer<Response> responseConsumer) {
 
-        final Filter.Chain chain;
-        chain = Filter.Chain.build(getFilterList(), (s, r, rr) -> createAndSchedule(httpRequest, s, r, rr));
+        final Filter.Chain.Builder builder = getFilterChainBuilder();
 
         final Request request = SimpleRequest.builder()
             .from(httpRequest)
             .parameterizedPath(httpRequest.getManifestMetadata().getPreferredOperation().getPath())
             .build();
 
-        chain.next(session, request, responseConsumer);
+        final Filter.Chain root = builder.terminate((s, r, rr) -> createAndSchedule(httpRequest, s, r, rr));
+        root.next(session, request, responseConsumer);
 
     }
 
@@ -90,13 +89,12 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         }
     }
 
-    public List<Filter> getFilterList() {
-        return filterList;
+    public Filter.Chain.Builder getFilterChainBuilder() {
+        return filterChainBuilder;
     }
 
-    @Inject
-    public void setFilterList(List<Filter> filterList) {
-        this.filterList = filterList;
+    public void setFilterChainBuilder(Filter.Chain.Builder filterChainBuilder) {
+        this.filterChainBuilder = filterChainBuilder;
     }
 
     public ExceptionMapper.Resolver getExceptionMapperResolver() {

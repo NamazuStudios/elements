@@ -96,11 +96,7 @@ public class SimpleResponse implements Response, Serializable {
             sequence = header.getSequence();
 
             simpleResponseHeaderMap.clear();
-
-            for (final String headerName : header.getHeaderNames()) {
-                final List<Object> value = header.getHeaders(headerName);
-                simpleResponseHeaderMap.put(headerName, new ArrayList<>(value));
-            }
+            header.copyToMap(simpleResponseHeaderMap);
 
             return this;
 
