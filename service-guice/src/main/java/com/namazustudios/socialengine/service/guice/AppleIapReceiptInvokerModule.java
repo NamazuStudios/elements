@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;

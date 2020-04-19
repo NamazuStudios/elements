@@ -1,15 +1,27 @@
 package com.namazustudios.socialengine.appserve;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.appserve.guice.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTApplicationInjectorScopedProvider;
+import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
+import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
+import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
+import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
+import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
+import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
@@ -17,7 +29,14 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
+import java.text.DateFormat;
+import java.util.List;
+import java.util.function.Supplier;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.google.inject.Guice.createInjector;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 import static com.namazustudios.socialengine.rt.PersistenceStrategy.getNullPersistence;
 
 public class AppServeMain implements Runnable {
@@ -69,6 +88,9 @@ public class AppServeMain implements Runnable {
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
+        final Supplier<List<FacebookPermission>> facebookPermissionListSupplier;
+        facebookPermissionListSupplier =  new FacebookBuiltinPermissionsSupplier();
+
         return createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new MongoCoreModule(),
@@ -78,17 +100,35 @@ public class AppServeMain implements Runnable {
             new ValidationModule(),
             new MongoSearchModule(),
             new ZContextModule(),
-            new JeroMQMultiplexerModule(),
+            new GameOnInvokerModule(),
             new RTFilesystemGitLoaderModule(),
-            new JaxRSClientModule(),
             new AppServeSecurityModule(),
             new AppServeFilterModule(),
+            new RTDaoModule(),
+            new RTGitApplicationModule(),
+            new AppServeRedissonServicesmodule(),
+            new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
             new AbstractModule() {
                 @Override
                 protected void configure() {
                     bind(PersistenceStrategy.class).toInstance(getNullPersistence());
                 }
-            }
+            },
+            new AppleIapReceiptInvokerModule(),
+            new JacksonHttpClientModule()
+                    .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
+                    .withDefaultObjectMapperProvider(() -> {
+                        final ObjectMapper objectMapper = new ObjectMapper();
+                        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                        return objectMapper;
+                    }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
+                final ObjectMapper objectMapper = new ObjectMapper();
+                final DateFormat dateFormat = new AppleDateFormat();
+                objectMapper.setDateFormat(dateFormat);
+                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                return objectMapper;
+            })
         ).getInstance(Server.class);
 
     }

@@ -34,7 +34,12 @@
         </dependency>
 
         <!-- Optional Dependencies -->
-
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>service-redis</artifactId>
+            <version>${project.version}</version>
+            <optional>true</optional>
+        </dependency>
         <dependency>
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
@@ -59,13 +64,6 @@
         </dependency>
 
         <!-- Test Dependencies -->
-
-<!--        <dependency>-->
-<!--            <groupId>javax.servlet</groupId>-->
-<!--            <artifactId>servlet-api</artifactId>-->
-<!--            <version>${javax.servlet.api.version}</version>-->
-<!--            <scope>test</scope>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>org.testng</groupId>
             <artifactId>testng</artifactId>

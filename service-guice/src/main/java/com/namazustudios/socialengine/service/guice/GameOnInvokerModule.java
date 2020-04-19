@@ -1,11 +1,8 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.service.guice;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.service.gameon.client.invoker.*;
 import com.namazustudios.socialengine.service.gameon.client.invoker.builder.*;
-
-import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 
 public class GameOnInvokerModule extends PrivateModule {
     @Override
