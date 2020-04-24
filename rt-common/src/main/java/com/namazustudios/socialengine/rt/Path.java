@@ -306,8 +306,17 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
         return toNormalizedPathString(pathSeparator, false);
     }
 
+    /**
+     * Converts this {@link Path} to a {@link String} representing the path. Optionally including the context.
+     *
+     * @param pathSeparator the path separator
+     * @param shouldIncludeContext
+     * @return
+     */
     public String toNormalizedPathString(final String pathSeparator, final boolean shouldIncludeContext) {
+
         final String context;
+
         if (shouldIncludeContext) {
             context = this.context;
         }
@@ -315,7 +324,12 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
             context = null;
         }
 
-        return pathFromContextAndComponents(context, components, pathSeparator);
+        return stringFromContextAndComponents(context, components, pathSeparator);
+
+    }
+
+    public Path toPathWithContext(final String context) {
+        return new Path(context, components);
     }
 
     @Override
@@ -503,11 +517,28 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
                     .splitToList(path);
         }
 
-        public static String pathFromContextAndComponents(final String context, final List<String> pathComponents) {
-            return pathFromContextAndComponents(context, pathComponents, PATH_SEPARATOR);
+        /**
+         * Gets a {@link String} representing the a path and path components.
+         *
+         * @param context the context
+         * @param pathComponents the path components
+         * @return the {@link String} representation of a {@link Path}
+         */
+        public static String stringFromContextAndComponents(final String context,
+                                                            final List<String> pathComponents) {
+            return stringFromContextAndComponents(context, pathComponents, PATH_SEPARATOR);
         }
 
-        public static String pathFromContextAndComponents(final String context, final List<String> pathComponents, final String pathSeparator) {
+        /**
+         * Gets a {@link String} representing the a path and path components.
+         *
+         * @param context the context
+         * @param pathComponents the path components
+         * @return the {@link String} representation of a {@link Path}
+         */
+        public static String stringFromContextAndComponents(final String context,
+                                                            final List<String> pathComponents,
+                                                            final String pathSeparator) {
             String resultPath = "";
 
             if (context != null) {
@@ -555,9 +586,9 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
         /**
          * Normalizes the path by removing duplicate separators, trimming whitespace, and then
-         * rejoining into a single path wiht a leading separator.
+         * rejoining into a single path wiith a leading separator.
          *
-         * @param path the path to normailze
+         * @param path the path to normalize
          * @return the normalized path
          */
         public String normalize(final String path) {
@@ -593,6 +624,16 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      */
     public static Path fromPathString(final String pathString) {
         return fromPathString(pathString, PATH_SEPARATOR);
+    }
+
+    /**
+     * Returns the {@link Path} from the filesystem path string.
+     *
+     * @param fileSystemPath the filesystem path
+     * @return the {@link Path} instance
+     */
+    public static Path fromFileSystemPathString(final String fileSystemPath) {
+        return fromPathString(fileSystemPath, File.separator);
     }
 
     /**

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
 import java.util.Set;
@@ -98,10 +99,10 @@ class V1CompoundId implements Serializable {
 
         try {
 
-            if (byteRepresentation.length == 0) throw new IllegalArgumentException("Got zero-length ayte array.");
+            if (byteRepresentation.length == 0) throw new IllegalArgumentException("Got zero-length byte array.");
 
             final byte prefix = byteRepresentation[index++];
-            if (prefix != PREFIX_BYTE) throw new IllegalArgumentException("Got invalid prefix byte.");
+            if (prefix != PREFIX_BYTE) throw new IllegalArgumentException("Got invalid prefix byte " + prefix);
 
             while (index < byteRepresentation.length) {
 
@@ -142,6 +143,29 @@ class V1CompoundId implements Serializable {
 
     }
 
+    private V1CompoundId(final ByteBuffer byteBufferRepresentation) {
+
+        components = new Component[FIELD_COUNT];
+
+        try {
+
+            if (byteBufferRepresentation.remaining() == 0) throw new IllegalArgumentException("Got zero-length ByteBuffer");
+
+            final byte prefix = byteBufferRepresentation.get();
+            if (prefix != PREFIX_BYTE) throw new IllegalArgumentException("Got invalid prefix byte: " + prefix);
+
+            while (byteBufferRepresentation.hasRemaining()) {
+                final Field field = FIELDS[byteBufferRepresentation.get()];
+                final long upper = byteBufferRepresentation.getLong();
+                final long lower = byteBufferRepresentation.getLong();
+                final UUID uuid = new UUID(upper, lower);
+                components[field.ordinal()] = new Component(field, uuid);
+            }
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+
+    }
     /**
      * Gets the {@link Component} representing the {@link Field}, throwing an {@link IllegalStateException} if the
      * field is not present.
@@ -405,6 +429,17 @@ class V1CompoundId implements Serializable {
          */
         Builder with(final byte[] byteRepresentation) {
             return with(new V1CompoundId(byteRepresentation));
+        }
+
+        /**
+         * Prses the contensts of a {@link ByteBuffer} into this builder assigning all fields to the builder.
+         *
+         * @param byteBufferRepresentation the byte representation of the {@link V1CompoundId}.
+         *
+         * @return this instance
+         */
+        Builder with(final ByteBuffer byteBufferRepresentation) {
+            return with(new V1CompoundId(byteBufferRepresentation));
         }
 
         /**

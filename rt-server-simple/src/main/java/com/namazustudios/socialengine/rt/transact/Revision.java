@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.namazustudios.socialengine.rt.Path;
-
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 
@@ -17,7 +16,7 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
 
         @Override
         public String getUniqueIdentifier() {
-            return "<zero>";
+            return "zero";
         }
 
         @Override
@@ -40,7 +39,7 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
 
         @Override
         public String getUniqueIdentifier() {
-            return "<infinity>";
+            return "infinity";
         }
 
         @Override
@@ -56,7 +55,30 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     };
 
     /**
-     * A special type of Revision that is before all other {@link Revision} instances
+     * Represents the latest revision. This is a special {@link Revision} that is newer than almost every other
+     * revision.  It is is equal to itself and less than {@link #infinity()}.
+     */
+    Revision<Void> LATEST = new Revision<Void>() {
+
+        @Override
+        public String getUniqueIdentifier() {
+            return "latest";
+        }
+
+        @Override
+        public int compareTo(Revision<?> o) {
+            return this == o ? 0 : INFINITY == o ? -1 : 1;
+        }
+
+        @Override
+        public <T> Revision<T> comparableTo() {
+            return (Revision<T>) this;
+        }
+
+    };
+
+    /**
+     * A special type of Revision that is before all other {@link Revision} instances.
      *
      * @return the zero revision
      */
@@ -65,13 +87,22 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     }
 
     /**
-     * A special type of Reviisioin that is after all other {@link Revision} nistances.
+     * A special type of Revision that is after all other {@link Revision} instances.
      *
      * @return the infinity revision
      */
-    static Revision<?> infinity() {
+    static <U> Revision<U> infinity() {
         return INFINITY.comparableTo();
     }
+
+    /**
+     * Represents the latest revision of any particular resource.  Similar to {@link #infinity()} but can be used to
+     * represent a specific tangible instance.
+     *
+     * @param <U>
+     * @return the latest revision
+     */
+    static <U> Revision<U> latest() { return LATEST.comparableTo(); }
 
     /**
      * Returns a string uniquely identifying this {@link Revision}.  This may be any value, except for the literal value
@@ -92,13 +123,34 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     }
 
     /**
+     * Returns true if this {@link Revision<?>} is after the supplied {@link Revision<?>}.
+     *
+     * @param revision the other revision to check
+     * @return true if this is after, false otherwise
+     *
+     */
+    default boolean isAfter(final Revision<?> revision) {
+        return compareTo(revision) > 0;
+    }
+
+    /**
      * Returns true if this {@link Revision} is before the supplied {@link Revision<?>}
      *
      * @param revision the revision to check
      * @return true if this is before, false otherwise
      */
-    default boolean isBefore(Revision<?> revision) {
+    default boolean isBefore(final Revision<?> revision) {
         return compareTo(revision) < 0;
+    }
+
+    /**
+     * Returns true if this {@link Revision<?>} is before or the same as the supplied {@link Revision<?>}
+     *
+     * @param revision to check
+     * @return true if before or same, false otherwise
+     */
+    default boolean isBeforeOrSame(final Revision<?> revision) {
+        return compareTo(revision) <= 0;
     }
 
     /**

@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.InvalidResourceIdException;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
@@ -29,6 +30,12 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
 public class ResourceId implements Serializable, HasNodeId {
 
     final V1CompoundId v1CompoundId;
+
+    private static final int SIZE = new ResourceId(new V1CompoundId.Builder()
+            .with(INSTANCE, UUID.randomUUID())
+            .with(RESOURCE, UUID.randomUUID())
+            .with(APPLICATION, UUID.randomUUID())
+        .build()).asBytes().length;
 
     private transient volatile int hash;
 
@@ -104,6 +111,15 @@ public class ResourceId implements Serializable, HasNodeId {
     }
 
     /**
+     * Returns the number of bytes when a {@link ResourceId} is stored as a {@link byte[]}
+     *
+     * @return the size, in bytes
+     */
+    public static int getSizeInBytes() {
+        return SIZE;
+    }
+
+    /**
      * Creates a new unique {@link ResourceId}, specifying the {@link NodeId}
      */
     public static ResourceId randomResourceIdForNode(final NodeId nodeId) {
@@ -140,7 +156,7 @@ public class ResourceId implements Serializable, HasNodeId {
 
     /**
      * Parses a new {@link ResourceId} from the given {@link byte[]}.  The should be the string representation returned
-     * byt {@link #asString()}.
+     * byt {@link #asBytes()}.
      *
      * @param byteRepresentation the  {@link byte[]} representation of the {@link ResourceId} from {@link ResourceId#asBytes()}.
      */
@@ -150,6 +166,19 @@ public class ResourceId implements Serializable, HasNodeId {
             .only(INSTANCE, APPLICATION, RESOURCE)
             .build()
         );
+    }
+
+    /**
+     * Parses a new {@link ResourceId} from the given {@link ByteBuffer[]}.  The should be the string representation
+     * returned by {@link #asBytes()}.
+     *
+     * @param byteBufferRepresentation the  {@link ByteBuffer} representation of the {@link ResourceId} from {@link ResourceId#asBytes()}.
+     */
+    public static ResourceId resourceIdFromByteBuffer(final ByteBuffer byteBufferRepresentation) {
+        return new ResourceId(new V1CompoundId.Builder()
+            .with(byteBufferRepresentation)
+            .only(INSTANCE, APPLICATION, RESOURCE)
+            .build());
     }
 
 }

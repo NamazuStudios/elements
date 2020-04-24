@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.Monitor;
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
 import javolution.io.Struct;
@@ -25,7 +24,6 @@ import java.util.stream.Stream;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
-import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.StandardOpenOption.*;
 
 public class UnixFSTransactionJournal implements TransactionJournal {
@@ -38,13 +36,13 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionJournal.class);
 
-    public static final String LOCK_FILE_EXT = ".lock";
-
     public static final String JOURNAL_MAGIC = "JELM";
 
     private static final int VERSION_MAJOR = 1;
 
     private static final int VERSION_MINOR = 0;
+
+    final UnixFSUtils utils;
 
     private final Path lockFilePath;
 
@@ -57,18 +55,14 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     private final AtomicLong committed = new AtomicLong(-1);
 
     @Inject
-    public UnixFSTransactionJournal(@Named(JOURNAL_PATH) final Path journalPath,
-                                    @Named(TRANSACTION_BUFFER_SIZE) final int txnBufferSize,
-                                    @Named(TRANSACTION_BUFFER_COUNT) final int txnBufferCount) throws IOException {
+    public UnixFSTransactionJournal(
+            final UnixFSUtils utils,
+            @Named(JOURNAL_PATH) final Path journalPath,
+            @Named(TRANSACTION_BUFFER_SIZE) final int txnBufferSize,
+            @Named(TRANSACTION_BUFFER_COUNT) final int txnBufferCount) throws IOException {
 
-        lockFilePath = Paths.get(journalPath.toString() + LOCK_FILE_EXT);
-
-        if (Files.exists(lockFilePath)) {
-            final String msg = format("Journal path is locked %s", lockFilePath);
-            throw new FileAlreadyExistsException(msg);
-        } else {
-            Files.createFile(lockFilePath);
-        }
+        this.utils = utils;
+        lockFilePath = this.utils.lockDirectory(journalPath);
 
         try (final FileChannel channel = FileChannel.open(journalPath, READ, WRITE, CREATE)) {
 
@@ -159,15 +153,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     @Override
     public void close() {
-
         journalBuffer.force();
-
-        try {
-            deleteIfExists(lockFilePath);
-        } catch (IOException e) {
-            logger.error("Failed to delete lock file.", e);
-        }
-
+        utils.unlockDirectory(lockFilePath);
     }
 
     private static class JournalHeader extends Struct {
@@ -193,12 +180,14 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     public static void main(final String[] args) throws Exception {
-
         final Path path = Paths.get("test.txt");
 
-        try (final UnixFSTransactionJournal j = new UnixFSTransactionJournal(path, 1024 * 1024, 256)) {
-            System.out.println("Hello World!");
-        }
+        try {
+            Files.createFile(path);
+        } catch (FileAlreadyExistsException ex) {}
+
+        final Object obj = Files.readAttributes(path, "unix:*");
+        System.out.println(obj);
 
     }
 

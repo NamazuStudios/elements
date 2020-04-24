@@ -37,10 +37,7 @@ public class Persistence {
 
     private static final byte[] SIGNATURE = new byte[]{ (byte)248, 'L', 'E', 'L', 'M', '\r', '\n' };
 
-    private static final int VERSION_MAJOR = 1;
-
-    private static final int VERSION_MINOR = 0;
-
+w
     private static final String PERSIST_TYPE = "_t";
 
     private static final String PERSIST_METADATA = "_md";
