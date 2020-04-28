@@ -19,18 +19,18 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private final UnixFSUtils utils;
 
-    private final UnixFSLinkPathIndex pathIndex;
+    private final UnixFSPathIndex pathIndex;
 
-    private final UnixFSResourceIdIndex resourceIdIndex;
+    private final UnixFSResourceIndex resourceIdIndex;
 
     private final UnixFSReversePathIndex reversePathIndex;
 
     @Inject
     public UnixFSRevisionDataStore(
             final UnixFSUtils utils,
-            final UnixFSLinkPathIndex pathIndex,
+            final UnixFSPathIndex pathIndex,
             final UnixFSReversePathIndex reversePathIndex,
-            final UnixFSResourceIdIndex resourceIdIndex,
+            final UnixFSResourceIndex resourceIdIndex,
             @Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) throws IOException {
         this.utils = utils;
         this.root = storageRoot;
@@ -56,7 +56,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
     }
 
     @Override
-    public ResourceIdIndex getResourceIdIndex() {
+    public ResourceIndex getResourceIdIndex() {
         return resourceIdIndex;
     }
 

@@ -90,16 +90,24 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
             .orElseThrow(ResourceNotFoundException::new);
     }
 
-    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final Path path) throws IOException {
-        return revisionDataStore
+    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final Path path) {
+
+        final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
             .getResourceIdIndex()
             .loadResourceContentsAt(revision.comparableTo(), path);
+
+        return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
+
     }
 
-    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final ResourceId resourceId) throws IOException {
-        return revisionDataStore
-            .getResourceIdIndex()
-            .loadResourceContentsAt(revision.comparableTo(), resourceId);
+    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final ResourceId resourceId) {
+
+        final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
+                .getResourceIdIndex()
+                .loadResourceContentsAt(revision.comparableTo(), resourceId);
+
+        return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
+
     }
 
     private class UnixFSReadOnlyTransaction implements ReadOnlyTransaction {
@@ -131,12 +139,12 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         }
 
         @Override
-        public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
+        public ReadableByteChannel loadResourceContents(final ResourceId resourceId) {
             return loadResourceContentsAt(entry.getRevision(), resourceId);
         }
 
         @Override
-        public ReadableByteChannel loadResourceContents(final Path path) throws IOException {
+        public ReadableByteChannel loadResourceContents(final Path path) {
             return loadResourceContentsAt(entry.getRevision(), path);
         }
 

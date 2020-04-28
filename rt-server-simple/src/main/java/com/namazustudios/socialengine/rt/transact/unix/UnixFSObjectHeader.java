@@ -2,7 +2,10 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import javolution.io.Struct;
 
-public class UnixFSHeader extends Struct {
+/**
+ * File header for all objects in the RT Storage system.
+ */
+public class UnixFSObjectHeader extends Struct {
 
     public static final int VERSION_MAJOR_1 = 1;
 
@@ -32,7 +35,7 @@ public class UnixFSHeader extends Struct {
      */
     public Unsigned32 crc32 = new Unsigned32();
 
-    public UnixFSHeader() {
+    public UnixFSObjectHeader() {
         crc32.set(0);
         tombstone.set(false);
         majorVersion.set(VERSION_MAJOR_CURRENT);

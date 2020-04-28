@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.transact;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
+import java.util.function.Function;
 
 import static java.util.Optional.empty;
 
@@ -151,6 +152,36 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      */
     default boolean isBeforeOrSame(final Revision<?> revision) {
         return compareTo(revision) <= 0;
+    }
+
+    /**
+     * A conveineince wrapper around the {@link Optional<ValueT>} returned by this instance's {@link #getValue()}
+     * method.  The supplied {@link Function} will map the value according to the rules spelled out by
+     * {@link Optional#map(Function)}
+     *
+     * @param mapper
+     * @param <U>
+     * @return
+     */
+    default <U> Revision<U> map(final Function<ValueT, U> mapper) {
+        return new Revision<U>() {
+
+            @Override
+            public int compareTo(Revision<?> o) {
+                return Revision.this.compareTo(o);
+            }
+
+            @Override
+            public String getUniqueIdentifier() {
+                return Revision.this.getUniqueIdentifier();
+            }
+
+            @Override
+            public Optional<U> getValue() {
+                return Revision.this.getValue().map(mapper);
+            }
+
+        };
     }
 
     /**
