@@ -10,8 +10,10 @@ buildNumber.properties
 test-repositories
 storage.xodus
 node_modules
+.DS_Store
 
 #IntelliJ Configurations (except shared run configurations
+.idea/jarRepositories.xml
 .idea/artifacts/
 .idea/compiler.xml
 .idea/encodings.xml
