@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -33,13 +31,25 @@ public interface Attributes {
     Set<String> getAttributeNames();
 
     /**
+     * Gets the attribute associated with this {@link Attributes} for the given name.  Returning null if no such
+     * attribute is found.  Note that an attribute may exist with the supplied name and the value null.  In order to
+     * distinguish from this, the method {@link #getAttributeOptional(String)} may be used.
+     *
+     * @param name the name of hte attribute
+     * @return the value or null
+     */
+    default Object getAttribute(final String name) {
+        return getAttributeOptional(name).orElse(null);
+    }
+
+    /**
      * Gets the attribute associated with this {@link Attributes} object.
      *
      * @param name the name of the attribute to fetch
      *
      * @return an {@link Optional<Object>} for the value
      */
-    Optional<Object> getAttribute(String name);
+    Optional<Object> getAttributeOptional(String name);
 
     /**
      * Returns a view of this {@link Attributes} object as a {@link Map<String, Object>}.
@@ -97,7 +107,7 @@ public interface Attributes {
      */
     default void copyToMap(Map<String, Object> simpleAttributesMap) {
         for (final String attributeName : getAttributeNames()) {
-            final Object attribute = getAttribute(attributeName);
+            final Object attribute = getAttributeOptional(attributeName);
             simpleAttributesMap.put(attributeName, attribute);
         }
     }
@@ -139,7 +149,7 @@ class EmptyAttributes implements Attributes, Serializable {
     }
 
     @Override
-    public Optional<Object> getAttribute(String name) {
+    public Optional<Object> getAttributeOptional(String name) {
         return empty();
     }
 

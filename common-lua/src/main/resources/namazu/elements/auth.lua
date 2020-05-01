@@ -21,7 +21,7 @@ auth.SESSION_SECRET_SCHEME = "session_secret"
 --
 -- @return the logged-in user making the request, or the unprivileged user.  Never nil
 function auth.user()
-    return attributes:getAttributeOrDefault(User.USER_ATTRIBUTE, User:getUnprivileged())
+    return attributes:getAttributeOptional(User.USER_ATTRIBUTE):orElse(User:getUnprivileged())
 end
 
 --- Fetches the current Profile

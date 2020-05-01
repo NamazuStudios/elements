@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import org.w3c.dom.Attr;
-
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiPredicate;
@@ -24,7 +22,7 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
     }
 
     @Override
-    public Optional<Object> getAttribute(final String name) {
+    public Optional<Object> getAttributeOptional(final String name) {
         final Object object = getAttributes().get(name);
         return object == null ? empty() : of(object);
     }
@@ -101,7 +99,7 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
         public Builder from(final Attributes attributes) {
 
             for (final String name : attributes.getAttributeNames()) {
-                setAttribute(name, attributes.getAttribute(name));
+                setAttribute(name, attributes.getAttributeOptional(name));
             }
 
             return this;
@@ -119,8 +117,8 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
         public Builder from(final Attributes attributes, final BiPredicate<String, Object> filter) {
 
             for (final String name : attributes.getAttributeNames()) {
-                final Object value = attributes.getAttribute(name);
-                if (filter.test(name, value)) setAttribute(name, attributes.getAttribute(name));
+                final Object value = attributes.getAttributeOptional(name);
+                if (filter.test(name, value)) setAttribute(name, attributes.getAttributeOptional(name));
             }
 
             return this;

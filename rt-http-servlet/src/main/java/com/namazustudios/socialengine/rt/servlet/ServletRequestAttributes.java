@@ -35,7 +35,7 @@ public class ServletRequestAttributes implements MutableAttributes {
     }
 
     @Override
-    public Optional<Object> getAttribute(final String name) {
+    public Optional<Object> getAttributeOptional(final String name) {
         final Object value = servletRequestSupplier.get().getAttribute(name);
         return value == null ? empty() : of(value);
     }

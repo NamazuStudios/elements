@@ -17,7 +17,7 @@ public class RequestUserAuthenticationMethod implements UserAuthenticationMethod
     public User attempt() throws ForbiddenException {
         return getRequest()
             .getAttributes()
-            .getAttribute(USER_ATTRIBUTE)
+            .getAttributeOptional(USER_ATTRIBUTE)
             .map(User.class::cast)
             .orElseThrow(() -> new ForbiddenException());
     }

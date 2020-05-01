@@ -43,7 +43,7 @@ public class RequestScope implements Scope {
         return () -> {
             final Request request = getCurrentRequest();
             final MutableAttributes attributes = request.getAttributes();
-            return (T) attributes.getAttribute(key.toString()).orElseGet(() -> {
+            return (T) attributes.getAttributeOptional(key.toString()).orElseGet(() -> {
                 final T object = unscoped.get();
                 if (!isCircularProxy(object)) attributes.setAttribute(key.toString(), object);
                 return object;
