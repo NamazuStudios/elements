@@ -71,7 +71,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private boolean existsAt(final Revision<?> revision, final ResourceId resourceId) {
         final Revision<Boolean> exists;
-        exists = revisionDataStore.getResourceIdIndex().existsAt(revision.comparableTo(), resourceId);
+        exists = revisionDataStore.getResourceIndex().existsAt(revision.comparableTo(), resourceId);
         return exists.getValue().isPresent() && exists.getValue().get();
     }
 
@@ -93,7 +93,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
     private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final Path path) {
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
-            .getResourceIdIndex()
+            .getResourceIndex()
             .loadResourceContentsAt(revision.comparableTo(), path);
 
         return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
@@ -103,7 +103,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
     private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final ResourceId resourceId) {
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
-                .getResourceIdIndex()
+                .getResourceIndex()
                 .loadResourceContentsAt(revision.comparableTo(), resourceId);
 
         return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());

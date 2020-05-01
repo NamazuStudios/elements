@@ -4,9 +4,7 @@ public interface RevisionDataStore extends AutoCloseable {
 
     PathIndex getPathIndex();
 
-    ReversePathIndex getReversePathIndex();
-
-    ResourceIndex getResourceIdIndex();
+    ResourceIndex getResourceIndex();
 
     void close();
 
