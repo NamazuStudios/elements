@@ -215,7 +215,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public void linkNewResource(final Path path, final ResourceId id) {
-            entry.linkNewResource(path, id);
+            entry.linkNewResource(id, path);
         }
 
         @Override

@@ -88,8 +88,6 @@ public class UnixFSUtils {
         }
     }
 
-
-
     /**
      * Searches the supplied {@link Path} to a directory and finds the most suitable revision.  This is the file with
      * highest {@link Revision<Path>} that is the same as or less than the {@link Revision<?>}.  If no such revision
