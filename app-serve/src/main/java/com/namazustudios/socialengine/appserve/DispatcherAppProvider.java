@@ -15,7 +15,6 @@ import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
@@ -23,17 +22,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.servlet.DispatcherType;
+import javax.inject.Named;
 import java.io.File;
-import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
+
+    public static final String DISPATCHER_APPLICATION_SERVICE = "com.namazustudios.socialengine.appserve.dispatcher.application.service";
 
     private static final String PATH_PREFIX = "app-serve";
     private static final String VERSION_PREFIX = "app-serve-version";
@@ -168,7 +167,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     }
 
     @Inject
-    public void setApplicationService(ApplicationService applicationService) {
+    public void setApplicationService(@Named(DISPATCHER_APPLICATION_SERVICE) ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
 
