@@ -11,35 +11,43 @@ import com.namazustudios.socialengine.service.*;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.application.*;
-import com.namazustudios.socialengine.service.auth.DefaultSessionService;
-import com.namazustudios.socialengine.service.auth.AuthServiceProvider;
-import com.namazustudios.socialengine.service.auth.FacebookAuthServiceProvider;
-import com.namazustudios.socialengine.service.auth.MockSessionServiceProvider;
+import com.namazustudios.socialengine.service.auth.*;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.gameon.*;
 import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
+import com.namazustudios.socialengine.service.goods.SuperuserItemService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemService;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemServiceProvider;
+import com.namazustudios.socialengine.service.inventory.SuperUserSimpleInventoryItemService;
 import com.namazustudios.socialengine.service.leaderboard.LeaderboardServiceProvider;
 import com.namazustudios.socialengine.service.leaderboard.RankServiceProvider;
 import com.namazustudios.socialengine.service.leaderboard.ScoreServiceProvider;
+import com.namazustudios.socialengine.service.leaderboard.SuperUserLeaderboardService;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
 import com.namazustudios.socialengine.service.mission.MissionService;
 import com.namazustudios.socialengine.service.mission.MissionServiceProvider;
+import com.namazustudios.socialengine.service.mission.SuperUserMissionService;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
+import com.namazustudios.socialengine.service.notification.SuperUserFCMRegistrationService;
 import com.namazustudios.socialengine.service.profile.ProfileOverrideServiceProvider;
 import com.namazustudios.socialengine.service.profile.ProfileServiceProvider;
+import com.namazustudios.socialengine.service.profile.SuperUserProfileOverrideService;
+import com.namazustudios.socialengine.service.profile.SuperUserProfileService;
 import com.namazustudios.socialengine.service.progress.ProgressService;
 import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
+import com.namazustudios.socialengine.service.progress.SuperUserProgressService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
+import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
+import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignService;
+import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
 import com.namazustudios.socialengine.util.DisplayNameGenerator;
 import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
@@ -245,6 +253,111 @@ public class ServicesModule extends PrivateModule {
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
         bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
 
+        bind(UsernamePasswordAuthService.class)
+            .annotatedWith(Unscoped.class)
+            .to(AnonUsernamePasswordAuthService.class);
+
+        bind(SocialCampaignService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperuserSocialCampaignService.class);
+
+        bind(UserService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperuserUserService.class);
+
+        bind(ShortLinkService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperuserShortLinkService.class);
+
+        bind(ApplicationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserApplicationService.class);
+
+        bind(ApplicationConfigurationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserApplicationConfigurationService.class);
+
+        bind(FacebookApplicationConfigurationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserFacebookApplicationConfigurationService.class);
+
+        bind(MatchmakingApplicationConfigurationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserMatchmakingApplicationConfigurationService.class);
+
+        bind(FirebaseApplicationConfigurationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserFirebaseApplicationConfigurationService.class);
+
+        bind(IosApplicationConfigurationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserIosApplicationConfigurationService.class);
+
+        bind(GooglePlayApplicationConfigurationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserGooglePlayApplicationConfigurationService.class);
+
+        bind(ProfileService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserProfileService.class);
+
+        bind(ProfileOverrideService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserProfileOverrideService.class);
+
+        bind(FCMRegistrationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserFCMRegistrationService.class);
+
+        bind(ScoreService.class)
+            .annotatedWith(Unscoped.class)
+            .to(ScoreService.class);
+
+        bind(LeaderboardService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserLeaderboardService.class);
+
+        bind(MockSessionService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserMockSessionService.class);
+
+        bind(GameOnApplicationConfigurationService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserGameOnApplicationConfigurationService.class);
+
+        bind(GameOnAdminPrizeService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserGameOnAdminPrizeService.class);
+
+        bind(ItemService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperuserItemService.class);
+
+        bind(SimpleInventoryItemService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserSimpleInventoryItemService.class);
+
+        bind(MissionService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserMissionService.class);
+
+        bind(ProgressService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserProgressService.class);
+
+        bind(FacebookAuthService.class)
+            .annotatedWith(Unscoped.class)
+            .to(AnonFacebookAuthService.class);
+
+        bind(VersionService.class)
+            .annotatedWith(Unscoped.class)
+            .to(BuildPropertiesVersionService.class);
+
+        bind(SessionService.class)
+            .annotatedWith(Unscoped.class)
+            .to(DefaultSessionService.class);
+
+        // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
         expose(UserService.class);
@@ -286,6 +399,34 @@ public class ServicesModule extends PrivateModule {
         expose(RewardIssuanceService.class);
         expose(AppleIapReceiptService.class);
         expose(GooglePlayIapReceiptService.class);
+
+        // Unscoped Services
+        expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
+        expose(SocialCampaignService.class).annotatedWith(Unscoped.class);
+        expose(UserService.class).annotatedWith(Unscoped.class);
+        expose(ShortLinkService.class).annotatedWith(Unscoped.class);
+        expose(ApplicationService.class).annotatedWith(Unscoped.class);
+        expose(ApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(FacebookApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(MatchmakingApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(FirebaseApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(IosApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(GooglePlayApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(ProfileService.class).annotatedWith(Unscoped.class);
+        expose(ProfileOverrideService.class).annotatedWith(Unscoped.class);
+        expose(FCMRegistrationService.class).annotatedWith(Unscoped.class);
+        expose(ScoreService.class).annotatedWith(Unscoped.class);
+        expose(LeaderboardService.class).annotatedWith(Unscoped.class);
+        expose(MockSessionService.class).annotatedWith(Unscoped.class);
+        expose(GameOnApplicationConfigurationService.class).annotatedWith(Unscoped.class);
+        expose(GameOnAdminPrizeService.class).annotatedWith(Unscoped.class);
+        expose(ItemService.class).annotatedWith(Unscoped.class);
+        expose(SimpleInventoryItemService.class).annotatedWith(Unscoped.class);
+        expose(MissionService.class).annotatedWith(Unscoped.class);
+        expose(ProgressService.class).annotatedWith(Unscoped.class);
+        expose(FacebookAuthService.class).annotatedWith(Unscoped.class);
+        expose(VersionService.class).annotatedWith(Unscoped.class);
+        expose(SessionService.class).annotatedWith(Unscoped.class);
 
     }
 

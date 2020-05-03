@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
+import com.namazustudios.socialengine.service.Unscoped;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -31,8 +32,6 @@ import java.util.concurrent.ConcurrentMap;
 import static java.lang.String.format;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
-
-    public static final String DISPATCHER_APPLICATION_SERVICE = "com.namazustudios.socialengine.appserve.dispatcher.application.service";
 
     private static final String PATH_PREFIX = "app-serve";
     private static final String VERSION_PREFIX = "app-serve-version";
@@ -167,7 +166,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     }
 
     @Inject
-    public void setApplicationService(@Named(DISPATCHER_APPLICATION_SERVICE) ApplicationService applicationService) {
+    public void setApplicationService(@Unscoped ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
 
