@@ -1,10 +1,9 @@
-package com.namazustudios.socialengine.rest;
+package com.namazustudios.socialengine.codeserve;
 
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.rest.guice.RestAPIModule;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -19,9 +18,6 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 
-import javax.inject.Inject;
-import javax.inject.Named;
-import javax.inject.Singleton;
 import javax.servlet.DispatcherType;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,32 +25,30 @@ import java.util.concurrent.Callable;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
-import static com.namazustudios.socialengine.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 import static java.util.EnumSet.allOf;
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
 import static org.eclipse.jetty.util.Loader.getResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
-@Singleton
-public class RestAPIMain implements Callable<Void>, Runnable {
+public class CodeServeMain implements Callable<Void>, Runnable {
 
-    private static final Logger logger = getLogger(RestAPIMain.class);
+    private static final Logger logger = getLogger(CodeServeMain.class);
 
     private static final OptionParser optionParser = new OptionParser();
 
-    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.rest.api.bind.address";
+    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.codeserve.bind.address";
 
-    public static final String PORT = "com.namazustudios.socialengine.rest.api.port";
+    public static final String PORT = "com.namazustudios.socialengine.codeserve.port";
 
-    public static final String API_CONTEXT = "com.namazustudios.socialengine.rest.api.context";
+    public static final String CODE_SERVE_CONTEXT = "com.namazustudios.socialengine.codeserve.context";
 
     public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
 
-    public static final int DEFAULT_PORT = 8081;
+    public static final int DEFAULT_PORT = 8082;
 
     public static final Stage DEFAULT_STAGE = DEVELOPMENT;
 
-    public static final String DEFAULT_API_CONTEXT = "/api";
+    public static final String DEFAULT_API_CONTEXT = "/code-serve";
 
     private static final OptionSpec<String> bindOptionSpec = optionParser
             .accepts("bind", "The bind address.")
@@ -94,7 +88,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
      * @param args the command-line arguments
      * @throws ProgramArgumentException if there was a problem parsing the command line arguments
      */
-    public RestAPIMain(final String[] args) throws ProgramArgumentException {
+    public CodeServeMain(final String[] args) throws ProgramArgumentException {
 
         int port;
         String bind;
@@ -121,7 +115,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         }
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-        injector = createInjector(stage, new RestAPIModule(defaultConfigurationSupplier));
+        injector = createInjector(stage, new CodeServeModule(defaultConfigurationSupplier));
 
         final ServerConnector connector = new ServerConnector(server);
         connector.setHost(bind);
@@ -132,14 +126,11 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         final ServletContextHandler servletHandler = new ServletContextHandler(SESSIONS);
         servletHandler.setContextPath(apiContext);
 
-        servletHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
-
         final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
         servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
 
         final Map<String, String> defaultInitParameters = new HashMap<>();
         defaultInitParameters.put("dirAllowed", "false");
-        defaultInitParameters.put("resourceBase", getResource("swagger").toString());
 
         final ServletHolder defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
         defaultServletHolder.setInitParameters(defaultInitParameters);
@@ -149,61 +140,6 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         server.setHandler(handlerCollection);
         server.setConnectors(new Connector[]{connector});
 
-    }
-
-    @Inject
-    private RestAPIMain(@Named(PORT) final int port,
-                        @Named(BIND_ADDRESS) final String bind,
-                        @Named(API_CONTEXT) final String apiContext,
-                        final Injector injector) {
-
-        this.injector = injector;
-
-        final ServerConnector connector = new ServerConnector(server);
-        connector.setHost(bind);
-        connector.setPort(port);
-
-        final HandlerCollection handlerCollection = new HandlerCollection();
-
-        final ServletContextHandler servletHandler = new ServletContextHandler(SESSIONS);
-        servletHandler.setContextPath(apiContext);
-
-        servletHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
-
-        final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
-        servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
-
-        final Map<String, String> defaultInitParameters = new HashMap<>();
-        defaultInitParameters.put("dirAllowed", "false");
-        defaultInitParameters.put("resourceBase", getResource("swagger").toString());
-
-        final ServletHolder defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
-        defaultServletHolder.setInitParameters(defaultInitParameters);
-
-        handlerCollection.addHandler(servletHandler);
-
-        server.setHandler(handlerCollection);
-        server.setConnectors(new Connector[]{connector});
-
-    }
-
-    /**
-     * Starts the server, and returns immediately.
-     *
-     * @throws Exception
-     */
-    public void start() throws Exception {
-        server.start();
-    }
-
-    /**
-     * Stops the server and waits for it to complete.
-     *
-     * @throws Exception
-     */
-    public void stop() throws Exception {
-        server.stop();
-        server.join();
     }
 
     /**
@@ -233,16 +169,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     }
 
     /**
-     * Gets the {@link Injector} used intenrally by this instance.'
-     *
-     * @return the injector
-     */
-    public Injector getInjesctor() {
-        return injector;
-    }
-
-    /**
-     * Thrown by the {@link RestAPIMain#run()} method.  The value of {@link #getCause()} will always be the exact
+     * Thrown by the {@link CodeServeMain#run()} method.  The value of {@link #getCause()} will always be the exact
      * cause of the underlying exception.
      */
     public class ServerRuntimeException extends RuntimeException {
@@ -252,7 +179,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     }
 
     /**
-     * Thrown when bad arguments are passed to the {@link RestAPIMain#RestAPIMain(String[])} constructor or the
+     * Thrown when bad arguments are passed to the {@link CodeServeMain#CodeServeMain(String[])} constructor or the
      * arguments supplied cannot be used to creat the server.
      */
     public class ProgramArgumentException extends IllegalArgumentException {
@@ -272,7 +199,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
     public static void main(final String[] args) throws Exception {
         try {
-            final RestAPIMain main = new RestAPIMain(args);
+            final CodeServeMain main = new CodeServeMain(args);
             main.run();
         } catch (final ProgramArgumentException ex) {
             logger.debug("Bad program arguments.", ex);

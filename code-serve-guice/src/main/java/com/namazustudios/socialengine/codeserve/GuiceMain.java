@@ -37,25 +37,9 @@ public class GuiceMain extends GuiceServletContextListener {
 
     @Override
     protected Injector getInjector() {
-
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier(servletContext.getClassLoader());
-
-        return createInjector(
-            new ConfigurationModule(defaultConfigurationSupplier),
-            new RedisModule(),
-            new ServicesModule(),
-            new MongoCoreModule(),
-            new MongoDaoModule(),
-            new MongoSearchModule(),
-            new ValidationModule(),
-            new GitSecurityModule(),
-            new GitServletModule(),
-            new RTFilesystemGitLoaderModule(),
-            new RTGitBootstrapModule(),
-            new FileSystemCodeServeModule()
-        );
-
+        return createInjector(new CodeServeModule((defaultConfigurationSupplier)));
     }
 
 }
