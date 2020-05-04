@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import com.namazustudios.socialengine.service.*;
+import com.namazustudios.socialengine.service.advancement.AdvancementService;
+import com.namazustudios.socialengine.service.advancement.StandardAdvancementService;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.application.*;
@@ -81,168 +83,170 @@ public class ServicesModule extends PrivateModule {
     protected void configure() {
 
         bind(Mapper.class)
-                .toProvider(ServicesDozerMapperProvider.class)
-                .asEagerSingleton();
+            .toProvider(ServicesDozerMapperProvider.class)
+            .asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
-                .toProvider(AuthServiceProvider.class)
-                .in(scope);
+            .toProvider(AuthServiceProvider.class)
+            .in(scope);
 
         bind(SocialCampaignService.class)
-                .toProvider(SocialCampaignServiceProvider.class)
-                .in(scope);
+            .toProvider(SocialCampaignServiceProvider.class)
+            .in(scope);
 
         bind(UserService.class)
-                .toProvider(UserServiceProvider.class)
-                .in(scope);
+            .toProvider(UserServiceProvider.class)
+            .in(scope);
 
         bind(ShortLinkService.class)
-                .toProvider(ShortLinkServiceProvider.class)
-                .in(scope);
+            .toProvider(ShortLinkServiceProvider.class)
+            .in(scope);
 
         bind(ApplicationService.class)
-                .toProvider(ApplicationServiceProvider.class)
-                .in(scope);
+            .toProvider(ApplicationServiceProvider.class)
+            .in(scope);
 
         bind(ApplicationConfigurationService.class)
-                .toProvider(ApplicationConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(ApplicationConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(PSNApplicationConfigurationService.class)
-                .toProvider(PSNApplicationConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(PSNApplicationConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(FacebookApplicationConfigurationService.class)
-                .toProvider(FacebookApplicationConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(FacebookApplicationConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(ProfileService.class)
-                .toProvider(ProfileServiceProvider.class)
-                .in(scope);
+            .toProvider(ProfileServiceProvider.class)
+            .in(scope);
 
         bind(MatchService.class)
-                .toProvider(MatchServiceProvider.class)
-                .in(scope);
+            .toProvider(MatchServiceProvider.class)
+            .in(scope);
 
         bind(ManifestService.class)
-                .toProvider(ManifestServiceProvider.class)
-                .in(scope);
+            .toProvider(ManifestServiceProvider.class)
+            .in(scope);
 
         bind(IosApplicationConfigurationService.class)
-                .toProvider(IosApplicationConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(IosApplicationConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(GooglePlayApplicationConfigurationService.class)
-                .toProvider(GooglePlayApplicationConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(GooglePlayApplicationConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(MatchmakingApplicationConfigurationService.class)
-                .toProvider(MatchmakingConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(MatchmakingConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(FirebaseApplicationConfigurationService.class)
-                .toProvider(FirebaseApplicationConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(FirebaseApplicationConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(FCMRegistrationService.class)
-                .toProvider(FCMRegistrationServiceProvider.class)
-                .in(scope);
+            .toProvider(FCMRegistrationServiceProvider.class)
+            .in(scope);
 
         bind(ScoreService.class)
-                .toProvider(ScoreServiceProvider.class)
-                .in(scope);
+            .toProvider(ScoreServiceProvider.class)
+            .in(scope);
 
         bind(RankService.class)
-                .toProvider(RankServiceProvider.class)
-                .in(scope);
+            .toProvider(RankServiceProvider.class)
+            .in(scope);
 
         bind(LeaderboardService.class)
-                .toProvider(LeaderboardServiceProvider.class)
-                .in(scope);
+            .toProvider(LeaderboardServiceProvider.class)
+            .in(scope);
 
         bind(FriendService.class)
-                .toProvider(FriendServiceProvider.class)
-                .in(scope);
+            .toProvider(FriendServiceProvider.class)
+            .in(scope);
 
         bind(FriendService.class)
-                .toProvider(FriendServiceProvider.class)
-                .in(scope);
+            .toProvider(FriendServiceProvider.class)
+            .in(scope);
 
         bind(FacebookFriendService.class)
-                .toProvider(FacebookFriendServiceProvider.class)
-                .in(scope);
+            .toProvider(FacebookFriendServiceProvider.class)
+            .in(scope);
 
         bind(MockSessionService.class)
-                .toProvider(MockSessionServiceProvider.class)
-                .in(scope);
+            .toProvider(MockSessionServiceProvider.class)
+            .in(scope);
 
         bind(GameOnApplicationConfigurationService.class)
-                .toProvider(GameOnApplicationConfigurationServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnApplicationConfigurationServiceProvider.class)
+            .in(scope);
 
         bind(GameOnRegistrationService.class)
-                .toProvider(GameOnRegistrationServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnRegistrationServiceProvider.class)
+            .in(scope);
 
         bind(GameOnSessionService.class)
-                .toProvider(GameOnSessionServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnSessionServiceProvider.class)
+            .in(scope);
 
         bind(GameOnTournamentService.class)
-                .toProvider(GameOnTournamentServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnTournamentServiceProvider.class)
+            .in(scope);
 
         bind(GameOnPlayerTournamentService.class)
-                .toProvider(GameOnPlayerTournamentServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnPlayerTournamentServiceProvider.class)
+            .in(scope);
 
         bind(GameOnMatchService.class)
-                .toProvider(GameOnMatchServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnMatchServiceProvider.class)
+            .in(scope);
 
         bind(GameOnAdminPrizeService.class)
-                .toProvider(GameOnAdminPrizeServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnAdminPrizeServiceProvider.class)
+            .in(scope);
 
         bind(GameOnGamePrizeService.class)
-                .toProvider(GameOnGamePrizeServiceProvider.class)
-                .in(scope);
+            .toProvider(GameOnGamePrizeServiceProvider.class)
+            .in(scope);
 
         bind(ItemService.class)
-                .toProvider(ItemServiceProvider.class)
-                .in(scope);
+            .toProvider(ItemServiceProvider.class)
+            .in(scope);
 
         bind(SimpleInventoryItemService.class)
-                .toProvider(SimpleInventoryItemServiceProvider.class)
-                .in(scope);
+            .toProvider(SimpleInventoryItemServiceProvider.class)
+            .in(scope);
 
         bind(MissionService.class)
-                .toProvider(MissionServiceProvider.class)
-                .in(scope);
+            .toProvider(MissionServiceProvider.class)
+            .in(scope);
 
         bind(ProgressService.class)
-                .toProvider(ProgressServiceProvider.class)
-                .in(scope);
+            .toProvider(ProgressServiceProvider.class)
+            .in(scope);
 
         bind(FacebookAuthService.class)
-                .toProvider(FacebookAuthServiceProvider.class)
-                .in(scope);
+            .toProvider(FacebookAuthServiceProvider.class)
+            .in(scope);
 
         bind(RewardIssuanceService.class)
-                .toProvider(RewardIssuanceServiceProvider.class)
-                .in(scope);
+            .toProvider(RewardIssuanceServiceProvider.class)
+            .in(scope);
 
         bind(AppleIapReceiptService.class)
-                .toProvider(AppleIapReceiptServiceProvider.class)
-                .in(scope);
+            .toProvider(AppleIapReceiptServiceProvider.class)
+            .in(scope);
 
         bind(GooglePlayIapReceiptService.class)
-                .toProvider(GooglePlayIapReceiptServiceProvider.class)
-                .in(scope);
+            .toProvider(GooglePlayIapReceiptServiceProvider.class)
+            .in(scope);
 
         bind(ProfileOverrideService.class)
-                .toProvider(ProfileOverrideServiceProvider.class)
-                .in(scope);
+            .toProvider(ProfileOverrideServiceProvider.class)
+            .in(scope);
+
+        bind(AdvancementService.class).to(StandardAdvancementService.class);
 
         bind(SessionService.class).to(DefaultSessionService.class);
         bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
@@ -357,6 +361,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(DefaultSessionService.class);
 
+        bind(AdvancementService.class)
+            .annotatedWith(Unscoped.class)
+            .to(StandardAdvancementService.class);
+
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
@@ -399,6 +407,7 @@ public class ServicesModule extends PrivateModule {
         expose(RewardIssuanceService.class);
         expose(AppleIapReceiptService.class);
         expose(GooglePlayIapReceiptService.class);
+        expose(AdvancementService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -427,6 +436,7 @@ public class ServicesModule extends PrivateModule {
         expose(FacebookAuthService.class).annotatedWith(Unscoped.class);
         expose(VersionService.class).annotatedWith(Unscoped.class);
         expose(SessionService.class).annotatedWith(Unscoped.class);
+        expose(AdvancementService.class).annotatedWith(Unscoped.class);
 
     }
 

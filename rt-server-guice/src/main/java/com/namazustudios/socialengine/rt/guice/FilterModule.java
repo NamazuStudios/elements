@@ -6,12 +6,18 @@ import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.handler.Filter;
 
+import java.io.File;
+
 /**
  * Allows for the configuration of {@link Filter}s for servicing {@link Request} instances.
  *
  * Created by patricktwohig on 9/2/15.
  */
 public class FilterModule extends PrivateModule {
+
+    private Runnable exposeRequestAction = () -> {};
+
+    private Runnable exposeFilterChainBuilderAction = () -> {};
 
     private Multibinder<Filter> filterMultibinder;
 
@@ -26,8 +32,19 @@ public class FilterModule extends PrivateModule {
         filterMultibinder = Multibinder.newSetBinder(binder(), Filter.class);
         configureFilters();
 
+        exposeRequestAction.run();
         expose(Filter.Chain.Builder.class);
 
+    }
+
+    /**
+     * Exposes the {@link Request} binding.
+     *
+     * @return this instance
+     */
+    public FilterModule exposingRequest() {
+        exposeRequestAction = () -> expose(Request.class);
+        return this;
     }
 
     /**

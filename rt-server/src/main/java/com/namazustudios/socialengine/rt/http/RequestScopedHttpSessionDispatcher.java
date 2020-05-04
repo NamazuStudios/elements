@@ -93,6 +93,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         return filterChainBuilder;
     }
 
+    @Inject
     public void setFilterChainBuilder(Filter.Chain.Builder filterChainBuilder) {
         this.filterChainBuilder = filterChainBuilder;
     }
