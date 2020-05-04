@@ -19,7 +19,8 @@ public class RequestSessionSecretProfileIdentificationMethod implements ProfileI
     @Override
     public Profile attempt() throws UnidentifiedProfileException {
 
-        final String profileId = new SessionSecretHeader(getRequest().getHeader()::getHeader)
+        final RequestHeader header = getRequest().getHeader();
+        final String profileId = SessionSecretHeader.withOptionalValueSupplier(header::getHeader)
             .getOverrideProfileId()
             .orElseThrow(() -> new UnidentifiedProfileException());
 

@@ -26,7 +26,7 @@ public class SessionIdAuthenticationContainerRequestFilter implements ContainerR
 
     @Override
     public void filter(final ContainerRequestContext requestContext) {
-        new SessionSecretHeader(requestContext::getHeaderString)
+        SessionSecretHeader.withValueSupplier(requestContext::getHeaderString)
             .getSessionSecret()
             .ifPresent(sessionId -> checkSessionAndSetAttributes(requestContext, sessionId));
     }

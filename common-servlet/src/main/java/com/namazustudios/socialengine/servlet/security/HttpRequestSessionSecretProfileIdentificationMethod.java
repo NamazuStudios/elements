@@ -20,7 +20,7 @@ public class HttpRequestSessionSecretProfileIdentificationMethod implements Prof
     @Override
     public Profile attempt() throws UnidentifiedProfileException {
 
-        final String overrideProfileId = new SessionSecretHeader(getHttpServletRequest()::getHeader)
+        final String overrideProfileId = SessionSecretHeader.withValueSupplier(getHttpServletRequest()::getHeader)
             .getOverrideProfileId()
             .orElseThrow(() -> new UnidentifiedProfileException());
 

@@ -42,7 +42,8 @@ public class SessionIdAuthenticationFilter implements Filter {
         final HttpServletRequest request = (HttpServletRequest) _request;
         final HttpServletResponse response = (HttpServletResponse) _response;
 
-        final Optional<String> sessionSecret = new SessionSecretHeader(request::getHeader).getSessionSecret();
+        final Optional<String> sessionSecret = SessionSecretHeader.withValueSupplier(request::getHeader)
+                                                                  .getSessionSecret();
 
         sessionSecret.ifPresent(ss -> {
             final Session session;

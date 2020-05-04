@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
@@ -41,21 +42,16 @@ public class SessionSecretHeader {
 
     private final Optional<String> overrideProfileId;
 
-    /**
-     *
-     * @param tFunction
-     * @param <T>
-     */
-    public <T> SessionSecretHeader(final Function<String, T> tFunction) {
-        this(getSessionSecretHeader(tFunction));
+    public static final <T> SessionSecretHeader withValueSupplier(final Function<String, T> tValueSupplier) {
+        return new SessionSecretHeader(getSessionSecretHeader(tValueSupplier));
     }
 
-    public static final <T> SessionSecretHeader withOptionalValue(final OptionalSupplier<T> tOptionalSupplier) {
-        return new SessionSecretHeader(getSessionSecretHeader(tOptionalSupplier));
+    public static final <T> SessionSecretHeader withOptionalValueSupplier(final OptionalSupplier<T> tOptionalSupplier) {
+        return new SessionSecretHeader(getOptionalSessionSecretHeader(tOptionalSupplier));
     }
 
     @SuppressWarnings("deprecated") // This is here to provide backwards compatibility.
-    private static <T> Optional<String> getSessionSecretHeader(final OptionalSupplier<T> tOptionalSupplier) {
+    private static <T> Optional<String> getOptionalSessionSecretHeader(final OptionalSupplier<T> tOptionalSupplier) {
         final Optional<String> secret = tOptionalSupplier.asString(SESSION_SECRET);
         return secret.isPresent() ? secret : tOptionalSupplier.asString(SOCIALENGINE_SESSION_SECRET);
     }

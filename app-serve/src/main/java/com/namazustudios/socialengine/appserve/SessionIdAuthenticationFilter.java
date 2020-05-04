@@ -29,7 +29,7 @@ public class SessionIdAuthenticationFilter implements Filter {
                        final Consumer<Response> responseReceiver) {
 
         final RequestHeader header = request.getHeader();
-        final SessionSecretHeader parsed = new SessionSecretHeader(header::getHeader);
+        final SessionSecretHeader parsed = SessionSecretHeader.withOptionalValueSupplier(header::getHeader);
 
         if (parsed.getSessionSecret().isPresent()) {
 
