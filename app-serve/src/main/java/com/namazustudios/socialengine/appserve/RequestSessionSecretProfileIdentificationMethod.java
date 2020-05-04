@@ -43,7 +43,7 @@ public class RequestSessionSecretProfileIdentificationMethod implements ProfileI
         return profileOverrideService;
     }
 
-//    @Inject
+    @Inject
     public void setProfileOverrideService(ProfileOverrideService profileOverrideService) {
         this.profileOverrideService = profileOverrideService;
     }

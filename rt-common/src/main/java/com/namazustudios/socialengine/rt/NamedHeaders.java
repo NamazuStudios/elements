@@ -69,7 +69,7 @@ public interface NamedHeaders {
     default void copyToMap(Map<String, List<Object>> requestHeaderMap) {
         for (final String headerName : getHeaderNames()) {
             final Optional<List<Object>> headers = getHeaders(headerName);
-            requestHeaderMap.put(headerName, new ArrayList<>(headers.get()));
+            headers.ifPresent(v -> requestHeaderMap.put(headerName, new ArrayList<>(v)));
         }
     }
 

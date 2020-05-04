@@ -107,8 +107,8 @@ public interface Attributes {
      */
     default void copyToMap(Map<String, Object> simpleAttributesMap) {
         for (final String attributeName : getAttributeNames()) {
-            final Object attribute = getAttributeOptional(attributeName);
-            simpleAttributesMap.put(attributeName, attribute);
+            final Optional<Object> attribute = getAttributeOptional(attributeName);
+            attribute.ifPresent(v -> simpleAttributesMap.put(attributeName, v));
         }
     }
 
