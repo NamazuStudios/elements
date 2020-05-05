@@ -7,7 +7,7 @@
 --
 
 local attributes = require "namazu.resource.attributes"
-local User = java.require "com.namazustudios.socialengine.model.User"
+local User = java.require "com.namazustudios.socialengine.model.user.User"
 local Profile = java.require "com.namazustudios.socialengine.model.profile.Profile"
 
 local auth = {}

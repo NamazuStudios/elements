@@ -2,9 +2,8 @@ package com.namazustudios.socialengine.service.friend;
 
 import com.namazustudios.socialengine.dao.FriendDao;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.friend.Friend;
-import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.FriendService;
 
 import javax.inject.Inject;

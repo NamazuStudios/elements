@@ -5,11 +5,10 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
-import com.namazustudios.socialengine.model.reward.Reward;
 import org.bson.types.ObjectId;
 import org.testng.ITestContext;
 import org.testng.annotations.BeforeClass;
@@ -24,7 +23,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.*;

@@ -2,7 +2,7 @@
 //
 //import com.namazustudios.socialengine.dao.SessionDao;
 //import com.namazustudios.socialengine.exception.ForbiddenException;
-//import com.namazustudios.socialengine.model.User;
+//import com.namazustudios.socialengine.model.user.User;
 //import com.namazustudios.socialengine.model.session.Session;
 //import com.namazustudios.socialengine.service.SessionService;
 //

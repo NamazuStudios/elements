@@ -1,11 +1,9 @@
 package com.namazustudios.socialengine.service.mission;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import static com.namazustudios.socialengine.service.Services.forbidden;
 
 /**
  * Created by davidjbrooks on 11/27/2018.

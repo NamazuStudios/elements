@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.rt;
 import com.google.common.io.ByteStreams;
 import com.namazustudios.socialengine.dao.BootstrapDao;
 import com.namazustudios.socialengine.exception.InternalException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Bootstrapper;
 import com.namazustudios.socialengine.rt.Path;

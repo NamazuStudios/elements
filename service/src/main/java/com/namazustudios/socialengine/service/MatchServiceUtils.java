@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.model.match.Match;
+import com.namazustudios.socialengine.model.user.User;
 
 /**
  * A type that assists the services classes in paring players.   This performs the action of attempting to pair two
@@ -22,7 +23,7 @@ public interface MatchServiceUtils {
 
     /**
      * Redacts any private information for the opponent user so an opponent may not see the personal details of
-     * an opponent {@link com.namazustudios.socialengine.model.User}.
+     * an opponent {@link User}.
      *
      * @param match the {@link Match} info
      * @return the same {@link Match} with private information redacted

@@ -1,11 +1,9 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.friend.Friend;
+import com.namazustudios.socialengine.model.user.User;
 
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Stream;
 
 /**
  * Similar to the {@link UserDao} but contains {@link User} operations related to Facebook

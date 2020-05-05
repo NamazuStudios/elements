@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.friend.FacebookFriend;
 import com.namazustudios.socialengine.service.FacebookFriendCache;

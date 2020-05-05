@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.security;
 import com.google.common.base.Splitter;
 import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.exception.security.BadSessionSecretException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import org.slf4j.Logger;
@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;

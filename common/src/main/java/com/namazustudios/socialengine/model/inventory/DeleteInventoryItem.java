@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.model.inventory;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.goods.Item;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 

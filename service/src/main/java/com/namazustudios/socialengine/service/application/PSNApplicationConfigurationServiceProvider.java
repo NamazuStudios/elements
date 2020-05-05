@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.application;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.PSNApplicationConfigurationService;
 import com.namazustudios.socialengine.service.Services;
 

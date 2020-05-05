@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.model.inventory;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;

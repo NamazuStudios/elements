@@ -1,13 +1,13 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.security.UserAuthenticationMethod;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
+import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 
 public class RequestUserAuthenticationMethod implements UserAuthenticationMethod {
 

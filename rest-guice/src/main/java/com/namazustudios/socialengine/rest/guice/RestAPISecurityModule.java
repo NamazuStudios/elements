@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rest.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.security.*;
 import com.namazustudios.socialengine.servlet.security.*;

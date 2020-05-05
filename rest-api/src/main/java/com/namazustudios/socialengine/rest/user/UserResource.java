@@ -1,15 +1,14 @@
 package com.namazustudios.socialengine.rest.user;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.model.UserCreateRequest;
-import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -18,8 +17,8 @@ import io.swagger.annotations.Authorization;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.Objects;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
@@ -79,47 +78,50 @@ public class UserResource {
     @ApiOperation(value = "Gets the current User",
                   notes = "A special endpoint used to get the current user for the request.  The current " +
                           "user is typically associated with the session but may be derived any other way.  This " +
-                          "is essentially an alias for using GET /user/myUserId")
+                          "i
+
+//    @Override
+//    public User createUser(UserCreateRequest user) {
+//        return getUserDao().createOrReactivateUser(user);
+//    }
+//
+//
+//    @Override
+//    public User createUser(User user, String password) {
+//        return getUserDao().createOrRectivateUserWithPassword(user, password);
+//    }
+//
+//    @Override
+//    public User updateUser(User user) {
+//        return getUserDao().updateActiveUser(user);
+//    }
+//
+//    @Override
+//    public User updateUser(User user, String password) {
+//        return getUserDao().updateActiveUser(user, password);
+//    }
+s essentially an alias for using GET /user/myUserId")
     public User getUser() {
         return getUserService().getCurrentUser();
     }
 
     @PUT
-    @Path("{name}")
+    @Path("{userId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a User",
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
                           "in the body of the request.  Optionally, the user's password may be provided in the User " +
                           "object.")
-    public User updateUser(final User user,
-                           @PathParam("name") String name) {
+    public User updateUser(final UserUpdateRequest userUpdateRequest,
+                           @PathParam("userId") String userId) {
 
-        getValidationHelper().validateModel(user);
+        getValidationHelper().validateModel(userUpdateRequest);
 
-        // Manually check if id is present: we should not include @NotNull in the model as it may interfere with e.g.
-        // user creation where id is not possible to be provided.
-        if (user.getId() == null) {
-            throw new InvalidDataException("id must be provided in the User object.");
-        }
-
-        name = Strings.nullToEmpty(name).trim();
-
-        String password = user.getPassword();
-        password = Strings.nullToEmpty(password).trim();
-
-        if (user.getName() == null) {
-            user.setName(name);
-        }
-
-        if (Strings.isNullOrEmpty(name)) {
+        if (isNullOrEmpty(userId)) {
             throw new NotFoundException("User not found.");
         }
 
-        if (Strings.isNullOrEmpty(password)) {
-            return getUserService().updateUser(user);
-        } else {
-            return getUserService().updateUser(user, password);
-        }
+        return getUserService().updateUser(userId, userUpdateRequest);
 
     }
 
@@ -129,19 +131,9 @@ public class UserResource {
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
                           "in the body of the request.  Optionally, the user's password may be provided in the User " +
                           "object.")
-    public User createUser(final User user) {
-
-        getValidationHelper().validateModel(user);
-
-        String password = user.getPassword();
-        password = Strings.nullToEmpty(password).trim();
-
-        if (password.isEmpty()){
-            return getUserService().createUser(user);
-        } else {
-            return getUserService().createUser(user, password);
-        }
-
+    public User createUser(final UserCreateRequest userCreateRequest) {
+        getValidationHelper().validateModel(userCreateRequest);
+        return getUserService().createUser(userCreateRequest);
     }
 
     @DELETE

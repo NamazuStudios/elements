@@ -1,9 +1,5 @@
 package com.namazustudios.socialengine.service;
 
-import com.google.common.base.Joiner;
-import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
 
 /**

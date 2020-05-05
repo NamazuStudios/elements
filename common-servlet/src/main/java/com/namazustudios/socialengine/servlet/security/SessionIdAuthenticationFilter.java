@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.servlet.security;
 
-import com.google.common.base.Splitter;
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
@@ -16,9 +15,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Optional;
 
-import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
-import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
-import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
+import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.application.Application.APPLICATION_ATTRIUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;

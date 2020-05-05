@@ -2,17 +2,12 @@ package com.namazustudios.socialengine.service.application;
 
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.service.ApplicationService;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.net.URI;
 
-import static com.google.common.net.UrlEscapers.urlFragmentEscaper;
-import static com.namazustudios.socialengine.Constants.*;
-import static com.namazustudios.socialengine.util.URIs.appendOrReplaceQuery;
 import static com.namazustudios.socialengine.util.URIs.appendPath;
 import static java.lang.String.format;
 

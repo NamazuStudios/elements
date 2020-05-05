@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.security;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.security.SessionSecretHeader;
@@ -12,9 +11,8 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
-import java.io.IOException;
 
-import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
+import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
 

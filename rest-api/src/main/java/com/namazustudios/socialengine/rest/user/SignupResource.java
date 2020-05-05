@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rest.user;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.service.UserService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;

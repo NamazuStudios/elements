@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.application.Application;
 
@@ -15,7 +15,6 @@ import com.namazustudios.socialengine.model.application.IosApplicationConfigurat
 import com.namazustudios.socialengine.model.application.ProductBundle;
 import com.namazustudios.socialengine.model.application.ProductBundleReward;
 import com.namazustudios.socialengine.model.goods.Item;
-import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker;

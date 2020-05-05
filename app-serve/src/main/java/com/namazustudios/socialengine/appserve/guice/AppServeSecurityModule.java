@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.appserve.RequestAttributeProfileIdentifica
 import com.namazustudios.socialengine.appserve.RequestHeaderProfileIdentificationMethod;
 import com.namazustudios.socialengine.appserve.RequestSessionSecretProfileIdentificationMethod;
 import com.namazustudios.socialengine.appserve.RequestUserAuthenticationMethod;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.guice.RequestScope;
 import com.namazustudios.socialengine.security.ProfileIdentificationMethod;

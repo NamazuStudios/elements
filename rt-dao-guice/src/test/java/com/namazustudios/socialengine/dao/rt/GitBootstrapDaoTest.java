@@ -5,7 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Bootstrapper;
 import com.namazustudios.socialengine.rt.lua.LuaBootstrapper;

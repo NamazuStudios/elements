@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine;
 
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.model.User;
-import joptsimple.OptionParser;
+import com.namazustudios.socialengine.model.user.User;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 

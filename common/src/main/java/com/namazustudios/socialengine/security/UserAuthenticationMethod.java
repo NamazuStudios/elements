@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.security;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 
 /**
  * Represents a supported authentication method.  This returns an instance of {@link User} if authenticaion is

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rest.security;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.SessionService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

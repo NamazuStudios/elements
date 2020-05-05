@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.social;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.SocialCampaignService;
 
 import javax.inject.Inject;

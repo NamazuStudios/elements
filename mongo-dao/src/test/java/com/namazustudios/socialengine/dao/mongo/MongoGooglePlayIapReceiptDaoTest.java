@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import static com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt.PURCHASE_STATE_PURCHASED;
 import org.testng.ITestContext;
@@ -13,9 +13,7 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
-import java.util.Date;
-
-import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.System.currentTimeMillis;
 import static org.testng.Assert.*;
 
