@@ -26,7 +26,6 @@ public class UserCreateRequest implements Serializable {
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String password;
 
-    @NotNull
     private User.Level level;
 
     public String getName() {

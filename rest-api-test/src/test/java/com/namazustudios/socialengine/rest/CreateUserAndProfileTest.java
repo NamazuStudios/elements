@@ -1,22 +1,20 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.Response;
 
-import static com.namazustudios.socialengine.rest.ClientContext.CONTEXT_APPLICATION;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
@@ -40,9 +38,7 @@ public class CreateUserAndProfileTest {
     private Client client;
 
     @Inject
-    @Named(CONTEXT_APPLICATION)
-    private Application application;
-
+    private ClientContext clientContext;
 
     @Test
     public void createUser() {
@@ -95,24 +91,69 @@ public class CreateUserAndProfileTest {
         final Session session = sessionCreation.getSession();
         assertEquals(session.getUser(), user);
         assertEquals(session.getProfile(), profile);
-        assertEquals(session.getApplication(), application);
 
     }
 
     @Test(dependsOnMethods = "loginUserWithEmail")
-    public void createProfileExpectingFailure() {
+    public void createProfileExpectingFailureNoAuth() {
         final Profile toCreate = new Profile();
 
         toCreate.setUser(user);
         toCreate.setDisplayName("Paddy O' Furniture");
-        toCreate.setApplication(application);
+        toCreate.setApplication(clientContext.getApplication());
 
-        profile = client
+        final Response response = client
             .target("http://localhost:8081/api/rest/profile")
             .request()
-            .post(Entity.entity(toCreate, APPLICATION_JSON))
-            .readEntity(Profile.class);
+            .post(Entity.entity(toCreate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 403);
 
     }
+
+    @Test(dependsOnMethods = "loginUserWithEmail")
+    public void createForUserHappy() {
+
+        final Profile toCreate = new Profile();
+
+        toCreate.setUser(user);
+        toCreate.setDisplayName("Paddy O' Furniture");
+        toCreate.setApplication(clientContext.getApplication());
+
+        final Response response = client
+            .target("http://localhost:8081/api/rest/profile")
+            .request()
+            .header("Elements-SessionSecret", sessionCreation.getSessionSecret())
+            .post(Entity.entity(toCreate, APPLICATION_JSON));
+
+        profile = response.readEntity(Profile.class);
+
+        assertNotNull(profile.getId());
+        assertEquals(profile.getUser(), user);
+        assertEquals(profile.getApplication(), clientContext.getApplication());
+
+    }
+
+    @Test(dependsOnMethods = "loginUserWithEmail")
+    public void createForBogusUser() {
+
+        final Profile toCreate = new Profile();
+
+        // We want to test that the system will reject the bogus user
+
+        toCreate.setUser(clientContext.getUser());
+        toCreate.setDisplayName("Paddy O' Furniture");
+        toCreate.setApplication(clientContext.getApplication());
+
+        final Response response = client
+                .target("http://localhost:8081/api/rest/profile")
+                .request()
+                .header("Elements-SessionSecret", sessionCreation.getSessionSecret())
+                .post(Entity.entity(toCreate, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 400);
+
+    }
+
 
 }

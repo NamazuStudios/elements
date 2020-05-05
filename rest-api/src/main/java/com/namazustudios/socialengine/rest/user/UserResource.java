@@ -78,29 +78,7 @@ public class UserResource {
     @ApiOperation(value = "Gets the current User",
                   notes = "A special endpoint used to get the current user for the request.  The current " +
                           "user is typically associated with the session but may be derived any other way.  This " +
-                          "i
-
-//    @Override
-//    public User createUser(UserCreateRequest user) {
-//        return getUserDao().createOrReactivateUser(user);
-//    }
-//
-//
-//    @Override
-//    public User createUser(User user, String password) {
-//        return getUserDao().createOrRectivateUserWithPassword(user, password);
-//    }
-//
-//    @Override
-//    public User updateUser(User user) {
-//        return getUserDao().updateActiveUser(user);
-//    }
-//
-//    @Override
-//    public User updateUser(User user, String password) {
-//        return getUserDao().updateActiveUser(user, password);
-//    }
-s essentially an alias for using GET /user/myUserId")
+                          "is essentially an alias for using GET /user/myUserId")
     public User getUser() {
         return getUserService().getCurrentUser();
     }
