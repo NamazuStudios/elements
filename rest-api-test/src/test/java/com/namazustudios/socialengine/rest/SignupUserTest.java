@@ -18,9 +18,10 @@ import javax.ws.rs.core.Response;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 @Guice(modules = {EmbeddedRestApiIntegrationTestModule.class})
-public class CreateUserAndProfileTest {
+public class SignupUserTest {
 
     private User user;
 
@@ -49,10 +50,10 @@ public class CreateUserAndProfileTest {
         toCreate.setPassword(password);
 
         user = client
-            .target("http://localhost:8081/api/rest/user")
-            .request()
-            .post(Entity.entity(toCreate, APPLICATION_JSON))
-            .readEntity(User.class);
+                .target("http://localhost:8081/api/rest/signup")
+                .request()
+                .post(Entity.entity(toCreate, APPLICATION_JSON))
+                .readEntity(User.class);
 
         assertNotNull(user);
         assertNotNull(user.getId());
@@ -65,9 +66,9 @@ public class CreateUserAndProfileTest {
     @DataProvider
     public Object[][] credentialsProvider() {
         return new Object[][] {
-            new Object[]{name, password},
-            new Object[]{email, password},
-            new Object[]{user.getId(), password}
+                new Object[]{name, password},
+                new Object[]{email, password},
+                new Object[]{user.getId(), password}
         };
     }
 
@@ -79,9 +80,9 @@ public class CreateUserAndProfileTest {
         request.setPassword(password);
 
         final Response response = client
-            .target("http://localhost:8081/api/rest/session")
-            .request()
-            .post(Entity.entity(request, APPLICATION_JSON));
+                .target("http://localhost:8081/api/rest/session")
+                .request()
+                .post(Entity.entity(request, APPLICATION_JSON));
 
         sessionCreation = response.readEntity(SessionCreation.class);
 
@@ -105,9 +106,9 @@ public class CreateUserAndProfileTest {
         toCreate.setApplication(clientContext.getApplication());
 
         final Response response = client
-            .target("http://localhost:8081/api/rest/profile")
-            .request()
-            .post(Entity.entity(toCreate, APPLICATION_JSON));
+                .target("http://localhost:8081/api/rest/profile")
+                .request()
+                .post(Entity.entity(toCreate, APPLICATION_JSON));
 
         assertEquals(response.getStatus(), 403);
 
@@ -123,10 +124,10 @@ public class CreateUserAndProfileTest {
         toCreate.setApplication(clientContext.getApplication());
 
         final Response response = client
-            .target("http://localhost:8081/api/rest/profile")
-            .request()
-            .header("Elements-SessionSecret", sessionCreation.getSessionSecret())
-            .post(Entity.entity(toCreate, APPLICATION_JSON));
+                .target("http://localhost:8081/api/rest/profile")
+                .request()
+                .header("Elements-SessionSecret", sessionCreation.getSessionSecret())
+                .post(Entity.entity(toCreate, APPLICATION_JSON));
 
         profile = response.readEntity(Profile.class);
 
@@ -156,6 +157,5 @@ public class CreateUserAndProfileTest {
         assertEquals(response.getStatus(), 400);
 
     }
-
 
 }
