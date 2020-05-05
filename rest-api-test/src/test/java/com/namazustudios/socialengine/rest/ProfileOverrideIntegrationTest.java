@@ -43,7 +43,7 @@ public class ProfileOverrideIntegrationTest {
     @Test
     public void testOverrideProfileFailure() throws Exception {
         try {
-            client.target("http://localhost:8080/api/rest/profile/current")
+            client.target("http://localhost:8081/api/rest/profile/current")
                   .request()
                   .header(SESSION_SECRET, clientContext.getSessionSecret())
                   .buildGet()
@@ -66,7 +66,7 @@ public class ProfileOverrideIntegrationTest {
     public void testOverrideProfileProfileIdHeader(final Profile profile) throws Exception {
 
         final Profile current = client
-            .target("http://localhost:8080/api/rest/profile/current")
+            .target("http://localhost:8081/api/rest/profile/current")
             .request()
             .header(SESSION_SECRET, clientContext.getSessionSecret())
             .header(PROFILE_ID, profile.getId())
@@ -84,7 +84,7 @@ public class ProfileOverrideIntegrationTest {
         final String sessionSecretHeader = format("%s p%s", clientContext.getSessionSecret(), profile.getId());
 
         final Profile current = client
-                .target("http://localhost:8080/api/rest/profile/current")
+                .target("http://localhost:8081/api/rest/profile/current")
                 .request()
                 .header(SESSION_SECRET, sessionSecretHeader)
                 .buildGet()

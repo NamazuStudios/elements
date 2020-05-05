@@ -77,7 +77,7 @@ public class GetProfilesIntegrationTest {
     public void testGetAllProfiles(final ClientContext clientContext) throws Exception {
 
         final Pagination<Profile> profiles = client
-              .target("http://localhost:8080/api/rest/profile")
+              .target("http://localhost:8081/api/rest/profile")
               .queryParam("count", 20)
               .request()
               .header(SESSION_SECRET, clientContext.getSessionSecret())
@@ -96,7 +96,7 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("count", 20)
                 .queryParam("user", clientContext.getUser().getId())
                 .request()
@@ -119,7 +119,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("count", 20)
                 .queryParam("user", clientContext.getUser().getId())
                 .queryParam("application", clientContext.getApplication().getId())
@@ -143,7 +143,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("count", 20)
                 .queryParam("user", clientContext.getUser().getId())
                 .queryParam("application", clientContext.getApplication().getName())
@@ -167,7 +167,7 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("count", 20)
                 .queryParam("user", "me")
                 .request()
@@ -190,7 +190,7 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("count", 20)
                 .queryParam("user", user.getId())
                 .request()
@@ -213,7 +213,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("application", other.getId())
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
@@ -225,7 +225,7 @@ public class GetProfilesIntegrationTest {
         assertEquals(profiles.getObjects().size(), 0);
 
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("application", other.getName())
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
@@ -244,7 +244,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("application", other.getName())
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
@@ -262,7 +262,7 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8080/api/rest/profile")
+                .target("http://localhost:8081/api/rest/profile")
                 .queryParam("application", "bogo")
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())

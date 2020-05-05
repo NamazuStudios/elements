@@ -26,7 +26,7 @@ public class AnonymousUserTest {
     public void testGetVersion() throws Exception {
 
         final Version version = client
-                .target("http://localhost:8080/api/rest/version")
+                .target("http://localhost:8081/api/rest/version")
                 .queryParam("count", 20)
                 .request()
                 .buildGet()
