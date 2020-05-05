@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.Serializable;
 import java.util.function.Consumer;
 
 /**
@@ -31,17 +32,9 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     public void dispatch(final Session session,
                          final HttpRequest httpRequest,
                          final Consumer<Response> responseConsumer) {
-
         final Filter.Chain.Builder builder = getFilterChainBuilder();
-
-        final Request request = SimpleRequest.builder()
-            .from(httpRequest)
-            .parameterizedPath(httpRequest.getManifestMetadata().getPreferredOperation().getPath())
-            .build();
-
         final Filter.Chain root = builder.terminate((s, r, rr) -> createAndSchedule(httpRequest, s, r, rr));
-        root.next(session, request, responseConsumer);
-
+        root.next(session, httpRequest, responseConsumer);
     }
 
     private void createAndSchedule(final HttpRequest httpRequest,
@@ -67,10 +60,22 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
         };
 
         try {
+
+            final SimpleRequest simpleRequest = SimpleRequest.builder()
+                    .from(request)
+                    .parameterizedPath(httpRequest.getManifestMetadata().getPreferredOperation().getPath())
+                    .build();
+
+            // Anything that can't be sent over the wire, we will remove to prevent an exception from getting thrown
+            // when we attempt to dispatch the request over the network.
+
+            simpleRequest.getAttributes().removeIf((name, value) -> !(value instanceof Serializable));
+
             getContext().getHandlerContext().invokeSingleUseHandlerAsync(
                 success, failure,
-                request.getAttributes(), httpModule.getModule(),
-                httpOperation.getMethod(), request.getPayload(), request, session);
+                simpleRequest.getAttributes(), httpModule.getModule(),
+                httpOperation.getMethod(), request.getPayload(), simpleRequest, session);
+
         } catch (Throwable th) {
             logRequestFailure(request, th);
             failure.accept(th);

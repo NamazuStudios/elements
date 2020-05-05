@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
 import static java.util.Collections.emptySet;
@@ -58,6 +59,10 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
     @Override
     public boolean equals(final Object that) {
         return Attributes.equals(this, that);
+    }
+
+    public void removeIf(final BiPredicate<String, Object> biPredicate) {
+        attributes.entrySet().removeIf(e -> biPredicate.test(e.getKey(), e.getValue()));
     }
 
     /**
