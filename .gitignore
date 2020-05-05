@@ -11,6 +11,9 @@ test-repositories
 storage.xodus
 node_modules
 
+# Default Script storage
+/repositories/*
+
 #IntelliJ Configurations (except shared run configurations
 .idea/artifacts/
 .idea/compiler.xml
