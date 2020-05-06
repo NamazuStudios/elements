@@ -28,9 +28,9 @@ public class CreateUserAndProfileTest {
 
     private SessionCreation sessionCreation;
 
-    private final String name = "testuser-" + randomUUID().toString();
+    private final String name = "testuser-name-" + randomUUID().toString();
 
-    private final String email = "testuser-" + randomUUID().toString() + "@example.com";
+    private final String email = "testuser-email-" + randomUUID().toString() + "@example.com";
 
     private final String password = randomUUID().toString();
 
@@ -93,6 +93,22 @@ public class CreateUserAndProfileTest {
         final Session session = sessionCreation.getSession();
         assertEquals(session.getUser(), user);
         assertEquals(session.getProfile(), profile);
+
+    }
+
+    @Test(dependsOnMethods = "createUser", dataProvider = "credentialsProvider")
+    public void testBogusUserLogin(final String uid, final String _ignored) {
+
+        final UsernamePasswordSessionRequest request = new UsernamePasswordSessionRequest();
+        request.setUserId(uid);
+        request.setPassword("bogus password");
+
+        final Response response = client
+            .target("http://localhost:8081/api/rest/session")
+            .request()
+            .post(Entity.entity(request, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 403);
 
     }
 
