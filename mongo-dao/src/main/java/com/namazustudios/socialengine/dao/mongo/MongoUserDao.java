@@ -502,19 +502,12 @@ public class MongoUserDao implements UserDao {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
-        if (ObjectId.isValid(userNameOrEmail)) {
-            query.and(
-                query.criteria("active").equal(true),
-                query.criteria("_id").equal(new ObjectId(userNameOrEmail))
-            );
-        } else {
-            query.or(
-                query.criteria("name").equal(userNameOrEmail),
-                query.criteria("email").equal(userNameOrEmail)
-            ).and(
-                query.criteria("active").equal(true)
-            );
-        }
+        query.or(
+            query.criteria("name").equal(userNameOrEmail),
+            query.criteria("email").equal(userNameOrEmail)
+        ).and(
+            query.criteria("active").equal(true)
+        );
 
         final MongoUser mongoUser = query.get();
 
