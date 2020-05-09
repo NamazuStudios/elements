@@ -27,7 +27,7 @@ public class RequestOptionalSessionProvider implements Provider<Optional<Session
     }
 
     @Inject
-    public void setSessionService(@Unscoped SessionService sessionService) {
+    public void setSessionService(SessionService sessionService) {
         this.sessionService = sessionService;
     }
 
