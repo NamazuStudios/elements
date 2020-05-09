@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Filter;
-import com.namazustudios.socialengine.service.Unscoped;
 
 import javax.inject.Inject;
 import java.util.Optional;
