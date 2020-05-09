@@ -35,7 +35,7 @@ function test_auth.test_facebook_security_manifest()
     assert(spec ~= nil, "Session Secret spec nil.")
     assert(description ~= nil, "Session Secret description nil.")
 
-    assert(spec["name"] == "SocialEngine-SessionSecret", "Expected 'Authorization.'  Got: " .. tostring(spec["name"]))
+    assert(spec["name"] == "Elements-SessionSecret", "Expected 'Elements-SessionSecret.'  Got: " .. tostring(spec["name"]))
     assert(spec["description"] == "The header containing the session secret.", "Got: " .. tostring(spec["description"]))
     assert(spec["type"] == "string", "Expected 'string'.  Got: " .. tostring(spec["type"]))
 
