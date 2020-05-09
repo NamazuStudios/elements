@@ -187,6 +187,7 @@ public class SimpleResponse implements Response, Serializable {
             final SimpleResponse simpleResponse = new SimpleResponse();
             final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
             simpleResponseHeader.setCode(code);
+            simpleResponseHeader.setSequence(sequence);
 
             simpleResponse.setResponseHeader(simpleResponseHeader);
             simpleResponse.setPayload(payload);
