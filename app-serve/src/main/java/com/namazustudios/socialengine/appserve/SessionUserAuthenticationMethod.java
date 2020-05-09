@@ -6,24 +6,28 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.UserAuthenticationMethod;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.Optional;
 
 public class SessionUserAuthenticationMethod implements UserAuthenticationMethod {
 
-    private Optional<Session> optionalSession;
+    private Provider<Optional<Session>> optionalSessionProvider;
 
     @Override
     public User attempt() throws ForbiddenException {
-        return getOptionalSession().map(session -> session.getUser()).orElseThrow(ForbiddenException::new);
+        return getOptionalSessionProvider()
+            .get()
+            .map(session -> session.getUser())
+            .orElseThrow(ForbiddenException::new);
     }
 
-    public Optional<Session> getOptionalSession() {
-        return optionalSession;
+    public Provider<Optional<Session>> getOptionalSessionProvider() {
+        return optionalSessionProvider;
     }
 
     @Inject
-    public void setOptionalSession(Optional<Session> optionalSession) {
-        this.optionalSession = optionalSession;
+    public void setOptionalSessionProvider(Provider<Optional<Session>> optionalSessionProvider) {
+        this.optionalSessionProvider = optionalSessionProvider;
     }
 
 }

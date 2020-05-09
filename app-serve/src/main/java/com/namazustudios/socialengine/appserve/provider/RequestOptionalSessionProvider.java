@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.appserve.provider;
 
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.security.SessionSecretHeader;
 import com.namazustudios.socialengine.service.SessionService;
@@ -19,7 +20,15 @@ public class RequestOptionalSessionProvider implements Provider<Optional<Session
     public Optional<Session> get() {
         return getSessionSecretHeader()
             .getSessionSecret()
-            .map(secret -> getSessionService().checkAndRefreshSessionIfNecessary(secret));
+            .flatMap(secret -> checkAndRefreshSession(secret));
+    }
+
+    private Optional<Session> checkAndRefreshSession(String secret) {
+        try {
+            return Optional.of(getSessionService().checkAndRefreshSessionIfNecessary(secret));
+        } catch (ForbiddenException ex) {
+            return Optional.empty();
+        }
     }
 
     public SessionService getSessionService() {

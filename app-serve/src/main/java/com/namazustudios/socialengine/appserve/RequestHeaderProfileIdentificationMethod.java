@@ -46,7 +46,7 @@ public class RequestHeaderProfileIdentificationMethod implements ProfileIdentifi
     }
 
     @Inject
-    public void setProfileOverrideService(final ProfileOverrideService profileOverrideService) {
+    public void setProfileOverrideService(ProfileOverrideService profileOverrideService) {
         this.profileOverrideService = profileOverrideService;
     }
 
