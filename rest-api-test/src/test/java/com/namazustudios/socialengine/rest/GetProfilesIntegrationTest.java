@@ -16,6 +16,7 @@ import javax.ws.rs.client.Client;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static java.util.stream.Collectors.toSet;
 import static org.testng.Assert.*;
 
@@ -59,27 +60,27 @@ public class GetProfilesIntegrationTest {
     @DataProvider
     public Object[][] provideClientContexts() {
         return new Object[][] {
-            new Object[]{client0},
-            new Object[]{client1},
+            new Object[]{client0, SESSION_SECRET},
+            new Object[]{client1, SOCIALENGINE_SESSION_SECRET},
         };
     }
 
     @DataProvider
     public Object[][] provideClientContextsAndNonmatchingUsers() {
         return new Object[][] {
-                new Object[]{client0, client1.getUser()},
-                new Object[]{client1, client0.getUser()},
+                new Object[]{client0, client1.getUser(), SESSION_SECRET},
+                new Object[]{client1, client0.getUser(), SOCIALENGINE_SESSION_SECRET},
         };
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetAllProfiles(final ClientContext clientContext) throws Exception {
+    public void testGetAllProfiles(final ClientContext clientContext, final String authHeader) throws Exception {
 
         final Pagination<Profile> profiles = client
               .target("http://localhost:8081/api/rest/profile")
               .queryParam("count", 20)
               .request()
-              .header(SESSION_SECRET, clientContext.getSessionSecret())
+              .header(authHeader, clientContext.getSessionSecret())
               .buildGet()
               .submit(ProfilePagination.class)
               .get();
@@ -113,7 +114,8 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByUserIdAndApplicationId(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByUserIdAndApplicationId(final ClientContext clientContext,
+                                                                final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
 
@@ -123,7 +125,7 @@ public class GetProfilesIntegrationTest {
                 .queryParam("user", clientContext.getUser().getId())
                 .queryParam("application", clientContext.getApplication().getId())
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();
@@ -137,7 +139,8 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByUserIdAndApplicationName(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByUserIdAndApplicationName(final ClientContext clientContext,
+                                                                  final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
 
@@ -147,7 +150,7 @@ public class GetProfilesIntegrationTest {
                 .queryParam("user", clientContext.getUser().getId())
                 .queryParam("application", clientContext.getApplication().getName())
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();
@@ -162,7 +165,8 @@ public class GetProfilesIntegrationTest {
 
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByUserIdMe(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByUserIdMe(final ClientContext clientContext,
+                                                  final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
         profiles = client
@@ -170,7 +174,7 @@ public class GetProfilesIntegrationTest {
                 .queryParam("count", 20)
                 .queryParam("user", "me")
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();
@@ -185,7 +189,8 @@ public class GetProfilesIntegrationTest {
 
     @Test(dataProvider = "provideClientContextsAndNonmatchingUsers")
     public void testGetProfilesFilteredByValidNonMatchingUserId(final ClientContext clientContext,
-                                                                final User user) throws Exception {
+                                                                final User user,
+                                                                final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
         profiles = client
@@ -193,7 +198,7 @@ public class GetProfilesIntegrationTest {
                 .queryParam("count", 20)
                 .queryParam("user", user.getId())
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();
@@ -207,7 +212,8 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByValidNonmatchingApplicationId(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByValidNonmatchingApplicationId(final ClientContext clientContext,
+                                                                       final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
 
@@ -215,7 +221,7 @@ public class GetProfilesIntegrationTest {
                 .target("http://localhost:8081/api/rest/profile")
                 .queryParam("application", other.getId())
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();
@@ -238,7 +244,8 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByValidNonmatchingApplicationName(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByValidNonmatchingApplicationName(final ClientContext clientContext,
+                                                                         final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
 
@@ -246,7 +253,7 @@ public class GetProfilesIntegrationTest {
                 .target("http://localhost:8081/api/rest/profile")
                 .queryParam("application", other.getName())
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();
@@ -257,14 +264,15 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByInvalidNonmatchingApplicationId(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByInvalidNonmatchingApplicationId(final ClientContext clientContext,
+                                                                         final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
         profiles = client
                 .target("http://localhost:8081/api/rest/profile")
                 .queryParam("application", "bogo")
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();

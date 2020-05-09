@@ -39,7 +39,8 @@ public interface Attributes {
      * @return the value or null
      */
     default Object getAttribute(final String name) {
-        return getAttributeOptional(name).orElse(null);
+        final Optional<Object> optionalAttribute = getAttributeOptional(name);
+        return optionalAttribute.orElse(null);
     }
 
     /**

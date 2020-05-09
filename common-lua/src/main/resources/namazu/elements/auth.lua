@@ -69,7 +69,7 @@ function auth.add_session_secret_header(security_manifest)
                       "POST /facebook_session endpoints in the API.";
 
         spec = {
-            name = "SocialEngine-SessionSecret",
+            name = "Elements-SessionSecret",
             description = "The header containing the session secret.",
             type = "string"
         }

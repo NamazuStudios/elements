@@ -127,7 +127,7 @@ public class SimpleResponse implements Response, Serializable {
          *
          * @return this object
          */
-        public Builder code(final int code) {
+        public Builder codeRaw(final int code) {
             this.code = code;
             return this;
         }
@@ -166,6 +166,18 @@ public class SimpleResponse implements Response, Serializable {
         }
 
         /**
+         * Takes a simple {@link Map<String, ?>} and inserts each header into this response. This assumes a one to one
+         * mapping of headers to values
+         *
+         * @param headers the headers to append
+         * @return this instance
+         */
+        public Builder appendHeaders(final Map<String, ?> headers) {
+            headers.forEach(this::header);
+            return this;
+        }
+
+        /**
          * Builds the {@link SimpleResponse} object.
          *
          * @return the {@link SimpleResponse}
@@ -174,6 +186,7 @@ public class SimpleResponse implements Response, Serializable {
 
             final SimpleResponse simpleResponse = new SimpleResponse();
             final SimpleResponseHeader simpleResponseHeader = new SimpleResponseHeader();
+            simpleResponseHeader.setCode(code);
 
             simpleResponse.setResponseHeader(simpleResponseHeader);
             simpleResponse.setPayload(payload);

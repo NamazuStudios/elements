@@ -20,6 +20,7 @@ import com.namazustudios.socialengine.service.SessionService;
 import com.namazustudios.socialengine.service.auth.DefaultSessionService;
 import com.namazustudios.socialengine.service.profile.ProfileOverrideServiceProvider;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -30,6 +31,7 @@ import java.util.Optional;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
 import static com.namazustudios.socialengine.rt.DummySession.getDummySession;
@@ -51,12 +53,20 @@ public class TestAuthOverrideFilter {
 
     private Filter.Chain.Builder builder;
 
+    @DataProvider
+    public Object[][] getAuthHeader() {
+        return new Object[][] {
+            new Object[] { SESSION_SECRET },
+            new Object[] { SOCIALENGINE_SESSION_SECRET }
+        };
+    }
+
     @BeforeMethod
     public void resetMocks() {
         reset(sessionDao, profileDao);
     }
 
-    @Test// (expectedExceptions = ForbiddenException.class)
+    @Test
     public void testNoSession() {
 
         final SimpleRequest request = new SimpleRequest.Builder()
@@ -72,11 +82,28 @@ public class TestAuthOverrideFilter {
 
     }
 
-    @Test
-    public void testSessionNoOverrideNoProfile() {
+    @Test(dataProvider = "getAuthHeader", expectedExceptions = ForbiddenException.class)
+    public void testBogusHeader(final String authHeader) {
 
         final SimpleRequest request = new SimpleRequest.Builder()
-                .header(SESSION_SECRET, "asdf")
+            .header(authHeader, "bogus")
+            .build();
+
+        final Filter.Chain terminal = (s, r, rr) -> {
+            final Response response = SimpleResponse.builder().build();
+            rr.accept(response);
+        };
+
+        when(getSessionDao().refresh(eq("bogus"), anyLong())).thenThrow(NotFoundException.class);
+        getBuilder().terminate(terminal).next(getDummySession(), request, r -> fail("Request shouldn't process."));
+
+    }
+
+    @Test(dataProvider = "getAuthHeader")
+    public void testSessionNoOverrideNoProfile(final String authHeader) {
+
+        final SimpleRequest request = new SimpleRequest.Builder()
+                .header(authHeader, "asdf")
                 .build();
 
         final Filter.Chain terminal = (s, r, rr) -> {
@@ -99,9 +126,9 @@ public class TestAuthOverrideFilter {
                 .get();
 
             final Session requestSession = request.getAttributes()
-                    .getAttributeOptional(SESSION_ATTRIBUTE)
-                    .map(Session.class::cast)
-                    .get();
+                .getAttributeOptional(SESSION_ATTRIBUTE)
+                .map(Session.class::cast)
+                .get();
 
             assertSame(mockUser, requestUser);
             assertSame(mockSession, requestSession);
@@ -110,11 +137,11 @@ public class TestAuthOverrideFilter {
 
     }
 
-    @Test
-    public void testSessionOverrideProfile() {
+    @Test(dataProvider = "getAuthHeader")
+    public void testSessionOverrideProfile(final String authHeader) {
 
         final SimpleRequest request = new SimpleRequest.Builder()
-                .header(SESSION_SECRET, "foo pbar")
+                .header(authHeader, "foo pbar")
                 .build();
 
         final Filter.Chain terminal = (s, r, rr) -> {

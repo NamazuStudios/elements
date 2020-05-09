@@ -15,6 +15,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
+import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
@@ -39,6 +41,14 @@ public class CreateUserAndProfileTest {
 
     @Inject
     private ClientContext clientContext;
+
+    @DataProvider
+    public Object[][] getAuthHeader() {
+        return new Object[][] {
+                new Object[] { SESSION_SECRET },
+                new Object[] { SOCIALENGINE_SESSION_SECRET }
+        };
+    }
 
     @Test
     public void createUser() {
@@ -129,8 +139,8 @@ public class CreateUserAndProfileTest {
 
     }
 
-    @Test(dependsOnMethods = "testUserLogin")
-    public void createForUserHappy() {
+    @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
+    public void createForUserHappy(final String authHeader) {
 
         final Profile toCreate = new Profile();
 
@@ -141,7 +151,7 @@ public class CreateUserAndProfileTest {
         final Response response = client
             .target("http://localhost:8081/api/rest/profile")
             .request()
-            .header("Elements-SessionSecret", sessionCreation.getSessionSecret())
+            .header(authHeader, sessionCreation.getSessionSecret())
             .post(Entity.entity(toCreate, APPLICATION_JSON));
 
         profile = response.readEntity(Profile.class);
@@ -152,8 +162,8 @@ public class CreateUserAndProfileTest {
 
     }
 
-    @Test(dependsOnMethods = "testUserLogin")
-    public void createForBogusUser() {
+    @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
+    public void createForBogusUser(final String authHeader) {
 
         final Profile toCreate = new Profile();
 
@@ -166,7 +176,7 @@ public class CreateUserAndProfileTest {
         final Response response = client
                 .target("http://localhost:8081/api/rest/profile")
                 .request()
-                .header("Elements-SessionSecret", sessionCreation.getSessionSecret())
+                .header(authHeader, sessionCreation.getSessionSecret())
                 .post(Entity.entity(toCreate, APPLICATION_JSON));
 
         assertEquals(response.getStatus(), 400);
