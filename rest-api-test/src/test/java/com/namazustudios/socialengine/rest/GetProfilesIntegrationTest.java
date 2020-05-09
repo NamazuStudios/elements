@@ -92,7 +92,8 @@ public class GetProfilesIntegrationTest {
     }
 
     @Test(dataProvider = "provideClientContexts")
-    public void testGetProfilesFilteredByUserId(final ClientContext clientContext) throws Exception {
+    public void testGetProfilesFilteredByUserId(final ClientContext clientContext,
+                                                final String authHeader) throws Exception {
 
         Pagination<Profile> profiles;
         profiles = client
@@ -100,7 +101,7 @@ public class GetProfilesIntegrationTest {
                 .queryParam("count", 20)
                 .queryParam("user", clientContext.getUser().getId())
                 .request()
-                .header(SESSION_SECRET, clientContext.getSessionSecret())
+                .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
                 .get();

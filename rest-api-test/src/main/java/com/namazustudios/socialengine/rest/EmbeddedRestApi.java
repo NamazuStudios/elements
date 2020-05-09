@@ -8,6 +8,8 @@ import redis.embedded.RedisServer;
 
 import javax.inject.Inject;
 
+import java.util.concurrent.Callable;
+
 import static java.lang.Runtime.getRuntime;
 
 public class EmbeddedRestApi {
@@ -41,10 +43,26 @@ public class EmbeddedRestApi {
         }));
     }
 
-    public void stop() throws Exception {
-        getRestAPIMain().stop();
-        getMongodExecutable().stop();
-        getRedisServer().stop();
+    public void stop() {
+
+        try {
+            getRestAPIMain().stop();
+        } catch (Exception ex) {
+            logger.warn("Caught exception stopping API.  Disregarding.", ex);
+        }
+
+        try {
+            getMongodExecutable().stop();
+        } catch (Exception ex) {
+            logger.warn("Caught exception MongoDB.  Disregarding.", ex);
+        }
+
+        try {
+            getRedisServer().stop();
+        } catch (Exception ex) {
+            logger.warn("Caught exception Redis.  Disregarding.", ex);
+        }
+
     }
 
     public RestAPIMain getRestAPIMain() {

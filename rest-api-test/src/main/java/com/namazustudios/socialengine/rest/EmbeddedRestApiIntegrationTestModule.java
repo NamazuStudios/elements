@@ -13,6 +13,8 @@ import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import redis.embedded.RedisServer;
 
 import java.io.IOException;
@@ -30,6 +32,8 @@ import static java.lang.String.format;
 
 public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
+    private static final Logger logger = LoggerFactory.getLogger(EmbeddedRestApiIntegrationTestModule.class);
+
     private static final int TEST_MONGO_PORT = 45000;
 
     private static final String TEST_MONGO_BIND_IP = "127.0.0.1";
@@ -43,20 +47,20 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         try {
             final MongodExecutable executable = mongodExecutable();
+            getRuntime().addShutdownHook(new Thread(executable::stop));
             bind(MongodExecutable.class).toInstance(executable);
             bind(MongodProcess.class).toInstance(executable.start());
-        } catch (IOException e) {
+        } catch (Exception e) {
             addError(e);
             return;
         }
 
-        final RedisServer redisServer;
-
         try {
-            redisServer = new RedisServer(TEST_REDIS_PORT);
+            final RedisServer redisServer = new RedisServer(TEST_REDIS_PORT);
+            getRuntime().addShutdownHook(new Thread(redisServer::stop));
             redisServer.start();
             bind(RedisServer.class).toInstance(redisServer);
-        } catch (IOException e) {
+        } catch (Exception e) {
             addError(e);
             return;
         }
