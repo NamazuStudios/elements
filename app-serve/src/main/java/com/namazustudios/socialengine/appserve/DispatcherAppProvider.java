@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.File;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -86,7 +85,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final String path = format("/%s/%s", PATH_PREFIX, application.getName());
         final DispatcherServlet dispatcherServlet = injector.getInstance(DispatcherServlet.class);
-        final SessionIdAuthenticationFilter sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
+        final RequestAttributeUserFilter requestAttributeUserFilter = injector.getInstance(RequestAttributeUserFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(path);

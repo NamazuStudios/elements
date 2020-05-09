@@ -10,33 +10,32 @@ import com.namazustudios.socialengine.service.ProfileOverrideService;
 
 import javax.inject.Inject;
 
-public class RequestSessionSecretProfileIdentificationMethod implements ProfileIdentificationMethod {
+public class SessionSecretHeaderProfileIdentificationMethod implements ProfileIdentificationMethod {
 
-    private Request request;
+    private SessionSecretHeader sessionSecretHeader;
 
     private ProfileOverrideService profileOverrideService;
 
     @Override
     public Profile attempt() throws UnidentifiedProfileException {
 
-        final RequestHeader header = getRequest().getHeader();
-        final String profileId = SessionSecretHeader.withOptionalValueSupplier(header::getHeader)
+       final String profileId = getSessionSecretHeader()
             .getOverrideProfileId()
-            .orElseThrow(() -> new UnidentifiedProfileException());
+            .orElseThrow(UnidentifiedProfileException::new);
 
         return getProfileOverrideService()
             .findOverrideProfile(profileId)
-            .orElseThrow(() -> new UnidentifiedProfileException());
+            .orElseThrow(UnidentifiedProfileException::new);
 
     }
 
-    public Request getRequest() {
-        return request;
+    public SessionSecretHeader getSessionSecretHeader() {
+        return sessionSecretHeader;
     }
 
     @Inject
-    public void setRequest(Request request) {
-        this.request = request;
+    public void setSessionSecretHeader(SessionSecretHeader sessionSecretHeader) {
+        this.sessionSecretHeader = sessionSecretHeader;
     }
 
     public ProfileOverrideService getProfileOverrideService() {

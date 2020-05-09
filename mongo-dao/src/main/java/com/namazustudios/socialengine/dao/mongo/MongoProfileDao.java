@@ -62,9 +62,10 @@ public class MongoProfileDao implements ProfileDao {
     public Optional<Profile> findActiveProfile(final String profileId) {
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+        if (!ObjectId.isValid(profileId)) throw new ProfileNotFoundException();
 
         query.and(
-            query.criteria("_id").equal(profileId),
+            query.criteria("_id").equal(new ObjectId(profileId)),
             query.criteria("active").equal(true)
         );
 

@@ -23,8 +23,6 @@ import static java.util.regex.Pattern.compile;
  */
 public class SessionSecretHeader {
 
-    public static final String SESSION_SECRET_HEADER_ATTRIBUTE = SessionSecretHeader.class.getName() + "attribute";
-
     private static final Logger logger = LoggerFactory.getLogger(SessionSecretHeader.class);
 
     private static final Pattern SEPARATOR = compile("\\s+");
