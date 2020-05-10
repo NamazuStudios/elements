@@ -15,6 +15,9 @@ local auth = {}
 --- Defines the Facebook OAuth Scheme
 auth.SESSION_SECRET_SCHEME = "session_secret"
 
+--- Deprecated session secret scheme
+auth.SOCIALENGINE_SESSION_SECRET_SCHEME = "socialengine_session_secret"
+
 --- Fetches the current User
 -- This fetches the current user executing the request.  This defers to the attributes set when the resoruce was
 -- created.  If no user exists, then this returns the Unprivileged user.
@@ -71,6 +74,18 @@ function auth.add_session_secret_header(security_manifest)
         spec = {
             name = "Elements-SessionSecret",
             description = "The header containing the session secret.",
+            type = "string"
+        }
+
+    }
+    security_manifest.header[auth.SOCIALENGINE_SESSION_SECRET_SCHEME] = {
+
+        description = "Uses a server-assigned session key which is generated from various POST /session and " ..
+                "POST /facebook_session endpoints in the API.";
+
+        spec = {
+            name = "SocialEngine-SessionSecret",
+            description = "The header containing the session secret (deprecated).",
             type = "string"
         }
 
