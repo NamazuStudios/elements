@@ -32,7 +32,7 @@ public interface TransactionJournal extends AutoCloseable {
      *
      * @return
      */
-    MutableEntry newEntry();
+    MutableEntry newMutableEntry();
 
     /**
      * Nukes the entire collection of data.  This may lock the entire database to accomplish this task.  Once complete,
@@ -40,7 +40,7 @@ public interface TransactionJournal extends AutoCloseable {
      *
      * @return a stream of {@link ResourceId} that were destroyed as part of this operation
      */
-    Stream<ResourceId> removeAllResources();
+    Stream<ResourceId> clear();
 
     /**
      * Returns a Monitor which is able to lock the entire journal.
@@ -134,7 +134,7 @@ public interface TransactionJournal extends AutoCloseable {
          * @return a {@link WritableByteChannel} which will receive the bytes of the {@link Resource}
          * @throws IOException if an IO operation fails
          */
-        WritableByteChannel saveNewResource(Path path, ResourceId resourceId) throws IOException;
+        WritableByteChannel saveNewResource(Path path, ResourceId resourceId) throws IOException, TransactionConflictException;
 
         /**
          * Links a new {@link Path} to an existing {@link ResourceId}.  This may throw an exception if a conflict
@@ -144,7 +144,7 @@ public interface TransactionJournal extends AutoCloseable {
          * @param id the {@link ResourceId} to link
          * @param path the {@link Path} to link
          */
-        void linkNewResource(ResourceId id, Path path);
+        void linkNewResource(ResourceId id, Path path) throws TransactionConflictException;
 
         /**
          * Links an existing {@link ResourceId} to a {@link Path}.  If there exists a conflict, such as a {@link Path}
@@ -154,7 +154,7 @@ public interface TransactionJournal extends AutoCloseable {
          * @param sourceResourceId the {@link ResourceId} of the source
          * @param destination the {@link Path} destination
          */
-        void linkExistingResource(ResourceId sourceResourceId, Path destination);
+        void linkExistingResource(ResourceId sourceResourceId, Path destination) throws TransactionConflictException;
 
         /**
          * The unlinks a {@link Path}, potentially deleting the {@link ResourceId} attached to it, provided there are
@@ -163,7 +163,7 @@ public interface TransactionJournal extends AutoCloseable {
          * @param path the {@link Path} to link
          * @return the result of the unlink operation
          */
-        Unlink unlinkPath(Path path);
+        Unlink unlinkPath(Path path) throws TransactionConflictException;
 
         /**
          * Unlinks multiple {@link Path} instances, specifying the maximum number to unlink as well.  The supplied
@@ -181,7 +181,7 @@ public interface TransactionJournal extends AutoCloseable {
          *
          * @param resourceId the {@link ResourceId}
          */
-        void removeResource(ResourceId resourceId);
+        void removeResource(ResourceId resourceId) throws TransactionConflictException;
 
         /**
          * Removes a {@link Path} pointing to a zero or more {@link ResourceId}s.  This will ensure that all

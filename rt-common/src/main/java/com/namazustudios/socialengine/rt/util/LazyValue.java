@@ -1,7 +1,13 @@
 package com.namazustudios.socialengine.rt.util;
 
+import java.util.Optional;
 import java.util.function.Supplier;
 
+/**
+ * A value that lazily loads the first time it is fetched. This is not thread safe.
+ *
+ * @param <T>
+ */
 public class LazyValue<T> {
 
     private static final Object UNASSIGNED = new Object() {
@@ -13,12 +19,17 @@ public class LazyValue<T> {
 
     T t = (T)UNASSIGNED;
 
-    final Supplier<T> tSupplier;
+    private final Supplier<T> tSupplier;
 
-    public LazyValue(Supplier<T> tSupplier) {
+    public LazyValue(final Supplier<T> tSupplier) {
         this.tSupplier = tSupplier;
     }
 
+    /**
+     * Gets the value of this {@link LazyValue<T>}, computing it if it was not already computed.
+     *
+     * @return the optional value
+     */
     public T get() {
 
         T t = this.t;
@@ -29,6 +40,14 @@ public class LazyValue<T> {
 
         return t;
 
+    }
+
+    /**
+     * Gets an {@link Optional} representing this {@link LazyValue<T>}
+     * @return
+     */
+    public Optional<T> getOptional() {
+        return  t == UNASSIGNED ? Optional.empty() : Optional.of(t);
     }
 
     @Override

@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.ResourceIndex;
 import com.namazustudios.socialengine.rt.transact.Revision;
-import com.namazustudios.socialengine.rt.transact.RevisionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,10 +14,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -33,8 +29,6 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
     private final UnixFSUtils utils;
 
-    private final RevisionFactory revisionFactory;
-
     private final UnixFSPathIndex unixFSPathIndex;
 
     private final UnixFSGarbageCollector garbageCollector;
@@ -43,12 +37,11 @@ public class UnixFSResourceIndex implements ResourceIndex {
     public UnixFSResourceIndex(
             final NodeId nodeId,
             final UnixFSUtils utils,
-            final RevisionFactory revisionFactory,
+            final Revision.Factory revisionFactory,
             final UnixFSPathIndex unixFSPathIndex,
             final UnixFSGarbageCollector garbageCollector) {
         this.nodeId = nodeId;
         this.utils = utils;
-        this.revisionFactory = revisionFactory;
         this.unixFSPathIndex = unixFSPathIndex;
         this.garbageCollector = garbageCollector;
     }
@@ -69,7 +62,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
             .filter(rv -> !rv.isTombstone())
             .map(rv -> load(revision, rv.getResourceId()));
 
-        return revisionFactory.createOptional(revision, readableByteChannelOptional);
+        return revision.withOptionalValue(readableByteChannelOptional);
 
     }
 

@@ -28,7 +28,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         this.utils = utils;
         this.pathIndex = pathIndex;
         this.resourceIdIndex = resourceIdIndex;
-        this.lockFilePath = utils.lockDirectory(storageRoot);
+        this.lockFilePath = utils.lockPath(storageRoot);
     }
 
     @Override

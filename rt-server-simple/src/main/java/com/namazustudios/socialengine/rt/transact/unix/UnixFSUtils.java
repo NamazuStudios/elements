@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
-import com.namazustudios.socialengine.rt.transact.RevisionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,15 +12,14 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Optional;
 
-import static com.namazustudios.socialengine.rt.transact.Revision.infinity;
 import static com.namazustudios.socialengine.rt.transact.Revision.zero;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionDataStore.STORAGE_ROOT_DIRECTORY;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.JOURNAL_PATH;
 import static java.lang.String.format;
 import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.Files.isDirectory;
+import static java.nio.file.Paths.get;
 import static java.util.Comparator.naturalOrder;
 
 /**
@@ -37,7 +35,9 @@ public class UnixFSUtils {
 
     public static final String RESOURCES_DIRECTORY = "resources";
 
-    private final RevisionFactory revisionFactory;
+    private final Revision.Factory revisionFactory;
+
+    private final Path journalPath;
 
     private final Path pathStorageRoot;
 
@@ -45,8 +45,10 @@ public class UnixFSUtils {
 
     @Inject
     public UnixFSUtils(
-            final RevisionFactory revisionFactory,
+            final Revision.Factory revisionFactory,
+            @Named(JOURNAL_PATH) final Path journalPath,
             @Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
+        this.journalPath = journalPath;
         this.revisionFactory = revisionFactory;
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath();
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath();
@@ -60,10 +62,12 @@ public class UnixFSUtils {
      * @return the {@link Path} to the lock file
      * @throws IOException if a locking error occurs,
      */
-    public Path lockDirectory(final Path directoryPath) throws IOException {
+    public Path lockPath(final Path directoryPath) throws IOException {
+        final Path lockFile = get(".", LOCK_FILE_NAME);
+        return tryLock(directoryPath.resolveSibling(lockFile));
+    }
 
-        final Path path = Paths.get(".", LOCK_FILE_NAME);
-        final Path lockFilePath = directoryPath.toAbsolutePath().resolve(path).toAbsolutePath();
+    private Path tryLock(final Path lockFilePath) throws IOException {
 
         if (Files.exists(lockFilePath)) {
             final String msg = format("Journal path is locked %s", lockFilePath);
@@ -104,7 +108,7 @@ public class UnixFSUtils {
         return doOperation(() -> Files
             .list(directory)
             .filter(Files::isRegularFile)
-            .map(file -> revisionFactory.create(file.getFileName().toString(), file))
+            .map(file -> revisionFactory.create(file.getFileName().toString()).withValue(file))
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
             .orElse(zero()));
@@ -129,6 +133,14 @@ public class UnixFSUtils {
     }
 
     /**
+     * Returns the path to the journal file.
+     * @return the path to the journal file.
+     */
+    public Path getJournalPath() {
+        return journalPath;
+    }
+
+    /**
      * Returns tha {@link Path} to the directory holding the path mapping.
      * @return the {@link Path} to the path mapping
      */
@@ -143,6 +155,22 @@ public class UnixFSUtils {
      */
     public Path getResourceStorageRoot() {
         return resourceStorageRoot;
+    }
+
+    /**
+     * Defines an operation which may throw an instance of {@link IOException}
+     */
+    @FunctionalInterface
+    public interface IOOperationV {
+
+        /**
+         * Performs the operation.
+         *
+         * @return the calculated vallue of the operation.
+         * @throws IOException for any reason.
+         */
+        void perform() throws IOException;
+
     }
 
     /**

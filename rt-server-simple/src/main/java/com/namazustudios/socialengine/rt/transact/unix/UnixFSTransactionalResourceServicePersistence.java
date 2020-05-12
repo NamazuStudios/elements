@@ -41,14 +41,14 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     @Override
     public ReadWriteTransaction openRW() {
-        final TransactionJournal.MutableEntry entry = getJournal().newEntry();
+        final TransactionJournal.MutableEntry entry = getJournal().newMutableEntry();
         return new UnixFSReadWriteTransaction(entry);
     }
 
     @Override
     public ExclusiveReadWriteTransaction openExclusiveRW() {
         final Monitor monitor = getJournal().getExclusiveMonitor();
-        final TransactionJournal.MutableEntry entry = getJournal().newEntry();
+        final TransactionJournal.MutableEntry entry = getJournal().newMutableEntry();
         return new UnixFSExclusiveReadWriteTransaction(entry, monitor);
     }
 
@@ -272,7 +272,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public Stream<ResourceId> removeAllResources() {
-            return journal.removeAllResources();
+            return journal.clear();
         }
 
         @Override

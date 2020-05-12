@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.transact;
 
+import com.namazustudios.socialengine.rt.util.LazyValue;
+
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
@@ -155,7 +157,7 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     }
 
     /**
-     * A conveineince wrapper around the {@link Optional<ValueT>} returned by this instance's {@link #getValue()}
+     * A convenience wrapper around the {@link Optional<ValueT>} returned by this instance's {@link #getValue()}
      * method.  The supplied {@link Function} will map the value according to the rules spelled out by
      * {@link Optional#map(Function)}
      *
@@ -165,22 +167,43 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      */
     default <U> Revision<U> map(final Function<ValueT, U> mapper) {
         return new Revision<U>() {
-
             @Override
-            public int compareTo(Revision<?> o) {
-                return Revision.this.compareTo(o);
-            }
-
+            public int compareTo(Revision<?> o) {  return Revision.this.compareTo(o); }
             @Override
-            public String getUniqueIdentifier() {
-                return Revision.this.getUniqueIdentifier();
-            }
-
+            public String getUniqueIdentifier() { return Revision.this.getUniqueIdentifier(); }
             @Override
-            public Optional<U> getValue() {
-                return Revision.this.getValue().map(mapper);
-            }
+            public Optional<U> getValue() { return Revision.this.getValue().map(mapper); }
+        };
+    }
 
+    /**
+     * Returns a new {@link Revision<U>} with the supplied value.  Useful if the current revision does not have a value
+     * and you are willing to supply the value.
+     *
+     * @param value the value to set
+     * @param <U> the type of the value
+     *
+     * @return a new {@link Revision} with a new value
+     */
+    default <U> Revision<U> withValue(final U value) {
+        return withOptionalValue(Optional.of(value));
+    }
+
+    /**
+     * Returns a new {@link Revision<U>} with the supplied {@link Optional<U>} value.
+     *
+     * @param optionalValue an {@link Optional<U>} representing the value.
+     * @param <U> the
+     * @return
+     */
+    default <U> Revision<U> withOptionalValue(final Optional<U> optionalValue) {
+        return new Revision<U>() {
+            @Override
+            public int compareTo(Revision<?> o) { return Revision.this.compareTo(o); }
+            @Override
+            public String getUniqueIdentifier() { return Revision.this.getUniqueIdentifier(); }
+            @Override
+            public Optional<U> getValue() { return optionalValue; }
         };
     }
 
@@ -192,23 +215,28 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      */
     default <T> Revision<T> comparableTo() {
         return new Revision<T>() {
-
             @Override
-            public int compareTo(final Revision<?> o) {
-                return Revision.this.compareTo(o);
-            }
-
+            public int compareTo(final Revision<?> o) { return Revision.this.compareTo(o); }
             @Override
-            public String getUniqueIdentifier() {
-                return Revision.this.getUniqueIdentifier();
-            }
-
+            public String getUniqueIdentifier() { return Revision.this.getUniqueIdentifier(); }
             @Override
-            public <U> Revision<U> comparableTo() {
-                return Revision.this.comparableTo();
-            }
-
+            public <U> Revision<U> comparableTo() { return Revision.this.comparableTo(); }
         };
+    }
+
+    interface Factory {
+
+        /**
+         * Creates a {@link Revision<T>} with the supplied revision ID and value.  This parses the revision ID, as specified
+         * by the {@link Revision#getUniqueIdentifier()}.  The resulting {@link Revision<T>} will have an
+         * {@link Optional<T>} associated with it which has the specified value.
+         *
+         * @param at a string indicating the unique revision ID.
+         * @param <T>
+         * @return a new {@link Revision<T>} instance
+         */
+        <T> Revision<T> create(String at);
+
     }
 
 }

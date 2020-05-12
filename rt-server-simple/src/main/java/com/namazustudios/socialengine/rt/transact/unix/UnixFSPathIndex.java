@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.PathIndex;
 import com.namazustudios.socialengine.rt.transact.Revision;
-import com.namazustudios.socialengine.rt.transact.RevisionFactory;
 import com.namazustudios.socialengine.rt.transact.RevisionMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,7 +31,7 @@ public class UnixFSPathIndex implements PathIndex {
 
     private final UnixFSUtils utils;
 
-    private final RevisionFactory revisionFactory;
+    private final Revision.Factory revisionFactory;
 
     private final UnixFSGarbageCollector garbageCollector;
 
@@ -42,7 +41,7 @@ public class UnixFSPathIndex implements PathIndex {
     public UnixFSPathIndex(
             final NodeId nodeId,
             final UnixFSUtils utils,
-            final RevisionFactory revisionFactory,
+            final Revision.Factory revisionFactory,
             final UnixFSGarbageCollector garbageCollector) {
         this.nodeId = nodeId;
         this.utils = utils;
@@ -71,7 +70,7 @@ public class UnixFSPathIndex implements PathIndex {
                     .filter(optional -> optional.isPresent() && !optional.get().isTombstone())
                     .map(optional -> optional.get());
 
-            return revisionFactory.create(revision, listings);
+            return revision.withValue(listings);
 
         });
 
@@ -191,7 +190,7 @@ public class UnixFSPathIndex implements PathIndex {
                                                final com.namazustudios.socialengine.rt.Path key) {
             final PathMapping mapping = new PathMapping(key);
             final Optional<RevisionListing> optionalRevisionListing = loadRevisionListing(mapping, revision);
-            return revisionFactory.createOptional(revision, optionalRevisionListing.map(l -> l.getResourceId()));
+            return revision.withOptionalValue(optionalRevisionListing).map(l -> l.resourceId);
         }
 
     }
