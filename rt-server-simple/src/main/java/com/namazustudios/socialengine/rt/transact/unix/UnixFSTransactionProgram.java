@@ -44,7 +44,7 @@ public class UnixFSTransactionProgram {
             return null;
         }
 
-        public Builder remove(final UnixFSTransactionCommand.Phase phase, final ResourceId resourceId) {
+        public Builder removeResource(final UnixFSTransactionCommand.Phase phase, final ResourceId resourceId) {
             return this;
         }
 

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
@@ -117,14 +116,8 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     @Override
     public ResourceService.Unlink unlinkPath(final Path path) throws TransactionConflictException {
         check();
-
         if (path.isWildcard()) throw new IllegalArgumentException("Wildcard paths not supported.");
-
-        // Gets the ResourceId from the working copy. Throwing if it does not exist for this revision.
-        if (!workingCopy.isPresent(path)) throw new ResourceNotFoundException("No resource at " + path);
-        optimisticLocking.lock(path);
         return workingCopy.unlink(path, () -> programBuilder.unlinkResource(COMMIT, path));
-
     }
 
     @Override
@@ -136,78 +129,30 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
         return workingCopy.unlinkMultiple(path, max, (fqPath, resourceId, remove) -> {
             programBuilder.unlinkResource(COMMIT, fqPath);
-            if (remove) programBuilder.remove(COMMIT, resourceId);
+            if (remove) programBuilder.removeResource(COMMIT, resourceId);
         });
-
-//        final List<ResourceId> toPurge = new ArrayList<>();
-//        final Map<ResourceId, Set<Path>> allPaths = new HashMap<>();
-//
-//        unixFSPathIndex
-//            .list(revision, path)
-//            .getValue()
-//            .ifPresent(ls -> ls.forEach(l -> {
-//
-//                final Set<Path> paths = unixFSPathIndex
-//                    .getReverseRevisionMap()
-//                    .getValueAt(revision, l.getResourceId())
-//                    .getValue().orElseThrow(() -> new FatalException("Reverse path mismatch."));
-//
-//                allPaths
-//                    .computeIfAbsent(l.getResourceId(), rid -> new TreeSet<>())
-//                    .addAll(paths);
-//
-//            }));
-
-//        for (final Map.Entry<ResourceId, Set<Path>> entry : allPaths.entrySet()) {
-//            optimisticLocking.lock(entry.getKey());
-//            optimisticLocking.lockPaths(entry.getValue());
-//        }
-//
-//        return toPurge
-//            .stream()
-//            .map(resourceId -> {
-//
-//                allPaths.get(resourceId).remove(resourceId);
-//
-//                final boolean removed = allPaths.get(resourceId).isEmpty();
-//
-//                programBuilder.unlinkResource(COMMIT, path);
-//                programBuilder.remove(COMMIT, resourceId);
-//
-//
-//
-//                return new ResourceService.Unlink() {
-//
-//
-//                    @Override
-//                    public ResourceId getResourceId() {
-//                        return resourceId;
-//                    }
-//
-//                    @Override
-//                    public boolean isRemoved() {
-//                        return removed;
-//                    }
-//
-//                };
-//
-//            }).collect(toList());
 
     }
 
     @Override
     public void removeResource(final ResourceId resourceId) throws TransactionConflictException {
         check();
-        workingCopy.removeResource(resourceId, () -> programBuilder.remove(COMMIT, resourceId));
+        workingCopy.removeResource(resourceId, path -> programBuilder.unlinkResource(COMMIT, path));
+        programBuilder.removeResource(COMMIT, resourceId);
     }
 
     @Override
     public List<ResourceId> removeResources(final Path path, final int max) throws TransactionConflictException {
+
         check();
 
-        return workingCopy.removeResources(path, max,
-            (fqPath, resourceId) -> programBuilder.remove(COMMIT, resourceId)
-                                                  .deletePath(COMMIT, fqPath));
+        final List<ResourceId> removed = workingCopy.removeResources(
+            path, max,
+            (fqPath, resourceId) -> programBuilder.deletePath(COMMIT, fqPath)
+        );
+
+        removed.forEach(resourceId -> programBuilder.removeResource(COMMIT, resourceId));
+        return removed;
 
     }
 
