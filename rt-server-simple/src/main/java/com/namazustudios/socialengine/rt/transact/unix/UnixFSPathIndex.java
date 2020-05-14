@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.getSizeInBytes;
@@ -53,6 +54,12 @@ public class UnixFSPathIndex implements PathIndex {
     @Override
     public RevisionMap<com.namazustudios.socialengine.rt.Path, ResourceId> getRevisionMap() {
         return pathRevisionMap;
+    }
+
+    @Override
+    public RevisionMap<ResourceId, Set<com.namazustudios.socialengine.rt.Path>> getReverseRevisionMap() {
+        // TODO Implement This
+        return null;
     }
 
     @Override
@@ -186,7 +193,7 @@ public class UnixFSPathIndex implements PathIndex {
     private class PathRevisionMap implements RevisionMap<com.namazustudios.socialengine.rt.Path, ResourceId> {
 
         @Override
-        public Revision<ResourceId> getValueAt(final Revision<ResourceId> revision,
+        public Revision<ResourceId> getValueAt(final Revision<?> revision,
                                                final com.namazustudios.socialengine.rt.Path key) {
             final PathMapping mapping = new PathMapping(key);
             final Optional<RevisionListing> optionalRevisionListing = loadRevisionListing(mapping, revision);

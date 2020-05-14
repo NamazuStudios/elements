@@ -12,13 +12,14 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Random;
+import java.util.concurrent.ThreadLocalRandom;
 
 import static com.namazustudios.socialengine.rt.transact.Revision.zero;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionDataStore.STORAGE_ROOT_DIRECTORY;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.JOURNAL_PATH;
 import static java.lang.String.format;
-import static java.nio.file.Files.deleteIfExists;
-import static java.nio.file.Files.isDirectory;
+import static java.nio.file.Files.*;
 import static java.nio.file.Paths.get;
 import static java.util.Comparator.naturalOrder;
 
@@ -35,6 +36,12 @@ public class UnixFSUtils {
 
     public static final String RESOURCES_DIRECTORY = "resources";
 
+    public static final String TEMPORARY_DIRECTORY = "resources";
+
+    private static final int TEMP_NAME_LENGTH_CHARS = 128;
+
+    private static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyz0123456789-";
+
     private final Revision.Factory revisionFactory;
 
     private final Path journalPath;
@@ -42,6 +49,8 @@ public class UnixFSUtils {
     private final Path pathStorageRoot;
 
     private final Path resourceStorageRoot;
+
+    private final Path temporaryFileDirectory;
 
     @Inject
     public UnixFSUtils(
@@ -52,6 +61,7 @@ public class UnixFSUtils {
         this.revisionFactory = revisionFactory;
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath();
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath();
+        this.temporaryFileDirectory= storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath();
     }
 
     /**
@@ -170,6 +180,58 @@ public class UnixFSUtils {
          * @throws IOException for any reason.
          */
         void perform() throws IOException;
+
+        default IOOperationV butFirstPerform(final IOOperationV next) {
+            return () -> {
+                try {
+                    next.perform();
+                } finally {
+                    perform();
+                }
+            };
+        }
+
+        default IOOperationV andThen(IOOperationV next) {
+            return () -> {
+                try {
+                    perform();
+                } finally {
+                    next.perform();
+                }
+            };
+        }
+
+    }
+
+    /**
+     * Allocates a file in the temporary directory that can be atomically linked to a permanently stored file.
+     *
+     * @return the {@link Path} to the file.
+     */
+    public Path allocateTemporaryFile() {
+
+        final Random random = ThreadLocalRandom.current();
+
+        do {
+
+            final StringBuilder stringBuilder = new StringBuilder();
+
+            for (int i = 0; i < TEMP_NAME_LENGTH_CHARS; ++i) {
+                final int index = random.nextInt(TEMP_FILE_CHARACTERS.length());
+                stringBuilder.append(TEMP_FILE_CHARACTERS.charAt(index));
+            }
+
+            final Path temporaryFile = temporaryFileDirectory.resolve(stringBuilder.toString());
+
+            try {
+                return Files.createFile(temporaryFile);
+            } catch (FileAlreadyExistsException ex) {
+                continue;
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            }
+
+        } while (true);
 
     }
 

@@ -91,7 +91,7 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
 
     /**
      * A special type of Revision that is after all other {@link Revision} instances.
-     *
+     *placehodler
      * @return the infinity revision
      */
     static <U> Revision<U> infinity() {

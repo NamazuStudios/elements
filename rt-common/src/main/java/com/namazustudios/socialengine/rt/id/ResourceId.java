@@ -120,6 +120,24 @@ public class ResourceId implements Serializable, HasNodeId {
     }
 
     /**
+     * Creates a new unique {@link ResourceId}, with a random {@link NodeId}.  Essentially, this creates an anonymous
+     * {@link ResourceId} that will never match an actual {@link Resource} in the cluster. This is useful for making
+     * placeholder values to represent "null" in caches or other instances.
+     */
+    public static ResourceId randomResourceId() {
+        try {
+            return new ResourceId(new V1CompoundId.Builder()
+                    .with(NodeId.randomNodeId().v1CompoundId)
+                    .with(RESOURCE, UUID.randomUUID())
+                    .only(INSTANCE, APPLICATION, RESOURCE)
+                    .build()
+            );
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidResourceIdException(ex);
+        }
+    }
+
+    /**
      * Creates a new unique {@link ResourceId}, specifying the {@link NodeId}
      */
     public static ResourceId randomResourceIdForNode(final NodeId nodeId) {

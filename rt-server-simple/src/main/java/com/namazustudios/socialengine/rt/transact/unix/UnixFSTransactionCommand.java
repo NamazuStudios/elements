@@ -17,6 +17,11 @@ public class UnixFSTransactionCommand {
         /**
          * The instruction to execute.
          */
+        public final Enum16<Phase> phase = new Enum16<>(Phase.values());
+
+        /**
+         * The instruction to execute.
+         */
         public final Enum16<Instruction> instruction = new Enum16<>(Instruction.values());
 
         /**
@@ -45,5 +50,23 @@ public class UnixFSTransactionCommand {
          */
         UNLINK_FS_PATH
     }
+
+    /**
+     * Indicates the phase of the a
+     */
+    public enum Phase {
+
+        /**
+         * Happens in the commit phase.
+         */
+        COMMIT,
+
+        /**
+         * Happens in the cleanup phase.
+         */
+        CLEANUP
+
+    }
+
 
 }

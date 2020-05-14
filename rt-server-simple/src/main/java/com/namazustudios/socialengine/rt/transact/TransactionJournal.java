@@ -69,55 +69,55 @@ public interface TransactionJournal extends AutoCloseable {
         @Override
         void close();
 
-        /**
-         * Checks that the supplied {@link ResourceId} exists for this journal entry.  If this journal entry has no
-         * knowledge of the existence of this {@link ResourceId}.  For example, the specified {@link ResourceId} may
-         * have been removed at the associated revision and not yet removed from the backing storage scheme.  Likewise,
-         * the journal entry may contain the actual serialized bytes of the {@link Resource}, but it has not yet been
-         * written to the disk in its expected location.
-         *
-         * @param resourceId the {@link ResourceId}
-         * @return a {@link Revision<Boolean>} that, if present, indicates whether or not the {@link ResourceId} exists.
-         */
-        Revision<Boolean> exists(ResourceId resourceId);
-
-        /**
-         * Returns a {@link Spliterator<ResourceService.Listing>} for all matching resource IDs at the supplied
-         * {@link Path}.
-         *
-         * @param path the path
-         * @return the {@link Spliterator<ResourceService.Listing>} representing the resource IDs at the path.
-         */
-        Revision<Stream<ResourceService.Listing>> list(Path path);
-
-        /**
-         * Gets the {@link ResourceId} associated with the path, if it is available in the current journal entry.
-         *
-         * @param path the path to fetch.
-         *
-         * @return the {@link ResourceId} revision
-         */
-        Revision<ResourceId> getResourceId(Path path);
-
-        /**
-         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} at the supplied {@link Path}
-         * @param path the path to load
-         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
-         * @throws IOException
-         * @throws ResourceNotFoundException
-         */
-        Revision<ReadableByteChannel> loadResourceContents(Path path) throws IOException;
-
-        /**
-         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} with the supplied
-         * {@link ResourceId}.
-         *
-         * @param resourceId the respirce id to load
-         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
-         * @throws IOException
-         * @throws ResourceNotFoundException
-         */
-        Revision<ReadableByteChannel> loadResourceContents(ResourceId resourceId) throws IOException;
+//        /**
+//         * Checks that the supplied {@link ResourceId} exists for this journal entry.  If this journal entry has no
+//         * knowledge of the existence of this {@link ResourceId}.  For example, the specified {@link ResourceId} may
+//         * have been removed at the associated revision and not yet removed from the backing storage scheme.  Likewise,
+//         * the journal entry may contain the actual serialized bytes of the {@link Resource}, but it has not yet been
+//         * written to the disk in its expected location.
+//         *
+//         * @param resourceId the {@link ResourceId}
+//         * @return a {@link Revision<Boolean>} that, if present, indicates whether or not the {@link ResourceId} exists.
+//         */
+//        Revision<Boolean> exists(ResourceId resourceId);
+//
+//        /**
+//         * Returns a {@link Spliterator<ResourceService.Listing>} for all matching resource IDs at the supplied
+//         * {@link Path}.
+//         *
+//         * @param path the path
+//         * @return the {@link Spliterator<ResourceService.Listing>} representing the resource IDs at the path.
+//         */
+//        Revision<Stream<ResourceService.Listing>> list(Path path);
+//
+//        /**
+//         * Gets the {@link ResourceId} associated with the path, if it is available in the current journal entry.
+//         *
+//         * @param path the path to fetch.
+//         *
+//         * @return the {@link ResourceId} revision
+//         */
+//        Revision<ResourceId> getResourceId(Path path);
+//
+//        /**
+//         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} at the supplied {@link Path}
+//         * @param path the path to load
+//         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
+//         * @throws IOException
+//         * @throws ResourceNotFoundException
+//         */
+//        Revision<ReadableByteChannel> loadResourceContents(Path path) throws IOException;
+//
+//        /**
+//         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} with the supplied
+//         * {@link ResourceId}.
+//         *
+//         * @param resourceId the respirce id to load
+//         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
+//         * @throws IOException
+//         * @throws ResourceNotFoundException
+//         */
+//        Revision<ReadableByteChannel> loadResourceContents(ResourceId resourceId) throws IOException;
 
     }
 
@@ -174,7 +174,7 @@ public interface TransactionJournal extends AutoCloseable {
          *
          * @return a {@link List< Unlink>} indicating the result of each operation
          */
-        List<Unlink> unlinkMultiple(Path path, int max);
+        List<Unlink> unlinkMultiple(Path path, int max) throws TransactionConflictException;
 
         /**
          * Removes a {@link ResourceId}, implicitly deleting all {@link Path} references to it.
@@ -191,7 +191,7 @@ public interface TransactionJournal extends AutoCloseable {
          * @param max the maximum number to remove
          * @return the {@link List<ResourceId>} instances of the removed {@link Resource}s
          */
-        List<ResourceId> removeResources(Path path, int max);
+        List<ResourceId> removeResources(Path path, int max) throws TransactionConflictException;
 
         /**
          * Commits the pending changes to the {@link TransactionJournal}.  Once this is done the next subsequent
@@ -206,6 +206,7 @@ public interface TransactionJournal extends AutoCloseable {
          * @return true if the transaction was committed
          */
         boolean isCommitted();
+
     }
 
  }

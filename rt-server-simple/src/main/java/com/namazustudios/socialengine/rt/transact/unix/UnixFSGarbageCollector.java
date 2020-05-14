@@ -47,11 +47,6 @@ public class UnixFSGarbageCollector {
         // TODO Implement This Method
     }
 
-    public Path allocateTemporaryFile() {
-        // TODO Implement This Method
-        return null;
-    }
-
     public void unlinkTemporary(final Path temporaryFile) {
         // TODO Implement This Method
     }

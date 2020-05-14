@@ -1,15 +1,11 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.SetMultimap;
 import com.namazustudios.socialengine.rt.Monitor;
-import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
-import com.namazustudios.socialengine.rt.util.LazyValue;
-import com.namazustudios.socialengine.rt.Path;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,25 +16,20 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.nio.channels.WritableByteChannel;
-import java.util.*;
-import java.util.Spliterators.AbstractSpliterator;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.function.Consumer;
 import java.util.stream.Stream;
 
-import static java.lang.Long.MAX_VALUE;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.concurrent.ConcurrentHashMap.newKeySet;
-import static java.util.stream.StreamSupport.stream;
 
 public class UnixFSTransactionJournal implements TransactionJournal {
 
@@ -94,7 +85,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private final AtomicLong current = new AtomicLong();
 
-    private final Map<Object, MutableEntry> lockedResources = new ConcurrentHashMap<>();
+    private final Map<Object, Object> lockedResources = new ConcurrentHashMap<>();
 
     // Set in constructor
 
@@ -196,25 +187,67 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     @Override
     public Entry getCurrentEntry() {
+
+        boolean unlock = true;
+
         try {
             rLock.lock();
             final Revision<?> nextRevision = unixFSRevisionPool.nextRevision(current);
-            final Entry entry = new UnixFSJournalEntry(nextRevision);
+            final Entry entry = new UnixFSJournalEntry(nextRevision, rLock::unlock);
+            unlock = false;
             return entry;
         } finally {
-            rLock.unlock();
+            if (unlock) rLock.unlock();
         }
+
     }
 
     @Override
     public MutableEntry newMutableEntry() {
+
+        boolean unlock = true;
+
+        final UnixFSOptimisticLocking optimisticLocking = new UnixFSOptimisticLocking() {
+
+            final List<Object> toRelease = new ArrayList<>();
+
+            private void lock(final Object object) throws TransactionConflictException {
+
+                final Object existing = lockedResources.putIfAbsent(object, this);
+
+                if (existing == null || existing == this) {
+                    toRelease.add(object);
+                } else {
+                    throw new TransactionConflictException();
+                }
+
+            }
+
+            @Override
+            public void lock(final Path path) throws TransactionConflictException {
+                lock((Object)path);
+            }
+
+            @Override
+            public void lock(final ResourceId resourceId) throws TransactionConflictException {
+                lock((Object)resourceId);
+            }
+
+            @Override
+            public void unlock() {
+                lockedResources.keySet().removeAll(toRelease);
+            }
+
+        };
+
         try {
             rLock.lock();
             final Revision<?> nextRevision = unixFSRevisionPool.nextRevision(current);
-            final MutableEntry entry = new UnixFSJournalMutableEntry(nextRevision);
+            final MutableEntry entry = null; // TODO Fix This
+            unlock = false;
             return entry;
         } finally {
-            rLock.unlock();
+            if (unlock) rLock.unlock();
         }
     }
 
@@ -257,295 +290,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     public void close() {
         journalBuffer.force();
         utils.unlockDirectory(lockFilePath);
-    }
-
-    private class UnixFSJournalEntry implements Entry {
-
-        protected boolean open = true;
-
-        protected final Revision<?> revision;
-
-        protected final LazyValue<SortedMap<Path, ResourceId>> pathMap;
-
-        protected final LazyValue<SetMultimap<ResourceId, Path>> reversePathMap;
-
-        public UnixFSJournalEntry(final Revision revision) {
-            rLock.lock();
-            this.revision = revision;
-            this.pathMap = new LazyValue<>(TreeMap::new);
-            this.reversePathMap = new LazyValue<>(HashMultimap::create);
-        }
-
-        @Override
-        public Revision<?> getRevision() {
-            check();
-            return revision;
-        }
-
-        @Override
-        public void close() {
-            if (open) {
-                try {
-                    open = false;
-                    unixFSGarbageCollector.unlock(revision);
-                } finally {
-                    rLock.unlock();
-                }
-            }
-        }
-
-        @Override
-        public Revision<Boolean> exists(final ResourceId resourceId) {
-            check();
-
-            final Optional<Boolean> optionalBoolean =  pathMap
-                .getOptional()
-                .map(v -> v.containsKey(resourceId));
-
-            return revision.withOptionalValue(optionalBoolean);
-
-        }
-
-        @Override
-        public Revision<Stream<ResourceService.Listing>> list(final com.namazustudios.socialengine.rt.Path path) {
-            check();
-
-            final Stream<ResourceService.Listing> listingStream;
-
-            if (path.isWildcard()) {
-                listingStream = listMultiple(path);
-            } else {
-                listingStream = listSingular(path);
-            }
-
-            return revision.withValue(listingStream);
-
-        }
-
-        private Stream<ResourceService.Listing> listSingular(final com.namazustudios.socialengine.rt.Path path) {
-            return pathMap
-                .getOptional()
-                .flatMap(map -> Optional.ofNullable(map.get(path)))
-                .map(resourceId -> new EntryListing(path, resourceId))
-                .map(ResourceService.Listing.class::cast)
-                .map(Stream::of)
-                .orElseGet(Stream::empty);
-        }
-
-        private Stream<ResourceService.Listing> listMultiple(final com.namazustudios.socialengine.rt.Path path) {
-            final com.namazustudios.socialengine.rt.Path first = path.stripWildcard();
-            return pathMap.getOptional().map(map -> stream(
-                    new AbstractSpliterator<ResourceService.Listing>(MAX_VALUE, 0) {
-
-                        final Iterator<Map.Entry<Path, ResourceId>> iterator = map
-                            .headMap(first)
-                            .entrySet()
-                            .iterator();
-
-                        @Override
-                        public boolean tryAdvance(final Consumer<? super ResourceService.Listing> consumer) {
-
-                            // Check we actually can find the value.
-                            if (!iterator.hasNext()) return false;
-
-                            // Check that the current entry matches the original wildcard path
-                            final Map.Entry<Path, ResourceId> current = iterator.next();
-                            if (!path.matches(current.getKey())) return false;
-
-                            // Finally if both tests pass, then we can make the entry and supply it ot the spliterator
-                            consumer.accept(new EntryListing(current));
-                            return true;
-
-                        }
-
-                    }, false)
-            ).orElseGet(Stream::empty);
-        }
-
-        @Override
-        public Revision<ResourceId> getResourceId(final Path path) {
-            check();
-            final Optional<ResourceId> resourceIdOptional = pathMap.getOptional().map(m -> m.get(path));
-            return revision.withOptionalValue(resourceIdOptional);
-        }
-
-        @Override
-        public Revision<ReadableByteChannel> loadResourceContents(final Path path) throws IOException {
-            check();
-            return revision.withOptionalValue(Optional.empty());
-        }
-
-        @Override
-        public Revision<ReadableByteChannel> loadResourceContents(final ResourceId resourceId) throws IOException {
-            check();
-            return revision.withOptionalValue(Optional.empty());
-        }
-
-        protected void check() {
-            if (!open) throw new IllegalStateException();
-        }
-
-    }
-
-    private class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements MutableEntry {
-
-        private boolean committed = false;
-
-        private final LazyValue<Map<ResourceId, Path>> temporaryResourceFiles;
-
-        private final ArrayList<Object> toRelease = new ArrayList<>();
-
-        private final UnixFSTransactionProgram.Builder programBuilder = programBuilderProvider.get();
-
-        public UnixFSJournalMutableEntry(final Revision<?> revision) {
-            super(revision);
-            this.temporaryResourceFiles = new LazyValue<>(HashMap::new);
-        }
-
-        @Override
-        public WritableByteChannel saveNewResource(
-                final com.namazustudios.socialengine.rt.Path path,
-                final ResourceId resourceId) throws IOException, TransactionConflictException {
-
-            check();
-
-            lock(path);
-            lock(resourceId);
-
-            final java.nio.file.Path temporaryFile = unixFSGarbageCollector.allocateTemporaryFile();
-            final FileChannel fileChannel = FileChannel.open(temporaryFile, WRITE);
-
-            return new WritableByteChannel() {
-                @Override
-                public int write(ByteBuffer byteBuffer) throws IOException {
-                    return fileChannel.write(byteBuffer);
-                }
-
-                @Override
-                public boolean isOpen() {
-                    return fileChannel.isOpen();
-                }
-
-                @Override
-                public void close() throws IOException {
-                    fileChannel.close();
-                    programBuilder.link(temporaryFile, resourceId)
-                                  .link(temporaryFile, path)
-                                  .unlink(temporaryFile);
-                }
-
-            };
-
-        }
-
-        @Override
-        public void linkNewResource(
-                final ResourceId sourceResourceId,
-                final com.namazustudios.socialengine.rt.Path path) throws TransactionConflictException {
-            check();
-            lock(path);
-            lock(sourceResourceId);
-            programBuilder.linkResource(sourceResourceId, path);
-        }
-
-        @Override
-        public void linkExistingResource(
-                final ResourceId sourceResourceId,
-                final com.namazustudios.socialengine.rt.Path destination) throws TransactionConflictException {
-            check();
-            lock(sourceResourceId);
-            lock(destination);
-            programBuilder.linkResource(sourceResourceId, destination);
-        }
-
-        @Override
-        public ResourceService.Unlink unlinkPath(final com.namazustudios.socialengine.rt.Path path) throws TransactionConflictException {
-            if (path.isWildcard()) throw new IllegalArgumentException("Wildcard paths not supported.");
-            check();
-            lock(path);
-            programBuilder.unlink(path);
-            return null;
-        }
-
-        @Override
-        public List<ResourceService.Unlink> unlinkMultiple(
-                final com.namazustudios.socialengine.rt.Path path,
-                final int max) {
-            check();
-            return null;
-        }
-
-        @Override
-        public void removeResource(final ResourceId resourceId) throws TransactionConflictException {
-            check();
-            lock(resourceId);
-        }
-
-        @Override
-        public List<ResourceId> removeResources(
-                final com.namazustudios.socialengine.rt.Path path,
-                final int max) {
-            if (path.isWildcard()) throw new IllegalArgumentException("Wildcard paths not supported.");
-            check();
-            return null;
-        }
-
-        @Override
-        public void commit() {
-            check();
-            committed = true;
-        }
-
-        @Override
-        public boolean isCommitted() {
-            return committed;
-        }
-
-        @Override
-        protected void check() {
-            super.check();
-            if (committed) throw new IllegalStateException();
-        }
-
-        private void lock(final Object object) throws TransactionConflictException {
-
-            final MutableEntry entry = lockedResources.putIfAbsent(object, this);
-
-            if (entry == this || entry == null) {
-                toRelease.add(object);
-            } else {
-                throw new TransactionConflictException();
-            }
-
-        }
-
-    }
-
-    private static class EntryListing implements ResourceService.Listing {
-
-        private final Path path;
-
-        private final ResourceId resourceId;
-
-        public EntryListing(final Path path, final ResourceId resourceId) {
-            this.path = path;
-            this.resourceId = resourceId;
-        }
-
-        public EntryListing(final Map.Entry<Path, ResourceId> current) {
-            this(current.getKey(), current.getValue());
-        }
-
-        @Override
-        public Path getPath() {
-            return path;
-        }
-
-        @Override
-        public ResourceId getResourceId() {
-            return resourceId;
-        }
-
     }
 
 }

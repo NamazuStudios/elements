@@ -5,6 +5,6 @@ import java.util.SortedSet;
 
 public interface RevisionMap<KeyT, ValueT> {
 
-    Revision<ValueT> getValueAt(final Revision<ValueT> revision, final KeyT key);
+    Revision<ValueT> getValueAt(final Revision<?> revision, final KeyT key);
 
 }
