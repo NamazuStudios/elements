@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest.guice;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.Constants;
@@ -15,11 +14,9 @@ import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
-import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
-import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
-import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
-import com.namazustudios.socialengine.service.notification.guice.NotificationServiceModule;
+import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.service.guice.*;
+import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.apache.bval.guice.ValidationModule;
 
@@ -71,16 +68,17 @@ public class RestAPIModule extends AbstractModule {
                         enableAllResources();
                     }
         });
-        install(new ServicesModule());
+        install(new RestAPIServicesModule());
         install(new NotificationServiceModule());
         install(new GuiceStandardNotificationFactoryModule());
         install(new FirebaseAppFactoryModule());
-        install(new RedissonServicesModule());
-        install(new SecurityModule());
+        install(new RestAPIRedissonServicesModule());
+        install(new RestAPISecurityModule());
         install(new MongoCoreModule());
         install(new MongoDaoModule());
         install(new MongoSearchModule());
         install(new RTFilesystemGitLoaderModule());
+        install(new ZContextModule());
         install(new RTDaoModule());
         install(new RTGitApplicationModule());
         install(new ValidationModule());

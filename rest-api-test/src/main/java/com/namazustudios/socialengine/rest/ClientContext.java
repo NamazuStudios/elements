@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
@@ -15,7 +14,7 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.DAYS;

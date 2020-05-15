@@ -3,12 +3,11 @@ package com.namazustudios.socialengine.service.mission;
 import com.namazustudios.socialengine.dao.MissionDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.mission.Mission;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Set;
 
 public class AnonMissionService implements MissionService {
 

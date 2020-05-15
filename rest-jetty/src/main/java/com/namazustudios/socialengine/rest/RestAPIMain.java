@@ -50,7 +50,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
     public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
 
-    public static final int DEFAULT_PORT = 8080;
+    public static final int DEFAULT_PORT = 8081;
 
     public static final Stage DEFAULT_STAGE = DEVELOPMENT;
 

@@ -11,7 +11,7 @@ local resource = require "namazu.resource"
 
 local auth = require "namazu.socialengine.auth"
 
-local User = java.require "com.namazustudios.socialengine.model.User"
+local User = java.require "com.namazustudios.socialengine.model.user.User"
 local Profile = java.require "com.namazustudios.socialengine.model.profile.Profile"
 
 local responsecode = require "namazu.response.code"
@@ -35,7 +35,7 @@ function test_auth.test_facebook_security_manifest()
     assert(spec ~= nil, "Session Secret spec nil.")
     assert(description ~= nil, "Session Secret description nil.")
 
-    assert(spec["name"] == "SocialEngine-SessionSecret", "Expected 'Authorization.'  Got: " .. tostring(spec["name"]))
+    assert(spec["name"] == "Elements-SessionSecret", "Expected 'Elements-SessionSecret.'  Got: " .. tostring(spec["name"]))
     assert(spec["description"] == "The header containing the session secret.", "Got: " .. tostring(spec["description"]))
     assert(spec["type"] == "string", "Expected 'string'.  Got: " .. tostring(spec["type"]))
 

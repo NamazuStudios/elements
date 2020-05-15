@@ -2,11 +2,10 @@ package com.namazustudios.socialengine.service.profile;
 
 
 import com.namazustudios.socialengine.dao.ProfileDao;
-import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;

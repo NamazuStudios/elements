@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import org.bson.types.ObjectId;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
@@ -12,7 +12,7 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static java.lang.Thread.sleep;
 import static java.util.UUID.randomUUID;

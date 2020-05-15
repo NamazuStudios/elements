@@ -2,8 +2,9 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 
 import java.util.Objects;
 
@@ -84,46 +85,21 @@ public interface UserService {
     Pagination<User> getUsers(int offset, int count, String search);
 
     /**
-     * Creates a new user.
+     * Creates a new user.  The service may override or reject the request based on the current user access level.
      *
-     * @param user the user to create
-     * @return the User, as it was create
+     * @param userCreateRequest the user to create
+     * @return the User, as it was created by the database
      */
-    User createUser(final User user);
+    User createUser(UserCreateRequest userCreateRequest);
 
     /**
-     * Creates a user with the given password.  The password must be non-null, non-empty
+     * Updates a user, preserving the user's password.
      *
-     * @param user the User object
-     * @param password the newly created User's password
-     * @return the User, as it was created in the database
-     */
-    User createUser(final User user, final String password);
-
-    /**
-     * Signs up a new user.
-     *
-     * @param userCreateRequest the details to use when creating the user
-     * @return the User, as it was create
-     */
-    User createUser(final UserCreateRequest userCreateRequest);
-
-    /**
-     * Updates a user.
-     *
+     * @param userId  the user ID to update
      * @param user the user to update
      * @return the User, as it was updated
      */
-    User updateUser(final User user);
-
-    /**
-     * Updates a user.
-     *
-     * @param user the user to update
-     * @param password the user's password
-     * @return the User, as it was updated
-     */
-    User updateUser(final User user, final String password);
+    User updateUser(String userId, UserUpdateRequest userUpdateRequest);
 
     /**
      * Removes a user from the system, effectively deleting his/her account.

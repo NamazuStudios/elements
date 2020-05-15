@@ -19,6 +19,7 @@ public class LuaBootstrapper implements Bootstrapper {
         BOOTSTRAP_RESOURCES = new ImmutableMap.Builder<Path, Supplier<InputStream>>()
                 .put(new Path("main.lua"), () -> getClass().getResourceAsStream("/main.lua"))
                 .put(new Path("example/model.lua"), () -> getClass().getResourceAsStream("/example/model.lua"))
+                .put(new Path("example/startup.lua"), () -> getClass().getResourceAsStream("/example/startup.lua"))
                 .put(new Path("example/hello_world.lua"), () -> getClass().getResourceAsStream("/example/hello_world.lua"))
             .build();
     }

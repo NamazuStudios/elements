@@ -10,13 +10,12 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
-import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
+import com.namazustudios.socialengine.service.Unscoped;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.handler.ContextHandler;
-import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
@@ -24,15 +23,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.servlet.DispatcherType;
 import java.io.File;
-import java.util.EnumSet;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
@@ -89,12 +85,11 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final String path = format("/%s/%s", PATH_PREFIX, application.getName());
         final DispatcherServlet dispatcherServlet = injector.getInstance(DispatcherServlet.class);
-        final SessionIdAuthenticationFilter sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
+        final RequestAttributeUserFilter requestAttributeUserFilter = injector.getInstance(RequestAttributeUserFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(path);
         servletContextHandler.addServlet(new ServletHolder(dispatcherServlet), "/*");
-        servletContextHandler.addFilter(new FilterHolder(sessionIdAuthenticationFilter), "/*", EnumSet.allOf(DispatcherType.class));
         return servletContextHandler;
 
     }
@@ -170,7 +165,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     }
 
     @Inject
-    public void setApplicationService(ApplicationService applicationService) {
+    public void setApplicationService(@Unscoped ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
 

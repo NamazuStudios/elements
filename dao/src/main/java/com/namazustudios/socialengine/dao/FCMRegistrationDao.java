@@ -42,7 +42,7 @@ public interface FCMRegistrationDao {
 
     /**
      * Deletes an instance of {@link FCMRegistration} based on the supplied id.  The id value corresponds to the
-     * value returned by {@link FCMRegistration#getId()}.  Additionally, this must refuse the request if the supplied
+     * value returned by {@link FCMRegistration#getId()}.  Additionally, this must refuse the  if the supplied
      * {@link Profile} does not match the owner of the correspendong {@link FCMRegistration}.
      *
      * @param fcmRegistrationId the id of the {@link FCMRegistration} as supplied by {@link FCMRegistration#getId()}

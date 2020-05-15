@@ -10,7 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -218,7 +218,7 @@ public class MongoUserDao implements UserDao {
 
     }
 
-    public User createOrRectivateUserWithPassword(final User user, final String password) {
+    public User createOrReactivateUserWithPassword(final User user, final String password) {
 
         validate(user);
 
@@ -502,12 +502,21 @@ public class MongoUserDao implements UserDao {
 
         final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
 
-        query.or(
-            query.criteria("name").equal(userNameOrEmail),
-            query.criteria("email").equal(userNameOrEmail)
-        ).and(
-            query.criteria("active").equal(true)
-        );
+        if (ObjectId.isValid(userNameOrEmail)) {
+            query.criteria("_id").equal(new ObjectId(userNameOrEmail));
+            query.criteria("active").equal(true);
+        } else {
+            query.or(
+                query.and(
+                    query.criteria("name").equal(userNameOrEmail),
+                    query.criteria("active").equal(true)
+                ),
+                query.and(
+                    query.criteria("email").equal(userNameOrEmail),
+                    query.criteria("active").equal(true)
+                )
+            );
+        }
 
         final MongoUser mongoUser = query.get();
 

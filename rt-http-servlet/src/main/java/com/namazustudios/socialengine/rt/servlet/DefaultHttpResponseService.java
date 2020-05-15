@@ -35,7 +35,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
             .put(ResponseCode.OPERATION_NOT_FOUND, HttpStatus.NOT_FOUND)
             .put(ResponseCode.UNACCEPTABLE_CONTENT, HttpStatus.NOT_ACCEPTABLE)
             .put(ResponseCode.UNSUPPORTED_MEDIA_TYPE, HttpStatus.UNSUPPORTED_MEDIA_TYPE)
-            .put(ResponseCode.OTHER_NOT_FOUND, HttpStatus.NOT_FOUND)
+            .put(ResponseCode.NOT_FOUND, HttpStatus.NOT_FOUND)
             .put(ResponseCode.FAILED_AUTH_RETRY, HttpStatus.UNAUTHORIZED)
             .put(ResponseCode.FAILED_AUTH_FATAL, HttpStatus.FORBIDDEN)
             .put(ResponseCode.TOO_BUSY_FATAL, HttpStatus.SERVICE_UNAVAILABLE)
@@ -85,11 +85,11 @@ public class DefaultHttpResponseService implements HttpResponseService {
             destination.setHeader(CONTENT_TYPE, responseContent.getType());
         }
 
+        setStatusCode(toWrite, destination, payload);
+
         if (payload != null) {
             payloadWriter.write(payload, destination.getOutputStream());
         }
-
-        setStatusCode(toWrite, destination, payload);
 
     }
 
@@ -106,7 +106,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
         final NamedHeaders namedHeaders = toWrite.getResponseHeader();
 
         for (final String header : namedHeaders.getHeaderNames()) {
-            namedHeaders.getHeaders(header).forEach(o -> destination.addHeader(header, o.toString()));
+            namedHeaders.getHeaders(header).get().forEach(o -> destination.addHeader(header, o.toString()));
         }
 
     }
@@ -137,7 +137,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
             // system and are handed through.
             writeReservedCode(code, payload, destination);
         } else {
-            destination.sendError(code);
+            destination.setStatus(code);
         }
 
     }
@@ -154,7 +154,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
         } else {
             final ResponseCode eCode = ResponseCode.getCodeForValue(code);
             final HttpStatus httpStatus = HTTP_STATUS_MAP.getOrDefault(eCode, HttpStatus.INTERNAL_SERVER_ERROR);
-            destination.sendError(httpStatus.getCode(), eCode.getDescription());
+            destination.setStatus(httpStatus.getCode());
         }
     }
 

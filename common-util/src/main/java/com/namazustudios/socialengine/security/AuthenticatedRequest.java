@@ -1,12 +1,12 @@
 package com.namazustudios.socialengine.security;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import java.security.Principal;
 
-import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
+import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 
 /**
  * Created by patricktwohig on 8/4/17.

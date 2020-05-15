@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.model.googleplayiapreceipt;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

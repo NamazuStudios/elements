@@ -44,9 +44,9 @@ public class ServletRequestHeader implements RequestHeader {
     }
 
     @Override
-    public List<Object> getHeaders(final String name) {
+    public Optional<List<Object>> getHeaders(final String name) {
         final Enumeration<String> headers = httpServletRequestSupplier.get().getHeaders(name);
-        return headers != null && headers.hasMoreElements() ? objectList(headers) : emptyList();
+        return headers != null && headers.hasMoreElements() ? Optional.of(objectList(headers)) : Optional.empty();
     }
 
     @Override

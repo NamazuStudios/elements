@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.appnode;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
@@ -18,8 +17,8 @@ import com.namazustudios.socialengine.rt.jeromq.CommandPreamble;
 import com.namazustudios.socialengine.rt.jeromq.Connection;
 import com.namazustudios.socialengine.rt.jeromq.JeroMQSocketHost;
 import com.namazustudios.socialengine.rt.jeromq.StatusRequest;
-import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
-import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
+import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
+import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

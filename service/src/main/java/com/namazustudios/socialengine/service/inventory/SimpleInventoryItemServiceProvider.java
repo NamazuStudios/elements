@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.inventory;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

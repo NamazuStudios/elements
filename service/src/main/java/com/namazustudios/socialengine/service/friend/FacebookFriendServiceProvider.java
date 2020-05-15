@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.friend;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.FacebookFriendService;
 
 import javax.inject.Inject;

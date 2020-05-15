@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import static java.util.Collections.emptyMap;
 
@@ -58,8 +55,9 @@ public class SimpleRequestHeader implements RequestHeader, Serializable {
     }
 
     @Override
-    public List<Object> getHeaders(final String name) {
-        return headers.get(name);
+    public Optional<List<Object>> getHeaders(final String name) {
+        final List<Object> objects = headers.get(name);
+        return objects == null || objects.isEmpty() ? Optional.empty() : Optional.of(headers.get(name));
     }
 
     public void setHeaders(Map<String, List<Object> > headers) {
@@ -79,9 +77,15 @@ public class SimpleRequestHeader implements RequestHeader, Serializable {
         return parameterizedPath;
     }
 
-
     public void setParameterizedPath(ParameterizedPath parameterizedPath) {
         this.parameterizedPath = parameterizedPath;
+    }
+
+    @Override
+    public void copyToMap(final Map<String, List<Object>> requestHeaderMap) {
+        for (final Map.Entry<String, List<Object>> entry : headers.entrySet()) {
+            requestHeaderMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
     }
 
     @Override

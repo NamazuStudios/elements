@@ -3,11 +3,15 @@ package com.namazustudios.socialengine.service.user;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.service.UserService;
 
 import javax.inject.Inject;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
 
 public class AnonUserService extends AbstractUserService implements UserService {
 
@@ -30,16 +34,6 @@ public class AnonUserService extends AbstractUserService implements UserService 
     }
 
     @Override
-    public User createUser(User user)  {
-        throw new ForbiddenException();
-    }
-
-    @Override
-    public User createUser(User user, String password)  {
-        throw new ForbiddenException();
-    }
-
-    @Override
     public User createUser(final UserCreateRequest userCreateRequest)  {
 
         final User user = new User();
@@ -50,18 +44,16 @@ public class AnonUserService extends AbstractUserService implements UserService 
         user.setLevel(User.Level.USER);
         user.setActive(true);
 
-        // reuse existing DAO method
-        return getUserDao().createOrRectivateUserWithPassword(user, userCreateRequest.getPassword());
+        final String password = nullToEmpty(userCreateRequest.getPassword()).trim();
+
+        return isNullOrEmpty(password) ?
+                getUserDao().createOrReactivateUser(user) :
+                getUserDao().createOrReactivateUserWithPassword(user, password);
 
     }
 
     @Override
-    public User updateUser(User user)  {
-        throw new ForbiddenException();
-    }
-
-    @Override
-    public User updateUser(User user, String password)  {
+    public User updateUser(String userId, UserUpdateRequest userUpdateRequest) {
         throw new ForbiddenException();
     }
 

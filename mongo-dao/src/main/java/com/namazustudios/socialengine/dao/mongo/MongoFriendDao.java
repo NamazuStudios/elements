@@ -10,7 +10,7 @@ import com.namazustudios.socialengine.exception.FriendNotFoundException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;

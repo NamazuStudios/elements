@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Supplier;
+
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Represents a listing of custom named simpleResponseHeaderMap.
@@ -20,26 +22,13 @@ public interface NamedHeaders {
     List<String> getHeaderNames();
 
     /**
-     * Gets a listing of headers mapped by header name.  A header may be repeated and therefore t
+     * Gets a listing of headers mapped by header name.  A header may be repeated and therefore there may be many
+     * values with a single name.
      *
-     * @return a {@link Map<String, List<Object>>} containhe header may be
-     * associated with many values.  If the name appears in the {@link List<String>} returned by
-     * {@link #getHeaderNames()}, then this must return a non-null value.
-     *
-     * @return the mapping of names to values
+     * @return a {@link Optional<List<Object>>}.  If {@link #getHeaderNames()} contains the name, then the returned
+     *         {@link Optional} must both be present and the enclosed {@link List<Object>} must have at least one value
      */
-    List<Object> getHeaders(String name);
-
-    /**
-     * Gets the raw values of the specified header.
-     *
-     * @param header the header name
-     * @param defaultListSupplier a {@link Supplier<List<Object>>} to provide the {@link List<Object>} if not present
-     * @return the first value of the header, or the default value
-     */
-    default List<Object> getHeadersOrDefault(final String header, final Supplier<List<Object>> defaultListSupplier) {
-        return getHeaderNames().contains(header) ? getHeaders(header) : defaultListSupplier.get();
-    }
+    Optional<List<Object>> getHeaders(String name);
 
     /**
      * Gets the raw value of the specified header, fetching the first value in the list
@@ -48,8 +37,8 @@ public interface NamedHeaders {
      * @param header the header name
      * @return the first value of the header, or null
      */
-    default Object getHeader(final String header) {
-        return getHeaderOrDefault(header, null);
+    default Optional<Object> getHeader(final String header) {
+        return getHeaders(header).map(l -> l.get(0));
     }
 
     /**
@@ -57,44 +46,31 @@ public interface NamedHeaders {
      * of values associated with the header.
      *
      * @param header the header name
-     * @param defaultValue the default value to return if the header is not found
+     * @param cls the type to attempt casting to
      * @return the first value of the header, or null
      */
-    default Object getHeaderOrDefault(final String header, final Object defaultValue) {
-        final List<Object> headers = getHeaders(header);
-        return headers == null || headers.isEmpty() ? defaultValue : headers.get(0);
+    default <T> Optional<T> getHeader(final String header, final Class<T> cls) {
+        return getHeaders(header).map(l -> l.get(0)).map(o -> {
+            try {
+                return cls.cast(o);
+            } catch (ClassCastException ex) {
+                final Logger logger = getLogger(getClass());
+                logger.warn("Expected {} but got {} instead for header {}", cls, o, header);
+                return null;
+            }
+        });
     }
 
     /**
-     * Gets a single header with the supplied name, attempting to convert the value to the
-     * specified type.  The default implementation of this method attempts a simple cast
-     * but more sophisticated conversions may be available. This may throw an exception
-     * if the type is not convertible.
+     * Copies this {@link NamedHeaders} to a {@link Map<String, List<Object>>}
      *
-     * @param header the header
-     * @return the header value, or null if no header is found
-     * @throws {@link InvalidConversionException} if the conversion is not possible.
+     * @param requestHeaderMap the map to receive the values.
      */
-    default <T> T getAndConvertHeader(final String header, final Class<T> type) throws InvalidConversionException {
-
-        final Object object = getHeader(header);
-
-        try {
-            return type.cast(object);
-        } catch (ClassCastException ex) {
-            throw new InvalidConversionException(ex);
+    default void copyToMap(Map<String, List<Object>> requestHeaderMap) {
+        for (final String headerName : getHeaderNames()) {
+            final Optional<List<Object>> headers = getHeaders(headerName);
+            headers.ifPresent(v -> requestHeaderMap.put(headerName, new ArrayList<>(v)));
         }
-
-    }
-
-    /**
-     * Convenience method to assemble a {@link Map<String, Object>} from the various header values already present in
-     * this {@link NamedHeaders} instance.ing the headers.
-     */
-    default Map<String, List<Object>> getHeaderMap() {
-        final Map<String, List<Object>> headerMap = new HashMap<>();
-        getHeaderNames().forEach(h -> headerMap.put(h, getHeaders(h)));
-        return headerMap;
     }
 
 }

@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service.leaderboard;
 
 import com.namazustudios.socialengine.dao.RankDao;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.RankService;

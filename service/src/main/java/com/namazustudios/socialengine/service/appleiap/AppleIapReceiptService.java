@@ -4,13 +4,12 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.service.appleiap.client.invoker.AppleIapVerifyReceiptInvoker.AppleIapVerifyReceiptEnvironment;
 
 import java.util.List;
-import java.util.Set;
 
 public interface AppleIapReceiptService {
 

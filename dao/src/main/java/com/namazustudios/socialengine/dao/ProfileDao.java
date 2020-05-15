@@ -4,11 +4,12 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by patricktwohig on 6/28/17.
@@ -26,7 +27,7 @@ public interface ProfileDao {
      * @return the active profile with the supplied ID, or null if not found.
      *
      */
-    Profile findActiveProfile(String profileId);
+    Optional<Profile> findActiveProfile(String profileId);
 
     /**
      * Finds the profile with the supplied profile ID.  Returning null if no profile matches the requested profile ID
@@ -36,7 +37,7 @@ public interface ProfileDao {
      * @param userId the id of the profile
      * @return the active profile, or null if not found
      */
-    Profile findActiveProfileForUser(String profileId, String userId);
+    Optional<Profile> findActiveProfileForUser(String profileId, String userId);
 
     /**
      * Gets actives profiles specifying the offset and the count.

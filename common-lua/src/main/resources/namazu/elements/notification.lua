@@ -7,7 +7,6 @@
 
 local ioc = require "namazu.ioc.resolver"
 
-local Application = java.require "com.namazustudios.socialengine.model.application.Application"
 local application_builder_provider = ioc:provider("com.namazustudios.socialengine.service.NotificationBuilder")
 local application_provider = ioc:provider("com.namazustudios.socialengine.model.application.Application")
 

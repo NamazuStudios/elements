@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.dao.InventoryItemDao;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 

@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service.auth;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.*;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
 import com.namazustudios.socialengine.service.FacebookAuthService;
 

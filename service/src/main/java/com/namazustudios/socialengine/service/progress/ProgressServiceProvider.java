@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.service.progress;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.Services;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-
-import static com.namazustudios.socialengine.service.Services.forbidden;
 
 /**
  * Created by davidjbrooks on 12/05/2018.

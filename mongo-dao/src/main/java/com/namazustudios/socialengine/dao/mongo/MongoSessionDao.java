@@ -197,7 +197,7 @@ public class MongoSessionDao implements SessionDao {
     }
 
     @Override
-    public void delete(final String sessionSecret) {
+    public void delete(final String userId, final String sessionSecret) {
 
         final ObjectId mongoUserId;
         final MongoSessionSecret mongoSessionSecret;
@@ -213,7 +213,12 @@ public class MongoSessionDao implements SessionDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
-        final WriteResult wr = getDatastore().delete(MongoSession.class, sessionId);
+        final Query<MongoSession> query = getDatastore().createQuery(MongoSession.class);
+
+        query.field("_id").equal(sessionId)
+             .field("user").equal(mongoUser);
+
+        final WriteResult wr = getDatastore().delete(query);
 
         if (wr.getN() == 0) {
             throw new NotFoundException("Session Not Found.");
@@ -229,7 +234,7 @@ public class MongoSessionDao implements SessionDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
         final Query<MongoSession> query = getDatastore().createQuery(MongoSession.class);
 
-        query.and(query.criteria("user").equal(mongoUser));
+        query.field("user").equal(mongoUser);
         getDatastore().delete(query);
 
     }

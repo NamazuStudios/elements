@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service.auth;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.MockSessionCreation;
@@ -18,7 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 
 import static com.namazustudios.socialengine.Constants.MOCK_SESSION_TIMEOUT_SECONDS;
-import static com.namazustudios.socialengine.model.User.Level.USER;
+import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.Math.min;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -83,7 +83,7 @@ public class SuperUserMockSessionService implements MockSessionService {
         user.setEmail(format("%s@example.com", user.getName()));
         user.setActive(true);
         user.setLevel(USER);
-        return getUserDao().createOrRectivateUserWithPassword(user, password);
+        return getUserDao().createOrReactivateUserWithPassword(user, password);
     }
 
     private Profile generateProfile(final User user, final Application application) {

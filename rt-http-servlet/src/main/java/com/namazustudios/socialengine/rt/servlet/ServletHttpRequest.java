@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.servlet;
 
-import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.RequestHeader;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.http.CompositeHttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
@@ -55,6 +54,11 @@ public class ServletHttpRequest implements HttpRequest {
     }
 
     @Override
+    public String getId() {
+        return uniqueId.toString();
+    }
+
+    @Override
     public HttpVerb getVerb() {
         try {
             return HttpVerb.valueOf(httpServletRequestSupplier.get().getMethod());
@@ -74,7 +78,7 @@ public class ServletHttpRequest implements HttpRequest {
     }
 
     @Override
-    public Attributes getAttributes() {
+    public MutableAttributes getAttributes() {
         return servletRequestAttributes;
     }
 

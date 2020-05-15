@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;

@@ -20,13 +20,13 @@ public class HttpRequestSessionSecretProfileIdentificationMethod implements Prof
     @Override
     public Profile attempt() throws UnidentifiedProfileException {
 
-        final String profileId = new SessionSecretHeader(getHttpServletRequest()::getHeader).getOverrideProfileId();
-        if (profileId == null) throw new UnidentifiedProfileException();
+        final String overrideProfileId = SessionSecretHeader.withValueSupplier(getHttpServletRequest()::getHeader)
+            .getOverrideProfileId()
+            .orElseThrow(() -> new UnidentifiedProfileException());
 
-        final Profile profile = getProfileOverrideService().findOverrideProfile(profileId);
-        if (profile == null) throw new UnidentifiedProfileException();
-
-        return profile;
+        return getProfileOverrideService()
+            .findOverrideProfile(overrideProfileId)
+            .orElseThrow(() -> new UnidentifiedProfileException());
 
     }
 

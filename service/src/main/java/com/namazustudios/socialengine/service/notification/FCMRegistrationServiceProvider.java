@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.notification;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.FCMRegistrationService;
 import com.namazustudios.socialengine.service.Services;
 

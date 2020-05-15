@@ -26,8 +26,6 @@ public class RTDaoModule extends PrivateModule {
         expose(ConnectionMultiplexer.class);
         expose(new TypeLiteral<Function<String, Context>>(){});
 
-        install(new ZContextModule());
-
         bind(ManifestDao.class).to(RTManifestDao.class).asEagerSingleton();
         bind(ConnectionMultiplexer.class).to(JeroMQConnectionMultiplexer.class).asEagerSingleton();
         bind(ContextFactory.class).to(DefaultContextFactory.class).asEagerSingleton();
