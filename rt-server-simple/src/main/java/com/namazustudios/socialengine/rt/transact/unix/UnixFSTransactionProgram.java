@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import javolution.io.Struct;
 
@@ -15,14 +14,17 @@ import static java.util.Objects.requireNonNull;
 
 public class UnixFSTransactionProgram {
 
+    private final ByteBuffer byteBuffer;
+
     private final Header header = new Header();
 
     public UnixFSTransactionProgram(final ByteBuffer byteBuffer, final int programPosition) {
+        this.byteBuffer = byteBuffer;
         header.setByteBuffer(byteBuffer, programPosition);
     }
 
     public void commit() {
-        // TODO Implement This.
+        header.algorithm.get().compute(this);
     }
 
     public static class Builder {
@@ -69,7 +71,7 @@ public class UnixFSTransactionProgram {
 
             operations.add((byteBuffer -> UnixFSTransactionCommand.builder()
                     .withPhase(phase)
-                    .withInstruction(UNLINK_RESOURCE)
+                    .withInstruction(UNLINK_RESOURCE_ID_FROM_PATH)
                     .addRTPathParameter(rtPath)
                 .build(byteBuffer)));
 
@@ -133,12 +135,28 @@ public class UnixFSTransactionProgram {
 
         }
 
+        public Builder removeResource(final UnixFSTransactionCommand.Phase phase,
+                                      final ResourceId resourceId) {
+
+            requireNonNull(phase);
+            requireNonNull(resourceId);
+
+            operations.add((byteBuffer -> UnixFSTransactionCommand.builder()
+                    .withPhase(phase)
+                    .withInstruction(REMOVE_RESOURCE)
+                    .addResourceIdParameter(resourceId)
+                .build(byteBuffer)));
+
+            return this;
+
+        }
+
         public UnixFSTransactionProgram compile() {
 
             if (byteBuffer == null) throw new IllegalStateException("Byte buffer must be set.");
 
             final int programPosition = byteBuffer.position();
-            for (int i = 0; i < UnixFSTransactionCommand.Header.SIZE; ++i) byteBuffer.put((byte)0xFF);
+            for (int i = 0; i < Header.SIZE; ++i) byteBuffer.put((byte)0xFF);
 
             final UnixFSTransactionProgram program = new UnixFSTransactionProgram(byteBuffer, programPosition);
             program.header.algorithm.set(checksumAlgorithm);
@@ -147,14 +165,6 @@ public class UnixFSTransactionProgram {
 
             return program;
 
-        }
-
-        public Builder removeResource(final UnixFSTransactionCommand.Phase phase, final ResourceId resourceId) {
-            return this;
-        }
-
-        public Builder deletePath(final UnixFSTransactionCommand.Phase phase, final Path path) {
-            return this;
         }
 
     }
@@ -179,12 +189,41 @@ public class UnixFSTransactionProgram {
         /**
          * Uses {@link CRC32}
          */
-        CRC_32,
+        CRC_32 {
+            @Override
+            protected void compute(final UnixFSTransactionProgram program) {
+
+                final CRC32 crc32 = new CRC32();
+
+                program.byteBuffer.position(program.header.getByteBufferPosition());
+                program.byteBuffer.limit((int)program.header.length.get());
+                program.header.checksum.set(0);
+
+                crc32.update(program.byteBuffer);
+                program.header.checksum.set(crc32.getValue());
+
+            }
+        },
 
         /**
          * Uses {@link Adler32}
          */
-        ADLER_32
+        ADLER_32 {
+            @Override
+            protected void compute(UnixFSTransactionProgram program) {
+                final Adler32 crc32 = new Adler32();
+
+                program.byteBuffer.position(program.header.getByteBufferPosition());
+                program.byteBuffer.limit((int)program.header.length.get());
+                program.header.checksum.set(0);
+
+                crc32.update(program.byteBuffer);
+                program.header.checksum.set(crc32.getValue());
+
+            }
+        };
+
+        protected abstract void compute(UnixFSTransactionProgram program);
 
     }
 

@@ -148,7 +148,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
         final List<ResourceId> removed = workingCopy.removeResources(
             path, max,
-            (fqPath, resourceId) -> programBuilder.deletePath(COMMIT, fqPath)
+            (fqPath, resourceId) -> programBuilder.unlinkResource(COMMIT, fqPath)
         );
 
         removed.forEach(resourceId -> programBuilder.removeResource(COMMIT, resourceId));

@@ -7,7 +7,6 @@ import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
 import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -195,23 +194,29 @@ public class UnixFSTransactionCommand {
         NOOP,
 
         /**
-         * Unlinks a filesystem path {@link ResourceId}, typically implented using {@link Files#delete(Path)} or similar
+         * Unlinks a filesystem path {@link ResourceId}, typically implented using
+         * {@link Files#delete(java.nio.file.Path)} or similar
          * functionality.
          */
         UNLINK_FS_PATH,
 
         /**
-         * Unlinks a {@link Resource}
+         * Unlinks a {@link ResourceId} from a {@link com.namazustudios.socialengine.rt.Path}
          */
-        UNLINK_RESOURCE,
+        UNLINK_RESOURCE_ID_FROM_PATH,
 
         /**
-         *  Links a {@link Path} to a {@link ResourceId}
+         * Removes a {@link Resource} with a supplied {@link ResourceId}
+         */
+        REMOVE_RESOURCE,
+
+        /**
+         *  Links a {@link java.nio.file.Path} to a {@link ResourceId}
          */
         LINK_FS_PATH_TO_RESOURCE,
 
         /**
-         * Links a {@link java.nio.file.Path} to a {@link Path}
+         * Links a {@link java.nio.file.Path} to a {@link com.namazustudios.socialengine.rt.Path}
          */
         LINK_FS_PATH_TO_RT_PATH,
 
@@ -221,9 +226,9 @@ public class UnixFSTransactionCommand {
         LINK_FS_PATH_TO_RESOURCE_ID,
 
         /**
-         * Links a {@link ResourceId} to a {@link Path}
+         * Links a {@link ResourceId} to a {@link com.namazustudios.socialengine.rt.Path}
          */
-        LINK_RESOURCE_TO_RT_PATH
+        LINK_RESOURCE_TO_RT_PATH,
 
     }
 
