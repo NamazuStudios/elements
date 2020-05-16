@@ -161,6 +161,7 @@ class V1CompoundId implements Serializable {
                 final UUID uuid = new UUID(upper, lower);
                 components[field.ordinal()] = new Component(field, uuid);
             }
+
         } catch (ArrayIndexOutOfBoundsException ex) {
             throw new IllegalArgumentException(ex);
         }
@@ -293,6 +294,19 @@ class V1CompoundId implements Serializable {
         }
 
         return bytes;
+
+    }
+
+    public void toByteBuffer(final ByteBuffer byteBuffer, final Field ... fields) {
+
+        byteBuffer.put(PREFIX_BYTE);
+
+        for (final Field field : fields) {
+            final UUID uuid = getComponent(field).getValue();
+            final long upper = uuid.getMostSignificantBits();
+            final long lower = uuid.getLeastSignificantBits();
+            byteBuffer.putLong(upper).putLong(lower);
+        }
 
     }
 

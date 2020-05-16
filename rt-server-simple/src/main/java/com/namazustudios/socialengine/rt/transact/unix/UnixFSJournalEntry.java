@@ -29,13 +29,10 @@ class UnixFSJournalEntry implements TransactionJournal.Entry {
 
     protected final UnixFSUtils.IOOperationV onClose;
 
-//    protected final LazyValue<SortedMap<Path, ResourceId>> pathMap;
-
     public UnixFSJournalEntry(final Revision revision,
                               final UnixFSUtils.IOOperationV onClose) {
         this.revision = revision;
         this.onClose = onClose;
-//        this.pathMap = new LazyValue<>(TreeMap::new);
     }
 
     protected void check() {

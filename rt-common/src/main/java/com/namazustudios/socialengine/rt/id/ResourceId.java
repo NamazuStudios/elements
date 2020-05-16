@@ -83,6 +83,15 @@ public class ResourceId implements Serializable, HasNodeId {
     }
 
     /**
+     * Writes this {@link ResourceId} to the supplied {@link ByteBuffer}.
+     *
+     * @param byteBuffer the {@link ByteBuffer} to receive the {@link ResourceId}
+     */
+    public void toByteBuffer(final ByteBuffer byteBuffer) {
+        v1CompoundId.toByteBuffer(byteBuffer, INSTANCE, APPLICATION, RESOURCE);
+    }
+
+    /**
      * Returns the {@link NodeId} assocaited with this {@link ResourceId}.
      *
      * @return the {@link NodeId}
@@ -190,7 +199,7 @@ public class ResourceId implements Serializable, HasNodeId {
      * Parses a new {@link ResourceId} from the given {@link ByteBuffer[]}.  The should be the string representation
      * returned by {@link #asBytes()}.
      *
-     * @param byteBufferRepresentation the  {@link ByteBuffer} representation of the {@link ResourceId} from {@link ResourceId#asBytes()}.
+     * @param byteBufferRepresentation the  {@link ByteBuffer} representation of the {@link ResourceId} from {@link ResourceId#f()}.
      */
     public static ResourceId resourceIdFromByteBuffer(final ByteBuffer byteBufferRepresentation) {
         return new ResourceId(new V1CompoundId.Builder()
