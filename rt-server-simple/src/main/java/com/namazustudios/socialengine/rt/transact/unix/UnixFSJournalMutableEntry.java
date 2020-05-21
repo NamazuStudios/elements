@@ -35,14 +35,14 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     private final UnixFSPathIndex unixFSPathIndex;
 
-    private final UnixFSTransactionProgram.Builder programBuilder;
+    private final UnixFSTransactionProgramBuilder programBuilder;
 
     private final UnixFSOptimisticLocking optimisticLocking;
 
     public UnixFSJournalMutableEntry(final Revision<?> revision,
                                      final UnixFSUtils unixFSUtils,
                                      final UnixFSPathIndex unixFSPathIndex,
-                                     final UnixFSTransactionProgram.Builder programBuilder,
+                                     final UnixFSTransactionProgramBuilder programBuilder,
                                      final UnixFSUtils.IOOperationV onClose,
                                      final UnixFSOptimisticLocking optimisticLocking) {
         super(revision, onClose);

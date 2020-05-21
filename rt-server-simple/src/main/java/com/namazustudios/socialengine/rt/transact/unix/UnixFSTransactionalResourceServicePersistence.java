@@ -90,7 +90,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
             .orElseThrow(ResourceNotFoundException::new);
     }
 
-    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final Path path) {
+    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final Path path) throws IOException {
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
             .getResourceIndex()
@@ -100,7 +100,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     }
 
-    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final ResourceId resourceId) {
+    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final ResourceId resourceId) throws IOException {
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
                 .getResourceIndex()
@@ -139,13 +139,8 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         }
 
         @Override
-        public ReadableByteChannel loadResourceContents(final ResourceId resourceId) {
+        public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
             return loadResourceContentsAt(entry.getRevision(), resourceId);
-        }
-
-        @Override
-        public ReadableByteChannel loadResourceContents(final Path path) {
-            return loadResourceContentsAt(entry.getRevision(), path);
         }
 
         @Override
@@ -170,76 +165,66 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public boolean exists(final ResourceId resourceId) {
-            final Revision<Boolean> journaled = entry.exists(resourceId);
-            return journaled.getValue().orElseGet(() -> existsAt(entry.getRevision(), resourceId));
+            return existsAt(entry.getRevision(), resourceId);
         }
 
         @Override
         public Stream<ResourceService.Listing> list(final Path path) {
 
-            final Revision<Stream<ResourceService.Listing>> journaled = entry.list(path);
-
             final Revision<Stream<ResourceService.Listing>> indexed = getRevisionDataStore()
                     .getPathIndex()
                     .list(entry.getRevision(), path);
 
-            return concat(
-                journaled.getValue().orElseGet(Stream::empty),
-                indexed.getValue().orElseGet(Stream::empty));
+            return indexed.getValue().orElseGet(Stream::empty);
 
         }
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            return entry.getResourceId(path).getValue().orElseGet(() -> getResourceIdAt(entry.getRevision(), path));
+            return getResourceIdAt(entry.getRevision(), path);
         }
 
         @Override
-        public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
-            final Revision<ReadableByteChannel> channelRevision = entry.loadResourceContents(resourceId);
-            if (channelRevision.getValue().isPresent()) return channelRevision.getValue().get();
+        public ReadableByteChannel loadResourceContents(final ResourceId resourceId)
+                throws IOException {
             return loadResourceContentsAt(entry.getRevision(), resourceId);
         }
 
         @Override
-        public ReadableByteChannel loadResourceContents(final Path path) throws IOException {
-            final Revision<ReadableByteChannel> channelRevision = entry.loadResourceContents(path);
-            if (channelRevision.getValue().isPresent()) return channelRevision.getValue().get();
-            return loadResourceContentsAt(entry.getRevision(), path);
-        }
-
-        @Override
-        public WritableByteChannel saveNewResource(final Path path, final ResourceId resourceId) throws IOException {
+        public WritableByteChannel saveNewResource(final Path path, final ResourceId resourceId)
+                throws IOException, TransactionConflictException {
             return entry.saveNewResource(path, resourceId);
         }
 
         @Override
-        public void linkNewResource(final Path path, final ResourceId id) {
+        public void linkNewResource(final Path path, final ResourceId id)
+                throws TransactionConflictException {
             entry.linkNewResource(id, path);
         }
 
         @Override
-        public void linkExistingResource(final ResourceId sourceResourceId, final Path destination) {
+        public void linkExistingResource(final ResourceId sourceResourceId, final Path destination)
+                throws TransactionConflictException {
             entry.linkExistingResource(sourceResourceId, destination);
         }
 
         @Override
-        public ResourceService.Unlink unlinkPath(final Path path) {
+        public ResourceService.Unlink unlinkPath(final Path path) throws TransactionConflictException {
             return entry.unlinkPath(path);
         }
 
         @Override
-        public List<ResourceService.Unlink> unlinkMultiple(final Path path, final int max) {
+        public List<ResourceService.Unlink> unlinkMultiple(final Path path, final int max) throws TransactionConflictException {
             return entry.unlinkMultiple(path, max);
         }
 
         @Override
-        public void removeResource(final ResourceId resourceId) {
+        public void removeResource(final ResourceId resourceId) throws TransactionConflictException {
             entry.removeResource(resourceId);
         }
 
         @Override
-        public List<ResourceId> removeResources(final Path path, final int max) {
+        public List<ResourceId> removeResources(final Path path, final int max) throws TransactionConflictException {
             return entry.removeResources(path, max);
         }
 

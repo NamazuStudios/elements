@@ -228,31 +228,14 @@ public class TransactionalResourceService implements ResourceService {
 
     }
 
-    private void executeRW(final Consumer<ReadWriteTransaction> operation) {
-
-        final Context context = getContext();
-
-        for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW()) {
-                operation.accept(txn);
-                txn.commit();
-            } catch (TransactionConflictException ex) {
-                continue;
-            }
-        }
-
-        throw new ContentionException();
-
-    }
-
-    private void executeRW(final BiConsumer<AcquiresCacheMutator, ReadWriteTransaction> operation) {
+    private void executeRW(final TransactionOperationV operation) {
 
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
             try (final ReadWriteTransaction txn = context.persistence.openRW();
                  final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
-                operation.accept(acm, txn);
+                operation.apply(acm, txn);
                 txn.commit();
             } catch (TransactionConflictException ex) {
                 continue;
@@ -263,7 +246,24 @@ public class TransactionalResourceService implements ResourceService {
 
     }
 
-    private <T> T computeRW(final Function<ReadWriteTransaction, T> operation) {
+    private void executeRW(final UncachedTransactionOperationV operation) {
+
+        final Context context = getContext();
+
+        for (int i = 0; i < RETRY_COUNT; ++i) {
+            try (final ReadWriteTransaction txn = context.persistence.openRW();) {
+                operation.apply(txn);
+                txn.commit();
+            } catch (TransactionConflictException ex) {
+                continue;
+            }
+        }
+
+        throw new ContentionException();
+
+    }
+
+    private <T> T computeRW(final UncachedTransactionOperation<T> operation) {
 
         final Context context = getContext();
 
@@ -281,7 +281,7 @@ public class TransactionalResourceService implements ResourceService {
 
     }
 
-    private <T> T computeRW(final BiFunction<AcquiresCacheMutator, ReadWriteTransaction, T> operation) {
+    private <T> T computeRW(final TransactionOperation<T> operation) {
 
         final Context context = getContext();
 
@@ -535,6 +535,34 @@ public class TransactionalResourceService implements ResourceService {
         public void evict(final ResourceId resourceId, final Consumer<Resource> removed) {
             // TODO Implement
         }
+
+    }
+
+    @FunctionalInterface
+    private interface TransactionOperationV {
+
+        void apply(AcquiresCacheMutator acm, ReadWriteTransaction txn) throws TransactionConflictException;
+
+    }
+
+    @FunctionalInterface
+    private interface UncachedTransactionOperationV {
+
+        void apply(ReadWriteTransaction txn) throws TransactionConflictException;
+
+    }
+
+    @FunctionalInterface
+    private interface TransactionOperation<ReturnT> {
+
+        ReturnT apply(AcquiresCacheMutator acm, ReadWriteTransaction txn) throws TransactionConflictException;
+
+    }
+
+    @FunctionalInterface
+    private interface UncachedTransactionOperation<ReturnT> {
+
+        ReturnT apply(ReadWriteTransaction txn) throws TransactionConflictException;
 
     }
 

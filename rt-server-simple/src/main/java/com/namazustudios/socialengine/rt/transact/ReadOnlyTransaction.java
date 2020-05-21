@@ -12,6 +12,11 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.stream.Stream;
 
+/**
+ * Represents a snapshot of the current database at a particular {@link Revision}. This guarantees that the data must
+ * exist for the life of this transaction at the supplied {@link Revision}. Once closed, however, the {@link Revision}
+ * may be collected by the database.
+ */
 public interface ReadOnlyTransaction extends AutoCloseable {
 
     /**
@@ -60,20 +65,6 @@ public interface ReadOnlyTransaction extends AutoCloseable {
      * @return a {@link ReadableByteChannel} with the contents of the {@link Resource}
      */
     ReadableByteChannel loadResourceContents(ResourceId resourceId) throws IOException;
-
-//    /**
-//     * Loads the contents of the {@link Resource} given the supplied {@link ResourceId}.  The supplied
-//     * {@link ReadableByteChannel} is only guaranteed to be valid for the life of this transaction.  However, the caller
-//     * must not assume the transaction will automatically clean up open byte channels.
-//     *
-//     * If no resource exists with the supplied id, then this must throw an instance of
-//     * {@link ResourceNotFoundException} to indicate there is no resource in the persistent storage with that
-//     * particular {@link Path}.
-//     *s
-//     * @param path the {@link Path}, which must be a non-wildcard direct paths
-//     * @return a {@link ReadableByteChannel} with the contents of the {@link Resource}
-//     */
-//    ReadableByteChannel loadResourceContents(Path path) throws IOException;
 
     /**
      * Closes this transaction, releasing any underlying system resources associated with this transaction.

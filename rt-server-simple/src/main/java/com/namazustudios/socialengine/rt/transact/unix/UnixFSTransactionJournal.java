@@ -30,6 +30,7 @@ import java.util.stream.Stream;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
+import static java.util.Arrays.fill;
 
 public class UnixFSTransactionJournal implements TransactionJournal {
 
@@ -101,26 +102,32 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private final long txnEntryBufferCount;
 
+    private final Slices slices;
+
     // Injected Fields
 
     private final UnixFSUtils utils;
+
+    private final UnixFSPathIndex unixFSPathIndex;
 
     private final UnixFSRevisionPool unixFSRevisionPool;
 
     private final UnixFSGarbageCollector unixFSGarbageCollector;
 
-    private final Provider<UnixFSTransactionProgram.Builder> programBuilderProvider;
+    private final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider;
 
     @Inject
     public UnixFSTransactionJournal(
             final UnixFSUtils utils,
+            final UnixFSPathIndex unixFSPathIndex,
             final UnixFSRevisionPool unixFSRevisionPool,
             final UnixFSGarbageCollector unixFSGarbageCollector,
-            final Provider<UnixFSTransactionProgram.Builder> programBuilderProvider,
+            final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider,
             @Named(TRANSACTION_ENTRY_BUFFER_SIZE) final int txnEntryBufferSize,
             @Named(TRANSACTION_ENTRY_BUFFER_COUNT) final int txnEntryBufferCount) throws IOException {
 
         this.utils = utils;
+        this.unixFSPathIndex = unixFSPathIndex;
         this.unixFSRevisionPool = unixFSRevisionPool;
         this.unixFSGarbageCollector = unixFSGarbageCollector;
         this.txnEntryBufferSize = txnEntryBufferSize;
@@ -141,6 +148,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         } else {
             journalBuffer = createNewJournal(journalPath);
         }
+
+        slices = new Slices(journalBuffer);
 
     }
 
@@ -171,7 +180,10 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                 throw new IllegalStateException("Channel size mismatch!");
             }
 
-            final MappedByteBuffer headerByteBuffer = channel.map(READ_WRITE, 0, header.size());
+            final MappedByteBuffer buffer = channel.map(READ_WRITE, 0, headerSize + totalEntrySize);
+            buffer.position(0).limit((int)headerSize);
+
+            final ByteBuffer headerByteBuffer = buffer.slice();
             header.setByteBuffer(headerByteBuffer, 0);
             header.magic.set(JOURNAL_MAGIC);
             header.major.set(VERSION_MAJOR_CURRENT);
@@ -179,7 +191,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             header.txnBufferSize.set(txnEntryBufferSize);
             header.txnBufferCount.set(txnEntryBufferCount);
 
-            return channel.map(READ_WRITE, header.size(), totalEntrySize);
+            return buffer;
 
         }
 
@@ -192,8 +204,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         try {
             rLock.lock();
-            final Revision<?> nextRevision = unixFSRevisionPool.nextRevision(current);
-            final Entry entry = new UnixFSJournalEntry(nextRevision, rLock::unlock);
+            final Revision<?> revision = unixFSRevisionPool.create(current);
+            final Entry entry = new UnixFSJournalEntry(revision, rLock::unlock);
             unlock = false;
             return entry;
         } finally {
@@ -207,7 +219,56 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         boolean unlock = true;
 
-        final UnixFSOptimisticLocking optimisticLocking = new UnixFSOptimisticLocking() {
+        try {
+
+            // Take a lock of the read lock. Note that subsequent operations will
+            rLock.lock();
+
+            // Fetches, atomically, the next slide, the revision, and sets an instance of OptimisitcLocking which will
+            // be used to track the resources held in contention.
+
+            final Slices.Slice slice = slices.next();
+            final Revision<?> revision = unixFSRevisionPool.create(current);
+            final UnixFSOptimisticLocking optimisticLocking = newOptimisticLocking();
+
+            // Sets up a build for the specific slide of the journal file.
+            final UnixFSTransactionProgramBuilder builder = programBuilderProvider.get()
+                .withByteBuffer(slice.slice)
+                .withChecksumAlgorithm(UnixFSChecksumAlgorithm.ADLER_32);
+
+            // Chain up all unwind operations appropriately. The andThen is specifically meant to continue chaining each
+            // unwind operation and execute the next in the chain. This gives the best possible chance at successfully
+            // unwinding the operation, covering all edge cases, while minimizing the chance of data loss.
+
+            final UnixFSUtils.IOOperationV onClose = UnixFSUtils.IOOperationV.begin()
+                .andThen(() -> buildAndExecute(builder))
+                .andThen(slice::close)
+                .andThen(rLock::unlock);
+
+            // Finally, we construct the entry, which we will return.
+            final MutableEntry entry = new UnixFSJournalMutableEntry(
+                revision,
+                utils,
+                unixFSPathIndex,
+                builder,
+                onClose,
+                optimisticLocking);
+
+            // We disable the unlock because we will transfer ownership of the lock to the entry. If it made it this far
+            // we know that the entry should be closed at a later time.
+
+            unlock = false;
+            return entry;
+
+        } finally {
+            // Conditionally perform the unlock operation.
+            if (unlock) rLock.unlock();
+        }
+
+    }
+
+    private UnixFSOptimisticLocking newOptimisticLocking() {
+        return new UnixFSOptimisticLocking() {
 
             final List<Object> toRelease = new ArrayList<>();
 
@@ -239,16 +300,10 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             }
 
         };
+    }
 
-        try {
-            rLock.lock();
-            final Revision<?> nextRevision = unixFSRevisionPool.nextRevision(current);
-            final MutableEntry entry = null; // TODO Fix This
-            unlock = false;
-            return entry;
-        } finally {
-            if (unlock) rLock.unlock();
-        }
+    private void buildAndExecute(final UnixFSTransactionProgramBuilder builder) {
+
     }
 
     @Override
@@ -290,6 +345,59 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     public void close() {
         journalBuffer.force();
         utils.unlockDirectory(lockFilePath);
+    }
+
+    private class Slices {
+
+        private final byte[] filler;
+
+        private final ArrayList<ByteBuffer> slices = new ArrayList<>();
+
+        private final UnixFSDualCounter counter = new UnixFSDualCounter((int)txnEntryBufferCount);
+
+        public Slices(final ByteBuffer journalBuffer) {
+
+            filler = new byte[(int)txnEntryBufferSize];
+            fill(filler, (byte) 0xFF);
+
+            for (int sliceIndex = 0; sliceIndex < txnEntryBufferCount; ++sliceIndex) {
+
+                final int position;
+
+                journalBuffer
+                    .position(position = header.size() + ((int)txnEntryBufferSize * sliceIndex))
+                    .limit(position + (int)txnEntryBufferSize);
+
+                slices.add(journalBuffer.slice());
+
+            }
+
+        }
+
+        public Slice next() {
+            return new Slice();
+        }
+
+        private class Slice implements AutoCloseable {
+
+            private final int index;
+
+            private final ByteBuffer slice;
+
+            public Slice() {
+                this.index = counter.incrementAhdGetLeading();
+                this.slice = slices.get(this.index);
+            }
+
+            @Override
+            public void close() {
+                slice.clear();
+                slice.put(filler);
+                counter.incrementAndGetTrailing();
+            }
+
+        }
+
     }
 
 }

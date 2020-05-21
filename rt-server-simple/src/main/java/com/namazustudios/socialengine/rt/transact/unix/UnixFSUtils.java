@@ -201,6 +201,15 @@ public class UnixFSUtils {
             };
         }
 
+        /**
+         * Starts building an {@link IOOperationV}
+         *
+         * @return an instance of {@link IOOperationV} which does nothing.
+         */
+        static IOOperationV begin() {
+            return () -> {};
+        }
+
     }
 
     /**

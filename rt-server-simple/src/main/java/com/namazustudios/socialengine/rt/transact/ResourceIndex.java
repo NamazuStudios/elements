@@ -35,7 +35,7 @@ public interface ResourceIndex {
      * @param path the {@link Path} to the {@link Resource}
      * @return a {@link Revision<ReadableByteChannel>} which can be used to read the {@link Resource} contents
      */
-    Revision<ReadableByteChannel> loadResourceContentsAt(Revision<?> revision, Path path);
+    Revision<ReadableByteChannel> loadResourceContentsAt(Revision<?> revision, Path path) throws IOException;
 
     /**
      * Attempts to open the contents of a {@link Resource} with the supplied {@link Path} at the supplied
@@ -49,6 +49,6 @@ public interface ResourceIndex {
      * @param resourceId the {@link Path} to the {@link ResourceId}
      * @return a {@link Revision<ReadableByteChannel>} which can be used to read the {@link Resource} contents
      */
-    Revision<ReadableByteChannel> loadResourceContentsAt(Revision<?> revision, ResourceId resourceId);
+    Revision<ReadableByteChannel> loadResourceContentsAt(Revision<?> revision, ResourceId resourceId) throws IOException;
 
 }
