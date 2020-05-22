@@ -18,19 +18,10 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionP
  */
 public class UnixFSTransactionCommand {
 
-    final Header header = new Header();
+    final Header header;
 
-    final ByteBuffer byteBuffer;
-
-    /**
-     * Constructs a {@link UnixFSTransactionCommand} from the supplied byte buffer and position.
-     *
-     * @param byteBuffer the {@link ByteBuffer}
-     * @param position the position of the first byte of the header.
-     */
-    UnixFSTransactionCommand(final ByteBuffer byteBuffer, int position) {
-        this.byteBuffer = byteBuffer.slice();
-        header.setByteBuffer(byteBuffer, position);
+    private UnixFSTransactionCommand(final Header header) {
+        this.header = header;
     }
 
     /**
@@ -41,17 +32,46 @@ public class UnixFSTransactionCommand {
      * @return an instance of {@link UnixFSTransactionParameter}
      */
     public UnixFSTransactionParameter getParameterAt(final int index) {
-
-        if (index > header.parameterCount.get()) {
-            throw new UnixFSProgramCorruptionException("Parameter index out of bounds.");
-        }
-
-        return UnixFSTransactionParameter.fromCommand(index, this);
-
+        return UnixFSTransactionParameter.fromCommand(this, index);
     }
 
+    /**
+     * Gets a {@link Builder} used to construct an instance of {@link UnixFSTransactionCommand} command.
+     *
+     * @return a new {@link Builder} instance
+     */
     public static Builder builder() {
         return new Builder();
+    }
+
+    /**
+     * Reads a new {@link UnixFSTransactionCommand} from the supplied {@link ByteBuffer}. This will read until the end
+     * of the {@link ByteBuffer}
+     *
+     * @param byteBuffer the {@link ByteBuffer} to read from.
+     */
+    public static UnixFSTransactionCommand from(final ByteBuffer byteBuffer) {
+
+        final ByteBuffer duplicate = byteBuffer.duplicate();
+
+        final Header header = new Header();
+        final int position = duplicate.position();
+        header.setByteBuffer(duplicate, position);
+
+        final long lLength = header.length.get();
+
+        if (lLength > Integer.MAX_VALUE || lLength < 0) {
+            throw new UnixFSProgramCorruptionException("Invalid command length: " + lLength);
+        }
+
+        duplicate.limit(position + (int) lLength);
+        byteBuffer.position(position + (int) lLength);
+
+        final ByteBuffer slice = duplicate.slice().asReadOnlyBuffer();
+        header.setByteBuffer(slice, 0);
+
+        return new UnixFSTransactionCommand(header);
+
     }
 
     /**
@@ -62,21 +82,21 @@ public class UnixFSTransactionCommand {
 
         private Builder() {}
 
-        private Phase phase;
+        private UnixFSTransactionProgram.ExecutionPhase executionPhase;
 
         private Instruction instruction;
 
         private final List<ParameterWriter> parameterOperations = new LinkedList<>();
 
         /**
-         * Specifies the {@link Phase} of the command.
+         * Specifies the {@link UnixFSTransactionProgram.ExecutionPhase} of the command.
          *
-         * @param phase the {@link Phase}
+         * @param executionPhase the {@link UnixFSTransactionProgram.ExecutionPhase}
          *
          * @return this instance
          */
-        public Builder withPhase(final Phase phase) {
-            this.phase = phase;
+        public Builder withPhase(final UnixFSTransactionProgram.ExecutionPhase executionPhase) {
+            this.executionPhase = executionPhase;
             return this;
         }
 
@@ -130,23 +150,35 @@ public class UnixFSTransactionCommand {
             return this;
         }
 
-        public void build(final ByteBuffer byteBuffer) {
+        /**
+         * Builds the {@link UnixFSTransactionCommand} by appending it and its commands to the supplied
+         * {@link ByteBuffer}.
+         *
+         * @param byteBuffer the {@link ByteBuffer} which will receive the {@link UnixFSTransactionCommand}
+         */
+        public UnixFSTransactionCommand build(final ByteBuffer byteBuffer) {
+
+            final ByteBuffer duplicate = byteBuffer.duplicate();
+            duplicate.mark();
 
             // Counts the parameters and locks the position of the command to the current byte buffer position
 
             final int paramCount = parameterOperations.size();
-            final int commandPosition = byteBuffer.position();
-            for (int i = 0; i < Header.SIZE; ++i) byteBuffer.put((byte)0xFF);
+            final int commandPosition = duplicate.position();
 
-            final UnixFSTransactionCommand command = new UnixFSTransactionCommand(byteBuffer, commandPosition);
+            // Fills the header bytes full of place holder data.
+            for (int i = 0; i < Header.SIZE; ++i) duplicate.put((byte)0xFF);
 
-            // Set all headers to the desired values.
-            command.header.phase.set(phase);
-            command.header.instruction.set(instruction);
-            command.header.parameterCount.set((short)paramCount);
+            // Creates the header and populates
+            final Header header = new Header();
+
+            // Set all headers to the desired values, overwriting previous clearing of the buffer.
+            header.phase.set(executionPhase);
+            header.instruction.set(instruction);
+            header.parameterCount.set((short)paramCount);
 
             // Allocate space for the parameter headers
-            for (int i = 0; i < paramCount * UnixFSTransactionParameter.Header.SIZE; ++i) byteBuffer.put((byte)0xFF);
+            for (int i = 0; i < paramCount * UnixFSTransactionParameter.Header.SIZE; ++i) duplicate.put((byte)0xFF);
 
             // Writes all parameters to the byte buffer
 
@@ -155,8 +187,19 @@ public class UnixFSTransactionCommand {
             while (listIterator.hasNext()) {
                 final int parameterIndex = listIterator.previousIndex();
                 final ParameterWriter parameterWriter = listIterator.next();
-                parameterWriter.write(command, parameterIndex);
+                parameterWriter.write(header, parameterIndex);
             }
+
+            final int commandLength = byteBuffer.position() - commandPosition;
+            header.length.set(commandLength);
+
+            duplicate.reset();
+            duplicate.limit(commandPosition + commandLength);
+
+            final ByteBuffer slice = duplicate.slice().asReadOnlyBuffer();
+            header.setByteBuffer(slice, 0);
+
+            return new UnixFSTransactionCommand(header);
 
         }
 
@@ -169,12 +212,17 @@ public class UnixFSTransactionCommand {
         /**
          * The instruction to execute.
          */
-        public final Enum16<Phase> phase = new Enum16<>(Phase.values());
+        public final Enum16<UnixFSTransactionProgram.ExecutionPhase> phase = new Enum16<>(UnixFSTransactionProgram.ExecutionPhase.values());
 
         /**
          * The instruction to execute.
          */
         public final Enum16<Instruction> instruction = new Enum16<>(Instruction.values());
+
+        /**
+         * The length of the command, in bytes.
+         */
+        public final Unsigned32 length = new Unsigned32();
 
         /**
          * Represents the number of parameters passed to the command.
@@ -203,17 +251,12 @@ public class UnixFSTransactionCommand {
         /**
          * Unlinks a {@link ResourceId} from a {@link com.namazustudios.socialengine.rt.Path}
          */
-        UNLINK_RESOURCE_ID_FROM_PATH,
+        UNLINK_RT_PATH,
 
         /**
          * Removes a {@link Resource} with a supplied {@link ResourceId}
          */
         REMOVE_RESOURCE,
-
-        /**
-         *  Links a {@link java.nio.file.Path} to a {@link ResourceId}
-         */
-        LINK_FS_PATH_TO_RESOURCE,
 
         /**
          * Links a {@link java.nio.file.Path} to a {@link com.namazustudios.socialengine.rt.Path}
@@ -232,27 +275,10 @@ public class UnixFSTransactionCommand {
 
     }
 
-    /**
-     * Indicates the phase of the a
-     */
-    public enum Phase {
-
-        /**
-         * Happens in the commit phase.
-         */
-        COMMIT,
-
-        /**
-         * Happens in the cleanup phase.
-         */
-        CLEANUP
-
-    }
-
     @FunctionalInterface
     private interface ParameterWriter {
 
-        void write(UnixFSTransactionCommand command, int parameter);
+        void write(UnixFSTransactionCommand.Header header, int parameter);
 
     }
 

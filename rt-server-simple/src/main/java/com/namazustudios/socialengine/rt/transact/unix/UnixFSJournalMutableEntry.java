@@ -15,8 +15,8 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommand.Phase.CLEANUP;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommand.Phase.COMMIT;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.CLEANUP;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.COMMIT;
 import static java.nio.file.StandardOpenOption.WRITE;
 
 class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements TransactionJournal.MutableEntry {

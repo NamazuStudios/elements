@@ -18,17 +18,22 @@ public class UnixFSTransactionParameter {
 
     private final ByteBuffer byteBuffer;
 
-    private UnixFSTransactionParameter(final UnixFSTransactionCommand command, final int index) {
+    private UnixFSTransactionParameter(final UnixFSTransactionCommand.Header commandHeader, final int index) {
 
-        final long parameterCount = command.header.parameterCount.get();
+        final long parameterCount = commandHeader.parameterCount.get();
 
-        if (index >= command.header.parameterCount.get()) {
+        if (index >= commandHeader.parameterCount.get()) {
             throw new UnixFSProgramCorruptionException("Parameter index out of bounds " + index + ">=" + parameterCount);
+        } else if (index < 0) {
+            throw new IllegalArgumentException("Invalid command parameter index: " + index);
         }
 
-        this.byteBuffer = command.byteBuffer;
+        final int position =
+            commandHeader.size() +
+            commandHeader.getByteBufferPosition() +
+            (header.size() * index);
 
-        final int position = calculateHeaderPositionRelative(command, index);
+        byteBuffer = commandHeader.getByteBuffer().duplicate();
         header.setByteBuffer(byteBuffer, position);
 
     }
@@ -41,73 +46,82 @@ public class UnixFSTransactionParameter {
      * Returns an instance of {@link UnixFSTransactionParameter} from the supplied {@link UnixFSTransactionCommand}
      * instance.
      *
-     * @param index the parameter index.
      * @param unixFSTransactionCommand the {@link UnixFSTransactionCommand} which owns the parameter
+     * @param index the parameter index.
      * @return an instance of {@link UnixFSTransactionParameter}
      */
-    static UnixFSTransactionParameter fromCommand(final int index,
-                                                  final UnixFSTransactionCommand unixFSTransactionCommand) {
-        return new UnixFSTransactionParameter(unixFSTransactionCommand, index);
+    static UnixFSTransactionParameter fromCommand(final UnixFSTransactionCommand unixFSTransactionCommand,
+                                                  final int index) {
+        return new UnixFSTransactionParameter(unixFSTransactionCommand.header, index);
     }
 
     /**
      * Appends a FS Path parameter.
      *
-     * @param command the command owning the parameter
+     * @param commandHeader the {@link UnixFSTransactionCommand.Header}
      * @param parameterIndex the parameter index
      * @param path the path to write
      */
-    static void appendFSPath(final UnixFSTransactionCommand command,
+    static void appendFSPath(final UnixFSTransactionCommand.Header commandHeader,
                              final int parameterIndex,
                              final java.nio.file.Path path) {
+
+        final ByteBuffer commandByteBuffer = commandHeader.getByteBuffer();
 
         final ByteBuffer encoded = CHARSET.encode(path.toString());
         encoded.rewind();
 
-        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(command, parameterIndex);
-        param.header.length.set(encoded.remaining());
-        param.header.position.set(command.byteBuffer.position() - command.header.getByteBufferPosition());
+        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(
+                commandHeader,
+                parameterIndex);
 
-        command.byteBuffer.put(encoded);
+        param.header.length.set(encoded.remaining());
+        param.header.position.set(commandByteBuffer.position() + commandHeader.getByteBufferPosition());
+        commandByteBuffer.put(encoded);
 
     }
 
     /**
      * Appends an RT Path parameter.
      *
-     * @param command the command owning the parameter
+     * @param commandHeader the {@link UnixFSTransactionCommand.Header}
      * @param parameterIndex the parameter index
      * @param path the path to write
      */
-    static void appendRTPath(final UnixFSTransactionCommand command,
+    static void appendRTPath(final UnixFSTransactionCommand.Header commandHeader,
                              final int parameterIndex,
                              final com.namazustudios.socialengine.rt.Path path) {
+
+        final ByteBuffer commandByteBuffer = commandHeader.getByteBuffer();
 
         final ByteBuffer encoded = CHARSET.encode(path.toAbsolutePathString());
         encoded.rewind();
 
-        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(command, parameterIndex);
-        param.header.length.set(encoded.remaining());
-        param.header.position.set(command.byteBuffer.position() - command.header.getByteBufferPosition());
+        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(
+                commandHeader,
+                parameterIndex);
 
-        command.byteBuffer.put(encoded);
+        param.header.length.set(encoded.remaining());
+        param.header.position.set(commandByteBuffer.position() + commandHeader.getByteBufferPosition());
+        commandByteBuffer.put(encoded);
 
     }
 
     /**
      * Appends a FS Path parameter.
      *
-     * @param command the command owning the parameter
+     * @param commandHeader the {@link UnixFSTransactionCommand.Header}
      * @param parameterIndex the parameter index
      * @param resourceId the {@link ResourceId} to write
      */
-    static void appendResourceId(final UnixFSTransactionCommand command,
+    static void appendResourceId(final UnixFSTransactionCommand.Header commandHeader,
                                  final int parameterIndex,
                                  final ResourceId resourceId) {
-        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(command, parameterIndex);
+        final ByteBuffer commandByteBuffer = commandHeader.getByteBuffer();
+        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(commandHeader, parameterIndex);
         param.header.length.set(ResourceId.getSizeInBytes());
-        param.header.position.set(command.byteBuffer.position() - command.header.getByteBufferPosition());
-        resourceId.toByteBuffer(command.byteBuffer);
+        param.header.position.set(commandByteBuffer.position() - commandHeader.getByteBufferPosition());
+        resourceId.toByteBuffer(commandByteBuffer);
     }
 
     /**
