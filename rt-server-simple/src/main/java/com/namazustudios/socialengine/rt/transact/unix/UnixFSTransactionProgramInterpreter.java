@@ -9,16 +9,23 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Path;
 import java.util.List;
 
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.CLEANUP;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.COMMIT;
+
 public class UnixFSTransactionProgramInterpreter {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionProgramInterpreter.class);
+
+    final UnixFSTransactionProgram program;
 
     final List<UnixFSTransactionCommand> commits;
 
     final List<UnixFSTransactionCommand> cleanups;
 
-    UnixFSTransactionProgramInterpreter(final List<UnixFSTransactionCommand> commits,
-                                                final List<UnixFSTransactionCommand> cleanups) {
+    UnixFSTransactionProgramInterpreter(final UnixFSTransactionProgram program,
+                                        final List<UnixFSTransactionCommand> commits,
+                                        final List<UnixFSTransactionCommand> cleanups) {
+        this.program = program;
         this.commits = commits;
         this.cleanups = cleanups;
     }
@@ -29,7 +36,15 @@ public class UnixFSTransactionProgramInterpreter {
      * @param executionHandler
      */
     public void executeCommitPhase(final ExecutionHandler executionHandler) {
+
+        final short phases = program.header.phases.get();
+
+        if (((0x1 << COMMIT.ordinal()) & phases) == 0) {
+            throw new IllegalStateException(COMMIT + " hot valid.");
+        }
+
         commits.forEach(command -> interpret(command, executionHandler));
+
     }
 
     /**
@@ -38,7 +53,15 @@ public class UnixFSTransactionProgramInterpreter {
      * @param executionHandler
      */
     public void executeCleanupPhase(final ExecutionHandler executionHandler) {
+
+        final short phases = program.header.phases.get();
+
+        if (((0x1 << CLEANUP.ordinal()) & phases) == 0) {
+            throw new IllegalStateException(CLEANUP + " hot valid.");
+        }
+
         cleanups.forEach(command -> interpret(command, executionHandler));
+
     }
 
     private void interpret(final UnixFSTransactionCommand command, final ExecutionHandler executionHandler) {
@@ -140,10 +163,10 @@ public class UnixFSTransactionProgramInterpreter {
         /**
          * Handles {@link Instruction#LINK_FS_PATH_TO_RT_PATH}
          *
-         * @param resourceId
+         * @param fsPath
          * @param rtPath
          */
-        void linkFSPathToRTPath(Path resourceId, com.namazustudios.socialengine.rt.Path rtPath);
+        void linkFSPathToRTPath(java.nio.file.Path fsPath, com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
          * Handles {@link Instruction#LINK_RESOURCE_TO_RT_PATH}

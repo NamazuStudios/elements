@@ -25,7 +25,7 @@ public interface TransactionJournal extends AutoCloseable {
      *
      * @return
      */
-    Entry getCurrentEntry();
+    Entry newSnapshotEntry();
 
     /**
      * Gets a new entry.
@@ -203,7 +203,7 @@ public interface TransactionJournal extends AutoCloseable {
          * Returns true if the transaction has been committed.  False otherwise.  If this method returns true, then
          * all other methods, except {@link #close()}, must throw an instance of {@link IllegalStateException}
          *
-         * @return true if the transaction was committed
+         * @return true if a commit was requested
          */
         boolean isCommitted();
 

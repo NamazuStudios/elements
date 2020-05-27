@@ -118,6 +118,22 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
     }
 
+    public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
+
+    }
+
+    public void linkFSPathToResourceId(final Revision<?> revision,
+                                       final Path fsPath,
+                                       final ResourceId resourceId) {
+
+    }
+
+    public void linkResourceIdToRTPath(final Revision<?> revision,
+                                       final ResourceId resourceId,
+                                       final com.namazustudios.socialengine.rt.Path rtPath) {
+
+    }
+
     private class PathMapping {
 
         private final Path fsPath;

@@ -198,14 +198,14 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public Entry getCurrentEntry() {
+    public UnixFSJournalEntry newSnapshotEntry() {
 
         boolean unlock = true;
 
         try {
             rLock.lock();
             final Revision<?> revision = unixFSRevisionPool.create(current);
-            final Entry entry = new UnixFSJournalEntry(revision, rLock::unlock);
+            final UnixFSJournalEntry entry = new UnixFSJournalEntry(revision, rLock::unlock);
             unlock = false;
             return entry;
         } finally {
@@ -215,7 +215,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public MutableEntry newMutableEntry() {
+    public UnixFSJournalMutableEntry newMutableEntry() {
 
         boolean unlock = true;
 
@@ -243,10 +243,11 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             final UnixFSUtils.IOOperationV onClose = UnixFSUtils.IOOperationV.begin()
                 .andThen(() -> buildAndExecute(builder))
                 .andThen(slice::close)
+                .andThen(optimisticLocking::unlock)
                 .andThen(rLock::unlock);
 
             // Finally, we construct the entry, which we will return.
-            final MutableEntry entry = new UnixFSJournalMutableEntry(
+            final UnixFSJournalMutableEntry entry = new UnixFSJournalMutableEntry(
                 revision,
                 utils,
                 unixFSPathIndex,

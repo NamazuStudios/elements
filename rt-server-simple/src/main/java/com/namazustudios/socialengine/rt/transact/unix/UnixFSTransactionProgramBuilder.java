@@ -10,7 +10,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommand.Instruction.*;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.CLEANUP;
@@ -27,11 +27,13 @@ public class UnixFSTransactionProgramBuilder {
 
     private ByteBuffer byteBuffer;
 
+    private UnixFSTransactionProgram program;
+
     private UnixFSChecksumAlgorithm checksumAlgorithm = UnixFSChecksumAlgorithm.ADLER_32;
 
-    private final EnumMap<ExecutionPhase, List<CommandWriter>> operations = new EnumMap<>(ExecutionPhase.class);
+    private final Map<ExecutionPhase, List<CommandWriter>> operations = new EnumMap<>(ExecutionPhase.class);
 
-    private final EnumMap<ExecutionPhase, List<UnixFSTransactionCommand>> commands = new EnumMap<>(ExecutionPhase.class);
+    private final Map<ExecutionPhase, List<UnixFSTransactionCommand>> commands = new EnumMap<>(ExecutionPhase.class);
 
     /**
      * Specifies the {@link ByteBuffer} which will hold the program's code.
@@ -42,7 +44,7 @@ public class UnixFSTransactionProgramBuilder {
     public UnixFSTransactionProgramBuilder withByteBuffer(final ByteBuffer byteBuffer) {
         requireNonNull(byteBuffer);
         this.byteBuffer = byteBuffer;
-        commands.clear();
+        clear();
         return this;
     }
 
@@ -55,7 +57,7 @@ public class UnixFSTransactionProgramBuilder {
     public UnixFSTransactionProgramBuilder withChecksumAlgorithm(final UnixFSChecksumAlgorithm checksumAlgorithm) {
         requireNonNull(checksumAlgorithm);
         this.checksumAlgorithm = checksumAlgorithm;
-        commands.clear();
+        clear();
         return this;
     }
 
@@ -78,7 +80,7 @@ public class UnixFSTransactionProgramBuilder {
                 .addFSPathParameter(fsPath)
             .build(byteBuffer)));
 
-        commands.clear();
+        clear();
         return this;
 
     }
@@ -102,7 +104,7 @@ public class UnixFSTransactionProgramBuilder {
                 .addRTPathParameter(rtPath)
             .build(byteBuffer)));
 
-        commands.clear();
+        clear();
 
         return this;
 
@@ -131,7 +133,7 @@ public class UnixFSTransactionProgramBuilder {
                 .addResourceIdParameter(resourceId)
             .build(byteBuffer)));
 
-        commands.clear();
+        clear();
 
         return this;
     }
@@ -159,7 +161,7 @@ public class UnixFSTransactionProgramBuilder {
                 .addRTPathParameter(rtPath)
             .build(byteBuffer)));
 
-        commands.clear();
+        clear();
 
         return this;
 
@@ -188,7 +190,7 @@ public class UnixFSTransactionProgramBuilder {
                 .addRTPathParameter(rtPath)
             .build(byteBuffer)));
 
-        commands.clear();
+        clear();
 
         return this;
 
@@ -214,10 +216,15 @@ public class UnixFSTransactionProgramBuilder {
                 .addResourceIdParameter(resourceId)
             .build(byteBuffer)));
 
-        commands.clear();
+        clear();
 
         return this;
 
+    }
+
+    private void clear() {
+        program = null;
+        commands.clear();
     }
 
     private List<CommandWriter> getOperations(final ExecutionPhase executionPhase) {
@@ -242,32 +249,22 @@ public class UnixFSTransactionProgramBuilder {
         program.header.algorithm.set(checksumAlgorithm);
         program.header.checksum.set(0);
 
-        compile(COMMIT, program, program.header.commitPos, program.header.commitLen);
-        compile(CLEANUP, program, program.header.cleanupPos, program.header.cleanupLen);
+        int programLength = 0;
 
-        return program;
+        // Compiles all Phases
+        programLength += compile(COMMIT, program, program.header.commitPos, program.header.commitLen);
+        programLength += compile(CLEANUP, program, program.header.cleanupPos, program.header.cleanupLen);
+
+        program.header.length.set(programLength);
+
+        return this.program = program;
 
     }
 
-    /**
-     * If a previous call to {@link #compile()} was made, this will generate an instance of
-     * {@link UnixFSTransactionProgramInterpreter} based on the {@link UnixFSTransactionCommand} instances that were
-     * compiled as part of building the {@link UnixFSTransactionProgram}. This is useful to avoid re-parsing the
-     * commands.
-     *
-     * @return an instance of {@link UnixFSTransactionProgramInterpreter}
-     */
-    public UnixFSTransactionProgramInterpreter interpret() {
-        final List<UnixFSTransactionCommand> commits = commands.get(COMMIT);
-        final List<UnixFSTransactionCommand> cleanups = commands.get(CLEANUP);
-        if (commits == null || cleanups == null) throw new IllegalStateException("Program has not bee compiled.");
-        return new UnixFSTransactionProgramInterpreter(commits, cleanups);
-    }
-
-    private void compile(final ExecutionPhase executionPhase,
-                         final UnixFSTransactionProgram program,
-                         final Struct.Unsigned32 pos,
-                         final Struct.Unsigned32 len) {
+    private int compile(final ExecutionPhase executionPhase,
+                        final UnixFSTransactionProgram program,
+                        final Struct.Unsigned32 pos,
+                        final Struct.Unsigned32 len) {
 
         final int position = byteBuffer.position() - program.header.getByteBufferPosition();
 
@@ -278,13 +275,32 @@ public class UnixFSTransactionProgramBuilder {
 
         this.commands.put(executionPhase, commands);
 
+        final int length = byteBuffer.position() - position;
+
         pos.set(position);
-        len.set(byteBuffer.position() - position);
+        len.set(length);
+
+        return length;
 
     }
 
+//    /**
+//     * If a previous call to {@link #compile()} was made, this will generate an instance of
+//     * {@link UnixFSTransactionProgramInterpreter} based on the {@link UnixFSTransactionCommand} instances that were
+//     * compiled as part of building the {@link UnixFSTransactionProgram}. This is useful to avoid re-parsing the
+//     * commands.
+//     *
+//     * @return an instance of {@link UnixFSTransactionProgramInterpreter}
+//     */
+//    public UnixFSTransactionProgramInterpreter interpreter() {
+//        final List<UnixFSTransactionCommand> commits = commands.get(COMMIT);
+//        final List<UnixFSTransactionCommand> cleanups = commands.get(CLEANUP);
+//        if (commits == null || cleanups == null) throw new IllegalStateException("Program has not bee compiled.");
+//        return new UnixFSTransactionProgramInterpreter(program, commits, cleanups);
+//    }
+
     @FunctionalInterface
-    public interface CommandWriter {
+    private interface CommandWriter {
 
         UnixFSTransactionCommand write(ByteBuffer buffer);
 

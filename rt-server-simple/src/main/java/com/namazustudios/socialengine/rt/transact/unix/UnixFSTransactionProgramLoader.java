@@ -35,10 +35,15 @@ class UnixFSTransactionProgramLoader {
         final int programPosition = program.header.getByteBufferPosition();
 
         final List<UnixFSTransactionCommand> commits, cleanups;
+        validateChecksum();
         commits = load(COMMIT, programPosition, program.header.commitPos, program.header.commitLen);
         cleanups = load(CLEANUP, programPosition, program.header.cleanupPos, program.header.cleanupLen);
 
-        return new UnixFSTransactionProgramInterpreter(commits, cleanups);
+        return new UnixFSTransactionProgramInterpreter(program, commits, cleanups);
+    }
+
+    private void validateChecksum() {
+        // TODO Read Checksum and Validate
     }
 
     private List<UnixFSTransactionCommand> load(

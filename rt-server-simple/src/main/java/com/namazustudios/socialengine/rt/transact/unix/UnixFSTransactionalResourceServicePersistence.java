@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -15,74 +16,73 @@ import java.nio.channels.WritableByteChannel;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static java.util.stream.Stream.concat;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class UnixFSTransactionalResourceServicePersistence implements TransactionalResourceServicePersistence {
 
     private static final Logger logger = getLogger(UnixFSTransactionalResourceServicePersistence.class);
 
-    private final TransactionJournal journal;
+    private final UnixFSRevisionDataStore unixFSRevisionDataStore;
 
-    private final RevisionDataStore revisionDataStore;
+    private final UnixFSTransactionJournal unixFSTransactionJournal;
 
     @Inject
-    public UnixFSTransactionalResourceServicePersistence(final TransactionJournal journal,
-                                                         final RevisionDataStore revisionDataStore) {
-        this.journal = journal;
-        this.revisionDataStore = revisionDataStore;
+    public UnixFSTransactionalResourceServicePersistence(final UnixFSRevisionDataStore unixFSRevisionDataStore,
+                                                         final UnixFSTransactionJournal unixFSTransactionJournal) {
+        this.unixFSRevisionDataStore = unixFSRevisionDataStore;
+        this.unixFSTransactionJournal = unixFSTransactionJournal;
     }
 
     @Override
     public ReadOnlyTransaction openRO() {
-        final TransactionJournal.Entry entry = getJournal().getCurrentEntry();
+        final UnixFSJournalEntry entry = getUnixFSTransactionJournal().newSnapshotEntry();
         return new UnixFSReadOnlyTransaction(entry);
     }
 
     @Override
     public ReadWriteTransaction openRW() {
-        final TransactionJournal.MutableEntry entry = getJournal().newMutableEntry();
+        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry();
         return new UnixFSReadWriteTransaction(entry);
     }
 
     @Override
     public ExclusiveReadWriteTransaction openExclusiveRW() {
-        final Monitor monitor = getJournal().getExclusiveMonitor();
-        final TransactionJournal.MutableEntry entry = getJournal().newMutableEntry();
+        final Monitor monitor = getUnixFSTransactionJournal().getExclusiveMonitor();
+        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry();
         return new UnixFSExclusiveReadWriteTransaction(entry, monitor);
     }
 
     @Override
     public void close() {
         try {
-            getRevisionDataStore().close();
+            getUnixFSRevisionDataStore().close();
         } catch (Exception ex) {
             logger.error("Caught exception closing {}", getClass().getName(), ex);
         }
     }
 
-    public TransactionJournal getJournal() {
-        return journal;
+    public UnixFSRevisionDataStore getUnixFSRevisionDataStore() {
+        return unixFSRevisionDataStore;
     }
 
-    public RevisionDataStore getRevisionDataStore() {
-        return revisionDataStore;
+    public UnixFSTransactionJournal getUnixFSTransactionJournal() {
+        return unixFSTransactionJournal;
     }
 
     private boolean existsAt(final Revision<?> revision, final ResourceId resourceId) {
         final Revision<Boolean> exists;
-        exists = revisionDataStore.getResourceIndex().existsAt(revision.comparableTo(), resourceId);
+        exists = getUnixFSRevisionDataStore().getResourceIndex().existsAt(revision.comparableTo(), resourceId);
         return exists.getValue().isPresent() && exists.getValue().get();
     }
 
     private Stream<ResourceService.Listing> listAt(final Revision<?> revision, final Path path) {
         final Revision<Stream<ResourceService.Listing>> listingRevision;
-        listingRevision = revisionDataStore.getPathIndex().list(revision.comparableTo(), path);
+        listingRevision = getUnixFSRevisionDataStore().getPathIndex().list(revision.comparableTo(), path);
         return listingRevision.getValue().orElseGet(Stream::empty);
     }
 
     private ResourceId getResourceIdAt(final Revision<?> revision, final Path path) {
-        return revisionDataStore
+        return getUnixFSRevisionDataStore()
             .getPathIndex()
             .getRevisionMap()
             .getValueAt(revision.comparableTo(), path)
@@ -92,7 +92,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final Path path) throws IOException {
 
-        final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
+        final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
             .getResourceIndex()
             .loadResourceContentsAt(revision.comparableTo(), path);
 
@@ -102,7 +102,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final ResourceId resourceId) throws IOException {
 
-        final Revision<ReadableByteChannel> readableByteChannelRevision = revisionDataStore
+        final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
                 .getResourceIndex()
                 .loadResourceContentsAt(revision.comparableTo(), resourceId);
 
@@ -152,9 +152,9 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private class UnixFSReadWriteTransaction implements ReadWriteTransaction {
 
-        protected final TransactionJournal.MutableEntry entry;
+        protected final UnixFSJournalMutableEntry entry;
 
-        public UnixFSReadWriteTransaction(TransactionJournal.MutableEntry entry) {
+        public UnixFSReadWriteTransaction(final UnixFSJournalMutableEntry entry) {
             this.entry = entry;
         }
 
@@ -171,9 +171,9 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         @Override
         public Stream<ResourceService.Listing> list(final Path path) {
 
-            final Revision<Stream<ResourceService.Listing>> indexed = getRevisionDataStore()
-                    .getPathIndex()
-                    .list(entry.getRevision(), path);
+            final Revision<Stream<ResourceService.Listing>> indexed = getUnixFSRevisionDataStore()
+                .getPathIndex()
+                .list(entry.getRevision(), path);
 
             return indexed.getValue().orElseGet(Stream::empty);
 
@@ -236,9 +236,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         @Override
         public void close() {
             try (final TransactionJournal.Entry e = entry) {
-                if (entry.isCommitted()) {
-                    revisionDataStore.apply(entry);
-                }
+                finish(entry);
             }
         }
 
@@ -249,7 +247,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         private final Monitor monitor;
 
-        public UnixFSExclusiveReadWriteTransaction(final TransactionJournal.MutableEntry entry,
+        public UnixFSExclusiveReadWriteTransaction(final UnixFSJournalMutableEntry entry,
                                                    final Monitor monitor) {
             super(entry);
             this.monitor = monitor;
@@ -257,17 +255,31 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public Stream<ResourceId> removeAllResources() {
-            return journal.clear();
+            return unixFSTransactionJournal.clear();
         }
 
         @Override
         public void close() {
             try (final Monitor m = monitor;
                  final TransactionJournal.Entry e = entry) {
-                if (entry.isCommitted()) {
-                    revisionDataStore.apply(entry);
-                }
+                finish(entry);
+             }
+        }
+
+    }
+
+    private void finish(final UnixFSJournalMutableEntry entry) {
+
+        final ExecutionHandler handler = getUnixFSRevisionDataStore().newExecutionHandler(entry.getRevision());
+
+        try {
+            if (entry.isCommitted()) {
+                entry.apply(handler);
+            } else {
+                entry.rollback();
             }
+        } finally {
+            entry.cleanup(handler);
         }
 
     }

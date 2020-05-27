@@ -115,6 +115,22 @@ public class UnixFSPathIndex implements PathIndex {
         }));
     }
 
+    public void giunlink(final Revision<?> revision,
+                       final com.namazustudios.socialengine.rt.Path rtPath) {
+
+    }
+
+    public void linkFSPathToRTPath(final Revision<?> revision,
+                                   final com.namazustudios.socialengine.rt.Path rtPath,
+                                   final Path resourceId) {
+    }
+
+    public void linkRTPathToResourceId(final Revision<?> revision,
+                                       final com.namazustudios.socialengine.rt.Path rtPath,
+                                       final ResourceId resourceId) {
+
+    }
+
     public class PathMapping {
 
         private final Path fsPath;

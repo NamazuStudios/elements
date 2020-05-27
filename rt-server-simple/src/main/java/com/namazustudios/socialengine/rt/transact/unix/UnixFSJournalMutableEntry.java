@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,15 +27,17 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     // Initialized with Object
 
+    private boolean rollback = false;
+
     private boolean committed = false;
 
     private UnixFSWorkingCopy workingCopy;
 
+    private UnixFSTransactionProgram program = null;
+
     // Assigned in Constructor
 
     private final UnixFSUtils unixFSUtils;
-
-    private final UnixFSPathIndex unixFSPathIndex;
 
     private final UnixFSTransactionProgramBuilder programBuilder;
 
@@ -48,7 +52,6 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
         super(revision, onClose);
         this.programBuilder = programBuilder;
         this.unixFSUtils = unixFSUtils;
-        this.unixFSPathIndex = unixFSPathIndex;
         this.optimisticLocking = optimisticLocking;
         this.workingCopy = new UnixFSWorkingCopy(revision, unixFSPathIndex, optimisticLocking);
     }
@@ -159,7 +162,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     @Override
     public void commit() {
         check();
-        programBuilder.compile().commit();
+        program = programBuilder.compile().commit(ExecutionPhase.values());
         committed = true;
     }
 
@@ -168,10 +171,25 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
         return committed;
     }
 
+    public void rollback() {
+        check();
+        program = programBuilder.compile().commit(CLEANUP);
+        rollback = true;
+    }
+
+    public void cleanup(final ExecutionHandler handler) {
+        program.interpreter().executeCleanupPhase(handler);
+    }
+
     @Override
     protected void check() {
         super.check();
-        if (committed) throw new IllegalStateException();
+        if (committed || rollback) throw new IllegalStateException();
+    }
+
+    public void apply(final ExecutionHandler handler) {
+        if (program == null) throw new IllegalStateException();
+        program.interpreter().executeCommitPhase(handler);
     }
 
 }

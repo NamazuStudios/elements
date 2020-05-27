@@ -14,6 +14,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
 import static com.namazustudios.socialengine.rt.transact.Revision.zero;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionDataStore.STORAGE_ROOT_DIRECTORY;
@@ -139,6 +140,16 @@ public class UnixFSUtils {
         } catch (Exception ex) {
             logger.error("IOException Performing operation.", ex);
             throw new InternalException(ex);
+        }
+    }
+
+    public <ExceptionT extends InternalException> void doOperationV(
+            final IOOperationV action,
+            final Function<Throwable, ExceptionT> exceptionTFunction) {
+        try {
+            action.perform();
+        } catch (IOException ex) {
+            throw exceptionTFunction.apply(ex);
         }
     }
 
