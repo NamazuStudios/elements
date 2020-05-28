@@ -81,13 +81,13 @@ public class UnixFSTransactionProgramInterpreter {
             case REMOVE_RESOURCE:
                 removeResource(command, executionHandler);
                 break;
-            case LINK_FS_PATH_TO_RT_PATH:
+            case LINK_RESOURCE_FILE_TO_RT_PATH:
                 linkFSPathToRTPath(command, executionHandler);
                 break;
             case LINK_RESOURCE_TO_RT_PATH:
                 linkResourceToRTPath(command, executionHandler);
                 break;
-            case LINK_FS_PATH_TO_RESOURCE_ID:
+            case LINK_RESOURCE_FILE_TO_RESOURCE_ID:
                 linkFSPathToResourceId(command, executionHandler);
                 break;
             default:
@@ -161,7 +161,7 @@ public class UnixFSTransactionProgramInterpreter {
         void removeResource(ResourceId resourceId);
 
         /**
-         * Handles {@link Instruction#LINK_FS_PATH_TO_RT_PATH}
+         * Handles {@link Instruction#LINK_RESOURCE_FILE_TO_RT_PATH}
          *
          * @param fsPath
          * @param rtPath
@@ -177,7 +177,7 @@ public class UnixFSTransactionProgramInterpreter {
         void linkResourceToRTPath(ResourceId resourceId, com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
-         * Handles {@link Instruction#LINK_FS_PATH_TO_RESOURCE_ID}
+         * Handles {@link Instruction#LINK_RESOURCE_FILE_TO_RESOURCE_ID}
          * @param fsPath
          * @param resourceId
          */

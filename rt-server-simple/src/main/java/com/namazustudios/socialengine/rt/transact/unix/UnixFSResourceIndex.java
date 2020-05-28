@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.ResourceIndex;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import org.slf4j.Logger;
@@ -19,6 +20,7 @@ import java.util.Objects;
 import java.util.Optional;
 
 import static java.nio.channels.FileChannel.open;
+import static java.nio.file.Files.createLink;
 import static java.nio.file.StandardOpenOption.READ;
 
 public class UnixFSResourceIndex implements ResourceIndex {
@@ -118,23 +120,26 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
     }
 
+    public PathMapping getPathMapping(final ResourceId resourceId) {
+        return new PathMapping(resourceId);
+    }
+
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
 
     }
 
-    public void linkFSPathToResourceId(final Revision<?> revision,
-                                       final Path fsPath,
-                                       final ResourceId resourceId) {
+    public void linkFSPathToResourceId(final Revision<?> revision, final Path fsPath, final ResourceId resourceId) {
+
+        final PathMapping pathMapping = new PathMapping(resourceId);
+
+        utils.doOperationV(() -> {
+            final Path revisionPath = pathMapping.getRevisionPath(revision);
+            createLink(fsPath, revisionPath);
+        }, FatalException::new);
 
     }
 
-    public void linkResourceIdToRTPath(final Revision<?> revision,
-                                       final ResourceId resourceId,
-                                       final com.namazustudios.socialengine.rt.Path rtPath) {
-
-    }
-
-    private class PathMapping {
+    public class PathMapping {
 
         private final Path fsPath;
 
@@ -146,6 +151,10 @@ public class UnixFSResourceIndex implements ResourceIndex {
                 .getResourceStorageRoot()
                 .resolve(resourceId.asString())
                 .toAbsolutePath();
+        }
+
+        public Path getRevisionPath(final Revision<?> revision) {
+            return utils.getRevisionPath(revision, fsPath);
         }
 
         @Override

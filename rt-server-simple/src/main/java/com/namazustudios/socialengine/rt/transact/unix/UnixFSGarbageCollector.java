@@ -1,37 +1,29 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
 
+import javax.inject.Inject;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentSkipListMap;
 
 /**
  * Implements the garbage collection for the {@link UnixFSTransactionalResourceServicePersistence}.
  */
 public class UnixFSGarbageCollector {
 
-    private SortedSet<Revision<?>> locked = new TreeSet<>();
+    private final UnixFSUtils utils;
 
-    /**
-     * Locks the supplied {@link Revision<?>} with this garbage collector.  While locked, this
-     * {@link UnixFSGarbageCollector} will not collect the supplied {@link Revision<?>}
-     *
-     * @param revision
-     */
-    public void lock(final Revision<?> revision) {
+    private final SortedMap<Revision<?>, Integer> locked = new ConcurrentSkipListMap<>();
 
-    }
-
-    /**
-     * Unlocks the supplied {@link Revision<?>}, making it potentially available for collection
-     *
-     * @param revision
-     */
-    public void unlock(final Revision<?> revision) {
-
+    @Inject
+    public UnixFSGarbageCollector(final UnixFSUtils utils) {
+        this.utils = utils;
     }
 
     /**
@@ -43,12 +35,14 @@ public class UnixFSGarbageCollector {
      * @param revision the {@link Revision<?>}
      */
     public void pin(final Path file, final Revision<?> revision) {
-        if (!locked.contains(revision)) throw new IllegalStateException("Revision not locked by garbage collector.");
-        // TODO Implement This Method
-    }
 
-    public void unlinkTemporary(final Path temporaryFile) {
-        // TODO Implement This Method
+        if (!locked.containsKey(revision)) throw new IllegalStateException("Revision not locked by garbage collector.");
+        if (!Files.isRegularFile(file)) throw new IllegalArgumentException("Not a file path: " + file);
+
+        final Path root = file.getParent();
+        final Path pinned = root.resolve(revision.getUniqueIdentifier());
+        utils.doOperationV(() -> Files.createLink(file, pinned), FatalException::new);
+
     }
 
 }

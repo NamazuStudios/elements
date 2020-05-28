@@ -259,14 +259,16 @@ public class UnixFSTransactionCommand {
         REMOVE_RESOURCE,
 
         /**
-         * Links a {@link java.nio.file.Path} to a {@link com.namazustudios.socialengine.rt.Path}
+         * Links a {@link java.nio.file.Path} to a {@link com.namazustudios.socialengine.rt.Path}. Specifically, this
+         * would be used to link a temporary file at the supplied {@link java.nio.file.Path} to a {@link ResourceId}
          */
-        LINK_FS_PATH_TO_RT_PATH,
+        LINK_RESOURCE_FILE_TO_RT_PATH,
 
         /**
-         * Links a {@link java.nio.file.Path} to a {@link ResourceId}
+         * Links a {@link java.nio.file.Path} to a {@link ResourceId}. Specifically, this would be used to link a
+         * temporary file at the supplied {@link java.nio.file.Path} to a {@link ResourceId}
          */
-        LINK_FS_PATH_TO_RESOURCE_ID,
+        LINK_RESOURCE_FILE_TO_RESOURCE_ID,
 
         /**
          * Links a {@link ResourceId} to a {@link com.namazustudios.socialengine.rt.Path}

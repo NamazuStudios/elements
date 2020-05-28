@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,13 +32,15 @@ public class UnixFSUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSUtils.class);
 
+    private static final String REVISION_SUFFIX = "§";
+
     public static final String LOCK_FILE_NAME = "lock";
 
     public static final String PATHS_DIRECTORY = "paths";
 
     public static final String RESOURCES_DIRECTORY = "resources";
 
-    public static final String TEMPORARY_DIRECTORY = "resources";
+    public static final String TEMPORARY_DIRECTORY = "temporary";
 
     private static final int TEMP_NAME_LENGTH_CHARS = 128;
 
@@ -179,6 +182,20 @@ public class UnixFSUtils {
     }
 
     /**
+     * Gets a {@link Path} based on the supplied parent path and the {@link Revision<?>}. This essentially appends the
+     * revision suffix to the path. This method simply formulates the {@link Path} and does not check that the directory
+     * even exists.
+     *
+     * @param revision the {@link Revision<?>}
+     * @param fsPath the parent filesystem {@link Path}
+     * @return the revision directory
+     */
+    public Path getRevisionPath(final Revision<?> revision, final Path fsPath) {
+        final String revisionDirectoryName = format("%s%s", revision.getUniqueIdentifier(), REVISION_SUFFIX);
+        return fsPath.resolve(revisionDirectoryName);
+    }
+
+    /**
      * Defines an operation which may throw an instance of {@link IOException}
      */
     @FunctionalInterface
@@ -265,7 +282,7 @@ public class UnixFSUtils {
         /**
          * Performs the operation.
          *
-         * @return the calculated vallue of the operation.
+         * @return the calculated value of the operation.
          * @throws IOException for any reason.
          */
         T perform() throws IOException;

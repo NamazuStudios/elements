@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.PathIndex;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.RevisionMap;
@@ -10,6 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
@@ -22,33 +24,37 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.getSizeInBytes;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromByteBuffer;
+import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.createLink;
 import static java.nio.file.StandardOpenOption.READ;
 
 public class UnixFSPathIndex implements PathIndex {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSPathIndex.class);
 
+    public static final String LINK = "link";
+
     private final NodeId nodeId;
 
     private final UnixFSUtils utils;
-
-    private final Revision.Factory revisionFactory;
 
     private final UnixFSGarbageCollector garbageCollector;
 
     private final PathRevisionMap pathRevisionMap;
 
+    private final ReversePathRevisionMap reversePathRevisionMap;
+
     @Inject
     public UnixFSPathIndex(
             final NodeId nodeId,
             final UnixFSUtils utils,
-            final Revision.Factory revisionFactory,
-            final UnixFSGarbageCollector garbageCollector) {
-        this.nodeId = nodeId;
+            final UnixFSGarbageCollector garbageCollector) throws IOException {
         this.utils = utils;
-        this.revisionFactory = revisionFactory;
+        this.nodeId = nodeId;
         this.garbageCollector = garbageCollector;
         this.pathRevisionMap = new PathRevisionMap();
+        this.reversePathRevisionMap = new ReversePathRevisionMap();
+        createDirectories(utils.getPathStorageRoot());
     }
 
     @Override
@@ -58,8 +64,7 @@ public class UnixFSPathIndex implements PathIndex {
 
     @Override
     public RevisionMap<ResourceId, Set<com.namazustudios.socialengine.rt.Path>> getReverseRevisionMap() {
-        // TODO Implement This
-        return null;
+        return reversePathRevisionMap;
     }
 
     @Override
@@ -74,7 +79,7 @@ public class UnixFSPathIndex implements PathIndex {
                     .walk(mapping.fsPath)
                     .filter(Files::isDirectory)
                     .map(directory -> loadRevisionListing(mapping, revision))
-                    .filter(optional -> optional.isPresent() && !optional.get().isTombstone())
+                    .filter(optional -> optional.isPresent())
                     .map(optional -> optional.get());
 
             return revision.withValue(listings);
@@ -115,19 +120,25 @@ public class UnixFSPathIndex implements PathIndex {
         }));
     }
 
-    public void giunlink(final Revision<?> revision,
-                       final com.namazustudios.socialengine.rt.Path rtPath) {
+    public PathMapping getPathMapping(final com.namazustudios.socialengine.rt.Path rtPath) {
+        return new PathMapping(rtPath);
+    }
 
+    public void unlink(final Revision<?> revision,
+                       final com.namazustudios.socialengine.rt.Path rtPath) {
+        // TODO Figure out unlinking
     }
 
     public void linkFSPathToRTPath(final Revision<?> revision,
                                    final com.namazustudios.socialengine.rt.Path rtPath,
-                                   final Path resourceId) {
-    }
+                                   final java.nio.file.Path sourceFilePath) {
 
-    public void linkRTPathToResourceId(final Revision<?> revision,
-                                       final com.namazustudios.socialengine.rt.Path rtPath,
-                                       final ResourceId resourceId) {
+        final PathMapping pathMapping = new PathMapping(rtPath);
+
+        utils.doOperationV(() -> {
+            final Path revisionPath = pathMapping.getRevisionPath(revision);
+            createLink(sourceFilePath, revisionPath);
+        }, FatalException::new);
 
     }
 
@@ -172,9 +183,13 @@ public class UnixFSPathIndex implements PathIndex {
             return Objects.hash(rtPath);
         }
 
+        public Path getRevisionPath(final Revision<?> revision) {
+            return utils.getRevisionPath(revision, fsPath);
+        }
+
     }
 
-    public class RevisionListing implements ResourceService.Listing {
+    private class RevisionListing implements ResourceService.Listing {
 
         private final PathMapping mapping;
 
@@ -214,6 +229,17 @@ public class UnixFSPathIndex implements PathIndex {
             final PathMapping mapping = new PathMapping(key);
             final Optional<RevisionListing> optionalRevisionListing = loadRevisionListing(mapping, revision);
             return revision.withOptionalValue(optionalRevisionListing).map(l -> l.resourceId);
+        }
+
+    }
+
+    private class ReversePathRevisionMap implements RevisionMap<ResourceId, Set<com.namazustudios.socialengine.rt.Path>> {
+
+        @Override
+        public Revision<Set<com.namazustudios.socialengine.rt.Path>> getValueAt(final Revision<?> revision,
+                                                                                final ResourceId key) {
+            // TODO Implement This
+            return null;
         }
 
     }

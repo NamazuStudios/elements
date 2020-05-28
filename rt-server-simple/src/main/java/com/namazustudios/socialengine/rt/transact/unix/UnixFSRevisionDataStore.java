@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
+import static java.nio.file.Files.createLink;
+
 public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     public static final String STORAGE_ROOT_DIRECTORY = "com.namazustudios.socialengine.rt.transact.unix.fs.root";
@@ -50,6 +52,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     public UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(final Revision<?> revision) {
         return new UnixFSTransactionProgramInterpreter.ExecutionHandler() {
+
             @Override
             public void unlinkFile(final java.nio.file.Path fsPath) {
                 utils.doOperationV(() -> Files.delete(fsPath), FatalException::new);
@@ -80,8 +83,16 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             @Override
             public void linkResourceToRTPath(final ResourceId resourceId,
                                              final com.namazustudios.socialengine.rt.Path rtPath) {
-                getPathIndex().linkRTPathToResourceId(revision, rtPath, resourceId);
-                getResourceIndex().linkResourceIdToRTPath(revision, resourceId, rtPath);
+
+                final UnixFSPathIndex.PathMapping pathMapping = pathIndex.getPathMapping(rtPath);
+                final UnixFSResourceIndex.PathMapping resourceMapping = resourceIdIndex.getPathMapping(resourceId);
+
+                utils.doOperationV(() -> {
+                    final Path rtPathPath = pathMapping.getRevisionPath(revision);
+                    final Path resourcePath = resourceMapping.getRevisionPath(revision);
+                    createLink(resourcePath, rtPathPath);
+                }, FatalException::new);
+
             }
 
         };

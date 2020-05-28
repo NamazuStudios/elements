@@ -118,9 +118,9 @@ public class UnixFSTransactionProgramBuilder {
      * @param resourceId the {@link ResourceId} to unlink
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder linkFile(final ExecutionPhase executionPhase,
-                                                    final java.nio.file.Path fsPath,
-                                                    final ResourceId resourceId) {
+    public UnixFSTransactionProgramBuilder linkResourceFile(final ExecutionPhase executionPhase,
+                                                            final java.nio.file.Path fsPath,
+                                                            final ResourceId resourceId) {
 
         requireNonNull(executionPhase);
         requireNonNull(fsPath);
@@ -128,7 +128,7 @@ public class UnixFSTransactionProgramBuilder {
 
         getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
                 .withPhase(executionPhase)
-                .withInstruction(LINK_FS_PATH_TO_RESOURCE_ID)
+                .withInstruction(LINK_RESOURCE_FILE_TO_RESOURCE_ID)
                 .addFSPathParameter(fsPath)
                 .addResourceIdParameter(resourceId)
             .build(byteBuffer)));
@@ -146,9 +146,9 @@ public class UnixFSTransactionProgramBuilder {
      * @param rtPath the {@link com.namazustudios.socialengine.rt.Path} to unlink
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder linkFile(final ExecutionPhase executionPhase,
-                                                    final java.nio.file.Path fsPath,
-                                                    final com.namazustudios.socialengine.rt.Path rtPath) {
+    public UnixFSTransactionProgramBuilder linkResourceFile(final ExecutionPhase executionPhase,
+                                                            final java.nio.file.Path fsPath,
+                                                            final com.namazustudios.socialengine.rt.Path rtPath) {
 
         requireNonNull(executionPhase);
         requireNonNull(fsPath);
@@ -156,7 +156,7 @@ public class UnixFSTransactionProgramBuilder {
 
         getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
                 .withPhase(executionPhase)
-                .withInstruction(LINK_FS_PATH_TO_RT_PATH)
+                .withInstruction(LINK_RESOURCE_FILE_TO_RT_PATH)
                 .addFSPathParameter(fsPath)
                 .addRTPathParameter(rtPath)
             .build(byteBuffer)));
