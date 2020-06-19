@@ -22,9 +22,9 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.getSizeInBytes;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromByteBuffer;
-import static java.nio.file.Files.createDirectories;
-import static java.nio.file.Files.createLink;
+import static java.nio.file.Files.*;
 import static java.nio.file.StandardOpenOption.READ;
+import static java.util.stream.Collectors.toSet;
 
 public class UnixFSPathIndex implements PathIndex {
 
@@ -102,7 +102,6 @@ public class UnixFSPathIndex implements PathIndex {
                 resourceIdBuffer.rewind();
 
                 final ResourceId resourceId = resourceIdFromByteBuffer(resourceIdBuffer);
-
                 return new RevisionListing(mapping, resourceId, objectHeader);
 
             }
@@ -122,7 +121,7 @@ public class UnixFSPathIndex implements PathIndex {
         final UnixFSPathMapping mapping = UnixFSPathMapping.fromPath(utils, nodeId, rtPath);
 
         utils.doOperationV(() -> {
-            final Path revisionPath = mapping.resolveRevisionPath(revision);
+            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
             createLink(sourceFilePath, revisionPath);
         }, FatalException::new);
 
@@ -152,10 +151,6 @@ public class UnixFSPathIndex implements PathIndex {
         @Override
         public ResourceId getResourceId() {
             return resourceId;
-        }
-
-        public boolean isTombstone() {
-            return objectHeader.tombstone.get();
         }
 
     }
@@ -189,8 +184,19 @@ public class UnixFSPathIndex implements PathIndex {
         @Override
         public Revision<Set<com.namazustudios.socialengine.rt.Path>> getValueAt(final Revision<?> revision,
                                                                                 final ResourceId key) {
-            // TODO Implement This
-            return null;
+
+            final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, key);
+            final Path reverseDirectory = resourceIdMapping.resolveReverseDirectory(nodeId, revision);
+
+            final Set<com.namazustudios.socialengine.rt.Path> pathSet =
+                utils.doOperation(() -> Files.list(reverseDirectory)
+                    .filter(path -> isSymbolicLink(path))
+                    .map(symlink -> UnixFSPathMapping.fromSymlinkPath(utils, nodeId, symlink))
+                    .map(mapping -> mapping.getPath())
+                    .collect(toSet()) , FatalException::new);
+
+            return revision.withValue(pathSet);
+
         }
 
     }

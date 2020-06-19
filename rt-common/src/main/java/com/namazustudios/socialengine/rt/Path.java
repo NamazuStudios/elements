@@ -1,9 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.Iterables;
 import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
 import com.namazustudios.socialengine.rt.id.HasNodeId;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -16,15 +12,17 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
-import static com.google.common.collect.Iterators.limit;
-import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.rt.Path.Util.*;
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromString;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
 
 /**
  * Represents the path scheme for use in the server.
@@ -121,9 +119,26 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      *
      */
     public Path(final Path parent, final Path path) {
-        this(newArrayList(Iterables.concat(parent.getComponents(), path.getComponents())));
+        this(parent.context, components(parent, path));
     }
 
+    private static List<String> components(final Path parent, final Path path) {
+
+        if (parent.hasContext() && path.hasContext() && !Objects.equals(parent.context, parent.context)) {
+            throw new IllegalArgumentException("context mismatch " + parent.context + "!=" + path.context);
+        } if (!parent.hasContext() && path.hasContext()) {
+            throw new IllegalArgumentException("child path must have no context or same as parent");
+        }
+
+        return concat(parent.components.stream(), path.components.stream()).collect(toList());
+
+    }
+
+    /**
+     * Constructs a {@link Path} from the supplied components.
+     *
+     * @param components
+     */
     public Path(final List<String> components) {
         this(null, components);
     }
@@ -134,6 +149,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      * @param components the path components
      */
     public Path(final String context, final List<String> components) {
+
         this.context = context;
 
         final int idx = components.indexOf(WILDCARD);
@@ -198,14 +214,29 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
     }
 
+    /**
+     * Gets the context of this {@link Path}, or null if no context exists.
+     *
+     * @return the context or null
+     */
     public String getContext() {
         return context;
     }
 
+    /**
+     * Returns true if this {@link Path} has a context.
+     *
+     * @return true if this {@link Path} has a context
+     */
     public boolean hasContext() {
         return context != null;
     }
 
+    /**
+     * Returns true if this {@link Path} both has a context and that context is a wildcard context.
+     *
+     * @return true if the context is a wildcard context
+     */
     public boolean hasWildcardContext() {
         if (hasContext() && context.equals(WILDCARD_CONTEXT_REPRESENTATION)) {
             return true;
@@ -362,9 +393,9 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
         final Iterator<String> o2StringIterator;
 
         if (isWildcard() || other.isWildcard()) {
-            final int min = min(maxCompareIndex, other.maxCompareIndex);
-            o1StringIterator = limit(getComponents().iterator(), min);
-            o2StringIterator = limit(other.getComponents().iterator(), min);
+            final int limit = min(maxCompareIndex, other.maxCompareIndex);
+            o1StringIterator = getComponents().stream().limit(limit).iterator();
+            o2StringIterator = other.getComponents().stream().limit(limit).iterator();
         } else if (getComponents().size() != other.getComponents().size()) {
             return getComponents().size() - other.getComponents().size();
         } else {
@@ -375,9 +406,9 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
         int value = 0;
 
         while (o1StringIterator.hasNext() && o2StringIterator.hasNext() && value == 0) {
-            final String s1 = Strings.nullToEmpty(o1StringIterator.next());
-            final String s2 = Strings.nullToEmpty(o2StringIterator.next());
-            value = s1.compareTo(s2);
+            final String s1 = o1StringIterator.next();
+            final String s2 = o2StringIterator.next();
+            value = (s1 == null ? "" : s1).compareTo(s2 == null ? "" : s2);
         }
 
         return value;
@@ -423,6 +454,53 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
     /**
+     * Converts the supplied components to a {@link Path}.
+     *
+     * @param components the components in the {@link Path}
+     *
+     * @return the {@link Path}
+     */
+    public static Path fromComponents(final String ... components) {
+        return new Path(asList(components));
+    }
+
+    /**
+     * Gets the a {@link Path} from the supplied context and components.
+     *
+     * @param context the context
+     * @param components the components
+     * @return the {@link Path} instance
+     */
+    public static Path fromContextAndComponents(final String context, final String ... components) {
+        return new Path(context, asList(components));
+    }
+
+    /**
+     * Converts the supplied string representation of he {@link Path} using {@link #PATH_SEPARATOR} as the
+     * separator.
+     *
+     * @param pathString the components in the {@link Path}
+     *
+     * @return the fully formed {@link Path}
+     */
+    public static Path fromPathString(final String pathString) {
+        return fromPathString(pathString, PATH_SEPARATOR);
+    }
+
+    /**
+     * Converts the supplied string representation of he {@link Path} with the supplied separator string.
+     *
+     * @param pathString the components in the {@link Path}
+     * @param pathString the separator string
+     *
+     * @return the fully formed {@link Path}
+     */
+    public static Path fromPathString(final String pathString, final String pathSeparator) {
+        final ContextAndComponents contextAndComponents = contextAndComponentsFromPath(pathString, pathSeparator);
+        return new Path(contextAndComponents.getContext(), contextAndComponents.getComponents());
+    }
+
+    /**
      * Some utility methods used by all Resource and related instances.
      */
     public static final class Util {
@@ -441,10 +519,12 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
          * @return the context if found, null otherwise
          */
         public static String contextFromPath(final String path) {
-            final List<String> components = Splitter.on(CONTEXT_SPLIT_PATTERN)
-                    .omitEmptyStrings()
-                    .trimResults()
-                    .splitToList(path);
+
+            final List<String> components = Stream.of(CONTEXT_SPLIT_PATTERN.split(path))
+                  .filter(c -> c != null)
+                  .map(c -> c.trim())
+                  .filter(c -> !c.isEmpty())
+                  .collect(toList());
 
             if (components.size() != 2) {
                 return null;
@@ -471,10 +551,11 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
                 return new ContextAndComponents(null, components);
             }
 
-            final List<String> contextAndPath = Splitter.on(CONTEXT_SPLIT_PATTERN)
-                    .omitEmptyStrings()
-                    .trimResults()
-                    .splitToList(path);
+            final List<String> contextAndPath = Stream.of(CONTEXT_SPLIT_PATTERN.split(path))
+                    .filter(c -> c != null)
+                    .map(c -> c.trim())
+                    .filter(c -> !c.isEmpty())
+                    .collect(toList());
 
             if (contextAndPath.size() != 2) {
                 throw new IllegalArgumentException("Expected two results when splitting path with '://': " + path);
@@ -498,10 +579,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
          * @return the components
          */
         public static List<String> componentsFromPath(final String path) {
-            return Splitter.on(SPLIT_PATTERN)
-                .omitEmptyStrings()
-                .trimResults()
-                .splitToList(path);
+            return contextAndComponentsFromPath(path).components;
         }
 
         /**
@@ -511,10 +589,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
          * @return the components
          */
         public static List<String> componentsFromPath(final String path, final String pathSeparator) {
-            return Splitter.on(pathSeparator)
-                    .omitEmptyStrings()
-                    .trimResults()
-                    .splitToList(path);
+            return contextAndComponentsFromPath(path, pathSeparator).components;
         }
 
         /**
@@ -580,7 +655,11 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
                 }
             }
 
-            return Joiner.on(pathSeparator).skipNulls().join(pathComponents);
+            return pathComponents
+                .stream()
+                .filter(c -> c != null)
+                .map(c -> c.trim())
+                .collect(Collectors.joining(pathSeparator));
 
         }
 
@@ -596,57 +675,6 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
             return pathFromComponents(pathComponents);
         }
 
-    }
-
-    public static Path fromContextAndComponents(final String context, String ... components) {
-        return new Path(context, asList(components));
-    }
-
-
-    /**
-     * Converts the supplied components to a {@link Path}.
-     *
-     * @param components the components in the {@link Path}
-     *
-     * @return the {@link Path}
-     */
-    public static Path fromComponents(String ... components) {
-        return new Path(asList(components));
-    }
-
-    /**
-     * Converts the supplied string representation of he {@link Path} using {@link #PATH_SEPARATOR} as the
-     * separator.
-     *
-     * @param pathString the components in the {@link Path}
-     *
-     * @return the fully formed {@link Path}
-     */
-    public static Path fromPathString(final String pathString) {
-        return fromPathString(pathString, PATH_SEPARATOR);
-    }
-
-    /**
-     * Returns the {@link Path} from the filesystem path string.
-     *
-     * @param fileSystemPath the filesystem path
-     * @return the {@link Path} instance
-     */
-    public static Path fromFileSystemPathString(final String fileSystemPath) {
-        return fromPathString(fileSystemPath, File.separator);
-    }
-
-    /**
-     * Converts the supplied string representation of he {@link Path} with the supplied separator string.
-     *
-     * @param pathString the components in the {@link Path}
-     * @param pathString the separator string
-     *
-     * @return the fully formed {@link Path}
-     */
-    public static Path fromPathString(final String pathString, final String pathSeparator) {
-        final ContextAndComponents contextAndComponents = contextAndComponentsFromPath(pathString, pathSeparator);
-        return new Path(contextAndComponents.getContext(), contextAndComponents.getComponents());
     }
 
 }

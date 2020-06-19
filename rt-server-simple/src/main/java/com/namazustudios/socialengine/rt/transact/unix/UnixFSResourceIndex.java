@@ -115,7 +115,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
         final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
         utils.doOperationV(() -> {
-            final Path revisionPath = mapping.resolveRevisionPath(revision);
+            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
             createLink(fsPath, revisionPath);
         }, FatalException::new);
 

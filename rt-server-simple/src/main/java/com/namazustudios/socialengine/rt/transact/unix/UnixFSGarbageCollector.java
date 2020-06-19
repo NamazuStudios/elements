@@ -56,7 +56,7 @@ public class UnixFSGarbageCollector {
         if (!Files.isRegularFile(file)) throw new IllegalArgumentException("Not a file path: " + file);
 
         final Path parent = file.getParent();
-        final Path pinned = utils.resolveRevisionPath(parent, revision);
+        final Path pinned = utils.resolveRevisionFilePath(parent, revision);
         utils.doOperationV(() -> Files.createLink(file, pinned), FatalException::new);
 
         return pinned;

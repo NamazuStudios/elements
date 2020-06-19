@@ -4,9 +4,6 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Map;
 
 public class UnixFSTransactionProgram {
 
@@ -110,7 +107,7 @@ public class UnixFSTransactionProgram {
         class PackedNodeId extends Member {
 
             public PackedNodeId() {
-                super(NodeId.getSizeInBytes() * Byte.SIZE, 4);
+                super(NodeId.getSizeInBytes() * Byte.SIZE, 8);
             }
 
             public NodeId get() {

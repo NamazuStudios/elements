@@ -24,7 +24,6 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJ
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
-import static java.nio.file.Paths.get;
 import static java.util.Comparator.naturalOrder;
 
 /**
@@ -34,23 +33,25 @@ public class UnixFSUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSUtils.class);
 
-    private static final String LINK_SUFFIX = "link";
+    public static final String LINK_SUFFIX = "link";
 
-    private static final String REVISION_SUFFIX = "revision";
+    public static final String REVISION_SUFFIX = "revision";
 
-    private static final String LOCK_FILE_NAME = "lock";
+    public static final String DIRECTORY_SUFFIX = "d";
 
-    private static final String PATHS_DIRECTORY = "paths";
+    public static final String LOCK_FILE_NAME = "lock";
 
-    private static final String RESOURCES_DIRECTORY = "resources";
+    public static final String PATHS_DIRECTORY = "paths";
 
-    private static final String TEMPORARY_DIRECTORY = "temporary";
+    public static final String RESOURCES_DIRECTORY = "resources";
 
-    private static final String TOMBSTONE_FILE_NAME = "tombstone";
+    public static final String TEMPORARY_DIRECTORY = "temporary";
 
-    private static final int TEMP_NAME_LENGTH_CHARS = 128;
+    public static final String TOMBSTONE_FILE_NAME = "tombstone";
 
-    private static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyz0123456789-";
+    public static final int TEMP_NAME_LENGTH_CHARS = 128;
+
+    public static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHI0123456789-";
 
     private final Revision.Factory revisionFactory;
 
@@ -178,8 +179,19 @@ public class UnixFSUtils {
      * @param revision the {@link Revision<?>} to use when resolving the file name
      * @return the {@link Path} to the fully-resolved file with revision suffix
      */
-    public Path resolveRevisionPath(final Path parent, final Revision<?> revision) {
+    public Path resolveRevisionFilePath(final Path parent, final Revision<?> revision) {
         return parent.resolve(format("%s.%s", revision.getUniqueIdentifier(), REVISION_SUFFIX));
+    }
+
+    /**
+     * Resolves a revision directory by appending the value of {@link #REVISION_SUFFIX} to the end of the file name.
+     *
+     * @param parent the parent {@link Path} owning the file
+     * @param revision the {@link Revision<?>} to use when resolving the file name
+     * @return the {@link Path} to the fully-resolved file with revision suffix
+     */
+    public Path resolveRevisionDirectoryPath(final Path parent, final Revision<?> revision) {
+        return parent.resolve(format("%s.%s.%s", revision.getUniqueIdentifier(), REVISION_SUFFIX, DIRECTORY_SUFFIX));
     }
 
     /**
@@ -203,20 +215,43 @@ public class UnixFSUtils {
      * @return the value returned from the {@link IOOperation<T>}
      */
     public <T> T doOperation(final IOOperation<T> action) {
+        return doOperation(action, InternalException::new);
+    }
+
+    /**
+     * Performs and operation that may throw an instance of {@link IOException}, and re-throws it wrapped inside of a
+     * {@link InternalException}.
+     *
+     * @param action the action to perform
+     * @param <T> the return type
+     * @return the value returned from the {@link IOOperation<T>}
+     */
+    public <T, ExceptionT extends InternalException> T doOperation(
+            final IOOperation<T> action,
+            final Function<Throwable, ExceptionT> exceptionTFunction) throws ExceptionT{
         try {
             return action.perform();
         } catch (Exception ex) {
             logger.error("IOException Performing operation.", ex);
-            throw new InternalException(ex);
+            throw exceptionTFunction.apply(ex);
         }
     }
 
+    /**
+     * Performs an IO Operation which may throw, catching the exception and wrapping it in the type specified in the
+     * function.
+     *
+     * @param action the action to perfrom
+     * @param exceptionTFunction a supplier to constrcut the exception
+     * @param <ExceptionT> the specified exception type
+     */
     public <ExceptionT extends InternalException> void doOperationV(
             final IOOperationV action,
             final Function<Throwable, ExceptionT> exceptionTFunction) {
         try {
             action.perform();
         } catch (IOException ex) {
+            logger.error("IOException Performing operation.", ex);
             throw exceptionTFunction.apply(ex);
         }
     }

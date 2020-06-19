@@ -1,17 +1,22 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
+import static com.namazustudios.socialengine.rt.Path.fromComponents;
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromString;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.DIRECTORY_SUFFIX;
+import static java.lang.String.format;
+import static java.nio.file.Files.readSymbolicLink;
 import static java.util.stream.Collectors.joining;
 
 public class UnixFSPathMapping {
-
-    private static final String PATH_DIRECTORY_EXTENSION = ".d";
 
     private final UnixFSUtils utils;
 
@@ -47,7 +52,7 @@ public class UnixFSPathMapping {
 
     /**
      * Given the {@link Revision<?>} this will resolve the path to the supplied revision for the symbolic link.
-     *
+     *resolveRevisionPath
      * @param revision the revision
      * @return the resolved path
      */
@@ -61,8 +66,8 @@ public class UnixFSPathMapping {
      * @param revision the {@link Revision<?>}
      * @return the {@link Path} to the revision
      */
-    public Path resolveRevisionPath(final Revision<?> revision) {
-        return utils.resolveRevisionPath(fsPath, revision);
+    public Path resolveRevisionFilePath(final Revision<?> revision) {
+        return utils.resolveRevisionFilePath(fsPath, revision);
     }
 
     @Override
@@ -112,12 +117,48 @@ public class UnixFSPathMapping {
         final Path relative = utils.resolvePathStorageRoot(nodeId).resolve(fqPath
             .getComponents()
             .stream()
-            .map(component -> component + PATH_DIRECTORY_EXTENSION)
+            .map(component -> format("%s.%s", component, DIRECTORY_SUFFIX))
             .collect(joining(utils.getPathSeparator())));
 
         final Path fsPath = utils.getPathStorageRoot().resolve(relative).toAbsolutePath();
         return new UnixFSPathMapping(utils, fsPath, fqPath);
 
+    }
+
+    /**
+     * Chases the following {@link Path} to a symbolic link and determines the
+     * {@link com.namazustudios.socialengine.rt.Path} associated with it.
+     *
+     * @param utils the {@link UnixFSUtils} instance
+     * @param symlink a {@link Path} that represents a symbolic link
+     *
+     * @return the {@link UnixFSPathMapping}
+     */
+    public static UnixFSPathMapping fromSymlinkPath(final UnixFSUtils utils, final NodeId nodeId, final Path symlink) {
+        return utils.doOperation(() -> {
+
+            final int dirExtensionLength = DIRECTORY_SUFFIX.length() + 1;
+
+            final Path fsPath = readSymbolicLink(symlink).toAbsolutePath();
+            final Path relative = utils.resolvePathStorageRoot(nodeId).relativize(fsPath);
+
+            final List<String> components = new ArrayList<>();
+
+            relative.forEach(p -> {
+                String component;
+                component = p.toString();
+                component = component.substring(0, component.length() - dirExtensionLength);
+                components.add(component);
+            });
+
+            final com.namazustudios.socialengine.rt.Path rtPath = new com.namazustudios.socialengine.rt.Path(
+                nodeId.asString(),
+                components
+            );
+
+            return new UnixFSPathMapping(utils, fsPath, rtPath);
+
+        }, FatalException::new);
     }
 
 }

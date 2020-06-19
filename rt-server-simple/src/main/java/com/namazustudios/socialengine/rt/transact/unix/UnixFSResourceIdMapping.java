@@ -1,12 +1,11 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 
 import java.nio.file.Path;
 import java.util.Objects;
-
-import static java.lang.String.format;
 
 public class UnixFSResourceIdMapping {
 
@@ -23,22 +22,33 @@ public class UnixFSResourceIdMapping {
     }
 
     /**
-     * Given the {@link Revision<?>} this will resolve the path to the supplied {@link Revision<?>}.
-     *
-     * @param revision the {@link Revision<?>}
-     * @return the {@link Path} to the revision
-     */
-    public Path resolveRevisionPath(final Revision<?> revision) {
-        return utils.resolveRevisionPath(fsPath, revision);
-    }
-
-    /**
      * Returns the filesystem {@link Path} to the resource id directory.
      *
      * @return the {@link ResourceId} directory
      */
     public Path getResourceIdDirectory() {
         return fsPath;
+    }
+
+    /**
+     * Given the {@link Revision<?>} this will resolve the path to the supplied {@link Revision<?>}.
+     *
+     * @param revision the {@link Revision<?>}
+     * @return the {@link Path} to the revision
+     */
+    public Path resolveRevisionFilePath(final Revision<?> revision) {
+        return utils.resolveRevisionFilePath(fsPath, revision);
+    }
+
+    /**
+     * Given the {@link Revision<?>} this will resolve the matching reverse-mapping directory.
+     *
+     * @param revision the revision directory
+     *
+     * @return the {@link Path} to the reverse-mapping directory
+     */
+    public Path resolveReverseDirectory(final NodeId nodeId, final Revision<?> revision) {
+        return utils.resolveRevisionDirectoryPath(fsPath, revision).resolve(nodeId.asString());
     }
 
     @Override
