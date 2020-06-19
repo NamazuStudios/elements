@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
@@ -94,8 +95,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private final Lock wLock;
 
-    private final java.nio.file.Path lockFilePath;
-
     private final MappedByteBuffer journalBuffer;
 
     private final long txnEntryBufferSize;
@@ -139,7 +138,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         this.wLock = rwLock.readLock();
 
         final java.nio.file.Path journalPath = utils.getJournalPath();
-        lockFilePath = this.utils.lockPath(journalPath);
 
         if (isRegularFile(journalPath)) {
             logger.info("Reading existing journal file {}", journalPath);
@@ -198,14 +196,14 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public UnixFSJournalEntry newSnapshotEntry() {
+    public UnixFSJournalEntry newSnapshotEntry(final NodeId nodeId) {
 
         boolean unlock = true;
 
         try {
             rLock.lock();
             final Revision<?> revision = unixFSRevisionPool.create(current);
-            final UnixFSJournalEntry entry = new UnixFSJournalEntry(revision, rLock::unlock);
+            final UnixFSJournalEntry entry = new UnixFSJournalEntry(nodeId, revision, rLock::unlock);
             unlock = false;
             return entry;
         } finally {
@@ -215,7 +213,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public UnixFSJournalMutableEntry newMutableEntry() {
+    public UnixFSJournalMutableEntry newMutableEntry(final NodeId nodeId) {
 
         boolean unlock = true;
 
@@ -233,6 +231,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
             // Sets up a build for the specific slide of the journal file.
             final UnixFSTransactionProgramBuilder builder = programBuilderProvider.get()
+                .withNodeId(nodeId)
                 .withByteBuffer(slice.slice)
                 .withChecksumAlgorithm(UnixFSChecksumAlgorithm.ADLER_32);
 
@@ -248,6 +247,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
             // Finally, we construct the entry, which we will return.
             final UnixFSJournalMutableEntry entry = new UnixFSJournalMutableEntry(
+                nodeId,
                 revision,
                 utils,
                 unixFSPathIndex,
@@ -345,7 +345,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     @Override
     public void close() {
         journalBuffer.force();
-        utils.unlockDirectory(lockFilePath);
+        utils.unlockStorageRoot();
     }
 
     private class Slices {

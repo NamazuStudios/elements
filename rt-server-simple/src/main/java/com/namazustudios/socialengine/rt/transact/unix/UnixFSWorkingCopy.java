@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
@@ -35,6 +36,8 @@ class UnixFSWorkingCopy {
 
     private static final ResourceId NULL_RESOURCE_ID = randomResourceId();
 
+    private final NodeId nodeId;
+
     private final Revision<?> revision;
 
     private final UnixFSPathIndex unixFSPathIndex;
@@ -45,9 +48,11 @@ class UnixFSWorkingCopy {
 
     private final HashMap<ResourceId, Set<Path>> resourceIdToPaths = new HashMap<>();
 
-    public UnixFSWorkingCopy(final Revision<?> revision,
+    public UnixFSWorkingCopy(final NodeId nodeId,
+                             final Revision<?> revision,
                              final UnixFSPathIndex unixFSPathIndex,
                              final UnixFSOptimisticLocking optimisticLocking) {
+        this.nodeId = nodeId;
         this.revision = revision;
         this.unixFSPathIndex = unixFSPathIndex;
         this.optimisticLocking = optimisticLocking;
@@ -63,9 +68,9 @@ class UnixFSWorkingCopy {
         if (path.isWildcard()) throw new IllegalArgumentException("Must be regular path.");
 
         final ResourceId resourceId = unixFSPathIndex
-            .getRevisionMap()
-            .getValueAt(revision, path)
-            .getValue()
+                .getRevisionMap(nodeId)
+                .getValueAt(revision, path)
+                .getValue()
             .orElse(NULL_RESOURCE_ID);
 
         load(resourceId);
@@ -83,10 +88,10 @@ class UnixFSWorkingCopy {
         if (resourceId.equals(NULL_RESOURCE_ID)) return emptySet();
 
         final Set<Path> paths = unixFSPathIndex
-            .getReverseRevisionMap()
-            .getValueAt(revision, resourceId)
-            .getValue()
-            .map(HashSet::new)
+                .getReverseRevisionMap(nodeId)
+                .getValueAt(revision, resourceId)
+                .getValue()
+                .map(HashSet::new)
             .orElseGet(HashSet::new);
 
         paths.forEach(path -> this.pathToResourceIds.put(path, resourceId));
@@ -204,7 +209,7 @@ class UnixFSWorkingCopy {
             final Path path, final int max,
             final UnlinkOperation unlinkOperation) throws TransactionConflictException {
 
-        final List<ResourceService.Listing> listings = unixFSPathIndex.list(revision, path)
+        final List<ResourceService.Listing> listings = unixFSPathIndex.list(nodeId, revision, path)
             .getValue()
             .orElseGet(Stream::empty)
             .limit(max)
@@ -263,11 +268,11 @@ class UnixFSWorkingCopy {
             final Path path, final int max,
             final BiConsumer<Path, ResourceId> onRemove) throws TransactionConflictException {
 
-        final List<ResourceService.Listing> listings = unixFSPathIndex.list(revision, path)
+        final List<ResourceService.Listing> listings = unixFSPathIndex.list(nodeId, revision, path)
                 .getValue()
                 .orElseGet(Stream::empty)
                 .limit(max)
-                .collect(toList());
+            .collect(toList());
 
         for (final ResourceService.Listing listing : listings) {
             // Lock Everything we want to clear out

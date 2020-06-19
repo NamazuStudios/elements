@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
 import com.namazustudios.socialengine.rt.exception.InvalidResourceIdException;
 
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
@@ -17,6 +18,11 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
  * with the pairs (I1, A1), (I1, A2), (I1, A3), (I2, A1), (I2, A2), (I2, A3).
  */
 public class NodeId implements Serializable, HasNodeId {
+
+    private static final int SIZE = new ResourceId(new V1CompoundId.Builder()
+            .with(INSTANCE, UUID.randomUUID())
+            .with(APPLICATION, UUID.randomUUID())
+        .build()).asBytes().length;
 
     final V1CompoundId v1CompoundId;
 
@@ -85,6 +91,17 @@ public class NodeId implements Serializable, HasNodeId {
         return (bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE, APPLICATION)) : bytes).clone();
     }
 
+    /**
+     * Writes this {@link NodeId} to a {@link ByteBuffer} at the supplied position. As the position is specified, this
+     * does not affect the buffer's mark, limit, position.
+     *
+     * @param byteBuffer the byteBuffer to receive the {@link NodeId}
+     * @param position the position at which to write the byte buffer
+     */
+    public void toByteBuffer(final ByteBuffer byteBuffer, int position) {
+        v1CompoundId.toByteBuffer(byteBuffer, position, INSTANCE, APPLICATION);
+    }
+
     @Override
     public NodeId getNodeId() throws InvalidNodeIdException {
         return this;
@@ -106,6 +123,15 @@ public class NodeId implements Serializable, HasNodeId {
     @Override
     public String toString() {
         return asString();
+    }
+
+    /**
+     * Returns the number of bytes when a {@link NodeId} is stored as a {@link byte[]}
+     *
+     * @return the size, in bytes
+     */
+    public static int getSizeInBytes() {
+        return SIZE;
     }
 
     /**
@@ -197,4 +223,20 @@ public class NodeId implements Serializable, HasNodeId {
             .build()
         );
     }
+
+    /**
+     * Reads a {@link NodeId} from the supplied {@link ByteBuffer} and position, ensuring that the buffer's mark, limit,
+     * and position are unaffected.
+     *
+     * @param byteBufferRepresentation the byte buffer to read
+     * @param byteBufferPosition the position of the node id within the byte buffer
+     * @return the {@link NodeId} instance
+     */
+    public static NodeId nodeIdFromByteBuffer(final ByteBuffer byteBufferRepresentation, int byteBufferPosition) {
+        return new NodeId(new V1CompoundId.Builder()
+                .with(byteBufferRepresentation, byteBufferPosition, SIZE)
+                .only(INSTANCE, APPLICATION)
+            .build());
+    }
+
 }

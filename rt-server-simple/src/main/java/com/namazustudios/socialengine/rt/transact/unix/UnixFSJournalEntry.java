@@ -1,27 +1,18 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
-import com.namazustudios.socialengine.rt.util.LazyValue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.channels.ReadableByteChannel;
-import java.util.*;
-import java.util.function.Consumer;
-import java.util.stream.Stream;
-
-import static java.lang.Long.MAX_VALUE;
-import static java.util.stream.StreamSupport.stream;
 
 class UnixFSJournalEntry implements TransactionJournal.Entry {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSJournalEntry.class);
+
+    private final NodeId nodeId;
 
     protected boolean open = true;
 
@@ -29,8 +20,10 @@ class UnixFSJournalEntry implements TransactionJournal.Entry {
 
     protected final UnixFSUtils.IOOperationV onClose;
 
-    public UnixFSJournalEntry(final Revision revision,
+    public UnixFSJournalEntry(final NodeId nodeId,
+                              final Revision revision,
                               final UnixFSUtils.IOOperationV onClose) {
+        this.nodeId = nodeId;
         this.revision = revision;
         this.onClose = onClose;
     }
@@ -43,6 +36,11 @@ class UnixFSJournalEntry implements TransactionJournal.Entry {
     public Revision<?> getRevision() {
         check();
         return revision;
+    }
+
+    public NodeId getNodeId() {
+        check();
+        return nodeId;
     }
 
     @Override

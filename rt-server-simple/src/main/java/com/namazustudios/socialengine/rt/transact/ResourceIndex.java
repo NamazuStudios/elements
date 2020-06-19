@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.io.IOException;
@@ -25,25 +26,19 @@ public interface ResourceIndex {
 
     /**
      * Attempts to open the contents of a {@link Resource} with the supplied {@link Path} at the supplied
-     * {@link Revision<?>}.
+     * {@link Revision<?>}. The returned {@link ReadableByteChannel} must be closed by the caller if it is present.
      *
-     * As this returns an instance of {@link ReadableByteChannel} the returned {@link Revision<ReadableByteChannel>}
-     * must not acquire any resources (such as open file descriptor) until the caller fetches it.  The caller must also
-     * take care to ensure that the {@link ReadableByteChannel#close()} method is called when it is finished.
      *
+     * @param nodeId
      * @param revision the {@link Revision<?>} to reference
      * @param path the {@link Path} to the {@link Resource}
      * @return a {@link Revision<ReadableByteChannel>} which can be used to read the {@link Resource} contents
      */
-    Revision<ReadableByteChannel> loadResourceContentsAt(Revision<?> revision, Path path) throws IOException;
+    Revision<ReadableByteChannel> loadResourceContentsAt(NodeId nodeId, Revision<?> revision, Path path) throws IOException;
 
     /**
      * Attempts to open the contents of a {@link Resource} with the supplied {@link Path} at the supplied
-     * {@link Revision<?>}.
-     * s
-     * As this returns an instance of {@link ReadableByteChannel} the returned {@link Revision<ReadableByteChannel>}
-     * must not acquire any resources (such as open file descriptor) until the caller fetches it.  The caller must also
-     * take care to ensure that the {@link ReadableByteChannel#close()} method is called when it is finished.
+     * {@link Revision<?>}. The returned {@link ReadableByteChannel} must be closed by the caller if it is present.
      *
      * @param revision the {@link Revision<?>} to reference
      * @param resourceId the {@link Path} to the {@link ResourceId}

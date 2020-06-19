@@ -98,40 +98,40 @@ public class UnixFSTransactionProgramInterpreter {
     private void unlinkFSPath(final UnixFSTransactionCommand command,
                               final ExecutionHandler executionHandler) {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
-        executionHandler.unlinkFile(fsPath);
+        executionHandler.unlinkFile(program, fsPath);
     }
 
     private void unlinkRTPath(final UnixFSTransactionCommand command,
                               final ExecutionHandler executionHandler) {
         final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(0).asRTPath();
-        executionHandler.unlinkRTPath(rtPath);
+        executionHandler.unlinkRTPath(program, rtPath);
     }
 
     private void removeResource(final UnixFSTransactionCommand command,
                                 final ExecutionHandler executionHandler) {
         final ResourceId resourceId = command.getParameterAt(0).asResourceId();
-        executionHandler.removeResource(resourceId);
+        executionHandler.removeResource(program, resourceId);
     }
 
     private void linkFSPathToRTPath(final UnixFSTransactionCommand command,
                                     final ExecutionHandler executionHandler) {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
         final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(1).asRTPath();
-        executionHandler.linkFSPathToRTPath(fsPath, rtPath);
+        executionHandler.linkFSPathToRTPath(program, fsPath, rtPath);
     }
 
     private void linkResourceToRTPath(final UnixFSTransactionCommand command,
                                       final ExecutionHandler executionHandler) {
         final ResourceId resourceId = command.getParameterAt(0).asResourceId();
         final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(1).asRTPath();
-        executionHandler.linkResourceToRTPath(resourceId, rtPath);
+        executionHandler.linkResourceToRTPath(program, resourceId, rtPath);
     }
 
     private void linkFSPathToResourceId(final UnixFSTransactionCommand command,
                                         final ExecutionHandler executionHandler) {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
         final ResourceId resourceId = command.getParameterAt(1).asResourceId();
-        executionHandler.linkFSPathToResourceId(fsPath, resourceId);
+        executionHandler.linkFSPathToResourceId(program, fsPath, resourceId);
     }
 
     /**
@@ -142,46 +142,58 @@ public class UnixFSTransactionProgramInterpreter {
         /**
          * Handles {@link Instruction#UNLINK_FS_PATH}
          *
+         * @param program
          * @param fsPath
          */
-        void unlinkFile(Path fsPath);
+        void unlinkFile(UnixFSTransactionProgram program, Path fsPath);
 
         /**
          * Handles {@link Instruction#UNLINK_RT_PATH}
          *
+         * @param program
          * @param rtPath
          */
-        void unlinkRTPath(com.namazustudios.socialengine.rt.Path rtPath);
+        void unlinkRTPath(UnixFSTransactionProgram program, com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
          * Handles {@link Instruction#REMOVE_RESOURCE}
          *
+         * @param program
          * @param resourceId
          */
-        void removeResource(ResourceId resourceId);
+        void removeResource(UnixFSTransactionProgram program, ResourceId resourceId);
 
         /**
          * Handles {@link Instruction#LINK_RESOURCE_FILE_TO_RT_PATH}
          *
+         * @param program
          * @param fsPath
          * @param rtPath
          */
-        void linkFSPathToRTPath(java.nio.file.Path fsPath, com.namazustudios.socialengine.rt.Path rtPath);
+        void linkFSPathToRTPath(UnixFSTransactionProgram program,
+                                Path fsPath,
+                                com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
          * Handles {@link Instruction#LINK_RESOURCE_TO_RT_PATH}
          *
+         * @param program
          * @param resourceId
          * @param rtPath
          */
-        void linkResourceToRTPath(ResourceId resourceId, com.namazustudios.socialengine.rt.Path rtPath);
+        void linkResourceToRTPath(UnixFSTransactionProgram program,
+                                  ResourceId resourceId,
+                                  com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
          * Handles {@link Instruction#LINK_RESOURCE_FILE_TO_RESOURCE_ID}
+         * @param program
          * @param fsPath
          * @param resourceId
          */
-        void linkFSPathToResourceId(Path fsPath, ResourceId resourceId);
+        void linkFSPathToResourceId(UnixFSTransactionProgram program,
+                                    Path fsPath,
+                                    ResourceId resourceId);
 
     }
 

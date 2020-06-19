@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
@@ -43,17 +44,18 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     private final UnixFSOptimisticLocking optimisticLocking;
 
-    public UnixFSJournalMutableEntry(final Revision<?> revision,
+    public UnixFSJournalMutableEntry(final NodeId nodeId,
+                                     final Revision<?> revision,
                                      final UnixFSUtils unixFSUtils,
                                      final UnixFSPathIndex unixFSPathIndex,
                                      final UnixFSTransactionProgramBuilder programBuilder,
                                      final UnixFSUtils.IOOperationV onClose,
                                      final UnixFSOptimisticLocking optimisticLocking) {
-        super(revision, onClose);
+        super(nodeId, revision, onClose);
         this.programBuilder = programBuilder;
         this.unixFSUtils = unixFSUtils;
         this.optimisticLocking = optimisticLocking;
-        this.workingCopy = new UnixFSWorkingCopy(revision, unixFSPathIndex, optimisticLocking);
+        this.workingCopy = new UnixFSWorkingCopy(nodeId, revision, unixFSPathIndex, optimisticLocking);
     }
 
     @Override

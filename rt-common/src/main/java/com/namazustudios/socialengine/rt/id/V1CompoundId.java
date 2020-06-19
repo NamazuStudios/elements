@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
 import java.io.Serializable;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.util.Arrays;
 import java.util.Objects;
@@ -149,6 +150,7 @@ class V1CompoundId implements Serializable {
 
         try {
 
+            int count = 0;
             if (byteBufferRepresentation.remaining() == 0) throw new IllegalArgumentException("Got zero-length ByteBuffer");
 
             final byte prefix = byteBufferRepresentation.get();
@@ -162,11 +164,47 @@ class V1CompoundId implements Serializable {
                 components[field.ordinal()] = new Component(field, uuid);
             }
 
-        } catch (ArrayIndexOutOfBoundsException ex) {
+        } catch (BufferUnderflowException | ArrayIndexOutOfBoundsException ex) {
             throw new IllegalArgumentException(ex);
         }
 
     }
+
+    private V1CompoundId(final ByteBuffer byteBufferRepresentation,
+                         final int byteBufferPosition,
+                         final int length) {
+
+        components = new Component[FIELD_COUNT];
+
+        int position = byteBufferPosition;
+
+        try {
+
+            if (byteBufferRepresentation.remaining() == 0) throw new IllegalArgumentException("Got zero-length ByteBuffer");
+
+            final byte prefix = byteBufferRepresentation.get();
+            if (prefix != PREFIX_BYTE) throw new IllegalArgumentException("Got invalid prefix byte: " + prefix);
+
+            while (position < length) {
+                final Field field = FIELDS[byteBufferRepresentation.get()];
+
+                final long upper = byteBufferRepresentation.getLong(position);
+                position += Long.BYTES;
+
+                final long lower = byteBufferRepresentation.getLong(position);
+                position += Long.BYTES;
+
+                final UUID uuid = new UUID(upper, lower);
+                components[field.ordinal()] = new Component(field, uuid);
+
+            }
+
+        } catch (BufferUnderflowException | ArrayIndexOutOfBoundsException ex) {
+            throw new IllegalArgumentException(ex);
+        }
+
+    }
+
     /**
      * Gets the {@link Component} representing the {@link Field}, throwing an {@link IllegalStateException} if the
      * field is not present.
@@ -310,6 +348,28 @@ class V1CompoundId implements Serializable {
 
     }
 
+    public void toByteBuffer(final ByteBuffer byteBuffer, final int position, final Field ... fields) {
+
+        byteBuffer.put(PREFIX_BYTE);
+
+        int pos = position;
+
+        for (final Field field : fields) {
+
+            final UUID uuid = getComponent(field).getValue();
+            final long upper = uuid.getMostSignificantBits();
+            final long lower = uuid.getLeastSignificantBits();
+
+            byteBuffer.putLong(pos, upper);
+            pos += Long.BYTES;
+
+            byteBuffer.putLong(pos, lower);
+            pos += Long.BYTES;
+
+        }
+
+    }
+
     /**
      * Represents the various fields which make up a compound ID.
      */
@@ -446,7 +506,7 @@ class V1CompoundId implements Serializable {
         }
 
         /**
-         * Prses the contensts of a {@link ByteBuffer} into this builder assigning all fields to the builder.
+         * Parses the contents of a {@link ByteBuffer} into this builder assigning all fields to the builder.
          *
          * @param byteBufferRepresentation the byte representation of the {@link V1CompoundId}.
          *
@@ -454,6 +514,18 @@ class V1CompoundId implements Serializable {
          */
         Builder with(final ByteBuffer byteBufferRepresentation) {
             return with(new V1CompoundId(byteBufferRepresentation));
+        }
+
+        /**
+         * Parses the contents of a {@link ByteBuffer} into this builder assigning all fields to the builder. This
+         * ensures that the byte buffer's position, mark, and limit are not modified.
+         *
+         * @param byteBufferRepresentation the byte representation of the {@link V1CompoundId}.
+         *
+         * @return this instance
+         */
+        Builder with(final ByteBuffer byteBufferRepresentation, final int byteBufferPosition, final int length) {
+            return with(new V1CompoundId(byteBufferRepresentation, byteBufferPosition, length));
         }
 
         /**

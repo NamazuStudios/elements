@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
@@ -34,21 +35,21 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
     }
 
     @Override
-    public ReadOnlyTransaction openRO() {
-        final UnixFSJournalEntry entry = getUnixFSTransactionJournal().newSnapshotEntry();
+    public ReadOnlyTransaction openRO(final NodeId nodeId) {
+        final UnixFSJournalEntry entry = getUnixFSTransactionJournal().newSnapshotEntry(nodeId);
         return new UnixFSReadOnlyTransaction(entry);
     }
 
     @Override
-    public ReadWriteTransaction openRW() {
-        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry();
+    public ReadWriteTransaction openRW(final NodeId nodeId) {
+        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
         return new UnixFSReadWriteTransaction(entry);
     }
 
     @Override
-    public ExclusiveReadWriteTransaction openExclusiveRW() {
+    public ExclusiveReadWriteTransaction openExclusiveRW(final NodeId nodeId) {
         final Monitor monitor = getUnixFSTransactionJournal().getExclusiveMonitor();
-        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry();
+        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
         return new UnixFSExclusiveReadWriteTransaction(entry, monitor);
     }
 
@@ -94,7 +95,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
             .getResourceIndex()
-            .loadResourceContentsAt(revision.comparableTo(), path);
+            .loadResourceContentsAt(, revision.comparableTo(), path);
 
         return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
 

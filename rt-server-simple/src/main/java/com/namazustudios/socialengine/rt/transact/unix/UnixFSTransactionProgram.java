@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.id.NodeId;
 import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
@@ -90,6 +91,8 @@ public class UnixFSTransactionProgram {
 
         final Enum8<UnixFSChecksumAlgorithm> algorithm = new Enum8<>(UnixFSChecksumAlgorithm.values());
 
+        final PackedNodeId nodeId = new PackedNodeId();
+
         final Unsigned32 checksum = new Unsigned32();
 
         final Unsigned8 phases = new Unsigned8();
@@ -103,6 +106,23 @@ public class UnixFSTransactionProgram {
         final Unsigned32 cleanupPos = new Unsigned32();
 
         final Unsigned32 cleanupLen = new Unsigned32();
+
+        class PackedNodeId extends Member {
+
+            public PackedNodeId() {
+                super(NodeId.getSizeInBytes() * Byte.SIZE, 4);
+            }
+
+            public NodeId get() {
+                final int position = getByteBufferPosition();
+                return NodeId.nodeIdFromByteBuffer(getByteBuffer(), getByteBufferPosition());
+            }
+
+            public void set(final NodeId nodeId) {
+                nodeId.toByteBuffer(getByteBuffer(), getByteBufferPosition());
+            }
+
+        }
 
     }
 

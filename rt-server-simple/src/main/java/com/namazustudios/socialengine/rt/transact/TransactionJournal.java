@@ -3,16 +3,13 @@ package com.namazustudios.socialengine.rt.transact;
 import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.ResourceService.Unlink;
-import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.io.IOException;
-import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
-import java.util.Spliterator;
 import java.util.stream.Stream;
 
 public interface TransactionJournal extends AutoCloseable {
@@ -24,15 +21,17 @@ public interface TransactionJournal extends AutoCloseable {
      * Gets a view of the current {@link Entry}.
      *
      * @return
+     * @param nodeId
      */
-    Entry newSnapshotEntry();
+    Entry newSnapshotEntry(NodeId nodeId);
 
     /**
      * Gets a new entry.
      *
      * @return
+     * @param nodeId
      */
-    MutableEntry newMutableEntry();
+    MutableEntry newMutableEntry(NodeId nodeId);
 
     /**
      * Nukes the entire collection of data.  This may lock the entire database to accomplish this task.  Once complete,

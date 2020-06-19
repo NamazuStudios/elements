@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase;
 import javolution.io.Struct;
@@ -25,15 +26,26 @@ import static java.util.stream.Collectors.toList;
  */
 public class UnixFSTransactionProgramBuilder {
 
-    private ByteBuffer byteBuffer;
+    private NodeId nodeId;
 
-    private UnixFSTransactionProgram program;
+    private ByteBuffer byteBuffer;
 
     private UnixFSChecksumAlgorithm checksumAlgorithm = UnixFSChecksumAlgorithm.ADLER_32;
 
     private final Map<ExecutionPhase, List<CommandWriter>> operations = new EnumMap<>(ExecutionPhase.class);
 
     private final Map<ExecutionPhase, List<UnixFSTransactionCommand>> commands = new EnumMap<>(ExecutionPhase.class);
+
+    /**
+     * Specifies the {@link NodeId} to associate with the program. The {@link NodeId} is used to
+     *
+     * @param nodeId the {@link NodeId}
+     * @return this instance
+     */
+    public UnixFSTransactionProgramBuilder withNodeId(final NodeId nodeId) {
+        this.nodeId = nodeId;
+        return this;
+    }
 
     /**
      * Specifies the {@link ByteBuffer} which will hold the program's code.
@@ -223,7 +235,6 @@ public class UnixFSTransactionProgramBuilder {
     }
 
     private void clear() {
-        program = null;
         commands.clear();
     }
 
@@ -240,6 +251,7 @@ public class UnixFSTransactionProgramBuilder {
      */
     public UnixFSTransactionProgram compile() {
 
+        if (nodeId == null) throw new IllegalStateException("NodeId must be set.");
         if (byteBuffer == null) throw new IllegalStateException("Byte buffer must be set.");
 
         final int programPosition = byteBuffer.position();
@@ -255,9 +267,10 @@ public class UnixFSTransactionProgramBuilder {
         programLength += compile(COMMIT, program, program.header.commitPos, program.header.commitLen);
         programLength += compile(CLEANUP, program, program.header.cleanupPos, program.header.cleanupLen);
 
+        program.header.nodeId.set(nodeId);
         program.header.length.set(programLength);
 
-        return this.program = program;
+        return program;
 
     }
 

@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.ContentionException;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +33,8 @@ public class TransactionalResourceService implements ResourceService {
     private static final int RETRY_COUNT = 1000;
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionalResourceService.class);
+
+    private NodeId nodeId;
 
     private ResourceLoader resourceLoader;
 
@@ -167,7 +170,7 @@ public class TransactionalResourceService implements ResourceService {
 
         final Context context = getContext();
 
-        try (final ExclusiveReadWriteTransaction txn = context.persistence.openExclusiveRW()) {
+        try (final ExclusiveReadWriteTransaction txn = context.persistence.openExclusiveRW(getNodeId())) {
             final Context old = this.context.getAndSet(context.clear());
             txn.removeAllResources();
             return old.acquires.values().stream().map(tr -> tr.getDelegate());
@@ -179,6 +182,15 @@ public class TransactionalResourceService implements ResourceService {
     public long getInMemoryResourceCount() {
         final Context context = getContext();
         return context.acquires.size();
+    }
+
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+
+    @Inject
+    public void setNodeId(NodeId nodeId) {
+        this.nodeId = nodeId;
     }
 
     public ResourceLoader getResourceLoader() {
@@ -209,7 +221,7 @@ public class TransactionalResourceService implements ResourceService {
 
         final Context context = getContext();
 
-        try (final ReadOnlyTransaction txn = context.persistence.openRO()) {
+        try (final ReadOnlyTransaction txn = context.persistence.openRO(getNodeId())) {
             final T value = operation.apply(txn);
             return value;
         }
@@ -220,7 +232,7 @@ public class TransactionalResourceService implements ResourceService {
 
         final Context context = getContext();
 
-        try (final ReadOnlyTransaction txn = context.persistence.openRO();
+        try (final ReadOnlyTransaction txn = context.persistence.openRO(getNodeId());
              final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
             final T value = operation.apply(acm, txn);
             return value;
@@ -233,7 +245,7 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW();
+            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId());
                  final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 operation.apply(acm, txn);
                 txn.commit();
@@ -251,7 +263,7 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW();) {
+            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId())) {
                 operation.apply(txn);
                 txn.commit();
             } catch (TransactionConflictException ex) {
@@ -268,7 +280,7 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW()) {
+            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId())) {
                 final T value = operation.apply(txn);
                 txn.commit();
                 return value;
@@ -286,7 +298,7 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW();
+            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId());
                  final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 final T value = operation.apply(acm, txn);
                 txn.commit();

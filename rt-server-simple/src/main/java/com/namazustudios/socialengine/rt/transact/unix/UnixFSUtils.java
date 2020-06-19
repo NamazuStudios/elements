@@ -2,7 +2,8 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,10 +11,10 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
-import java.nio.file.Path;
+import java.nio.file.*;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 
@@ -22,6 +23,7 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionData
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.JOURNAL_PATH;
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.Paths.get;
 import static java.util.Comparator.naturalOrder;
 
@@ -32,21 +34,27 @@ public class UnixFSUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSUtils.class);
 
-    private static final String REVISION_SUFFIX = "§";
+    private static final String LINK_SUFFIX = "link";
 
-    public static final String LOCK_FILE_NAME = "lock";
+    private static final String REVISION_SUFFIX = "revision";
 
-    public static final String PATHS_DIRECTORY = "paths";
+    private static final String LOCK_FILE_NAME = "lock";
 
-    public static final String RESOURCES_DIRECTORY = "resources";
+    private static final String PATHS_DIRECTORY = "paths";
 
-    public static final String TEMPORARY_DIRECTORY = "temporary";
+    private static final String RESOURCES_DIRECTORY = "resources";
+
+    private static final String TEMPORARY_DIRECTORY = "temporary";
+
+    private static final String TOMBSTONE_FILE_NAME = "tombstone";
 
     private static final int TEMP_NAME_LENGTH_CHARS = 128;
 
     private static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyz0123456789-";
 
     private final Revision.Factory revisionFactory;
+
+    private final Path storageRoot;
 
     private final Path journalPath;
 
@@ -56,54 +64,68 @@ public class UnixFSUtils {
 
     private final Path temporaryFileDirectory;
 
+    private final String pathSeparator;
+
+    private final Path tombstone;
+
     @Inject
     public UnixFSUtils(
             final Revision.Factory revisionFactory,
             @Named(JOURNAL_PATH) final Path journalPath,
             @Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
+
         this.journalPath = journalPath;
         this.revisionFactory = revisionFactory;
+        this.storageRoot = storageRoot;
+        this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath();
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath();
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath();
-        this.temporaryFileDirectory= storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath();
+        this.temporaryFileDirectory = storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath();
+
+        final Set<FileSystem> fileSystemSet = new HashSet<>();
+
+        fileSystemSet.add(storageRoot.getFileSystem());
+        fileSystemSet.add(tombstone.getFileSystem());
+        fileSystemSet.add(pathStorageRoot.getFileSystem());
+        fileSystemSet.add(resourceStorageRoot.getFileSystem());
+        fileSystemSet.add(temporaryFileDirectory.getFileSystem());
+
+        if (fileSystemSet.size() > 1) {
+            throw new IllegalArgumentException(format("%s %s and %s must share common filesystem.",
+                    pathStorageRoot,
+                    resourceStorageRoot,
+                    temporaryFileDirectory));
+        }
+
+        pathSeparator = pathStorageRoot.getFileSystem().getSeparator();
+
     }
 
     /**
      * Locks a directory by writing a lock file.  If the directory is already locked, then this will throw an instance
      * of {@link FileAlreadyExistsException} indicating that another process has locked the directory.
      *
-     * @param directoryPath the path to the directory
      * @return the {@link Path} to the lock file
      * @throws IOException if a locking error occurs,
      */
-    public Path lockPath(final Path directoryPath) throws IOException {
-        final Path lockFile = get(".", LOCK_FILE_NAME);
-        return tryLock(directoryPath.resolveSibling(lockFile));
-    }
-
-    private Path tryLock(final Path lockFilePath) throws IOException {
-
-        if (Files.exists(lockFilePath)) {
-            final String msg = format("Journal path is locked %s", lockFilePath);
-            throw new FileAlreadyExistsException(msg);
-        } else {
-            Files.createFile(lockFilePath);
-        }
-
-        return lockFilePath;
-
+    public void lockStorageRoot() {
+        final Path lockFile = getStorageRoot().resolve(LOCK_FILE_NAME);
+        doOperationV(() -> createFile(lockFile), FatalException::new);
     }
 
     /**
      * Unlocks the directory by deleting the specified lock file as the supplied {@link Path}
-     * @param lockFilePath the lock file path
      */
-    public void unlockDirectory(final Path lockFilePath) {
+    public void unlockStorageRoot() {
+
+        final Path lockFile = getStorageRoot().resolve(LOCK_FILE_NAME);
+
         try {
-            deleteIfExists(lockFilePath);
+            deleteIfExists(lockFile);
         } catch (IOException e) {
             logger.error("Failed to delete lock file.", e);
         }
+
     }
 
     /**
@@ -115,18 +137,61 @@ public class UnixFSUtils {
      * @param revision the {@link Revision<?>} to use as reference
      * @return the {@link Revision<Path>} pointing to the requested file.
      */
-    public Revision<Path> getFileForRevision(final Path directory, final Revision<?> revision) {
+    public Revision<Path> findLatestForRevision(final Path directory,
+                                                final Revision<?> revision) {
 
         if (!isDirectory(directory)) throw new IllegalArgumentException(directory + " must be a directory.");
+
+        final Function<Path, Revision<Path>> chop = file -> {
+            final String fileName = file.getFileName().toString();
+            final String revisionId = fileName.substring(0, fileName.length() - REVISION_SUFFIX.length());
+            return revisionFactory.create(revisionId).withValue(file);
+        };
 
         return doOperation(() -> Files
             .list(directory)
             .filter(Files::isRegularFile)
-            .map(file -> revisionFactory.create(file.getFileName().toString()).withValue(file))
+            .filter(file -> file.endsWith(REVISION_SUFFIX))
+            .map(chop)
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
             .orElse(zero()));
 
+    }
+
+    /**
+     * Gets the symbolic link path to the {@link Revision}.
+     *
+     * @param parent the parent directory.
+     * @param revision the revision to resolve.
+     *
+     * @return the resolved symbolic link path
+     */
+    public Path resolveLinkPath(final Path parent, final Revision<?> revision) {
+        return parent.resolve(format("%s.%s", revision.getUniqueIdentifier(), LINK_SUFFIX));
+    }
+
+    /**
+     * Resolves a revision file by appending the value of {@link #REVISION_SUFFIX} to the end of the file name.
+     *
+     * @param parent the parent {@link Path} owning the file
+     * @param revision the {@link Revision<?>} to use when resolving the file name
+     * @return the {@link Path} to the fully-resolved file with revision suffix
+     */
+    public Path resolveRevisionPath(final Path parent, final Revision<?> revision) {
+        return parent.resolve(format("%s.%s", revision.getUniqueIdentifier(), REVISION_SUFFIX));
+    }
+
+    /**
+     * Initializes the directory contents for all the necessary sub directories.
+     */
+    public void initialize() {
+        doOperationV(() -> {
+            createDirectories(pathStorageRoot);
+            createDirectories(resourceStorageRoot);
+            createDirectories(temporaryFileDirectory);
+            if (!isRegularFile(tombstone, NOFOLLOW_LINKS)) createFile(tombstone);
+        }, FatalException::new);
     }
 
     /**
@@ -157,6 +222,15 @@ public class UnixFSUtils {
     }
 
     /**
+     * Gets the storage root directory.
+     *
+     * @return the storage root
+     */
+    public Path getStorageRoot() {
+        return storageRoot;
+    }
+
+    /**
      * Returns the path to the journal file.
      * @return the path to the journal file.
      */
@@ -182,17 +256,23 @@ public class UnixFSUtils {
     }
 
     /**
-     * Gets a {@link Path} based on the supplied parent path and the {@link Revision<?>}. This essentially appends the
-     * revision suffix to the path. This method simply formulates the {@link Path} and does not check that the directory
-     * even exists.
+     * Returns the path separator string associated with the filesystem used by the storage directory.
      *
-     * @param revision the {@link Revision<?>}
-     * @param fsPath the parent filesystem {@link Path}
-     * @return the revision directory
+     * @return the path separator.
      */
-    public Path getRevisionPath(final Revision<?> revision, final Path fsPath) {
-        final String revisionDirectoryName = format("%s%s", revision.getUniqueIdentifier(), REVISION_SUFFIX);
-        return fsPath.resolve(revisionDirectoryName);
+    public String getPathSeparator() {
+        return pathSeparator;
+    }
+
+    /**
+     * Returns a {@link Path} to the path storage directory for the supplied {@link NodeId}.
+     *
+     * @param nodeId the {@link NodeId}
+     *
+     * @return the {@link Path} for the {@link NodeId}
+     */
+    public Path resolvePathStorageRoot(final NodeId nodeId) {
+        return getPathStorageRoot().resolve(nodeId.asString());
     }
 
     /**
@@ -261,7 +341,7 @@ public class UnixFSUtils {
             final Path temporaryFile = temporaryFileDirectory.resolve(stringBuilder.toString());
 
             try {
-                return Files.createFile(temporaryFile);
+                return createFile(temporaryFile);
             } catch (FileAlreadyExistsException ex) {
                 continue;
             } catch (IOException ex) {
