@@ -37,20 +37,20 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
     @Override
     public ReadOnlyTransaction openRO(final NodeId nodeId) {
         final UnixFSJournalEntry entry = getUnixFSTransactionJournal().newSnapshotEntry(nodeId);
-        return new UnixFSReadOnlyTransaction(entry);
+        return new UnixFSReadOnlyTransaction(nodeId, entry);
     }
 
     @Override
     public ReadWriteTransaction openRW(final NodeId nodeId) {
         final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
-        return new UnixFSReadWriteTransaction(entry);
+        return new UnixFSReadWriteTransaction(nodeId, entry);
     }
 
     @Override
     public ExclusiveReadWriteTransaction openExclusiveRW(final NodeId nodeId) {
         final Monitor monitor = getUnixFSTransactionJournal().getExclusiveMonitor();
         final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
-        return new UnixFSExclusiveReadWriteTransaction(entry, monitor);
+        return new UnixFSExclusiveReadWriteTransaction(nodeId, entry, monitor);
     }
 
     @Override
@@ -70,38 +70,60 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         return unixFSTransactionJournal;
     }
 
-    private boolean existsAt(final Revision<?> revision, final ResourceId resourceId) {
-        final Revision<Boolean> exists;
-        exists = getUnixFSRevisionDataStore().getResourceIndex().existsAt(revision.comparableTo(), resourceId);
+    private boolean existsAt(final Revision<?> revision,
+                             final ResourceId resourceId) {
+
+        final Revision<Boolean> exists = getUnixFSRevisionDataStore()
+            .getResourceIndex()
+            .existsAt(revision.comparableTo(), resourceId);
+
         return exists.getValue().isPresent() && exists.getValue().get();
+
     }
 
-    private Stream<ResourceService.Listing> listAt(final Revision<?> revision, final Path path) {
-        final Revision<Stream<ResourceService.Listing>> listingRevision;
-        listingRevision = getUnixFSRevisionDataStore().getPathIndex().list(revision.comparableTo(), path);
+    private Stream<ResourceService.Listing> listAt(final NodeId nodeId, final Revision<?> revision, final Path path) {
+
+        final NodeId resolvedNodeId = path
+            .getOptionalNodeId()
+            .orElse(nodeId);
+
+        final Revision<Stream<ResourceService.Listing>> listingRevision = getUnixFSRevisionDataStore()
+            .getPathIndex()
+            .list(resolvedNodeId, revision.comparableTo(), path);
+
         return listingRevision.getValue().orElseGet(Stream::empty);
+
     }
 
-    private ResourceId getResourceIdAt(final Revision<?> revision, final Path path) {
+    private ResourceId getResourceIdAt(final NodeId nodeId, final Revision<?> revision, final Path path) {
+
+        final NodeId resolvedNodeId = path
+            .getOptionalNodeId()
+            .orElse(nodeId);
+
         return getUnixFSRevisionDataStore()
             .getPathIndex()
-            .getRevisionMap()
+            .getRevisionMap(resolvedNodeId)
             .getValueAt(revision.comparableTo(), path)
             .getValue()
             .orElseThrow(ResourceNotFoundException::new);
-    }
-
-    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final Path path) throws IOException {
-
-        final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
-            .getResourceIndex()
-            .loadResourceContentsAt(, revision.comparableTo(), path);
-
-        return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
 
     }
 
-    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision, final ResourceId resourceId) throws IOException {
+//    private ReadableByteChannel loadResourceContentsAt(final NodeId nodeId,
+//                                                       final Revision<?> revision,
+//                                                       final Path path) throws IOException {
+//
+//        final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
+//            .getResourceIndex()
+//            .loadResourceContentsAt(nodeId, revision.comparableTo(), path);
+//
+//        return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
+//
+//    }
+
+    private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision,
+                                                       final ResourceId resourceId) throws IOException {
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
                 .getResourceIndex()
@@ -113,10 +135,13 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private class UnixFSReadOnlyTransaction implements ReadOnlyTransaction {
 
+        private final NodeId nodeId;
+
         private final TransactionJournal.Entry entry;
 
-        public UnixFSReadOnlyTransaction(TransactionJournal.Entry entry) {
+        public UnixFSReadOnlyTransaction(final NodeId nodeId, final TransactionJournal.Entry entry) {
             this.entry = entry;
+            this.nodeId = nodeId;
         }
 
         @Override
@@ -131,12 +156,12 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public Stream<ResourceService.Listing> list(final Path path) {
-            return listAt(entry.getRevision(), path);
+            return listAt(nodeId, entry.getRevision(), path);
         }
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            return getResourceIdAt(entry.getRevision(), path);
+            return getResourceIdAt(nodeId, entry.getRevision(), path);
         }
 
         @Override
@@ -153,10 +178,13 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private class UnixFSReadWriteTransaction implements ReadWriteTransaction {
 
+        protected final NodeId nodeId;
+
         protected final UnixFSJournalMutableEntry entry;
 
-        public UnixFSReadWriteTransaction(final UnixFSJournalMutableEntry entry) {
+        public UnixFSReadWriteTransaction(final NodeId nodeId, final UnixFSJournalMutableEntry entry) {
             this.entry = entry;
+            this.nodeId = nodeId;
         }
 
         @Override
@@ -174,7 +202,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
             final Revision<Stream<ResourceService.Listing>> indexed = getUnixFSRevisionDataStore()
                 .getPathIndex()
-                .list(entry.getRevision(), path);
+                .list(nodeId, entry.getRevision(), path);
 
             return indexed.getValue().orElseGet(Stream::empty);
 
@@ -182,7 +210,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            return getResourceIdAt(entry.getRevision(), path);
+            return getResourceIdAt(nodeId, entry.getRevision(), path);
         }
 
         @Override
@@ -246,11 +274,12 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
     private class UnixFSExclusiveReadWriteTransaction extends UnixFSReadWriteTransaction
                                                       implements ExclusiveReadWriteTransaction {
 
-        private final Monitor monitor;
+        protected final Monitor monitor;
 
-        public UnixFSExclusiveReadWriteTransaction(final UnixFSJournalMutableEntry entry,
+        public UnixFSExclusiveReadWriteTransaction(final NodeId nodeId,
+                                                   final UnixFSJournalMutableEntry entry,
                                                    final Monitor monitor) {
-            super(entry);
+            super(nodeId, entry);
             this.monitor = monitor;
         }
 

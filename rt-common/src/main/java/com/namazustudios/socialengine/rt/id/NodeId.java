@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.InvalidResourceIdException;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
+import java.util.Optional;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
@@ -105,6 +106,11 @@ public class NodeId implements Serializable, HasNodeId {
     @Override
     public NodeId getNodeId() throws InvalidNodeIdException {
         return this;
+    }
+
+    @Override
+    public Optional<NodeId> getOptionalNodeId() {
+        return Optional.empty();
     }
 
     @Override

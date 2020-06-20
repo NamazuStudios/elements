@@ -43,7 +43,7 @@ class UnixFSTransactionProgramLoader {
     }
 
     private void validateChecksum() {
-        // TODO Read Checksum and Validate
+        program.header.algorithm.get().verify(program);
     }
 
     private List<UnixFSTransactionCommand> load(

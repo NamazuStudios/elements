@@ -3,20 +3,22 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import static com.namazustudios.socialengine.rt.Path.fromComponents;
-import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromString;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.DIRECTORY_SUFFIX;
 import static java.lang.String.format;
 import static java.nio.file.Files.readSymbolicLink;
 import static java.util.stream.Collectors.joining;
 
 public class UnixFSPathMapping {
+
+    private static final Logger logger = LoggerFactory.getLogger(UnixFSPathMapping.class);
 
     private final UnixFSUtils utils;
 
@@ -96,25 +98,12 @@ public class UnixFSPathMapping {
                                              final NodeId nodeId,
                                              final com.namazustudios.socialengine.rt.Path rtPath) {
 
-        final com.namazustudios.socialengine.rt.Path fqPath;
+        final com.namazustudios.socialengine.rt.Path fqPath = rtPath
+            .getOptionalNodeId()
+            .map(nid -> rtPath)
+            .orElseGet(() -> rtPath.toPathWithContext(nodeId.asString()));
 
-        if (rtPath.hasContext()) {
-
-            final NodeId contextNodeId = nodeIdFromString(rtPath.getContext());
-
-            if (!contextNodeId.equals(nodeId)) {
-                throw new IllegalArgumentException(
-                    "Path context does not contain expected node id: " + nodeId + ". " +
-                    "Expected Node ID: " + nodeId);
-            }
-
-            fqPath = rtPath;
-
-        } else {
-            fqPath = rtPath.toPathWithContext(nodeId.asString());
-        }
-
-        final Path relative = utils.resolvePathStorageRoot(nodeId).resolve(fqPath
+        final Path relative = utils.resolvePathStorageRoot(fqPath.getNodeId()).resolve(fqPath
             .getComponents()
             .stream()
             .map(component -> format("%s.%s", component, DIRECTORY_SUFFIX))

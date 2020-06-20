@@ -111,7 +111,6 @@ public class UnixFSTransactionProgram {
             }
 
             public NodeId get() {
-                final int position = getByteBufferPosition();
                 return NodeId.nodeIdFromByteBuffer(getByteBuffer(), getByteBufferPosition());
             }
 
