@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -58,7 +57,9 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         return resourceIdIndex;
     }
 
-    public UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(final Revision<?> revision) {
+    public UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(
+            final NodeId nodeId,
+            final Revision<?> revision) {
         return new UnixFSTransactionProgramInterpreter.ExecutionHandler() {
 
             @Override
@@ -69,7 +70,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             @Override
             public void unlinkRTPath(final UnixFSTransactionProgram program,
                                      final com.namazustudios.socialengine.rt.Path rtPath) {
-                getPathIndex().unlink(revision, rtPath);
+                getPathIndex().unlink(revision, nodeId, rtPath);
             }
 
             @Override
@@ -78,32 +79,24 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             }
 
             @Override
-            public void linkFSPathToRTPath(final UnixFSTransactionProgram program, final Path fsPath,
-                                           final com.namazustudios.socialengine.rt.Path rtPath) {
-                getPathIndex().linkFSPathToRTPath(revision, rtPath, fsPath);
+            public void updateResource(final UnixFSTransactionProgram program,
+                                       final Path fsPath,
+                                       final ResourceId resourceId) {
+                getResourceIndex().updateResource(revision, fsPath, resourceId);
             }
 
             @Override
-            public void linkFSPathToResourceId(final UnixFSTransactionProgram program, final Path fsPath,
-                                               final ResourceId resourceId) {
-                getResourceIndex().linkFSPathToResourceId(revision, fsPath, resourceId);
+            public void linkNewResource(final UnixFSTransactionProgram program,
+                                        final Path fsPath,
+                                        final ResourceId resourceId) {
+                getResourceIndex().linkNewResource(revision, fsPath, resourceId);
             }
 
             @Override
             public void linkResourceToRTPath(final UnixFSTransactionProgram program,
                                              final ResourceId resourceId,
                                              final com.namazustudios.socialengine.rt.Path rtPath) {
-
-                // Map all the FS paths to RT paths.
-                final NodeId nodeId = program.header.nodeId.get();
-                final UnixFSPathMapping pathMapping = fromPath(utils, nodeId, rtPath);
-                final UnixFSResourceIdMapping resourceIdMapping = fromResourceId(utils, resourceId);
-
-                // Pin so we ensure that the latest version syncs up
-                final Path rtPathPath = garbageCollector.pinLatest(pathMapping.getPathDirectory(), revision);
-                final Path resourcePath = garbageCollector.pinLatest(resourceIdMapping.getResourceIdDirectory(), revision);
-                utils.doOperationV(() -> createLink(resourcePath, rtPathPath), FatalException::new);
-
+                getPathIndex().link(revision, nodeId, resourceId, rtPath);
             }
 
         };

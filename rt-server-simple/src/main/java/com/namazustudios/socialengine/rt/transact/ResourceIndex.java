@@ -28,22 +28,22 @@ public interface ResourceIndex {
      * Attempts to open the contents of a {@link Resource} with the supplied {@link Path} at the supplied
      * {@link Revision<?>}. The returned {@link ReadableByteChannel} must be closed by the caller if it is present.
      *
-     *
-     * @param nodeId
-     * @param revision the {@link Revision<?>} to reference
-     * @param path the {@link Path} to the {@link Resource}
-     * @return a {@link Revision<ReadableByteChannel>} which can be used to read the {@link Resource} contents
-     */
-    Revision<ReadableByteChannel> loadResourceContentsAt(NodeId nodeId, Revision<?> revision, Path path) throws IOException;
-
-    /**
-     * Attempts to open the contents of a {@link Resource} with the supplied {@link Path} at the supplied
-     * {@link Revision<?>}. The returned {@link ReadableByteChannel} must be closed by the caller if it is present.
-     *
      * @param revision the {@link Revision<?>} to reference
      * @param resourceId the {@link Path} to the {@link ResourceId}
      * @return a {@link Revision<ReadableByteChannel>} which can be used to read the {@link Resource} contents
      */
     Revision<ReadableByteChannel> loadResourceContentsAt(Revision<?> revision, ResourceId resourceId) throws IOException;
+
+    /**
+     * Given the file path, this updates the resource with the files's contents. The file should point to a temporary
+     * file which will get moved to the correct revision and {@link ResourceId}
+     *
+     * @param revision
+     * @param fsPath
+     * @param resourceId
+     * @param revision the {@link Revision<?>} to reference
+     * @param resourceId the {@link Path} to the {@link ResourceId}
+     */
+    void updateResource(Revision<?> revision, java.nio.file.Path fsPath, ResourceId resourceId);
 
 }

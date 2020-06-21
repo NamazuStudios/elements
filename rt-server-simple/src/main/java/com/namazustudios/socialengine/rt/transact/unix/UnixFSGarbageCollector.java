@@ -32,7 +32,7 @@ public class UnixFSGarbageCollector {
      * Flags the supplied directory for deletion.
      * @param directory
      */
-    public void tombstone(final Path directory, Revision<?> revision) {
+    public void tombstone(final Path directory, final Revision<?> revision) {
 
         if (Files.isDirectory(directory, NOFOLLOW_LINKS))
             throw new IllegalArgumentException(directory + " is not a directory.");

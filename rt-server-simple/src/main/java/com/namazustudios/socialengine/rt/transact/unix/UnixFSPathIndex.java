@@ -109,22 +109,34 @@ public class UnixFSPathIndex implements PathIndex {
         }));
     }
 
-    public void unlink(final Revision<?> revision,
-                       final com.namazustudios.socialengine.rt.Path rtPath) {
-        // TODO Figure out unlinking
-    }
+    public void link(final Revision<?> revision,
+                     final NodeId nodeId,
+                     final ResourceId resourceId,
+                     final com.namazustudios.socialengine.rt.Path rtPath) {
 
-    public void linkFSPathToRTPath(final Revision<?> revision,
-                                   final com.namazustudios.socialengine.rt.Path rtPath,
-                                   final java.nio.file.Path sourceFilePath) {
-
-        final UnixFSPathMapping mapping = UnixFSPathMapping.fromPath(utils, nodeId, rtPath);
+        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromPath(utils, nodeId, rtPath);
+        final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
         utils.doOperationV(() -> {
-            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
-            createLink(sourceFilePath, revisionPath);
+
+            createDirectories(pathMapping.getPathDirectory());
+            createDirectories(resourceIdMapping.resolveReverseDirectory(nodeId));
+
+            final Path symlinkPath = pathMapping.resolveSymlinkPath(revision);
+            createSymbolicLink(symlinkPath, resourceIdMapping.getResourceIdDirectory());
+
+            final Path reverseSymlinkPath = resourceIdMapping.resolveSymlinkPath(revision);
+            createSymbolicLink(reverseSymlinkPath, pathMapping.getPathDirectory());
+
         }, FatalException::new);
 
+    }
+
+    public void unlink(final Revision<?> revision,
+                       final NodeId nodeId,
+                       final com.namazustudios.socialengine.rt.Path rtPath) {
+        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromPath(utils, nodeId, rtPath);
+        garbageCollector.tombstone(pathMapping.getPathDirectory(), revision);
     }
 
     private class RevisionListing implements ResourceService.Listing {
@@ -186,7 +198,7 @@ public class UnixFSPathIndex implements PathIndex {
                                                                                 final ResourceId key) {
 
             final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, key);
-            final Path reverseDirectory = resourceIdMapping.resolveReverseDirectory(nodeId, revision);
+            final Path reverseDirectory = resourceIdMapping.resolveReverseDirectory(nodeId);
 
             final Set<com.namazustudios.socialengine.rt.Path> pathSet =
                 utils.doOperation(() -> Files.list(reverseDirectory)

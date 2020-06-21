@@ -81,14 +81,14 @@ public class UnixFSTransactionProgramInterpreter {
             case REMOVE_RESOURCE:
                 removeResource(command, executionHandler);
                 break;
-            case LINK_RESOURCE_FILE_TO_RT_PATH:
-                linkFSPathToRTPath(command, executionHandler);
-                break;
             case LINK_RESOURCE_TO_RT_PATH:
                 linkResourceToRTPath(command, executionHandler);
                 break;
-            case LINK_RESOURCE_FILE_TO_RESOURCE_ID:
-                linkFSPathToResourceId(command, executionHandler);
+            case UPDATE_RESOURCE:
+                updateResource(command, executionHandler);
+                break;
+            case LINK_NEW_RESOURCE:
+                linkNewResource(command, executionHandler);
                 break;
             default:
                 throw new InternalException("Unknown instruction: " + instruction);
@@ -113,13 +113,6 @@ public class UnixFSTransactionProgramInterpreter {
         executionHandler.removeResource(program, resourceId);
     }
 
-    private void linkFSPathToRTPath(final UnixFSTransactionCommand command,
-                                    final ExecutionHandler executionHandler) {
-        final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
-        final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(1).asRTPath();
-        executionHandler.linkFSPathToRTPath(program, fsPath, rtPath);
-    }
-
     private void linkResourceToRTPath(final UnixFSTransactionCommand command,
                                       final ExecutionHandler executionHandler) {
         final ResourceId resourceId = command.getParameterAt(0).asResourceId();
@@ -127,11 +120,18 @@ public class UnixFSTransactionProgramInterpreter {
         executionHandler.linkResourceToRTPath(program, resourceId, rtPath);
     }
 
-    private void linkFSPathToResourceId(final UnixFSTransactionCommand command,
-                                        final ExecutionHandler executionHandler) {
+    private void updateResource(final UnixFSTransactionCommand command,
+                                final ExecutionHandler executionHandler) {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
         final ResourceId resourceId = command.getParameterAt(1).asResourceId();
-        executionHandler.linkFSPathToResourceId(program, fsPath, resourceId);
+        executionHandler.updateResource(program, fsPath, resourceId);
+    }
+
+    private void linkNewResource(final UnixFSTransactionCommand command,
+                                 final ExecutionHandler executionHandler) {
+        final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
+        final ResourceId resourceId = command.getParameterAt(1).asResourceId();
+        executionHandler.linkNewResource(program, fsPath, resourceId);
     }
 
     /**
@@ -164,17 +164,6 @@ public class UnixFSTransactionProgramInterpreter {
         void removeResource(UnixFSTransactionProgram program, ResourceId resourceId);
 
         /**
-         * Handles {@link Instruction#LINK_RESOURCE_FILE_TO_RT_PATH}
-         *
-         * @param program
-         * @param fsPath
-         * @param rtPath
-         */
-        void linkFSPathToRTPath(UnixFSTransactionProgram program,
-                                Path fsPath,
-                                com.namazustudios.socialengine.rt.Path rtPath);
-
-        /**
          * Handles {@link Instruction#LINK_RESOURCE_TO_RT_PATH}
          *
          * @param program
@@ -186,14 +175,24 @@ public class UnixFSTransactionProgramInterpreter {
                                   com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
-         * Handles {@link Instruction#LINK_RESOURCE_FILE_TO_RESOURCE_ID}
+         * Handles {@link Instruction#UPDATE_RESOURCE}
          * @param program
          * @param fsPath
          * @param resourceId
          */
-        void linkFSPathToResourceId(UnixFSTransactionProgram program,
-                                    Path fsPath,
-                                    ResourceId resourceId);
+        void updateResource(UnixFSTransactionProgram program,
+                            Path fsPath,
+                            ResourceId resourceId);
+
+        /**
+         * Handles {@link Instruction#LINK_NEW_RESOURCE}
+         * @param program
+         * @param fsPath
+         * @param resourceId
+         */
+        void linkNewResource(UnixFSTransactionProgram program,
+                             Path fsPath,
+                             ResourceId resourceId);
 
     }
 

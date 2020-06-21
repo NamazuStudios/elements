@@ -43,6 +43,8 @@ public class UnixFSUtils {
 
     public static final String PATHS_DIRECTORY = "paths";
 
+    public static final String REVERSE_DIRECTORY = format("reverse.%s", DIRECTORY_SUFFIX);
+
     public static final String RESOURCES_DIRECTORY = "resources";
 
     public static final String TEMPORARY_DIRECTORY = "temporary";
@@ -168,7 +170,7 @@ public class UnixFSUtils {
      *
      * @return the resolved symbolic link path
      */
-    public Path resolveLinkPath(final Path parent, final Revision<?> revision) {
+    public Path resolveSymlinkPath(final Path parent, final Revision<?> revision) {
         return parent.resolve(format("%s.%s", revision.getUniqueIdentifier(), LINK_SUFFIX));
     }
 
@@ -187,11 +189,11 @@ public class UnixFSUtils {
      * Resolves a revision directory by appending the value of {@link #REVISION_SUFFIX} to the end of the file name.
      *
      * @param parent the parent {@link Path} owning the file
-     * @param revision the {@link Revision<?>} to use when resolving the file name
+     *
      * @return the {@link Path} to the fully-resolved file with revision suffix
      */
-    public Path resolveRevisionDirectoryPath(final Path parent, final Revision<?> revision) {
-        return parent.resolve(format("%s.%s.%s", revision.getUniqueIdentifier(), REVISION_SUFFIX, DIRECTORY_SUFFIX));
+    public Path resolveRevisionDirectoryPath(final Path parent) {
+        return parent.resolve(REVERSE_DIRECTORY);
     }
 
     /**
@@ -308,6 +310,16 @@ public class UnixFSUtils {
      */
     public Path resolvePathStorageRoot(final NodeId nodeId) {
         return getPathStorageRoot().resolve(nodeId.asString());
+    }
+
+    /**
+     * Returns true if the supplied path is a tombstone path.
+     *
+     * @param fsPath the {@link Path} to check for a tombstone.
+     * @return true if the path represents a tombstone, false otherwise
+     */
+    public boolean isTombstone(final Path fsPath) {
+        return doOperation(() -> isSameFile(tombstone, fsPath), FatalException::new);
     }
 
     /**

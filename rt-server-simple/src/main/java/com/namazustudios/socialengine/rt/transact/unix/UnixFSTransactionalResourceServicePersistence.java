@@ -265,7 +265,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         @Override
         public void close() {
             try (final TransactionJournal.Entry e = entry) {
-                finish(entry);
+                finish(nodeId, entry);
             }
         }
 
@@ -292,15 +292,16 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         public void close() {
             try (final Monitor m = monitor;
                  final TransactionJournal.Entry e = entry) {
-                finish(entry);
+                finish(nodeId, entry);
              }
         }
 
     }
 
-    private void finish(final UnixFSJournalMutableEntry entry) {
+    private void finish(final NodeId nodeId, final UnixFSJournalMutableEntry entry) {
 
-        final ExecutionHandler handler = getUnixFSRevisionDataStore().newExecutionHandler(entry.getRevision());
+        final ExecutionHandler handler = getUnixFSRevisionDataStore()
+            .newExecutionHandler(nodeId, entry.getRevision());
 
         try {
             if (entry.isCommitted()) {

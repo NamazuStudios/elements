@@ -184,6 +184,10 @@ public class TransactionalResourceService implements ResourceService {
         return context.acquires.size();
     }
 
+    public void persist(final ResourceId resourceId) {
+
+    }
+
     public NodeId getNodeId() {
         return nodeId;
     }

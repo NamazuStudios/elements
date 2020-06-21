@@ -18,7 +18,7 @@ import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 
 import static java.nio.channels.FileChannel.open;
-import static java.nio.file.Files.createLink;
+import static java.nio.file.Files.*;
 import static java.nio.file.StandardOpenOption.READ;
 
 public class UnixFSResourceIndex implements ResourceIndex {
@@ -39,15 +39,6 @@ public class UnixFSResourceIndex implements ResourceIndex {
     public Revision<Boolean> existsAt(final Revision<?> revision, final ResourceId resourceId) {
         final Path resourceIdDirectory = utils.getResourceStorageRoot().resolve(resourceId.asString());
         return utils.findLatestForRevision(resourceIdDirectory, revision).map(f -> true);
-    }
-
-    @Override
-    public Revision<ReadableByteChannel> loadResourceContentsAt(
-            final NodeId nodeId,
-            final Revision<?> revision,
-            final com.namazustudios.socialengine.rt.Path rtPath) {
-        final UnixFSPathMapping mapping = UnixFSPathMapping.fromPath(utils, nodeId, rtPath);
-        return utils.findLatestForRevision(mapping.getPathDirectory(), revision).map(f -> load(f, revision));
     }
 
     @Override
@@ -99,8 +90,44 @@ public class UnixFSResourceIndex implements ResourceIndex {
      * @param resourceId
      */
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
-        final UnixFSResourceIdMapping pathMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
-        garbageCollector.tombstone(pathMapping.getResourceIdDirectory(), revision);
+
+        final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        garbageCollector.tombstone(resourceIdMapping.getResourceIdDirectory(), revision);
+
+        final Path reverseRoot = resourceIdMapping.resolveReverseDirectories();
+
+        utils.doOperationV(() ->
+            list(reverseRoot).forEach(nodeIdDirectory -> unmap(revision, nodeIdDirectory)),
+            FatalException::new
+        );
+
+    }
+
+    private void unmap(final Revision<?> revision, final Path nodeIdDirectory) {
+        final NodeId nodeId = NodeId.nodeIdFromString(nodeIdDirectory.getFileName().toString());
+        utils.doOperationV(
+            () -> list(nodeIdDirectory).forEach(symlink -> unmap(revision, nodeId, symlink)),
+            FatalException::new
+        );
+    }
+
+    private void unmap(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
+        utils.doOperationV(() -> {
+            final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromSymlinkPath(utils, nodeId, symbolicLink);
+            garbageCollector.tombstone(pathMapping.getPathDirectory(), revision);
+        }, FatalException::new);
+    }
+
+    @Override
+    public void updateResource(final Revision<?> revision, final Path fsPath, final ResourceId resourceId) {
+
+        final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+
+        utils.doOperationV(() -> {
+            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
+            createLink(fsPath, revisionPath);
+        }, FatalException::new);
+
     }
 
     /**
@@ -110,12 +137,13 @@ public class UnixFSResourceIndex implements ResourceIndex {
      * @param fsPath the fs path to link
      * @param resourceId the resource ID to link
      */
-    public void linkFSPathToResourceId(final Revision<?> revision, final Path fsPath, final ResourceId resourceId) {
+    public void linkNewResource(final Revision<?> revision, final Path fsPath, final ResourceId resourceId) {
 
         final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
         utils.doOperationV(() -> {
             final Path revisionPath = mapping.resolveRevisionFilePath(revision);
+            createDirectories(mapping.getResourceIdDirectory());
             createLink(fsPath, revisionPath);
         }, FatalException::new);
 

@@ -33,6 +33,10 @@ public class UnixFSPathMapping {
         this.rtPath = rtPath;
     }
 
+    public boolean isTombstone() {
+        return utils.isTombstone(fsPath);
+    }
+
     /**
      * Returns the {@link com.namazustudios.socialengine.rt.Path} representing the symbolic path. This is always a fully
      * qualified path with the context set properly.
@@ -53,23 +57,13 @@ public class UnixFSPathMapping {
     }
 
     /**
-     * Given the {@link Revision<?>} this will resolve the path to the supplied revision for the symbolic link.
-     *resolveRevisionPath
-     * @param revision the revision
-     * @return the resolved path
-     */
-    public Path resolveLinkPath(final Revision<?> revision) {
-        return utils.resolveLinkPath(fsPath, revision);
-    }
-
-    /**
-     * Given the {@link Revision<?>} this will resolve the path to the supplied {@link Revision<?>}.
+     * Given the {@link Revision<?>} this will resolve the symbolic link
      *
      * @param revision the {@link Revision<?>}
      * @return the {@link Path} to the revision
      */
-    public Path resolveRevisionFilePath(final Revision<?> revision) {
-        return utils.resolveRevisionFilePath(fsPath, revision);
+    public Path resolveSymlinkPath(final Revision<?> revision) {
+        return utils.resolveSymlinkPath(fsPath, revision);
     }
 
     @Override

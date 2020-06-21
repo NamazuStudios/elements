@@ -130,9 +130,9 @@ public class UnixFSTransactionProgramBuilder {
      * @param resourceId the {@link ResourceId} to unlink
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder linkResourceFile(final ExecutionPhase executionPhase,
-                                                            final java.nio.file.Path fsPath,
-                                                            final ResourceId resourceId) {
+    public UnixFSTransactionProgramBuilder linkNewResource(final ExecutionPhase executionPhase,
+                                                           final java.nio.file.Path fsPath,
+                                                           final ResourceId resourceId) {
 
         requireNonNull(executionPhase);
         requireNonNull(fsPath);
@@ -140,7 +140,7 @@ public class UnixFSTransactionProgramBuilder {
 
         getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
                 .withPhase(executionPhase)
-                .withInstruction(LINK_RESOURCE_FILE_TO_RESOURCE_ID)
+                .withInstruction(LINK_NEW_RESOURCE)
                 .addFSPathParameter(fsPath)
                 .addResourceIdParameter(resourceId)
             .build(byteBuffer)));
@@ -148,35 +148,6 @@ public class UnixFSTransactionProgramBuilder {
         clear();
 
         return this;
-    }
-
-    /**
-     * Unlinks the {@link java.nio.file.Path} pointing to a specific {@link com.namazustudios.socialengine.rt.Path}.
-     *
-     * @param executionPhase  the execution phase to use
-     * @param fsPath the {@link java.nio.file.Path} to unlink
-     * @param rtPath the {@link com.namazustudios.socialengine.rt.Path} to unlink
-     * @return this instance
-     */
-    public UnixFSTransactionProgramBuilder linkResourceFile(final ExecutionPhase executionPhase,
-                                                            final java.nio.file.Path fsPath,
-                                                            final com.namazustudios.socialengine.rt.Path rtPath) {
-
-        requireNonNull(executionPhase);
-        requireNonNull(fsPath);
-        requireNonNull(rtPath);
-
-        getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
-                .withPhase(executionPhase)
-                .withInstruction(LINK_RESOURCE_FILE_TO_RT_PATH)
-                .addFSPathParameter(fsPath)
-                .addRTPathParameter(rtPath)
-            .build(byteBuffer)));
-
-        clear();
-
-        return this;
-
     }
 
     /**

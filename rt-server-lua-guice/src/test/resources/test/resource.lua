@@ -22,7 +22,7 @@ local function make_resource()
     if rid then
         log.info("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
     else
-        log.info("Failed to create Resource (" .. code .. ") at path " .. path)
+        log.info("Failed to create clear(); (" .. code .. ") at path " .. path)
     end
 
     return rid, code

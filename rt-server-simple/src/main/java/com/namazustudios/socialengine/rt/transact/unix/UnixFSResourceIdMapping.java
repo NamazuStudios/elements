@@ -22,6 +22,16 @@ public class UnixFSResourceIdMapping {
     }
 
     /**
+     * Resolves the symlink path for the supplied revision.
+     *
+     * @param revision the revision to use
+     * @return the symlink path for the revision.
+     */
+    public Path resolveSymlinkPath(final Revision<?> revision) {
+        return utils.resolveSymlinkPath(fsPath, revision);
+    }
+
+    /**
      * Returns the filesystem {@link Path} to the resource id directory.
      *
      * @return the {@link ResourceId} directory
@@ -41,14 +51,21 @@ public class UnixFSResourceIdMapping {
     }
 
     /**
-     * Given the {@link Revision<?>} this will resolve the matching reverse-mapping directory.
-     *
-     * @param revision the revision directory
+     * Will return the root of all reverse-mapping directories.
      *
      * @return the {@link Path} to the reverse-mapping directory
      */
-    public Path resolveReverseDirectory(final NodeId nodeId, final Revision<?> revision) {
-        return utils.resolveRevisionDirectoryPath(fsPath, revision).resolve(nodeId.asString());
+    public Path resolveReverseDirectories() {
+        return utils.resolveRevisionDirectoryPath(fsPath);
+    }
+
+    /**
+     * Given the {@link NodeId} this will resolve the matching reverse-mapping directory for.
+     *
+     * @return the {@link Path} to the reverse-mapping directory
+     */
+    public Path resolveReverseDirectory(final NodeId nodeId) {
+        return utils.resolveRevisionDirectoryPath(fsPath).resolve(nodeId.asString());
     }
 
     @Override
