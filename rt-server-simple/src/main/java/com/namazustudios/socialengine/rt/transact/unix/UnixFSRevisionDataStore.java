@@ -9,10 +9,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSPathMapping.fromPath;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSResourceIdMapping.fromResourceId;
-import static java.nio.file.Files.createLink;
-
 public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     public static final String STORAGE_ROOT_DIRECTORY = "com.namazustudios.socialengine.rt.transact.unix.fs.root";

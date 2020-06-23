@@ -32,6 +32,15 @@ public class UnixFSResourceIdMapping {
     }
 
     /**
+     * Gets the {@link ResourceId} associated with this mapping.
+     *
+     * @return the {@link ResourceId}
+     */
+    public ResourceId getResourceId() {
+        return resourceId;
+    }
+
+    /**
      * Returns the filesystem {@link Path} to the resource id directory.
      *
      * @return the {@link ResourceId} directory
@@ -65,7 +74,8 @@ public class UnixFSResourceIdMapping {
      * @return the {@link Path} to the reverse-mapping directory
      */
     public Path resolveReverseDirectory(final NodeId nodeId) {
-        return utils.resolveRevisionDirectoryPath(fsPath).resolve(nodeId.asString());
+        return utils.resolveRevisionDirectoryPath(fsPath)
+                    .resolve(nodeId.asString());
     }
 
     @Override
@@ -87,6 +97,20 @@ public class UnixFSResourceIdMapping {
                 "fsPath=" + fsPath +
                 ", resourceId=" + resourceId +
                 '}';
+    }
+
+    /**
+     * Creates a {@link UnixFSResourceIdMapping} from the {@link UnixFSUtils} and a string representing the
+     * {@link ResourceId}. This will appropriately resolve the directory from the configuration supplied in the utils.
+     *
+     * @param utils the utils instance which contains the necessary configuration
+     * @param resourceIdString the {@link ResourceId} string for which to associate w/ the mapping
+     *
+     * @return the {@link UnixFSResourceIdMapping}
+     */
+    public static UnixFSResourceIdMapping fromResourceId(final UnixFSUtils utils, final String resourceIdString) {
+        final ResourceId resourceId = ResourceId.resourceIdFromString(resourceIdString);
+        return fromResourceId(utils, resourceId);
     }
 
     /**

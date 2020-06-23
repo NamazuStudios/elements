@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
@@ -10,6 +11,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.DIRECTORY_SUFFIX;
 import static java.lang.String.format;
@@ -31,10 +33,6 @@ public class UnixFSPathMapping {
         this.utils = utils;
         this.fsPath = fsPath;
         this.rtPath = rtPath;
-    }
-
-    public boolean isTombstone() {
-        return utils.isTombstone(fsPath);
     }
 
     /**
@@ -88,9 +86,9 @@ public class UnixFSPathMapping {
      * @param rtPath the {@link com.namazustudios.socialengine.rt.Path} representing the symbolic location of the resource
      * @return the {@link UnixFSPathMapping} instance
      */
-    public static UnixFSPathMapping fromPath(final UnixFSUtils utils,
-                                             final NodeId nodeId,
-                                             final com.namazustudios.socialengine.rt.Path rtPath) {
+    public static UnixFSPathMapping fromRTPath(final UnixFSUtils utils,
+                                               final NodeId nodeId,
+                                               final com.namazustudios.socialengine.rt.Path rtPath) {
 
         final com.namazustudios.socialengine.rt.Path fqPath = rtPath
             .getOptionalNodeId()
@@ -109,20 +107,18 @@ public class UnixFSPathMapping {
     }
 
     /**
-     * Chases the following {@link Path} to a symbolic link and determines the
-     * {@link com.namazustudios.socialengine.rt.Path} associated with it.
+     * Creates a {@link UnixFSPathMapping} with the supplied information which resolves a particular {@link Path} to a
+     * {@link com.namazustudios.socialengine.rt.Path} mapping.
      *
-     * @param utils the {@link UnixFSUtils} instance
-     * @param symlink a {@link Path} that represents a symbolic link
-     *
-     * @return the {@link UnixFSPathMapping}
+     * @param utils the {@link UnixFSUtils} used to determine the actual configured location
+     * @param nodeId the {@link NodeId} to use a context
+     * @param fsPath the {@link Path} representing the on-disk directory for the {@link com.namazustudios.socialengine.rt.Path}
+     * @return the {@link UnixFSPathMapping} instance
      */
-    public static UnixFSPathMapping fromSymlinkPath(final UnixFSUtils utils, final NodeId nodeId, final Path symlink) {
+    public static UnixFSPathMapping fromFSPath(final UnixFSUtils utils, final NodeId nodeId, final Path fsPath) {
         return utils.doOperation(() -> {
 
             final int dirExtensionLength = DIRECTORY_SUFFIX.length() + 1;
-
-            final Path fsPath = readSymbolicLink(symlink).toAbsolutePath();
             final Path relative = utils.resolvePathStorageRoot(nodeId).relativize(fsPath);
 
             final List<String> components = new ArrayList<>();
@@ -141,6 +137,22 @@ public class UnixFSPathMapping {
 
             return new UnixFSPathMapping(utils, fsPath, rtPath);
 
+        }, FatalException::new);
+    }
+
+    /**
+     * Chases the following {@link Path} to a symbolic link and determines the
+     * {@link com.namazustudios.socialengine.rt.Path} associated with it.
+     *
+     * @param utils the {@link UnixFSUtils} instance
+     * @param symlink a {@link Path} that represents a symbolic link
+     *
+     * @return the {@link UnixFSPathMapping}
+     */
+    public static UnixFSPathMapping fromSymlinkPath(final UnixFSUtils utils, final NodeId nodeId, final Path symlink) {
+        return utils.doOperation(() -> {
+            final Path fsPath = readSymbolicLink(symlink).toAbsolutePath();
+            return fromFSPath(utils, nodeId, fsPath);
         }, FatalException::new);
     }
 

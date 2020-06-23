@@ -17,6 +17,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static com.namazustudios.socialengine.rt.transact.Revision.zero;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionDataStore.STORAGE_ROOT_DIRECTORY;
@@ -33,9 +34,9 @@ public class UnixFSUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSUtils.class);
 
-    public static final String LINK_SUFFIX = "link";
+    public static final String REVISION_SUFFIX = "rlink";
 
-    public static final String REVISION_SUFFIX = "revision";
+    public static final String REVISION_SYMBOLIC_LINK_SUFFIX = "rsymlink";
 
     public static final String DIRECTORY_SUFFIX = "d";
 
@@ -141,7 +142,8 @@ public class UnixFSUtils {
      * @return the {@link Revision<Path>} pointing to the requested file.
      */
     public Revision<Path> findLatestForRevision(final Path directory,
-                                                final Revision<?> revision) {
+                                                final Revision<?> revision,
+                                                final LinkType linkType) {
 
         if (!isDirectory(directory)) throw new IllegalArgumentException(directory + " must be a directory.");
 
@@ -153,8 +155,7 @@ public class UnixFSUtils {
 
         return doOperation(() -> Files
             .list(directory)
-            .filter(Files::isRegularFile)
-            .filter(file -> file.endsWith(REVISION_SUFFIX))
+            .filter(linkType::matches)
             .map(chop)
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
@@ -171,7 +172,7 @@ public class UnixFSUtils {
      * @return the resolved symbolic link path
      */
     public Path resolveSymlinkPath(final Path parent, final Revision<?> revision) {
-        return parent.resolve(format("%s.%s", revision.getUniqueIdentifier(), LINK_SUFFIX));
+        return parent.resolve(format("%s.%s", revision.getUniqueIdentifier(), REVISION_SYMBOLIC_LINK_SUFFIX));
     }
 
     /**
@@ -323,6 +324,20 @@ public class UnixFSUtils {
     }
 
     /**
+     * Flags the supplied directory for deletion. This essentially links a well-known file, ie the tombstone file, to
+     * the revision. It is possible to later check that this revision is a tombstone by using
+     * {@link #isTombstone(Path)}.
+     *
+     * @param directory the {@link Path} to the directory.
+     * @param revision the {@link Revision<?>} at which to apply the tombstone.
+     */
+    public void tombstone(final Path directory, final Revision<?> revision) {
+        if (isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
+        final Path destination = directory.resolve(revision.getUniqueIdentifier()).relativize(directory);
+        doOperationV(() -> createLink(tombstone, destination), FatalException::new);
+    }
+
+    /**
      * Defines an operation which may throw an instance of {@link IOException}
      */
     @FunctionalInterface
@@ -413,6 +428,56 @@ public class UnixFSUtils {
          * @throws IOException for any reason.
          */
         T perform() throws IOException;
+
+    }
+
+    /**
+     * Indicates the path type, including the extension.
+     */
+    public enum LinkType {
+
+        /**
+         * Indicates that the path is a directory.
+         */
+        DIRECTORY(DIRECTORY_SUFFIX, Files::isDirectory),
+
+        /**
+         * Indicates that the path is revision symbolic link to a directory.
+         */
+        REVISION_DIRECTORY(REVISION_SYMBOLIC_LINK_SUFFIX, Files::isSymbolicLink),
+
+        /**
+         * Indicates that the type is a hard link to a file (ie regular file).
+         */
+        REVISION_HARD_LINK(REVISION_SUFFIX, Files::isRegularFile),
+
+        /**
+         * Indicates that the type is a revision symlink.
+         */
+        REVISION_SYMBOLIC_LINK(REVISION_SYMBOLIC_LINK_SUFFIX, Files::isSymbolicLink);
+
+        private final String extension;
+        private final Predicate<Path> typePredicate;
+
+        LinkType(final String extension, final Predicate<Path> typePredicate) {
+            this.typePredicate = typePredicate;
+            this.extension = format("%s.%s", extension);
+        }
+
+        public String getExtension() {
+            return extension;
+        }
+
+        public Path stripExtension(final Path path) {
+            final String filen = path.getFileName().toString();
+            final String stripped = filen.substring(0, filen.length() - extension.length());
+            return path.resolveSibling(stripped);
+        }
+
+        public boolean matches(final Path file) {
+            return typePredicate.test(file) && file.endsWith(extension);
+
+        }
 
     }
 

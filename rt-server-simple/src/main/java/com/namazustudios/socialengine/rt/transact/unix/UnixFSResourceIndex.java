@@ -59,11 +59,8 @@ public class UnixFSResourceIndex implements ResourceIndex {
             garbageCollector.pin(file, revision);
 
             final UnixFSResourceHeader resourceHeader = new UnixFSResourceHeader();
-
             fc.read(resourceHeader.getByteBuffer());
-            if (resourceHeader.tombstone.get()) throw new ResourceNotFoundException();
 
-            fc = null;
             return out;
 
         } catch (FileNotFoundException ex) {
@@ -92,7 +89,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
 
         final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
-        garbageCollector.tombstone(resourceIdMapping.getResourceIdDirectory(), revision);
+        garbageCollector.utils.tombstone(resourceIdMapping.getResourceIdDirectory(), revision);
 
         final Path reverseRoot = resourceIdMapping.resolveReverseDirectories();
 
@@ -114,7 +111,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
     private void unmap(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
         utils.doOperationV(() -> {
             final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromSymlinkPath(utils, nodeId, symbolicLink);
-            garbageCollector.tombstone(pathMapping.getPathDirectory(), revision);
+            garbageCollector.utils.tombstone(pathMapping.getPathDirectory(), revision);
         }, FatalException::new);
     }
 

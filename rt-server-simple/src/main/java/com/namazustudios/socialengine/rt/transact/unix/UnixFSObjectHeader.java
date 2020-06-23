@@ -16,11 +16,6 @@ public class UnixFSObjectHeader extends Struct {
     public static final int VERSION_MINOR_CURRENT = VERSION_MINOR_0;
 
     /**
-     * Indicates that the value has been flagged for deletion.
-     */
-    public Bool tombstone = new Bool();
-
-    /**
      * Indicates the major version of the file
      */
     public Unsigned32 majorVersion = new Unsigned32();
@@ -30,14 +25,15 @@ public class UnixFSObjectHeader extends Struct {
      */
     public Unsigned32 minorVersion = new Unsigned32();
 
+    public Enum8<UnixFSChecksumAlgorithm> algorithm = new Enum8<>(UnixFSChecksumAlgorithm.values());
+
     /**
-     * The CRC-32 for the file.s
+     * The CRC-32 for the file
      */
-    public Unsigned32 crc32 = new Unsigned32();
+    public Unsigned32 checksum = new Unsigned32();
 
     public UnixFSObjectHeader() {
-        crc32.set(0);
-        tombstone.set(false);
+        checksum.set(0);
         majorVersion.set(VERSION_MAJOR_CURRENT);
         minorVersion.set(VERSION_MINOR_CURRENT);
     }
