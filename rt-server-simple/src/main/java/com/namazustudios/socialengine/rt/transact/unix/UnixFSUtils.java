@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
+import org.omg.CORBA.PUBLIC_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -81,10 +82,10 @@ public class UnixFSUtils {
         this.journalPath = journalPath;
         this.revisionFactory = revisionFactory;
         this.storageRoot = storageRoot;
-        this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath();
-        this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath();
-        this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath();
-        this.temporaryFileDirectory = storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath();
+        this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath().normalize();
+        this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath().normalize();
+        this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath().normalize();
+        this.temporaryFileDirectory = storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath().normalize();
 
         final Set<FileSystem> fileSystemSet = new HashSet<>();
 
@@ -147,20 +148,28 @@ public class UnixFSUtils {
 
         if (!isDirectory(directory)) throw new IllegalArgumentException(directory + " must be a directory.");
 
-        final Function<Path, Revision<Path>> chop = file -> {
-            final String fileName = file.getFileName().toString();
-            final String revisionId = fileName.substring(0, fileName.length() - REVISION_SUFFIX.length());
-            return revisionFactory.create(revisionId).withValue(file);
-        };
-
         return doOperation(() -> Files
             .list(directory)
-            .filter(linkType::matches)
-            .map(chop)
+            .filter(linkType::matches))
+            .map(path -> revisionFactory.create(linkType.stripExtension(path).toString()).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
-            .orElse(zero()));
+            .orElse(zero());
 
+    }
+
+    /**
+     * Searches a directory for the tombstone at the supplied {@link Revision<?>}. If it exists, this returns a
+     * {@link Revision<Path>} with a path indicating the tombstone. Otherwise, the resulting {@link Revision<Path>} will
+     * not contain a value.
+     *
+     * @param fsPathDirectory the directory
+     * @param revision the revision to search
+     * @param linkType the link type to search
+     * @return the {@link Revision<Path>}
+     */
+    public Revision<Path> findLatestTombstone(final Path fsPathDirectory, final Revision<?> revision, final LinkType linkType) {
+        return findLatestForRevision(fsPathDirectory, revision, linkType).filter(this::isTombstone);
     }
 
     /**
@@ -218,7 +227,7 @@ public class UnixFSUtils {
      * @return the value returned from the {@link IOOperation<T>}
      */
     public <T> T doOperation(final IOOperation<T> action) {
-        return doOperation(action, InternalException::new);
+        return doOperation(action, FatalException::new);
     }
 
     /**
@@ -238,6 +247,17 @@ public class UnixFSUtils {
             logger.error("IOException Performing operation.", ex);
             throw exceptionTFunction.apply(ex);
         }
+    }
+
+    /**
+     * Performs an IO Operation which may throw, catching the exception and wrapping it in the type specified in the
+     * function.
+     *
+     * @param action the action to perfrom
+     * @param <ExceptionT> the specified exception type
+     */
+    public <ExceptionT extends InternalException> void doOperationV(final IOOperationV action) {
+        doOperationV(action, FatalException::new);
     }
 
     /**
@@ -351,16 +371,6 @@ public class UnixFSUtils {
          */
         void perform() throws IOException;
 
-        default IOOperationV butFirstPerform(final IOOperationV next) {
-            return () -> {
-                try {
-                    next.perform();
-                } finally {
-                    perform();
-                }
-            };
-        }
-
         default IOOperationV andThen(IOOperationV next) {
             return () -> {
                 try {
@@ -464,18 +474,48 @@ public class UnixFSUtils {
             this.extension = format("%s.%s", extension);
         }
 
+        /**
+         * Gets the extension added to the last path component of the {@link Path}. This extension includes the '.'
+         * character.
+         *
+         * @return the full extension
+         */
         public String getExtension() {
             return extension;
         }
 
+        /**
+         * Strips the extension from the provided {@link Path}, throwing an exception if the path does not end with the
+         * expected extension.
+         *
+         * @param path the {@link Path}
+         * @return the stripped {@link Path}
+         */
         public Path stripExtension(final Path path) {
-            final String filen = path.getFileName().toString();
-            final String stripped = filen.substring(0, filen.length() - extension.length());
+            final String stripped = stripExtension(path.getFileName().toString());
             return path.resolveSibling(stripped);
         }
 
-        public boolean matches(final Path file) {
-            return typePredicate.test(file) && file.endsWith(extension);
+        /**
+         * Strips the extension from the provided {@link String}, throwing an exception if the path does not end with
+         * the expected extension.
+         *
+         * @param path the {@link String}
+         * @return the stripped {@link Path}
+         */
+        public String stripExtension(final String path) {
+            if (!path.endsWith(getExtension())) throw new IllegalArgumentException("Extension not present.");
+            return path.substring(0, path.length() - extension.length());
+        }
+
+        /**
+         * Tests if the supplied {@link Path} matches the expected extension and is of the correct type.
+         *
+         * @param path the {@link Path}
+         * @return true if the {@link Path} matches
+         */
+        public boolean matches(final Path path) {
+            return typePredicate.test(path) && path.endsWith(extension);
 
         }
 

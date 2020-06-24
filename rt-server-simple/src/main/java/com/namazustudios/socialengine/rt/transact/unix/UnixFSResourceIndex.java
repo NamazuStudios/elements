@@ -110,7 +110,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
     private void unmap(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
         utils.doOperationV(() -> {
-            final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromSymlinkPath(utils, nodeId, symbolicLink);
+            final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromFullyQualifiedSymlinkPath(utils, nodeId, symbolicLink);
             garbageCollector.utils.tombstone(pathMapping.getPathDirectory(), revision);
         }, FatalException::new);
     }

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
@@ -8,12 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Stream;
+import java.util.*;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.DIRECTORY_SUFFIX;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.DIRECTORY;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
 import static java.lang.String.format;
 import static java.nio.file.Files.readSymbolicLink;
 import static java.util.stream.Collectors.joining;
@@ -31,7 +29,7 @@ public class UnixFSPathMapping {
     public UnixFSPathMapping(final UnixFSUtils utils,
                              final Path fsPath, final com.namazustudios.socialengine.rt.Path rtPath) {
         this.utils = utils;
-        this.fsPath = fsPath;
+        this.fsPath = fsPath.toAbsolutePath().normalize();
         this.rtPath = rtPath;
     }
 
@@ -52,6 +50,15 @@ public class UnixFSPathMapping {
      */
     public Path getPathDirectory() {
         return fsPath;
+    }
+
+    /**
+     * Returns the relative path directory. This ist he path relative to the root of the storage system.
+     *
+     * @return the relative path directory.
+     */
+    public Path getRelativePathDirectory() {
+        return fsPath.relativize(utils.getPathStorageRoot());
     }
 
     /**
@@ -108,26 +115,69 @@ public class UnixFSPathMapping {
 
     /**
      * Creates a {@link UnixFSPathMapping} with the supplied information which resolves a particular {@link Path} to a
-     * {@link com.namazustudios.socialengine.rt.Path} mapping.
+     * {@link com.namazustudios.socialengine.rt.Path} mapping. This assumes that the supplied {@link Path} is fully
+     * qualified in that the first component contains a stringified {@link NodeId}.
+     *
+     * This relativizes this against the the path storage root and then infers the {@link NodeId} from the first
+     * component of the path.
      *
      * @param utils the {@link UnixFSUtils} used to determine the actual configured location
-     * @param nodeId the {@link NodeId} to use a context
      * @param fsPath the {@link Path} representing the on-disk directory for the {@link com.namazustudios.socialengine.rt.Path}
      * @return the {@link UnixFSPathMapping} instance
      */
-    public static UnixFSPathMapping fromFSPath(final UnixFSUtils utils, final NodeId nodeId, final Path fsPath) {
+    public static UnixFSPathMapping fromFullyQualifiedFSPath(final UnixFSUtils utils, final Path fsPath) {
         return utils.doOperation(() -> {
 
-            final int dirExtensionLength = DIRECTORY_SUFFIX.length() + 1;
-            final Path relative = utils.resolvePathStorageRoot(nodeId).relativize(fsPath);
+            final Path relative = utils.getPathStorageRoot().relativize(fsPath);
+
+            final NodeId nodeId;
+            final Iterator<Path> pathIterator = relative.iterator();
+
+            try {
+                final String nodeIdString = pathIterator.next().toString();
+                nodeId = NodeId.nodeIdFromString(nodeIdString);
+            } catch (NoSuchElementException ex) {
+                throw new IllegalArgumentException(format("Invalid FS path %s", fsPath), ex);
+            }
 
             final List<String> components = new ArrayList<>();
 
-            relative.forEach(p -> {
-                String component;
-                component = p.toString();
-                component = component.substring(0, component.length() - dirExtensionLength);
-                components.add(component);
+            while (pathIterator.hasNext()) {
+                final Path component = DIRECTORY.stripExtension(pathIterator.next());
+                components.add(component.toString());
+            }
+
+            final com.namazustudios.socialengine.rt.Path rtPath = new com.namazustudios.socialengine.rt.Path(
+                nodeId.asString(),
+                components
+            );
+
+            return new UnixFSPathMapping(utils, fsPath, rtPath);
+
+        }, FatalException::new);
+    }
+
+    /**
+     * Creates a {@link UnixFSPathMapping} with the supplied information which resolves a particular {@link Path} to a
+     * {@link com.namazustudios.socialengine.rt.Path} mapping. This relativizes this against the the path storage root
+     * and then infers the {@link NodeId} from the first component of the path.
+     *
+     * @param utils the {@link UnixFSUtils} used to determine the actual configured location
+     * @param fsPath the {@link Path} representing the on-disk directory for the {@link com.namazustudios.socialengine.rt.Path}
+     * @return the {@link UnixFSPathMapping} instance
+     */
+    public static UnixFSPathMapping fromRelativeFSPath(final UnixFSUtils utils,
+                                                       final NodeId nodeId,
+                                                       final Path fsPath) {
+        return utils.doOperation(() -> {
+
+            final Path relative = utils.resolvePathStorageRoot(nodeId).resolve(fsPath);
+
+            final List<String> components = new ArrayList<>();
+
+            relative.forEach(component -> {
+                final Path stripped = DIRECTORY.stripExtension(component);
+                components.add(stripped.toString());
             });
 
             final com.namazustudios.socialengine.rt.Path rtPath = new com.namazustudios.socialengine.rt.Path(
@@ -149,10 +199,10 @@ public class UnixFSPathMapping {
      *
      * @return the {@link UnixFSPathMapping}
      */
-    public static UnixFSPathMapping fromSymlinkPath(final UnixFSUtils utils, final NodeId nodeId, final Path symlink) {
+    public static UnixFSPathMapping fromFullyQualifiedSymlinkPath(final UnixFSUtils utils, final Path symlink) {
         return utils.doOperation(() -> {
             final Path fsPath = readSymbolicLink(symlink).toAbsolutePath();
-            return fromFSPath(utils, nodeId, fsPath);
+            return fromFullyQualifiedFSPath(utils, fsPath);
         }, FatalException::new);
     }
 

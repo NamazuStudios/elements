@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.rt.transact.Revision;
 import java.nio.file.Path;
 import java.util.Objects;
 
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
+
 public class UnixFSResourceIdMapping {
 
     private final UnixFSUtils utils;
@@ -17,7 +19,7 @@ public class UnixFSResourceIdMapping {
 
     private UnixFSResourceIdMapping(final UnixFSUtils utils, final ResourceId resourceId, final Path fsPath) {
         this.utils = utils;
-        this.fsPath = fsPath;
+        this.fsPath = fsPath.toAbsolutePath().normalize();
         this.resourceId = resourceId;
     }
 
@@ -74,8 +76,18 @@ public class UnixFSResourceIdMapping {
      * @return the {@link Path} to the reverse-mapping directory
      */
     public Path resolveReverseDirectory(final NodeId nodeId) {
-        return utils.resolveRevisionDirectoryPath(fsPath)
-                    .resolve(nodeId.asString());
+        return utils.resolveRevisionDirectoryPath(fsPath).resolve(nodeId.asString());
+    }
+
+    /**
+     * Finds the the tombstone file, if it exists.
+     *
+     * @param revision the {@link Revision<?>} to check
+     *
+     * @return the {@link Revision<Path>} of the tombstone file.
+     */
+    public Revision<Path> findTombstone(final Revision<?> revision) {
+        return utils.findLatestTombstone(fsPath, revision, REVISION_HARD_LINK);
     }
 
     @Override

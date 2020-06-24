@@ -16,12 +16,15 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_SYMBOLIC_LINK;
+import static java.lang.String.format;
 import static java.nio.file.Files.*;
+import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toSet;
 
 public class UnixFSPathIndex implements PathIndex {
@@ -83,9 +86,9 @@ public class UnixFSPathIndex implements PathIndex {
                                                          final Revision<?> revision,
                                                          final Path directory) {
 
-        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromFSPath(utils, nodeId, directory);
+        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRelativeFSPath(utils, nodeId, directory);
 
-        return utils.findLatestForRevision(pathMapping.getPathDirectory(), revision)
+        return utils.findLatestForRevision(pathMapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
                     .getValue()
                     .map(file -> (RevisionListing) utils.doOperation(() -> {
 
@@ -122,16 +125,89 @@ public class UnixFSPathIndex implements PathIndex {
         final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
         final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
+        if (!isDirectory(resourceIdMapping.getResourceIdDirectory())) {
+
+            // This should not happen because it should have been pre-checked before even attempting this operation
+            // if this does happen, it indicates that there was some data loss and the data store is corrupt or
+            // has been tampered with since having been used.
+
+            final String msg = format("Attempting to link non-existent directory %s -> %s",
+                    resourceIdMapping.getResourceIdDirectory(),
+                    rtPath);
+
+            logger.error("Attempting to link non-existent directory {} -> {}",
+                    resourceIdMapping.getResourceIdDirectory(),
+                    rtPath);
+
+            throw new FatalException(msg);
+
+        }
+
+        final Revision<Path> tombstonePathRevision = resourceIdMapping.findTombstone(revision);
+
+        if (tombstonePathRevision.getValue().isPresent()) {
+
+            // Same as above, this should have been pre-checked. This means that there was an improper pre-check
+            // but in this case the problem is that the file exists it was deleted at some point in the past.
+
+            final String msg = format("Attempting to link tombstoned directory %s -> %s",
+                    resourceIdMapping.getResourceIdDirectory(),
+                    rtPath);
+
+            logger.error("Attempting to link tombstoned directory {} -> {}",
+                    resourceIdMapping.getResourceIdDirectory(),
+                    rtPath);
+
+            throw new FatalException(msg);
+
+        }
+
         utils.doOperationV(() -> {
 
-            createDirectories(pathMapping.getPathDirectory());
-            createDirectories(resourceIdMapping.resolveReverseDirectory(nodeId));
+            final Path pathDirectory = pathMapping.getPathDirectory();
+            final Path resourceIdDirectory = resourceIdMapping.getResourceIdDirectory();
 
-            final Path symlinkPath = pathMapping.resolveSymlinkPath(revision);
-            createSymbolicLink(symlinkPath, resourceIdMapping.getResourceIdDirectory());
+            final Path pathSymlink = utils.resolveSymlinkPath(pathDirectory, revision);
+            final Path pathSymlinkTarget = pathSymlink.relativize(resourceIdDirectory);
 
-            final Path reverseSymlinkPath = resourceIdMapping.resolveSymlinkPath(revision);
-            createSymbolicLink(reverseSymlinkPath, pathMapping.getPathDirectory());
+            logger.trace("Creating directory {}", pathDirectory);
+            createDirectories(pathDirectory);
+
+            final Path reversePathDirectoryParent = resourceIdMapping.resolveReverseDirectory(nodeId);
+            final Path reversePathDirectory = utils
+                .findLatestForRevision(reversePathDirectoryParent, revision, REVISION_SYMBOLIC_LINK)
+                .map(symlink -> garbageCollector.pin(symlink, revision))
+                .map(symlink -> utils.doOperation(() -> readSymbolicLink(symlink)))
+                .getValue()
+                .orElseGet(() -> utils.doOperation(() -> {
+
+                    // No mapping exists for this revision because it can't find the symlink. Therefore, we must make
+                    // the new directory and setup all the links.
+
+                    // The link is determined by the revision number unique ID
+                    final Path link = utils.resolveSymlinkPath(reversePathDirectoryParent, revision);
+
+                    // The target is a randomly generated UUID.
+                    final Path target = reversePathDirectoryParent.resolve(randomUUID().toString());
+
+                    logger.trace("Creating directory {}", target);
+                    logger.trace("Creating symbolic link {} -> {} for new reverse mapping.", link, target);
+
+                    createDirectories(target);
+                    createSymbolicLink(link, target.getFileName());
+
+                    return target;
+
+                }));
+
+                final Path reversePathSymlink = reversePathDirectory.resolve(randomUUID().toString());
+                final Path reversePathSymlinkTarget = reversePathSymlink.relativize(pathDirectory);
+
+                logger.trace("Creating symlink {} -> {}", pathSymlink, pathSymlinkTarget);
+                logger.trace("Creating symlink {} -> {}", reversePathSymlink, reversePathSymlinkTarget);
+
+                createSymbolicLink(pathSymlink, pathSymlinkTarget);
+                createSymbolicLink(reversePathSymlink, reversePathSymlinkTarget);
 
         }, FatalException::new);
 
@@ -181,7 +257,7 @@ public class UnixFSPathIndex implements PathIndex {
                                                final com.namazustudios.socialengine.rt.Path key) {
             final UnixFSPathMapping mapping = UnixFSPathMapping.fromRTPath(utils, nodeId, key);
             return utils
-                .findLatestForRevision(mapping.getPathDirectory(), revision)
+                .findLatestForRevision(mapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
                 .map(symlink -> utils.doOperation(() -> {
                     final Path revisionDirectory = readSymbolicLink(symlink);
                     final String fileName = revisionDirectory.getFileName().toString();
@@ -206,13 +282,17 @@ public class UnixFSPathIndex implements PathIndex {
             final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, key);
             final Path reverseDirectory = resourceIdMapping.resolveReverseDirectory(nodeId);
 
-
             final Set<com.namazustudios.socialengine.rt.Path> pathSet =
-                utils.doOperation(() -> Files.list(reverseDirectory)
-                    .filter(link -> REVISION_SYMBOLIC_LINK.matches(link))
-                    .map(symlink -> UnixFSPathMapping.fromSymlinkPath(utils, nodeId, symlink))
-                    .map(mapping -> mapping.getPath())
-                    .collect(toSet()) , FatalException::new);
+                utils.findLatestForRevision(reverseDirectory, revision, REVISION_SYMBOLIC_LINK)
+                     .map(symlink -> garbageCollector.pin(symlink, revision))
+                     .map(symlink -> utils.doOperation(() -> readSymbolicLink(symlink)))
+                     .map(directory -> utils.doOperation(() -> Files.list(directory)))
+                     .map(symlinkStream -> symlinkStream
+                         .filter(path -> utils.doOperation(() -> isSymbolicLink(path)))
+                         .map(symlink -> UnixFSPathMapping.fromFullyQualifiedSymlinkPath(utils, symlink))
+                         .map(mapping -> mapping.getPath())
+                         .collect(toSet())
+                      ).getValue().orElseGet(Collections::emptySet);
 
             return revision.withValue(pathSet);
 

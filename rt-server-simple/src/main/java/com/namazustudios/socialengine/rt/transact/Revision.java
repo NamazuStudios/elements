@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.util.LazyValue;
+import sun.security.krb5.internal.APRep;
 
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static java.util.Optional.empty;
 
@@ -208,6 +210,17 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     }
 
     /**
+     * Filters this {@link Revision<ValueT>} such that it will report an empty value if the supplied
+     * {@link Predicate<ValueT>} does not hold true.
+     *
+     * @param predicate the {@link Predicate<ValueT>} to test
+     * @return a newly filtered {@link Revision<ValueT>}
+     */
+    default Revision<ValueT> filter(final Predicate<ValueT> predicate) {
+        return withOptionalValue(getValue().filter(predicate));
+    }
+
+    /**
      * Returns a new {@link Revision} that is comparable to the requested type.
      *
      * @param <T> the requested type
@@ -227,9 +240,9 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     interface Factory {
 
         /**
-         * Creates a {@link Revision<T>} with the supplied revision ID and value.  This parses the revision ID, as specified
-         * by the {@link Revision#getUniqueIdentifier()}.  The resulting {@link Revision<T>} will have an
-         * {@link Optional<T>} associated with it which has the specified value.
+         * Creates a {@link Revision<T>} with the supplied revision ID and value.  This parses the revision ID, as
+         * specified by the {@link Revision#getUniqueIdentifier()}.  The resulting {@link Revision<T>} will have
+         * no value, initially.
          *
          * @param at a string indicating the unique revision ID.
          * @param <T>

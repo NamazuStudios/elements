@@ -219,10 +219,10 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         try {
 
-            // Take a lock of the read lock. Note that subsequent operations will
+            // Take a lock of the read lock.
             rLock.lock();
 
-            // Fetches, atomically, the next slide, the revision, and sets an instance of OptimisitcLocking which will
+            // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
             // be used to track the resources held in contention.
 
             final Slices.Slice slice = slices.next();
