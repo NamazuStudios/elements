@@ -20,6 +20,10 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     Revision<Void> ZERO = new Revision<Void>() {
 
         @Override
+        public <RevisionT extends Revision>
+        RevisionT getOriginal(Class<RevisionT> cls) { return cls.cast(this);  }
+
+        @Override
         public String getUniqueIdentifier() {
             return "zero";
         }
@@ -43,6 +47,10 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     Revision<Void> INFINITY = new Revision<Void>() {
 
         @Override
+        public <RevisionT extends Revision>
+        RevisionT getOriginal(Class<RevisionT> cls) { return cls.cast(this);  }
+
+        @Override
         public String getUniqueIdentifier() {
             return "infinity";
         }
@@ -50,29 +58,6 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
         @Override
         public int compareTo(Revision<?> o) {
             return this == o ? 0 : 1;
-        }
-
-        @Override
-        public <T> Revision<T> comparableTo() {
-            return (Revision<T>) this;
-        }
-
-    };
-
-    /**
-     * Represents the latest revision. This is a special {@link Revision} that is newer than almost every other
-     * revision.  It is is equal to itself and less than {@link #infinity()}.
-     */
-    Revision<Void> LATEST = new Revision<Void>() {
-
-        @Override
-        public String getUniqueIdentifier() {
-            return "latest";
-        }
-
-        @Override
-        public int compareTo(Revision<?> o) {
-            return this == o ? 0 : INFINITY == o ? -1 : 1;
         }
 
         @Override
@@ -101,21 +86,24 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     }
 
     /**
-     * Represents the latest revision of any particular resource.  Similar to {@link #infinity()} but can be used to
-     * represent a specific tangible instance.
-     *
-     * @param <U>
-     * @return the latest revision
-     */
-    static <U> Revision<U> latest() { return LATEST.comparableTo(); }
-
-    /**
      * Returns a string uniquely identifying this {@link Revision}.  This may be any value, except for the literal value
      * "&ltzero&gt"
      *
      * @return the unique ID
      */
     String getUniqueIdentifier();
+
+    /**
+     * Gets the original {@link Revision<RevisionT>}. This is put here to assist the implementation of compareTo as
+     * many of the default methods in this interface would otherwise hide the original object. The actual behavior of
+     * this method is up to the implementation as it only exists to assist implementation.
+     *
+     * @param cls the type
+     * @param <RevisionT> the type of {@link Revision<RevisionT>}
+     * @return the original implementation
+     *
+     */
+    <RevisionT extends Revision> RevisionT getOriginal(Class<RevisionT> cls);
 
     /**
      * Returns the value at this particular revision.  The supplied value may not exist, hence this returns an instance
@@ -170,6 +158,9 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     default <U> Revision<U> map(final Function<ValueT, U> mapper) {
         return new Revision<U>() {
             @Override
+            public <RevisionT extends Revision>
+            RevisionT getOriginal(Class<RevisionT> cls) { return Revision.this.getOriginal(cls);  }
+            @Override
             public int compareTo(Revision<?> o) {  return Revision.this.compareTo(o); }
             @Override
             public String getUniqueIdentifier() { return Revision.this.getUniqueIdentifier(); }
@@ -201,6 +192,9 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     default <U> Revision<U> withOptionalValue(final Optional<U> optionalValue) {
         return new Revision<U>() {
             @Override
+            public <RevisionT extends Revision>
+            RevisionT getOriginal(Class<RevisionT> cls) { return Revision.this.getOriginal(cls);  }
+            @Override
             public int compareTo(Revision<?> o) { return Revision.this.compareTo(o); }
             @Override
             public String getUniqueIdentifier() { return Revision.this.getUniqueIdentifier(); }
@@ -228,6 +222,9 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      */
     default <T> Revision<T> comparableTo() {
         return new Revision<T>() {
+            @Override
+            public <RevisionT extends Revision>
+            RevisionT getOriginal(Class<RevisionT> cls) { return Revision.this.getOriginal(cls);  }
             @Override
             public int compareTo(final Revision<?> o) { return Revision.this.compareTo(o); }
             @Override

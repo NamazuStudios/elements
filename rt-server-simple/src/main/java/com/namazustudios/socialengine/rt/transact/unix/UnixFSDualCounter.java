@@ -104,6 +104,11 @@ class UnixFSDualCounter {
 
     }
 
+    public Snapshot getSnapshot() {
+        final long snapshot = counter.get();
+        return new Snapshot(snapshot);
+    }
+
     private int increment(final int value) {
         return value == max ? 0 : value + 1;
     }
@@ -120,6 +125,60 @@ class UnixFSDualCounter {
         final long lLeading = leading;
         final long lTrailing = trailing;
         return lTrailing | (lLeading << 32);
+    }
+
+    /**
+     * Gets a snapshot of the counter. This includes both the leading and trailing values.
+     */
+    public static class Snapshot implements Comparable<Snapshot> {
+
+        private final int max;
+        private final long snapshot;
+
+        private Snapshot(int max, long snapshot) {
+            this.max = max;
+            this.snapshot = snapshot;
+        }
+
+        /**
+         * Gets the snapshot value.
+         *
+         * @return the snapshot value
+         */
+        public long getSnapshot() {
+            return snapshot;
+        }
+
+        /**
+         * Gets the leading value.
+         *
+         * @return the leading value.
+         */
+        public int getLeading() {
+            return leading(snapshot);
+        }
+
+        /**
+         * Gets the trailing value.
+         *
+         * @return the trailing value
+         */
+        public int getTrailing() {
+            return trailing(snapshot);
+        }
+
+        @Override
+        public String toString() {
+            return format("snapshot-%d", getSnapshot());
+        }
+
+        @Override
+        public int compareTo(final Snapshot snapshot) {
+            final int relativeMinimum = Integer.min(getTrailing(), snapshot.getTrailing());
+
+            return 0;
+        }
+
     }
 
 }

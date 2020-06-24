@@ -6,25 +6,36 @@ import static java.lang.String.format;
 
 public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
 
-    private final long mask;
-
-    private final long revision;
-
     private volatile String uid;
 
-    public UnixFSRevision(final long mask, long revision) {
-        this.mask = mask;
-        this.revision = revision;
+    private final UnixFSDualCounter.Snapshot snapshot;
+
+    public UnixFSRevision(final UnixFSDualCounter.Snapshot snapshot) {
+        this.snapshot = snapshot;
+    }
+
+    @Override
+    public <RevisionT1 extends Revision> RevisionT1 getOriginal(final Class<RevisionT1> cls) {
+        return cls.cast(this);
     }
 
     @Override
     public String getUniqueIdentifier() {
-        return uid == null ? (uid = format("%0X", (mask & revision))) : uid;
+        return uid == null ? (uid = format("%0X", snapshot.getSnapshot())) : uid;
     }
 
     @Override
     public int compareTo(final Revision<?> o) {
-        return getUniqueIdentifier().compareTo(o.getUniqueIdentifier());
+
+        if (o == Revision.ZERO) {
+            return 1;
+        } else if (o == Revision.INFINITY) {
+            return -1;
+        }
+
+        final UnixFSRevision<?> other = o.getOriginal(UnixFSRevision.class);
+        return snapshot.compareTo(other.snapshot);
+
     }
 
 }
