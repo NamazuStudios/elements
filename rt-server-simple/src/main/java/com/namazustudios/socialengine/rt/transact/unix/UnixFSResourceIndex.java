@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
@@ -11,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
@@ -37,36 +34,54 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
     @Override
     public Revision<Boolean> existsAt(final Revision<?> revision, final ResourceId resourceId) {
-        final Path resourceIdDirectory = utils.getResourceStorageRoot().resolve(resourceId.asString());
-        return utils.findLatestForRevision(resourceIdDirectory, revision).map(f -> true);
+
+        final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        if (!isDirectory(mapping.getResourceIdDirectory())) return Revision.zero();
+
+        return utils.findLatestForRevision(
+            mapping.getResourceIdDirectory(),
+            revision,
+            UnixFSUtils.LinkType.REVISION_HARD_LINK
+        ).map(path -> garbageCollector.pin(path, revision))
+         .map(path -> isRegularFile(path) && !utils.isTombstone(path));
+
     }
 
     @Override
     public Revision<ReadableByteChannel> loadResourceContentsAt(
             final Revision<?> revision,
-            final ResourceId resourceId) {
-        final Path resourceIdDirectory = utils.getResourceStorageRoot().resolve(resourceId.asString());
-        return utils.findLatestForRevision(resourceIdDirectory, revision).map(file -> load(file, revision));
+            final ResourceId resourceId) throws IOException {
+
+        final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        if (!isDirectory(mapping.getResourceIdDirectory())) return Revision.zero();
+
+        final Revision<Path> pathRevision = utils.findLatestForRevision(
+            mapping.getResourceIdDirectory(),
+            revision,
+            UnixFSUtils.LinkType.REVISION_HARD_LINK
+        );
+
+        if (!pathRevision.getValue().isPresent()) return Revision.zero();
+
+        final ReadableByteChannel channel = load(pathRevision.getValue().get(), revision);
+        return revision.withValue(channel);
+
     }
 
-    private ReadableByteChannel load(final Path file, final Revision<?> revision) {
+    private ReadableByteChannel load(final Path file, final Revision<?> revision) throws IOException {
 
         FileChannel fc = null;
 
         try {
 
-            final FileChannel out = fc = open(file, READ);
-            garbageCollector.pin(file, revision);
+            final Path pinned = garbageCollector.pin(file, revision);
+            final FileChannel out = fc = open(pinned, READ);
 
             final UnixFSResourceHeader resourceHeader = new UnixFSResourceHeader();
             fc.read(resourceHeader.getByteBuffer());
 
             return out;
 
-        } catch (FileNotFoundException ex) {
-            throw new ResourceNotFoundException(ex);
-        } catch (IOException ex) {
-            throw new InternalException(ex);
         } finally {
             if (fc != null) {
                 try {
@@ -94,23 +109,23 @@ public class UnixFSResourceIndex implements ResourceIndex {
         final Path reverseRoot = resourceIdMapping.resolveReverseDirectories();
 
         utils.doOperationV(() ->
-            list(reverseRoot).forEach(nodeIdDirectory -> unmap(revision, nodeIdDirectory)),
+            list(reverseRoot).forEach(nodeIdDirectory -> tombstone(revision, nodeIdDirectory)),
             FatalException::new
         );
 
     }
 
-    private void unmap(final Revision<?> revision, final Path nodeIdDirectory) {
+    private void tombstone(final Revision<?> revision, final Path nodeIdDirectory) {
         final NodeId nodeId = NodeId.nodeIdFromString(nodeIdDirectory.getFileName().toString());
         utils.doOperationV(
-            () -> list(nodeIdDirectory).forEach(symlink -> unmap(revision, nodeId, symlink)),
+            () -> list(nodeIdDirectory).forEach(symlink -> tombstone(revision, nodeId, symlink)),
             FatalException::new
         );
     }
 
-    private void unmap(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
+    private void tombstone(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
         utils.doOperationV(() -> {
-            final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromFullyQualifiedSymlinkPath(utils, nodeId, symbolicLink);
+            final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRelativeFSPath(utils, nodeId, symbolicLink);
             garbageCollector.utils.tombstone(pathMapping.getPathDirectory(), revision);
         }, FatalException::new);
     }

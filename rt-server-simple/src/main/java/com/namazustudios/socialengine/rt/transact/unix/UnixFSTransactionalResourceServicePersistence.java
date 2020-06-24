@@ -126,8 +126,8 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
                                                        final ResourceId resourceId) throws IOException {
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
-                .getResourceIndex()
-                .loadResourceContentsAt(revision.comparableTo(), resourceId);
+            .getResourceIndex()
+            .loadResourceContentsAt(revision.comparableTo(), resourceId);
 
         return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
 
