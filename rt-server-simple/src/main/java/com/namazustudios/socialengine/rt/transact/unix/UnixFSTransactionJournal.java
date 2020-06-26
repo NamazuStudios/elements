@@ -386,7 +386,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             private final ByteBuffer slice;
 
             public Slice() {
-                this.index = counter.incrementAhdGetLeading();
+                this.index = counter.incrementAndGetLeading();
                 this.slice = slices.get(this.index);
             }
 

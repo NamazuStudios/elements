@@ -33,8 +33,9 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
             return -1;
         }
 
-        final UnixFSRevision<?> other = o.getOriginal(UnixFSRevision.class);
-        return snapshot.compareTo(other.snapshot);
+//        final UnixFSRevision<?> other = o.getOriginal(UnixFSRevision.class);
+//        return snapshot.compareTo(other.snapshot);
+        return 0;
 
     }
 
