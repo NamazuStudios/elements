@@ -23,13 +23,18 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private static final Logger logger = getLogger(UnixFSTransactionalResourceServicePersistence.class);
 
+    private final UnixFSRevisionPool unixFSRevisionPool;
+
     private final UnixFSRevisionDataStore unixFSRevisionDataStore;
 
     private final UnixFSTransactionJournal unixFSTransactionJournal;
 
     @Inject
-    public UnixFSTransactionalResourceServicePersistence(final UnixFSRevisionDataStore unixFSRevisionDataStore,
-                                                         final UnixFSTransactionJournal unixFSTransactionJournal) {
+    public UnixFSTransactionalResourceServicePersistence(
+            final UnixFSRevisionPool unixFSRevisionPool,
+            final UnixFSRevisionDataStore unixFSRevisionDataStore,
+            final UnixFSTransactionJournal unixFSTransactionJournal) {
+        this.unixFSRevisionPool = unixFSRevisionPool;
         this.unixFSRevisionDataStore = unixFSRevisionDataStore;
         this.unixFSTransactionJournal = unixFSTransactionJournal;
     }
@@ -300,8 +305,8 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private void finish(final NodeId nodeId, final UnixFSJournalMutableEntry entry) {
 
-        final ExecutionHandler handler = getUnixFSRevisionDataStore()
-            .newExecutionHandler(nodeId, entry.getRevision());
+        final UnixFSRevisionPool.Pending pending = unixFSRevisionPool.beginRevisionChange();
+        final ExecutionHandler handler = getUnixFSRevisionDataStore().newExecutionHandler(nodeId, pending.getRevision());
 
         try {
             if (entry.isCommitted()) {

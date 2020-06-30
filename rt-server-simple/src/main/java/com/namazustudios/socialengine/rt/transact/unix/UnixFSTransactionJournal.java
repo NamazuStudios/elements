@@ -202,7 +202,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         try {
             rLock.lock();
-            final Revision<?> revision = unixFSRevisionPool.create(current);
+            final Revision<?> revision = unixFSRevisionPool.getCurrent();
             final UnixFSJournalEntry entry = new UnixFSJournalEntry(nodeId, revision, rLock::unlock);
             unlock = false;
             return entry;
@@ -226,7 +226,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             // be used to track the resources held in contention.
 
             final Slices.Slice slice = slices.next();
-            final Revision<?> revision = unixFSRevisionPool.create(current);
+            final Revision<?> readRevision = unixFSRevisionPool.getCurrent();
             final UnixFSOptimisticLocking optimisticLocking = newOptimisticLocking();
 
             // Sets up a build for the specific slide of the journal file.
@@ -248,7 +248,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             // Finally, we construct the entry, which we will return.
             final UnixFSJournalMutableEntry entry = new UnixFSJournalMutableEntry(
                 nodeId,
-                revision,
+                readRevision,
                 utils,
                 unixFSPathIndex,
                 builder,

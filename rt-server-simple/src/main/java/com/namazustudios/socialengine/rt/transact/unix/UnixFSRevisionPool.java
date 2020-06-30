@@ -6,14 +6,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class UnixFSRevisionPool implements Revision.Factory {
 
-    public Revision<?> create(final AtomicLong current) {
-        // TODO Implement
-        return null;
-    }
+    private final UnixFSDualCounter revisions = new UnixFSDualCounter();
 
-    public Revision<?> nextRevision(final AtomicLong current) {
-        // TODO Implement
-        return null;
+    public Revision<?> getCurrent() {
+        return new UnixFSRevision<>(revisions.getSnapshot(), revisions::getSnapshot);
     }
 
     @Override
@@ -22,4 +18,11 @@ public class UnixFSRevisionPool implements Revision.Factory {
         return null;
     }
 
+    public Pending beginRevisionChange() {
+        return null;
+    }
+
+    public interface Pending {
+        Revision<?> getRevision();
+    }
 }

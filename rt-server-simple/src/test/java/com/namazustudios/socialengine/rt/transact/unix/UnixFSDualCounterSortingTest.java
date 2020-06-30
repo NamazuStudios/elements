@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.function.Consumer;
 
 import static java.lang.String.format;
 import static org.testng.Assert.assertTrue;
@@ -21,7 +20,7 @@ public class UnixFSDualCounterSortingTest {
     @DataProvider
     public Object[][] getTestData() {
         return new Object[][] {
-//            normalDataSetFilled(),
+            normalDataSetFilled(),
             offsetDataSetFilled()
         };
     }

@@ -76,7 +76,7 @@ public class UnixFSTransactionProgram {
         COMMIT,
 
         /**
-         * Happens in the cleanup phase.
+         * Happens in the cleanup phase. Executed regardless.
          */
         CLEANUP
 

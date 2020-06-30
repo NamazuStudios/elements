@@ -28,7 +28,7 @@ class UnixFSDualCounter {
 
     private final int max;
 
-    private final AtomicLong counter;
+    private final Counter counter;
 
     /**
      * Creates an instance of {@link UnixFSDualCounter} with the default max value, which is the max value of an
@@ -50,12 +50,32 @@ class UnixFSDualCounter {
     }
 
     /**
-     * Same as {@link #UnixFSDualCounter(int)}, but allows for the caller to specify its own AtomicLong, such use case
-     * is intended for use
+     * Same as {@link #UnixFSDualCounter(int)}, but allows for the caller to specify its own AtomicLong used.
+     *
      * @param max
      * @param counter
      */
     public UnixFSDualCounter(final int max, final AtomicLong counter) {
+        this(max, new Counter() {
+            @Override
+            public long get() {
+                return counter.get();
+            }
+
+            @Override
+            public boolean compareAndSet(long expect, long update) {
+                return counter.compareAndSet(expect, update);
+            }
+        });
+    }
+
+    /**
+     * Allows for the caller to specify an arbitrary {@link Counter}.
+     *
+     * @param max the max value
+     * @param counter the counter
+     */
+    public UnixFSDualCounter(final int max, final Counter counter) {
         if (max <= 0) throw new IllegalArgumentException("Maximum value too low: " + max);
         this.max = max;
         this.counter = counter;
@@ -254,13 +274,13 @@ class UnixFSDualCounter {
                                            max, other.max, reference.max);
                 throw new IllegalArgumentException(msg);
             } else if (reference.isNull() || isNull() || other.isNull()) {
-                final String msg = format("Cannot compare two snapshots where one or more is null %s %s %s",
-                                           this, other, reference);
+                final String msg = format("Cannot compare two snapshots where one or more is null (%s) - %s %s",
+                                           reference, this, other);
                 throw new IllegalArgumentException(msg);
             }
 
             final long lThisValue = normalize(reference.trailing);
-            final long lOtherValue = normalize(reference.trailing);
+            final long lOtherValue = other.normalize(reference.trailing);
 
             return lThisValue < lOtherValue ? -1 :
                    lThisValue > lOtherValue ?  1 : 0;
@@ -268,8 +288,31 @@ class UnixFSDualCounter {
         }
 
         private long normalize(final long reference) {
-
+            return reference <= leading ? leading - reference : leading + (max - reference);
         }
+
+    }
+
+    /**
+     * Interface which wraps an {@link AtomicLong} or similar data structure.
+     */
+    public interface Counter {
+
+        /**
+         * Gets the current value, atomically.
+         *
+         * @return the value
+         */
+        long get();
+
+        /**
+         * Compares and sets the value, atomically.
+         *
+         * @param expect the expected value
+         * @param update the new value to update
+         * @return true if set, false otherwise
+         */
+        boolean compareAndSet(long expect, long update);
 
     }
 

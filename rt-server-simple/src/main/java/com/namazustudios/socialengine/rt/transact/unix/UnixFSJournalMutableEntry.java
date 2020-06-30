@@ -45,17 +45,17 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     private final UnixFSOptimisticLocking optimisticLocking;
 
     public UnixFSJournalMutableEntry(final NodeId nodeId,
-                                     final Revision<?> revision,
+                                     final Revision<?> readRevision,
                                      final UnixFSUtils unixFSUtils,
                                      final UnixFSPathIndex unixFSPathIndex,
                                      final UnixFSTransactionProgramBuilder programBuilder,
                                      final UnixFSUtils.IOOperationV onClose,
                                      final UnixFSOptimisticLocking optimisticLocking) {
-        super(nodeId, revision, onClose);
+        super(nodeId, readRevision, onClose);
         this.programBuilder = programBuilder;
         this.unixFSUtils = unixFSUtils;
         this.optimisticLocking = optimisticLocking;
-        this.workingCopy = new UnixFSWorkingCopy(nodeId, revision, unixFSPathIndex, optimisticLocking);
+        this.workingCopy = new UnixFSWorkingCopy(nodeId, readRevision, unixFSPathIndex, optimisticLocking);
     }
 
     @Override
