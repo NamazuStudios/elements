@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
@@ -41,21 +40,23 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     @Override
     public ReadOnlyTransaction openRO(final NodeId nodeId) {
+        final UnixFSRevision<?> revision = getUnixFSRevisionDataStore().getCurrentRevision();
         final UnixFSJournalEntry entry = getUnixFSTransactionJournal().newSnapshotEntry(nodeId);
-        return new UnixFSReadOnlyTransaction(nodeId, entry);
+        return new UnixFSReadOnlyTransaction(nodeId, revision, entry);
     }
 
     @Override
     public ReadWriteTransaction openRW(final NodeId nodeId) {
-        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
-        return new UnixFSReadWriteTransaction(nodeId, entry);
+        final UnixFSRevision<?> revision = getUnixFSRevisionDataStore().getCurrentRevision();
+        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId, false);
+        return new UnixFSReadWriteTransaction(nodeId, revision, entry);
     }
 
     @Override
     public ExclusiveReadWriteTransaction openExclusiveRW(final NodeId nodeId) {
-        final Monitor monitor = getUnixFSTransactionJournal().getExclusiveMonitor();
-        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
-        return new UnixFSExclusiveReadWriteTransaction(nodeId, entry, monitor);
+        final UnixFSRevision<?> revision = getUnixFSRevisionDataStore().getCurrentRevision();
+        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId, true);
+        return new UnixFSExclusiveReadWriteTransaction(nodeId, revision, entry);
     }
 
     @Override
@@ -65,6 +66,10 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         } catch (Exception ex) {
             logger.error("Caught exception closing {}", getClass().getName(), ex);
         }
+    }
+
+    public UnixFSRevisionPool getUnixFSRevisionPool() {
+        return unixFSRevisionPool;
     }
 
     public UnixFSRevisionDataStore getUnixFSRevisionDataStore() {
@@ -115,18 +120,6 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     }
 
-//    private ReadableByteChannel loadResourceContentsAt(final NodeId nodeId,
-//                                                       final Revision<?> revision,
-//                                                       final Path path) throws IOException {
-//
-//        final Revision<ReadableByteChannel> readableByteChannelRevision = getUnixFSRevisionDataStore()
-//            .getResourceIndex()
-//            .loadResourceContentsAt(nodeId, revision.comparableTo(), path);
-//
-//        return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
-//
-//    }
-
     private ReadableByteChannel loadResourceContentsAt(final Revision<?> revision,
                                                        final ResourceId resourceId) throws IOException {
 
@@ -142,42 +135,45 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         private final NodeId nodeId;
 
+        private final UnixFSRevision<?> revision;
+
         private final TransactionJournal.Entry entry;
 
-        public UnixFSReadOnlyTransaction(final NodeId nodeId, final TransactionJournal.Entry entry) {
+        public UnixFSReadOnlyTransaction(final NodeId nodeId,
+                                         final UnixFSRevision revision,
+                                         final TransactionJournal.Entry entry) {
             this.entry = entry;
+            this.revision = revision;
             this.nodeId = nodeId;
         }
 
         @Override
-        public Revision<?> getRevision() {
-            return entry.getRevision();
+        public Revision<?> getReadRevision() {
+            return revision;
         }
 
         @Override
         public boolean exists(final ResourceId resourceId) {
-            return existsAt(entry.getRevision(), resourceId);
+            return existsAt(revision, resourceId);
         }
 
         @Override
         public Stream<ResourceService.Listing> list(final Path path) {
-            return listAt(nodeId, entry.getRevision(), path);
+            return listAt(nodeId, revision, path);
         }
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            return getResourceIdAt(nodeId, entry.getRevision(), path);
+            return getResourceIdAt(nodeId, revision, path);
         }
 
         @Override
         public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
-            return loadResourceContentsAt(entry.getRevision(), resourceId);
+            return loadResourceContentsAt(revision, resourceId);
         }
 
         @Override
-        public void close() {
-            entry.close();
-        }
+        public void close() { entry.close(); }
 
     }
 
@@ -185,21 +181,26 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         protected final NodeId nodeId;
 
+        private final UnixFSRevision<?> revision;
+
         protected final UnixFSJournalMutableEntry entry;
 
-        public UnixFSReadWriteTransaction(final NodeId nodeId, final UnixFSJournalMutableEntry entry) {
+        public UnixFSReadWriteTransaction(final NodeId nodeId,
+                                          final UnixFSRevision<?> revision,
+                                          final UnixFSJournalMutableEntry entry) {
             this.entry = entry;
+            this.revision = revision;
             this.nodeId = nodeId;
         }
 
         @Override
-        public Revision<?> getRevision() {
-            return entry.getRevision();
+        public Revision<?> getReadRevision() {
+            return revision;
         }
 
         @Override
         public boolean exists(final ResourceId resourceId) {
-            return existsAt(entry.getRevision(), resourceId);
+            return existsAt(revision, resourceId);
         }
 
         @Override
@@ -207,7 +208,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
             final Revision<Stream<ResourceService.Listing>> indexed = getUnixFSRevisionDataStore()
                 .getPathIndex()
-                .list(nodeId, entry.getRevision(), path);
+                .list(nodeId, revision, path);
 
             return indexed.getValue().orElseGet(Stream::empty);
 
@@ -215,13 +216,13 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            return getResourceIdAt(nodeId, entry.getRevision(), path);
+            return getResourceIdAt(nodeId, revision, path);
         }
 
         @Override
         public ReadableByteChannel loadResourceContents(final ResourceId resourceId)
                 throws IOException {
-            return loadResourceContentsAt(entry.getRevision(), resourceId);
+            return loadResourceContentsAt(revision, resourceId);
         }
 
         @Override
@@ -264,14 +265,13 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public void commit() {
-            entry.commit();
+            final Revision<?> revision = getUnixFSRevisionPool().createNextRevision();
+            entry.commit(revision);
         }
 
         @Override
         public void close() {
-            try (final TransactionJournal.Entry e = entry) {
-                finish(nodeId, entry);
-            }
+            finish(nodeId, entry);
         }
 
     }
@@ -279,13 +279,10 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
     private class UnixFSExclusiveReadWriteTransaction extends UnixFSReadWriteTransaction
                                                       implements ExclusiveReadWriteTransaction {
 
-        protected final Monitor monitor;
-
         public UnixFSExclusiveReadWriteTransaction(final NodeId nodeId,
-                                                   final UnixFSJournalMutableEntry entry,
-                                                   final Monitor monitor) {
-            super(nodeId, entry);
-            this.monitor = monitor;
+                                                   final UnixFSRevision<?> revision,
+                                                   final UnixFSJournalMutableEntry entry) {
+            super(nodeId, revision, entry);
         }
 
         @Override
@@ -293,29 +290,27 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
             return unixFSTransactionJournal.clear();
         }
 
-        @Override
-        public void close() {
-            try (final Monitor m = monitor;
-                 final TransactionJournal.Entry e = entry) {
-                finish(nodeId, entry);
-             }
-        }
-
     }
 
     private void finish(final NodeId nodeId, final UnixFSJournalMutableEntry entry) {
 
-        final UnixFSRevisionPool.Pending pending = unixFSRevisionPool.beginRevisionChange();
-        final ExecutionHandler handler = getUnixFSRevisionDataStore().newExecutionHandler(nodeId, pending.getRevision());
+        ExecutionHandler handler = null;
 
         try {
+
+            final UnixFSRevision<?> revision = entry.getWriteRevision().getOriginal(UnixFSRevision.class);
+
+            handler = getUnixFSRevisionDataStore().newExecutionHandler(nodeId, revision);
+
             if (entry.isCommitted()) {
                 entry.apply(handler);
+                getUnixFSRevisionDataStore().updateRevision(revision);
             } else {
                 entry.rollback();
             }
+
         } finally {
-            entry.cleanup(handler);
+            if (handler != null) entry.cleanup(handler);
         }
 
     }

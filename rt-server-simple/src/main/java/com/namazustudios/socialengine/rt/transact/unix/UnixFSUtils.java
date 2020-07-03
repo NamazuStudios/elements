@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
-import org.omg.CORBA.PUBLIC_MEMBER;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +21,6 @@ import java.util.function.Predicate;
 
 import static com.namazustudios.socialengine.rt.transact.Revision.zero;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionDataStore.STORAGE_ROOT_DIRECTORY;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.JOURNAL_PATH;
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -45,6 +43,8 @@ public class UnixFSUtils {
 
     public static final String PATHS_DIRECTORY = "paths";
 
+    public static final String TRANSACTION_JOURNAL_FILE_NAME = "journal";
+
     public static final String REVERSE_DIRECTORY = format("reverse.%s", DIRECTORY_SUFFIX);
 
     public static final String RESOURCES_DIRECTORY = "resources";
@@ -61,7 +61,7 @@ public class UnixFSUtils {
 
     private final Path storageRoot;
 
-    private final Path journalPath;
+    private final Path transactionJournalPath;
 
     private final Path pathStorageRoot;
 
@@ -76,12 +76,12 @@ public class UnixFSUtils {
     @Inject
     public UnixFSUtils(
             final Revision.Factory revisionFactory,
-            @Named(JOURNAL_PATH) final Path journalPath,
             @Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
 
-        this.journalPath = journalPath;
+
         this.revisionFactory = revisionFactory;
         this.storageRoot = storageRoot;
+        this.transactionJournalPath = storageRoot.resolve(TRANSACTION_JOURNAL_FILE_NAME).toAbsolutePath().normalize();
         this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath().normalize();
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath().normalize();
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath().normalize();
@@ -94,6 +94,7 @@ public class UnixFSUtils {
         fileSystemSet.add(pathStorageRoot.getFileSystem());
         fileSystemSet.add(resourceStorageRoot.getFileSystem());
         fileSystemSet.add(temporaryFileDirectory.getFileSystem());
+        fileSystemSet.add(transactionJournalPath.getFileSystem());
 
         if (fileSystemSet.size() > 1) {
             throw new IllegalArgumentException(format("%s %s and %s must share common filesystem.",
@@ -292,8 +293,8 @@ public class UnixFSUtils {
      * Returns the path to the journal file.
      * @return the path to the journal file.
      */
-    public Path getJournalPath() {
-        return journalPath;
+    public Path getTransactionJournalPath() {
+        return transactionJournalPath;
     }
 
     /**

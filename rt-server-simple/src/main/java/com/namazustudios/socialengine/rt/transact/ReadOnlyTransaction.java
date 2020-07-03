@@ -23,7 +23,7 @@ public interface ReadOnlyTransaction extends AutoCloseable {
      * Gets the Revision of this transaction.
      * @return the revision.
      */
-    Revision<?> getRevision();
+    Revision<?> getReadRevision();
 
     /**
      * Checks if the resource exists, returning false if it does not exist.

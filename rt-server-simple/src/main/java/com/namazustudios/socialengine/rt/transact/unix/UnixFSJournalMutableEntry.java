@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
-import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,8 +17,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.CLEANUP;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.COMMIT;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.*;
 import static java.nio.file.StandardOpenOption.WRITE;
 
 class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements TransactionJournal.MutableEntry {
@@ -42,20 +40,21 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     private final UnixFSTransactionProgramBuilder programBuilder;
 
-    private final UnixFSOptimisticLocking optimisticLocking;
-
     public UnixFSJournalMutableEntry(final NodeId nodeId,
-                                     final Revision<?> readRevision,
                                      final UnixFSUtils unixFSUtils,
-                                     final UnixFSPathIndex unixFSPathIndex,
                                      final UnixFSTransactionProgramBuilder programBuilder,
-                                     final UnixFSUtils.IOOperationV onClose,
-                                     final UnixFSOptimisticLocking optimisticLocking) {
-        super(nodeId, readRevision, onClose);
+                                     final UnixFSWorkingCopy workingCopy,
+                                     final UnixFSUtils.IOOperationV onClose) {
+        super(nodeId, onClose);
         this.programBuilder = programBuilder;
         this.unixFSUtils = unixFSUtils;
-        this.optimisticLocking = optimisticLocking;
-        this.workingCopy = new UnixFSWorkingCopy(nodeId, readRevision, unixFSPathIndex, optimisticLocking);
+        this.workingCopy = workingCopy;
+    }
+
+    @Override
+    public Revision<?> getWriteRevision() {
+        // TODO FIgure out This
+        return null;
     }
 
     @Override
@@ -105,7 +104,9 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
         workingCopy.linkNewResource(
             sourceResourceId,
             destination,
-            () -> programBuilder.linkResource(COMMIT, sourceResourceId, destination));
+            () -> {
+                programBuilder.linkResource(COMMIT, sourceResourceId, destination);
+            });
     }
 
     @Override
@@ -163,10 +164,18 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     }
 
     @Override
-    public void commit() {
+    public void commit(final Revision<?> revision) {
         check();
-        program = programBuilder.compile().commit(ExecutionPhase.values());
+
+        final UnixFSRevision original = revision.getOriginal(UnixFSRevision.class);
+
+        program = programBuilder
+            .revision(original)
+            .compile()
+            .commit(CLEANUP, COMMIT);
+
         committed = true;
+
     }
 
     @Override

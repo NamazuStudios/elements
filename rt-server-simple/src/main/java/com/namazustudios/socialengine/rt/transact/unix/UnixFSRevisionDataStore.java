@@ -53,7 +53,13 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         return resourceIdIndex;
     }
 
-    public UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(
+    @Override
+    public UnixFSRevision<?> getCurrentRevision() {
+        // TODO Figure This Out
+        return null;
+    }
+
+    UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(
             final NodeId nodeId,
             final Revision<?> revision) {
         return new UnixFSTransactionProgramInterpreter.ExecutionHandler() {
@@ -96,6 +102,10 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             }
 
         };
+    }
+
+    void updateRevision(final UnixFSRevision<?> revision) {
+
     }
 
 }

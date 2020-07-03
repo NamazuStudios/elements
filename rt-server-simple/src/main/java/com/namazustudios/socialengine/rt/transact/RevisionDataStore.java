@@ -9,6 +9,13 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 public interface RevisionDataStore extends AutoCloseable {
 
     /**
+     * Gets the current database revision.
+     *
+     * @return the current database revision.
+     */
+    Revision<?> getCurrentRevision();
+
+    /**
      * Gets the {@link PathIndex} which manages the relationship between {@link Path}s with {@link ResourceId}s.
      *
      * @return the {@link PathIndex}

@@ -88,7 +88,7 @@ public enum UnixFSChecksumAlgorithm {
     };
 
     /**
-     * Computes the checksum, skipping the value of {@link UnixFSTransactionProgram.Header#checksum} and then compares
+     * Computes the checksum, skipping the value of {@link UnixFSTransactionProgramHeader#checksum} and then compares
      * the computed value against the stored value. In the even of a mismatch this will throw an instance of
      * {@link ChecksumFailureExeception}
      *
@@ -99,7 +99,7 @@ public enum UnixFSChecksumAlgorithm {
     public abstract void verify(final UnixFSTransactionProgram program) throws ChecksumFailureExeception;
 
     /**
-     * Computes the checksum and then sets the {@link UnixFSTransactionProgram.Header#checksum} value.
+     * Computes the checksum and then sets the {@link UnixFSTransactionProgramHeader#checksum} value.
      *
      * @param program the program for which to compute the checksum
      */

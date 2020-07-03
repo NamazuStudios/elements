@@ -1,28 +1,45 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.transact.Revision;
+import javolution.io.Struct;
 
-import java.util.concurrent.atomic.AtomicLong;
+import javax.inject.Inject;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.file.Files;
+import java.nio.file.Path;
 
-public class UnixFSRevisionPool implements Revision.Factory {
+import static java.nio.file.Files.isRegularFile;
 
-    private final UnixFSDualCounter revisions = new UnixFSDualCounter();
+/**
+ * Serializes the actual update of the {@link Revision<?>} of the total database. This ensures that each sequentially
+ * provided {@link Revision<?>} is committed and updated in order. Additionally, this further ensures that the
+ * {@link Revision<?>}s are committed in the same order in which they are issued.
+ *
+ * This approach does have some performance implications, specifically it forces that each revision be applied in order
+ * therefore, threads attempting to commit may have to wait for others to complete. However, the implementation is
+ * designed to be a lightweight approach, minimizing the chances that there is contention.
+ */
+public class UnixFSRevisionPool implements Revision.Factory, AutoCloseable {
 
-    public Revision<?> getCurrent() {
-        return new UnixFSRevision<>(revisions.getSnapshot(), revisions::getSnapshot);
+    private final UnixFSDualCounter revisionCounter = new UnixFSDualCounter();
+
+    /**
+     * Creates a new {@link Revision<?>} and returns it. Once returned, the {@link Revision<?>} must be either committed
+     * or canceled before future {@link Revision<?>}s will be applied
+     * @return
+     */
+    public Revision<?> createNextRevision() {
+        return new UnixFSRevision<>(revisionCounter::getTrailing, revisionCounter.incrementLeadingAndGetSnapshot());
     }
 
     @Override
-    public <T> Revision<T> create(final String at) {
-        // TODO Implement
-        return null;
+    public UnixFSRevision<?> create(final String at) {
+        final UnixFSDualCounter.Snapshot snapshot =  UnixFSDualCounter.Snapshot.fromString(at);
+        return new UnixFSRevision<>(revisionCounter::getTrailing, snapshot);
     }
 
-    public Pending beginRevisionChange() {
-        return null;
-    }
+    @Override
+    public void close() {}
 
-    public interface Pending {
-        Revision<?> getRevision();
-    }
 }

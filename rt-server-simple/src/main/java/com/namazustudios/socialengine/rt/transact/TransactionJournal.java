@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceService.Unlink;
@@ -26,12 +25,12 @@ public interface TransactionJournal extends AutoCloseable {
     Entry newSnapshotEntry(NodeId nodeId);
 
     /**
-     * Gets a new entry.
+     * Gets a new entry for writing.
      *
-     * @return
-     * @param nodeId
+     * @return a new {@link MutableEntry}
+     * @param nodeId the {@link NodeId} to use
      */
-    MutableEntry newMutableEntry(NodeId nodeId);
+    MutableEntry newMutableEntry(NodeId nodeId, boolean exclusive);
 
     /**
      * Nukes the entire collection of data.  This may lock the entire database to accomplish this task.  Once complete,
@@ -41,24 +40,14 @@ public interface TransactionJournal extends AutoCloseable {
      */
     Stream<ResourceId> clear();
 
-    /**
-     * Returns a Monitor which is able to lock the entire journal.
-     *
-     * @return the exclusive monitor on the journal
-     */
-    Monitor getExclusiveMonitor();
+    /**I can see tensions are running high here. But can't we just agree that the next time we record a racially charged incident that we all make a commitment to turn the phone horizontally?
 
-    /**
+Thanks.
+
      * Represents a journal entry for read only purposes.   This will include the most recent most complete entry, if
      * one exists.
      */
     interface Entry extends AutoCloseable {
-
-        /**
-         * Gets the {@link Revision} of this entry.
-         * @return
-         */
-        Revision<?> getRevision();
 
         /**
          * Closes this entry.  Releasing any resources to the underlying {@link TransactionJournal}.  Once this is
@@ -68,62 +57,20 @@ public interface TransactionJournal extends AutoCloseable {
         @Override
         void close();
 
-//        /**
-//         * Checks that the supplied {@link ResourceId} exists for this journal entry.  If this journal entry has no
-//         * knowledge of the existence of this {@link ResourceId}.  For example, the specified {@link ResourceId} may
-//         * have been removed at the associated revision and not yet removed from the backing storage scheme.  Likewise,
-//         * the journal entry may contain the actual serialized bytes of the {@link Resource}, but it has not yet been
-//         * written to the disk in its expected location.
-//         *
-//         * @param resourceId the {@link ResourceId}
-//         * @return a {@link Revision<Boolean>} that, if present, indicates whether or not the {@link ResourceId} exists.
-//         */
-//        Revision<Boolean> exists(ResourceId resourceId);
-//
-//        /**
-//         * Returns a {@link Spliterator<ResourceService.Listing>} for all matching resource IDs at the supplied
-//         * {@link Path}.
-//         *
-//         * @param path the path
-//         * @return the {@link Spliterator<ResourceService.Listing>} representing the resource IDs at the path.
-//         */
-//        Revision<Stream<ResourceService.Listing>> list(Path path);
-//
-//        /**
-//         * Gets the {@link ResourceId} associated with the path, if it is available in the current journal entry.
-//         *
-//         * @param path the path to fetch.
-//         *
-//         * @return the {@link ResourceId} revision
-//         */
-//        Revision<ResourceId> getResourceId(Path path);
-//
-//        /**
-//         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} at the supplied {@link Path}
-//         * @param path the path to load
-//         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
-//         * @throws IOException
-//         * @throws ResourceNotFoundException
-//         */
-//        Revision<ReadableByteChannel> loadResourceContents(Path path) throws IOException;
-//
-//        /**
-//         * Opens a {@link ReadableByteChannel} to the contents of the {@link Resource} with the supplied
-//         * {@link ResourceId}.
-//         *
-//         * @param resourceId the respirce id to load
-//         * @return the revision of the {@link ReadableByteChannel} for the contents of the {@link Resource}
-//         * @throws IOException
-//         * @throws ResourceNotFoundException
-//         */
-//        Revision<ReadableByteChannel> loadResourceContents(ResourceId resourceId) throws IOException;
-
     }
 
     /**
      * Represents a mutable journal entry.  This allows for writes to
      */
     interface MutableEntry extends Entry {
+
+        /**
+         * Gets the write revision of this {@link MutableEntry}, this is the {@link Revision<?>} which will be written
+         * to the database as part of processing the journal entry.
+         *
+         * @return the write revision
+         */
+        Revision<?> getWriteRevision();
 
         /**
          * Opens a {@link WritableByteChannel} to save a resource, specifying the {@link Path} and {@link ResourceId}.
@@ -195,8 +142,9 @@ public interface TransactionJournal extends AutoCloseable {
         /**
          * Commits the pending changes to the {@link TransactionJournal}.  Once this is done the next subsequent
          * operation must be to close the {@link Entry}
+         * @param revision
          */
-        void commit();
+        void commit(Revision<?> revision);
 
         /**
          * Returns true if the transaction has been committed.  False otherwise.  If this method returns true, then

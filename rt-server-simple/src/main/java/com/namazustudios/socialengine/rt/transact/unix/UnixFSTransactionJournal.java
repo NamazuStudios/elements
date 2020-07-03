@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
@@ -38,11 +37,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     private static final byte FILLER = (byte) 0xFF;
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionJournal.class);
-
-    /**
-     * The path to the journal file, specified as a constructor parameter.
-     */
-    public static final String JOURNAL_PATH = "com.namazustudios.socialengine.rt.transact.journal.path";
 
     /**
      * The size of each transaction entry.  This is a fixed size.  If a transaction attempts to write more bytes than
@@ -85,8 +79,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private final UnixFSJournalHeader header = new UnixFSJournalHeader();
 
-    private final AtomicLong current = new AtomicLong();
-
     private final Map<Object, Object> lockedResources = new ConcurrentHashMap<>();
 
     // Set in constructor
@@ -109,26 +101,18 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private final UnixFSPathIndex unixFSPathIndex;
 
-    private final UnixFSRevisionPool unixFSRevisionPool;
-
-    private final UnixFSGarbageCollector unixFSGarbageCollector;
-
     private final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider;
 
     @Inject
     public UnixFSTransactionJournal(
             final UnixFSUtils utils,
             final UnixFSPathIndex unixFSPathIndex,
-            final UnixFSRevisionPool unixFSRevisionPool,
-            final UnixFSGarbageCollector unixFSGarbageCollector,
             final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider,
             @Named(TRANSACTION_ENTRY_BUFFER_SIZE) final int txnEntryBufferSize,
             @Named(TRANSACTION_ENTRY_BUFFER_COUNT) final int txnEntryBufferCount) throws IOException {
 
         this.utils = utils;
         this.unixFSPathIndex = unixFSPathIndex;
-        this.unixFSRevisionPool = unixFSRevisionPool;
-        this.unixFSGarbageCollector = unixFSGarbageCollector;
         this.txnEntryBufferSize = txnEntryBufferSize;
         this.txnEntryBufferCount = txnEntryBufferCount;
         this.programBuilderProvider = programBuilderProvider;
@@ -137,7 +121,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         this.rLock = rwLock.readLock();
         this.wLock = rwLock.readLock();
 
-        final java.nio.file.Path journalPath = utils.getJournalPath();
+        final java.nio.file.Path journalPath = utils.getTransactionJournalPath();
 
         if (isRegularFile(journalPath)) {
             logger.info("Reading existing journal file {}", journalPath);
@@ -202,7 +186,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         try {
             rLock.lock();
-            final Revision<?> revision = unixFSRevisionPool.getCurrent();
+            // TODO Fix This
+            final Revision<?> revision = Revision.zero();
             final UnixFSJournalEntry entry = new UnixFSJournalEntry(nodeId, revision, rLock::unlock);
             unlock = false;
             return entry;
@@ -213,20 +198,22 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public UnixFSJournalMutableEntry newMutableEntry(final NodeId nodeId) {
+    public UnixFSJournalMutableEntry newMutableEntry(final NodeId nodeId, boolean exclusive) {
 
         boolean unlock = true;
+        final Lock lock = exclusive ? wLock : rLock;
 
         try {
 
             // Take a lock of the read lock.
-            rLock.lock();
+            lock.lock();
 
             // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
             // be used to track the resources held in contention.
 
             final Slices.Slice slice = slices.next();
-            final Revision<?> readRevision = unixFSRevisionPool.getCurrent();
+            // TODO Fix This
+            final Revision<?> readRevision = Revision.zero();
             final UnixFSOptimisticLocking optimisticLocking = newOptimisticLocking();
 
             // Sets up a build for the specific slide of the journal file.
@@ -243,7 +230,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                 .andThen(() -> buildAndExecute(builder))
                 .andThen(slice::close)
                 .andThen(optimisticLocking::unlock)
-                .andThen(rLock::unlock);
+                .andThen(lock::unlock);
 
             // Finally, we construct the entry, which we will return.
             final UnixFSJournalMutableEntry entry = new UnixFSJournalMutableEntry(
@@ -263,7 +250,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         } finally {
             // Conditionally perform the unlock operation.
-            if (unlock) rLock.unlock();
+            if (unlock) lock.unlock();
         }
 
     }
@@ -322,30 +309,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public Monitor getExclusiveMonitor() {
-
-        wLock.lock();
-
-        return new Monitor() {
-
-            @Override
-            public void close() {
-                wLock.unlock();
-            }
-
-            @Override
-            public Condition getCondition(final String name) {
-                throw new UnsupportedOperationException("Conditions are't supported for this implementation.");
-            }
-
-        };
-
-    }
-
-    @Override
     public void close() {
         journalBuffer.force();
-        utils.unlockStorageRoot();
     }
 
     private class Slices {

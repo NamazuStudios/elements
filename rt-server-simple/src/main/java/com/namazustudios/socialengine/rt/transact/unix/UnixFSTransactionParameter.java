@@ -18,7 +18,7 @@ public class UnixFSTransactionParameter {
 
     private final ByteBuffer byteBuffer;
 
-    private UnixFSTransactionParameter(final UnixFSTransactionCommand.Header commandHeader, final int index) {
+    private UnixFSTransactionParameter(final UnixFSTransactionCommandHeader commandHeader, final int index) {
 
         final long parameterCount = commandHeader.parameterCount.get();
 
@@ -58,11 +58,11 @@ public class UnixFSTransactionParameter {
     /**
      * Appends a FS Path parameter.
      *
-     * @param commandHeader the {@link UnixFSTransactionCommand.Header}
+     * @param commandHeader the {@link UnixFSTransactionCommandHeader}
      * @param parameterIndex the parameter index
      * @param path the path to write
      */
-    static void appendFSPath(final UnixFSTransactionCommand.Header commandHeader,
+    static void appendFSPath(final UnixFSTransactionCommandHeader commandHeader,
                              final int parameterIndex,
                              final java.nio.file.Path path) {
 
@@ -84,11 +84,11 @@ public class UnixFSTransactionParameter {
     /**
      * Appends an RT Path parameter.
      *
-     * @param commandHeader the {@link UnixFSTransactionCommand.Header}
+     * @param commandHeader the {@link UnixFSTransactionCommandHeader}
      * @param parameterIndex the parameter index
      * @param path the path to write
      */
-    static void appendRTPath(final UnixFSTransactionCommand.Header commandHeader,
+    static void appendRTPath(final UnixFSTransactionCommandHeader commandHeader,
                              final int parameterIndex,
                              final com.namazustudios.socialengine.rt.Path path) {
 
@@ -110,11 +110,11 @@ public class UnixFSTransactionParameter {
     /**
      * Appends a FS Path parameter.
      *
-     * @param commandHeader the {@link UnixFSTransactionCommand.Header}
+     * @param commandHeader the {@link UnixFSTransactionCommandHeader}
      * @param parameterIndex the parameter index
      * @param resourceId the {@link ResourceId} to write
      */
-    static void appendResourceId(final UnixFSTransactionCommand.Header commandHeader,
+    static void appendResourceId(final UnixFSTransactionCommandHeader commandHeader,
                                  final int parameterIndex,
                                  final ResourceId resourceId) {
         final ByteBuffer commandByteBuffer = commandHeader.getByteBuffer();

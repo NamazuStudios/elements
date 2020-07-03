@@ -1,15 +1,12 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.id.NodeId;
-import javolution.io.Struct;
-
 import java.nio.ByteBuffer;
 
 public class UnixFSTransactionProgram {
 
     final ByteBuffer byteBuffer;
 
-    final Header header = new Header();
+    final UnixFSTransactionProgramHeader header = new UnixFSTransactionProgramHeader();
 
     transient boolean valid = false;
 
@@ -29,11 +26,11 @@ public class UnixFSTransactionProgram {
     /**
      * Commits this {@link UnixFSTransactionProgram} by calculating the checksum and setting it's
      */
-    public UnixFSTransactionProgram commit(final ExecutionPhase ... executionPhases) {
+    public UnixFSTransactionProgram commit(final UnixFSTransactionProgramExecutionPhase... executionPhases) {
 
         short phases = 0;
 
-        for (final ExecutionPhase executionPhase : executionPhases) {
+        for (final UnixFSTransactionProgramExecutionPhase executionPhase : executionPhases) {
             phases |= 0x1 << executionPhase.ordinal();
         }
 
@@ -62,63 +59,6 @@ public class UnixFSTransactionProgram {
         }
 
         return interpreter;
-
-    }
-
-    /**
-     * Indicates the phase of the a
-     */
-    public enum ExecutionPhase {
-
-        /**
-         * Happens in the commit phase.
-         */
-        COMMIT,
-
-        /**
-         * Happens in the cleanup phase. Executed regardless.
-         */
-        CLEANUP
-
-    }
-
-    static class Header extends Struct {
-
-        public static final int SIZE = new Header().size();
-
-        final Enum8<UnixFSChecksumAlgorithm> algorithm = new Enum8<>(UnixFSChecksumAlgorithm.values());
-
-        final PackedNodeId nodeId = new PackedNodeId();
-
-        final Unsigned32 checksum = new Unsigned32();
-
-        final Unsigned8 phases = new Unsigned8();
-
-        final Unsigned32 length = new Unsigned32();
-
-        final Unsigned32 commitPos = new Unsigned32();
-
-        final Unsigned32 commitLen = new Unsigned32();
-
-        final Unsigned32 cleanupPos = new Unsigned32();
-
-        final Unsigned32 cleanupLen = new Unsigned32();
-
-        class PackedNodeId extends Member {
-
-            public PackedNodeId() {
-                super(NodeId.getSizeInBytes() * Byte.SIZE, 8);
-            }
-
-            public NodeId get() {
-                return NodeId.nodeIdFromByteBuffer(getByteBuffer(), getByteBufferPosition());
-            }
-
-            public void set(final NodeId nodeId) {
-                nodeId.toByteBuffer(getByteBuffer(), getByteBufferPosition());
-            }
-
-        }
 
     }
 

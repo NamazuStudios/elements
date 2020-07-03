@@ -1,12 +1,9 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
-import java.nio.file.Files;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.ListIterator;
@@ -18,9 +15,9 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionP
  */
 public class UnixFSTransactionCommand {
 
-    final Header header;
+    final UnixFSTransactionCommandHeader header;
 
-    private UnixFSTransactionCommand(final Header header) {
+    private UnixFSTransactionCommand(final UnixFSTransactionCommandHeader header) {
         this.header = header;
     }
 
@@ -54,7 +51,7 @@ public class UnixFSTransactionCommand {
 
         final ByteBuffer duplicate = byteBuffer.duplicate();
 
-        final Header header = new Header();
+        final UnixFSTransactionCommandHeader header = new UnixFSTransactionCommandHeader();
         final int position = duplicate.position();
         header.setByteBuffer(duplicate, position);
 
@@ -82,31 +79,31 @@ public class UnixFSTransactionCommand {
 
         private Builder() {}
 
-        private UnixFSTransactionProgram.ExecutionPhase executionPhase;
+        private UnixFSTransactionProgramExecutionPhase executionPhase;
 
-        private Instruction instruction;
+        private UnixFSTransactionCommandInstruction instruction;
 
         private final List<ParameterWriter> parameterOperations = new LinkedList<>();
 
         /**
-         * Specifies the {@link UnixFSTransactionProgram.ExecutionPhase} of the command.
+         * Specifies the {@link UnixFSTransactionProgramExecutionPhase} of the command.
          *
-         * @param executionPhase the {@link UnixFSTransactionProgram.ExecutionPhase}
+         * @param executionPhase the {@link UnixFSTransactionProgramExecutionPhase}
          *
          * @return this instance
          */
-        public Builder withPhase(final UnixFSTransactionProgram.ExecutionPhase executionPhase) {
+        public Builder withPhase(final UnixFSTransactionProgramExecutionPhase executionPhase) {
             this.executionPhase = executionPhase;
             return this;
         }
 
         /**
-         * Specifies the {@link Instruction} to execute.
+         * Specifies the {@link UnixFSTransactionCommandInstruction} to execute.
          *
-         * @param instruction the {@link Instruction}
+         * @param instruction the {@link UnixFSTransactionCommandInstruction}
          * @return
          */
-        public Builder withInstruction(final Instruction instruction) {
+        public Builder withInstruction(final UnixFSTransactionCommandInstruction instruction) {
             this.instruction = instruction;
             return this;
         }
@@ -167,10 +164,10 @@ public class UnixFSTransactionCommand {
             final int commandPosition = duplicate.position();
 
             // Fills the header bytes full of place holder data.
-            for (int i = 0; i < Header.SIZE; ++i) duplicate.put((byte)0xFF);
+            for (int i = 0; i < UnixFSTransactionCommandHeader.SIZE; ++i) duplicate.put((byte)0xFF);
 
             // Creates the header and populates
-            final Header header = new Header();
+            final UnixFSTransactionCommandHeader header = new UnixFSTransactionCommandHeader();
 
             // Set all headers to the desired values, overwriting previous clearing of the buffer.
             header.phase.set(executionPhase);
@@ -205,83 +202,15 @@ public class UnixFSTransactionCommand {
 
     }
 
-    public static class Header extends Struct {
-
-        public static final int SIZE = new UnixFSTransactionProgram.Header().size();
-
-        /**
-         * The instruction to execute.
-         */
-        public final Enum16<UnixFSTransactionProgram.ExecutionPhase> phase = new Enum16<>(UnixFSTransactionProgram.ExecutionPhase.values());
-
-        /**
-         * The instruction to execute.
-         */
-        public final Enum16<Instruction> instruction = new Enum16<>(Instruction.values());
-
-        /**
-         * The length of the command, in bytes.
-         */
-        public final Unsigned32 length = new Unsigned32();
-
-        /**
-         * Represents the number of parameters passed to the command.
-         */
-        public final Unsigned8 parameterCount = new Unsigned8();
-
-    }
-
-    /**
-     * Indicates the instruction.
-     */
-    enum Instruction {
-
-        /**
-         * No-op.
-         */
-        NOOP,
-
-        /**
-         * Unlinks a filesystem path {@link ResourceId}, typically implented using
-         * {@link Files#delete(java.nio.file.Path)} or similar
-         * functionality.
-         */
-        UNLINK_FS_PATH,
-
-        /**
-         * Unlinks a {@link ResourceId} from a {@link com.namazustudios.socialengine.rt.Path}
-         */
-        UNLINK_RT_PATH,
-
-        /**
-         * Removes a {@link Resource} with a supplied {@link ResourceId}
-         */
-        REMOVE_RESOURCE,
-
-        /**
-         * Updates an existing {@link Resource to a new version. This accepts botht he resource file to update as well
-         * as the {@link ResourceId}.
-         */
-        UPDATE_RESOURCE,
-
-        /**
-         * Links a {@link java.nio.file.Path} to a {@link ResourceId}. Specifically, this would be used to link a
-         * temporary file at the supplied {@link java.nio.file.Path} to a {@link ResourceId}. The existing resource must
-         * not exist as this operation only makes sense for the first time a ResourceId is introduced.
-         */
-        LINK_NEW_RESOURCE,
-
-        /**
-         * Links a {@link ResourceId} to a {@link com.namazustudios.socialengine.rt.Path}
-         */
-        LINK_RESOURCE_TO_RT_PATH,
-
-    }
-
     @FunctionalInterface
     private interface ParameterWriter {
 
-        void write(UnixFSTransactionCommand.Header header, int parameter);
+        /**
+         * Writes the command to the
+         * @param header
+         * @param parameter
+         */
+        void write(UnixFSTransactionCommandHeader header, int parameter);
 
     }
 

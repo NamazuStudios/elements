@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase;
+import com.namazustudios.socialengine.rt.transact.Revision;
 import javolution.io.Struct;
 
 import java.nio.BufferOverflowException;
@@ -13,9 +14,9 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommand.Instruction.*;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.CLEANUP;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.COMMIT;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommandInstruction.*;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.CLEANUP;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.COMMIT;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -32,9 +33,11 @@ public class UnixFSTransactionProgramBuilder {
 
     private UnixFSChecksumAlgorithm checksumAlgorithm = UnixFSChecksumAlgorithm.ADLER_32;
 
-    private final Map<ExecutionPhase, List<CommandWriter>> operations = new EnumMap<>(ExecutionPhase.class);
+    private UnixFSRevision<?> revision;
 
-    private final Map<ExecutionPhase, List<UnixFSTransactionCommand>> commands = new EnumMap<>(ExecutionPhase.class);
+    private final Map<UnixFSTransactionProgramExecutionPhase, List<CommandWriter>> operations = new EnumMap<>(UnixFSTransactionProgramExecutionPhase.class);
+
+    private final Map<UnixFSTransactionProgramExecutionPhase, List<UnixFSTransactionCommand>> commands = new EnumMap<>(UnixFSTransactionProgramExecutionPhase.class);
 
     /**
      * Specifies the {@link NodeId} to associate with the program. The {@link NodeId} is used to
@@ -80,7 +83,7 @@ public class UnixFSTransactionProgramBuilder {
      * @param fsPath the {@link java.nio.file.Path} to unlink
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder unlinkFile(final ExecutionPhase executionPhase,
+    public UnixFSTransactionProgramBuilder unlinkFile(final UnixFSTransactionProgramExecutionPhase executionPhase,
                                                       final java.nio.file.Path fsPath) {
 
         requireNonNull(executionPhase);
@@ -104,7 +107,7 @@ public class UnixFSTransactionProgramBuilder {
      * @param rtPath the {@link com.namazustudios.socialengine.rt.Path} to unlink
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder unlinkResource(final ExecutionPhase executionPhase,
+    public UnixFSTransactionProgramBuilder unlinkResource(final UnixFSTransactionProgramExecutionPhase executionPhase,
                                                           final com.namazustudios.socialengine.rt.Path rtPath) {
 
         requireNonNull(executionPhase);
@@ -130,7 +133,7 @@ public class UnixFSTransactionProgramBuilder {
      * @param resourceId the {@link ResourceId} to unlink
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder linkNewResource(final ExecutionPhase executionPhase,
+    public UnixFSTransactionProgramBuilder linkNewResource(final UnixFSTransactionProgramExecutionPhase executionPhase,
                                                            final java.nio.file.Path fsPath,
                                                            final ResourceId resourceId) {
 
@@ -158,7 +161,7 @@ public class UnixFSTransactionProgramBuilder {
      * @param rtPath the {@link com.namazustudios.socialengine.rt.Path} to link
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder linkResource(final ExecutionPhase executionPhase,
+    public UnixFSTransactionProgramBuilder linkResource(final UnixFSTransactionProgramExecutionPhase executionPhase,
                                                         final ResourceId resourceId,
                                                         final com.namazustudios.socialengine.rt.Path rtPath) {
 
@@ -187,7 +190,7 @@ public class UnixFSTransactionProgramBuilder {
      *
      * @return this instance
      */
-    public UnixFSTransactionProgramBuilder removeResource(final ExecutionPhase executionPhase,
+    public UnixFSTransactionProgramBuilder removeResource(final UnixFSTransactionProgramExecutionPhase executionPhase,
                                                           final ResourceId resourceId) {
 
         requireNonNull(executionPhase);
@@ -205,11 +208,24 @@ public class UnixFSTransactionProgramBuilder {
 
     }
 
+    /**
+     * Sets the desired {@link Revision<?>} of this particular transaction program. Once executed, the database will be
+     * set to this {@link Revision<?>}
+     *
+     * @param revision the {@link Revision<?>} to set
+     * @return the this instance
+     */
+    public UnixFSTransactionProgramBuilder revision(final UnixFSRevision<?> revision) {
+        this.revision = revision;
+        clear();
+        return this;
+    }
+
     private void clear() {
         commands.clear();
     }
 
-    private List<CommandWriter> getOperations(final ExecutionPhase executionPhase) {
+    private List<CommandWriter> getOperations(final UnixFSTransactionProgramExecutionPhase executionPhase) {
         return operations.computeIfAbsent(executionPhase, k -> new ArrayList<>());
     }
 
@@ -226,7 +242,7 @@ public class UnixFSTransactionProgramBuilder {
         if (byteBuffer == null) throw new IllegalStateException("Byte buffer must be set.");
 
         final int programPosition = byteBuffer.position();
-        for (int i = 0; i < UnixFSTransactionProgram.Header.SIZE; ++i) byteBuffer.put((byte)0xFF);
+        for (int i = 0; i < UnixFSTransactionProgramHeader.SIZE; ++i) byteBuffer.put((byte)0xFF);
 
         final UnixFSTransactionProgram program = new UnixFSTransactionProgram(byteBuffer, programPosition);
         program.header.algorithm.set(checksumAlgorithm);
@@ -245,7 +261,7 @@ public class UnixFSTransactionProgramBuilder {
 
     }
 
-    private int compile(final ExecutionPhase executionPhase,
+    private int compile(final UnixFSTransactionProgramExecutionPhase executionPhase,
                         final UnixFSTransactionProgram program,
                         final Struct.Unsigned32 pos,
                         final Struct.Unsigned32 len) {
@@ -267,21 +283,6 @@ public class UnixFSTransactionProgramBuilder {
         return length;
 
     }
-
-//    /**
-//     * If a previous call to {@link #compile()} was made, this will generate an instance of
-//     * {@link UnixFSTransactionProgramInterpreter} based on the {@link UnixFSTransactionCommand} instances that were
-//     * compiled as part of building the {@link UnixFSTransactionProgram}. This is useful to avoid re-parsing the
-//     * commands.
-//     *
-//     * @return an instance of {@link UnixFSTransactionProgramInterpreter}
-//     */
-//    public UnixFSTransactionProgramInterpreter interpreter() {
-//        final List<UnixFSTransactionCommand> commits = commands.get(COMMIT);
-//        final List<UnixFSTransactionCommand> cleanups = commands.get(CLEANUP);
-//        if (commits == null || cleanups == null) throw new IllegalStateException("Program has not bee compiled.");
-//        return new UnixFSTransactionProgramInterpreter(program, commits, cleanups);
-//    }
 
     @FunctionalInterface
     private interface CommandWriter {

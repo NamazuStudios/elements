@@ -4,20 +4,22 @@ import com.namazustudios.socialengine.rt.transact.Revision;
 
 import javax.inject.Provider;
 
+import java.util.function.IntSupplier;
+
 import static java.lang.String.format;
 
 public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
 
     private volatile String uid;
 
+    private final IntSupplier referenceSupplier;
+
     private final UnixFSDualCounter.Snapshot snapshot;
 
-    private final Provider<UnixFSDualCounter.Snapshot> referenceProvider;
-
-    public UnixFSRevision(final UnixFSDualCounter.Snapshot snapshot,
-                          final Provider<UnixFSDualCounter.Snapshot> referenceProvider) {
+    UnixFSRevision(final IntSupplier referenceSupplier,
+                   final UnixFSDualCounter.Snapshot snapshot) {
         this.snapshot = snapshot;
-        this.referenceProvider = referenceProvider;
+        this.referenceSupplier = referenceSupplier;
     }
 
     @Override
@@ -38,7 +40,7 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
             return -1;
         } else {
             final UnixFSRevision<?> other = o.getOriginal(UnixFSRevision.class);
-            final UnixFSDualCounter.Snapshot reference = referenceProvider.get();
+            final int reference = referenceSupplier.getAsInt();
             return snapshot.compareTo(reference, other.snapshot);
         }
     }

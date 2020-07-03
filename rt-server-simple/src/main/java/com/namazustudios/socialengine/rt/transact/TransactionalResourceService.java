@@ -19,7 +19,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiConsumer;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -441,13 +440,13 @@ public class TransactionalResourceService implements ResourceService {
                 // thread will be in the proess of applying a later revision.  In any case, the version we currently
                 // have will soon be replaced and it's not worth it.  However we have to check again to ensure we don't
                 // leak memorry.
-                if (txn.getRevision().isBefore(existing.getRevision())) return existing;
+                if (txn.getReadRevision().isBefore(existing.getRevision())) return existing;
 
                 // Take the penalty allocating a large resource.  This may still fail, but the above check should avoid
                 // any several iterations.
                 final Resource update = loadResource(resourceId);
 
-                 try (final Resource stale = existing.update(update, txn.getRevision())) {
+                 try (final Resource stale = existing.update(update, txn.getReadRevision())) {
                      // Even though we may make several allocations, it's okay.  We are guaranteed to make and destroy
                      // one resource per iteration.
                      logger.debug("Updated resource {} -> {}", update, stale);
@@ -507,7 +506,7 @@ public class TransactionalResourceService implements ResourceService {
                 final Resource resource = getResourceLoader().load(rbc, false);
 
                 final TransactionalResource transactionalResource;
-                transactionalResource = new TransactionalResource(txn.getRevision(), resource, this::purge);
+                transactionalResource = new TransactionalResource(txn.getReadRevision(), resource, this::purge);
 
                 toClose.add(transactionalResource);
                 return transactionalResource;

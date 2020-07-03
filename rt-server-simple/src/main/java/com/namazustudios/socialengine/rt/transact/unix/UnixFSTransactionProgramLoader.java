@@ -5,8 +5,8 @@ import javolution.io.Struct.Unsigned32;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.CLEANUP;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.COMMIT;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.CLEANUP;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.COMMIT;
 
 /**
  * Used to load an instance of {@link UnixFSTransactionProgram} and build an instance of
@@ -47,7 +47,7 @@ class UnixFSTransactionProgramLoader {
     }
 
     private List<UnixFSTransactionCommand> load(
-            final UnixFSTransactionProgram.ExecutionPhase executionPhase,
+            final UnixFSTransactionProgramExecutionPhase executionPhase,
             final int programPosition,
             final Unsigned32 pos,
             final Unsigned32 len) {

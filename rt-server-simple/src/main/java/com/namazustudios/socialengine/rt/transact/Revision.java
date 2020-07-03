@@ -237,15 +237,14 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     interface Factory {
 
         /**
-         * Creates a {@link Revision<T>} with the supplied revision ID and value.  This parses the revision ID, as
-         * specified by the {@link Revision#getUniqueIdentifier()}.  The resulting {@link Revision<T>} will have
+         * Creates a {@link Revision<?>} with the supplied revision ID.  This parses the revision ID, as
+         * specified by the {@link Revision#getUniqueIdentifier()}.  The resulting {@link Revision<?>} will have
          * no value, initially.
          *
          * @param at a string indicating the unique revision ID.
-         * @param <T>
-         * @return a new {@link Revision<T>} instance
+         * @return a new {@link Revision<?>} instance
          */
-        <T> Revision<T> create(String at);
+        Revision<?> create(String at);
 
     }
 

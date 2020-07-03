@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.transact.FatalException;
 
 import javax.sound.midi.SysexMessage;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 
@@ -17,7 +18,7 @@ import static java.lang.String.format;
  * around and catches up to the trailing value, then all resources are exhausted and the counter will throw an instance
  * of {@link FatalException}. If, while incrementing the trailing value, a thread catches up to the leading value then
  * this counter will throw an instance of {@link IllegalStateException} indicating a situation implying programmer
- * error and likely data corruption.
+ * error and likely data corruption.UnixFSTransactionProgramBuilder
  *
  * They are backed by a single instance of an {@link AtomicLong} and bit-shifting is used to pack the values together.
  *
@@ -138,6 +139,41 @@ class UnixFSDualCounter {
     }
 
     /**
+     * Increments the leading value. This may be incremented up to the maximum value until with a call to
+     * {@link #incrementAndGetTrailing()} before throwing an instance of {@link FatalException}.
+     *
+     * @return the post-incremented value
+     * @throws FatalException if the count has been exhausted
+     * @return a {@link Snapshot} of the state of this {@link UnixFSDualCounter}
+     */
+    public Snapshot incrementLeadingAndGetSnapshot() {
+
+        long packed;
+        long expected;
+        int leading, trailing;
+
+        do {
+
+            expected = counter.get();
+
+            trailing = trailing(expected);
+            leading = increment(leading(expected));
+
+            if (trailing == leading) {
+                // This should happen when the entire pool is exhausted. This may happen under normal circumstances, but
+                // ideally this should be extremely rare. Nonetheless, we protect against data loss by simply throwing
+                // an instance of fatal exception to avoid over-writing or corrupting the index. The value is not
+                // actually written so this should preserve the data integrity.
+                throw new FatalException("Exhausted counter at " + format("trailing==leading==%d", trailing));
+            }
+
+        } while (!counter.compareAndSet(expected, packed = pack(trailing, leading)));
+
+        return new Snapshot(max, packed);
+
+    }
+
+    /**
      * Increments the lower value. This may not be incremented past the upper value, if so it indicates programmer error
      * and an instance of {@link IllegalStateException} will be thrown.
      *
@@ -203,9 +239,21 @@ class UnixFSDualCounter {
     }
 
     /**
+     * Gets the trailing version.
+     *
+     * @return
+     */
+    public int getTrailing() {
+        final long value = counter.get();
+        return trailing(value);
+    }
+
+    /**
      * Gets a snapshot of the counter. This includes both the leading and trailing values.
      */
     public static class Snapshot {
+
+        private static final Pattern SPLIT_PATTERN = Pattern.compile("-");
 
         private final int max;
         private final int leading;
@@ -255,6 +303,30 @@ class UnixFSDualCounter {
             return getLeading() == getTrailing();
         }
 
+        /**
+         * Returns this {@link Snapshot} as a string
+         *
+         * @return the string-formatted version
+         */
+        public String asString() {
+            return format("0x%016X-0x%016X", max, snapshot);
+        }
+
+        /**
+         * Returns a new {@link Snapshot} from the supplied string.
+         *
+         * @param string the string
+         * @return the {@link Snapshot}
+         * {@link IllegalArgumentException} if the string does not parse
+         */
+        public static Snapshot fromString(final String string) {
+            final String[] tokens = SPLIT_PATTERN.split(string);
+            if (tokens.length != 2) throw new IllegalArgumentException("Invalid snapshot format: " + string);
+            final String max = tokens[0];
+            final String snapshot = tokens[0];
+            return new Snapshot(Integer.decode(max), Long.decode(snapshot));
+        }
+
         @Override
         public String toString() {
             return format("snapshot-%016X (t%d l%d)", snapshot, trailing, leading);
@@ -267,20 +339,18 @@ class UnixFSDualCounter {
          * @param other
          * @return
          */
-        public int compareTo(final Snapshot reference, final Snapshot other) {
+        public int compareTo(final int reference, final Snapshot other) {
 
-            if (max != reference.max || max != other.max) {
-                final String msg = format("All snapshots must have identical max values %d != %d != %d",
-                                           max, other.max, reference.max);
+            if (reference > max || max != other.max) {
+                final String msg = format("All snapshots must have identical max values %d != %d", max, other.max);
                 throw new IllegalArgumentException(msg);
-            } else if (reference.isNull() || isNull() || other.isNull()) {
-                final String msg = format("Cannot compare two snapshots where one or more is null (%s) - %s %s",
-                                           reference, this, other);
+            } else if (isNull() || other.isNull()) {
+                final String msg = format("Cannot compare two snapshots where one or more is null %s %s", this, other);
                 throw new IllegalArgumentException(msg);
             }
 
-            final long lThisValue = normalize(reference.trailing);
-            final long lOtherValue = other.normalize(reference.trailing);
+            final long lThisValue = normalize(reference);
+            final long lOtherValue = other.normalize(reference);
 
             return lThisValue < lOtherValue ? -1 :
                    lThisValue > lOtherValue ?  1 : 0;

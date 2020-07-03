@@ -28,7 +28,7 @@ public class UnixFSDualCounterSortingTest {
     private Object[] normalDataSetFilled() {
         final UnixFSDualCounter counter = new UnixFSDualCounter(500);
         final List<UnixFSDualCounter.Snapshot> snapshots = fill(counter);
-        return new Object[]{snapshots.get(0), snapshots};
+        return new Object[]{counter.getTrailing(), snapshots};
     }
 
     private Object[] offsetDataSetFilled() {
@@ -36,7 +36,7 @@ public class UnixFSDualCounterSortingTest {
         for (int i = 0; i < 100; ++i) counter.incrementAndGetLeading();
         for (int i = 0; i < 100; ++i) counter.incrementAndGetTrailing();
         final List<UnixFSDualCounter.Snapshot> snapshots = fill(counter);
-        return new Object[]{snapshots.get(0), snapshots};
+        return new Object[]{counter.getTrailing(), snapshots};
     }
 
 
@@ -54,7 +54,7 @@ public class UnixFSDualCounterSortingTest {
     }
 
     @Test(invocationCount = 1000, dataProvider = "getTestData")
-    public void monteCarloTestSorting(final UnixFSDualCounter.Snapshot reference,
+    public void monteCarloTestSorting(final int reference,
                                       final List<UnixFSDualCounter.Snapshot> snapshots) {
 
         assertTrue(!snapshots.isEmpty(), "Empty data set.");

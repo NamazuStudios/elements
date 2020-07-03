@@ -2,15 +2,14 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommand.Instruction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.file.Path;
 import java.util.List;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.CLEANUP;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgram.ExecutionPhase.COMMIT;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.CLEANUP;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.COMMIT;
 
 public class UnixFSTransactionProgramInterpreter {
 
@@ -66,7 +65,7 @@ public class UnixFSTransactionProgramInterpreter {
 
     private void interpret(final UnixFSTransactionCommand command, final ExecutionHandler executionHandler) {
 
-        final Instruction instruction = command.header.instruction.get();
+        final UnixFSTransactionCommandInstruction instruction = command.header.instruction.get();
         logger.trace("Command {}", command);
 
         switch (command.header.instruction.get()) {
@@ -140,7 +139,7 @@ public class UnixFSTransactionProgramInterpreter {
     interface ExecutionHandler {
 
         /**
-         * Handles {@link Instruction#UNLINK_FS_PATH}
+         * Handles {@link UnixFSTransactionCommandInstruction#UNLINK_FS_PATH}
          *
          * @param program
          * @param fsPath
@@ -148,7 +147,7 @@ public class UnixFSTransactionProgramInterpreter {
         void unlinkFile(UnixFSTransactionProgram program, Path fsPath);
 
         /**
-         * Handles {@link Instruction#UNLINK_RT_PATH}
+         * Handles {@link UnixFSTransactionCommandInstruction#UNLINK_RT_PATH}
          *
          * @param program
          * @param rtPath
@@ -156,7 +155,7 @@ public class UnixFSTransactionProgramInterpreter {
         void unlinkRTPath(UnixFSTransactionProgram program, com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
-         * Handles {@link Instruction#REMOVE_RESOURCE}
+         * Handles {@link UnixFSTransactionCommandInstruction#REMOVE_RESOURCE}
          *
          * @param program
          * @param resourceId
@@ -164,7 +163,7 @@ public class UnixFSTransactionProgramInterpreter {
         void removeResource(UnixFSTransactionProgram program, ResourceId resourceId);
 
         /**
-         * Handles {@link Instruction#LINK_RESOURCE_TO_RT_PATH}
+         * Handles {@link UnixFSTransactionCommandInstruction#LINK_RESOURCE_TO_RT_PATH}
          *
          * @param program
          * @param resourceId
@@ -175,7 +174,7 @@ public class UnixFSTransactionProgramInterpreter {
                                   com.namazustudios.socialengine.rt.Path rtPath);
 
         /**
-         * Handles {@link Instruction#UPDATE_RESOURCE}
+         * Handles {@link UnixFSTransactionCommandInstruction#UPDATE_RESOURCE}
          * @param program
          * @param fsPath
          * @param resourceId
@@ -185,7 +184,7 @@ public class UnixFSTransactionProgramInterpreter {
                             ResourceId resourceId);
 
         /**
-         * Handles {@link Instruction#LINK_NEW_RESOURCE}
+         * Handles {@link UnixFSTransactionCommandInstruction#LINK_NEW_RESOURCE}
          * @param program
          * @param fsPath
          * @param resourceId
