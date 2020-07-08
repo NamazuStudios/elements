@@ -53,4 +53,13 @@ public class UnixFSGarbageCollector {
 
     }
 
+    public void lock(final UnixFSRevision<?> revision) throws UnixFSRevisionCollectedException {
+        // TODO Lock
+    }
+
+
+    public void unlock(final UnixFSRevision<?> revision) {
+        // TODO Unlock
+    }
+
 }

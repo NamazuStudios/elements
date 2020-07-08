@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
+import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -14,6 +15,9 @@ import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
 import static org.slf4j.LoggerFactory.getLogger;
@@ -21,6 +25,10 @@ import static org.slf4j.LoggerFactory.getLogger;
 public class UnixFSTransactionalResourceServicePersistence implements TransactionalResourceServicePersistence {
 
     private static final Logger logger = getLogger(UnixFSTransactionalResourceServicePersistence.class);
+
+    private final Lock rLock;
+
+    private final Lock wLock;
 
     private final UnixFSRevisionPool unixFSRevisionPool;
 
@@ -33,30 +41,50 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
             final UnixFSRevisionPool unixFSRevisionPool,
             final UnixFSRevisionDataStore unixFSRevisionDataStore,
             final UnixFSTransactionJournal unixFSTransactionJournal) {
+
+        final ReadWriteLock rwLock = new ReentrantReadWriteLock();
+        this.rLock = rwLock.readLock();
+        this.wLock = rwLock.readLock();
+
         this.unixFSRevisionPool = unixFSRevisionPool;
         this.unixFSRevisionDataStore = unixFSRevisionDataStore;
         this.unixFSTransactionJournal = unixFSTransactionJournal;
+
     }
 
     @Override
     public ReadOnlyTransaction openRO(final NodeId nodeId) {
-        final UnixFSRevision<?> revision = getUnixFSRevisionDataStore().getCurrentRevision();
-        final UnixFSJournalEntry entry = getUnixFSTransactionJournal().newSnapshotEntry(nodeId);
-        return new UnixFSReadOnlyTransaction(nodeId, revision, entry);
+        try {
+            rLock.lock();
+            final RevisionDataStore.LockedRevision revision = getUnixFSRevisionDataStore().lockCurrentRevision();
+            return new UnixFSReadOnlyTransaction(nodeId, revision);
+        } finally {
+            rLock.unlock();
+        }
     }
 
     @Override
     public ReadWriteTransaction openRW(final NodeId nodeId) {
-        final UnixFSRevision<?> revision = getUnixFSRevisionDataStore().getCurrentRevision();
-        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId, false);
-        return new UnixFSReadWriteTransaction(nodeId, revision, entry);
+        try {
+            rLock.lock();
+            final RevisionDataStore.LockedRevision revision = getUnixFSRevisionDataStore().lockCurrentRevision();
+            final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
+            return new UnixFSReadWriteTransaction(nodeId, revision, entry);
+        } finally {
+            rLock.unlock();
+        }
     }
 
     @Override
     public ExclusiveReadWriteTransaction openExclusiveRW(final NodeId nodeId) {
-        final UnixFSRevision<?> revision = getUnixFSRevisionDataStore().getCurrentRevision();
-        final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId, true);
-        return new UnixFSExclusiveReadWriteTransaction(nodeId, revision, entry);
+        try {
+            wLock.lock();
+            final RevisionDataStore.LockedRevision revision = getUnixFSRevisionDataStore().lockCurrentRevision();
+            final UnixFSJournalMutableEntry entry = getUnixFSTransactionJournal().newMutableEntry(nodeId);
+            return new UnixFSExclusiveReadWriteTransaction(nodeId, revision, entry);
+        } finally {
+            wLock.unlock();
+        }
     }
 
     @Override
@@ -135,72 +163,81 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         private final NodeId nodeId;
 
-        private final UnixFSRevision<?> revision;
-
-        private final TransactionJournal.Entry entry;
+        private final RevisionDataStore.LockedRevision revision;
 
         public UnixFSReadOnlyTransaction(final NodeId nodeId,
-                                         final UnixFSRevision revision,
-                                         final TransactionJournal.Entry entry) {
-            this.entry = entry;
-            this.revision = revision;
+                                         final RevisionDataStore.LockedRevision revision) {
             this.nodeId = nodeId;
+            this.revision = revision;
         }
 
         @Override
         public Revision<?> getReadRevision() {
-            return revision;
+            return revision.getRevision();
         }
 
         @Override
         public boolean exists(final ResourceId resourceId) {
-            return existsAt(revision, resourceId);
+            return existsAt(revision.getRevision(), resourceId);
         }
 
         @Override
         public Stream<ResourceService.Listing> list(final Path path) {
-            return listAt(nodeId, revision, path);
+            return listAt(nodeId, revision.getRevision(), path);
         }
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            return getResourceIdAt(nodeId, revision, path);
+            return getResourceIdAt(nodeId, revision.getRevision(), path);
         }
 
         @Override
         public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
-            return loadResourceContentsAt(revision, resourceId);
+            return loadResourceContentsAt(revision.getRevision(), resourceId);
         }
 
         @Override
-        public void close() { entry.close(); }
+        public void close() {
+            revision.close();
+        }
 
     }
 
     private class UnixFSReadWriteTransaction implements ReadWriteTransaction {
 
-        protected final NodeId nodeId;
+        private final Lock lock;
 
-        private final UnixFSRevision<?> revision;
+        private final RevisionDataStore.LockedRevision revision;
+
+        protected final NodeId nodeId;
 
         protected final UnixFSJournalMutableEntry entry;
 
         public UnixFSReadWriteTransaction(final NodeId nodeId,
-                                          final UnixFSRevision<?> revision,
+                                          final RevisionDataStore.LockedRevision revision,
+                                          final UnixFSJournalMutableEntry entry) {
+            this(wLock, nodeId, revision, entry);
+        }
+
+        public UnixFSReadWriteTransaction(final Lock lock,
+                                          final NodeId nodeId,
+                                          final RevisionDataStore.LockedRevision revision,
                                           final UnixFSJournalMutableEntry entry) {
             this.entry = entry;
             this.revision = revision;
             this.nodeId = nodeId;
+            this.lock = lock;
+            lock.lock();
         }
 
         @Override
         public Revision<?> getReadRevision() {
-            return revision;
+            return revision.getRevision();
         }
 
         @Override
         public boolean exists(final ResourceId resourceId) {
-            return existsAt(revision, resourceId);
+            return existsAt(revision.getRevision(), resourceId);
         }
 
         @Override
@@ -208,7 +245,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
             final Revision<Stream<ResourceService.Listing>> indexed = getUnixFSRevisionDataStore()
                 .getPathIndex()
-                .list(nodeId, revision, path);
+                .list(nodeId, revision.getRevision(), path);
 
             return indexed.getValue().orElseGet(Stream::empty);
 
@@ -216,13 +253,13 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            return getResourceIdAt(nodeId, revision, path);
+            return getResourceIdAt(nodeId, revision.getRevision(), path);
         }
 
         @Override
         public ReadableByteChannel loadResourceContents(final ResourceId resourceId)
                 throws IOException {
-            return loadResourceContentsAt(revision, resourceId);
+            return loadResourceContentsAt(revision.getRevision(), resourceId);
         }
 
         @Override
@@ -271,7 +308,11 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public void close() {
-            finish(nodeId, entry);
+            FinallyAction.begin()
+                .then(() -> finish(nodeId, entry))
+                .then(() -> lock.unlock())
+                .then(() -> revision.close())
+            .perform();
         }
 
     }
@@ -280,14 +321,15 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
                                                       implements ExclusiveReadWriteTransaction {
 
         public UnixFSExclusiveReadWriteTransaction(final NodeId nodeId,
-                                                   final UnixFSRevision<?> revision,
+                                                   final RevisionDataStore.LockedRevision revision,
                                                    final UnixFSJournalMutableEntry entry) {
-            super(nodeId, revision, entry);
+            super(wLock, nodeId, revision, entry);
         }
 
         @Override
         public Stream<ResourceId> removeAllResources() {
-            return unixFSTransactionJournal.clear();
+            unixFSTransactionJournal.clear();
+            return getUnixFSRevisionDataStore().removeAllResources();
         }
 
     }

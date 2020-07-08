@@ -1,8 +1,13 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.transact.FatalException;
+import sun.misc.Unsafe;
 
 import javax.sound.midi.SysexMessage;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 
@@ -239,9 +244,9 @@ class UnixFSDualCounter {
     }
 
     /**
-     * Gets the trailing version.
+     * Gets the trailing value.
      *
-     * @return
+     * @return the trailing value
      */
     public int getTrailing() {
         final long value = counter.get();
@@ -249,9 +254,23 @@ class UnixFSDualCounter {
     }
 
     /**
+     * Gets the leading value.
+     *
+     * @return the leading
+     */
+    public int getLeading() {
+        final long value = counter.get();
+        return leading(value);
+    }
+
+    /**
      * Gets a snapshot of the counter. This includes both the leading and trailing values.
      */
     public static class Snapshot {
+
+        public static int SIZE_BYTES = Integer.BYTES + Long.BYTES;
+
+        public static Snapshot UNDEFINED = new Snapshot(0,0);
 
         private static final Pattern SPLIT_PATTERN = Pattern.compile("-");
 
@@ -294,7 +313,7 @@ class UnixFSDualCounter {
             return trailing;
         }
 
-        /**
+        /**7
          * A null snapshot was taken when leading == trailing.
          *
          * @return true if empty
@@ -313,18 +332,38 @@ class UnixFSDualCounter {
         }
 
         /**
+         * Gets the max value.
+         *
+         * @return the max value
+         */
+        public int getMax() {
+            return max;
+        }
+
+        /**
          * Returns a new {@link Snapshot} from the supplied string.
          *
          * @param string the string
          * @return the {@link Snapshot}
          * {@link IllegalArgumentException} if the string does not parse
          */
-        public static Snapshot fromString(final String string) {
+        static Snapshot fromString(final String string) {
             final String[] tokens = SPLIT_PATTERN.split(string);
             if (tokens.length != 2) throw new IllegalArgumentException("Invalid snapshot format: " + string);
             final String max = tokens[0];
-            final String snapshot = tokens[0];
-            return new Snapshot(Integer.decode(max), Long.decode(snapshot));
+            final String snapshot = tokens[1];
+            return fromIntegralValues(Integer.parseInt(max), Long.parseLong(snapshot));
+        }
+
+        /**
+         * Constructs a {@link Snapshot} from the integral values.
+         *
+         * @param max the max value
+         * @param snapshot the long value
+         * @return the newly created {@link Snapshot}
+         */
+        static Snapshot fromIntegralValues(final int max, final long snapshot) {
+            return new Snapshot(max, snapshot);
         }
 
         @Override
@@ -339,7 +378,7 @@ class UnixFSDualCounter {
          * @param other
          * @return
          */
-        public int compareTo(final int reference, final Snapshot other) {
+        int compareTo(final int reference, final Snapshot other) {
 
             if (reference > max || max != other.max) {
                 final String msg = format("All snapshots must have identical max values %d != %d", max, other.max);

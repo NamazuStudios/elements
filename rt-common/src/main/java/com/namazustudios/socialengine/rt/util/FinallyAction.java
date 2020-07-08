@@ -7,6 +7,17 @@ package com.namazustudios.socialengine.rt.util;
 @FunctionalInterface
 public interface FinallyAction extends AutoCloseable {
 
+    FinallyAction BEGIN = () -> {};
+
+    /**
+     * Begins the finally action.
+     *
+     * @return
+     */
+    static FinallyAction begin() {
+        return BEGIN;
+    }
+
     /**
      * Perform the {@link FinallyAction}.
      */

@@ -239,6 +239,7 @@ public class UnixFSTransactionProgramBuilder {
     public UnixFSTransactionProgram compile() {
 
         if (nodeId == null) throw new IllegalStateException("NodeId must be set.");
+        if (revision == null) throw new IllegalStateException("Revision must be set.");
         if (byteBuffer == null) throw new IllegalStateException("Byte buffer must be set.");
 
         final int programPosition = byteBuffer.position();
@@ -256,6 +257,7 @@ public class UnixFSTransactionProgramBuilder {
 
         program.header.nodeId.set(nodeId);
         program.header.length.set(programLength);
+        program.header.revision.fromRevision(revision);
 
         return program;
 

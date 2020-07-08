@@ -14,7 +14,17 @@ public enum UnixFSChecksumAlgorithm {
     CRC_32 {
 
         @Override
-        public void verify(final UnixFSTransactionProgram program) throws ChecksumFailureExeception {
+        public void verify(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
+
+        }
+
+        @Override
+        public void compute(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
+
+        }
+
+        @Override
+        public void verify(final UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception {
 
             final CRC32 crc32 = new CRC32();
             final int programPosition = program.header.getByteBufferPosition();
@@ -29,7 +39,7 @@ public enum UnixFSChecksumAlgorithm {
             program.byteBuffer.limit((int) (programPosition + program.header.length.get()));
             crc32.update(program.byteBuffer);
 
-            if (crc32.getValue() != program.header.checksum.get()) throw new ChecksumFailureExeception();
+            if (crc32.getValue() != program.header.checksum.get()) throw new UnixFSChecksumFailureExeception();
 
         }
 
@@ -54,7 +64,17 @@ public enum UnixFSChecksumAlgorithm {
     ADLER_32 {
 
         @Override
-        public void verify(UnixFSTransactionProgram program) throws ChecksumFailureExeception {
+        public void verify(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
+
+        }
+
+        @Override
+        public void compute(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
+
+        }
+
+        @Override
+        public void verify(UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception {
 
             final Adler32 adler32 = new Adler32();
             final int programPosition = program.header.getByteBufferPosition();
@@ -69,7 +89,7 @@ public enum UnixFSChecksumAlgorithm {
             program.byteBuffer.limit((int) (programPosition + program.header.length.get()));
             adler32.update(program.byteBuffer);
 
-            if (adler32.getValue() != program.header.checksum.get()) throw new ChecksumFailureExeception();
+            if (adler32.getValue() != program.header.checksum.get()) throw new UnixFSChecksumFailureExeception();
         }
 
         @Override
@@ -90,19 +110,37 @@ public enum UnixFSChecksumAlgorithm {
     /**
      * Computes the checksum, skipping the value of {@link UnixFSTransactionProgramHeader#checksum} and then compares
      * the computed value against the stored value. In the even of a mismatch this will throw an instance of
-     * {@link ChecksumFailureExeception}
+     * {@link UnixFSChecksumFailureExeception}
+     *
+     * @param revision the program to verify
+     *
+     * @throws UnixFSChecksumFailureExeception if the checksum mismatches
+     */
+    public abstract void verify(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception;
+
+    /**
+     * Computes the checksum and then sets the {@link UnixFSTransactionProgramHeader#checksum} value.
+     *
+     * @param revision the program for which to compute the checksum
+     */
+    public abstract void compute(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception;
+
+    /**
+     * Computes the checksum, skipping the value of {@link UnixFSTransactionProgramHeader#checksum} and then compares
+     * the computed value against the stored value. In the even of a mismatch this will throw an instance of
+     * {@link UnixFSChecksumFailureExeception}
      *
      * @param program the program to verify
      *
-     * @throws ChecksumFailureExeception if the checksum mismatches
+     * @throws UnixFSChecksumFailureExeception if the checksum mismatches
      */
-    public abstract void verify(final UnixFSTransactionProgram program) throws ChecksumFailureExeception;
+    public abstract void verify(final UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception;
 
     /**
      * Computes the checksum and then sets the {@link UnixFSTransactionProgramHeader#checksum} value.
      *
      * @param program the program for which to compute the checksum
      */
-    public abstract void compute(final UnixFSTransactionProgram program) throws ChecksumFailureExeception;
+    public abstract void compute(final UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception;
 
 }

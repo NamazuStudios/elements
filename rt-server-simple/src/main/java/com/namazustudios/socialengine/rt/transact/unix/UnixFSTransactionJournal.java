@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.Monitor;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
@@ -21,16 +20,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-import java.util.stream.Stream;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
-import static java.util.Arrays.fill;
 
 public class UnixFSTransactionJournal implements TransactionJournal {
 
@@ -83,17 +76,13 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     // Set in constructor
 
-    private final Lock rLock;
-
-    private final Lock wLock;
-
     private final MappedByteBuffer journalBuffer;
 
     private final long txnEntryBufferSize;
 
     private final long txnEntryBufferCount;
 
-    private final Slices slices;
+    private final UnixFSCircularBlockBuffer circularBlockBuffer;
 
     // Injected Fields
 
@@ -117,10 +106,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         this.txnEntryBufferCount = txnEntryBufferCount;
         this.programBuilderProvider = programBuilderProvider;
 
-        final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-        this.rLock = rwLock.readLock();
-        this.wLock = rwLock.readLock();
-
         final java.nio.file.Path journalPath = utils.getTransactionJournalPath();
 
         if (isRegularFile(journalPath)) {
@@ -131,7 +116,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             journalBuffer = createNewJournal(journalPath);
         }
 
-        slices = new Slices(journalBuffer);
+        journalBuffer.reset().position(header.size());
+        circularBlockBuffer = new UnixFSCircularBlockBuffer(journalBuffer, txnEntryBufferSize);
 
     }
 
@@ -180,82 +166,56 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public UnixFSJournalEntry newSnapshotEntry(final NodeId nodeId) {
+    public UnixFSJournalMutableEntry newMutableEntry(final NodeId nodeId) {
 
-        boolean unlock = true;
+        // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
+        // be used to track the resources held in contention.
 
-        try {
-            rLock.lock();
-            // TODO Fix This
-            final Revision<?> revision = Revision.zero();
-            final UnixFSJournalEntry entry = new UnixFSJournalEntry(nodeId, revision, rLock::unlock);
-            unlock = false;
-            return entry;
-        } finally {
-            if (unlock) rLock.unlock();
-        }
+        final UnixFSCircularBlockBuffer.Slice<ByteBuffer> slice = circularBlockBuffer.next();
 
-    }
+        // TODO Fix This, we may need to supply the revision from the calling code
+        final Revision<?> readRevision = Revision.zero();
+        final UnixFSOptimisticLocking optimisticLocking = newOptimisticLocking();
 
-    @Override
-    public UnixFSJournalMutableEntry newMutableEntry(final NodeId nodeId, boolean exclusive) {
+        // Sets up a build for the specific slide of the journal file.
+        final UnixFSTransactionProgramBuilder builder = programBuilderProvider.get()
+            .withNodeId(nodeId)
+            .withByteBuffer(slice.getSlice())
+            .withChecksumAlgorithm(UnixFSChecksumAlgorithm.ADLER_32);
 
-        boolean unlock = true;
-        final Lock lock = exclusive ? wLock : rLock;
+        // Chain up all unwind operations appropriately. The andThen is specifically meant to continue chaining each
+        // unwind operation and execute the next in the chain. This gives the best possible chance at successfully
+        // unwinding the operation, covering all edge cases, while minimizing the chance of data loss.
 
-        try {
+        final UnixFSUtils.IOOperationV onClose = UnixFSUtils.IOOperationV.begin()
+            .andThen(() -> buildAndExecute(builder))
+            .andThen(slice::close)
+            .andThen(optimisticLocking::unlock);
 
-            // Take a lock of the read lock.
-            lock.lock();
+        final UnixFSWorkingCopy workingCopy = new UnixFSWorkingCopy(
+            nodeId,
+            readRevision,
+            unixFSPathIndex,
+            optimisticLocking
+        );
 
-            // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
-            // be used to track the resources held in contention.
+        // Finally, we construct the entry, which we will return.
+        final UnixFSJournalMutableEntry entry = new UnixFSJournalMutableEntry(
+            utils,
+            builder,
+            workingCopy,
+            onClose
+        );
 
-            final Slices.Slice slice = slices.next();
-            // TODO Fix This
-            final Revision<?> readRevision = Revision.zero();
-            final UnixFSOptimisticLocking optimisticLocking = newOptimisticLocking();
+        // We disable the unlock because we will transfer ownership of the lock to the entry. If it made it this far
+        // we know that the entry should be closed at a later time.
 
-            // Sets up a build for the specific slide of the journal file.
-            final UnixFSTransactionProgramBuilder builder = programBuilderProvider.get()
-                .withNodeId(nodeId)
-                .withByteBuffer(slice.slice)
-                .withChecksumAlgorithm(UnixFSChecksumAlgorithm.ADLER_32);
-
-            // Chain up all unwind operations appropriately. The andThen is specifically meant to continue chaining each
-            // unwind operation and execute the next in the chain. This gives the best possible chance at successfully
-            // unwinding the operation, covering all edge cases, while minimizing the chance of data loss.
-
-            final UnixFSUtils.IOOperationV onClose = UnixFSUtils.IOOperationV.begin()
-                .andThen(() -> buildAndExecute(builder))
-                .andThen(slice::close)
-                .andThen(optimisticLocking::unlock)
-                .andThen(lock::unlock);
-
-            // Finally, we construct the entry, which we will return.
-            final UnixFSJournalMutableEntry entry = new UnixFSJournalMutableEntry(
-                nodeId,
-                readRevision,
-                utils,
-                unixFSPathIndex,
-                builder,
-                onClose,
-                optimisticLocking);
-
-            // We disable the unlock because we will transfer ownership of the lock to the entry. If it made it this far
-            // we know that the entry should be closed at a later time.
-
-            unlock = false;
-            return entry;
-
-        } finally {
-            // Conditionally perform the unlock operation.
-            if (unlock) lock.unlock();
-        }
+        return entry;
 
     }
 
     private UnixFSOptimisticLocking newOptimisticLocking() {
+
         return new UnixFSOptimisticLocking() {
 
             final List<Object> toRelease = new ArrayList<>();
@@ -295,75 +255,13 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Override
-    public Stream<ResourceId> clear() {
-
-        if (!wLock.tryLock()) throw new IllegalStateException("Operation must be performed in exclusive transaction.");
-
-        try {
-            // TODO Clear Journal by moving to other location on disk.
-            return null;
-        } finally {
-            wLock.unlock();
-        }
-
+    public void clear() {
+        // TODO: Nuke and reload Journal file on disk.
     }
 
     @Override
     public void close() {
         journalBuffer.force();
-    }
-
-    private class Slices {
-
-        private final byte[] filler;
-
-        private final ArrayList<ByteBuffer> slices = new ArrayList<>();
-
-        private final UnixFSDualCounter counter = new UnixFSDualCounter((int)txnEntryBufferCount);
-
-        public Slices(final ByteBuffer journalBuffer) {
-
-            filler = new byte[(int)txnEntryBufferSize];
-            fill(filler, (byte) 0xFF);
-
-            for (int sliceIndex = 0; sliceIndex < txnEntryBufferCount; ++sliceIndex) {
-
-                final int position;
-
-                journalBuffer
-                    .position(position = header.size() + ((int)txnEntryBufferSize * sliceIndex))
-                    .limit(position + (int)txnEntryBufferSize);
-
-                slices.add(journalBuffer.slice());
-
-            }
-
-        }
-
-        public Slice next() {
-            return new Slice();
-        }
-
-        private class Slice implements AutoCloseable {
-
-            private final int index;
-
-            private final ByteBuffer slice;
-
-            public Slice() {
-                this.index = counter.incrementAndGetLeading();
-                this.slice = slices.get(this.index);
-            }
-
-            @Override
-            public void close() {
-                slice.clear();
-                slice.put(filler);
-                counter.incrementAndGetTrailing();
-            }
-
-        }
-
     }
 
 }

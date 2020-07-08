@@ -1,14 +1,18 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.transact.Revision;
+import javolution.io.Struct;
 
 import javax.inject.Provider;
 
+import java.nio.ByteBuffer;
 import java.util.function.IntSupplier;
 
 import static java.lang.String.format;
 
 public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
+
+    static int SIZE_BYTES = UnixFSDualCounter.Snapshot.SIZE_BYTES;
 
     private volatile String uid;
 
@@ -43,6 +47,10 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
             final int reference = referenceSupplier.getAsInt();
             return snapshot.compareTo(reference, other.snapshot);
         }
+    }
+
+    UnixFSDualCounter.Snapshot getSnapshot() {
+        return snapshot;
     }
 
 }

@@ -1,7 +1,10 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+
+import java.util.stream.Stream;
 
 /**
  * Defines the data storage for underlying revision based data store.
@@ -14,6 +17,12 @@ public interface RevisionDataStore extends AutoCloseable {
      * @return the current database revision.
      */
     Revision<?> getCurrentRevision();
+
+    /**
+     * Locks the database revision.
+     * @return
+     */
+    LockedRevision lockCurrentRevision();
 
     /**
      * Gets the {@link PathIndex} which manages the relationship between {@link Path}s with {@link ResourceId}s.
@@ -31,9 +40,38 @@ public interface RevisionDataStore extends AutoCloseable {
     ResourceIndex getResourceIndex();
 
     /**
+     * Removes all {@link Resource} instances from the datastore. This operation will essentially clear the entire data
+     * store, all revisions etc.
+     *
+     * @return all resources.
+     */
+    Stream<ResourceId> removeAllResources();
+
+    /**
      * Closes this {@link RevisionDataStore} releasing any resources associated with it such as file handles or
      * database connections.
      */
     void close();
+
+    /**
+     * Represents a locked revision. This guarantees that the revision will not be deleted by any garbage collection
+     * process that the underlying data store implements until the revision is released.
+     */
+    interface LockedRevision extends AutoCloseable {
+
+        /**
+         * Gets the {@link Revision<?>} that is locked.
+         *
+         * @return the locked {@link Revision<?>}
+         */
+        Revision<?> getRevision();
+
+        /**
+         * Release the lock on the {@link Revision<?>}, making it potentially available for garbage collection.
+         */
+        @Override
+        void close();
+
+    }
 
 }

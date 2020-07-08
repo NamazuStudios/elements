@@ -25,6 +25,8 @@ class UnixFSTransactionProgramHeader extends Struct {
 
     final Unsigned32 cleanupLen = new Unsigned32();
 
+    final UnixFSRevisionData revision = inner(new UnixFSRevisionData());
+
     class PackedNodeId extends Member {
 
         public PackedNodeId() {

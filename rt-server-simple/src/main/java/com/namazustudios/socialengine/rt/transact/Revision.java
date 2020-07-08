@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.transact;
 import com.namazustudios.socialengine.rt.util.LazyValue;
 import sun.security.krb5.internal.APRep;
 
+import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
@@ -113,17 +114,6 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      */
     default Optional<ValueT> getValue() {
         return empty();
-    }
-
-    /**
-     * Returns true if this {@link Revision<?>} is after the supplied {@link Revision<?>}.
-     *
-     * @param revision the other revision to check
-     * @return true if this is after, false otherwise
-     *
-     */
-    default boolean isAfter(final Revision<?> revision) {
-        return compareTo(revision) > 0;
     }
 
     /**

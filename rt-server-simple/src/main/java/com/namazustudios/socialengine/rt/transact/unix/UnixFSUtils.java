@@ -20,7 +20,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static com.namazustudios.socialengine.rt.transact.Revision.zero;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionDataStore.STORAGE_ROOT_DIRECTORY;
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -33,6 +32,8 @@ public class UnixFSUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSUtils.class);
 
+    public static final String STORAGE_ROOT_DIRECTORY = "com.namazustudios.socialengine.rt.transact.unix.fs.root";
+
     public static final String REVISION_SUFFIX = "rlink";
 
     public static final String REVISION_SYMBOLIC_LINK_SUFFIX = "rsymlink";
@@ -40,6 +41,8 @@ public class UnixFSUtils {
     public static final String DIRECTORY_SUFFIX = "d";
 
     public static final String LOCK_FILE_NAME = "lock";
+
+    public static final String HEAD_FILE_NAME = "head";
 
     public static final String PATHS_DIRECTORY = "paths";
 
@@ -61,6 +64,8 @@ public class UnixFSUtils {
 
     private final Path storageRoot;
 
+    private final Path headFilePath;
+
     private final Path transactionJournalPath;
 
     private final Path pathStorageRoot;
@@ -81,6 +86,7 @@ public class UnixFSUtils {
 
         this.revisionFactory = revisionFactory;
         this.storageRoot = storageRoot;
+        this.headFilePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();
         this.transactionJournalPath = storageRoot.resolve(TRANSACTION_JOURNAL_FILE_NAME).toAbsolutePath().normalize();
         this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath().normalize();
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath().normalize();
@@ -90,6 +96,7 @@ public class UnixFSUtils {
         final Set<FileSystem> fileSystemSet = new HashSet<>();
 
         fileSystemSet.add(storageRoot.getFileSystem());
+        fileSystemSet.add(headFilePath.getFileSystem());
         fileSystemSet.add(tombstone.getFileSystem());
         fileSystemSet.add(pathStorageRoot.getFileSystem());
         fileSystemSet.add(resourceStorageRoot.getFileSystem());
@@ -295,6 +302,14 @@ public class UnixFSUtils {
      */
     public Path getTransactionJournalPath() {
         return transactionJournalPath;
+    }
+
+    /**
+     * Returns the path to the head file.
+     * @return the path to the head file.
+     */
+    public Path getHeadFilePath() {
+        return null;
     }
 
     /**

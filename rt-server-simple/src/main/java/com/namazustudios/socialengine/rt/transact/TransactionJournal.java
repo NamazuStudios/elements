@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
-import java.util.stream.Stream;
 
 public interface TransactionJournal extends AutoCloseable {
 
@@ -17,28 +16,19 @@ public interface TransactionJournal extends AutoCloseable {
     void close();
 
     /**
-     * Gets a view of the current {@link Entry}.
-     *
-     * @return
-     * @param nodeId
-     */
-    Entry newSnapshotEntry(NodeId nodeId);
-
-    /**
      * Gets a new entry for writing.
      *
      * @return a new {@link MutableEntry}
      * @param nodeId the {@link NodeId} to use
      */
-    MutableEntry newMutableEntry(NodeId nodeId, boolean exclusive);
+    MutableEntry newMutableEntry(NodeId nodeId);
 
     /**
      * Nukes the entire collection of data.  This may lock the entire database to accomplish this task.  Once complete,
      * it will be as if the system was freshly instantiated (though some garbage may still exist.)
      *
-     * @return a stream of {@link ResourceId} that were destroyed as part of this operation
      */
-    Stream<ResourceId> clear();
+    void clear();
 
     /**I can see tensions are running high here. But can't we just agree that the next time we record a racially charged incident that we all make a commitment to turn the phone horizontally?
 

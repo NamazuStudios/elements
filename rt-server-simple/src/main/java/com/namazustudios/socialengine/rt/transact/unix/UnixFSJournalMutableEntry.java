@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
@@ -38,14 +37,17 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     private final UnixFSUtils unixFSUtils;
 
+    private final UnixFSRevisionPool revisionPool;
+
     private final UnixFSTransactionProgramBuilder programBuilder;
 
-    public UnixFSJournalMutableEntry(final NodeId nodeId,
-                                     final UnixFSUtils unixFSUtils,
+    public UnixFSJournalMutableEntry(final UnixFSUtils unixFSUtils,
+                                     final UnixFSRevisionPool revisionPool,
                                      final UnixFSTransactionProgramBuilder programBuilder,
                                      final UnixFSWorkingCopy workingCopy,
                                      final UnixFSUtils.IOOperationV onClose) {
-        super(nodeId, onClose);
+        super(onClose);
+        this.revisionPool = revisionPool;
         this.programBuilder = programBuilder;
         this.unixFSUtils = unixFSUtils;
         this.workingCopy = workingCopy;
@@ -53,8 +55,8 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     @Override
     public Revision<?> getWriteRevision() {
-        // TODO FIgure out This
-        return null;
+        if (program == null) throw new IllegalStateException();
+        return revisionPool.create(program.header.revision);
     }
 
     @Override

@@ -1,24 +1,11 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.transact.Revision;
-import javolution.io.Struct;
-
-import javax.inject.Inject;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.file.Files;
-import java.nio.file.Path;
-
-import static java.nio.file.Files.isRegularFile;
 
 /**
- * Serializes the actual update of the {@link Revision<?>} of the total database. This ensures that each sequentially
- * provided {@link Revision<?>} is committed and updated in order. Additionally, this further ensures that the
- * {@link Revision<?>}s are committed in the same order in which they are issued.
+ * Manages a circular buffer of available revisions, tracks the reference revision, and ensures that all revisions
+ * properly sort at any given time. This further safeguards against creating invalid or out of range revisions.
  *
- * This approach does have some performance implications, specifically it forces that each revision be applied in order
- * therefore, threads attempting to commit may have to wait for others to complete. However, the implementation is
- * designed to be a lightweight approach, minimizing the chances that there is contention.
  */
 public class UnixFSRevisionPool implements Revision.Factory, AutoCloseable {
 
@@ -31,6 +18,16 @@ public class UnixFSRevisionPool implements Revision.Factory, AutoCloseable {
      */
     public Revision<?> createNextRevision() {
         return new UnixFSRevision<>(revisionCounter::getTrailing, revisionCounter.incrementLeadingAndGetSnapshot());
+    }
+
+    /**
+     * Creates a {@link UnixFSRevision<?>} from the supplied {@link UnixFSRevisionData} (serialized form).
+     *
+     * @param unixFSRevisionData the {@link UnixFSRevisionData} representing the serialized form
+     * @return the newly created {@link UnixFSRevision<?>}
+     */
+    public UnixFSRevision<?> create(final UnixFSRevisionData unixFSRevisionData) {
+        return unixFSRevisionData.toRevision(revisionCounter::getTrailing);
     }
 
     @Override
