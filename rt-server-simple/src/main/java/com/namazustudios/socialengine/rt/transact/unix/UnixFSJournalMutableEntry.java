@@ -37,26 +37,16 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     private final UnixFSUtils unixFSUtils;
 
-    private final UnixFSRevisionPool revisionPool;
-
     private final UnixFSTransactionProgramBuilder programBuilder;
 
     public UnixFSJournalMutableEntry(final UnixFSUtils unixFSUtils,
-                                     final UnixFSRevisionPool revisionPool,
                                      final UnixFSTransactionProgramBuilder programBuilder,
                                      final UnixFSWorkingCopy workingCopy,
                                      final UnixFSUtils.IOOperationV onClose) {
         super(onClose);
-        this.revisionPool = revisionPool;
         this.programBuilder = programBuilder;
         this.unixFSUtils = unixFSUtils;
         this.workingCopy = workingCopy;
-    }
-
-    @Override
-    public Revision<?> getWriteRevision() {
-        if (program == null) throw new IllegalStateException();
-        return revisionPool.create(program.header.revision);
     }
 
     @Override
@@ -167,32 +157,19 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     @Override
     public void commit(final Revision<?> revision) {
+
         check();
 
         final UnixFSRevision original = revision.getOriginal(UnixFSRevision.class);
-
-        program = programBuilder
-            .revision(original)
-            .compile()
-            .commit(CLEANUP, COMMIT);
-
+        program = programBuilder.revision(original).compile(CLEANUP, COMMIT).commit();
         committed = true;
 
     }
 
-    @Override
-    public boolean isCommitted() {
-        return committed;
-    }
-
     public void rollback() {
         check();
-        program = programBuilder.compile().commit(CLEANUP);
+        program = programBuilder.compile(CLEANUP).commit();
         rollback = true;
-    }
-
-    public void cleanup(final ExecutionHandler handler) {
-        program.interpreter().executeCleanupPhase(handler);
     }
 
     @Override
@@ -201,7 +178,11 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
         if (committed || rollback) throw new IllegalStateException();
     }
 
-    public void apply(final ExecutionHandler handler) {
+    void cleanup(final ExecutionHandler handler) {
+        program.interpreter().executeCleanupPhase(handler);
+    }
+
+    void apply(final ExecutionHandler handler) {
         if (program == null) throw new IllegalStateException();
         program.interpreter().executeCommitPhase(handler);
     }

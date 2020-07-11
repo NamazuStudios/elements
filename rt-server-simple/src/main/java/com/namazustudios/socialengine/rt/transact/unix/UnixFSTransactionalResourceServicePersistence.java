@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
+import com.namazustudios.socialengine.rt.transact.RevisionDataStore.PendingRevisionChange;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
@@ -30,15 +31,12 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
     private final Lock wLock;
 
-    private final UnixFSRevisionPool unixFSRevisionPool;
-
     private final UnixFSRevisionDataStore unixFSRevisionDataStore;
 
     private final UnixFSTransactionJournal unixFSTransactionJournal;
 
     @Inject
     public UnixFSTransactionalResourceServicePersistence(
-            final UnixFSRevisionPool unixFSRevisionPool,
             final UnixFSRevisionDataStore unixFSRevisionDataStore,
             final UnixFSTransactionJournal unixFSTransactionJournal) {
 
@@ -46,7 +44,6 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         this.rLock = rwLock.readLock();
         this.wLock = rwLock.readLock();
 
-        this.unixFSRevisionPool = unixFSRevisionPool;
         this.unixFSRevisionDataStore = unixFSRevisionDataStore;
         this.unixFSTransactionJournal = unixFSTransactionJournal;
 
@@ -94,10 +91,6 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
         } catch (Exception ex) {
             logger.error("Caught exception closing {}", getClass().getName(), ex);
         }
-    }
-
-    public UnixFSRevisionPool getUnixFSRevisionPool() {
-        return unixFSRevisionPool;
     }
 
     public UnixFSRevisionDataStore getUnixFSRevisionDataStore() {
@@ -302,18 +295,38 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public void commit() {
-            final Revision<?> revision = getUnixFSRevisionPool().createNextRevision();
-            entry.commit(revision);
+            try (final PendingRevisionChange pending = getUnixFSRevisionDataStore().beginRevisionUpdate()) {
+                write(pending);
+                pending.update();
+            }
         }
 
         @Override
         public void close() {
             FinallyAction.begin()
-                .then(() -> finish(nodeId, entry))
+                .then(() -> entry.close())
                 .then(() -> lock.unlock())
                 .then(() -> revision.close())
             .perform();
         }
+
+        private void write(final PendingRevisionChange pending) {
+
+            final UnixFSRevision<?> revision = pending.getRevision().getOriginal(UnixFSRevision.class);
+            final ExecutionHandler handler = getUnixFSRevisionDataStore().newExecutionHandler(nodeId, revision);
+
+            try {
+                entry.commit(revision);
+                entry.apply(handler);
+            } catch (Exception ex) {
+                pending.fail();
+                throw new FatalException(ex);
+            } finally {
+                entry.cleanup(handler);
+            }
+
+        }
+
 
     }
 
@@ -328,31 +341,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
 
         @Override
         public Stream<ResourceId> removeAllResources() {
-            unixFSTransactionJournal.clear();
             return getUnixFSRevisionDataStore().removeAllResources();
-        }
-
-    }
-
-    private void finish(final NodeId nodeId, final UnixFSJournalMutableEntry entry) {
-
-        ExecutionHandler handler = null;
-
-        try {
-
-            final UnixFSRevision<?> revision = entry.getWriteRevision().getOriginal(UnixFSRevision.class);
-
-            handler = getUnixFSRevisionDataStore().newExecutionHandler(nodeId, revision);
-
-            if (entry.isCommitted()) {
-                entry.apply(handler);
-                getUnixFSRevisionDataStore().updateRevision(revision);
-            } else {
-                entry.rollback();
-            }
-
-        } finally {
-            if (handler != null) entry.cleanup(handler);
         }
 
     }

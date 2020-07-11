@@ -1,5 +1,9 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import javolution.io.Struct;
+
+import java.lang.reflect.Member;
+import java.nio.ByteBuffer;
 import java.util.zip.Adler32;
 import java.util.zip.CRC32;
 
@@ -14,48 +18,51 @@ public enum UnixFSChecksumAlgorithm {
     CRC_32 {
 
         @Override
-        public void verify(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
-
-        }
-
-        @Override
-        public void compute(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
-
-        }
-
-        @Override
-        public void verify(final UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception {
+        public void verify(final Checkable checkable) throws UnixFSChecksumFailureExeception {
 
             final CRC32 crc32 = new CRC32();
-            final int programPosition = program.header.getByteBufferPosition();
 
-            program.byteBuffer.position(programPosition);
-            program.byteBuffer.limit(programPosition + program.header.checksum.offset());
+            final ByteBuffer contents = checkable.contentsToCheck();
+            final Struct.Unsigned32 checksum = checkable.checksum();
 
-            crc32.update(program.byteBuffer);
+            // Original limit/position values of the buffer
+            final int limit = contents.limit();
+            final int position = contents.position();
+
+            // Sets to read up to the beginning of the checksum member and updates the checksum.
+            contents.limit(position + checksum.offset());
+            crc32.update(contents);
+
+            // Inserts four zero bytes as if it were calculated with zeros in that position
             for (int i = 0; i < 4; ++i) crc32.update(0);
 
-            program.byteBuffer.position(programPosition + program.header.phases.offset());
-            program.byteBuffer.limit((int) (programPosition + program.header.length.get()));
-            crc32.update(program.byteBuffer);
+            // Sets the limit and position to the remainder of the buffer and updates the checksum.
+            contents.position(4 + position + checksum.offset()).limit(limit);
+            crc32.update(contents);
 
-            if (crc32.getValue() != program.header.checksum.get()) throw new UnixFSChecksumFailureExeception();
+            final long existing = checksum.get();
+            final long calculated = crc32.getValue();
+
+            if (existing != calculated) throw new UnixFSChecksumFailureExeception(existing + "!=" + calculated);
 
         }
 
         @Override
-        public void compute(final UnixFSTransactionProgram program) {
+        public void compute(final Checkable checkable) {
 
             final CRC32 crc32 = new CRC32();
 
-            program.byteBuffer.position(program.header.getByteBufferPosition());
-            program.byteBuffer.limit((int)program.header.length.get());
-            program.header.checksum.set(0);
+            final Struct.Unsigned32 checksum = checkable.checksum();
+            final ByteBuffer contents = checkable.contentsToCheck();
 
-            crc32.update(program.byteBuffer);
-            program.header.checksum.set(crc32.getValue());
+            checksum.set(0);
+            crc32.update(contents);
+
+            final long value = crc32.getValue();
+            checksum.set(value);
 
         }
+
     },
 
     /**
@@ -64,83 +71,99 @@ public enum UnixFSChecksumAlgorithm {
     ADLER_32 {
 
         @Override
-        public void verify(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
-
-        }
-
-        @Override
-        public void compute(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception {
-
-        }
-
-        @Override
-        public void verify(UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception {
+        public void verify(final Checkable checkable) throws UnixFSChecksumFailureExeception {
 
             final Adler32 adler32 = new Adler32();
-            final int programPosition = program.header.getByteBufferPosition();
 
-            program.byteBuffer.position(programPosition);
-            program.byteBuffer.limit(programPosition + program.header.checksum.offset());
+            final ByteBuffer contents = checkable.contentsToCheck();
+            final Struct.Unsigned32 checksum = checkable.checksum();
 
-            adler32.update(program.byteBuffer);
+            // Original limit/position values of the buffer
+            final int limit = contents.limit();
+            final int position = contents.position();
+
+            // Sets to read up to the beginning of the checksum member and updates the checksum.
+            contents.limit(position + checksum.offset());
+            adler32.update(contents);
+
+            // Inserts four zero bytes as if it were calculated with zeros in that position
             for (int i = 0; i < 4; ++i) adler32.update(0);
 
-            program.byteBuffer.position(programPosition + program.header.phases.offset());
-            program.byteBuffer.limit((int) (programPosition + program.header.length.get()));
-            adler32.update(program.byteBuffer);
+            // Sets the limit and position to the remainder of the buffer and updates the checksum.
+            contents.position(4 + position + checksum.offset()).limit(limit);
+            adler32.update(contents);
 
-            if (adler32.getValue() != program.header.checksum.get()) throw new UnixFSChecksumFailureExeception();
+            final long existing = checksum.get();
+            final long calculated = adler32.getValue();
+
+            if (existing != calculated) throw new UnixFSChecksumFailureExeception(existing + "!=" + calculated);
+
         }
 
         @Override
-        public void compute(UnixFSTransactionProgram program) {
+        public void compute(final Checkable checkable) {
 
             final Adler32 adler32 = new Adler32();
 
-            program.byteBuffer.position(program.header.getByteBufferPosition());
-            program.byteBuffer.limit((int)program.header.length.get());
-            program.header.checksum.set(0);
+            final Struct.Unsigned32 checksum = checkable.checksum();
+            final ByteBuffer contents = checkable.contentsToCheck();
 
-            adler32.update(program.byteBuffer);
-            program.header.checksum.set(adler32.getValue());
+            checksum.set(0);
+            adler32.update(contents);
+
+            final long value = adler32.getValue();
+            checksum.set(value);
 
         }
+
     };
 
     /**
-     * Computes the checksum, skipping the value of {@link UnixFSTransactionProgramHeader#checksum} and then compares
-     * the computed value against the stored value. In the even of a mismatch this will throw an instance of
+     * Computes the checksum, skipping the value of {@link Checkable#checksum()} and then compares the computed value
+     * against the stored value. In the even of a mismatch this will throw an instance of
      * {@link UnixFSChecksumFailureExeception}
      *
-     * @param revision the program to verify
+     * @param checkable the {@link Checkable} to verify
      *
      * @throws UnixFSChecksumFailureExeception if the checksum mismatches
      */
-    public abstract void verify(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception;
+    public abstract void verify(final Checkable checkable) throws UnixFSChecksumFailureExeception;
 
     /**
-     * Computes the checksum and then sets the {@link UnixFSTransactionProgramHeader#checksum} value.
+     * Computes the checksum and then sets the {@link Checkable#checksum()} value.
      *
-     * @param revision the program for which to compute the checksum
+     * @param checkable the structure to compute
      */
-    public abstract void compute(final UnixFSRevisionDataStoreRevision revision) throws UnixFSChecksumFailureExeception;
+    public abstract void compute(final Checkable checkable) throws UnixFSChecksumFailureExeception;
 
     /**
-     * Computes the checksum, skipping the value of {@link UnixFSTransactionProgramHeader#checksum} and then compares
-     * the computed value against the stored value. In the even of a mismatch this will throw an instance of
-     * {@link UnixFSChecksumFailureExeception}
-     *
-     * @param program the program to verify
-     *
-     * @throws UnixFSChecksumFailureExeception if the checksum mismatches
+     * Defines a Checksum-able {@link Struct} type.
      */
-    public abstract void verify(final UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception;
+    interface Checkable {
 
-    /**
-     * Computes the checksum and then sets the {@link UnixFSTransactionProgramHeader#checksum} value.
-     *
-     * @param program the program for which to compute the checksum
-     */
-    public abstract void compute(final UnixFSTransactionProgram program) throws UnixFSChecksumFailureExeception;
+        /**
+         * Returns the member of the struct containing the checksum. Calculation presumes that for verification this
+         * member will be set to zero before calculating the checksum, and that this value will be skipped when
+         * verifying the checksum.
+         *
+         * Additionally, the checker and validator both assume that this member falls somewhere inside the
+         * {@link ByteBuffer} returned by {@link #contentsToCheck()}.
+         *
+         * @return the checksum member
+         */
+        Struct.Unsigned32 checksum();
+
+        /**
+         * Returns a {@link ByteBuffer} of the {@link Struct}'s contents positioned appropriately for the the algorithm.
+         * The returned value must have the position and limit set appropriately to perform the checksum calculation.
+         *
+         * The position must be the beginning of the {@link Struct} and the limit must be set to the final region of
+         * data to check (which may exceed the size of the {@link Struct}).
+         *
+         * @return the {@link ByteBuffer}
+         */
+        ByteBuffer contentsToCheck();
+
+    }
 
 }

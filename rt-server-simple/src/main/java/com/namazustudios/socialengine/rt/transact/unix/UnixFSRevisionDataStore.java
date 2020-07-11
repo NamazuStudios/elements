@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
@@ -13,8 +14,12 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSChecksumAlgorithm.CRC_32;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
@@ -75,6 +80,10 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private final int revisionBufferCount;
 
+    private final Lock revisionLock = new ReentrantLock();
+
+    private final Condition revisionCondition = revisionLock.newCondition();
+
     @Inject
     public UnixFSRevisionDataStore(
             final UnixFSUtils utils,
@@ -107,8 +116,10 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         revisionBuffer.clear().position(header.size());
 
-        circularBlockBuffer = new UnixFSCircularBlockBuffer(revisionBuffer, UnixFSRevisionDataStoreRevision.SIZE)
-           .forStructType(UnixFSRevisionDataStoreRevision::new);
+        final UnixFSCircularBlockBuffer circularBlockBuffer;
+        circularBlockBuffer = new UnixFSCircularBlockBuffer(revisionBuffer, UnixFSRevisionDataStoreRevision.SIZE);
+
+        this.circularBlockBuffer = circularBlockBuffer.forStructType(UnixFSRevisionDataStoreRevision::new);
 
     }
 
@@ -170,9 +181,18 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     @Override
     public UnixFSRevision<?> getCurrentRevision() {
-        final UnixFSRevisionDataStoreRevision data = circularBlockBuffer.peek();
-        data.algorithm.get().verify(data);
+
+        final UnixFSRevisionDataStoreRevision data = circularBlockBuffer.trailing();
+
+        try {
+            final UnixFSChecksumAlgorithm algorithm = data.algorithm.get();
+            algorithm.verify(data);
+        } catch (UnixFSChecksumFailureExeception | ArrayIndexOutOfBoundsException ex) {
+            throw new FatalException(ex);
+        }
+
         return getRevisionPool().create(data.revision);
+
     }
 
     @Override
@@ -201,6 +221,44 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             };
 
         } while(true);
+    }
+
+    @Override
+    public PendingRevisionChange beginRevisionUpdate() {
+
+        revisionLock.lock();
+
+        final UnixFSRevision<?> next = getRevisionPool().createNextRevision();
+        final UnixFSRevisionDataStoreRevision storedRevision = circularBlockBuffer.nextLeading();
+
+        storedRevision.algorithm.set(CRC_32);
+        storedRevision.revision.fromRevision(next);
+        CRC_32.compute(storedRevision);
+
+        return new PendingRevisionChange() {
+
+            @Override
+            public void update() {
+                
+            }
+
+            @Override
+            public void fail() {
+
+            }
+
+            @Override
+            public Revision<?> getRevision() {
+                return null;
+            }
+
+            @Override
+            public void close() {
+                revisionLock.unlock();
+            }
+
+        };
+
     }
 
     @Override
@@ -256,10 +314,6 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             }
 
         };
-    }
-
-    void updateRevision(final UnixFSRevision<?> revision) {
-
     }
 
 }

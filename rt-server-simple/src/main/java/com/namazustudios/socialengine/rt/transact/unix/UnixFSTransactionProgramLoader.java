@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.transact.FatalException;
 import javolution.io.Struct.Unsigned32;
 
 import java.util.ArrayList;
@@ -43,7 +44,17 @@ class UnixFSTransactionProgramLoader {
     }
 
     private void validateChecksum() {
-        program.header.algorithm.get().verify(program);
+
+        final UnixFSChecksumAlgorithm algorithm;
+
+        try {
+            algorithm = program.header.algorithm.get();
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            throw new FatalException(ex);
+        }
+
+        algorithm.verify(program.header);
+
     }
 
     private List<UnixFSTransactionCommand> load(

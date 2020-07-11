@@ -10,8 +10,11 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
+import java.util.stream.IntStream;
 
 import static java.lang.String.format;
+import static java.util.stream.IntStream.concat;
+import static java.util.stream.IntStream.rangeClosed;
 
 /**
  * Represents a wraparound counter with a leading and trailing value. This allows multiple threads to safely share an
@@ -49,7 +52,7 @@ class UnixFSDualCounter {
      * hit, including zero. Therefore, if using this to index an array, the max value shoudl be one less than the total
      * size of the array.
      *
-     * @param max the maximum value.
+     * @param max the maximum value, inclusive
      */
     public UnixFSDualCounter(final int max) {
         this(max, new AtomicLong(pack(max, max)));
@@ -338,6 +341,23 @@ class UnixFSDualCounter {
          */
         public int getMax() {
             return max;
+        }
+
+        /**
+         * Returns {@link IntStream} representing the range of valid integers covered by this stream.
+         *
+         * @return this range.
+         */
+        public IntStream range() {
+            if (trailing < leading) {
+                return rangeClosed(trailing, leading);
+            } else if (trailing > leading) {
+                final IntStream trailingToEnd = rangeClosed(trailing, max);
+                final IntStream beginToLeading = rangeClosed(0, leading);
+                return concat(trailingToEnd, beginToLeading);
+            } else {
+                return IntStream.empty();
+            }
         }
 
         /**

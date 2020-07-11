@@ -20,6 +20,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+    /**
+     * Represents a journal entry for read only purposes.   This will include the most recent most complete entry, if
+     * one exists.
+     */
+
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
@@ -252,11 +257,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private void buildAndExecute(final UnixFSTransactionProgramBuilder builder) {
 
-    }
-
-    @Override
-    public void clear() {
-        // TODO: Nuke and reload Journal file on disk.
     }
 
     @Override

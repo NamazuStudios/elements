@@ -19,10 +19,19 @@ public interface RevisionDataStore extends AutoCloseable {
     Revision<?> getCurrentRevision();
 
     /**
-     * Locks the database revision.
-     * @return
+     * Locks the database revision guaranteeing that the revision will not be collected until the lock is released.
+     *
+     * @return the {@link LockedRevision} instance
      */
     LockedRevision lockCurrentRevision();
+
+    /**
+     * Begins the revision update process. This returns a {@link PendingRevisionChange} which represents the next
+     * {@link Revision<?>} in the datastore.
+     *
+     * @return the {@link PendingRevisionChange}
+     */
+    PendingRevisionChange beginRevisionUpdate();
 
     /**
      * Gets the {@link PathIndex} which manages the relationship between {@link Path}s with {@link ResourceId}s.
@@ -71,6 +80,27 @@ public interface RevisionDataStore extends AutoCloseable {
          */
         @Override
         void close();
+
+    }
+
+    /**
+     * Used to update a pending revision change. Once obtained, this will allow the calling code to either modify
+     * the revision of hte data store, or fail the pending revision change. If neither option is used, then closing this
+     * does nothing at all.
+     */
+    interface PendingRevisionChange extends LockedRevision {
+
+        /**
+         * Updates the {@link Revision<?>} of the data store.
+         */
+        void update();
+
+        /**
+         * Marks the pending revision as failed and removes it from the pool of pending revisions. Before failing a
+         * revision change, the calling code must be sure to clean up or unwind any partial changes to the system
+         * before calling fail.
+         */
+        void fail();
 
     }
 

@@ -16,7 +16,7 @@ public class UnixFSRevisionPool implements Revision.Factory, AutoCloseable {
      * or canceled before future {@link Revision<?>}s will be applied
      * @return
      */
-    public Revision<?> createNextRevision() {
+    public UnixFSRevision<?> createNextRevision() {
         return new UnixFSRevision<>(revisionCounter::getTrailing, revisionCounter.incrementLeadingAndGetSnapshot());
     }
 

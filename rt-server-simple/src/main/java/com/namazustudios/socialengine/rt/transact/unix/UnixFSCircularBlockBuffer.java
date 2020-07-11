@@ -5,6 +5,7 @@ import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -14,8 +15,15 @@ import static java.util.Arrays.fill;
  * Given a {@link ByteBuffer}, this slices the buffer into a series of smaller {@link ByteBuffer}s which represent a
  * subset of the data. This allows a {@link ByteBuffer} to be used by several threads w/ exclusive access to subsections
  * of the content.
+ *
+ * While this structure's behavior is thread safe, care must be taken by the client code to ensure that the data
+ * contained in the block buffer is mutated appropriately.
+ *
+ * The {@link #iterator()} method of this class uses a snapshot of the trailing/leading values and therefore, it is
+ * possible that data has changed while iterating. Therefore, code using an iterator must be prepared to handle such
+ * scenarios.
  */
-public class UnixFSCircularBlockBuffer {
+public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
 
     private final byte[] filler;
 
@@ -32,7 +40,7 @@ public class UnixFSCircularBlockBuffer {
         }
 
         final int sliceCount = toSlice.remaining() / blockSize;
-        counter = new UnixFSDualCounter(sliceCount);
+        counter = new UnixFSDualCounter(sliceCount - 1);
 
         this.filler = new byte[blockSize];
         fill(filler, (byte) 0xFF);
@@ -46,20 +54,40 @@ public class UnixFSCircularBlockBuffer {
     }
 
     /**
-     * Gets the current slice, the returned {@link Slice} should be closed, but does not return the {@link Slice} to the
-     * pool of slices.
+     * Gets the current leading slice value. Since this presumes that there is at least one in the chain
      *
-     * @return the current slice
+     * @return the current leading slice
      */
-    public ByteBuffer peek() {
+    public ByteBuffer leading() {
         if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
         final int leading = counter.getLeading();
         return slices.get(leading);
     }
 
     /**
-     * Gets the next {@link Slice}, which will be held by the caller until the returned slice is closed.
+     * Gets the current leading slice value. Since this presumes that there is at least one in the chain
      *
+     * @return the current trailing slice
+     */
+    public ByteBuffer trailing() {
+        if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
+        final int trailing = counter.getTrailing();
+        return slices.get(trailing);
+    }
+
+    /**
+     * Increments the current leading value, and returns the {@link ByteBuffer} associated with the value.
+     *
+     * @return the next leading value.
+     */
+    public ByteBuffer nextLeading() {
+        final int leading = counter.incrementAndGetLeading();
+        return slices.get(leading);
+    }
+
+    /**
+     * Gets the next {@link Slice}, which will be held by the caller until the returned slice is closed.
+     * TODO: Remove This.
      * @return the next {@link Slice}
      * @throws FatalException if the buffer has been exhausted
      */
@@ -68,7 +96,7 @@ public class UnixFSCircularBlockBuffer {
         final int leading = counter.incrementAndGetLeading();
         final ByteBuffer slice = slices.get(leading);
 
-        return new Slice() {
+        return new Slice<ByteBuffer>() {
 
             @Override
             public ByteBuffer getSlice() {
@@ -94,7 +122,13 @@ public class UnixFSCircularBlockBuffer {
      * @return the new typed view
      */
     public <StructT extends Struct> StructTypedView<StructT> forStructType(final Supplier<StructT> structSuppler) {
-        return new StructTypedView<StructT>(structSuppler);
+        return new StructTypedView<>(structSuppler);
+    }
+
+    @Override
+    public Iterator<ByteBuffer> iterator() {
+        final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
+        return snapshot.range().mapToObj(i -> slices.get(i)).iterator();
     }
 
     /**
@@ -123,7 +157,7 @@ public class UnixFSCircularBlockBuffer {
      *
      * @param <StructT>
      */
-    class StructTypedView<StructT extends Struct> {
+    class StructTypedView<StructT extends Struct> implements Iterable<StructT> {
 
         private final List<StructT> structs = new ArrayList<>();
 
@@ -135,40 +169,37 @@ public class UnixFSCircularBlockBuffer {
         }
 
         /**
-         * Functionally similar to {@link UnixFSCircularBlockBuffer#peek()}.
+         * Functionally similar to {@link UnixFSCircularBlockBuffer#leading()}.
          *
-         * @return the current struct object
+         * @return the current leading struct object
          */
-        StructT peek() {
+        StructT leading() {
             final int index = counter.getLeading();
             return structs.get(index);
         }
 
         /**
-         * Functionally similar to {@link UnixFSCircularBlockBuffer#next()}.
-         *
-         * @return the next struct object
+         * Functionality simialr to {@link UnixFSCircularBlockBuffer#trailing()}
+         * @return the current trailing struct object
          */
-        Slice<StructT> next() {
+        public StructT trailing() {
+            final int index = counter.getTrailing();
+            return structs.get(index);
+        }
 
-            final int index = counter.incrementAndGetLeading();
+        @Override
+        public Iterator<StructT> iterator() {
+            final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
+            return snapshot.range().mapToObj(i -> structs.get(i)).iterator();
+        }
 
-            return new Slice<StructT>() {
-
-                @Override
-                public StructT getSlice() {
-                    return structs.get(index);
-                }
-
-                @Override
-                public void close() {
-                    final ByteBuffer slice = slices.get(index);
-                    slice.clear();
-                    slice.put(filler);
-                    counter.incrementAndGetTrailing();
-                }
-
-            };
+        /**
+         * Inc
+         * @return
+         */
+        public StructT nextLeading() {
+            final int leading = counter.incrementAndGetLeading();
+            return structs.get(leading);
         }
 
     }

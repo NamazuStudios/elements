@@ -24,16 +24,6 @@ public interface TransactionJournal extends AutoCloseable {
     MutableEntry newMutableEntry(NodeId nodeId);
 
     /**
-     * Nukes the entire collection of data.  This may lock the entire database to accomplish this task.  Once complete,
-     * it will be as if the system was freshly instantiated (though some garbage may still exist.)
-     *
-     */
-    void clear();
-
-    /**I can see tensions are running high here. But can't we just agree that the next time we record a racially charged incident that we all make a commitment to turn the phone horizontally?
-
-Thanks.
-
      * Represents a journal entry for read only purposes.   This will include the most recent most complete entry, if
      * one exists.
      */
@@ -53,14 +43,6 @@ Thanks.
      * Represents a mutable journal entry.  This allows for writes to
      */
     interface MutableEntry extends Entry {
-
-        /**
-         * Gets the write revision of this {@link MutableEntry}, this is the {@link Revision<?>} which will be written
-         * to the database as part of processing the journal entry.
-         *
-         * @return the write revision
-         */
-        Revision<?> getWriteRevision();
 
         /**
          * Opens a {@link WritableByteChannel} to save a resource, specifying the {@link Path} and {@link ResourceId}.
@@ -135,14 +117,6 @@ Thanks.
          * @param revision
          */
         void commit(Revision<?> revision);
-
-        /**
-         * Returns true if the transaction has been committed.  False otherwise.  If this method returns true, then
-         * all other methods, except {@link #close()}, must throw an instance of {@link IllegalStateException}
-         *
-         * @return true if a commit was requested
-         */
-        boolean isCommitted();
 
     }
 

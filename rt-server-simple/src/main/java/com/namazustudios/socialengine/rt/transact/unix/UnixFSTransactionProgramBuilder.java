@@ -236,14 +236,13 @@ public class UnixFSTransactionProgramBuilder {
      *
      * @return a freshly compiled instance of {@link UnixFSTransactionProgram}
      */
-    public UnixFSTransactionProgram compile() {
+    public UnixFSTransactionProgram compile(final UnixFSTransactionProgramExecutionPhase ... executionPhases) {
 
         if (nodeId == null) throw new IllegalStateException("NodeId must be set.");
-        if (revision == null) throw new IllegalStateException("Revision must be set.");
         if (byteBuffer == null) throw new IllegalStateException("Byte buffer must be set.");
 
         final int programPosition = byteBuffer.position();
-        for (int i = 0; i < UnixFSTransactionProgramHeader.SIZE; ++i) byteBuffer.put((byte)0xFF);
+        for (int i = 0; i < UnixFSTransactionProgramHeader.SIZE; ++i) byteBuffer.put((byte) 0xFF);
 
         final UnixFSTransactionProgram program = new UnixFSTransactionProgram(byteBuffer, programPosition);
         program.header.algorithm.set(checksumAlgorithm);
@@ -251,13 +250,34 @@ public class UnixFSTransactionProgramBuilder {
 
         int programLength = 0;
 
-        // Compiles all Phases
-        programLength += compile(COMMIT, program, program.header.commitPos, program.header.commitLen);
-        programLength += compile(CLEANUP, program, program.header.cleanupPos, program.header.cleanupLen);
+        // Determines which phases to commit.
+
+        short phases = 0;
+
+        for (final UnixFSTransactionProgramExecutionPhase executionPhase : executionPhases) {
+            phases |= 0x1 << executionPhase.ordinal();
+        }
+
+        program.header.phases.set(phases);
+
+        if ((phases & COMMIT.ordinal()) != 0) {
+            programLength += compile(COMMIT, program, program.header.commitPos, program.header.commitLen);
+        } else {
+            program.header.commitPos.set(0);
+            program.header.commitLen.set(0);
+        }
+
+        if ((phases & CLEANUP.ordinal()) != 0) {
+            programLength += compile(CLEANUP, program, program.header.cleanupPos, program.header.cleanupLen);
+        } else {
+            program.header.cleanupPos.set(0);
+            program.header.cleanupLen.set(0);
+        }
 
         program.header.nodeId.set(nodeId);
         program.header.length.set(programLength);
-        program.header.revision.fromRevision(revision);
+
+        if (revision != null) program.header.revision.fromRevision(revision);
 
         return program;
 

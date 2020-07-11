@@ -26,16 +26,9 @@ public class UnixFSTransactionProgram {
     /**
      * Commits this {@link UnixFSTransactionProgram} by calculating the checksum and setting it's
      */
-    public UnixFSTransactionProgram commit(final UnixFSTransactionProgramExecutionPhase... executionPhases) {
+    public UnixFSTransactionProgram commit() {
 
-        short phases = 0;
-
-        for (final UnixFSTransactionProgramExecutionPhase executionPhase : executionPhases) {
-            phases |= 0x1 << executionPhase.ordinal();
-        }
-
-        header.phases.set(phases);
-        header.algorithm.get().compute(this);
+        header.algorithm.get().compute(header);
         valid = true;
 
         return this;
