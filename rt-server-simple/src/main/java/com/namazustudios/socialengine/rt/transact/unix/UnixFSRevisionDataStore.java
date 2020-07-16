@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -14,12 +14,10 @@ import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSChecksumAlgorithm.CRC_32;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionOperation.State.COMMITTED;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionOperation.State.WRITING;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
@@ -62,6 +60,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private static final Logger logger = getLogger(UnixFSRevisionDataStore.class);
 
+    private final UnixFSChecksumAlgorithm preferredChecksum;
+
     private final UnixFSRevisionDataStoreHeader header;
 
     private final UnixFSUtils utils;
@@ -76,13 +76,9 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private final MappedByteBuffer  revisionBuffer;
 
-    private final UnixFSCircularBlockBuffer.StructTypedView<UnixFSRevisionDataStoreRevision> circularBlockBuffer;
+    private final UnixFSCircularBlockBuffer.StructTypedView<UnixFSRevisionOperation> circularBlockBuffer;
 
     private final int revisionBufferCount;
-
-    private final Lock revisionLock = new ReentrantLock();
-
-    private final Condition revisionCondition = revisionLock.newCondition();
 
     @Inject
     public UnixFSRevisionDataStore(
@@ -91,6 +87,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             final UnixFSResourceIndex resourceIdIndex,
             final UnixFSRevisionPool revisionPool,
             final UnixFSGarbageCollector garbageCollector,
+            final UnixFSChecksumAlgorithm preferredChecksum,
             @Named(REVISION_BUFFER_COUNT) final int revisionBufferCount) throws IOException {
 
         this.header = new UnixFSRevisionDataStoreHeader();
@@ -100,6 +97,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         this.revisionPool = revisionPool;
         this.garbageCollector = garbageCollector;
         this.revisionBufferCount = revisionBufferCount;
+        this.preferredChecksum = preferredChecksum;
 
         utils.initialize();
         utils.lockStorageRoot();
@@ -117,9 +115,9 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         revisionBuffer.clear().position(header.size());
 
         final UnixFSCircularBlockBuffer circularBlockBuffer;
-        circularBlockBuffer = new UnixFSCircularBlockBuffer(revisionBuffer, UnixFSRevisionDataStoreRevision.SIZE);
+        circularBlockBuffer = new UnixFSCircularBlockBuffer(revisionBuffer, UnixFSRevisionOperation.SIZE);
 
-        this.circularBlockBuffer = circularBlockBuffer.forStructType(UnixFSRevisionDataStoreRevision::new);
+        this.circularBlockBuffer = circularBlockBuffer.forStructType(UnixFSRevisionOperation::new);
 
     }
 
@@ -180,81 +178,29 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
     }
 
     @Override
-    public UnixFSRevision<?> getCurrentRevision() {
-
-        final UnixFSRevisionDataStoreRevision data = circularBlockBuffer.trailing();
-
-        try {
-            final UnixFSChecksumAlgorithm algorithm = data.algorithm.get();
-            algorithm.verify(data);
-        } catch (UnixFSChecksumFailureExeception | ArrayIndexOutOfBoundsException ex) {
-            throw new FatalException(ex);
-        }
-
-        return getRevisionPool().create(data.revision);
-
-    }
-
-    @Override
     public LockedRevision lockCurrentRevision() {
-        do {
 
-            final UnixFSRevision<?> revision = getCurrentRevision();
+        final UnixFSRevisionOperation operation = circularBlockBuffer
+            .reverse()
+            .map(slice -> slice.getValue())
+            .filter(op -> op.isValid() && op.state.get() == COMMITTED)
+            .findFirst()
+            .orElseThrow(FatalException::new);
 
-            try {
-                garbageCollector.lock(revision);
-            } catch (UnixFSRevisionCollectedException ex) {
-                logger.trace("Revision was collected. Trying again.", ex);
-                continue;
-            }
+        final UnixFSRevision<?> revision = getRevisionPool().create(operation.revision);
 
-            return new LockedRevision() {
-                @Override
-                public Revision<?> getRevision() {
-                    return revision;
-                }
-
-                @Override
-                public void close() {
-                    garbageCollector.unlock(revision);
-                }
-            };
-
-        } while(true);
-    }
-
-    @Override
-    public PendingRevisionChange beginRevisionUpdate() {
-
-        revisionLock.lock();
-
-        final UnixFSRevision<?> next = getRevisionPool().createNextRevision();
-        final UnixFSRevisionDataStoreRevision storedRevision = circularBlockBuffer.nextLeading();
-
-        storedRevision.algorithm.set(CRC_32);
-        storedRevision.revision.fromRevision(next);
-        CRC_32.compute(storedRevision);
-
-        return new PendingRevisionChange() {
-
-            @Override
-            public void update() {
-                
-            }
-
-            @Override
-            public void fail() {
-
-            }
+        return new LockedRevision() {
 
             @Override
             public Revision<?> getRevision() {
-                return null;
+                return revision;
             }
 
             @Override
             public void close() {
-                revisionLock.unlock();
+                if (operation.readers.decrementAndGet() == 0) {
+                    getGarbageCollector().hint(revision);
+                }
             }
 
         };
@@ -262,13 +208,26 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
     }
 
     @Override
+    public PendingRevisionChange beginRevisionUpdate() {
+        return new UnixFSPendingRevisionChange();
+    }
+
+    @Override
     public Stream<ResourceId> removeAllResources() {
-        // TODO Figure This Out
+        // TODO Implement this. This should do a fast-nuke of the directory and remove all resources in the storage
         throw new UnsupportedOperationException();
     }
 
     public UnixFSRevisionPool getRevisionPool() {
         return revisionPool;
+    }
+
+    public UnixFSChecksumAlgorithm getPreferredChecksum() {
+        return preferredChecksum;
+    }
+
+    public UnixFSGarbageCollector getGarbageCollector() {
+        return garbageCollector;
     }
 
     UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(
@@ -314,6 +273,73 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             }
 
         };
+    }
+
+    private class UnixFSPendingRevisionChange implements PendingRevisionChange {
+
+        private boolean open = true;
+
+        private boolean destroy = false;
+
+        private final UnixFSRevision<?> revision;
+
+        private final UnixFSRevisionOperation storedOperation;
+
+        private final Slice<UnixFSRevisionOperation> storedOperationSlice;
+
+        public UnixFSPendingRevisionChange() {
+
+            final UnixFSChecksumAlgorithm preferredAlgorithm = getPreferredChecksum();
+
+            revision = getRevisionPool().createNextRevision();
+
+            storedOperationSlice = circularBlockBuffer.nextLeading();
+
+            storedOperation = storedOperationSlice.getValue();
+            storedOperation.state.set(WRITING);
+            storedOperation.revision.fromRevision(revision);
+            storedOperation.algorithm.set(preferredAlgorithm);
+
+            preferredAlgorithm.compute(storedOperation);
+
+        }
+
+        @Override
+        public void update() {
+
+            final UnixFSChecksumAlgorithm preferredAlgorithm = getPreferredChecksum();
+            final Slice<UnixFSRevisionOperation> slice = circularBlockBuffer.nextLeading().clear();
+            final UnixFSRevisionOperation op = slice.getValue();
+
+            destroy = true;
+
+            op.state.set(COMMITTED);
+            op.revision.fromRevision(revision);
+            op.algorithm.set(preferredAlgorithm);
+
+            preferredAlgorithm.compute(op);
+
+        }
+
+        @Override
+        public void fail() {
+            storedOperationSlice.clear();
+        }
+
+        @Override
+        public Revision<?> getRevision() {
+            return revision;
+        }
+
+        @Override
+        public void close() {
+            try {
+                if (open && destroy) storedOperationSlice.clear();
+            } finally {
+                open = false;
+            }
+        }
+
     }
 
 }

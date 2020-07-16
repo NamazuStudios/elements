@@ -11,12 +11,12 @@ import java.util.stream.Stream;
  */
 public interface RevisionDataStore extends AutoCloseable {
 
-    /**
-     * Gets the current database revision.
-     *
-     * @return the current database revision.
-     */
-    Revision<?> getCurrentRevision();
+//    /**
+//     * Gets the current database revision.
+//     *
+//     * @return the current database revision.
+//     */
+//    Revision<?> getCurrentRevision();
 
     /**
      * Locks the database revision guaranteeing that the revision will not be collected until the lock is released.

@@ -102,6 +102,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             final UnixFSUtils utils,
             final UnixFSPathIndex unixFSPathIndex,
             final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider,
+            final UnixFSChecksumAlgorithm preferredChecksumAlgorithm,
             @Named(TRANSACTION_ENTRY_BUFFER_SIZE) final int txnEntryBufferSize,
             @Named(TRANSACTION_ENTRY_BUFFER_COUNT) final int txnEntryBufferCount) throws IOException {
 
@@ -185,7 +186,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         // Sets up a build for the specific slide of the journal file.
         final UnixFSTransactionProgramBuilder builder = programBuilderProvider.get()
             .withNodeId(nodeId)
-            .withByteBuffer(slice.getSlice())
+            .withByteBuffer(slice.getValue())
             .withChecksumAlgorithm(UnixFSChecksumAlgorithm.ADLER_32);
 
         // Chain up all unwind operations appropriately. The andThen is specifically meant to continue chaining each
@@ -193,7 +194,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         // unwinding the operation, covering all edge cases, while minimizing the chance of data loss.
 
         final UnixFSUtils.IOOperationV onClose = UnixFSUtils.IOOperationV.begin()
-            .andThen(() -> buildAndExecute(builder))
             .andThen(slice::close)
             .andThen(optimisticLocking::unlock);
 
@@ -253,10 +253,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             }
 
         };
-    }
-
-    private void buildAndExecute(final UnixFSTransactionProgramBuilder builder) {
-
     }
 
     @Override

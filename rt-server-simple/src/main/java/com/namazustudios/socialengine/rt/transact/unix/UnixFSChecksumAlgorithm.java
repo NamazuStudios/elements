@@ -18,7 +18,7 @@ public enum UnixFSChecksumAlgorithm {
     CRC_32 {
 
         @Override
-        public void verify(final Checkable checkable) throws UnixFSChecksumFailureExeception {
+        public boolean isValid(final Checkable checkable) throws UnixFSChecksumFailureExeception {
 
             final CRC32 crc32 = new CRC32();
 
@@ -43,7 +43,7 @@ public enum UnixFSChecksumAlgorithm {
             final long existing = checksum.get();
             final long calculated = crc32.getValue();
 
-            if (existing != calculated) throw new UnixFSChecksumFailureExeception(existing + "!=" + calculated);
+            return existing == calculated;
 
         }
 
@@ -71,7 +71,7 @@ public enum UnixFSChecksumAlgorithm {
     ADLER_32 {
 
         @Override
-        public void verify(final Checkable checkable) throws UnixFSChecksumFailureExeception {
+        public boolean isValid(final Checkable checkable) throws UnixFSChecksumFailureExeception {
 
             final Adler32 adler32 = new Adler32();
 
@@ -96,7 +96,7 @@ public enum UnixFSChecksumAlgorithm {
             final long existing = checksum.get();
             final long calculated = adler32.getValue();
 
-            if (existing != calculated) throw new UnixFSChecksumFailureExeception(existing + "!=" + calculated);
+            return existing == calculated;
 
         }
 
@@ -119,6 +119,14 @@ public enum UnixFSChecksumAlgorithm {
     };
 
     /**
+     * Checks if this the supplied {@link Checkable} is valid.
+     *
+     * @param checkable
+     * @return true if valid, false otherwise
+     */
+    public abstract boolean isValid(final Checkable checkable);
+
+    /**
      * Computes the checksum, skipping the value of {@link Checkable#checksum()} and then compares the computed value
      * against the stored value. In the even of a mismatch this will throw an instance of
      * {@link UnixFSChecksumFailureExeception}
@@ -127,7 +135,9 @@ public enum UnixFSChecksumAlgorithm {
      *
      * @throws UnixFSChecksumFailureExeception if the checksum mismatches
      */
-    public abstract void verify(final Checkable checkable) throws UnixFSChecksumFailureExeception;
+    public void verify(final Checkable checkable) throws UnixFSChecksumFailureExeception {
+        if (!isValid(checkable)) throw new UnixFSChecksumFailureExeception("Checksum failure.");
+    }
 
     /**
      * Computes the checksum and then sets the {@link Checkable#checksum()} value.

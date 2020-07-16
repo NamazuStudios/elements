@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import static java.util.Arrays.fill;
 
@@ -19,11 +20,11 @@ import static java.util.Arrays.fill;
  * While this structure's behavior is thread safe, care must be taken by the client code to ensure that the data
  * contained in the block buffer is mutated appropriately.
  *
- * The {@link #iterator()} method of this class uses a snapshot of the trailing/leading values and therefore, it is
- * possible that data has changed while iterating. Therefore, code using an iterator must be prepared to handle such
+ * The {@link #stream()} {@link #reverse()} methods of this class uses a snapshot of the trailing/leading values and it
+ * is possible that data has changed while iterating. Therefore, code using an iterator must be prepared to handle such
  * scenarios.
  */
-public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
+public class UnixFSCircularBlockBuffer {
 
     private final byte[] filler;
 
@@ -58,10 +59,10 @@ public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
      *
      * @return the current leading slice
      */
-    public ByteBuffer leading() {
+    public Slice<ByteBuffer> leading() {
         if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
         final int leading = counter.getLeading();
-        return slices.get(leading);
+        return new Slice<>(leading, slices.get(leading), slices.get(leading));
     }
 
     /**
@@ -69,10 +70,10 @@ public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
      *
      * @return the current trailing slice
      */
-    public ByteBuffer trailing() {
+    public Slice<ByteBuffer> trailing() {
         if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
         final int trailing = counter.getTrailing();
-        return slices.get(trailing);
+        return new Slice<>(trailing, slices.get(trailing), slices.get(trailing));
     }
 
     /**
@@ -80,37 +81,20 @@ public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
      *
      * @return the next leading value.
      */
-    public ByteBuffer nextLeading() {
+    public Slice<ByteBuffer> nextLeading() {
         final int leading = counter.incrementAndGetLeading();
-        return slices.get(leading);
+        return new Slice<>(leading, slices.get(leading), slices.get(leading));
     }
 
     /**
      * Gets the next {@link Slice}, which will be held by the caller until the returned slice is closed.
-     * TODO: Remove This.
+     *
      * @return the next {@link Slice}
      * @throws FatalException if the buffer has been exhausted
      */
     public Slice<ByteBuffer> next() {
-
         final int leading = counter.incrementAndGetLeading();
-        final ByteBuffer slice = slices.get(leading);
-
-        return new Slice<ByteBuffer>() {
-
-            @Override
-            public ByteBuffer getSlice() {
-                return slice;
-            }
-
-            @Override
-            public void close() {
-                slice.clear();
-                slice.put(filler);
-                counter.incrementAndGetTrailing();
-            }
-
-        };
+        return new Slice<>(leading, slices.get(leading), slices.get(leading));
     }
 
     /**
@@ -125,28 +109,96 @@ public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
         return new StructTypedView<>(structSuppler);
     }
 
-    @Override
-    public Iterator<ByteBuffer> iterator() {
+    /**
+     * Returns a stream of the {@link UnixFSCircularBlockBuffer} in order, trailing to leading.
+     *
+     * @return the {@link Stream<ByteBuffer>}
+     */
+    public Stream<Slice<ByteBuffer>> stream() {
         final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
-        return snapshot.range().mapToObj(i -> slices.get(i)).iterator();
+        return snapshot.range().mapToObj(i -> new Slice(i, slices.get(i), slices.get(i)));
     }
 
     /**
-     * Represents a slice of the provided byte buffer array.
+     * Streams the contents of this {@link UnixFSCircularBlockBuffer} in reverse order, leading to trailing.
+     *
+     * @return the {@link Stream<ByteBuffer>}
      */
-    interface Slice<T> extends AutoCloseable {
+    public Stream<Slice<ByteBuffer>> reverse() {
+        final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
+        return snapshot.reverseRange().mapToObj(i -> new Slice(i, slices.get(i), slices.get(i)));
+    }
+
+    /**
+     * Represents a slice of the provided byte buffer array. Two {@link Slice<T>} instances are equal if they both
+     * point to the same index in the {@link UnixFSCircularBlockBuffer}, as they essentially point to the same data.
+     * This may be a little counterintuitive as two {@link Slice<T>} instances of differing generic types may be the
+     * same even if they house different values.
+     */
+    public class Slice<T> implements Comparable<Slice<?>> {
+
+        private final int index;
+
+        private final T value;
+
+        private final ByteBuffer buffer;
+
+        private final UnixFSCircularBlockBuffer owner = UnixFSCircularBlockBuffer.this;
+
+        private Slice(int index, T value, ByteBuffer buffer) {
+            this.index = index;
+            this.value = value;
+            this.buffer = buffer;
+        }
 
         /**
          * Gets the actual {@link ByteBuffer} associated slice.
          *
          * @return the {@link ByteBuffer}
          */
-        T getSlice();
+        T getValue() {
+            return value;
+        }
 
         /**
-         * Returns the {@link Slice} to the pool if necessary.
+         * Clears the contents of the slice by filling the underlying memory with the filler bytes.
          */
-        default void close() {}
+        public Slice<T> clear() {
+            buffer.position(0).limit(filler.length);
+            buffer.put(filler);
+            return this;
+        }
+
+        @Override
+        public int compareTo(final Slice<?> o) {
+            if (owner != o.owner) throw new IllegalArgumentException("Can only compare two Slices with same owner.");
+            return index - o.index;
+        }
+
+        @Override
+        public boolean equals(Object o) {
+
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            final Slice<?> slice = (Slice<?>) o;
+            if (owner != slice.owner) return false;
+
+            return index == slice.index;
+
+        }
+
+        @Override
+        public int hashCode() {
+            return index;
+        }
+
+        /**
+         * Sets this {@link Slice<T>} to the trailing value
+         */
+        public void setTrailing() {
+            while (index != counter.incrementAndGetLeading());
+        }
 
     }
 
@@ -157,7 +209,7 @@ public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
      *
      * @param <StructT>
      */
-    class StructTypedView<StructT extends Struct> implements Iterable<StructT> {
+    public class StructTypedView<StructT extends Struct> {
 
         private final List<StructT> structs = new ArrayList<>();
 
@@ -173,33 +225,59 @@ public class UnixFSCircularBlockBuffer implements Iterable<ByteBuffer> {
          *
          * @return the current leading struct object
          */
-        StructT leading() {
-            final int index = counter.getLeading();
-            return structs.get(index);
+        public Slice<StructT> leading() {
+            if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
+            final int leading = counter.getLeading();
+            return new Slice<>(leading, structs.get(leading), slices.get(leading));
         }
 
         /**
          * Functionality simialr to {@link UnixFSCircularBlockBuffer#trailing()}
          * @return the current trailing struct object
          */
-        public StructT trailing() {
-            final int index = counter.getTrailing();
-            return structs.get(index);
-        }
-
-        @Override
-        public Iterator<StructT> iterator() {
-            final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
-            return snapshot.range().mapToObj(i -> structs.get(i)).iterator();
+        public Slice<StructT> trailing() {
+            if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
+            final int trailing = counter.getTrailing();
+            return new Slice<>(trailing, structs.get(trailing), slices.get(trailing));
         }
 
         /**
-         * Inc
+         * Returns a stream view of the current valid elements contained in this buffer.
+         *
+         * @return the {@link Stream<StructT>}
+         */
+        public Stream<Slice<StructT>> stream() {
+            final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
+            return snapshot
+                .range()
+                .mapToObj(i -> new Slice<>(i, structs.get(i), slices.get(i)));
+        }
+
+        /**
+         * Returns a stream view of the current valid elements contained in this buffer, in reverse order.
+         *
+         * @return the {@link Stream<StructT>}
+         */
+        public Stream<Slice<StructT>> reverse() {
+            final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
+            return snapshot
+                    .reverseRange()
+                    .mapToObj(i -> new Slice<>(i, structs.get(i), slices.get(i)));
+        }
+
+
+        public Slice<StructT> nextTrailing() {
+            final int trailing = counter.incrementAndGetTrailing();
+            return new Slice<>(trailing, structs.get(trailing), slices.get(trailing));
+        }
+
+        /**
+         * Increments the
          * @return
          */
-        public StructT nextLeading() {
+        public Slice<StructT> nextLeading() {
             final int leading = counter.incrementAndGetLeading();
-            return structs.get(leading);
+            return new Slice<>(leading, structs.get(leading), slices.get(leading));
         }
 
     }

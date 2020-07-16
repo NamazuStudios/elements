@@ -53,4 +53,9 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
         return snapshot;
     }
 
+    long distance(final UnixFSRevision<?> other) {
+        // TODO Fix this
+        return 0;
+    }
+
 }

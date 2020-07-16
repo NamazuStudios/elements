@@ -22,8 +22,6 @@ public class UnixFSGarbageCollector {
 
     final UnixFSUtils utils;
 
-    private final SortedMap<Revision<?>, Integer> locked = new ConcurrentSkipListMap<>();
-
     @Inject
     public UnixFSGarbageCollector(final UnixFSUtils utils) {
         this.utils = utils;
@@ -39,9 +37,6 @@ public class UnixFSGarbageCollector {
      * @return the {@link Path} to the pinned file.
      */
     public Path pin(final Path file, final Revision<?> revision) {
-
-        if (!locked.containsKey(revision)) throw new IllegalStateException("Revision not locked by garbage collector.");
-
         if (isRegularFile(file, NOFOLLOW_LINKS) || isSymbolicLink(file)) {
             final Path parent = file.getParent();
             final Path pinned = utils.resolveRevisionFilePath(parent, revision);
@@ -50,16 +45,15 @@ public class UnixFSGarbageCollector {
         } else {
             throw new IllegalArgumentException("Not a file path: " + file);
         }
-
     }
 
-    public void lock(final UnixFSRevision<?> revision) throws UnixFSRevisionCollectedException {
-        // TODO Lock
-    }
-
-
-    public void unlock(final UnixFSRevision<?> revision) {
-        // TODO Unlock
+    /**
+     * Hints that the following {@link Revision<?>} may be eligible for garbage collection.
+     *
+     * @param revision
+     */
+    public void hint(final UnixFSRevision<?> revision) {
+        // TODO Implement
     }
 
 }

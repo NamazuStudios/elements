@@ -1,13 +1,7 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.transact.FatalException;
-import sun.misc.Unsafe;
 
-import javax.sound.midi.SysexMessage;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.regex.Pattern;
 import java.util.stream.IntStream;
@@ -33,7 +27,7 @@ import static java.util.stream.IntStream.rangeClosed;
  * Because this dual-counter transparently supports wraparound, the trailing value may not necessarily be less than the
  * leading value as the values wrap around automatically.
  */
-class UnixFSDualCounter {
+public class UnixFSDualCounter {
 
     private final int max;
 
@@ -358,6 +352,27 @@ class UnixFSDualCounter {
             } else {
                 return IntStream.empty();
             }
+        }
+
+        /**
+         * Returns {@link IntStream} representing the range of valid integers covered by this stream, in reverse order.
+         *
+         * @return this range.
+         */
+        public IntStream reverseRange() {
+            if (trailing < leading) {
+                return reverseRangeClosed(trailing, leading);
+            } else if (trailing > leading) {
+                final IntStream leadingToBegin = reverseRangeClosed(leading, 0);
+                final IntStream maxToTrailing = reverseRangeClosed(max, trailing);
+                return concat(leadingToBegin, maxToTrailing);
+            } else {
+                return IntStream.empty();
+            }
+        }
+
+        private static IntStream reverseRangeClosed(final int from, final int to) {
+            return rangeClosed(from, to).map(i -> to - i + from);
         }
 
         /**
