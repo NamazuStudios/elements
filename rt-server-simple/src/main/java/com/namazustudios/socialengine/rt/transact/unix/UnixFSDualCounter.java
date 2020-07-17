@@ -31,7 +31,7 @@ public class UnixFSDualCounter {
 
     private final int max;
 
-    private final Counter counter;
+    private UnixFSAtomicCASCounter counter;
 
     /**
      * Creates an instance of {@link UnixFSDualCounter} with the default max value, which is the max value of an
@@ -59,7 +59,7 @@ public class UnixFSDualCounter {
      * @param counter
      */
     public UnixFSDualCounter(final int max, final AtomicLong counter) {
-        this(max, new Counter() {
+        this(max, new UnixFSAtomicCASCounter() {
             @Override
             public long get() {
                 return counter.get();
@@ -73,12 +73,12 @@ public class UnixFSDualCounter {
     }
 
     /**
-     * Allows for the caller to specify an arbitrary {@link Counter}.
+     * Allows for the caller to specify an arbitrary {@link UnixFSAtomicCASCounter}.
      *
      * @param max the max value
      * @param counter the counter
      */
-    public UnixFSDualCounter(final int max, final Counter counter) {
+    public UnixFSDualCounter(final int max, final UnixFSAtomicCASCounter counter) {
         if (max <= 0) throw new IllegalArgumentException("Maximum value too low: " + max);
         this.max = max;
         this.counter = counter;
@@ -434,29 +434,6 @@ public class UnixFSDualCounter {
         private long normalize(final long reference) {
             return reference <= leading ? leading - reference : leading + (max - reference);
         }
-
-    }
-
-    /**
-     * Interface which wraps an {@link AtomicLong} or similar data structure.
-     */
-    public interface Counter {
-
-        /**
-         * Gets the current value, atomically.
-         *
-         * @return the value
-         */
-        long get();
-
-        /**
-         * Compares and sets the value, atomically.
-         *
-         * @param expect the expected value
-         * @param update the new value to update
-         * @return true if set, false otherwise
-         */
-        boolean compareAndSet(long expect, long update);
 
     }
 

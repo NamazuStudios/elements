@@ -20,10 +20,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-    /**
-     * Represents a journal entry for read only purposes.   This will include the most recent most complete entry, if
-     * one exists.
-     */
 
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
@@ -194,7 +190,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         // unwinding the operation, covering all edge cases, while minimizing the chance of data loss.
 
         final UnixFSUtils.IOOperationV onClose = UnixFSUtils.IOOperationV.begin()
-            .andThen(slice::close)
             .andThen(optimisticLocking::unlock);
 
         final UnixFSWorkingCopy workingCopy = new UnixFSWorkingCopy(

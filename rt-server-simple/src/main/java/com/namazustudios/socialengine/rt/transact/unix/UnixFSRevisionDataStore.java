@@ -25,7 +25,8 @@ import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * Responsible for tracking the current revision and providing access to the various indices that access the underlying
- * data.
+ * data. This implements the current revision using a table of revisions stored in a {@link UnixFSCircularBlockBuffer}
+ * whereby pending operations are
  */
 public class UnixFSRevisionDataStore implements RevisionDataStore {
 

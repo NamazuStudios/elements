@@ -11,15 +11,10 @@ import java.util.stream.Stream;
  */
 public interface RevisionDataStore extends AutoCloseable {
 
-//    /**
-//     * Gets the current database revision.
-//     *
-//     * @return the current database revision.
-//     */
-//    Revision<?> getCurrentRevision();
-
     /**
      * Locks the database revision guaranteeing that the revision will not be collected until the lock is released.
+     * This method is safe to call from multiple threads, however the returned {@link LockedRevision} must be used from
+     * only one thread at a time.
      *
      * @return the {@link LockedRevision} instance
      */
@@ -27,7 +22,8 @@ public interface RevisionDataStore extends AutoCloseable {
 
     /**
      * Begins the revision update process. This returns a {@link PendingRevisionChange} which represents the next
-     * {@link Revision<?>} in the datastore.
+     * {@link Revision<?>} in the data store. This method is safe to call from multiple threads, however the returned
+     * {@link PendingRevisionChange} must be used from only one thread at a time.
      *
      * @return the {@link PendingRevisionChange}
      */
