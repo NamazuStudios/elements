@@ -9,6 +9,8 @@ import sun.misc.Unsafe;
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
 
+import static java.lang.String.format;
+
 /**
  * Some dirty hacks to support atomic memory access.
  */
@@ -28,13 +30,19 @@ public abstract class UnixFSMemoryUtils {
     }
 
     /**
-     * Makes an instance of {@link UnixFSAtomicCASCounter} from 
+     * Makes an instance of {@link UnixFSAtomicCASCounter} from
      * {@see {@link UnixFSMemoryUtils#getCounter(ByteBuffer, int)}} for details.
      */
     public UnixFSAtomicCASCounter getCounter(final ByteBuffer byteBuffer) {
+
         final int position = byteBuffer.position();
-        byteBuffer.position(position + Long.BYTES);
-        return getCounter(byteBuffer, position);
+        final UnixFSAtomicCASCounter counter = getCounter(byteBuffer, position);
+
+        final long value = byteBuffer.getLong();
+        logger.trace("Created {}} with initial value {}, ", counter, value);
+
+        return counter;
+
     }
 
     /**
@@ -96,7 +104,7 @@ public abstract class UnixFSMemoryUtils {
 
             if (byteBuffer.isReadOnly()) throw new IllegalArgumentException("Read-only buffers not supported.");
             if (!byteBuffer.isDirect()) throw new IllegalArgumentException("Only direct bytebuffers are supported.");
-            if (byteBuffer.remaining() < Long.BYTES) throw new IllegalArgumentException("Not enough space in buffer");
+            if ((position + Long.BYTES) > byteBuffer.limit()) throw new IllegalArgumentException("Not enough space in buffer");
 
             try {
 
@@ -140,6 +148,11 @@ public abstract class UnixFSMemoryUtils {
                         } catch (IllegalAccessException ex) {
                             throw new FatalException(ex);
                         }
+                    }
+
+                    @Override
+                    public String toString() {
+                        return format("Unsafe counter %s (pos=%d)", byteBuffer, position);
                     }
 
                 };

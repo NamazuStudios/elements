@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -22,16 +25,18 @@ public class UnixFSMemoryUtilsTest {
 
     private static final int TEST_COUNT = 16;
 
+    private static final Logger logger = LoggerFactory.getLogger(UnixFSMemoryUtilsTest.class);
+
     private final UnixFSMemoryUtils underTest = UnixFSMemoryUtils.getInstance();
 
     private Path temp;
 
-    private MappedByteBuffer buffer;
+    private MappedByteBuffer memoryMappedBuffer;
 
     private List<UnixFSAtomicCASCounter> counters;
 
-    @DataProvider
-    public Object[][] getCounters() throws Exception {
+    @BeforeClass
+    public void setup() throws Exception {
 
         temp = createTempFile(getClass().getSimpleName(), "bin");
 
@@ -40,15 +45,21 @@ public class UnixFSMemoryUtilsTest {
             while (filler.hasRemaining()) filler.putLong(0);
             filler.rewind();
             fileChannel.write(filler);
-            buffer = fileChannel.map(READ_WRITE, 0, Long.BYTES * TEST_COUNT);
+            memoryMappedBuffer = fileChannel.map(READ_WRITE, 0, Long.BYTES * TEST_COUNT);
         }
 
+        memoryMappedBuffer.rewind();
         counters = new ArrayList<>();
 
         for (int i = 0; i < TEST_COUNT; ++i) {
-            final UnixFSAtomicCASCounter counter = underTest.getCounter(mappedByteBuffer);
+            final UnixFSAtomicCASCounter counter = underTest.getCounter(memoryMappedBuffer);
             counters.add(counter);
         }
+
+    }
+
+    @DataProvider
+    public Object[][] getCounters() throws Exception {
 
         return counters.stream()
             .map(counter -> new Object[]{counter})
@@ -62,19 +73,45 @@ public class UnixFSMemoryUtilsTest {
         final ThreadLocalRandom random = ThreadLocalRandom.current();
 
         long expect;
-        long update = 0;
+        long update;
 
         do {
             expect = counter.get();
-            assertEquals(update, expect);
             update = random.nextLong();
+            if (random.nextInt(25) == 0) System.gc();
         } while (!counter.compareAndSet(expect, update));
 
     }
 
-    @Test
-    public void testFileWasWritten() {
+    @Test(dependsOnMethods = "testCounter")
+    public void testBufferIsConsistent() {
+        memoryMappedBuffer.rewind();
+        checkBuffer(memoryMappedBuffer);
+    }
 
+    @Test(dependsOnMethods = "testBufferIsConsistent")
+    public void testFileIsConsistent() throws Exception {
+
+        memoryMappedBuffer.force();
+
+        final ByteBuffer byteBuffer = ByteBuffer.allocate(TEST_COUNT * Long.BYTES);
+
+        try (final FileChannel fileChannel = FileChannel.open(temp, READ)) {
+            fileChannel.read(byteBuffer);
+        }
+
+        byteBuffer.rewind();
+        checkBuffer(byteBuffer);
+
+    }
+
+    private void checkBuffer(final ByteBuffer buffer) {
+        for (final UnixFSAtomicCASCounter counter : counters) {
+            final long cValue = counter.get();
+            final long bValue = buffer.getLong();
+            logger.info("Buffer value {}. Counter value {}.", bValue, cValue);
+            assertEquals(bValue, cValue, "Buffer value mismatch.");
+        }
     }
 
 }
