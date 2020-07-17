@@ -31,7 +31,7 @@ public class UnixFSDualCounter {
 
     private final int max;
 
-    private UnixFSAtomicCASCounter counter;
+    private final UnixFSAtomicLong counter;
 
     /**
      * Creates an instance of {@link UnixFSDualCounter} with the default max value, which is the max value of an
@@ -59,7 +59,7 @@ public class UnixFSDualCounter {
      * @param counter
      */
     public UnixFSDualCounter(final int max, final AtomicLong counter) {
-        this(max, new UnixFSAtomicCASCounter() {
+        this(max, new UnixFSAtomicLong() {
             @Override
             public long get() {
                 return counter.get();
@@ -73,12 +73,12 @@ public class UnixFSDualCounter {
     }
 
     /**
-     * Allows for the caller to specify an arbitrary {@link UnixFSAtomicCASCounter}.
+     * Allows for the caller to specify an arbitrary {@link UnixFSAtomicLong}.
      *
      * @param max the max value
      * @param counter the counter
      */
-    public UnixFSDualCounter(final int max, final UnixFSAtomicCASCounter counter) {
+    public UnixFSDualCounter(final int max, final UnixFSAtomicLong counter) {
         if (max <= 0) throw new IllegalArgumentException("Maximum value too low: " + max);
         this.max = max;
         this.counter = counter;

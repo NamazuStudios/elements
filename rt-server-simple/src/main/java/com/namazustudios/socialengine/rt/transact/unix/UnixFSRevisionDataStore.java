@@ -16,8 +16,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionOperation.State.COMMITTED;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionOperation.State.WRITING;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.COMMITTED;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.WRITING;
+import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
@@ -30,40 +31,7 @@ import static org.slf4j.LoggerFactory.getLogger;
  */
 public class UnixFSRevisionDataStore implements RevisionDataStore {
 
-    private static final byte FILLER = (byte) 0xFF;
-
-    public static final String REVISION_BUFFER_COUNT = "com.namazustudios.socialengine.rt.transact.unix.fs.revision.buffer.count";
-
-    /**
-     * Some magic bytes int he file to indicate what it is.
-     */
-    public static final String HEAD_FILE_MAGIC = "RELM";
-
-    /**
-     * Constant for major version 1
-     */
-    public static final int VERSION_MAJOR_1 = 1;
-
-    /**
-     * Constant for minor version 0
-     */
-    public static final int VERSION_MINOR_0 = 0;
-
-    /**
-     * Indicates the current major version.
-     */
-    public static final int VERSION_MAJOR_CURRENT = VERSION_MAJOR_1;
-
-    /**
-     * Indicates the current minor version.
-     */
-    public static final int VERSION_MINOR_CURRENT = VERSION_MINOR_0;
-
     private static final Logger logger = getLogger(UnixFSRevisionDataStore.class);
-
-    private final UnixFSChecksumAlgorithm preferredChecksum;
-
-    private final UnixFSRevisionDataStoreHeader header;
 
     private final UnixFSUtils utils;
 
@@ -75,11 +43,9 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private final UnixFSGarbageCollector garbageCollector;
 
-    private final MappedByteBuffer  revisionBuffer;
+    private final UnixFSChecksumAlgorithm preferredChecksum;
 
-    private final UnixFSCircularBlockBuffer.StructTypedView<UnixFSRevisionOperation> circularBlockBuffer;
-
-    private final int revisionBufferCount;
+    private final UnixFSRevisionTable revisionTable;
 
     @Inject
     public UnixFSRevisionDataStore(
@@ -89,84 +55,20 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             final UnixFSRevisionPool revisionPool,
             final UnixFSGarbageCollector garbageCollector,
             final UnixFSChecksumAlgorithm preferredChecksum,
-            @Named(REVISION_BUFFER_COUNT) final int revisionBufferCount) throws IOException {
+            final UnixFSRevisionTable revisionTable) throws IOException {
 
-        this.header = new UnixFSRevisionDataStoreHeader();
         this.utils = utils;
         this.pathIndex = pathIndex;
         this.resourceIdIndex = resourceIdIndex;
         this.revisionPool = revisionPool;
         this.garbageCollector = garbageCollector;
-        this.revisionBufferCount = revisionBufferCount;
         this.preferredChecksum = preferredChecksum;
-
-        utils.initialize();
-        utils.lockStorageRoot();
-
-        final java.nio.file.Path headFilePath = utils.getHeadFilePath();
-
-        if (isRegularFile(headFilePath)) {
-            logger.info("Reading existing journal file {}", headFilePath);
-            // TODO Read and Recover Headfile if Necessary
-            throw new UnsupportedOperationException("Not yet implemented.");
-        } else {
-            revisionBuffer = createNewHeadFile(headFilePath);
-        }
-
-        revisionBuffer.clear().position(header.size());
-
-        final UnixFSCircularBlockBuffer circularBlockBuffer;
-        circularBlockBuffer = new UnixFSCircularBlockBuffer(revisionBuffer, UnixFSRevisionOperation.SIZE);
-
-        this.circularBlockBuffer = circularBlockBuffer.forStructType(UnixFSRevisionOperation::new);
-
-    }
-
-    private MappedByteBuffer createNewHeadFile(final Path headFilePath) throws IOException {
-
-        try (final FileChannel channel = FileChannel.open(headFilePath, READ, WRITE, CREATE)) {
-
-            final long headerSize = header.size();
-            final long totalEntrySize = (UnixFSRevisionData.SIZE * revisionBufferCount);
-
-            final ByteBuffer fillHeader = ByteBuffer.allocate(header.size());
-            while(fillHeader.hasRemaining()) fillHeader.put(FILLER);
-            fillHeader.rewind();
-            channel.write(fillHeader);
-
-            final ByteBuffer fillEntry = ByteBuffer.allocate(UnixFSRevisionData.SIZE);
-            while(fillEntry.hasRemaining()) fillEntry.put(FILLER);
-
-            for (int entry = 0; entry < revisionBufferCount; ++entry) {
-                fillEntry.rewind();
-                channel.write(fillEntry);
-            }
-
-            if (channel.size() != (headerSize + totalEntrySize)) {
-                // This should only happen if there's an error in the code.
-                throw new IllegalStateException("Channel size mismatch!");
-            }
-
-            final MappedByteBuffer buffer = channel.map(READ_WRITE, 0, headerSize + totalEntrySize);
-            buffer.position(0).limit((int)headerSize);
-
-            final ByteBuffer headerByteBuffer = buffer.slice();
-            header.setByteBuffer(headerByteBuffer, 0);
-            header.magic.set(HEAD_FILE_MAGIC);
-            header.major.set(VERSION_MAJOR_CURRENT);
-            header.minor.set(VERSION_MINOR_CURRENT);
-            header.revisionBufferCount.set(revisionBufferCount);
-
-            return buffer;
-
-        }
+        this.revisionTable = revisionTable;
 
     }
 
     @Override
-    public void close() {
-        utils.unlockStorageRoot();
-    }
+    public void close() {}
 
     @Override
     public UnixFSPathIndex getPathIndex() {
@@ -181,7 +83,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
     @Override
     public LockedRevision lockCurrentRevision() {
 
-        final UnixFSRevisionOperation operation = circularBlockBuffer
+        final UnixFSRevisionTableEntry operation = revisionTable
             .reverse()
             .map(slice -> slice.getValue())
             .filter(op -> op.isValid() && op.state.get() == COMMITTED)
@@ -284,9 +186,9 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         private final UnixFSRevision<?> revision;
 
-        private final UnixFSRevisionOperation storedOperation;
+        private final UnixFSRevisionTableEntry storedOperation;
 
-        private final Slice<UnixFSRevisionOperation> storedOperationSlice;
+        private final Slice<UnixFSRevisionTableEntry> storedOperationSlice;
 
         public UnixFSPendingRevisionChange() {
 
@@ -294,7 +196,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
             revision = getRevisionPool().createNextRevision();
 
-            storedOperationSlice = circularBlockBuffer.nextLeading();
+            storedOperationSlice = revisionTable.nextLeading();
 
             storedOperation = storedOperationSlice.getValue();
             storedOperation.state.set(WRITING);
@@ -309,8 +211,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         public void update() {
 
             final UnixFSChecksumAlgorithm preferredAlgorithm = getPreferredChecksum();
-            final Slice<UnixFSRevisionOperation> slice = circularBlockBuffer.nextLeading().clear();
-            final UnixFSRevisionOperation op = slice.getValue();
+            final Slice<UnixFSRevisionTableEntry> slice = revisionTable.nextLeading().clear();
+            final UnixFSRevisionTableEntry op = slice.getValue();
 
             destroy = true;
 

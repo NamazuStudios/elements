@@ -5,9 +5,11 @@ import com.namazustudios.socialengine.rt.transact.FatalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Unsafe;
+import sun.nio.ch.DirectBuffer;
 
 import java.lang.reflect.Field;
 import java.nio.ByteBuffer;
+import java.util.function.LongSupplier;
 
 import static java.lang.String.format;
 
@@ -30,23 +32,23 @@ public abstract class UnixFSMemoryUtils {
     }
 
     /**
-     * Makes an instance of {@link UnixFSAtomicCASCounter} from
-     * {@see {@link UnixFSMemoryUtils#getCounter(ByteBuffer, int)}} for details.
+     * Makes an instance of {@link UnixFSAtomicLong} from
+     * {@see {@link UnixFSMemoryUtils#getAtomicLong(ByteBuffer, int)}} for details.
      */
-    public UnixFSAtomicCASCounter getCounter(final ByteBuffer byteBuffer) {
+    public UnixFSAtomicLong getAtomicLong(final ByteBuffer byteBuffer) {
 
         final int position = byteBuffer.position();
-        final UnixFSAtomicCASCounter counter = getCounter(byteBuffer, position);
+        final UnixFSAtomicLong counter = getAtomicLong(byteBuffer, position);
 
         final long value = byteBuffer.getLong();
-        logger.trace("Created {}} with initial value {}, ", counter, value);
+        logger.trace("Created {} with initial value {}, ", counter, value);
 
         return counter;
 
     }
 
     /**
-     * Gets a {@link UnixFSAtomicCASCounter} with the supplied {@link ByteBuffer}. The 64-bit counter object will be
+     * Gets a {@link UnixFSAtomicLong} with the supplied {@link ByteBuffer}. The 64-bit counter object will be
      * placed at the {@link ByteBuffer}'s {@link ByteBuffer#position()}.
      *
      * The {@link ByteBuffer}'s position is unchanged.
@@ -56,10 +58,10 @@ public abstract class UnixFSMemoryUtils {
      *
      * @param byteBuffer the {@link ByteBuffer}
      * @param position the positing within the {@link ByteBuffer}
-     * @return the {@link UnixFSAtomicCASCounter}
+     * @return the {@link UnixFSAtomicLong}
      * @throws {@link IllegalArgumentException} if this method can detect misalignment, or otherwise improper use
      */
-    public abstract UnixFSAtomicCASCounter getCounter(final ByteBuffer byteBuffer, final int position);
+    public abstract UnixFSAtomicLong getAtomicLong(final ByteBuffer byteBuffer, final int position);
 
     private static class UnsafeUnixFSMemoryUtils extends UnixFSMemoryUtils {
 
@@ -100,36 +102,57 @@ public abstract class UnixFSMemoryUtils {
         }
 
         @Override
-        public UnixFSAtomicCASCounter getCounter(final ByteBuffer byteBuffer, final int position) {
+        public UnixFSAtomicLong getAtomicLong(final ByteBuffer byteBuffer, final int position) {
 
             if (byteBuffer.isReadOnly()) throw new IllegalArgumentException("Read-only buffers not supported.");
             if (!byteBuffer.isDirect()) throw new IllegalArgumentException("Only direct bytebuffers are supported.");
             if ((position + Long.BYTES) > byteBuffer.limit()) throw new IllegalArgumentException("Not enough space in buffer");
 
+            final DirectBuffer directBuffer = (DirectBuffer) byteBuffer;
+
             try {
 
                 // Determines if we have to flip the byte buffer order around
                 final boolean nativeByteOrder = byteBufferNativeOrderField.getBoolean(byteBuffer);
-
                 final ByteOrderCorrection byteOrderCorrection = nativeByteOrder ? l -> l : Long::reverseBytes;
 
-                return new UnixFSAtomicCASCounter() {
+                final LongSupplier memoryAddressSupplier = () -> {
+                    try {
+                        final long base = byteBufferAddressField.getLong(byteBuffer);
+                        return base + position;
+                    } catch (IllegalAccessException ex) {
+                        logger.error("Unable to find memory address of counter.", ex);
+                        throw new FatalException(ex);
+                    }
+                };
+
+                final long address = memoryAddressSupplier.getAsLong();
+                final long misalignment = address % Long.BYTES;
+
+                if (misalignment != 0) {
+
+                    final String msg = format(
+                        "Address of long 0x%X is     not properly aligned. Misalignment of %d bytes.",
+                        address, misalignment
+                    );
+
+                    throw new IllegalArgumentException(msg);
+
+                }
+
+                return new UnixFSAtomicLong() {
                     @Override
                     public long get() {
-
-                        final long address = getMemoryAddress();
+                        final long address = memoryAddressSupplier.getAsLong();
                         final long raw = unsafe.getLongVolatile(null, address);
-                        unsafe.loadFence();
-
                         final long corrected = byteOrderCorrection.correctByteOrder(raw);
                         return corrected;
-
                     }
 
                     @Override
                     public boolean compareAndSet(final long expect, final long update) {
 
-                        final long address = getMemoryAddress();
+                        final long address = memoryAddressSupplier.getAsLong();
                         final long expectCorrected = byteOrderCorrection.correctByteOrder(expect);
                         final long updateCorrected = byteOrderCorrection.correctByteOrder(update);
 
@@ -139,15 +162,6 @@ public abstract class UnixFSMemoryUtils {
                             unsafe.storeFence();
                         }
 
-                    }
-
-                    private long getMemoryAddress() {
-                        try {
-                            final long base = byteBufferAddressField.getLong(byteBuffer);
-                            return base + position;
-                        } catch (IllegalAccessException ex) {
-                            throw new FatalException(ex);
-                        }
                     }
 
                     @Override

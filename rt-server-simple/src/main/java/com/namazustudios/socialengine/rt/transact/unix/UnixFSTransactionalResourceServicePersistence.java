@@ -88,6 +88,7 @@ public class UnixFSTransactionalResourceServicePersistence implements Transactio
     public void close() {
         try {
             getUnixFSRevisionDataStore().close();
+            getUnixFSTransactionJournal().close();
         } catch (Exception ex) {
             logger.error("Caught exception closing {}", getClass().getName(), ex);
         }

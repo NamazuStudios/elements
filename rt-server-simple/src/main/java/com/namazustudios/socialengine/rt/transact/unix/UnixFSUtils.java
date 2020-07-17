@@ -44,9 +44,11 @@ public class UnixFSUtils {
 
     public static final String HEAD_FILE_NAME = "head";
 
-    public static final String PATHS_DIRECTORY = "paths";
+    public static final String REVISION_POOL_FILE_NAME = "rpool";
 
     public static final String TRANSACTION_JOURNAL_FILE_NAME = "journal";
+
+    public static final String PATHS_DIRECTORY = "paths";
 
     public static final String REVERSE_DIRECTORY = format("reverse.%s", DIRECTORY_SUFFIX);
 
@@ -64,7 +66,9 @@ public class UnixFSUtils {
 
     private final Path storageRoot;
 
-    private final Path headFilePath;
+    private final Path revisionTablePath;
+
+    private final Path revisionPoolPath;
 
     private final Path transactionJournalPath;
 
@@ -86,7 +90,9 @@ public class UnixFSUtils {
 
         this.revisionFactory = revisionFactory;
         this.storageRoot = storageRoot;
-        this.headFilePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();
+
+        this.revisionTablePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();
+        this.revisionPoolPath = storageRoot.resolve(REVISION_POOL_FILE_NAME).toAbsolutePath().normalize();
         this.transactionJournalPath = storageRoot.resolve(TRANSACTION_JOURNAL_FILE_NAME).toAbsolutePath().normalize();
         this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath().normalize();
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath().normalize();
@@ -96,7 +102,8 @@ public class UnixFSUtils {
         final Set<FileSystem> fileSystemSet = new HashSet<>();
 
         fileSystemSet.add(storageRoot.getFileSystem());
-        fileSystemSet.add(headFilePath.getFileSystem());
+        fileSystemSet.add(revisionPoolPath.getFileSystem());
+        fileSystemSet.add(revisionTablePath.getFileSystem());
         fileSystemSet.add(tombstone.getFileSystem());
         fileSystemSet.add(pathStorageRoot.getFileSystem());
         fileSystemSet.add(resourceStorageRoot.getFileSystem());
@@ -111,33 +118,6 @@ public class UnixFSUtils {
         }
 
         pathSeparator = pathStorageRoot.getFileSystem().getSeparator();
-
-    }
-
-    /**
-     * Locks a directory by writing a lock file.  If the directory is already locked, then this will throw an instance
-     * of {@link FileAlreadyExistsException} indicating that another process has locked the directory.
-     *
-     * @return the {@link Path} to the lock file
-     * @throws IOException if a locking error occurs,
-     */
-    public void lockStorageRoot() {
-        final Path lockFile = getStorageRoot().resolve(LOCK_FILE_NAME);
-        doOperationV(() -> createFile(lockFile), FatalException::new);
-    }
-
-    /**
-     * Unlocks the directory by deleting the specified lock file as the supplied {@link Path}
-     */
-    public void unlockStorageRoot() {
-
-        final Path lockFile = getStorageRoot().resolve(LOCK_FILE_NAME);
-
-        try {
-            deleteIfExists(lockFile);
-        } catch (IOException e) {
-            logger.error("Failed to delete lock file.", e);
-        }
 
     }
 
@@ -308,8 +288,16 @@ public class UnixFSUtils {
      * Returns the path to the head file.
      * @return the path to the head file.
      */
-    public Path getHeadFilePath() {
-        return null;
+    public Path getRevisionTableFilePath() {
+        return revisionTablePath;
+    }
+
+    /**
+     * Returns the path to the revision pool file.
+     * @return the path to the revision pool file.
+     */
+    public Path getRevisionPoolPath() {
+        return revisionPoolPath;
     }
 
     /**

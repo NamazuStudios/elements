@@ -33,7 +33,7 @@ public class UnixFSMemoryUtilsTest {
 
     private MappedByteBuffer memoryMappedBuffer;
 
-    private List<UnixFSAtomicCASCounter> counters;
+    private List<UnixFSAtomicLong> counters;
 
     @BeforeClass
     public void setup() throws Exception {
@@ -52,7 +52,7 @@ public class UnixFSMemoryUtilsTest {
         counters = new ArrayList<>();
 
         for (int i = 0; i < TEST_COUNT; ++i) {
-            final UnixFSAtomicCASCounter counter = underTest.getCounter(memoryMappedBuffer);
+            final UnixFSAtomicLong counter = underTest.getAtomicLong(memoryMappedBuffer);
             counters.add(counter);
         }
 
@@ -68,7 +68,7 @@ public class UnixFSMemoryUtilsTest {
     }
 
     @Test(threadPoolSize = TEST_COUNT * 2, dataProvider = "getCounters", invocationCount = 1000)
-    public void testCounter(final UnixFSAtomicCASCounter counter) {
+    public void testCounter(final UnixFSAtomicLong counter) {
 
         final ThreadLocalRandom random = ThreadLocalRandom.current();
 
@@ -105,8 +105,14 @@ public class UnixFSMemoryUtilsTest {
 
     }
 
+    @Test(expectedExceptions = IllegalArgumentException.class)
+    public void testMisalignedFails() {
+        final ByteBuffer buffer = ByteBuffer.allocateDirect(Long.BYTES + 1);
+        underTest.getAtomicLong(buffer, 1);
+    }
+
     private void checkBuffer(final ByteBuffer buffer) {
-        for (final UnixFSAtomicCASCounter counter : counters) {
+        for (final UnixFSAtomicLong counter : counters) {
             final long cValue = counter.get();
             final long bValue = buffer.getLong();
             logger.info("Buffer value {}. Counter value {}.", bValue, cValue);

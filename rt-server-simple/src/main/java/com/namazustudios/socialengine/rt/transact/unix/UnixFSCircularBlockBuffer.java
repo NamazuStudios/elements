@@ -5,7 +5,6 @@ import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
@@ -32,7 +31,7 @@ public class UnixFSCircularBlockBuffer {
 
     private final List<ByteBuffer> slices = new ArrayList<>();
 
-    public UnixFSCircularBlockBuffer(final ByteBuffer buffer, final int blockSize) {
+    public UnixFSCircularBlockBuffer(final UnixFSAtomicLong atomicLong, final ByteBuffer buffer, final int blockSize) {
 
         final ByteBuffer toSlice = buffer.slice();
 
@@ -41,7 +40,7 @@ public class UnixFSCircularBlockBuffer {
         }
 
         final int sliceCount = toSlice.remaining() / blockSize;
-        counter = new UnixFSDualCounter(sliceCount - 1);
+        this.counter = new UnixFSDualCounter(sliceCount - 1, atomicLong);
 
         this.filler = new byte[blockSize];
         fill(filler, (byte) 0xFF);

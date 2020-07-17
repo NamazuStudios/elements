@@ -1,11 +1,14 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
- * Interface which wraps an {@link AtomicLong} or similar data structure.
+ * Interface which behaves similar to an {@link AtomicLong}, but with reduced functionality. This may be a pure memory
+ * based implementation, as backed by {@link AtomicLong}, or it may be backed by one obtained from 
+ * {@link UnixFSMemoryUtils#getAtomicLong(ByteBuffer)}
  */
-public interface UnixFSAtomicCASCounter {
+public interface UnixFSAtomicLong {
 
     /**
      * Gets the current value, atomically.

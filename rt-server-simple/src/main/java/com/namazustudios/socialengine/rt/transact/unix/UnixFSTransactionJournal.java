@@ -119,7 +119,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         }
 
         journalBuffer.reset().position(header.size());
-        circularBlockBuffer = new UnixFSCircularBlockBuffer(journalBuffer, txnEntryBufferSize);
+        circularBlockBuffer = new UnixFSCircularBlockBuffer(null, journalBuffer, txnEntryBufferSize);
 
     }
 

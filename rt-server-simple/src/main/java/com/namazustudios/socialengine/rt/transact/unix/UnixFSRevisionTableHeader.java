@@ -1,8 +1,9 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import javolution.context.LocalContext;
 import javolution.io.Struct;
 
-class UnixFSRevisionDataStoreHeader extends Struct {
+class UnixFSRevisionTableHeader extends Struct {
 
     final UTF8String magic = new UTF8String(4);
 
@@ -10,6 +11,8 @@ class UnixFSRevisionDataStoreHeader extends Struct {
 
     final Signed32 minor = new Signed32();
 
-    final Unsigned32 revisionBufferCount = new Unsigned32();
+    final Signed32 revisionTableCount = new Signed32();
+
+    final UnixFSAtomicLongData atomicLongData = inner(new UnixFSAtomicLongData());
 
 }

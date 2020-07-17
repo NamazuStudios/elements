@@ -6,9 +6,9 @@ import javolution.io.Struct;
 import java.nio.ByteBuffer;
 import java.util.concurrent.atomic.AtomicInteger;
 
-class UnixFSRevisionOperation extends Struct implements UnixFSChecksumAlgorithm.Checkable {
+class UnixFSRevisionTableEntry extends Struct implements UnixFSChecksumAlgorithm.Checkable {
 
-    static int SIZE = new UnixFSRevisionOperation().size();
+    static int SIZE = new UnixFSRevisionTableEntry().size();
 
     final AtomicInteger readers = new AtomicInteger();
 
