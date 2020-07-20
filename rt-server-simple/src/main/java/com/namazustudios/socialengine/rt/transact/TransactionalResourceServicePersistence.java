@@ -7,7 +7,19 @@ import com.namazustudios.socialengine.rt.id.NodeId;
  * unerlying data storage.
  *
  */
-public interface TransactionalResourceServicePersistence extends AutoCloseable {
+public interface TransactionalResourceServicePersistence {
+
+    /**
+     * Starts the {@link TransactionalResourceServicePersistence} instance and obtains all resources necessary to
+     * begin accessing the underlying datastore.
+     */
+    void start();
+
+    /**
+     * Closes this {@link TransactionalResourceServicePersistence} instance and releases any underlying connections to
+     * the data storage. Outstanding transactions may be forcibly closed if this is called.
+     */
+    void stop();
 
     /**
      * Opens an instance of {@link ReadOnlyTransaction} with the underlying data store.
@@ -37,12 +49,5 @@ public interface TransactionalResourceServicePersistence extends AutoCloseable {
      * @return the {@link ExclusiveReadWriteTransaction}
      */
     ExclusiveReadWriteTransaction openExclusiveRW(NodeId nodeId);
-
-    /**
-     * Closes this {@link TransactionalResourceServicePersistence} instance and releases any underlying connections to
-     * the data storage. Outstanding transactions may be forcibly closed if this is called.
-     */
-    @Override
-    void close();
 
 }

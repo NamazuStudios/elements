@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.HashSet;
@@ -82,6 +83,8 @@ public class UnixFSUtils {
 
     private final Path tombstone;
 
+    private final Path lockFilePath;
+
     @Inject
     public UnixFSUtils(
             final Revision.Factory revisionFactory,
@@ -91,6 +94,7 @@ public class UnixFSUtils {
         this.revisionFactory = revisionFactory;
         this.storageRoot = storageRoot;
 
+        this.lockFilePath = storageRoot.resolve(LOCK_FILE_NAME);
         this.revisionTablePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();
         this.revisionPoolPath = storageRoot.resolve(REVISION_POOL_FILE_NAME).toAbsolutePath().normalize();
         this.transactionJournalPath = storageRoot.resolve(TRANSACTION_JOURNAL_FILE_NAME).toAbsolutePath().normalize();
@@ -327,6 +331,23 @@ public class UnixFSUtils {
     }
 
     /**
+     * Writes a lock file in the storage root, throwing a {@link FatalException} if there is already a lock file. This
+     * uses the {@link File#deleteOnExit()} facility to attempt to unlock the directoy regardless of exit, however this
+     * uses shutdown hooks and is not guaranteed.
+     */
+    public void lockStorageRoot() {
+        final Path created = doOperation(() -> createFile(lockFilePath), FatalException::new);
+        created.toFile().deleteOnExit();
+    }
+
+    /**
+     * Deletes the lock file in the storage root, throwing a {@link FatalException} if the was a problem unlocking.
+     */
+    public void unlockStorageRoot() {
+        doOperationV(() -> deleteIfExists(lockFilePath), FatalException::new);
+    }
+
+    /**
      * Returns a {@link Path} to the path storage directory for the supplied {@link NodeId}.
      *
      * @param nodeId the {@link NodeId}
@@ -375,7 +396,7 @@ public class UnixFSUtils {
          */
         void perform() throws IOException;
 
-        default IOOperationV andThen(IOOperationV next) {
+        default IOOperationV andThen(final IOOperationV next) {
             return () -> {
                 try {
                     perform();

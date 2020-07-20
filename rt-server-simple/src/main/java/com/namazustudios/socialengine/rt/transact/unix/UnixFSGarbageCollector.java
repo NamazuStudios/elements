@@ -1,14 +1,12 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.transact.DefaultTransactionalResourceServicePersistence;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
 
 import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Optional;
-import java.util.SortedMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 
 import static java.lang.String.format;
 import static java.nio.file.Files.isRegularFile;
@@ -16,7 +14,7 @@ import static java.nio.file.Files.isSymbolicLink;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 /**
- * Implements the garbage collection for the {@link UnixFSTransactionalResourceServicePersistence}.
+ * Implements the garbage collection for the {@link DefaultTransactionalResourceServicePersistence}.
  */
 public class UnixFSGarbageCollector {
 
@@ -53,6 +51,14 @@ public class UnixFSGarbageCollector {
      * @param revision
      */
     public void hint(final UnixFSRevision<?> revision) {
+        // TODO Implement
+    }
+
+    public void start() {
+        // TODO Implement
+    }
+
+    public void stop() {
         // TODO Implement
     }
 

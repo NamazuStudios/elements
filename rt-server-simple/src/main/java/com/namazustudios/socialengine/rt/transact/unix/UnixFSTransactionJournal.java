@@ -91,14 +91,16 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private final UnixFSPathIndex unixFSPathIndex;
 
+    private final UnixFSChecksumAlgorithm preferredChecksumAlgorithm;
+
     private final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider;
 
     @Inject
     public UnixFSTransactionJournal(
             final UnixFSUtils utils,
             final UnixFSPathIndex unixFSPathIndex,
-            final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider,
             final UnixFSChecksumAlgorithm preferredChecksumAlgorithm,
+            final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider,
             @Named(TRANSACTION_ENTRY_BUFFER_SIZE) final int txnEntryBufferSize,
             @Named(TRANSACTION_ENTRY_BUFFER_COUNT) final int txnEntryBufferCount) throws IOException {
 
@@ -106,6 +108,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         this.unixFSPathIndex = unixFSPathIndex;
         this.txnEntryBufferSize = txnEntryBufferSize;
         this.txnEntryBufferCount = txnEntryBufferCount;
+        this.preferredChecksumAlgorithm = preferredChecksumAlgorithm;
         this.programBuilderProvider = programBuilderProvider;
 
         final java.nio.file.Path journalPath = utils.getTransactionJournalPath();
@@ -165,6 +168,14 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         }
 
+    }
+
+    public void start() {
+
+    }
+
+    public void stop() {
+        journalBuffer.force();
     }
 
     @Override
@@ -248,11 +259,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             }
 
         };
-    }
-
-    @Override
-    public void close() {
-        journalBuffer.force();
     }
 
 }

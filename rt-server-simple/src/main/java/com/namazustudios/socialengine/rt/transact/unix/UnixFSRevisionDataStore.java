@@ -2,26 +2,20 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.transact.*;
+import com.namazustudios.socialengine.rt.transact.FatalException;
+import com.namazustudios.socialengine.rt.transact.Revision;
+import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
+import com.namazustudios.socialengine.rt.transact.TransactionJournal;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.io.IOException;
-import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.COMMITTED;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.WRITING;
-import static java.lang.String.format;
-import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
-import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.StandardOpenOption.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -55,7 +49,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             final UnixFSRevisionPool revisionPool,
             final UnixFSGarbageCollector garbageCollector,
             final UnixFSChecksumAlgorithm preferredChecksum,
-            final UnixFSRevisionTable revisionTable) throws IOException {
+            final UnixFSRevisionTable revisionTable) {
 
         this.utils = utils;
         this.pathIndex = pathIndex;
@@ -66,9 +60,6 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         this.revisionTable = revisionTable;
 
     }
-
-    @Override
-    public void close() {}
 
     @Override
     public UnixFSPathIndex getPathIndex() {
@@ -131,6 +122,10 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     public UnixFSGarbageCollector getGarbageCollector() {
         return garbageCollector;
+    }
+
+    public UnixFSRevisionTable getRevisionTable() {
+        return revisionTable;
     }
 
     UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(
@@ -221,6 +216,16 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             op.algorithm.set(preferredAlgorithm);
 
             preferredAlgorithm.compute(op);
+
+        }
+
+        @Override
+        public void apply(final TransactionJournal.Entry entry) {
+
+        }
+
+        @Override
+        public void cleanup(final TransactionJournal.Entry entry) {
 
         }
 

@@ -10,10 +10,7 @@ import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
 
-public interface TransactionJournal extends AutoCloseable {
-
-    @Override
-    void close();
+public interface TransactionJournal {
 
     /**
      * Gets a new entry for writing.
@@ -36,6 +33,16 @@ public interface TransactionJournal extends AutoCloseable {
          */
         @Override
         void close();
+
+        /**
+         * Internal implementations use this to get the {@link Entry} as the original type. If the type cannot convert
+         * to the requested type, this may throw an exception.
+         *
+         * @param originalType the original type
+         * @param <EntryT>
+         * @return
+         */
+        <EntryT extends Entry> EntryT getOriginal(final Class<EntryT> originalType);
 
     }
 
@@ -113,7 +120,8 @@ public interface TransactionJournal extends AutoCloseable {
 
         /**
          * Commits the pending changes to the {@link TransactionJournal}.  Once this is done the next subsequent
-         * operation must be to close the {@link Entry}
+         * operation must be to close the {@link Entry}.
+         *
          * @param revision
          */
         void commit(Revision<?> revision);

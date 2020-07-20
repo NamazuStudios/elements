@@ -3,13 +3,15 @@ package com.namazustudios.socialengine.rt.transact;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.transact.TransactionJournal.Entry;
+import com.namazustudios.socialengine.rt.transact.TransactionJournal.MutableEntry;
 
 import java.util.stream.Stream;
 
 /**
  * Defines the data storage for underlying revision based data store.
  */
-public interface RevisionDataStore extends AutoCloseable {
+public interface RevisionDataStore {
 
     /**
      * Locks the database revision guaranteeing that the revision will not be collected until the lock is released.
@@ -53,12 +55,6 @@ public interface RevisionDataStore extends AutoCloseable {
     Stream<ResourceId> removeAllResources();
 
     /**
-     * Closes this {@link RevisionDataStore} releasing any resources associated with it such as file handles or
-     * database connections.
-     */
-    void close();
-
-    /**
      * Represents a locked revision. This guarantees that the revision will not be deleted by any garbage collection
      * process that the underlying data store implements until the revision is released.
      */
@@ -87,7 +83,22 @@ public interface RevisionDataStore extends AutoCloseable {
     interface PendingRevisionChange extends LockedRevision {
 
         /**
-         * Updates the {@link Revision<?>} of the data store.
+         * Applies the {@link MutableEntry}'s pending changes to the datastore.
+         *
+         * @param entry the entry
+         */
+        void apply(Entry entry);
+
+        /**
+         * Performs any cleanup actions from the {@link MutableEntry}.
+         *
+         * @param entry
+         */
+        void cleanup(Entry entry);
+
+        /**
+         * Updates the {@link Revision<?>} of the data store, this should be performed after applying the entry to the
+         * as it updates the current version to the associated {@link Revision<?>}
          */
         void update();
 
