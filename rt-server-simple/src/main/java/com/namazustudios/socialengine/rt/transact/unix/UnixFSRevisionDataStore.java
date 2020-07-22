@@ -7,15 +7,20 @@ import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.COMMITTED;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.WRITING;
+import static java.util.Comparator.comparing;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -41,6 +46,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private final UnixFSRevisionTable revisionTable;
 
+    private final UnixFSTransactionJournal transactionJournal;
+
     @Inject
     public UnixFSRevisionDataStore(
             final UnixFSUtils utils,
@@ -49,7 +56,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             final UnixFSRevisionPool revisionPool,
             final UnixFSGarbageCollector garbageCollector,
             final UnixFSChecksumAlgorithm preferredChecksum,
-            final UnixFSRevisionTable revisionTable) {
+            final UnixFSRevisionTable revisionTable,
+            final UnixFSTransactionJournal transactionJournal) {
 
         this.utils = utils;
         this.pathIndex = pathIndex;
@@ -58,8 +66,39 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         this.garbageCollector = garbageCollector;
         this.preferredChecksum = preferredChecksum;
         this.revisionTable = revisionTable;
+        this.transactionJournal = transactionJournal;
 
     }
+
+    public void start() {
+        recoverJournal();
+    }
+
+    private void recoverJournal() {
+
+        logger.info("Recovering journal, if necessary.");
+
+        final List<Slice<JournalRecoveryExecution>> executionList = getTransactionJournal()
+            .entries()
+            .map(s -> s.flatMap(bb -> new UnixFSTransactionProgram(bb, 0)))
+            .filter(s -> s.getValue().isValid())
+            .map(s -> s.flatMap(p -> p.interpreter()))
+            .map(s -> s.flatMap(JournalRecoveryExecution::new))
+            .collect(Collectors.toList());
+
+        // We must execute every journal entry in the order of revision committed as this will be what is necessary
+        // for each revision.
+        executionList.sort(comparing(Slice::getValue));
+        executionList.forEach(s -> {
+            s.getValue().perform();
+            s.clear();
+        });
+
+        logger.info("Recovered {} entries.", executionList.size());
+
+    }
+
+    public void stop() {}
 
     @Override
     public UnixFSPathIndex getPathIndex() {
@@ -72,12 +111,12 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
     }
 
     @Override
-    public LockedRevision lockCurrentRevision() {
+    public LockedRevision lockLatestReadUncommitted() {
 
         final UnixFSRevisionTableEntry operation = revisionTable
             .reverse()
             .map(slice -> slice.getValue())
-            .filter(op -> op.isValid() && op.state.get() == COMMITTED)
+            .filter(op -> op.isValid() && COMMITTED.equals(op.state.get()))
             .findFirst()
             .orElseThrow(FatalException::new);
 
@@ -106,6 +145,19 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         return new UnixFSPendingRevisionChange();
     }
 
+    public PendingRevisionChange findPendingRevisionChange(final UnixFSRevision<?> revision) {
+        return getRevisionTable()
+            .reverse()
+            .filter(s -> s.getValue().isValid() && WRITING.equals(s.getValue().state.get()))
+            .filter(s -> {
+                final UnixFSRevision<?> opRevision = getRevisionPool().create(s.getValue().revision);
+                return revision.compareTo(opRevision) == 0;
+            })
+            .findFirst()
+            .map(s -> new UnixFSPendingRevisionChange(s))
+            .orElseThrow(FatalException::new);
+    }
+
     @Override
     public Stream<ResourceId> removeAllResources() {
         // TODO Implement this. This should do a fast-nuke of the directory and remove all resources in the storage
@@ -128,10 +180,14 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         return revisionTable;
     }
 
-    UnixFSTransactionProgramInterpreter.ExecutionHandler newExecutionHandler(
+    public UnixFSTransactionJournal getTransactionJournal() {
+        return transactionJournal;
+    }
+
+    private ExecutionHandler newExecutionHandler(
             final NodeId nodeId,
             final Revision<?> revision) {
-        return new UnixFSTransactionProgramInterpreter.ExecutionHandler() {
+        return new ExecutionHandler() {
 
             @Override
             public void unlinkFile(final UnixFSTransactionProgram program, final Path fsPath) {
@@ -181,25 +237,30 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         private final UnixFSRevision<?> revision;
 
-        private final UnixFSRevisionTableEntry storedOperation;
+        private final UnixFSRevisionTableEntry tableEntry;
 
-        private final Slice<UnixFSRevisionTableEntry> storedOperationSlice;
+        private final Slice<UnixFSRevisionTableEntry> tableEntrySlice;
 
-        public UnixFSPendingRevisionChange() {
+        private UnixFSPendingRevisionChange() {
 
             final UnixFSChecksumAlgorithm preferredAlgorithm = getPreferredChecksum();
 
             revision = getRevisionPool().createNextRevision();
+            tableEntrySlice = getRevisionTable().nextLeading();
 
-            storedOperationSlice = revisionTable.nextLeading();
+            tableEntry = tableEntrySlice.getValue();
+            tableEntry.state.set(WRITING);
+            tableEntry.revision.fromRevision(revision);
+            tableEntry.algorithm.set(preferredAlgorithm);
 
-            storedOperation = storedOperationSlice.getValue();
-            storedOperation.state.set(WRITING);
-            storedOperation.revision.fromRevision(revision);
-            storedOperation.algorithm.set(preferredAlgorithm);
+            preferredAlgorithm.compute(tableEntry);
 
-            preferredAlgorithm.compute(storedOperation);
+        }
 
+        private UnixFSPendingRevisionChange(final Slice<UnixFSRevisionTableEntry> tableEntrySlice) {
+            this.tableEntrySlice = tableEntrySlice;
+            this.tableEntry = tableEntrySlice.getValue();
+            this.revision = getRevisionPool().create(tableEntry.revision);
         }
 
         @Override
@@ -222,6 +283,18 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         @Override
         public void apply(final TransactionJournal.Entry entry) {
 
+            final UnixFSJournalEntry journalEntry = entry.getOriginal(UnixFSJournalEntry.class);
+            final NodeId nodeId = journalEntry.getNodeId();
+            final UnixFSTransactionProgram transactionProgram = journalEntry.getProgram();
+            final UnixFSTransactionProgramInterpreter interpreter = transactionProgram.interpreter();
+            final ExecutionHandler executionHandler = newExecutionHandler(nodeId, revision);
+
+            try {
+                interpreter.executeCommitPhase(executionHandler);
+            } finally {
+                interpreter.executeCleanupPhase(executionHandler);
+            }
+
         }
 
         @Override
@@ -231,7 +304,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         @Override
         public void fail() {
-            storedOperationSlice.clear();
+            tableEntrySlice.clear();
         }
 
         @Override
@@ -242,12 +315,43 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         @Override
         public void close() {
             try {
-                if (open && destroy) storedOperationSlice.clear();
+                if (open && destroy) tableEntrySlice.clear();
             } finally {
                 open = false;
             }
         }
 
+    }
+
+    private class JournalRecoveryExecution implements Comparable<JournalRecoveryExecution> {
+
+        private final NodeId nodeId;
+
+        private final UnixFSRevision<?> revision;
+
+        private final UnixFSTransactionProgramInterpreter interpreter;
+
+        private JournalRecoveryExecution(final UnixFSTransactionProgramInterpreter interpreter) {
+            this.interpreter = interpreter;
+            this.nodeId = interpreter.program.header.nodeId.get();
+            this.revision = getRevisionPool().create(interpreter.program.header.revision);
+        }
+
+        @Override
+        public int compareTo(JournalRecoveryExecution o) {
+            return revision.compareTo(o.revision);
+        }
+
+        public void perform() {
+            final ExecutionHandler executionHandler = newExecutionHandler(nodeId, revision);
+            try (final LockedRevision lr = findPendingRevisionChange(revision)) {
+                try {
+                    interpreter.executeCommitPhase(executionHandler);
+                } finally {
+                    interpreter.executeCleanupPhase(executionHandler);
+                }
+            }
+        }
     }
 
 }

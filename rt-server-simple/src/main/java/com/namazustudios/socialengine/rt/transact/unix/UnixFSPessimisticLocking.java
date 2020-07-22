@@ -14,7 +14,7 @@ import java.util.Collection;
  * Once the transaction is committed, the objects locked will be removed from the global locking pool. This allows
  * for multiple concurrent transactions writing unrelated data.
  */
-public interface UnixFSOptimisticLocking {
+public interface UnixFSPessimisticLocking {
 
     /**
      * Attempts to lock the supplied {@link Path}, throwing an instance of {@link TransactionConflictException}
@@ -55,7 +55,7 @@ public interface UnixFSOptimisticLocking {
     }
 
     /**
-     * Releases all objects locked by this {@link UnixFSOptimisticLocking} instance.
+     * Releases all objects locked by this {@link UnixFSPessimisticLocking} instance.
      */
     void unlock();
 

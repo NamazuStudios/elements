@@ -31,8 +31,6 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     private UnixFSWorkingCopy workingCopy;
 
-    private UnixFSTransactionProgram program = null;
-
     // Assigned in Constructor
 
     private final UnixFSUtils unixFSUtils;
@@ -166,25 +164,10 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
     }
 
-    public void rollback() {
-        check();
-        program = programBuilder.compile(CLEANUP).commit();
-        rollback = true;
-    }
-
     @Override
     protected void check() {
         super.check();
         if (committed || rollback) throw new IllegalStateException();
-    }
-
-    void cleanup(final ExecutionHandler handler) {
-        program.interpreter().executeCleanupPhase(handler);
-    }
-
-    void apply(final ExecutionHandler handler) {
-        if (program == null) throw new IllegalStateException();
-        program.interpreter().executeCommitPhase(handler);
     }
 
 }

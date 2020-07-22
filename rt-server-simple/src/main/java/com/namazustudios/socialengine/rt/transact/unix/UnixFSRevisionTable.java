@@ -19,6 +19,8 @@ import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.*;
+import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
+import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -169,7 +171,12 @@ public class UnixFSRevisionTable {
 
             final MappedByteBuffer mappedByteBuffer;
 
-            final Path temporaryCopy = copy(revisionTableFilePath, revisionTableFilePath.resolveSibling(".tmp"));
+            final Path temporaryCopy = createTempFile(
+                revisionTableFilePath.getParent(),
+                "revision-table",
+                "temp");
+
+            copy(revisionTableFilePath, temporaryCopy, REPLACE_EXISTING);
 
             try (final FileChannel channel = open(temporaryCopy, READ, WRITE)) {
 
@@ -233,6 +240,8 @@ public class UnixFSRevisionTable {
                     mappedByteBuffer = originalMappedByteBuffer;
                 }
 
+                move(temporaryCopy, revisionTableFilePath, ATOMIC_MOVE, REPLACE_EXISTING);
+                delete(temporaryCopy);
 
             }
 

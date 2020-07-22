@@ -6,6 +6,7 @@ import javolution.io.Struct;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -192,11 +193,13 @@ public class UnixFSCircularBlockBuffer {
             return index;
         }
 
-        /**
-         * Sets this {@link Slice<T>} to the trailing value
-         */
-        public void setTrailing() {
-            while (index != counter.incrementAndGetLeading());
+        public <U> U map(final Function<T, U> mapper) {
+            return mapper.apply(getValue());
+        }
+
+        public <U> Slice<U> flatMap(final Function<T, U> mapper) {
+            final U value = mapper.apply(getValue());
+            return new Slice<U>(index, value, buffer);
         }
 
     }

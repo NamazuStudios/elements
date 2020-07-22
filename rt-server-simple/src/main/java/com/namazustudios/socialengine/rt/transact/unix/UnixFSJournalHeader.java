@@ -17,4 +17,6 @@ class UnixFSJournalHeader extends Struct {
 
     final Unsigned32 txnBufferCount = new Unsigned32();
 
+    final UnixFSAtomicLongData counter = inner(new UnixFSAtomicLongData());
+
 }

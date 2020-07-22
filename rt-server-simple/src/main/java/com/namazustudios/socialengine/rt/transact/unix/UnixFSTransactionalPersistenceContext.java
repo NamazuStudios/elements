@@ -20,18 +20,22 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
 
     private final UnixFSRevisionPool revisionPool;
 
+    private final UnixFSRevisionDataStore revisionDataStore;
+
     @Inject
     public UnixFSTransactionalPersistenceContext(
             final UnixFSUtils unixFSUtils,
             final UnixFSTransactionJournal transactionJournal,
             final UnixFSRevisionTable revisionTable,
             final UnixFSGarbageCollector garbageCollector,
-            final UnixFSRevisionPool revisionPool) {
+            final UnixFSRevisionPool revisionPool,
+            final UnixFSRevisionDataStore unixFSRevisionDataStore) {
         this.unixFSUtils = unixFSUtils;
         this.transactionJournal = transactionJournal;
         this.revisionTable = revisionTable;
         this.garbageCollector = garbageCollector;
         this.revisionPool = revisionPool;
+        this.revisionDataStore = unixFSRevisionDataStore;
     }
 
     @Override
@@ -42,8 +46,9 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
         try {
             getRevisionPool().start();
             getRevisionTable().start();
-            getGarbageCollector().start();
             getTransactionJournal().start();
+            getGarbageCollector().start();
+            getRevisionDataStore().start();
         } catch (IllegalStateException ex) {
             logger.error("Inconsistent state.", ex);
         } catch (Exception ex) {
@@ -56,8 +61,9 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
     @Override
     public void stop() {
         try {
-            safeStop(getTransactionJournal()::stop);
+            safeStop(getRevisionDataStore()::stop);
             safeStop(getGarbageCollector()::stop);
+            safeStop(getTransactionJournal()::stop);
             safeStop(getRevisionTable()::stop);
             safeStop(getRevisionPool()::stop);
         } finally {
@@ -91,6 +97,10 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
 
     public UnixFSGarbageCollector getGarbageCollector() {
         return garbageCollector;
+    }
+
+    public UnixFSRevisionDataStore getRevisionDataStore() {
+        return revisionDataStore;
     }
 
 }

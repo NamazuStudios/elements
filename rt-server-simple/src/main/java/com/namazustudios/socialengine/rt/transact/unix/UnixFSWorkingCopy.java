@@ -42,7 +42,7 @@ class UnixFSWorkingCopy {
 
     private final UnixFSPathIndex unixFSPathIndex;
 
-    private final UnixFSOptimisticLocking optimisticLocking;
+    private final UnixFSPessimisticLocking pessimisticLocking;
 
     private final HashMap<Path, ResourceId> pathToResourceIds = new HashMap<>();
 
@@ -51,11 +51,11 @@ class UnixFSWorkingCopy {
     public UnixFSWorkingCopy(final NodeId nodeId,
                              final Revision<?> revision,
                              final UnixFSPathIndex unixFSPathIndex,
-                             final UnixFSOptimisticLocking optimisticLocking) {
+                             final UnixFSPessimisticLocking pessimisticLocking) {
         this.nodeId = nodeId;
         this.revision = revision;
         this.unixFSPathIndex = unixFSPathIndex;
-        this.optimisticLocking = optimisticLocking;
+        this.pessimisticLocking = pessimisticLocking;
     }
 
     private ResourceId getResourceId(final Path path) {
@@ -114,8 +114,8 @@ class UnixFSWorkingCopy {
         final ResourceId resourceId = pathToResourceIds.get(path);
         if (NULL_RESOURCE_ID.equals(resourceId)) throw new ResourceNotFoundException();
 
-        optimisticLocking.lock(path);
-        optimisticLocking.lock(resourceId);
+        pessimisticLocking.lock(path);
+        pessimisticLocking.lock(resourceId);
 
         final Set<Path> paths = getPathsForResourceId(resourceId);
         if (paths.remove(path)) logger.warn("Consistency error. Reverse mapping broken.");
@@ -153,8 +153,8 @@ class UnixFSWorkingCopy {
         if (isPresent(resourceId)) throw new DuplicateException();
 
         // Locks them to ensure that this transactional entry can access them.
-        optimisticLocking.lock(path);
-        optimisticLocking.lock(resourceId);
+        pessimisticLocking.lock(path);
+        pessimisticLocking.lock(resourceId);
 
         // Performs the linkage to the resource ID and the path.
         pathToResourceIds.put(path, resourceId);
@@ -174,8 +174,8 @@ class UnixFSWorkingCopy {
         if (isPresent(resourceId)) throw new DuplicateException();
 
         // Locks them to ensure that this transactional entry can access them.
-        optimisticLocking.lock(path);
-        optimisticLocking.lock(resourceId);
+        pessimisticLocking.lock(path);
+        pessimisticLocking.lock(resourceId);
 
         // Performs the linkage to the resource ID and the path.
         pathToResourceIds.put(path, resourceId);
@@ -194,8 +194,8 @@ class UnixFSWorkingCopy {
         if (!isPresent(resourceId)) throw new ResourceNotFoundException();
 
         // Locks them to ensure that this transactional entry can access them.
-        optimisticLocking.lock(path);
-        optimisticLocking.lock(resourceId);
+        pessimisticLocking.lock(path);
+        pessimisticLocking.lock(resourceId);
 
         // Performs the linkage to the resource ID and the path.
         pathToResourceIds.put(path, resourceId);
@@ -217,8 +217,8 @@ class UnixFSWorkingCopy {
 
         for (final ResourceService.Listing listing : listings) {
             // Lock Everything we want to clear out
-            optimisticLocking.lock(listing.getPath());
-            optimisticLocking.lock(listing.getResourceId());
+            pessimisticLocking.lock(listing.getPath());
+            pessimisticLocking.lock(listing.getResourceId());
         }
 
         return listings
@@ -257,8 +257,8 @@ class UnixFSWorkingCopy {
         if (!isPresent(resourceId)) throw new ResourceNotFoundException();
         final Set<Path> paths = getPathsForResourceId(resourceId);
 
-        optimisticLocking.lock(resourceId);
-        optimisticLocking.lockPaths(paths);
+        pessimisticLocking.lock(resourceId);
+        pessimisticLocking.lockPaths(paths);
 
         doRemove(paths, onRemove);
 
@@ -276,8 +276,8 @@ class UnixFSWorkingCopy {
 
         for (final ResourceService.Listing listing : listings) {
             // Lock Everything we want to clear out
-            optimisticLocking.lock(listing.getPath());
-            optimisticLocking.lock(listing.getResourceId());
+            pessimisticLocking.lock(listing.getPath());
+            pessimisticLocking.lock(listing.getResourceId());
         }
 
         return listings

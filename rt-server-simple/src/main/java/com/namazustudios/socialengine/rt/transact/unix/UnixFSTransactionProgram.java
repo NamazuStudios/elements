@@ -1,14 +1,17 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.nio.ByteBuffer;
 
 public class UnixFSTransactionProgram {
 
+    private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionProgram.class);
+
     final ByteBuffer byteBuffer;
 
     final UnixFSTransactionProgramHeader header = new UnixFSTransactionProgramHeader();
-
-    transient boolean valid = false;
 
     transient UnixFSTransactionProgramInterpreter interpreter = null;
 
@@ -27,11 +30,26 @@ public class UnixFSTransactionProgram {
      * Commits this {@link UnixFSTransactionProgram} by calculating the checksum and setting it's
      */
     public UnixFSTransactionProgram commit() {
-
         header.algorithm.get().compute(header);
-        valid = true;
-
         return this;
+    }
+
+    /**
+     * Checks if this {@link UnixFSTransactionProgram}'s header is valid.
+     * @return
+     */
+    public boolean isValid() {
+
+        final UnixFSChecksumAlgorithm algorithm;
+
+        try {
+            algorithm = header.algorithm.get();
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            logger.debug("Unable to determine checksum algorithm.", ex);
+            return false;
+        }
+
+        return algorithm.isValid(header);
 
     }
 
@@ -41,14 +59,11 @@ public class UnixFSTransactionProgram {
      *
      * @return the {@link UnixFSTransactionProgramInterpreter}, or a cached instance.
      */
-    UnixFSTransactionProgramInterpreter interpreter() {
+    public UnixFSTransactionProgramInterpreter interpreter() {
 
         if (interpreter == null) {
             final UnixFSTransactionProgramLoader loader = new UnixFSTransactionProgramLoader(this);
             interpreter = loader.load();
-            valid = true;
-        } else if (!valid) {
-            throw new UnixFSProgramCorruptionException("Invalid program.");
         }
 
         return interpreter;

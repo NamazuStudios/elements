@@ -69,7 +69,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
     public ReadOnlyTransaction openRO(final NodeId nodeId) {
         try {
             lock.lock();
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockCurrentRevision();
+            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
             return new DefaultReadOnlyTransaction(nodeId, revision);
         } finally {
             lock.unlock();
@@ -81,7 +81,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
         try {
             lock.lock();
             final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockCurrentRevision();
+            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
             return new DefaultReadWriteTransaction(nodeId, revision, entry);
         } finally {
             lock.unlock();
@@ -93,7 +93,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
         try {
             exclusiveLock.lock();
             final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockCurrentRevision();
+            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
             return new ExclusiveDefaultReadWriteTransaction(nodeId, revision, entry);
         } finally {
             exclusiveLock.unlock();

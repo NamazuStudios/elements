@@ -16,6 +16,8 @@ class UnixFSJournalEntry implements TransactionJournal.Entry {
 
     protected final UnixFSUtils.IOOperationV onClose;
 
+    protected UnixFSTransactionProgram program;
+
     public UnixFSJournalEntry(final UnixFSUtils.IOOperationV onClose) {
         this.onClose = onClose;
     }
@@ -34,6 +36,25 @@ class UnixFSJournalEntry implements TransactionJournal.Entry {
                 logger.error("Caught IOException closing entry.", ex);
             }
         }
+    }
+
+    @Override
+    public <EntryT extends TransactionJournal.Entry> EntryT getOriginal(final Class<EntryT> originalType) {
+        try {
+            return originalType.cast(this);
+        } catch (ClassCastException ex) {
+            throw new IllegalArgumentException("Incompatible journal entry type.", ex);
+        }
+    }
+
+    public UnixFSTransactionProgram getProgram() {
+        if (program == null) throw new IllegalStateException("No program set.");
+        return program;
+    }
+
+    public NodeId getNodeId() {
+        if (program == null) throw new IllegalStateException("No program set.");
+        return program.header.nodeId.get();
     }
 
 }

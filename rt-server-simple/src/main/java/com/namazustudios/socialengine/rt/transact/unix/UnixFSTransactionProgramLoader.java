@@ -1,7 +1,8 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.transact.FatalException;
 import javolution.io.Struct.Unsigned32;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +16,8 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionP
  */
 class UnixFSTransactionProgramLoader {
 
+    private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionProgramLoader.class);
+
     private final UnixFSTransactionProgram program;
 
     /**
@@ -22,7 +25,7 @@ class UnixFSTransactionProgramLoader {
      * {@link UnixFSTransactionProgramInterpreter}
      * @param program the {@link UnixFSTransactionProgram} to load
      */
-    UnixFSTransactionProgramLoader(UnixFSTransactionProgram program) {
+    UnixFSTransactionProgramLoader(final UnixFSTransactionProgram program) {
         this.program = program;
     }
 
@@ -32,30 +35,18 @@ class UnixFSTransactionProgramLoader {
      *
      * @return the {@link UnixFSTransactionProgramInterpreter}
      */
-    UnixFSTransactionProgramInterpreter load() {
-        final int programPosition = program.header.getByteBufferPosition();
+    public UnixFSTransactionProgramInterpreter load() {
 
         final List<UnixFSTransactionCommand> commits, cleanups;
-        validateChecksum();
+        final int programPosition = program.header.getByteBufferPosition();
+        if (!program.isValid())throw new UnixFSProgramCorruptionException("Invalid program.");
+
         commits = load(COMMIT, programPosition, program.header.commitPos, program.header.commitLen);
         cleanups = load(CLEANUP, programPosition, program.header.cleanupPos, program.header.cleanupLen);
-
         return new UnixFSTransactionProgramInterpreter(program, commits, cleanups);
-    }
-
-    private void validateChecksum() {
-
-        final UnixFSChecksumAlgorithm algorithm;
-
-        try {
-            algorithm = program.header.algorithm.get();
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            throw new FatalException(ex);
-        }
-
-        algorithm.verify(program.header);
 
     }
+
 
     private List<UnixFSTransactionCommand> load(
             final UnixFSTransactionProgramExecutionPhase executionPhase,

@@ -18,9 +18,13 @@ public interface RevisionDataStore {
      * This method is safe to call from multiple threads, however the returned {@link LockedRevision} must be used from
      * only one thread at a time.
      *
+     * The returned {@link LockedRevision} is valid for a revision at the read uncommitted isolation level, that is to
+     * say it may return a {@link Revision<?>} with data that is in the process of being committed. Sometimes this is
+     * called "dirty read" isolation level.
+     *
      * @return the {@link LockedRevision} instance
      */
-    LockedRevision lockCurrentRevision();
+    LockedRevision lockLatestReadUncommitted();
 
     /**
      * Begins the revision update process. This returns a {@link PendingRevisionChange} which represents the next
@@ -83,7 +87,7 @@ public interface RevisionDataStore {
     interface PendingRevisionChange extends LockedRevision {
 
         /**
-         * Applies the {@link MutableEntry}'s pending changes to the datastore.
+         * Applies the {@link MutableEntry}'s pending changes to the data store.
          *
          * @param entry the entry
          */
