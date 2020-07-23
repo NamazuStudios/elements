@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.security;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 
 import java.security.Principal;
 

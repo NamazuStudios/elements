@@ -112,6 +112,8 @@
         <netty.version>4.1.22.Final</netty.version>
         <xodus.version>1.3.91</xodus.version>
         <jetty.version>9.4.7.v20170914</jetty.version>
+        <flapdoodle.mongo.version>2.2.0</flapdoodle.mongo.version>
+        <embedded.redis.version>0.6</embedded.redis.version>
         <spotify.dns.version>3.1.5</spotify.dns.version>
     </properties>
 

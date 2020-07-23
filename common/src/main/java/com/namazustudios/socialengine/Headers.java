@@ -29,10 +29,24 @@ public interface Headers {
             "the request as a normal request.";
 
     /**
+     * Specifies the profile ID to use when authing the request.
+     */
+    String PROFILE_ID = "Elements-ProfileId";
+
+    /**
      * Specifies the Session ID used by social engine.  The Session ID corresponds to {@link SessionCreation} and
      * is used for authentication.
      */
-    String SESSION_SECRET = "SocialEngine-SessionSecret";
+    String SESSION_SECRET = "Elements-SessionSecret";
+
+    /**
+     * Header constant for deprecated header name.  This will still work transparently, but will not match the
+     * documentation.  Used for backwards compatibility only.
+     *
+     * @deprecated use {@link #SESSION_SECRET}
+     */
+    @Deprecated
+    String SOCIALENGINE_SESSION_SECRET = "SocialEngine-SessionSecret";
 
     /**
      * Specifies the user's Facebook OAuth token used to interact with the Facebook API.

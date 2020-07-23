@@ -5,7 +5,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Bootstrapper;
 import com.namazustudios.socialengine.rt.lua.LuaBootstrapper;
@@ -22,11 +22,6 @@ import javax.inject.Named;
 import java.io.File;
 import java.util.UUID;
 import java.util.function.Function;
-
-import static com.google.common.io.Files.fileTreeTraverser;
-import static com.namazustudios.socialengine.Constants.GIT_STORAGE_DIRECTORY;
-import static com.namazustudios.socialengine.dao.rt.FilesystemGitLoader.getBareStorageDirectory;
-import static org.testng.Assert.assertTrue;
 
 /**
  * Created by patricktwohig on 8/23/17.

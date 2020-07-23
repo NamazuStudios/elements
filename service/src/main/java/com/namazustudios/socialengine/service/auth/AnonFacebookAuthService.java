@@ -4,34 +4,15 @@ import com.google.common.base.Joiner;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.annotation.FacebookPermissions;
 import com.namazustudios.socialengine.dao.*;
-import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
-import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
-import com.namazustudios.socialengine.model.session.Session;
-import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.FacebookAuthService;
-import com.restfb.*;
-import com.restfb.exception.FacebookOAuthException;
-import com.restfb.json.JsonObject;
-import com.restfb.types.ProfilePictureSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.List;
-import java.util.function.Supplier;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.Constants.SESSION_TIMEOUT_SECONDS;
 import static java.lang.Math.min;
-import static java.lang.System.currentTimeMillis;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.stream.Collectors.toList;
 
 /**
  * This is the basic {@link FacebookAuthService} used

@@ -1,13 +1,15 @@
 package com.namazustudios.socialengine.service.user;
 
 import com.google.common.collect.Lists;
-import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.service.UserService;
 
-import javax.inject.Inject;
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * Created by patricktwohig on 3/26/15.
@@ -45,39 +47,34 @@ public class UserUserService extends AnonUserService implements UserService {
     }
 
     @Override
-    public User createUser(User user) {
+    public User createUser(UserCreateRequest user) {
         throw new ForbiddenException();
     }
 
     @Override
-    public User createUser(User user, String password) { throw new ForbiddenException(); }
+    public User updateUser(final String userId, final UserUpdateRequest userUpdateRequest) {
 
-    @Override
-    public User updateUser(User user) {
+        checkForCurrentUser(userId);
 
-        checkForCurrentUser(user.getId());
+        final User user = new User();
 
         // Regular users cannot change their own level or change their name.  The underlying DAO
         // may support name changes, but this cannot be done here.
 
+        user.setId(userId);
         user.setLevel(User.Level.USER);
         user.setName(getCurrentUser().getName());
+
+        // Regular users can't use this call to deactivate their user as well.  This must be done through
+        // a delete operation.
+
         user.setActive(true);
 
-        return getUserDao().updateActiveUser(user);
+        final String password = nullToEmpty(userUpdateRequest.getPassword()).trim();
 
-    }
-
-    @Override
-    public User updateUser(User user, String password) {
-
-        checkForCurrentUser(user.getName());
-
-        user.setLevel(User.Level.USER);
-        user.setName(getCurrentUser().getName());
-        user.setActive(true);
-
-        return getUserDao().updateActiveUser(user, password);
+        return isNullOrEmpty(password) ?
+            getUserDao().updateActiveUser(user) :
+            getUserDao().updateActiveUser(user, password);
 
     }
 

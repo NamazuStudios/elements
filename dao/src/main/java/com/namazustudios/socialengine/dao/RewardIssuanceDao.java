@@ -1,17 +1,15 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 
 import java.util.List;
-import java.util.Set;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.emptySet;
 
 /**
  * Manipulates the instances of {@link RewardIssuance}, including the operations to ensure tha the rewards are properly

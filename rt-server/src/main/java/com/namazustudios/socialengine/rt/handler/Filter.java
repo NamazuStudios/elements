@@ -77,6 +77,41 @@ public interface Filter {
             };
         }
 
+        /**
+         * A container-supplied builder for {@link Filter.Chain} instances.  This allows for the dispatch of
+         * {@link Request} instances through a chain of filters.
+         */
+        interface Builder {
+
+            /**
+             * Adds an additional {@link Filter} to this {@link Builder}
+             *
+             * @param filter
+             * @return this instance
+             */
+            Builder withFilter(Filter filter);
+
+            /**
+             * Adds multiple {@link Filter}s to this {@link Builder}
+             *
+             * @param filters the {@link Filter}s to add
+             * @return
+             */
+            Builder withFilters(Iterable<Filter> filters);
+
+            /**
+             * Terminates the {@link Chain} and returns a {@link Chain} which can be used to process ths {@link Filter}s
+             * specified in this {@link Builder}.  The terminal link in the chain will then be used to finally dispatch
+             * the request to the code which processes the {@link Request}.
+             *
+             * @param terminal the terminal {@link Filter}
+             *
+             * @return the {@link Chain}
+             */
+            Chain terminate(Chain terminal);
+
+        }
+
     }
 
 }

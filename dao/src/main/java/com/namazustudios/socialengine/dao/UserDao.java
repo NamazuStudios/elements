@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
 
 /**
  * This is the UserDao which is used to update users in the database.  Since users
@@ -105,13 +105,13 @@ public interface UserDao {
      *
      * @return the User, as was written to the database
      */
-    User createOrRectivateUserWithPassword(User user, String password);
+    User createOrReactivateUserWithPassword(User user, String password);
 
     /**
      * Updates the given user, regardless of active status and then returns
      * the user instance as it was written to the database.
      *
-     * The given {@link com.namazustudios.socialengine.model.User#isActive()} is only honored for this,
+     * The given {@link User#isActive()} is only honored for this,
      * call if setting to true.  This cannot be used to deactivate a user, if wishing to set
      * a user as inactive please use the {@link #softDeleteUser(String)} instead.
      *
@@ -126,7 +126,7 @@ public interface UserDao {
      * Updates the given user, regardless of active status and then returns
      * the user instance as it was written to the database.
      *
-     * The given {@link com.namazustudios.socialengine.model.User#isActive()} is only honored for this,
+     * The given {@link User#isActive()} is only honored for this,
      * call if setting to true.  This cannot be used to deactivate a user, if wishing to set
      * a user as inactive please use the {@link #softDeleteUser(String)} instead.
      *
@@ -141,7 +141,7 @@ public interface UserDao {
      * Updates the given active user.  If the user has been deleted or has been
      * flagged as inactive, then this method will fail.
      *
-     * The given {@link com.namazustudios.socialengine.model.User#isActive()} is ignored for this,
+     * The given {@link User#isActive()} is ignored for this,
      * if wishing to set a user as inactive, please use the {@link #softDeleteUser(String)} instead.
      *
      * This does not change the user's password.
@@ -156,7 +156,7 @@ public interface UserDao {
      * Updates the given active user.  If the user has been deleted or has been
      * flagged as inactive, then this method will fail.
      *
-     * The given {@link com.namazustudios.socialengine.model.User#isActive()} is ignored for this,
+     * The given {@link User#isActive()} is ignored for this,
      * if wishing to set a user as inactive, please use the {@link #softDeleteUser(String)} instead.
      *
      * @param user the user to update

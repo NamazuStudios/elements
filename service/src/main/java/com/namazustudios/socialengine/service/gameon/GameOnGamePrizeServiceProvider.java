@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.service.gameon;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.service.GameOnAdminPrizeService;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.GameOnGamePrizeService;
 
 import javax.inject.Inject;

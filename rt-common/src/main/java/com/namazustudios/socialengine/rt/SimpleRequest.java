@@ -7,11 +7,14 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.util.UUID.randomUUID;
 
 /**
  * Created by patricktwohig on 7/26/15.
  */
 public class SimpleRequest implements Request, Serializable {
+
+    private String uuid;
 
     private SimpleRequestHeader header;
 
@@ -22,6 +25,15 @@ public class SimpleRequest implements Request, Serializable {
     private Map<String, List<Object>> parameterMap;
 
     private String toString;
+
+    @Override
+    public String getId() {
+        return uuid == null ? (uuid = randomUUID().toString()) : uuid;
+    }
+
+    public void setId(String uuid) {
+        this.uuid = uuid;
+    }
 
     @Override
     public SimpleRequestHeader getHeader() {
@@ -111,6 +123,8 @@ public class SimpleRequest implements Request, Serializable {
      */
     public static class Builder {
 
+        private String id;
+
         private String path;
 
         private String method;
@@ -138,18 +152,21 @@ public class SimpleRequest implements Request, Serializable {
          */
         public Builder from(final Request request) {
 
-            if (request.getHeader() != null) {
+            id = request.getId();
 
-                payload = request.getPayload();
+            payload = request.getPayload();
 
-                simpleRequestParameterMap.clear();
+            simpleRequestParameterMap.clear();
 
-                for (final String parameterName : request.getParameterNames()) {
-                    final List<Object> value = request.getParameters(parameterName);
-                    simpleRequestParameterMap.put(parameterName, value == null ? Collections.emptyList() : new ArrayList<>(value));
-                }
+            for (final String parameterName : request.getParameterNames()) {
+                final List<Object> value = request.getParameters(parameterName);
+                simpleRequestParameterMap.put(parameterName, value == null ? Collections.emptyList() : new ArrayList<>(value));
+            }
 
-                final RequestHeader header = request.getHeader();
+            final RequestHeader header = request.getHeader();
+
+            if (header != null) {
+
 
                 path = header.getPath();
                 method = header.getMethod();
@@ -157,16 +174,10 @@ public class SimpleRequest implements Request, Serializable {
                 toString = request.toString();
 
                 simpleRequestHeaderMap.clear();
+                request.getHeader().copyToMap(simpleRequestHeaderMap);
 
-                for (final String headerName : header.getHeaderNames()) {
-                    final List<Object> value = request.getHeader().getHeaders(headerName);
-                    simpleRequestHeaderMap.put(headerName, new ArrayList<>(value));
-                }
-
-                for (final String attributeName : request.getAttributes().getAttributeNames()) {
-                    final Object attribute = request.getAttributes().getAttribute(attributeName);
-                    simpleAttributesMap.put(attributeName, attribute);
-                }
+                simpleAttributesMap.clear();
+                request.getAttributes().copyToMap(simpleAttributesMap);
 
             }
 
@@ -289,11 +300,14 @@ public class SimpleRequest implements Request, Serializable {
             final SimpleRequestHeader simpleRequestHeader = new SimpleRequestHeader();
             final SimpleAttributes simpleAttributes = new SimpleAttributes();
 
-
+            simpleRequest.setId(id);
             simpleRequest.setPayload(payload);
             simpleRequest.setParameterMap(new LinkedHashMap<>(simpleRequestParameterMap));
 
+
             simpleAttributes.setAttributes(new HashMap<>(simpleAttributesMap));
+            simpleAttributes.setAttribute(REQUEST_ID_ATTRIBUTE, id);
+
             simpleRequest.setAttributes(simpleAttributes);
 
             simpleRequestHeader.setPath(path);

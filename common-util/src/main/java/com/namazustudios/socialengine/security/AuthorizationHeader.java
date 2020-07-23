@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.security;
 
 import com.google.common.base.Splitter;
-import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
+import com.namazustudios.socialengine.exception.security.AuthorizationHeaderParseException;
 
 import java.util.Iterator;
 import java.util.regex.Pattern;

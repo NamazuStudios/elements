@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 
@@ -41,9 +41,10 @@ public interface SessionDao {
     /**
      * Deletes the {@link Session} instance.  The secret is determined by {@link SessionCreation#getSessionSecret()}.
      *
-     * @param sessionSecret
+     * @param userId the user ID owning the session
+     * @param sessionSecret the session secret
      */
-    void delete(String sessionSecret);
+    void delete(String userId, String sessionSecret);
 
     /**
      * Deletes all instances of {@link Session} for the provided {@link User}.

@@ -1,14 +1,14 @@
 package com.namazustudios.socialengine.servlet.security;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.UserAuthenticationMethod;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpSession;
 
-import static com.namazustudios.socialengine.model.User.USER_ATTRIBUTE;
+import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 
 /**
  * Created by patricktwohig on 6/26/17.

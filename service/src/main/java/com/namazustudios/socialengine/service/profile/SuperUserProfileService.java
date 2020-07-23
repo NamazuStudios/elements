@@ -21,8 +21,13 @@ public class SuperUserProfileService implements ProfileService {
     private Supplier<Profile> currentProfileSupplier;
 
     @Override
-    public Pagination<Profile> getProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp) {
-        return getProfileDao().getActiveProfiles(offset, count, lowerBoundTimestamp, upperBoundTimestamp);
+    public Pagination<Profile> getProfiles(final int offset, final int count,
+                                           final String applicationNameOrId, final String userId,
+                                           final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
+        return getProfileDao().getActiveProfiles(
+                offset, count,
+                applicationNameOrId, userId,
+                lowerBoundTimestamp, upperBoundTimestamp);
     }
 
     @Override

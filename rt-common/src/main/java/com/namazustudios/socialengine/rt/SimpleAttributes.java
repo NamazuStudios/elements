@@ -1,21 +1,19 @@
 package com.namazustudios.socialengine.rt;
 
-import org.w3c.dom.Attr;
-
 import java.io.Serializable;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 /**
  * Simple implementation of {@link Attributes} backed by a {@link Map<String, Object>}.
  */
-public class SimpleAttributes implements Attributes, Serializable {
+public class SimpleAttributes implements MutableAttributes, Serializable {
 
     private Map<String, Object> attributes;
 
@@ -25,8 +23,9 @@ public class SimpleAttributes implements Attributes, Serializable {
     }
 
     @Override
-    public Object getAttribute(String name) {
-        return getAttributes().get(name);
+    public Optional<Object> getAttributeOptional(final String name) {
+        final Object object = getAttributes().get(name);
+        return object == null ? empty() : of(object);
     }
 
     @Override
@@ -34,12 +33,22 @@ public class SimpleAttributes implements Attributes, Serializable {
         return Collections.unmodifiableMap(getAttributes());
     }
 
+    @Override
+    public void setAttribute(final String name, final Object obj) {
+        attributes.put(name, obj);
+    }
+
     public Map<String, Object> getAttributes() {
         return attributes;
     }
 
-    public void setAttributes(Map<String, Object> attributes) {
+    public void setAttributes(final Map<String, Object> attributes) {
         this.attributes = attributes;
+    }
+
+    @Override
+    public void copyToMap(final Map<String, Object> simpleAttributesMap) {
+        simpleAttributesMap.putAll(attributes);
     }
 
     @Override
@@ -50,6 +59,10 @@ public class SimpleAttributes implements Attributes, Serializable {
     @Override
     public boolean equals(final Object that) {
         return Attributes.equals(this, that);
+    }
+
+    public void removeIf(final BiPredicate<String, Object> biPredicate) {
+        attributes.entrySet().removeIf(e -> biPredicate.test(e.getKey(), e.getValue()));
     }
 
     /**
@@ -91,7 +104,7 @@ public class SimpleAttributes implements Attributes, Serializable {
         public Builder from(final Attributes attributes) {
 
             for (final String name : attributes.getAttributeNames()) {
-                setAttribute(name, attributes.getAttribute(name));
+                setAttribute(name, attributes.getAttributeOptional(name));
             }
 
             return this;
@@ -109,8 +122,8 @@ public class SimpleAttributes implements Attributes, Serializable {
         public Builder from(final Attributes attributes, final BiPredicate<String, Object> filter) {
 
             for (final String name : attributes.getAttributeNames()) {
-                final Object value = attributes.getAttribute(name);
-                if (filter.test(name, value)) setAttribute(name, attributes.getAttribute(name));
+                final Object value = attributes.getAttributeOptional(name);
+                if (filter.test(name, value)) setAttribute(name, attributes.getAttributeOptional(name));
             }
 
             return this;

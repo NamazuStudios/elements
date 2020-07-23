@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.codeserve;
 import com.google.inject.AbstractModule;
 import com.google.inject.multibindings.Multibinder;
 import com.google.inject.servlet.ServletScopes;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.UserAuthenticationMethod;
 import com.namazustudios.socialengine.security.UserProvider;
 import com.namazustudios.socialengine.servlet.security.HttpRequestAttributeAuthenticationMethod;

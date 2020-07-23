@@ -12,11 +12,12 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(value = "GameOnTournament",
      description = "Provides access to the eligible tournaments.  An eligible tourname is one for which the player " +
                    "qualifies and has not already entered.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("game_on/tournament/developer")
 public class GameOnTournamentResource {
 

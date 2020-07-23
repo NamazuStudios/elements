@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by patricktwohig on 7/24/15.
@@ -40,12 +41,20 @@ public class SimpleResponseHeader implements ResponseHeader, Serializable {
     }
 
     @Override
-    public List<Object> getHeaders(final String name) {
-        return headers.get(name);
+    public Optional<List<Object>> getHeaders(final String name) {
+        final List<Object> value = headers.get(name);
+        return value == null || value.isEmpty() ? Optional.empty() : Optional.of(value);
     }
 
     public void setHeaders(Map<String, List<Object>> headers) {
         this.headers = headers;
+    }
+
+    @Override
+    public void copyToMap(final Map<String, List<Object>> requestHeaderMap) {
+        for (final Map.Entry<String, List<Object>> entry : headers.entrySet()) {
+            requestHeaderMap.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+        }
     }
 
     @Override

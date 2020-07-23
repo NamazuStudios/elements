@@ -15,11 +15,15 @@ import javax.inject.Provider;
 
 public class MongoLockFactoryProvider implements Provider<LockFactory> {
 
+    public static final String LOCK_TIMEOUT = "com.namazustudios.socialengine.mongo.search.index.lock.timeout";
+
     public static final String LOCK_COLLECTION = "com.namazustudios.socialengine.mongo.search.index.lock.collection";
 
     public static final String PEER_COLLECTION = "com.namazustudios.socialengine.mongo.search.index.peer.collection";
 
     private Provider<Condition> conditionProvider;
+
+    private int lockTimeout;
 
     private String lockCollectionName;
 
@@ -38,11 +42,21 @@ public class MongoLockFactoryProvider implements Provider<LockFactory> {
 
         final MongoLockFactory mongoLockFactory = new MongoLockFactoryBuilder()
             .withCondition(condition)
+            .withLockTimeoutMilliseconds(getLockTimeout())
             .build(lockCollection, peerCollection);
 
         shutdownHooks.add(mongoLockFactory, () -> mongoLockFactory.close());
         return mongoLockFactory;
 
+    }
+
+    public int getLockTimeout() {
+        return lockTimeout;
+    }
+
+    @Inject
+    public void setLockTimeout(@Named(LOCK_TIMEOUT) int lockTimeout) {
+        this.lockTimeout = lockTimeout;
     }
 
     public Provider<Condition> getConditionProvider() {

@@ -28,11 +28,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common-util</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>${javax.inject.version}</version>

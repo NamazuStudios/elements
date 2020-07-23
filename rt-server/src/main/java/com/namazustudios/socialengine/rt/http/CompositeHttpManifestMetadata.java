@@ -15,8 +15,7 @@ import static com.google.common.net.MediaType.ANY_TYPE;
 import static com.namazustudios.socialengine.rt.http.Accept.parseHeader;
 import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.*;
 import static java.util.Arrays.asList;
-import static java.util.Collections.sort;
-import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.*;
 
 /**
  * Builds an {@link HttpManifestMetadata} as a composite of an {@link HttpRequest} and a {@link HttpManifest}.  All
@@ -39,7 +38,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
         final List<Accept> accepts = httpRequest
             .getHeader()
-            .getHeadersOrDefault(ACCEPT, () -> asList(ANY_TYPE))
+            .getHeaders(ACCEPT).orElseGet(() -> singletonList(ANY_TYPE))
             .stream()
             .flatMap(header -> parseHeader(header.toString()).stream())
             .collect(Collectors.toList());
@@ -98,7 +97,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
         final String contentTypeHeader = httpRequest
             .getHeader()
-            .getHeaderOrDefault(CONTENT_TYPE, ANY_TYPE)
+            .getHeader(CONTENT_TYPE).orElse(ANY_TYPE)
             .toString();
 
         try {
@@ -299,7 +298,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
             final String acceptableTypes = "[" + httpRequest
                     .getHeader()
-                    .getHeadersOrDefault(ACCEPT, () -> asList(ANY_TYPE))
+                    .getHeaders(ACCEPT).orElseGet(() -> asList(ANY_TYPE))
                     .stream()
                     .map(o -> o.toString())
                     .collect(Collectors.joining(",")) + "]";

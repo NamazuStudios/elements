@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.match;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.MatchService;
 
 import javax.inject.Inject;

@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.codeserve;
 
-import com.namazustudios.socialengine.exception.AuthorizationHeaderParseException;
+import com.namazustudios.socialengine.exception.security.AuthorizationHeaderParseException;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.UnauthorizedException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.AuthenticatedRequest;
 import com.namazustudios.socialengine.security.AuthorizationHeader;
 import com.namazustudios.socialengine.security.BasicAuthorizationHeader;

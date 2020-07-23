@@ -2,13 +2,11 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.MatchDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.bson.types.ObjectId;
 import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;

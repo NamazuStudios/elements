@@ -2,7 +2,7 @@ package com.namazustudios.socialengine;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.ValidationFailureException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -10,8 +10,6 @@ import joptsimple.OptionSpec;
 
 import javax.inject.Inject;
 import javax.validation.ConstraintViolation;
-import java.util.Arrays;
-import java.util.stream.Collectors;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;

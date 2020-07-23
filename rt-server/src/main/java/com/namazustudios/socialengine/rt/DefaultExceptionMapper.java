@@ -81,10 +81,10 @@ public class DefaultExceptionMapper implements ExceptionMapper<Throwable> {
         }
 
         final SimpleResponse simpleResponse = SimpleResponse.builder()
-                .from(request)
-                .code(code)
-                .payload(simpleExceptionResponsePayload)
-            .build();
+            .from(request)
+            .code(code)
+            .payload(simpleExceptionResponsePayload)
+        .build();
 
         try {
             responseReceiver.accept(simpleResponse);

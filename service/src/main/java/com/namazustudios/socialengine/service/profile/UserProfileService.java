@@ -1,13 +1,14 @@
 package com.namazustudios.socialengine.service.profile;
 
+
 import com.namazustudios.socialengine.dao.ProfileDao;
-import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.ProfileService;
+import com.namazustudios.socialengine.service.UserService;
 
 import javax.inject.Inject;
 import java.util.Objects;
@@ -20,15 +21,33 @@ public class UserProfileService implements ProfileService {
 
     private User user;
 
+    private UserService userService;
+
     private ProfileDao profileDao;
 
     private Supplier<Profile> currentProfileSupplier;
 
     @Override
-    public Pagination<Profile> getProfiles(int offset, int count, long lowerBoundTimestamp, long upperBoundTimestamp) {
-        return getProfileDao()
-            .getActiveProfiles(offset, count, lowerBoundTimestamp, upperBoundTimestamp)
-            .transform(this::redactPrivateInformation);
+    public Pagination<Profile> getProfiles(final int offset, final int count,
+                                           final String applicationNameOrId, final String userId,
+                                           final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
+        if (getUserService().isCurrentUserAlias(userId)) {
+            return getProfileDao()
+                .getActiveProfiles(
+                        offset, count,
+                        applicationNameOrId, getUserService().getCurrentUser().getId(),
+                        lowerBoundTimestamp, upperBoundTimestamp)
+                .transform(this::redactPrivateInformation);
+        } else if (userId == null || getUserService().isCurrentUser(userId)) {
+            return getProfileDao()
+                .getActiveProfiles(
+                    offset, count,
+                    applicationNameOrId, userId,
+                    lowerBoundTimestamp, upperBoundTimestamp)
+                .transform(this::redactPrivateInformation);
+        } else {
+            return new Pagination<>();
+        }
     }
 
     @Override
@@ -89,6 +108,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public UserService getUserService() {
+        return userService;
+    }
+
+    @Inject
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     public ProfileDao getProfileDao() {

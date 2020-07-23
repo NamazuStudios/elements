@@ -1,15 +1,15 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
-
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Optional.empty;
 
 /**
  * Contains attributes which may be attached to a {@link Request}, {@link Resource} or similar object.  Typically these
@@ -31,47 +31,26 @@ public interface Attributes {
     Set<String> getAttributeNames();
 
     /**
+     * Gets the attribute associated with this {@link Attributes} for the given name.  Returning null if no such
+     * attribute is found.  Note that an attribute may exist with the supplied name and the value null.  In order to
+     * distinguish from this, the method {@link #getAttributeOptional(String)} may be used.
+     *
+     * @param name the name of hte attribute
+     * @return the value or null
+     */
+    default Object getAttribute(final String name) {
+        final Optional<Object> optionalAttribute = getAttributeOptional(name);
+        return optionalAttribute.orElse(null);
+    }
+
+    /**
      * Gets the attribute associated with this {@link Attributes} object.
      *
-     * @param name the attribute name
-     * @return the attribute value, or null
-     */
-    Object getAttribute(String name);
-
-    /**
-     * Gets the attribute with the supplied name.  If the attribute does not exist, then this returns the specified
-     * default value.
+     * @param name the name of the attribute to fetch
      *
-     * @param name the name
-     * @param defaultValue the default value
-     * @return the {@link Object} representing the attribute or the default value
+     * @return an {@link Optional<Object>} for the value
      */
-    default Object getAttributeOrDefault(final String name, final Object defaultValue) {
-        return getAttributeNames().contains(name) ? getAttribute(name) : defaultValue;
-    }
-
-    /**
-     * Gets the attribute with the supplied name and {@link Class<T>}.  This attempts to convert the attribute value
-     * to the specified type.  The default implementation of this method simply attempts to cast, but subclasses may
-     * provide a more refined means to convert the attribute value.
-     *
-     * @param name the name of the attribute
-     * @param tClass the desired type
-     * @param <T> the desired type
-     * @return the attribvute value or null
-     * @throws {@link InvalidConversionException} if the conversion fails
-     */
-    default <T> T getAndConvertAttribute(final String name, final Class<T> tClass) throws InvalidConversionException {
-
-        final Object attributeValue = getAttribute(name);
-
-        try {
-            return tClass.cast(attributeValue);
-        } catch (ClassCastException ex) {
-            throw new InvalidConversionException(ex);
-        }
-
-    }
+    Optional<Object> getAttributeOptional(String name);
 
     /**
      * Returns a view of this {@link Attributes} object as a {@link Map<String, Object>}.
@@ -123,6 +102,18 @@ public interface Attributes {
     }
 
     /**
+     * Copies these {@link Attributes} to the supplied {@link Map<String, Object>}.
+     *
+     * @param simpleAttributesMap the map to receive the contents
+     */
+    default void copyToMap(Map<String, Object> simpleAttributesMap) {
+        for (final String attributeName : getAttributeNames()) {
+            final Optional<Object> attribute = getAttributeOptional(attributeName);
+            attribute.ifPresent(v -> simpleAttributesMap.put(attributeName, v));
+        }
+    }
+
+    /**
      * Tests if two {@link Attributes} are equal to each other.  This is used by subclasses toprovide a universal test
      * for equality against another instance of {@link Attributes}.
      *
@@ -159,8 +150,8 @@ class EmptyAttributes implements Attributes, Serializable {
     }
 
     @Override
-    public Object getAttribute(String name) {
-        return null;
+    public Optional<Object> getAttributeOptional(String name) {
+        return empty();
     }
 
     @Override

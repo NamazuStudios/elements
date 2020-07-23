@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.rewardissuance;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

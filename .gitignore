@@ -12,6 +12,9 @@ storage.xodus
 node_modules
 .DS_Store
 
+# Default Script storage
+/repositories/*
+
 #IntelliJ Configurations (except shared run configurations
 .idea/jarRepositories.xml
 .idea/artifacts/
@@ -27,4 +30,4 @@ node_modules
 .idea/checkstyle-idea.xml
 .idea/codeStyles/
 .idea/dbnavigator.xml
-
+.idea/jarRepositories.xml

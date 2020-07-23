@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.service.application;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.service.FacebookApplicationConfigurationService;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.GooglePlayApplicationConfigurationService;
-import com.namazustudios.socialengine.service.IosApplicationConfigurationService;
 
 import javax.inject.Inject;
 import javax.inject.Provider;

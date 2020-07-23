@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.mongodb.MongoCommandException;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.exception.application.ApplicationNotFoundException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
@@ -231,19 +232,25 @@ public class MongoApplicationDao implements ApplicationDao {
 
     }
 
-    public MongoApplication getActiveMongoApplication(final String mongoApplicationNameOrId) {
+    public MongoApplication findActiveMongoApplication(final String mongoApplicationNameOrId) {
 
         final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
 
-        query.filter("active =", true);
+        query.field("active").equal(true);
 
-        try {
-            query.filter("_id", new ObjectId(mongoApplicationNameOrId));
-        } catch (IllegalArgumentException ex) {
-            query.filter("name =", mongoApplicationNameOrId);
+        if (ObjectId.isValid(mongoApplicationNameOrId)) {
+            query.field("_id").equal(new ObjectId(mongoApplicationNameOrId));
+        } else {
+            query.field("name").equal(mongoApplicationNameOrId);
         }
 
-        final MongoApplication mongoApplication = query.get();
+        return query.get();
+
+    }
+
+    public MongoApplication getActiveMongoApplication(final String mongoApplicationNameOrId) {
+
+        final MongoApplication mongoApplication = findActiveMongoApplication(mongoApplicationNameOrId);
 
         if (mongoApplication == null) {
             throw new ApplicationNotFoundException("application not found: " + mongoApplicationNameOrId);

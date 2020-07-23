@@ -7,6 +7,17 @@ import java.io.Serializable;
 
 public class DummySession implements Session, Serializable {
 
+    private static DummySession INSTANCE = new DummySession();
+
+    /**
+     * Returns a singleton {@link DummySession} instance.
+     *
+     * @return the {@link DummySession} instane
+     */
+    public static DummySession getDummySession() {
+        return INSTANCE;
+    }
+
     @Override
     public String getId() {
         throw new UnsupportedOperationException("Session Not Supported.");

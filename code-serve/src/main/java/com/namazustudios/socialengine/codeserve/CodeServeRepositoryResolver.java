@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.codeserve;
 
 import com.namazustudios.socialengine.dao.BootstrapDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
@@ -18,7 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 
-import static com.namazustudios.socialengine.model.User.Level.SUPERUSER;
+import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 
 /**
  * Created by patricktwohig on 8/1/17.

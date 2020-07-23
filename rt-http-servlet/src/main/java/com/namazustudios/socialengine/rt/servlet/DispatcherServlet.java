@@ -131,9 +131,9 @@ public class DispatcherServlet extends HttpServlet {
                                            final HttpRequest httpRequest,
                                            final HttpServletResponse httpServletResponse) {
 
-        final String prefix = httpRequest.toString();
+        final String prefix = httpRequest.getId();
         final AtomicBoolean complete = new AtomicBoolean();
-        MDC.put(MDC_HTTP_REQUEST, prefix);
+        MDC.put(MDC_HTTP_REQUEST, httpRequest.getId());
         logger.debug("{} - Dispatching Request.", prefix);
 
         asyncContext.addListener(new AsyncListener() {

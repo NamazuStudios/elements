@@ -20,11 +20,12 @@ import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
 
 @Api(value = "GameOnSession",
      description = "Handles the creation and deleteion of Amazon GameOn Sessions.  Only one session may exist per " +
                    "Profile and Device OS Type.",
-     authorizations = {@Authorization(SESSION_SECRET)})
+     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("game_on/session")
 public class GameOnSessionResource {
 

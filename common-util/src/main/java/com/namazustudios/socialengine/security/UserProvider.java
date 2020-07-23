@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.security;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,7 +44,7 @@ public class UserProvider implements Provider<User> {
     }
 
     @Inject
-    public void setSupportedAuthenticationMethods(Set<UserAuthenticationMethod> supportedAuthenticationMethods) {
+    public void setSupportedAuthenticationMethods(final Set<UserAuthenticationMethod> supportedAuthenticationMethods) {
         this.supportedAuthenticationMethods = supportedAuthenticationMethods;
     }
 

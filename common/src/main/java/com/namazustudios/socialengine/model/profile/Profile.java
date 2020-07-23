@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.model.profile;
 
-import com.namazustudios.socialengine.model.User;
-import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;

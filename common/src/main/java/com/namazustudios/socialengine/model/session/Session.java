@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.model.session;
 
-import com.namazustudios.socialengine.model.User;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;

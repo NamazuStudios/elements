@@ -127,7 +127,7 @@ public enum ResponseCode {
     /**
      * Used to relay a not found condition, other than method or path.
      */
-    OTHER_NOT_FOUND,
+    NOT_FOUND,
 
     /**
      * The request was canceled by the user.
