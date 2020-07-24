@@ -25,6 +25,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -69,6 +70,8 @@ public class LuaResource implements Resource {
 
     private final BuiltinManager builtinManager;
 
+    private final ResourceLockService resourceLockService;
+
     private Logger scriptLog = logger;
 
     /**
@@ -97,9 +100,11 @@ public class LuaResource implements Resource {
             final @Named(LOCAL) Context localContext,
             final @Named(REMOTE) Context remoteContext,
             final PersistenceStrategy persistenceStrategy,
+            final ResourceLockService resourceLockService,
             final NodeId nodeId) {
         try {
 
+            this.resourceLockService = resourceLockService;
             this.resourceId = randomResourceIdForNode(nodeId);
             this.localContext = localContext;
             this.remoteContext = remoteContext;
@@ -199,7 +204,8 @@ public class LuaResource implements Resource {
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
-        try (final InputStream inputStream = assetLoader.open(modulePath)) {
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId);
+             final InputStream inputStream = assetLoader.open(modulePath)) {
 
             // We substitute the logger for the name of the file we actually are trying to open.  This way the
             // actual logger reads the name of the source file.
@@ -235,13 +241,15 @@ public class LuaResource implements Resource {
 
     @Override
     public void setVerbose(boolean verbose) {
-        luaState.pushBoolean(verbose);
-        luaState.setPersistenceSetting("path", -1);
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+            luaState.pushBoolean(verbose);
+            luaState.setPersistenceSetting("path", -1);
+        }
     }
 
     @Override
     public boolean isVerbose() {
-        try {
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
             luaState.getPersistenceSetting("debug");
             return luaState.toBoolean(-1);
         } finally {
@@ -250,12 +258,12 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public void serialize(OutputStream os) throws IOException {
+    public void serialize(final OutputStream os) throws IOException {
         getPersistence().serialize(os);
     }
 
     @Override
-    public void deserialize(InputStream is) throws IOException {
+    public void deserialize(final InputStream is) throws IOException {
         getPersistence().deserialize(is, sh -> {
             resourceId = sh.getResourceId();
             attributes = sh.getAttributes();
@@ -315,18 +323,26 @@ public class LuaResource implements Resource {
     @Override
     public void close() {
 
-        getTasks().forEach(taskId -> {
-            final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
-            localContext.getTaskContext().finishWithError(taskId, resourceDestroyedException);
-        });
+        try(final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
 
-        getLuaState().close();
+            getTasks().forEach(taskId -> {
+                final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
+                localContext.getTaskContext().finishWithError(taskId, resourceDestroyedException);
+            });
+
+            getLuaState().close();
+
+        } finally {
+            resourceLockService.delete(resourceId);
+        }
 
     }
 
     @Override
     public void unload() {
-        getLuaState().close();
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+            getLuaState().close();
+        }
     }
 
     @Override
@@ -334,9 +350,11 @@ public class LuaResource implements Resource {
         return params -> (consumer, throwableConsumer) -> {
 
             final LuaState luaState = getLuaState();
-            FinallyAction finalOperation = () -> luaState.setTop(0);
+            FinallyAction finalOperation = FinallyAction.begin();
 
-            try {
+            try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+
+                finalOperation = finalOperation.then(() -> luaState.setTop(0));
 
                 luaState.getGlobal(REQUIRE);
                 luaState.pushString(CoroutineBuiltin.MODULE_NAME);
@@ -382,7 +400,7 @@ public class LuaResource implements Resource {
     }
 
     private void finish(final TaskId taskId, final Consumer<Object> consumer, final Object result) {
-        try {
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
             consumer.accept(result);
         } catch (Exception ex) {
             logger.error("Caught exception finishing task {}", taskId, ex);
@@ -393,9 +411,11 @@ public class LuaResource implements Resource {
     public void resume(final TaskId taskId, final Object ... results) {
 
         final LuaState luaState = getLuaState();
-        FinallyAction finalOperation = () -> luaState.setTop(0);
+        FinallyAction finalOperation = FinallyAction.begin();
 
-        try {
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+
+            finalOperation = finalOperation.then(() -> luaState.setTop(0));
 
             luaState.getGlobal(REQUIRE);
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);

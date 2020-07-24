@@ -4,14 +4,21 @@ import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.exception.ResourceDestroyedException;
+import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
+import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
 
+import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static com.namazustudios.socialengine.rt.util.OutputStreamAdapter.FLUSH;
+import static java.nio.ByteBuffer.allocate;
 
 /**
  * A {@link Resource} is a logical unit of work, which is represented by an instance of this type.  It essentially
@@ -25,6 +32,11 @@ import java.util.function.Consumer;
  * Created by patricktwohig on 8/8/15.
  */
 public interface Resource extends AutoCloseable {
+
+    /**
+     * Default IO Buffer size, 4kb
+     */
+    int DEFAULT_IO_BUFFER_SIZE = 4096;
 
     /**
      * Returns the immutable and globally-unique ID of this resource.  Though a resource
@@ -127,7 +139,13 @@ public interface Resource extends AutoCloseable {
      * @throws IOException if something failed during serialization
      */
     default void serialize(final WritableByteChannel wbc) throws IOException {
-        // TODO Implement This
+
+        final ByteBuffer byteBuffer = allocate(DEFAULT_IO_BUFFER_SIZE);
+
+        try (final OutputStream os = new OutputStreamAdapter(wbc, byteBuffer, FLUSH)) {
+            serialize(os);
+        }
+
     }
 
     /**
@@ -137,8 +155,14 @@ public interface Resource extends AutoCloseable {
      * @param is the {@link InputStream} from which to read the serialized resource
      * @throws IOException if something failed during deserialization
      */
-    default void deserialize(final ReadableByteChannel is) throws IOException {
-        // TODO Implement This
+    default void deserialize(final ReadableByteChannel ibc) throws IOException {
+
+        final ByteBuffer byteBuffer = allocate(DEFAULT_IO_BUFFER_SIZE);
+
+        try (final InputStream is = new InputStreamAdapter(ibc, byteBuffer, FLUSH)) {
+            deserialize(is);
+        }
+
     }
 
     /**

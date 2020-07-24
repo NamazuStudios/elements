@@ -11,25 +11,31 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Provider;
 import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
+import static java.lang.Integer.min;
+import static java.lang.Thread.sleep;
 import static java.util.Spliterator.*;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.IntStream.range;
 
 public class TransactionalResourceService implements ResourceService {
 
-    private static final int RETRY_COUNT = 1000;
+    private static final int RETRY_COUNT = 250;
+
+    private static final int WAIT_INTERVAL = 5;
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionalResourceService.class);
 
@@ -37,7 +43,7 @@ public class TransactionalResourceService implements ResourceService {
 
     private ResourceLoader resourceLoader;
 
-    private Provider<TransactionalResourceServicePersistence> persistenceProvider;
+    private TransactionalResourceServicePersistence persistence;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
@@ -49,7 +55,6 @@ public class TransactionalResourceService implements ResourceService {
         if (this.context.compareAndSet(null, context)) {
             logger.info("Started.");
         } else {
-            context.close();
             throw new IllegalStateException("Already running.");
         }
 
@@ -59,7 +64,6 @@ public class TransactionalResourceService implements ResourceService {
     public void stop() {
         final Context context = this.context.getAndSet(null);
         if (context == null) throw new IllegalStateException("Not currently running.");
-        context.close();
     }
 
     @Override
@@ -169,8 +173,8 @@ public class TransactionalResourceService implements ResourceService {
 
         final Context context = getContext();
 
-        try (final ExclusiveReadWriteTransaction txn = context.persistence.openExclusiveRW(getNodeId())) {
-            final Context old = this.context.getAndSet(context.clear());
+        try (final ExclusiveReadWriteTransaction txn = getPersistence().openExclusiveRW(getNodeId())) {
+            final Context old = this.context.getAndSet(new Context());
             txn.removeAllResources();
             return old.acquires.values().stream().map(tr -> tr.getDelegate());
         }
@@ -184,7 +188,13 @@ public class TransactionalResourceService implements ResourceService {
     }
 
     public void persist(final ResourceId resourceId) {
-
+        executeRW((acm, txn) -> {
+            try (final WritableByteChannel wbc = txn.updateResource(resourceId)) {
+                acm.updateResource(resourceId, wbc);
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            }
+        });
     }
 
     public NodeId getNodeId() {
@@ -205,13 +215,13 @@ public class TransactionalResourceService implements ResourceService {
         this.resourceLoader = resourceLoader;
     }
 
-    public Provider<TransactionalResourceServicePersistence> getPersistenceProvider() {
-        return persistenceProvider;
+    public TransactionalResourceServicePersistence getPersistence() {
+        return persistence;
     }
 
     @Inject
-    public void setPersistenceProvider(Provider<TransactionalResourceServicePersistence> persistenceProvider) {
-        this.persistenceProvider = persistenceProvider;
+    public void setPersistence(final TransactionalResourceServicePersistence persistence) {
+        this.persistence = persistence;
     }
 
     private Context getContext() {
@@ -221,21 +231,16 @@ public class TransactionalResourceService implements ResourceService {
     }
 
     private <T> T computeRO(final Function<ReadOnlyTransaction, T> operation) {
-
-        final Context context = getContext();
-
-        try (final ReadOnlyTransaction txn = context.persistence.openRO(getNodeId())) {
-            final T value = operation.apply(txn);
-            return value;
+        try (final ReadOnlyTransaction txn = getPersistence().openRO(getNodeId())) {
+            return operation.apply(txn);
         }
-
     }
 
     private <T> T computeRO(final BiFunction<AcquiresCacheMutator, ReadOnlyTransaction, T> operation) {
 
         final Context context = getContext();
 
-        try (final ReadOnlyTransaction txn = context.persistence.openRO(getNodeId());
+        try (final ReadOnlyTransaction txn = getPersistence().openRO(getNodeId());
              final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
             final T value = operation.apply(acm, txn);
             return value;
@@ -248,11 +253,12 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId());
+            try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId());
                  final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 operation.apply(acm, txn);
                 txn.commit();
             } catch (TransactionConflictException ex) {
+                randomWait(i);
                 continue;
             }
         }
@@ -263,13 +269,12 @@ public class TransactionalResourceService implements ResourceService {
 
     private void executeRW(final UncachedTransactionOperationV operation) {
 
-        final Context context = getContext();
-
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId())) {
+            try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId())) {
                 operation.apply(txn);
                 txn.commit();
             } catch (TransactionConflictException ex) {
+                randomWait(i);
                 continue;
             }
         }
@@ -283,11 +288,12 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId())) {
+            try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId())) {
                 final T value = operation.apply(txn);
                 txn.commit();
                 return value;
             } catch (TransactionConflictException ex) {
+                randomWait(i);
                 continue;
             }
         }
@@ -301,12 +307,13 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = context.persistence.openRW(getNodeId());
+            try (final ReadWriteTransaction txn = getPersistence()  .openRW(getNodeId());
                  final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 final T value = operation.apply(acm, txn);
                 txn.commit();
                 return value;
             } catch (TransactionConflictException ex) {
+                randomWait(i);
                 continue;
             }
         }
@@ -315,27 +322,22 @@ public class TransactionalResourceService implements ResourceService {
 
     }
 
+    private void randomWait(final int retry) {
+
+        final Random random = ThreadLocalRandom.current();
+        final int time = random.nextInt(retry * WAIT_INTERVAL);
+
+        try {
+            sleep(time);
+        } catch (InterruptedException ex) {
+            throw new InternalException(ex);
+        }
+
+    }
+
     private class Context {
 
-        private final TransactionalResourceServicePersistence persistence;
-
         private final ConcurrentMap<ResourceId, TransactionalResource> acquires = new ConcurrentHashMap<>();
-
-        private Context() {
-            persistence = getPersistenceProvider().get();
-        }
-
-        private Context(final TransactionalResourceServicePersistence persistence) {
-            this.persistence = persistence;
-        }
-
-        public Context clear() {
-            return new Context(persistence);
-        }
-
-        void close() {
-            persistence.close();
-        }
 
     }
 
@@ -352,8 +354,6 @@ public class TransactionalResourceService implements ResourceService {
         private final Context context;
 
         private final ReadOnlyTransaction txn;
-
-        private final ReadWriteTransaction rwtxn;
 
         private final List<TransactionalResource> toClose = new ArrayList<>();
 
@@ -373,7 +373,6 @@ public class TransactionalResourceService implements ResourceService {
                                     final ReadOnlyTransaction txn,
                                     final ReadWriteTransaction rwtxn) {
             this.txn = txn;
-            this.rwtxn = rwtxn;
             this.context = context;
         }
 
@@ -437,9 +436,9 @@ public class TransactionalResourceService implements ResourceService {
 
                 // Revisions will only ever move forward.  Therefore, we can skip an allocation completely if we check
                 // this first and just return the existing value.  We can safely assume that at some point some other
-                // thread will be in the proess of applying a later revision.  In any case, the version we currently
+                // thread will be in the process of applying a later revision.  In any case, the version we currently
                 // have will soon be replaced and it's not worth it.  However we have to check again to ensure we don't
-                // leak memorry.
+                // leak memory.
                 if (txn.getReadRevision().isBefore(existing.getRevision())) return existing;
 
                 // Take the penalty allocating a large resource.  This may still fail, but the above check should avoid
@@ -487,7 +486,7 @@ public class TransactionalResourceService implements ResourceService {
 
             // Finally return true if the operation was successful.  IF this happens before an acquire, then the
             // concurrently-happening will see a dead resource and reload, or it will see an active resource and
-            // acquire meaning that this release will not happen immedaitely.
+            // acquire meaning that this release will not happen immediately.
             return resource.release();
 
         }
@@ -543,12 +542,20 @@ public class TransactionalResourceService implements ResourceService {
         }
 
         public Resource evict(final ResourceId resourceId) {
-            // TODO Implement
-            return null;
+            final TransactionalResource tr = context.acquires.remove(resourceId);
+            if (tr == null) throw new ResourceNotFoundException();
+            return tr.getDelegate();
         }
 
         public void evict(final ResourceId resourceId, final Consumer<Resource> removed) {
-            // TODO Implement
+            final TransactionalResource tr = context.acquires.remove(resourceId);
+            if (tr != null) removed.accept(tr.getDelegate());
+        }
+
+        public void updateResource(final ResourceId resourceId, final WritableByteChannel wbc) throws IOException {
+            final TransactionalResource tr = context.acquires.get(resourceId);
+            if (tr == null) throw new ResourceNotFoundException();
+            tr.serialize(wbc);
         }
 
     }

@@ -12,6 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.ReadableByteChannel;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.rt.IocResolver.IOC_RESOLVER_MODULE_NAME;
@@ -44,27 +45,27 @@ public class LuaResourceLoader implements ResourceLoader {
     public Resource load(final InputStream is, final boolean verbose) throws ResourcePersistenceException {
 
         final LuaResource luaResource = getLuaResourceProvider().get();
-        luaResource.setVerbose(verbose);
 
         try {
+            preload(luaResource, verbose).deserialize(is);
+            return luaResource;
+        } catch (IOException ex) {
+            throw new ResourcePersistenceException(ex);
+        } catch (Exception ex) {
+            luaResource.close();
+            logger.error("Caught exception loading resource.", ex);
+            throw ex;
+        }
 
-            final IocResolver iocResolver;
-            iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
+    }
 
-            luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
-            luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
-            luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
+    @Override
+    public Resource load(final ReadableByteChannel rbc, final boolean verbose) throws ResourcePersistenceException {
 
-            final Set<Builtin> builtinSet = getAdditionalBuiltins().get();
-            builtinSet.forEach(luaResource.getBuiltinManager()::installBuiltin);
+        final LuaResource luaResource = getLuaResourceProvider().get();
 
-            luaResource.deserialize(is);
-
+        try {
+            preload(luaResource, verbose).deserialize(rbc);
             return luaResource;
         } catch (IOException ex) {
             throw new ResourcePersistenceException(ex);
@@ -82,33 +83,39 @@ public class LuaResourceLoader implements ResourceLoader {
                          final Object ... args) throws ModuleNotFoundException {
 
         final LuaResource luaResource = getLuaResourceProvider().get();
-        luaResource.setAttributes(attributes);
 
         try {
-
-            final IocResolver iocResolver;
-            iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
-
-            luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
-            luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
-            luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
-            luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
-
-            final Set<Builtin> builtinSet = getAdditionalBuiltins().get();
-            builtinSet.forEach(luaResource.getBuiltinManager()::installBuiltin);
-
+            preload(luaResource, false).setAttributes(attributes);
             luaResource.loadModule(getAssetLoader(), moduleName, args);
-
             return luaResource;
         } catch (Exception ex) {
             luaResource.close();
             logger.error("Caught exception loading resource.", ex);
             throw ex;
         }
+
+    }
+
+    private LuaResource preload(final LuaResource luaResource, final boolean verbose) {
+
+        luaResource.setVerbose(verbose);
+
+        final IocResolver iocResolver;
+        iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
+
+        luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
+        luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());
+        luaResource.getBuiltinManager().installBuiltin(getAssetLoaderBuiltinProvider().get());
+        luaResource.getBuiltinManager().installBuiltin(getResponseCodeBuiltinProvider().get());
+        luaResource.getBuiltinManager().installBuiltin(getHttpStatusBuiltinProvider().get());
+        luaResource.getBuiltinManager().installBuiltin(getHttpClientBuiltinProvider().get());
+        luaResource.getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(IOC_RESOLVER_MODULE_NAME, iocResolver));
+        luaResource.getBuiltinManager().installBuiltin(getJnaBuiltinProvider().get());
+
+        final Set<Builtin> builtinSet = getAdditionalBuiltins().get();
+        builtinSet.forEach(luaResource.getBuiltinManager()::installBuiltin);
+
+        return luaResource;
 
     }
 

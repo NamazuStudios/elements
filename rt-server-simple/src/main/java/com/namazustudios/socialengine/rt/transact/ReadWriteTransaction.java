@@ -34,6 +34,21 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
      */
     WritableByteChannel saveNewResource(final Path path, final ResourceId resourceId) throws IOException, TransactionConflictException;
 
+    /***
+     * Opens a {@link WritableByteChannel} to a newly defined {@link Resource} with the {@link ResourceId}
+     *
+     * If the {@link ResourceId} is not found, then this must throw an instance of {@link ResourceNotFoundException}
+     * to indicate that the operation is not possible.
+     *
+     * @param resourceId the {@link ResourceId} of the existing {@link ResourceId}
+     * @return a {@link WritableByteChannel} which must be closed by the calling code when finished.
+     *
+     * @throws IOException if an {@link IOException} prevented opening the {@link WritableByteChannel}
+     * @throws ResourceNotFoundException if no {@link ResourceId} matches
+     * @throws TransactionConflictException if another process is already attempting to modify the same {@link Path} or {@link ResourceId}
+     */
+    WritableByteChannel updateResource(final ResourceId resourceId) throws IOException, TransactionConflictException;
+
     /**
      * Creates a link betweeen a {@link Path} and {@link ResourceId}, provided that neither already exist. If either
      * exist, then this will throw an instance of {@link DuplicateException}.

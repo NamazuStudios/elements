@@ -2,11 +2,13 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
+import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
 import org.w3c.dom.Attr;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
@@ -69,10 +71,7 @@ public interface ResourceLoader extends AutoCloseable {
      * @throws {@link ResourcePersistenceException} if the resource was corrupted of failed to load for some reason
      *
      */
-    default Resource load(final ReadableByteChannel rbc, boolean verbose) throws ResourcePersistenceException {
-        // TODO Implement as simple stream wrapper
-        return null;
-    }
+    Resource load(final ReadableByteChannel rbc, boolean verbose) throws ResourcePersistenceException;
 
     /**
      * Performs the same operation as {@link #load(String, Attributes, Object...)} using {@link Attributes#EMPTY}
