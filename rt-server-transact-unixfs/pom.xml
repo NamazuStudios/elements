@@ -10,7 +10,7 @@
     </parent>
 
     <groupId>com.namazustudios.socialengine</groupId>
-    <artifactId>rt-server-transact-unixfx</artifactId>
+    <artifactId>rt-server-transact-unixfs</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>rt-server-transact-unixfx</name>
 
