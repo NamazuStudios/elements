@@ -1,20 +1,17 @@
-<?xml version="1.0" encoding="UTF-8"?>
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>namazu-socialengine-system</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>namazu-socialengine-system</name>
-
     <scm>
         <url>ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</url>
         <connection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git</connection>
         <developerConnection>scm:git:ssh://git@bitbucket.namazustudios.net:7999/soc/socialengine-java-server.git
         </developerConnection>
     </scm>
-
     <modules>
         <module>common</module>
         <module>common-util</module>
@@ -46,9 +43,9 @@
         <module>rt-server-cluster-node</module>
         <module>rt-server-cluster-node-jeromq</module>
         <module>rt-server-cluster-node-jeromq-guice</module>
-<!--        <module>rt-server-cluster-client</module>-->
-<!--        <module>rt-server-cluster-client-jeromq</module>-->
-<!--        <module>rt-server-cluster-client-jeromq-guice</module>-->
+        <!--        <module>rt-server-cluster-client</module>-->
+        <!--        <module>rt-server-cluster-client-jeromq</module>-->
+        <!--        <module>rt-server-cluster-client-jeromq-guice</module>-->
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
         <module>rt-server-lua-stress-tests</module>
@@ -72,8 +69,9 @@
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
         <module>web-ui-angular</module>
-  </modules>
-
+        <module>rt-server-transact</module>
+        <module>rt-server-transact-unixfx</module>
+    </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>4.1.0</guice.version>
@@ -116,7 +114,6 @@
         <embedded.redis.version>0.6</embedded.redis.version>
         <spotify.dns.version>3.1.5</spotify.dns.version>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
@@ -130,7 +127,6 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>
@@ -168,5 +164,4 @@
             </plugin>
         </plugins>
     </build>
-
 </project>
