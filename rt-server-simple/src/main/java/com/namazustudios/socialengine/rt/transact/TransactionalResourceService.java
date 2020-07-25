@@ -361,17 +361,8 @@ public class TransactionalResourceService implements ResourceService {
 
         private final List<TransactionalResource> toRelease = new ArrayList<>();
 
-        public AcquiresCacheMutator(final Context context, final ReadWriteTransaction txn) {
-            this(context, txn, txn);
-        }
-
-        public AcquiresCacheMutator(final Context context, final ReadOnlyTransaction txn) {
-            this(context, txn, null);
-        }
-
         public AcquiresCacheMutator(final Context context,
-                                    final ReadOnlyTransaction txn,
-                                    final ReadWriteTransaction rwtxn) {
+                                    final ReadOnlyTransaction txn) {
             this.txn = txn;
             this.context = context;
         }
@@ -446,9 +437,9 @@ public class TransactionalResourceService implements ResourceService {
                 final Resource update = loadResource(resourceId);
 
                  try (final Resource stale = existing.update(update, txn.getReadRevision())) {
-                     // Even though we may make several allocations, it's okay.  We are guaranteed to make and destroy
-                     // one resource per iteration.
-                     logger.debug("Updated resource {} -> {}", update, stale);
+                    // Even though we may make several allocations, it's okay.  We are guaranteed to make and destroy
+                    // one resource per iteration.
+                    logger.debug("Updated resource {} -> {}", update, stale);
                 } catch (Exception ex) {
                     logger.error("Caught exception closing out stale resource.", ex);
                 }
@@ -518,7 +509,7 @@ public class TransactionalResourceService implements ResourceService {
         private void purge(final TransactionalResource transactionalResource) {
 
             if (context.acquires.remove(transactionalResource.getId()) == null) {
-                logger.error("Unable to evict {} from resource cache.");
+                logger.error("Unable to evict {} from resource cache.", transactionalResource);
             }
 
             try {
