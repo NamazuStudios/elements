@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.transact;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceService.Unlink;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
@@ -54,12 +55,27 @@ public interface TransactionJournal {
         /**
          * Opens a {@link WritableByteChannel} to save a resource, specifying the {@link Path} and {@link ResourceId}.
          *
+         * This method expects the calling code to close the supplied {@link WritableByteChannel}.
+         *
          * @param path the {@link Path} at which to link the {@link ResourceId}
          * @param resourceId the {@link ResourceId} to use when creating the link
          * @return a {@link WritableByteChannel} which will receive the bytes of the {@link Resource}
          * @throws IOException if an IO operation fails
-         */
+         * @throws ResourceNotFoundException if no such resource exists
+      is   */
         WritableByteChannel saveNewResource(Path path, ResourceId resourceId) throws IOException, TransactionConflictException;
+
+        /**
+         * Opens a {@link WritableByteChannel} to save the contents of an existing {@link Resource} specified by the
+         * {@link ResourceId}.
+         *
+         * This method expects the calling code to close the supplied {@link WritableByteChannel}.
+         *
+         * @param resourceId the {@link ResourceId} of an existing {@link Resource} in the system
+         * @return a {@link WritableByteChannel}
+         * @throws ResourceNotFoundException if no such resource exists
+         */
+        WritableByteChannel updateResource(ResourceId resourceId) throws IOException, TransactionConflictException;
 
         /**
          * Links a new {@link Path} to an existing {@link ResourceId}.  This may throw an exception if a conflict

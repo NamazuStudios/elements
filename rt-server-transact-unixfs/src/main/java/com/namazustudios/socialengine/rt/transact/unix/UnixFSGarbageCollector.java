@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.transact.DefaultTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistence;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.Revision;
 
@@ -14,7 +14,7 @@ import static java.nio.file.Files.isSymbolicLink;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 /**
- * Implements the garbage collection for the {@link DefaultTransactionalResourceServicePersistence}.
+ * Implements the garbage collection for the {@link SimpleTransactionalResourceServicePersistence}.
  */
 public class UnixFSGarbageCollector {
 

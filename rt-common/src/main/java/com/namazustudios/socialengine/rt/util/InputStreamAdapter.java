@@ -5,8 +5,7 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
-import static java.lang.Long.max;
-import static java.lang.Long.min;
+import static java.lang.Math.min;
 
 /**
  * Wraps an instance of {@link ReadableByteChannel} using a {@link ByteBuffer}. It is not recommended to use a
@@ -30,7 +29,8 @@ public class InputStreamAdapter extends InputStream {
 
     public InputStreamAdapter(final ReadableByteChannel rbc, final ByteBuffer byteBuffer, final int options) {
         this.rbc = rbc;
-        this.byteBuffer = byteBuffer;
+        this.byteBuffer = byteBuffer.slice();
+        this.byteBuffer.position(0).limit(0);
         close = (CLOSE & options) == 0 ? Operation.NOOP : rbc::close;
     }
 
@@ -52,7 +52,7 @@ public class InputStreamAdapter extends InputStream {
     public int read(final byte[] b, final int off, final int len) throws IOException {
         if (byteBuffer.hasRemaining() || loadBuffer(true)) {
             final int original = byteBuffer.position();
-            byteBuffer.get(b, off, len);
+            byteBuffer.get(b, off, min(byteBuffer.remaining(), len));
             return byteBuffer.position() - original;
         } else {
             return -1;
@@ -86,13 +86,20 @@ public class InputStreamAdapter extends InputStream {
         final int read = rbc.read(byteBuffer);
 
         if (read < 0) return false;
-        else if (read == 0 && !allowZeroBytes) throw new IOException("backing channel is in nonblocking mode.");
+        else if (read == 0 && !allowZeroBytes) throw new NonBlockingIOException("Backing channel is in nonblocking " +
+                                                                                "mode and therefore zero bytes were " +
+                                                                                "read.");
 
         byteBuffer.limit(read);
         byteBuffer.rewind();
 
         return true;
 
+    }
+
+    @Override
+    public int available() {
+        return byteBuffer.remaining();
     }
 
     @Override

@@ -145,7 +145,8 @@ class UnixFSWorkingCopy {
     public WritableByteChannel saveNewResource(
             final Path path,
             final ResourceId resourceId,
-            final UnixFSUtils.IOOperation<WritableByteChannel> writableByteChannelSupplier) throws TransactionConflictException, IOException {
+            final UnixFSUtils.IOOperation<WritableByteChannel> writableByteChannelSupplier)
+            throws TransactionConflictException, IOException {
 
         // Checks that both paths and resource IDs are free and available for use
 
@@ -162,6 +163,15 @@ class UnixFSWorkingCopy {
 
         return writableByteChannelSupplier.perform();
 
+    }
+
+    public WritableByteChannel updateResource(
+            final ResourceId resourceId,
+            final UnixFSUtils.IOOperation<WritableByteChannel> writableByteChannelSupplier)
+            throws TransactionConflictException, IOException {
+        if (!isPresent(resourceId)) throw new ResourceNotFoundException();
+        pessimisticLocking.lock(resourceId);
+        return writableByteChannelSupplier.perform();
     }
 
     public void linkNewResource(final ResourceId resourceId,

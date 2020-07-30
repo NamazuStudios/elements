@@ -64,7 +64,7 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
             final byte[] resourceIdBytes = resourceIdString.getBytes(UTF_8);
             os.write(resourceIdBytes);
             return null;
-        }).when(resource).serialize(any());
+        }).when(resource).serialize(any(OutputStream.class));
 
         getResourceService().addAndReleaseResource(path, resource);
         getResourceService().link(resourceId, alias);

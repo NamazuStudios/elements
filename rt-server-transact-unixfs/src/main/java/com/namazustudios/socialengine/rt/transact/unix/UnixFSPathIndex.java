@@ -41,11 +41,10 @@ public class UnixFSPathIndex implements PathIndex {
     public UnixFSPathIndex(
             final NodeId nodeId,
             final UnixFSUtils utils,
-            final UnixFSGarbageCollector garbageCollector) throws IOException {
+            final UnixFSGarbageCollector garbageCollector) {
         this.utils = utils;
         this.nodeId = nodeId;
         this.garbageCollector = garbageCollector;
-        createDirectories(utils.getPathStorageRoot());
     }
 
     @Override

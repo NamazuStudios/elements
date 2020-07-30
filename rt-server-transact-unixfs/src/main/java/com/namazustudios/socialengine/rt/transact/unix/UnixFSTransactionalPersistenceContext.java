@@ -1,10 +1,15 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+
+import java.io.IOException;
+
+import static java.nio.file.Files.createDirectories;
 
 public class UnixFSTransactionalPersistenceContext implements TransactionalPersistenceContext {
 
@@ -41,6 +46,7 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
     @Override
     public void start() {
 
+        getUnixFSUtils().initialize();
         getUnixFSUtils().lockStorageRoot();
 
         try {
@@ -51,9 +57,11 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
             getRevisionDataStore().start();
         } catch (IllegalStateException ex) {
             logger.error("Inconsistent state.", ex);
+            throw ex;
         } catch (Exception ex) {
             stop();
             logger.error("Failed to start.", ex);
+            throw new InternalException(ex);
         }
 
     }

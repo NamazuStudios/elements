@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceLoader;
+import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ContentionException;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -22,14 +25,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static java.lang.Integer.min;
 import static java.lang.Thread.sleep;
 import static java.util.Spliterator.*;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.IntStream.range;
 
 public class TransactionalResourceService implements ResourceService {
 

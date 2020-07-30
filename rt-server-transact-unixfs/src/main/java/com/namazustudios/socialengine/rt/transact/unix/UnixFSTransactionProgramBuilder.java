@@ -153,6 +153,26 @@ public class UnixFSTransactionProgramBuilder {
         return this;
     }
 
+
+    public UnixFSTransactionProgramBuilder updateResource(final UnixFSTransactionProgramExecutionPhase executionPhase,
+                                                          final ResourceId resourceId,
+                                                          final java.nio.file.Path fsPath) {
+
+        requireNonNull(fsPath);
+        requireNonNull(resourceId);
+        requireNonNull(executionPhase);
+
+        getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
+                .withPhase(executionPhase)
+                .withInstruction(UPDATE_RESOURCE)
+                .addResourceIdParameter(resourceId)
+                .addFSPathParameter(fsPath)
+            .build(byteBuffer)));
+
+        return this;
+    }
+
+
     /**
      * Links a {@link ResourceId} to a specific {@link com.namazustudios.socialengine.rt.Path}.
      *

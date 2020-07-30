@@ -21,9 +21,9 @@ import java.util.stream.Stream;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class DefaultTransactionalResourceServicePersistence implements TransactionalResourceServicePersistence {
+public class SimpleTransactionalResourceServicePersistence implements TransactionalResourceServicePersistence {
 
-    private static final Logger logger = getLogger(DefaultTransactionalResourceServicePersistence.class);
+    private static final Logger logger = getLogger(SimpleTransactionalResourceServicePersistence.class);
 
     private final Lock lock;
 
@@ -36,7 +36,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
     private final TransactionalPersistenceContext transactionalPersistenceContext;
 
     @Inject
-    public DefaultTransactionalResourceServicePersistence(
+    public SimpleTransactionalResourceServicePersistence(
             final RevisionDataStore revisionDataStore,
             final TransactionJournal transactionJournal,
             final TransactionalPersistenceContext transactionalPersistenceContext) {
@@ -70,7 +70,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
         try {
             lock.lock();
             final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
-            return new DefaultReadOnlyTransaction(nodeId, revision);
+            return new SimpleReadOnlyTransaction(nodeId, revision);
         } finally {
             lock.unlock();
         }
@@ -82,7 +82,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
             lock.lock();
             final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
             final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
-            return new DefaultReadWriteTransaction(nodeId, revision, entry);
+            return new SimpleReadWriteTransaction(nodeId, revision, entry);
         } finally {
             lock.unlock();
         }
@@ -94,7 +94,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
             exclusiveLock.lock();
             final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
             final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
-            return new ExclusiveDefaultReadWriteTransaction(nodeId, revision, entry);
+            return new ExclusiveSimpleReadWriteTransaction(nodeId, revision, entry);
         } finally {
             exclusiveLock.unlock();
         }
@@ -163,14 +163,14 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
 
     }
 
-    private class DefaultReadOnlyTransaction implements ReadOnlyTransaction {
+    private class SimpleReadOnlyTransaction implements ReadOnlyTransaction {
 
         private final NodeId nodeId;
 
         private final RevisionDataStore.LockedRevision revision;
 
-        public DefaultReadOnlyTransaction(final NodeId nodeId,
-                                          final RevisionDataStore.LockedRevision revision) {
+        public SimpleReadOnlyTransaction(final NodeId nodeId,
+                                         final RevisionDataStore.LockedRevision revision) {
             this.nodeId = nodeId;
             this.revision = revision;
         }
@@ -207,7 +207,7 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
 
     }
 
-    private class DefaultReadWriteTransaction implements ReadWriteTransaction {
+    private class SimpleReadWriteTransaction implements ReadWriteTransaction {
 
         private final Lock lock;
 
@@ -217,16 +217,16 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
 
         protected final TransactionJournal.MutableEntry entry;
 
-        public DefaultReadWriteTransaction(final NodeId nodeId,
-                                           final RevisionDataStore.LockedRevision revision,
-                                           final TransactionJournal.MutableEntry entry) {
+        public SimpleReadWriteTransaction(final NodeId nodeId,
+                                          final RevisionDataStore.LockedRevision revision,
+                                          final TransactionJournal.MutableEntry entry) {
             this(exclusiveLock, nodeId, revision, entry);
         }
 
-        public DefaultReadWriteTransaction(final Lock lock,
-                                           final NodeId nodeId,
-                                           final RevisionDataStore.LockedRevision revision,
-                                           final TransactionJournal.MutableEntry entry) {
+        public SimpleReadWriteTransaction(final Lock lock,
+                                          final NodeId nodeId,
+                                          final RevisionDataStore.LockedRevision revision,
+                                          final TransactionJournal.MutableEntry entry) {
             this.entry = entry;
             this.revision = revision;
             this.nodeId = nodeId;
@@ -270,6 +270,12 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
         public WritableByteChannel saveNewResource(final Path path, final ResourceId resourceId)
                 throws IOException, TransactionConflictException {
             return entry.saveNewResource(path, resourceId);
+        }
+
+        @Override
+        public WritableByteChannel updateResource(final ResourceId resourceId)
+                throws IOException, TransactionConflictException {
+            return entry.updateResource(resourceId);
         }
 
         @Override
@@ -339,13 +345,13 @@ public class DefaultTransactionalResourceServicePersistence implements Transacti
 
     }
 
-    private class ExclusiveDefaultReadWriteTransaction
-            extends DefaultReadWriteTransaction
+    private class ExclusiveSimpleReadWriteTransaction
+            extends SimpleReadWriteTransaction
             implements ExclusiveReadWriteTransaction {
 
-        public ExclusiveDefaultReadWriteTransaction(final NodeId nodeId,
-                                                    final RevisionDataStore.LockedRevision revision,
-                                                    final TransactionJournal.MutableEntry entry) {
+        public ExclusiveSimpleReadWriteTransaction(final NodeId nodeId,
+                                                   final RevisionDataStore.LockedRevision revision,
+                                                   final TransactionJournal.MutableEntry entry) {
             super(exclusiveLock, nodeId, revision, entry);
         }
 

@@ -65,7 +65,6 @@ public class UnixFSRevisionTable {
 
     @Inject
     public UnixFSRevisionTable(final UnixFSUtils utils,
-                               final UnixFSChecksumAlgorithm preferredChecksum,
                                @Named(REVISION_TABLE_COUNT) final int revisionTableCount) throws IOException {
         this.utils = utils;
         this.revisionTableCount = revisionTableCount;

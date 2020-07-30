@@ -89,11 +89,8 @@ public class UnixFSUtils {
     public UnixFSUtils(
             final Revision.Factory revisionFactory,
             @Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
-
-
         this.revisionFactory = revisionFactory;
         this.storageRoot = storageRoot;
-
         this.lockFilePath = storageRoot.resolve(LOCK_FILE_NAME);
         this.revisionTablePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();
         this.revisionPoolPath = storageRoot.resolve(REVISION_POOL_FILE_NAME).toAbsolutePath().normalize();
@@ -102,27 +99,7 @@ public class UnixFSUtils {
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath().normalize();
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath().normalize();
         this.temporaryFileDirectory = storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath().normalize();
-
-        final Set<FileSystem> fileSystemSet = new HashSet<>();
-
-        fileSystemSet.add(storageRoot.getFileSystem());
-        fileSystemSet.add(revisionPoolPath.getFileSystem());
-        fileSystemSet.add(revisionTablePath.getFileSystem());
-        fileSystemSet.add(tombstone.getFileSystem());
-        fileSystemSet.add(pathStorageRoot.getFileSystem());
-        fileSystemSet.add(resourceStorageRoot.getFileSystem());
-        fileSystemSet.add(temporaryFileDirectory.getFileSystem());
-        fileSystemSet.add(transactionJournalPath.getFileSystem());
-
-        if (fileSystemSet.size() > 1) {
-            throw new IllegalArgumentException(format("%s %s and %s must share common filesystem.",
-                    pathStorageRoot,
-                    resourceStorageRoot,
-                    temporaryFileDirectory));
-        }
-
         pathSeparator = pathStorageRoot.getFileSystem().getSeparator();
-
     }
 
     /**
@@ -202,12 +179,33 @@ public class UnixFSUtils {
      * Initializes the directory contents for all the necessary sub directories.
      */
     public void initialize() {
+
         doOperationV(() -> {
-            createDirectories(pathStorageRoot);
-            createDirectories(resourceStorageRoot);
-            createDirectories(temporaryFileDirectory);
+            createDirectories(getStorageRoot());
+            createDirectories(getPathStorageRoot());
+            createDirectories(getResourceStorageRoot());
+            createDirectories(getTemporaryFileDirectory());
             if (!isRegularFile(tombstone, NOFOLLOW_LINKS)) createFile(tombstone);
         }, FatalException::new);
+
+        final Set<FileSystem> fileSystemSet = new HashSet<>();
+
+        fileSystemSet.add(tombstone.getFileSystem());
+        fileSystemSet.add(getPathStorageRoot().getFileSystem());
+        fileSystemSet.add(getRevisionPoolPath().getFileSystem());
+        fileSystemSet.add(getRevisionTableFilePath().getFileSystem());
+        fileSystemSet.add(getPathStorageRoot().getFileSystem());
+        fileSystemSet.add(getResourceStorageRoot().getFileSystem());
+        fileSystemSet.add(getTemporaryFileDirectory().getFileSystem());
+        fileSystemSet.add(getTransactionJournalPath().getFileSystem());
+
+        if (fileSystemSet.size() > 1) {
+            throw new IllegalArgumentException(format("%s %s and %s must share common filesystem.",
+                pathStorageRoot,
+                resourceStorageRoot,
+                temporaryFileDirectory));
+        }
+
     }
 
     /**
@@ -281,6 +279,33 @@ public class UnixFSUtils {
     }
 
     /**
+     * Returns tha {@link Path} to the directory holding the path mapping.
+     * @return the {@link Path} to the path mapping
+     */
+    public Path getPathStorageRoot() {
+        return pathStorageRoot;
+    }
+
+    /**
+     * Returns the storage root directory where {@link Resource} instances are stored.
+     *
+     * @return the {@link Path} to the {@link Resource} storage
+     */
+    public Path getResourceStorageRoot() {
+        return resourceStorageRoot;
+    }
+
+    /**
+     * A directory for temporary files which will eventually be linked to the main storage roots and will later
+     * be deleted.
+     *
+     * @return the temporary file directory.
+     */
+    public Path getTemporaryFileDirectory() {
+        return temporaryFileDirectory;
+    }
+
+    /**
      * Returns the path to the journal file.
      * @return the path to the journal file.
      */
@@ -302,23 +327,6 @@ public class UnixFSUtils {
      */
     public Path getRevisionPoolPath() {
         return revisionPoolPath;
-    }
-
-    /**
-     * Returns tha {@link Path} to the directory holding the path mapping.
-     * @return the {@link Path} to the path mapping
-     */
-    public Path getPathStorageRoot() {
-        return pathStorageRoot;
-    }
-
-    /**
-     * Returns the storage root directory where {@link Resource} instances are stored.
-     *
-     * @return the {@link Path} to the {@link Resource} storage
-     */
-    public Path getResourceStorageRoot() {
-        return resourceStorageRoot;
     }
 
     /**
@@ -541,7 +549,6 @@ public class UnixFSUtils {
          */
         public boolean matches(final Path path) {
             return typePredicate.test(path) && path.endsWith(extension);
-
         }
 
     }

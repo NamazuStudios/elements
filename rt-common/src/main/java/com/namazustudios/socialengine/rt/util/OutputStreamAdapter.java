@@ -27,22 +27,28 @@ public class OutputStreamAdapter extends OutputStream {
 
     private final ByteBuffer byteBuffer;
 
-    private final Operation ioop;
+    private final Operation flushop;
 
-    private final Operation close;
+    private final Operation closeop;
 
     public OutputStreamAdapter(final WritableByteChannel wbc, final ByteBuffer byteBuffer, final int options) {
         this.wbc = wbc;
-        this.byteBuffer = byteBuffer;
-        ioop =  (FLUSH & options) == 0 ? Operation.NOOP : this::doFlush;
-        close = (CLOSE & options) == 0 ? Operation.NOOP : wbc::close;
+        this.byteBuffer = byteBuffer.slice();
+        closeop = (CLOSE & options) == 0 ? Operation.NOOP : wbc::close;
+        flushop = (FLUSH & options) == 0 ? Operation.NOOP : this::doFlush;
     }
 
     @Override
     public void write(final int b) throws IOException {
+
         byteBuffer.put((byte)b);
-        if (!byteBuffer.hasRemaining()) doFlush();
-        ioop.perform();
+
+        if (!byteBuffer.hasRemaining()) {
+            doFlush();
+        } else {
+            flushop.perform();
+        }
+
     }
 
     @Override
@@ -53,30 +59,20 @@ public class OutputStreamAdapter extends OutputStream {
     @Override
     public void write(final byte[] b, final int off, final int len) throws IOException {
 
-        if (byteBuffer.remaining() < len) {
-            byteBuffer.put(b, off, len);
-            ioop.perform();
-            return;
-        }
-
-        doFlush();
-
-        if (byteBuffer.remaining() < len) {
-            byteBuffer.put(b, off, len);
-            ioop.perform();
-            return;
-        }
+        if ((len + off) > b.length) throw new IllegalArgumentException("Invalid length");
+        if (off > b.length || off < 0) throw new IllegalArgumentException("Invalid offset.");
 
         int pos = off;
+        final int end = off + len;
 
-        while (pos < b.length) {
-            final int toWrite = min(byteBuffer.remaining(), b.length - pos);
+        while (pos < end) {
+            final int toWrite = min(byteBuffer.remaining(), end - pos);
             byteBuffer.put(b, pos, toWrite);
             if (!byteBuffer.hasRemaining()) doFlush();
             pos += toWrite;
         }
 
-        ioop.perform();
+        flushop.perform();
 
     }
 
@@ -86,15 +82,22 @@ public class OutputStreamAdapter extends OutputStream {
     }
 
     private void doFlush() throws IOException {
+
         byteBuffer.flip();
-        wbc.write(byteBuffer);
+
+        while (byteBuffer.hasRemaining()) {
+            if (wbc.write(byteBuffer) == 0) throw new NonBlockingIOException("Channel is in non-blocking mode and " +
+                                                                             "cannot accept bytes right now.");
+        }
+
         byteBuffer.clear();
+
     }
 
     @Override
     public void close() throws IOException {
         doFlush();
-        close.perform();
+        closeop.perform();
     }
 
     @FunctionalInterface

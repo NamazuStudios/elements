@@ -87,6 +87,43 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     }
 
     @Override
+    public WritableByteChannel updateResource(final ResourceId resourceId)
+            throws IOException, TransactionConflictException {
+
+        check();
+
+        return workingCopy.updateResource(resourceId, () -> {
+
+            final java.nio.file.Path temporaryFile = unixFSUtils.allocateTemporaryFile();
+            final FileChannel fileChannel = FileChannel.open(temporaryFile, WRITE);
+
+            return new WritableByteChannel() {
+
+                @Override
+                public int write(ByteBuffer byteBuffer) throws IOException {
+                    return fileChannel.write(byteBuffer);
+                }
+
+                @Override
+                public boolean isOpen() {
+                    return fileChannel.isOpen();
+                }
+
+                @Override
+                public void close() throws IOException {
+                    fileChannel.close();
+                    programBuilder
+                            .updateResource(COMMIT, resourceId, temporaryFile)
+                            .unlinkFile(CLEANUP, temporaryFile);
+                }
+
+            };
+
+        });
+
+    }
+
+    @Override
     public void linkNewResource(
             final ResourceId sourceResourceId,
             final Path destination) throws TransactionConflictException {
