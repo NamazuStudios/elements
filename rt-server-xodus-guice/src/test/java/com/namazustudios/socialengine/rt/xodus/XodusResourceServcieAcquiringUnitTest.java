@@ -51,7 +51,7 @@ public class XodusResourceServcieAcquiringUnitTest extends AbstractResourceServi
             doAnswer(a -> {
                 fail("No attempt to load resource should be made for this test.");
                 return null;
-            }).when(resourceLoader).load(any());
+            }).when(resourceLoader).load(any(InputStream.class));
 
             bind(ResourceLoader.class).toInstance(resourceLoader);
 

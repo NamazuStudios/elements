@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This contains code to handle a
@@ -32,7 +33,7 @@ import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromStri
  *
  * Created by patricktwohig on 7/24/15.
  */
-public interface ResourceService {
+public interface ResourceService extends AutoCloseable {
 
     /**
      * Called on start-up to ensure that the {@link ResourceService} has created and started any internal processes
@@ -258,7 +259,7 @@ public interface ResourceService {
      * @return
      */
     default List<Unlink> unlinkMultiple(final Path path, int max) {
-        final Logger logger = LoggerFactory.getLogger(getClass());
+        final Logger logger = getLogger(getClass());
         return unlinkMultiple(path, max, r -> {
             try {
                 r.close();
@@ -365,7 +366,7 @@ public interface ResourceService {
      * are attempted to be closed.
      */
     default void removeAndCloseAllResources() {
-        final Logger logger = LoggerFactory.getLogger(getClass());
+        final Logger logger = getLogger(getClass());
         removeAllResources().forEach(resource -> {
             try {
                 resource.close();
@@ -376,6 +377,19 @@ public interface ResourceService {
     }
 
     long getInMemoryResourceCount();
+
+    /**
+     * Closes this {@link ResourceService}. Equivalent to calling {@link #stop()}
+     */
+    @Override
+    default void close() {
+        try {
+            stop();
+        } catch (IllegalStateException ex) {
+            final Logger logger = getLogger(getClass());
+            logger.info("Already closed.", ex);
+        }
+    };
 
     /**
      * Contains the association between the {@link Path} and {@link ResourceId}.

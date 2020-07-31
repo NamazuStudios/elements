@@ -11,6 +11,7 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -64,12 +65,12 @@ public class XodusResourceServicePersistenceTest {
             os.write(bytes);
             originals.put(new Key(bytes), resourceId);
             return null;
-        }).when(resource).serialize(any());
+        }).when(resource).serialize(any(OutputStream.class));
 
         getResourceService().addAndReleaseResource(path, resource);
 
         verify(resource, times(1)).unload();
-        verify(resource, times(1)).serialize(any());
+        verify(resource, times(1)).serialize(any(OutputStream.class));
 
     }
 
@@ -92,7 +93,7 @@ public class XodusResourceServicePersistenceTest {
 
         getResourceService().release(acquired);
         verify(acquired.getDelegate(), times(1)).unload();
-        verify(acquired.getDelegate(), times(1)).serialize(any());
+        verify(acquired.getDelegate(), times(1)).serialize(any(OutputStream.class));
 
         final Resource removed = getResourceService().removeResource(originalId);
         assertEquals(removed, DeadResource.getInstance());
@@ -145,7 +146,7 @@ public class XodusResourceServicePersistenceTest {
 
             final ResourceLoader mockResourceLoader = mock(ResourceLoader.class);
 
-            when(mockResourceLoader.load(any())).thenAnswer(invocation -> {
+            when(mockResourceLoader.load(any(InputStream.class))).thenAnswer(invocation -> {
 
                 final byte bytes[] = new byte[MOCK_COUNT];
 

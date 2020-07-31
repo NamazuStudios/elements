@@ -108,8 +108,6 @@ public abstract class UnixFSMemoryUtils {
             if (!byteBuffer.isDirect()) throw new IllegalArgumentException("Only direct bytebuffers are supported.");
             if ((position + Long.BYTES) > byteBuffer.limit()) throw new IllegalArgumentException("Not enough space in buffer");
 
-            final DirectBuffer directBuffer = (DirectBuffer) byteBuffer;
-
             try {
 
                 // Determines if we have to flip the byte buffer order around
@@ -132,7 +130,7 @@ public abstract class UnixFSMemoryUtils {
                 if (misalignment != 0) {
 
                     final String msg = format(
-                        "Address of long 0x%X is     not properly aligned. Misalignment of %d bytes.",
+                        "Address of long 0x%X is not properly aligned. Misalignment of %d bytes.",
                         address, misalignment
                     );
 

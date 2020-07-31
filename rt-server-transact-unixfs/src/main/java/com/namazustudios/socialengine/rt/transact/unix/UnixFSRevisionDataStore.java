@@ -298,7 +298,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         @Override
         public void cleanup(final TransactionJournal.Entry entry) {
-
+            throw new FatalException("Not yet supported.");
         }
 
         @Override

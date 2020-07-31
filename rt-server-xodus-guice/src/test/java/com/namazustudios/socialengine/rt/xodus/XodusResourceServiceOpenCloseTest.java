@@ -51,7 +51,7 @@ public class XodusResourceServiceOpenCloseTest {
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             rs.addAndReleaseResource(path, original);
             verify(original, times(1)).unload();
-            verify(original, times(1)).serialize(any());
+            verify(original, times(1)).serialize(any(OutputStream.class));
         }
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
@@ -72,7 +72,7 @@ public class XodusResourceServiceOpenCloseTest {
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             rs.addAndReleaseResource(path, original);
             verify(original, times(1)).unload();
-            verify(original, times(1)).serialize(any());
+            verify(original, times(1)).serialize(any(OutputStream.class));
         }
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
@@ -95,7 +95,7 @@ public class XodusResourceServiceOpenCloseTest {
         }
 
         verify(original, times(1)).unload();
-        verify(original, times(1)).serialize(any());
+        verify(original, times(1)).serialize(any(OutputStream.class));
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             final Resource loaded = rs.getAndAcquireResourceWithId(original.getId());
@@ -117,7 +117,7 @@ public class XodusResourceServiceOpenCloseTest {
         }
 
         verify(original, times(1)).unload();
-        verify(original, times(1)).serialize(any());
+        verify(original, times(1)).serialize(any(OutputStream.class));
 
         try (final ResourceService rs = open(base.getAbsolutePath())) {
             final Resource loaded = rs.getAndAcquireResourceAtPath(path);
@@ -139,7 +139,7 @@ public class XodusResourceServiceOpenCloseTest {
             final byte[] bytes = resourceId.asString().getBytes(UTF_8);
             os.write(bytes);
             return null;
-        }).when(mock).serialize(any());
+        }).when(mock).serialize(any(OutputStream.class));
 
         return mock;
 
@@ -164,7 +164,7 @@ public class XodusResourceServiceOpenCloseTest {
         protected void configure() {
             final ResourceLoader mockResourceLoader = mock(ResourceLoader.class);
 
-            when(mockResourceLoader.load(any())).thenAnswer(invocation -> {
+            when(mockResourceLoader.load(any(InputStream.class))).thenAnswer(invocation -> {
 
                 final InputStream is = invocation.getArgument(0);
                 final byte[] bytes = ByteStreams.toByteArray(is);

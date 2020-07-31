@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.transact.Revision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -62,6 +63,7 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
+    @Inject
     public UnixFSRevisionPool(final UnixFSUtils utils,
                               @Named(REVISION_POOL_SIZE) final int poolSize) {
         this.utils = utils;
@@ -194,6 +196,7 @@ public class UnixFSRevisionPool implements Revision.Factory {
                 }
 
                 if (poolSize < max) {
+
                     final String msg = format(
                             "Cannot reduce pool size from %d to %d",
                             magic, poolSize

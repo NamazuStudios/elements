@@ -31,19 +31,15 @@ public class UnixFSPathIndex implements PathIndex {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSPathIndex.class);
 
-    private final NodeId nodeId;
-
     private final UnixFSUtils utils;
 
     private final UnixFSGarbageCollector garbageCollector;
 
     @Inject
     public UnixFSPathIndex(
-            final NodeId nodeId,
             final UnixFSUtils utils,
             final UnixFSGarbageCollector garbageCollector) {
         this.utils = utils;
-        this.nodeId = nodeId;
         this.garbageCollector = garbageCollector;
     }
 

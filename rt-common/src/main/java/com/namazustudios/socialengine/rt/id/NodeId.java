@@ -20,7 +20,7 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
  */
 public class NodeId implements Serializable, HasNodeId {
 
-    private static final int SIZE = new ResourceId(new V1CompoundId.Builder()
+    private static final int SIZE = new NodeId(new V1CompoundId.Builder()
             .with(INSTANCE, UUID.randomUUID())
             .with(APPLICATION, UUID.randomUUID())
         .build()).asBytes().length;
