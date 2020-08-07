@@ -225,7 +225,7 @@ public class TransactionalResourceService implements ResourceService {
     }
 
     private Context getContext() {
-        final Context context = getContext();
+        final Context context = this.context.get();
         if (context == null) throw new IllegalStateException("Not started.");
         return context;
     }

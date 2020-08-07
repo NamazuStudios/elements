@@ -13,6 +13,17 @@ public class UnixFSAtomicLongData extends Struct {
 
     private final Signed64 value = new Signed64();
 
+    /**
+     * Initializes the atomic long data to the supplied value. This will, non atomically, write the value to the bytes
+     * in the underlying buffer. This should only be used to initialize the value when the counter is created and should
+     * not be used again.
+     *
+     * @param value the value to set
+     */
+    public void initialize(long value) {
+        this.value.set(value);
+    }
+
     @Override
     public final boolean isPacked() {
         return false;

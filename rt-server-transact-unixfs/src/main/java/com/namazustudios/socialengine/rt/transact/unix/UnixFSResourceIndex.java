@@ -22,13 +22,25 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSResourceIndex.class);
 
-    private final UnixFSUtils utils;
+    private UnixFSUtils utils;
 
-    private final UnixFSGarbageCollector garbageCollector;
+    private UnixFSGarbageCollector garbageCollector;
+
+    public UnixFSUtils getUtils() {
+        return utils;
+    }
 
     @Inject
-    public UnixFSResourceIndex(final UnixFSUtils utils, final UnixFSGarbageCollector garbageCollector) {
+    public void setUtils(UnixFSUtils utils) {
         this.utils = utils;
+    }
+
+    public UnixFSGarbageCollector getGarbageCollector() {
+        return garbageCollector;
+    }
+
+    @Inject
+    public void setGarbageCollector(final UnixFSGarbageCollector garbageCollector) {
         this.garbageCollector = garbageCollector;
     }
 
@@ -42,7 +54,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
             mapping.getResourceIdDirectory(),
             revision,
             UnixFSUtils.LinkType.REVISION_HARD_LINK
-        ).map(path -> garbageCollector.pin(path, revision))
+        ).map(path -> getGarbageCollector().pin(path, revision))
          .map(path -> isRegularFile(path) && !utils.isTombstone(path));
 
     }
@@ -74,7 +86,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
         try {
 
-            final Path pinned = garbageCollector.pin(file, revision);
+            final Path pinned = getGarbageCollector().pin(file, revision);
             final FileChannel out = fc = open(pinned, READ);
 
             final UnixFSResourceHeader resourceHeader = new UnixFSResourceHeader();
@@ -104,7 +116,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
 
         final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
-        garbageCollector.utils.tombstone(resourceIdMapping.getResourceIdDirectory(), revision);
+        getUtils().tombstone(resourceIdMapping.getResourceIdDirectory(), revision);
 
         final Path reverseRoot = resourceIdMapping.resolveReverseDirectories();
 
@@ -126,7 +138,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
     private void tombstone(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
         utils.doOperationV(() -> {
             final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRelativeFSPath(utils, nodeId, symbolicLink);
-            garbageCollector.utils.tombstone(pathMapping.getPathDirectory(), revision);
+            getUtils().tombstone(pathMapping.getPathDirectory(), revision);
         }, FatalException::new);
     }
 

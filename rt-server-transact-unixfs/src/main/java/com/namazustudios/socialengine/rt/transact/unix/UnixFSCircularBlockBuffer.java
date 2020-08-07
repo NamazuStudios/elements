@@ -55,6 +55,14 @@ public class UnixFSCircularBlockBuffer {
     }
 
     /**
+     * Resets the underlying {@link UnixFSDualCounter}. The result of this call effectively clears the buffer, but does
+     * not overwrite the data contained therein.
+     */
+    public void reset() {
+        counter.reset();
+    }
+
+    /**
      * Gets the current leading slice value. Since this presumes that there is at least one in the chain
      *
      * @return the current leading slice
@@ -263,8 +271,8 @@ public class UnixFSCircularBlockBuffer {
         public Stream<Slice<StructT>> reverse() {
             final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
             return snapshot
-                    .reverseRange()
-                    .mapToObj(i -> new Slice<>(i, structs.get(i), slices.get(i)));
+                .reverseRange()
+                .mapToObj(i -> new Slice<>(i, structs.get(i), slices.get(i)));
         }
 
 

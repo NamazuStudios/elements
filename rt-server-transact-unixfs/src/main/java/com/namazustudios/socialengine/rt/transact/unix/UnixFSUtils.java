@@ -63,7 +63,7 @@ public class UnixFSUtils {
 
     public static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHI0123456789-";
 
-    private final Revision.Factory revisionFactory;
+    private Revision.Factory revisionFactory;
 
     private final Path storageRoot;
 
@@ -86,10 +86,7 @@ public class UnixFSUtils {
     private final Path lockFilePath;
 
     @Inject
-    public UnixFSUtils(
-            final Revision.Factory revisionFactory,
-            @Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
-        this.revisionFactory = revisionFactory;
+    public UnixFSUtils(@Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
         this.storageRoot = storageRoot;
         this.lockFilePath = storageRoot.resolve(LOCK_FILE_NAME);
         this.revisionTablePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();
@@ -100,6 +97,15 @@ public class UnixFSUtils {
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath().normalize();
         this.temporaryFileDirectory = storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath().normalize();
         pathSeparator = pathStorageRoot.getFileSystem().getSeparator();
+    }
+
+    public Revision.Factory getRevisionFactory() {
+        return revisionFactory;
+    }
+
+    @Inject
+    public void setRevisionFactory(Revision.Factory revisionFactory) {
+        this.revisionFactory = revisionFactory;
     }
 
     /**
@@ -120,7 +126,7 @@ public class UnixFSUtils {
         return doOperation(() -> Files
             .list(directory)
             .filter(linkType::matches))
-            .map(path -> revisionFactory.create(linkType.stripExtension(path).toString()).withValue(path))
+            .map(path -> getRevisionFactory().create(linkType.stripExtension(path).toString()).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
             .orElse(zero());

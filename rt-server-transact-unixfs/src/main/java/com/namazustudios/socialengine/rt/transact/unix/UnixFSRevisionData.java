@@ -10,9 +10,9 @@ public class UnixFSRevisionData extends Struct {
 
     public static final int SIZE = new UnixFSRevisionData().size();
 
-    Signed32 max;
+    final Signed32 max = new Signed32();
 
-    Signed64 snapshot;
+    final Signed64 snapshot = new Signed64();
 
     void fromRevision(final UnixFSRevision<?> revision) {
         final UnixFSDualCounter.Snapshot snapshot = revision.getSnapshot();

@@ -18,8 +18,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
+import static java.nio.file.StandardOpenOption.*;
 
 /**
  * Manages a circular buffer of available revisions, tracks the reference revision, and ensures that all revisions
@@ -57,18 +56,11 @@ public class UnixFSRevisionPool implements Revision.Factory {
      */
     public static final int VERSION_MINOR_CURRENT = VERSION_MINOR_0;
 
-    private final UnixFSUtils utils;
+    private int poolSize;
 
-    private final int poolSize;
+    private UnixFSUtils utils;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
-
-    @Inject
-    public UnixFSRevisionPool(final UnixFSUtils utils,
-                              @Named(REVISION_POOL_SIZE) final int poolSize) {
-        this.utils = utils;
-        this.poolSize = poolSize;
-    }
 
     public void start() {
 
@@ -95,6 +87,24 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
     }
 
+    public int getPoolSize() {
+        return poolSize;
+    }
+
+    @Inject
+    public void setPoolSize(@Named(REVISION_POOL_SIZE) final int poolSize) {
+        this.poolSize = poolSize;
+    }
+
+    public UnixFSUtils getUtils() {
+        return utils;
+    }
+
+    @Inject
+    public void setUtils(final UnixFSUtils utils) {
+        this.utils = utils;
+    }
+
     /**
      * Creates a new {@link Revision<?>} and returns it. Once returned, the {@link Revision<?>} must be either committed
      * or canceled before future {@link Revision<?>}s will be applied
@@ -119,7 +129,6 @@ public class UnixFSRevisionPool implements Revision.Factory {
         return getContext().create(at);
     }
 
-
     private Context getContext() {
         final Context context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
@@ -139,17 +148,17 @@ public class UnixFSRevisionPool implements Revision.Factory {
             final Path revisionPoolPath = utils.getRevisionPoolPath();
 
             if (isRegularFile(revisionPoolPath)) {
-                logger.info("Reading existing head file {}", revisionPoolPath);
+                logger.info("Reading existing revision pool {}", revisionPoolPath);
                 poolBuffer = readRevisionPoolFile(revisionPoolPath);
             } else {
-                logger.info("Creating new head file at {}", revisionPoolPath);
+                logger.info("Creating new revision pool at {}", revisionPoolPath);
                 poolBuffer = createNewRevisionPoolFile(revisionPoolPath);
             }
 
-            revisionCounter = new UnixFSDualCounter(poolSize, revisionPoolData.atomicLongData.createAtomicLong());
+            final UnixFSAtomicLong counter = revisionPoolData.atomicLongData.createAtomicLong();
+            revisionCounter = new UnixFSDualCounter(getPoolSize(), counter);
 
         }
-
 
         private MappedByteBuffer readRevisionPoolFile(final Path revisionPoolPath) throws IOException {
 
@@ -215,7 +224,7 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
             final MappedByteBuffer mappedByteBuffer;
 
-            try (final FileChannel fileChannel = FileChannel.open(revisionPoolPath, READ, WRITE)) {
+            try (final FileChannel fileChannel = FileChannel.open(revisionPoolPath, READ, WRITE, CREATE)) {
                 final ByteBuffer buffer = ByteBuffer.allocate(revisionPoolData.size());
 
                 // Writes the initial values to the file and flushes the buffer to disk.

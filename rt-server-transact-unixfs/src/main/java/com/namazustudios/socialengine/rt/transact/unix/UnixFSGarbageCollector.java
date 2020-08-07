@@ -18,12 +18,7 @@ import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
  */
 public class UnixFSGarbageCollector {
 
-    final UnixFSUtils utils;
-
-    @Inject
-    public UnixFSGarbageCollector(final UnixFSUtils utils) {
-        this.utils = utils;
-    }
+    private UnixFSUtils utils;
 
     /**
      * Pins the particular file to the supplied {@link Revision<?>}.  This will guarantee that the file pointed to the
@@ -38,7 +33,7 @@ public class UnixFSGarbageCollector {
         if (isRegularFile(file, NOFOLLOW_LINKS) || isSymbolicLink(file)) {
             final Path parent = file.getParent();
             final Path pinned = utils.resolveRevisionFilePath(parent, revision);
-            utils.doOperationV(() -> Files.createLink(file, pinned), FatalException::new);
+            getUtils().doOperationV(() -> Files.createLink(file, pinned), FatalException::new);
             return pinned;
         } else {
             throw new IllegalArgumentException("Not a file path: " + file);
@@ -60,6 +55,15 @@ public class UnixFSGarbageCollector {
 
     public void stop() {
         // TODO Implement
+    }
+
+    public UnixFSUtils getUtils() {
+        return utils;
+    }
+
+    @Inject
+    public void setUtils(final UnixFSUtils utils) {
+        this.utils = utils;
     }
 
 }

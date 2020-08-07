@@ -57,18 +57,11 @@ public class UnixFSRevisionTable {
 
     private static final Logger logger = getLogger(UnixFSRevisionTable.class);
 
-    private final UnixFSUtils utils;
+    private UnixFSUtils utils;
 
-    private final int revisionTableCount;
+    private int revisionTableCount;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
-
-    @Inject
-    public UnixFSRevisionTable(final UnixFSUtils utils,
-                               @Named(REVISION_TABLE_COUNT) final int revisionTableCount) throws IOException {
-        this.utils = utils;
-        this.revisionTableCount = revisionTableCount;
-    }
 
     public void start() {
 
@@ -116,8 +109,18 @@ public class UnixFSRevisionTable {
         return utils;
     }
 
+    @Inject
+    public void setUtils(final UnixFSUtils utils) {
+        this.utils = utils;
+    }
+
     public int getRevisionTableCount() {
         return revisionTableCount;
+    }
+
+    @Inject
+    public void setRevisionTableCount(@Named(REVISION_TABLE_COUNT) int revisionTableCount) {
+        this.revisionTableCount = revisionTableCount;
     }
 
     private class Context {
@@ -134,35 +137,37 @@ public class UnixFSRevisionTable {
 
             final long totalBytesRequired =
                 (long) header.size() +
-                (long) revisionTableCount * (long) UnixFSRevisionData.SIZE;
+                (long) getRevisionTableCount() * (long) UnixFSRevisionTableEntry.SIZE;
 
             if (totalBytesRequired > Integer.MAX_VALUE) {
 
                 final String msg = format("Revision buffer count too large. (%dx%d)=size > %d",
-                        UnixFSRevisionData.SIZE,
-                        revisionTableCount,
+                        UnixFSRevisionTableEntry.SIZE,
+                        getRevisionTableCount(),
                         Integer.MAX_VALUE);
 
                 throw new IllegalArgumentException(msg);
             }
 
-            final Path revisionTableFilePath = utils.getRevisionTableFilePath();
+            final UnixFSAtomicLong counter;
+            final Path revisionTableFilePath = getUtils().getRevisionTableFilePath();
 
             if (isRegularFile(revisionTableFilePath)) {
-                logger.info("Reading existing head file {}", revisionTableFilePath);
+                logger.info("Reading existing revision table {}", revisionTableFilePath);
                 revisionTableBuffer = loadRevisionTableFile(revisionTableFilePath);
+                counter = header.atomicLongData.createAtomicLong();
             } else {
-                logger.info("Creating new head file at {}", revisionTableFilePath);
+                logger.info("Creating new revision table at {}", revisionTableFilePath);
                 revisionTableBuffer = createRevisionTableFile(revisionTableFilePath);
+                counter = header.atomicLongData.createAtomicLong();
             }
 
             revisionTableBuffer.clear().position(header.size());
 
-            final UnixFSAtomicLong counter = header.atomicLongData.createAtomicLong();
-
-            this.circularBlockBuffer =
-                    new UnixFSCircularBlockBuffer(counter, revisionTableBuffer, UnixFSRevisionTableEntry.SIZE)
-                            .forStructType(UnixFSRevisionTableEntry::new);
+            this.circularBlockBuffer = new UnixFSCircularBlockBuffer(
+                counter,
+                revisionTableBuffer,
+                UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new);
 
         }
 
@@ -252,21 +257,21 @@ public class UnixFSRevisionTable {
             try (final FileChannel channel = open(revisionTableFilePath, READ, WRITE, CREATE)) {
 
                 final int headerSize = header.size();
-                final int totalEntrySize = (UnixFSRevisionData.SIZE * revisionTableCount);
+                final int totalEntrySize = (UnixFSRevisionTableEntry.SIZE * getRevisionTableCount());
 
                 // Places the header at the beginning of the file.
 
-                final ByteBuffer fillHeader = ByteBuffer.allocate(headerSize + Long.BYTES);
+                final ByteBuffer fillHeader = ByteBuffer.allocate(headerSize);
                 while(fillHeader.hasRemaining()) fillHeader.put(FILLER);
                 fillHeader.rewind();
                 channel.write(fillHeader);
 
                 // We next allocate memory in the file for the remaining block entries.
 
-                final ByteBuffer fillEntry = ByteBuffer.allocate(UnixFSRevisionData.SIZE);
+                final ByteBuffer fillEntry = ByteBuffer.allocate(UnixFSRevisionTableEntry.SIZE);
                 while(fillEntry.hasRemaining()) fillEntry.put(FILLER);
 
-                for (int entry = 0; entry < revisionTableCount; ++entry) {
+                for (int entry = 0; entry < getRevisionTableCount(); ++entry) {
                     fillEntry.rewind();
                     channel.write(fillEntry);
                 }
@@ -284,7 +289,7 @@ public class UnixFSRevisionTable {
                 header.magic.set(REVISION_TABLE_MAGIC);
                 header.major.set(VERSION_MAJOR_CURRENT);
                 header.minor.set(VERSION_MINOR_CURRENT);
-                header.revisionTableCount.set(revisionTableCount);
+                header.revisionTableCount.set(getRevisionTableCount());
 
                 return buffer;
 

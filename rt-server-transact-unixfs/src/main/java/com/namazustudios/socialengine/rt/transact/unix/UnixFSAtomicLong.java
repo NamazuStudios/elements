@@ -18,6 +18,16 @@ public interface UnixFSAtomicLong {
     long get();
 
     /**
+     * Sets the value of, atomically.
+     *
+     * @param value the value to set
+     */
+    default void set(final long value) {
+        long current;
+        do current = get(); while (!compareAndSet(current, value));
+    }
+
+    /**
      * Compares and sets the value, atomically.
      *
      * @param expect the expected value

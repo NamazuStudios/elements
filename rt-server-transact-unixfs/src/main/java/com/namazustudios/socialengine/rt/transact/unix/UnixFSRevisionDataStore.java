@@ -31,43 +31,21 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private static final Logger logger = getLogger(UnixFSRevisionDataStore.class);
 
-    private final UnixFSUtils utils;
+    private UnixFSUtils utils;
 
-    private final UnixFSPathIndex pathIndex;
+    private UnixFSPathIndex pathIndex;
 
-    private final UnixFSResourceIndex resourceIdIndex;
+    private UnixFSResourceIndex resourceIndex;
 
-    private final UnixFSRevisionPool revisionPool;
+    private UnixFSRevisionPool revisionPool;
 
-    private final UnixFSGarbageCollector garbageCollector;
+    private UnixFSGarbageCollector garbageCollector;
 
-    private final UnixFSChecksumAlgorithm preferredChecksum;
+    private UnixFSChecksumAlgorithm preferredChecksum;
 
-    private final UnixFSRevisionTable revisionTable;
+    private UnixFSRevisionTable revisionTable;
 
-    private final UnixFSTransactionJournal transactionJournal;
-
-    @Inject
-    public UnixFSRevisionDataStore(
-            final UnixFSUtils utils,
-            final UnixFSPathIndex pathIndex,
-            final UnixFSResourceIndex resourceIdIndex,
-            final UnixFSRevisionPool revisionPool,
-            final UnixFSGarbageCollector garbageCollector,
-            final UnixFSChecksumAlgorithm preferredChecksum,
-            final UnixFSRevisionTable revisionTable,
-            final UnixFSTransactionJournal transactionJournal) {
-
-        this.utils = utils;
-        this.pathIndex = pathIndex;
-        this.resourceIdIndex = resourceIdIndex;
-        this.revisionPool = revisionPool;
-        this.garbageCollector = garbageCollector;
-        this.preferredChecksum = preferredChecksum;
-        this.revisionTable = revisionTable;
-        this.transactionJournal = transactionJournal;
-
-    }
+    private UnixFSTransactionJournal transactionJournal;
 
     public void start() {
         recoverJournal();
@@ -106,7 +84,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     @Override
     public UnixFSResourceIndex getResourceIndex() {
-        return resourceIdIndex;
+        return resourceIndex;
     }
 
     @Override
@@ -163,24 +141,68 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         throw new UnsupportedOperationException();
     }
 
+    public UnixFSUtils getUtils() {
+        return utils;
+    }
+
+    @Inject
+    public void setUtils(final UnixFSUtils utils) {
+        this.utils = utils;
+    }
+
+    @Inject
+    public void setPathIndex(final UnixFSPathIndex pathIndex) {
+        this.pathIndex = pathIndex;
+    }
+
+    @Inject
+    public void setResourceIndex(final UnixFSResourceIndex resourceIndex) {
+        this.resourceIndex = resourceIndex;
+    }
+
     public UnixFSRevisionPool getRevisionPool() {
         return revisionPool;
     }
 
-    public UnixFSChecksumAlgorithm getPreferredChecksum() {
-        return preferredChecksum;
+    @Inject
+    public void setRevisionPool(final UnixFSRevisionPool revisionPool) {
+        this.revisionPool = revisionPool;
     }
 
     public UnixFSGarbageCollector getGarbageCollector() {
         return garbageCollector;
     }
 
+    @Inject
+    public void setGarbageCollector(final UnixFSGarbageCollector garbageCollector) {
+        this.garbageCollector = garbageCollector;
+    }
+
+    public UnixFSChecksumAlgorithm getPreferredChecksum() {
+        return preferredChecksum;
+    }
+
+    @Inject
+    public void setPreferredChecksum(final UnixFSChecksumAlgorithm preferredChecksum) {
+        this.preferredChecksum = preferredChecksum;
+    }
+
     public UnixFSRevisionTable getRevisionTable() {
         return revisionTable;
     }
 
+    @Inject
+    public void setRevisionTable(final UnixFSRevisionTable revisionTable) {
+        this.revisionTable = revisionTable;
+    }
+
     public UnixFSTransactionJournal getTransactionJournal() {
         return transactionJournal;
+    }
+
+    @Inject
+    public void setTransactionJournal(final UnixFSTransactionJournal transactionJournal) {
+        this.transactionJournal = transactionJournal;
     }
 
     private ExecutionHandler newExecutionHandler(
@@ -190,7 +212,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
             @Override
             public void unlinkFile(final UnixFSTransactionProgram program, final Path fsPath) {
-                utils.doOperationV(() -> Files.delete(fsPath), FatalException::new);
+                getUtils().doOperationV(() -> Files.delete(fsPath), FatalException::new);
             }
 
             @Override

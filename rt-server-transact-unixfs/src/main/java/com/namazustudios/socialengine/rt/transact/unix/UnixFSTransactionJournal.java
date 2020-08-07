@@ -77,43 +77,21 @@ public class UnixFSTransactionJournal implements TransactionJournal {
      */
     public static final int VERSION_MINOR_CURRENT = VERSION_MINOR_0;
 
-    private final long txnBufferSize;
+    private long txnBufferSize;
 
-    private final long txnBufferCount;
+    private long txnBufferCount;
 
-    private final UnixFSUtils utils;
+    private UnixFSUtils utils;
 
-    private final UnixFSPathIndex unixFSPathIndex;
+    private UnixFSPathIndex unixFSPathIndex;
 
-    private final UnixFSChecksumAlgorithm preferredChecksumAlgorithm;
+    private UnixFSChecksumAlgorithm preferredChecksumAlgorithm;
 
-    private final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider;
+    private Provider<UnixFSTransactionProgramBuilder> programBuilderProvider;
+
+    private UnixFSRevisionDataStore revisionDataStore;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
-
-    private final UnixFSRevisionDataStore revisionDataStore;
-
-    @Inject
-    public UnixFSTransactionJournal(
-            final UnixFSUtils utils,
-            final UnixFSPathIndex unixFSPathIndex,
-            final UnixFSChecksumAlgorithm preferredChecksumAlgorithm,
-            final UnixFSRevisionDataStore revisionDataStore,
-            final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider,
-            @Named(TRANSACTION_BUFFER_SIZE) final int txnBufferSize,
-            @Named(TRANSACTION_BUFFER_COUNT) final int txnBufferCount) {
-
-        if (txnBufferSize > Integer.MAX_VALUE) throw new IllegalArgumentException("tnx buffer size too large");
-        if (txnBufferCount > Integer.MAX_VALUE) throw new IllegalArgumentException("tnx buffer count too large");
-
-        this.utils = utils;
-        this.unixFSPathIndex = unixFSPathIndex;
-        this.txnBufferSize = txnBufferSize;
-        this.txnBufferCount = txnBufferCount;
-        this.preferredChecksumAlgorithm = preferredChecksumAlgorithm;
-        this.programBuilderProvider = programBuilderProvider;
-        this.revisionDataStore = revisionDataStore;
-    }
 
     public void start() {
 
@@ -155,28 +133,65 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         return txnBufferSize;
     }
 
+    @Inject
+    public void setTxnBufferSize(@Named(TRANSACTION_BUFFER_SIZE) long txnBufferSize) {
+        if (txnBufferSize > Integer.MAX_VALUE) throw new IllegalArgumentException("tnx buffer size too large");
+        this.txnBufferSize = txnBufferSize;
+    }
+
     public long getTxnBufferCount() {
         return txnBufferCount;
+    }
+
+    @Inject
+    public void setTxnBufferCount(@Named(TRANSACTION_BUFFER_COUNT) long txnBufferCount) {
+        if (txnBufferCount > Integer.MAX_VALUE) throw new IllegalArgumentException("tnx buffer count too large");
+        this.txnBufferCount = txnBufferCount;
     }
 
     public UnixFSUtils getUtils() {
         return utils;
     }
 
+    @Inject
+    public void setUtils(final UnixFSUtils utils) {
+        this.utils = utils;
+    }
+
     public UnixFSPathIndex getUnixFSPathIndex() {
         return unixFSPathIndex;
+    }
+
+    @Inject
+    public void setUnixFSPathIndex(final UnixFSPathIndex unixFSPathIndex) {
+        this.unixFSPathIndex = unixFSPathIndex;
     }
 
     public UnixFSChecksumAlgorithm getPreferredChecksumAlgorithm() {
         return preferredChecksumAlgorithm;
     }
 
+    @Inject
+    public void setPreferredChecksumAlgorithm(final UnixFSChecksumAlgorithm preferredChecksumAlgorithm) {
+        this.preferredChecksumAlgorithm = preferredChecksumAlgorithm;
+    }
+
     public Provider<UnixFSTransactionProgramBuilder> getProgramBuilderProvider() {
         return programBuilderProvider;
     }
 
+    @Inject
+    public void setProgramBuilderProvider(final Provider<UnixFSTransactionProgramBuilder> programBuilderProvider) {
+        this.programBuilderProvider = programBuilderProvider;
+    }
+
     public UnixFSRevisionDataStore getRevisionDataStore() {
         return revisionDataStore;
+    }
+
+    @Inject
+    public void setRevisionDataStore(final UnixFSRevisionDataStore revisionDataStore) {
+        this.revisionDataStore = revisionDataStore;
     }
 
     public Stream<UnixFSCircularBlockBuffer.Slice<ByteBuffer>> entries() {
@@ -199,18 +214,20 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         private Context() throws IOException {
 
+            final UnixFSAtomicLong counter;
             final Path journalPath = getUtils().getTransactionJournalPath();
 
             if (isRegularFile(journalPath)) {
                 logger.info("Reading existing journal file {}", journalPath);
                 journalBuffer = readExistingJournal(journalPath);
+                counter = header.counter.createAtomicLong();
             } else {
+                logger.info("Creating new journal file {}", journalPath);
                 journalBuffer = createNewJournal(journalPath);
+                counter = header.counter.createAtomicLong();
             }
 
-            journalBuffer.reset().position(header.size());
-
-            final UnixFSAtomicLong counter = header.counter.createAtomicLong();
+            journalBuffer.clear().position(header.size());
             circularBlockBuffer = new UnixFSCircularBlockBuffer(counter, journalBuffer, (int) txnBufferSize);
 
         }
@@ -378,17 +395,20 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                     throw new IllegalStateException("Channel size mismatch!");
                 }
 
-                final MappedByteBuffer buffer = channel.map(READ_WRITE, 0, headerSize + totalEntrySize);
-                buffer.position(0).limit((int)headerSize);
+                final MappedByteBuffer journalBuffer = channel.map(READ_WRITE, 0, headerSize + totalEntrySize);
 
-                header.setByteBuffer(buffer, 0);
+                journalBuffer.position(0).limit((int)headerSize);
+
+                final ByteBuffer headerBuffer = journalBuffer.slice();
+                header.setByteBuffer(headerBuffer, 0);
+
                 header.magic.set(JOURNAL_MAGIC);
                 header.major.set(VERSION_MAJOR_CURRENT);
                 header.minor.set(VERSION_MINOR_CURRENT);
                 header.txnBufferSize.set(getTxnBufferSize());
                 header.txnBufferCount.set(getTxnBufferCount());
 
-                return buffer;
+                return journalBuffer;
 
             }
 

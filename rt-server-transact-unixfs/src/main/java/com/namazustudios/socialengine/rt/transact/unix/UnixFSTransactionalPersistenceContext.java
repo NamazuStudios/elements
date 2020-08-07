@@ -15,33 +15,17 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
 
     private final Logger logger = LoggerFactory.getLogger(UnixFSTransactionalPersistenceContext.class);
 
-    private final UnixFSUtils unixFSUtils;
+    private UnixFSUtils unixFSUtils;
 
-    private final UnixFSTransactionJournal transactionJournal;
+    private UnixFSTransactionJournal transactionJournal;
 
-    private final UnixFSRevisionTable revisionTable;
+    private UnixFSRevisionTable revisionTable;
 
-    private final UnixFSGarbageCollector garbageCollector;
+    private UnixFSGarbageCollector garbageCollector;
 
-    private final UnixFSRevisionPool revisionPool;
+    private UnixFSRevisionPool revisionPool;
 
-    private final UnixFSRevisionDataStore revisionDataStore;
-
-    @Inject
-    public UnixFSTransactionalPersistenceContext(
-            final UnixFSUtils unixFSUtils,
-            final UnixFSTransactionJournal transactionJournal,
-            final UnixFSRevisionTable revisionTable,
-            final UnixFSGarbageCollector garbageCollector,
-            final UnixFSRevisionPool revisionPool,
-            final UnixFSRevisionDataStore unixFSRevisionDataStore) {
-        this.unixFSUtils = unixFSUtils;
-        this.transactionJournal = transactionJournal;
-        this.revisionTable = revisionTable;
-        this.garbageCollector = garbageCollector;
-        this.revisionPool = revisionPool;
-        this.revisionDataStore = unixFSRevisionDataStore;
-    }
+    private UnixFSRevisionDataStore revisionDataStore;
 
     @Override
     public void start() {
@@ -87,28 +71,58 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
         }
     }
 
-    public UnixFSRevisionPool getRevisionPool() {
-        return revisionPool;
-    }
-
     public UnixFSUtils getUnixFSUtils() {
         return unixFSUtils;
+    }
+
+    @Inject
+    public void setUnixFSUtils(UnixFSUtils unixFSUtils) {
+        this.unixFSUtils = unixFSUtils;
     }
 
     public UnixFSTransactionJournal getTransactionJournal() {
         return transactionJournal;
     }
 
+    @Inject
+    public void setTransactionJournal(UnixFSTransactionJournal transactionJournal) {
+        this.transactionJournal = transactionJournal;
+    }
+
     public UnixFSRevisionTable getRevisionTable() {
         return revisionTable;
+    }
+
+    @Inject
+    public void setRevisionTable(UnixFSRevisionTable revisionTable) {
+        this.revisionTable = revisionTable;
     }
 
     public UnixFSGarbageCollector getGarbageCollector() {
         return garbageCollector;
     }
 
+    @Inject
+    public void setGarbageCollector(UnixFSGarbageCollector garbageCollector) {
+        this.garbageCollector = garbageCollector;
+    }
+
+    public UnixFSRevisionPool getRevisionPool() {
+        return revisionPool;
+    }
+
+    @Inject
+    public void setRevisionPool(UnixFSRevisionPool revisionPool) {
+        this.revisionPool = revisionPool;
+    }
+
     public UnixFSRevisionDataStore getRevisionDataStore() {
         return revisionDataStore;
+    }
+
+    @Inject
+    public void setRevisionDataStore(UnixFSRevisionDataStore revisionDataStore) {
+        this.revisionDataStore = revisionDataStore;
     }
 
 }

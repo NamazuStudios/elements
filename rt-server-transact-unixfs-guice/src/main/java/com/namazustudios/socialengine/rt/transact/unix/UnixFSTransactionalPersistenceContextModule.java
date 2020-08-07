@@ -35,28 +35,16 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        bind(TransactionalPersistenceContext.class)
-            .to(UnixFSTransactionalPersistenceContext.class)
-            .asEagerSingleton();
-
-        bind(TransactionJournal.class)
-            .to(UnixFSTransactionJournal.class)
-            .asEagerSingleton();
-
-        bind(UnixFSRevisionPool.class)
-            .asEagerSingleton();
-
-        bind(UnixFSRevisionTable.class)
-            .asEagerSingleton();
-
-        bind(Revision.Factory.class)
-            .to(UnixFSRevisionPool.class)
-            .asEagerSingleton();
-
-        bind(UnixFSGarbageCollector.class)
-            .asEagerSingleton();
+        bind(UnixFSGarbageCollector.class).asEagerSingleton();
+        bind(UnixFSRevisionPool.class).asEagerSingleton();
+        bind(UnixFSRevisionTable.class).asEagerSingleton();
+        bind(UnixFSTransactionJournal.class).asEagerSingleton();
+        bind(UnixFSTransactionalPersistenceContext.class).asEagerSingleton();
 
         bind(RevisionDataStore.class).to(UnixFSRevisionDataStore.class);
+        bind(Revision.Factory.class).to(UnixFSRevisionPool.class);
+        bind(TransactionJournal.class).to(UnixFSTransactionJournal.class);
+        bind(TransactionalPersistenceContext.class).to(UnixFSTransactionalPersistenceContext.class);
 
         storageRootBinding.run();
         transactionSizeBinding.run();
@@ -89,7 +77,10 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
      * @return this instance
      */
     public UnixFSTransactionalPersistenceContextModule withTransactionBufferSize(final int size) {
-        transactionSizeBinding = () -> bind(int.class).annotatedWith(named(TRANSACTION_BUFFER_SIZE)).toInstance(size);
+        transactionSizeBinding = () ->
+            bind(long.class)
+                .annotatedWith(named(TRANSACTION_BUFFER_SIZE))
+                .toInstance((long)size);
         return this;
     }
 
@@ -101,7 +92,10 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
      * @return this instance
      */
     public UnixFSTransactionalPersistenceContextModule withTransactionBufferCount(final int count) {
-        transactionCountBinding = () -> bind(int.class).annotatedWith(named(TRANSACTION_BUFFER_COUNT)).toInstance(count);
+        transactionCountBinding = () ->
+            bind(long.class)
+                .annotatedWith(named(TRANSACTION_BUFFER_COUNT))
+                .toInstance((long)count);
         return this;
     }
 

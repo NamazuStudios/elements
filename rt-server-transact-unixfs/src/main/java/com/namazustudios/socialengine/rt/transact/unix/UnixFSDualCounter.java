@@ -34,14 +34,6 @@ public class UnixFSDualCounter {
     private final UnixFSAtomicLong counter;
 
     /**
-     * Creates an instance of {@link UnixFSDualCounter} with the default max value, which is the max value of an
-     * integer.
-     */
-    public UnixFSDualCounter() {
-        this(Integer.MAX_VALUE);
-    }
-
-    /**
      * Creates a dual count with the supplied maximum value. The max value represents the actual number the counter will
      * hit, including zero. Therefore, if using this to index an array, the max value shoudl be one less than the total
      * size of the array.
@@ -66,6 +58,11 @@ public class UnixFSDualCounter {
             }
 
             @Override
+            public void set(final long value) {
+                counter.set(value);
+            }
+
+            @Override
             public boolean compareAndSet(long expect, long update) {
                 return counter.compareAndSet(expect, update);
             }
@@ -82,6 +79,14 @@ public class UnixFSDualCounter {
         if (max <= 0) throw new IllegalArgumentException("Maximum value too low: " + max);
         this.max = max;
         this.counter = counter;
+    }
+
+    /**
+     * Resets this counter ensuring that both leading/trailing values are equal to the max value. This uses the
+     * counter's currently configured maximum value.
+     */
+    public void reset() {
+        counter.set(pack(max, max));
     }
 
     /**
@@ -372,7 +377,7 @@ public class UnixFSDualCounter {
         }
 
         private static IntStream reverseRangeClosed(final int from, final int to) {
-            return rangeClosed(from, to).map(i -> to - i + from);
+            return rangeClosed(to, from).map(i -> to - i + from);
         }
 
         /**

@@ -212,7 +212,7 @@ public class UnixFSPathIndex implements PathIndex {
                        final NodeId nodeId,
                        final com.namazustudios.socialengine.rt.Path rtPath) {
         final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
-        garbageCollector.utils.tombstone(pathMapping.getPathDirectory(), revision);
+        garbageCollector.getUtils().tombstone(pathMapping.getPathDirectory(), revision);
     }
 
     private class RevisionListing implements ResourceService.Listing {

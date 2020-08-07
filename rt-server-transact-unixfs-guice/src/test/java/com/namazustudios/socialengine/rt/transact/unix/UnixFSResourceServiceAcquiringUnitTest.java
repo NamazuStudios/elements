@@ -5,9 +5,9 @@ import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceAcquiringUnitTest;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
-import com.namazustudios.socialengine.rt.transact.TransactionalResourceService;
-import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
+import com.namazustudios.socialengine.rt.transact.*;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
@@ -26,9 +26,24 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
     @Inject
     private TransactionalResourceService transactionalResourceService;
 
+    @Inject
+    private TransactionalPersistenceContext transactionalPersistenceContext;
+
     @Override
     public ResourceService getResourceService() {
         return transactionalResourceService;
+    }
+
+    @BeforeClass
+    public void start() {
+        transactionalPersistenceContext.start();
+        transactionalResourceService.start();
+    }
+
+    @AfterClass
+    public void stop() {
+        transactionalResourceService.stop();
+        transactionalPersistenceContext.start();
     }
 
     public static class Module extends AbstractModule {
@@ -39,7 +54,7 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
             final NodeId testNodeId = randomNodeId();
             bind(NodeId.class).toInstance(testNodeId);
 
-            install(new TransactionalResourceServiceModule());
+            install(new TransactionalResourceServiceModule().exposeTransactionalResourceService());
             install(new SimpleTransactionalResourceServicePersistenceModule());
 
             try {

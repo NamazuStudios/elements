@@ -139,6 +139,7 @@ public abstract class UnixFSMemoryUtils {
                 }
 
                 return new UnixFSAtomicLong() {
+
                     @Override
                     public long get() {
                         final long address = memoryAddressSupplier.getAsLong();
