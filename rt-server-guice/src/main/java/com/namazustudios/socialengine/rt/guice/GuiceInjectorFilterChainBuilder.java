@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Filter;
 import com.namazustudios.socialengine.rt.handler.Session;
+import org.slf4j.Logger;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -16,7 +17,11 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import static org.slf4j.LoggerFactory.getLogger;
+
 public class GuiceInjectorFilterChainBuilder implements Filter.Chain.Builder {
+
+    private static final Logger logger = getLogger(GuiceInjectorFilterChainBuilder.class);
 
     private final Injector injector;
 
@@ -88,6 +93,9 @@ public class GuiceInjectorFilterChainBuilder implements Filter.Chain.Builder {
                 // At the beginning of the chain, we should make sure that we have no scope set.
                 Filter.Chain.build(filters, terminal).next(session, request, scopedResponseConsumer);
 
+            } catch (Exception ex) {
+                logger.error("Caught exception in filter chain builder.", ex);
+                throw ex;
             }
 
             // We should also make sure that after the call, the scope is empty and all intermediate states have
