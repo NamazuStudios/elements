@@ -36,12 +36,6 @@ public class CodeServeMain implements Callable<Void>, Runnable {
 
     private static final OptionParser optionParser = new OptionParser();
 
-    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.codeserve.bind.address";
-
-    public static final String PORT = "com.namazustudios.socialengine.codeserve.port";
-
-    public static final String CODE_SERVE_CONTEXT = "com.namazustudios.socialengine.codeserve.context";
-
     public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
 
     public static final int DEFAULT_PORT = 8082;
