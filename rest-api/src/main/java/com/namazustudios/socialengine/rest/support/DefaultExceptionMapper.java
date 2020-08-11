@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
 import com.namazustudios.socialengine.exception.BaseException;
 import com.namazustudios.socialengine.exception.ErrorCode;
+import com.namazustudios.socialengine.exception.UnauthorizedException;
 import com.namazustudios.socialengine.exception.ValidationFailureException;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.ValidationErrorResponse;
@@ -18,7 +19,9 @@ import javax.ws.rs.ext.Provider;
 import java.util.List;
 import java.util.Map;
 
+import static com.namazustudios.socialengine.Headers.BEARER;
 import static java.util.stream.Collectors.toList;
+import static javax.ws.rs.core.HttpHeaders.WWW_AUTHENTICATE;
 
 /**
  * Created by patricktwohig on 4/10/15.
@@ -65,10 +68,23 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
                 .map(v -> v.getPropertyPath() + " - " + v.getMessage())
                 .collect(toList()));
 
-            return Response
-                    .status(getStatusForCode(ex.getCode()))
+            return Response.status(getStatusForCode(ex.getCode()))
+                           .entity(errorResponse)
+                           .build();
+
+        } catch (UnauthorizedException ex) {
+
+            final ErrorResponse errorResponse = new ErrorResponse();
+
+            LOG.info("Caught validation failure exception while processing request.", ex);
+
+            errorResponse.setMessage(ex.getMessage());
+            errorResponse.setCode(ex.getCode().toString());
+
+            return Response.status(getStatusForCode(ex.getCode()))
                     .entity(errorResponse)
-                .build();
+                    .header(WWW_AUTHENTICATE, BEARER)
+                    .build();
 
         } catch (BaseException ex) {
 
