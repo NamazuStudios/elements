@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.sun.org.apache.bcel.internal.generic.RET;
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -24,8 +26,13 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
 
     @Override
     public Optional<Object> getAttributeOptional(final String name) {
-        final Object object = getAttributes().get(name);
+
+        final Map<String, Object> attributes = getAttributes();
+        if (attributes == null) return Optional.empty();
+
+        final Object object = attributes.get(name);
         return object == null ? empty() : of(object);
+
     }
 
     @Override

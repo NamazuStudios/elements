@@ -163,7 +163,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
     }
 
     @Inject
-    public void setWritersByContentType(Map<String, PayloadWriter> writersByContentType) {
+    public void setWritersByContentType(final Map<String, PayloadWriter> writersByContentType) {
         this.writersByContentType = writersByContentType;
     }
 
