@@ -246,6 +246,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(ProfileOverrideServiceProvider.class)
             .in(scope);
 
+        bind(AppleSignInAuthService.class)
+            .toProvider(AppleSignInAuthServiceProvider.class)
+            .in(scope);
+
         bind(AdvancementService.class).to(StandardAdvancementService.class);
 
         bind(SessionService.class).to(DefaultSessionService.class);
@@ -365,6 +369,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(StandardAdvancementService.class);
 
+        bind(AppleSignInAuthService.class)
+            .annotatedWith(Unscoped.class)
+            .to(AnonAppleSignInAuthService.class);
+
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
@@ -408,6 +416,7 @@ public class ServicesModule extends PrivateModule {
         expose(AppleIapReceiptService.class);
         expose(GooglePlayIapReceiptService.class);
         expose(AdvancementService.class);
+        expose(AppleSignInAuthService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -437,6 +446,7 @@ public class ServicesModule extends PrivateModule {
         expose(VersionService.class).annotatedWith(Unscoped.class);
         expose(SessionService.class).annotatedWith(Unscoped.class);
         expose(AdvancementService.class).annotatedWith(Unscoped.class);
+        expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
 
     }
 
