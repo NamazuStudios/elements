@@ -197,6 +197,38 @@ public class User implements Serializable {
         this.appleSignInId = appleSignInId;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return isActive() == user.isActive() &&
+                Objects.equals(getId(), user.getId()) &&
+                Objects.equals(getName(), user.getName()) &&
+                Objects.equals(getEmail(), user.getEmail()) &&
+                getLevel() == user.getLevel() &&
+                Objects.equals(getFacebookId(), user.getFacebookId()) &&
+                Objects.equals(getAppleSignInId(), user.getAppleSignInId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getAppleSignInId());
+    }
+
+    @Override
+    public String toString() {
+        return "User{" +
+                "id='" + id + '\'' +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", level=" + level +
+                ", active=" + active +
+                ", facebookId='" + facebookId + '\'' +
+                ", appleSignInId='" + appleSignInId + '\'' +
+                '}';
+    }
+
     /**
      * Gets a special User object which is set to unprivileged.  This is used
      * as a palceholder when a user is not logged in.
