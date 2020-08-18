@@ -57,6 +57,9 @@ public class MongoApplicationConfiguration {
     @Property("active")
     private boolean active;
 
+    @Property("signInPrivateKey")
+    private String appleSignInPrivateKey;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -105,6 +108,14 @@ public class MongoApplicationConfiguration {
         this.active = active;
     }
 
+    public String getAppleSignInPrivateKey() {
+        return appleSignInPrivateKey;
+    }
+
+    public void setAppleSignInPrivateKey(String appleSignInPrivateKey) {
+        this.appleSignInPrivateKey = appleSignInPrivateKey;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -115,12 +126,21 @@ public class MongoApplicationConfiguration {
                 Objects.equals(getUniqueIdentifier(), that.getUniqueIdentifier()) &&
                 Objects.equals(getParent(), that.getParent()) &&
                 Objects.equals(getProductBundles(), that.getProductBundles()) &&
-                getCategory() == that.getCategory();
+                getCategory() == that.getCategory() &&
+                Objects.equals(getAppleSignInPrivateKey(), that.getAppleSignInPrivateKey());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getObjectId(), getUniqueIdentifier(), getParent(), getProductBundles(), getCategory(),
-                isActive());
+        return Objects.hash(
+            getObjectId(),
+            getUniqueIdentifier(),
+            getParent(),
+            getProductBundles(),
+            getCategory(),
+            isActive(),
+            getAppleSignInPrivateKey()
+        );
     }
+
 }

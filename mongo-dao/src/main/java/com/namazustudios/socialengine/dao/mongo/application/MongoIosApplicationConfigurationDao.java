@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoProductBundle;
+import com.namazustudios.socialengine.exception.application.ApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.IosApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
@@ -23,6 +24,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.IOS_APP_STORE;
+import static java.lang.String.format;
 
 /**
  * Created by patricktwohig on 5/25/17.
@@ -119,7 +121,8 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         final MongoIosApplicationConfiguration mongoIosApplicationProfile = query.get();
 
         if (mongoIosApplicationProfile == null) {
-            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
+            final String msg = format("application profile %s not found", applicationConfigurationNameOrId);
+            throw new ApplicationConfigurationNotFoundException(msg);
         }
 
         return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationConfiguration.class);
