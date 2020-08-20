@@ -5,6 +5,7 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.impl.PublicClaims;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.namazustudios.socialengine.dao.AppleSignInSessionDao;
@@ -106,7 +107,11 @@ public class AppleSignInAuthServiceOperations {
             appConfiguration)
         );
 
-        final TokenResponse tokenResponse = fetchRefreshToken(authorizationCode, appleSignInConfiguration);
+        final TokenResponse tokenResponse = fetchRefreshToken(
+            authorizationCode,
+            appleIdentityToken,
+            appleSignInConfiguration);
+
         final Session session = new Session();
 
         session.setUser(user);
@@ -148,7 +153,9 @@ public class AppleSignInAuthServiceOperations {
 
             return verifier.verify(jwt);
 
-        } catch (JWTVerificationException ex) {
+        } catch (TokenExpiredException ex) {
+            return jwt;
+        }catch (JWTVerificationException ex) {
             return null;
         }
 
@@ -228,16 +235,17 @@ public class AppleSignInAuthServiceOperations {
     }
 
     private TokenResponse fetchRefreshToken(final String authorizationCode,
+                                            final DecodedJWT appleIdentityToken,
                                             final AppleSignInConfiguration appleSignInConfiguration) {
 
         final String clientId = appleSignInConfiguration.getClientId();
-        final String clientSecret = generateClientSecret(appleSignInConfiguration);
+        final String clientSecret = generateClientSecret(appleSignInConfiguration, appleIdentityToken);
 
         final Form form = new Form()
             .param(AuthParameter.CLIENT_ID.value, clientId)
             .param(AuthParameter.CLIENT_SECRET.value, clientSecret)
             .param(AuthParameter.GRANT_TYPE.value, GrantType.AUTHORIZATION_CODE.value)
-            .param(AuthParameter.CODE.value, authorizationCode);
+            .param(AuthParameter.CODE.value, authorizationCode.trim());
 
         final Response response = getClient()
             .target(BASE_URL)
@@ -256,7 +264,8 @@ public class AppleSignInAuthServiceOperations {
 
     }
 
-    private String generateClientSecret(final AppleSignInConfiguration appleSignInConfiguration) {
+    private String generateClientSecret(final AppleSignInConfiguration appleSignInConfiguration,
+                                        final DecodedJWT appleIdentityToken) {
 
         final long now = MILLISECONDS.toSeconds(currentTimeMillis());
 
@@ -278,14 +287,26 @@ public class AppleSignInAuthServiceOperations {
 
         final Algorithm algorithm = Algorithm.ECDSA256(null, ecPrivateKey);
 
-        return JWT.create()
-                .withKeyId(appleSignInConfiguration.getKeyId())
-                .withClaim(PublicClaims.ISSUER, appleSignInConfiguration.getTeamId())
-                .withClaim(PublicClaims.SUBJECT, appleSignInConfiguration.getClientId())
-                .withClaim(PublicClaims.ISSUED_AT, now)
-                .withClaim(PublicClaims.EXPIRES_AT, now + TOKEN_EXPIRY)
-                .withClaim(PublicClaims.AUDIENCE, TOKEN_AUDIENCE)
-            .sign(algorithm);
+        if (appleIdentityToken.getClaims().containsKey("nonce")) {
+            return JWT.create()
+                    .withKeyId(appleSignInConfiguration.getKeyId().trim())
+                    .withClaim(PublicClaims.ISSUER, appleSignInConfiguration.getTeamId().trim())
+                    .withClaim(PublicClaims.SUBJECT, appleSignInConfiguration.getClientId().trim())
+                    .withClaim(PublicClaims.ISSUED_AT, now)
+                    .withClaim(PublicClaims.EXPIRES_AT, now + TOKEN_EXPIRY)
+                    .withClaim(PublicClaims.AUDIENCE, TOKEN_AUDIENCE)
+//                    .withClaim("nonce", appleIdentityToken.getClaim("nonce").asString())
+                .sign(algorithm);
+        } else {
+            return JWT.create()
+                    .withKeyId(appleSignInConfiguration.getKeyId().trim())
+                    .withClaim(PublicClaims.ISSUER, appleSignInConfiguration.getTeamId().trim())
+                    .withClaim(PublicClaims.SUBJECT, appleSignInConfiguration.getClientId().trim())
+                    .withClaim(PublicClaims.ISSUED_AT, now)
+                    .withClaim(PublicClaims.EXPIRES_AT, now + TOKEN_EXPIRY)
+                    .withClaim(PublicClaims.AUDIENCE, TOKEN_AUDIENCE)
+                .sign(algorithm);
+        }
 
     }
 

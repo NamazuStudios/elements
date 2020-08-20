@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.applesignin;
 
 import com.namazustudios.socialengine.dao.AppleSignInUserDao;
 import com.namazustudios.socialengine.model.user.User;

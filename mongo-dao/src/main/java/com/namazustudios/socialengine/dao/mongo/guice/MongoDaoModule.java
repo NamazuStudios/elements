@@ -6,6 +6,7 @@ import com.google.inject.name.Names;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.dao.mongo.*;
+import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInUserDao;
 import com.namazustudios.socialengine.dao.mongo.application.*;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
