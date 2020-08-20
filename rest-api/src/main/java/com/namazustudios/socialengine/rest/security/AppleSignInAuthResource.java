@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest.security;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionRequest;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.service.AppleSignInAuthService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -43,7 +44,7 @@ public class AppleSignInAuthResource {
                 "will include that account information in the response. If there is an account, or this method " +
                 "receives an existing session key, this will link the existing account to apple if the account was " +
                 "not previously linked.")
-    public AppleSignInSessionCreation createSession(final AppleSignInSessionRequest appleSignInSessionRequest) {
+    public SessionCreation createSession(final AppleSignInSessionRequest appleSignInSessionRequest) {
 
         getValidationHelper().validateModel(appleSignInSessionRequest);
 

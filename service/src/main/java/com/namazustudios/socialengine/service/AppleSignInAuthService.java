@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 
 /**
  * Used to authorize requests users using Facebook Apple Sign-in tokens.
@@ -8,7 +9,6 @@ import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
  * Created by patricktwohig on 6/22/17.
  */
 public interface AppleSignInAuthService {
-
 
     /**
      * Creates a new session using the supplied application, application configuration, and the identity token.
@@ -27,6 +27,5 @@ public interface AppleSignInAuthService {
                                                                               String applicationConfigurationNameOrId,
                                                                               String identityToken,
                                                                               String authorizationCode);
-
 
 }

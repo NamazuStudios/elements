@@ -470,8 +470,8 @@ public class MongoProfileDao implements ProfileDao {
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.and(
-                query.criteria("user").equal(user),
-                query.criteria("application").equal(application)
+            query.criteria("user").equal(user),
+            query.criteria("application").equal(application)
         );
 
         final UpdateOperations<MongoProfile> updateOperations;

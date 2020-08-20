@@ -144,8 +144,9 @@ public interface ProfileDao {
      * Creates, reactivates, or refreshes a {@link Profile}.  This is similar to
      * {@link #createOrReactivateProfile(Profile)} except that it will upsert the {@link Profile}.
      *
-     * If the profile is already active, then this will perform minimal updates
-     * of the profile as it is supplied.
+     * If the profile is already active, then this will perform minimal updates of the profile as it is supplied.
+     * Specifically, it will not update the display name, application, and user field. It will only update the image
+     * url, if it was supplied.
      *
      * @param profile the user
      * @return the {@link Profile}, as written to the database

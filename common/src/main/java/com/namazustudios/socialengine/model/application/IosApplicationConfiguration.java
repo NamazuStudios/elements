@@ -16,7 +16,7 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
 
     private String applicationId;
 
-    private String appleSignInPrivateKey;
+    private AppleSignInConfiguration appleSignInConfiguration;
 
     /**
      * Gets the Application ID, as defined in the AppStore (com.mycompany.app)
@@ -35,21 +35,20 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
     }
 
     /**
-     * Gets the Apple Sign-In private key.
-     *
-     * @return the apple-sign in private key.
+     * Gets the {@link AppleSignInConfiguration} for use with this {@link IosApplicationConfiguration}.
+     * @return the {@link AppleSignInConfiguration}
      */
-    public String getAppleSignInPrivateKey() {
-        return appleSignInPrivateKey;
+    public AppleSignInConfiguration getAppleSignInConfiguration() {
+        return appleSignInConfiguration;
     }
 
     /**
-     * Sets the Apple Sign-In Private Key
+     * Sets the {@link AppleSignInConfiguration} for use with this {@link IosApplicationConfiguration}.
      *
-     * @param appleSignInPrivateKey
+     * @param appleSignInConfiguration
      */
-    public void setAppleSignInPrivateKey(String appleSignInPrivateKey) {
-        this.appleSignInPrivateKey = appleSignInPrivateKey;
+    public void setAppleSignInConfiguration(AppleSignInConfiguration appleSignInConfiguration) {
+        this.appleSignInConfiguration = appleSignInConfiguration;
     }
 
     @Override
@@ -59,12 +58,20 @@ public class IosApplicationConfiguration extends ApplicationConfiguration implem
         if (!super.equals(o)) return false;
         IosApplicationConfiguration that = (IosApplicationConfiguration) o;
         return Objects.equals(getApplicationId(), that.getApplicationId()) &&
-                Objects.equals(getAppleSignInPrivateKey(), that.getAppleSignInPrivateKey());
+                Objects.equals(appleSignInConfiguration, that.appleSignInConfiguration);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getApplicationId(), getAppleSignInPrivateKey());
+        return Objects.hash(super.hashCode(), getApplicationId(), appleSignInConfiguration);
+    }
+
+    @Override
+    public String toString() {
+        return "IosApplicationConfiguration{" +
+                "applicationId='" + applicationId + '\'' +
+                ", appleSignInConfiguration=" + appleSignInConfiguration +
+                '}';
     }
 
 }
