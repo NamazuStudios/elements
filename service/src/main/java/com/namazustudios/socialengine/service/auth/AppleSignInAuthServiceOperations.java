@@ -55,6 +55,8 @@ public class AppleSignInAuthServiceOperations {
 
     private static final Logger logger = LoggerFactory.getLogger(AppleSignInAuthServiceOperations.class);
 
+    private static final String EC_ALGO = "EC";
+
     private static final String RSA_ALGO = "RSA";
 
     private static final String BASE_URL = "https://appleid.apple.com/auth";
@@ -267,7 +269,7 @@ public class AppleSignInAuthServiceOperations {
                 PKCS8EncodedKeySpec::new);
 
             ecPrivateKey = (ECPrivateKey) KeyFactory
-                .getInstance("EC")
+                .getInstance(EC_ALGO)
                 .generatePrivate(pemDecoder.getSpec());
 
         } catch (InvalidKeySpecException | NoSuchAlgorithmException | InvalidPemException e) {
