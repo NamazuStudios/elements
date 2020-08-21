@@ -5,7 +5,6 @@ import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.exceptions.JWTVerificationException;
-import com.auth0.jwt.exceptions.TokenExpiredException;
 import com.auth0.jwt.impl.PublicClaims;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.namazustudios.socialengine.dao.AppleSignInSessionDao;
@@ -153,9 +152,8 @@ public class AppleSignInAuthServiceOperations {
 
             return verifier.verify(jwt);
 
-        } catch (TokenExpiredException ex) {
-            return jwt;
-        }catch (JWTVerificationException ex) {
+        } catch (JWTVerificationException ex) {
+            logger.trace("Key verification failed for {}", algorithm, ex);
             return null;
         }
 
@@ -275,7 +273,8 @@ public class AppleSignInAuthServiceOperations {
 
             final PemDecoder<PKCS8EncodedKeySpec> pemDecoder = new PemDecoder<>(
                 appleSignInConfiguration.getAppleSignInPrivateKey(),
-                PKCS8EncodedKeySpec::new);
+                PKCS8EncodedKeySpec::new
+            );
 
             ecPrivateKey = (ECPrivateKey) KeyFactory
                 .getInstance(EC_ALGO)
@@ -287,26 +286,14 @@ public class AppleSignInAuthServiceOperations {
 
         final Algorithm algorithm = Algorithm.ECDSA256(null, ecPrivateKey);
 
-        if (appleIdentityToken.getClaims().containsKey("nonce")) {
-            return JWT.create()
-                    .withKeyId(appleSignInConfiguration.getKeyId().trim())
-                    .withClaim(PublicClaims.ISSUER, appleSignInConfiguration.getTeamId().trim())
-                    .withClaim(PublicClaims.SUBJECT, appleSignInConfiguration.getClientId().trim())
-                    .withClaim(PublicClaims.ISSUED_AT, now)
-                    .withClaim(PublicClaims.EXPIRES_AT, now + TOKEN_EXPIRY)
-                    .withClaim(PublicClaims.AUDIENCE, TOKEN_AUDIENCE)
-//                    .withClaim("nonce", appleIdentityToken.getClaim("nonce").asString())
-                .sign(algorithm);
-        } else {
-            return JWT.create()
-                    .withKeyId(appleSignInConfiguration.getKeyId().trim())
-                    .withClaim(PublicClaims.ISSUER, appleSignInConfiguration.getTeamId().trim())
-                    .withClaim(PublicClaims.SUBJECT, appleSignInConfiguration.getClientId().trim())
-                    .withClaim(PublicClaims.ISSUED_AT, now)
-                    .withClaim(PublicClaims.EXPIRES_AT, now + TOKEN_EXPIRY)
-                    .withClaim(PublicClaims.AUDIENCE, TOKEN_AUDIENCE)
-                .sign(algorithm);
-        }
+        return JWT.create()
+                .withKeyId(appleSignInConfiguration.getKeyId().trim())
+                .withClaim(PublicClaims.ISSUER, appleSignInConfiguration.getTeamId().trim())
+                .withClaim(PublicClaims.SUBJECT, appleSignInConfiguration.getClientId().trim())
+                .withClaim(PublicClaims.ISSUED_AT, now)
+                .withClaim(PublicClaims.EXPIRES_AT, now + TOKEN_EXPIRY)
+                .withClaim(PublicClaims.AUDIENCE, TOKEN_AUDIENCE)
+            .sign(algorithm);
 
     }
 
@@ -388,9 +375,9 @@ public class AppleSignInAuthServiceOperations {
 
     public enum Claim {
 
-        UID(PublicClaims.SUBJECT),
+        EMAIL("email"),
 
-        EMAIL("email");
+        USER_ID(PublicClaims.SUBJECT);
 
         public final String value;
 

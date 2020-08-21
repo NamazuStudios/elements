@@ -31,9 +31,9 @@ public class AnonAppleSignInAuthService implements AppleSignInAuthService {
                 final User user = new User();
                 user.setActive(true);
                 user.setLevel(USER);
-                user.setName(appleIdentityToken.getClaim(Claim.UID.value).asString());
+                user.setName(appleIdentityToken.getClaim(Claim.USER_ID.value).asString());
                 user.setEmail(appleIdentityToken.getClaim(Claim.EMAIL.value).asString());
-                user.setAppleSignInId(appleIdentityToken.getClaim(Claim.UID.value).asString());
+                user.setAppleSignInId(appleIdentityToken.getClaim(Claim.USER_ID.value).asString());
                 return getAppleSignInUserDao().createReactivateOrUpdateUser(user);
             }
         );

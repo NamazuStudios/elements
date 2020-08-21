@@ -29,7 +29,7 @@ import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.google.inject.name.Names.bindProperties;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 import static com.namazustudios.socialengine.service.auth.AppleSignInAuthServiceOperations.Claim.EMAIL;
-import static com.namazustudios.socialengine.service.auth.AppleSignInAuthServiceOperations.Claim.UID;
+import static com.namazustudios.socialengine.service.auth.AppleSignInAuthServiceOperations.Claim.USER_ID;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -117,7 +117,7 @@ public class AppleSignInAuthServiceOperationsTest {
             user.setActive(true);
             user.setEmail(appleIdentityToken.getClaim(EMAIL.value).asString());
             user.setLevel(User.Level.USER);
-            user.setAppleSignInId(appleIdentityToken.getClaim(UID.value).asString());
+            user.setAppleSignInId(appleIdentityToken.getClaim(USER_ID.value).asString());
             user.setName(nameService.generateQualifiedName());
             return user;
         });

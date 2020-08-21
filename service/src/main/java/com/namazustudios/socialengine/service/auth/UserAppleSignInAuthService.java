@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.auth;
 
 import com.namazustudios.socialengine.dao.AppleSignInUserDao;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
-import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.AppleSignInAuthService;
 import com.namazustudios.socialengine.service.auth.AppleSignInAuthServiceOperations.Claim;
@@ -33,7 +32,7 @@ public class UserAppleSignInAuthService implements AppleSignInAuthService {
                 user.setId(getUser().getId());
                 user.setLevel(getUser().getLevel());
                 user.setActive(getUser().isActive());
-                user.setAppleSignInId(appleIdentityToken.getClaim(Claim.UID.value).asString());
+                user.setAppleSignInId(appleIdentityToken.getClaim(Claim.USER_ID.value).asString());
                 user.setEmail(getUser().getEmail());
                 user.setName(getUser().getName());
                 return getAppleSignInUserDao().connectActiveAppleUserIfNecessary(user);

@@ -1,20 +1,23 @@
-package com.namazustudios.socialengine.model.session;
+package com.namazustudios.socialengine.dao.mongo.model;
 
-import java.sql.Timestamp;
+import org.mongodb.morphia.annotations.*;
+
 import java.util.Objects;
 
-public class AppleSignInSession extends Session {
+@Entity(value = "session", noClassnameStored = true)
+public class MongoAppleSignInSession extends MongoSession {
 
+    @Property
+    private long refreshTime;
 
+    @Property
     private String refreshToken;
 
-    private Timestamp refreshTime;
-
-    public Timestamp getRefreshTime() {
+    public long getRefreshTime() {
         return refreshTime;
     }
 
-    public void setRefreshTime(Timestamp refreshTime) {
+    public void setRefreshTime(long refreshTime) {
         this.refreshTime = refreshTime;
     }
 
@@ -30,20 +33,19 @@ public class AppleSignInSession extends Session {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-        AppleSignInSession that = (AppleSignInSession) o;
+        MongoAppleSignInSession that = (MongoAppleSignInSession) o;
         return getRefreshTime() == that.getRefreshTime() &&
                 Objects.equals(getRefreshToken(), that.getRefreshToken());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getRefreshTime(), getRefreshToken());
+        return Objects.hash(getRefreshTime(), getRefreshToken());
     }
 
     @Override
     public String toString() {
-        return "AppleSignInSession{" +
+        return "MongoAppleSignInSession{" +
                 "refreshTime=" + refreshTime +
                 ", refreshToken='" + refreshToken + '\'' +
                 '}';

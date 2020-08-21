@@ -44,7 +44,7 @@ public class AppleSignInAuthResource {
                 "will include that account information in the response. If there is an account, or this method " +
                 "receives an existing session key, this will link the existing account to apple if the account was " +
                 "not previously linked.")
-    public SessionCreation createSession(final AppleSignInSessionRequest appleSignInSessionRequest) {
+    public AppleSignInSessionCreation createSession(final AppleSignInSessionRequest appleSignInSessionRequest) {
 
         getValidationHelper().validateModel(appleSignInSessionRequest);
 
