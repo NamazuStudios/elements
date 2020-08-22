@@ -34,6 +34,7 @@ import java.security.MessageDigest;
 import java.sql.Timestamp;
 import java.util.Date;
 
+import static com.namazustudios.socialengine.dao.mongo.model.MongoSession.Type.STANDARD_ELEMENTS;
 import static java.lang.System.currentTimeMillis;
 
 public class MongoSessionDao implements SessionDao {
@@ -151,6 +152,7 @@ public class MongoSessionDao implements SessionDao {
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
         final MongoSession mongoSession = getMapper().map(session, MongoSession.class);
+        mongoSession.setType(STANDARD_ELEMENTS);
         mongoSession.setSessionId(sessionId);
 
         getDatastore().save(mongoSession);

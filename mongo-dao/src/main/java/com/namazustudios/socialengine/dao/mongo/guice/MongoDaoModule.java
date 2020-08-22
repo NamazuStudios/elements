@@ -6,6 +6,7 @@ import com.google.inject.name.Names;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.dao.mongo.*;
+import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInSessionDao;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInUserDao;
 import com.namazustudios.socialengine.dao.mongo.application.*;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
@@ -70,6 +71,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(AppleIapReceiptDao.class).to(MongoAppleIapReceiptDao.class);
         bind(GooglePlayIapReceiptDao.class).to(MongoGooglePlayIapReceiptDao.class);
         bind(AppleSignInUserDao.class).to(MongoAppleSignInUserDao.class);
+        bind(AppleSignInSessionDao.class).to(MongoAppleSignInSessionDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -121,6 +123,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(AppleIapReceiptDao.class);
         expose(GooglePlayIapReceiptDao.class);
         expose(AppleSignInUserDao.class);
+        expose(AppleSignInSessionDao.class);
 
     }
 

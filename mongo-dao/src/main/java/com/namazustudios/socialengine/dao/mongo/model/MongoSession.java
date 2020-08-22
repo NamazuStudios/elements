@@ -8,7 +8,8 @@ import java.sql.Timestamp;
 
 @Entity(value = "session", noClassnameStored = true)
 @Indexes({
-        @Index(fields = @Field(value = "expiry"), options = @IndexOptions(expireAfterSeconds = MongoSession.SESSION_LINGER_SECONDS))
+    @Index(fields = @Field(value = "type")),
+    @Index(fields = @Field(value = "expiry"), options = @IndexOptions(expireAfterSeconds = MongoSession.SESSION_LINGER_SECONDS)),
 })
 public class MongoSession {
 
@@ -29,6 +30,9 @@ public class MongoSession {
 
     @Property
     private Timestamp expiry;
+
+    @Property
+    private Type type;
 
     /**
      * Gets the id of this {@link MongoSession}.
@@ -118,6 +122,40 @@ public class MongoSession {
      */
     public void setExpiry(Timestamp expiry) {
         this.expiry = expiry;
+    }
+
+    /**
+     * Gets the type of the session.
+     *
+     * @return the session type
+     */
+    public Type getType() {
+        return type;
+    }
+
+    /**
+     * Sets the type of the session.
+     *
+     * @param type the type
+     */
+    public void setType(Type type) {
+        this.type = type;
+    }
+
+    /**
+     * Specifies the type of the session.
+     */
+    public enum Type {
+        /**
+         * The Elements session type.
+         */
+        STANDARD_ELEMENTS,
+
+        /**
+         * A session created by Apple Sign-In
+         */
+        APPLE_SIGN_IN
+
     }
 
 }
