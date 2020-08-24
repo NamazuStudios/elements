@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.AppleSignInUserDao;
-import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
@@ -27,7 +26,7 @@ public class MongoAppleSignInUserDaoTest {
 
     @BeforeClass
     public void seedOtherUsers() {
-        for (int i = 0; i < 50; ++i) {
+        for (int i = 50; i < 100; ++i) {
             final User user = new User();
             user.setLevel(USER);
             user.setActive(true);
@@ -142,7 +141,7 @@ public class MongoAppleSignInUserDaoTest {
     @Test(dependsOnMethods = "testConnectIfNecessaryUnconnected")
     public void testConnectingSameUserHasNoSideEffects() {
 
-        final User user = getUserDao().getActiveUserByNameOrEmail("testy.mctesterson.1@example.com");
+        final User user = getUserDao().getActiveUserByNameOrEmail("testy.mctesterson.51@example.com");
         final User connected = getApplappleSignInUserDao().connectActiveAppleUserIfNecessary(user);
 
         assertNotNull(connected.getId());
