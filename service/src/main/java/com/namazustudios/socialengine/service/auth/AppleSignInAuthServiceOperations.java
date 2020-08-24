@@ -253,6 +253,11 @@ public class AppleSignInAuthServiceOperations {
 
         if (response.getStatus() == Response.Status.OK.getStatusCode()) {
             return response.readEntity(TokenResponse.class);
+        } else if (response.getStatus() == Response.Status.BAD_REQUEST.getStatusCode()) {
+            final Object obj = response.readEntity(Object.class);
+            logger.error("Caught error from Apple servers {} {}", response.getStatus(), obj);
+            final String msg = format("Failed to validate Apple Sign-In: %s", obj);
+            throw new ForbiddenException(msg);
         } else {
             final Object obj = response.readEntity(Object.class);
             logger.error("Caught error from Apple servers {} {}", response.getStatus(), obj);
