@@ -1,5 +1,9 @@
 package com.namazustudios.socialengine.model.application;
 
+import io.swagger.annotations.ApiModel;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Collections;
 import java.util.HashMap;
@@ -12,10 +16,13 @@ import java.util.Objects;
  *
  * Created by patricktwohig on 5/23/17.
  */
+@ApiModel(description = "Configuration for the iOS Application Configuration")
 public class IosApplicationConfiguration extends ApplicationConfiguration implements Serializable {
 
+    @NotNull
     private String applicationId;
 
+    @Valid
     private AppleSignInConfiguration appleSignInConfiguration;
 
     /**

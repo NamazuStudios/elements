@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.model.application;
 
+import com.namazustudios.socialengine.annotation.PemFile;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -16,6 +18,7 @@ public class AppleSignInConfiguration {
     @NotNull
     private String clientId;
 
+    @PemFile
     @NotNull
     private String appleSignInPrivateKey;
 
