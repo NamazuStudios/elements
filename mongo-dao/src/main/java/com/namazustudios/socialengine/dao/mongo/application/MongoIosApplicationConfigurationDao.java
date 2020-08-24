@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoAppleSignInConfiguration;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoProductBundle;
 import com.namazustudios.socialengine.exception.application.ApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -157,9 +158,13 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
         updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
+        final MongoAppleSignInConfiguration mongoAppleSignInConfiguration = getBeanMapper()
+            .map(iosApplicationConfiguration.getAppleSignInConfiguration(), MongoAppleSignInConfiguration.class);
+
         updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
         updateOperations.set("category", iosApplicationConfiguration.getCategory());
         updateOperations.set("parent", mongoApplication);
+        updateOperations.set("appleSignInConfiguration", mongoAppleSignInConfiguration);
 
         if (iosApplicationConfiguration.getProductBundles() != null &&
                 iosApplicationConfiguration.getProductBundles().size() > 0) {
