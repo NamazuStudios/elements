@@ -128,7 +128,7 @@ public class AppleSignInAuthServiceOperations {
         try {
             jwt = JWT.decode(identityToken);
         } catch (JWTDecodeException ex) {
-            throw new InvalidDataException(ex);
+            throw new InvalidDataException(ex.getMessage(), ex);
         }
 
         return fetchPublicKeys()

@@ -73,8 +73,8 @@ public class AppleSignInAuthResource {
         return getAppleSignInAuthService().createOrUpdateUserWithIdentityTokenAndAuthCode(
                 applicationNameOrId,
                 applicationConfigurationNameOrId,
-                authCode,
-                identityToken);
+                identityToken,
+                authCode);
 
     }
 
