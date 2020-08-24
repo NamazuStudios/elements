@@ -94,7 +94,6 @@ public class MongoAppleSignInSessionDaoTest {
         assertEquals(creation.getSession().getUser(), testUser);
         assertEquals(creation.getSession().getApplication(), testApplication);
 
-
     }
 
     public UserDao getUserDao() {
