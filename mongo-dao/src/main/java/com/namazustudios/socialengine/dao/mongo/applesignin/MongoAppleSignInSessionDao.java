@@ -4,15 +4,19 @@ import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.AppleSignInSessionDao;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoAppleSignInSession;
+import com.namazustudios.socialengine.dao.mongo.model.MongoSession;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSessionSecret;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.exception.security.BadSessionSecretException;
 import com.namazustudios.socialengine.model.applesignin.TokenResponse;
 import com.namazustudios.socialengine.model.session.AppleSignInSession;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -79,7 +83,37 @@ public class MongoAppleSignInSessionDao implements AppleSignInSessionDao {
 
     @Override
     public Optional<AppleSignInSession> findSession(final String sessionSecret) {
-        return Optional.empty();
+
+        final ObjectId mongoUserId;
+        final MongoSessionSecret mongoSessionSecret;
+
+        try {
+            mongoSessionSecret = new MongoSessionSecret(sessionSecret);
+            mongoUserId = mongoSessionSecret.getContextAsObjectId();
+        } catch (IllegalArgumentException ex) {
+            throw new BadSessionSecretException(ex, "Bad Session Secret");
+        }
+
+        final MessageDigest messageDigest = getMessageDigestProvider().get();
+        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
+        final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
+
+        final Query<MongoAppleSignInSession> query = getDatastore().createQuery(MongoAppleSignInSession.class);
+
+        query.and(
+            query.criteria("_id").equal(sessionId),
+            query.criteria("type").equal(APPLE_SIGN_IN)
+        );
+
+        final MongoSession mongoSession = query.get();
+
+        if (mongoSession == null) {
+            return Optional.empty();
+        } else {
+            final AppleSignInSession appleSignInSession = getMapper().map(mongoSession, AppleSignInSession.class);
+            return Optional.ofNullable(appleSignInSession);
+        }
+
     }
 
     public Mapper getMapper() {

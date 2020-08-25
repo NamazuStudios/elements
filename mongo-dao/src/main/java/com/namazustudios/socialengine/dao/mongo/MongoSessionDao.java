@@ -177,6 +177,7 @@ public class MongoSessionDao implements SessionDao {
             query.field("_id").equal(new ObjectId(profileId));
 
             final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
+
                 final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
                         .upsert(false)
                         .returnNew(true);
