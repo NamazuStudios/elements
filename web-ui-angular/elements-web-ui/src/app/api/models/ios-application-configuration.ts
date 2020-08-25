@@ -1,5 +1,8 @@
 /* tslint:disable */
+
 import { Application } from './application';
+import { AppleSignInConfiguration } from './apple-sign-in-configuration'
+
 export interface IosApplicationConfiguration {
 
   /**
@@ -21,5 +24,15 @@ export interface IosApplicationConfiguration {
    * The parent application owning this configuration.
    */
   parent: Application;
+
+  /**
+   * The application id.
+   */
   applicationId?: string;
+
+  /**
+   * The Apple Sign-In configuration.
+   */
+  appleSignInConfiguration?: AppleSignInConfiguration;
+
 }
