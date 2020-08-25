@@ -77,12 +77,8 @@ public class MongoAppleSignInSessionDao implements AppleSignInSessionDao {
 
     }
 
-    public void validate(final Session session) {
-        getValidationHelper().validateModel(session);
-    }
-
     @Override
-    public Optional<AppleSignInSession> findSession(final String sessionSecret) {
+    public Optional<AppleSignInSession> findSession(String sessionSecret) {
 
         final ObjectId mongoUserId;
         final MongoSessionSecret mongoSessionSecret;
@@ -114,6 +110,10 @@ public class MongoAppleSignInSessionDao implements AppleSignInSessionDao {
             return Optional.ofNullable(appleSignInSession);
         }
 
+    }
+
+    public void validate(final Session session) {
+        getValidationHelper().validateModel(session);
     }
 
     public Mapper getMapper() {
