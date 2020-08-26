@@ -18,10 +18,22 @@ export class IosApplicationConfigurationDialogComponent implements OnInit {
     category: ['IOS_APP_STORE'],
     parent: [this.data.applicationConfiguration.parent],
     appleSignInConfiguration: this.formBuilder.group({
-      teamId: [this.data.applicationConfiguration.appleSignInConfiguration.teamId],
-      clientId: [this.data.applicationConfiguration.appleSignInConfiguration.clientId],
-      keyId: [this.data.applicationConfiguration.appleSignInConfiguration.keyId],
-      appleSignInPrivateKey: [this.data.applicationConfiguration.appleSignInConfiguration.appleSignInPrivateKey]
+      teamId: [
+        this.data.applicationConfiguration.appleSignInConfiguration ?
+        this.data.applicationConfiguration.appleSignInConfiguration.teamId : ""
+      ],
+      clientId: [
+        this.data.applicationConfiguration.appleSignInConfiguration ?
+        this.data.applicationConfiguration.appleSignInConfiguration.clientId : ""
+      ],
+      keyId: [
+        this.data.applicationConfiguration.appleSignInConfiguration ?
+        this.data.applicationConfiguration.appleSignInConfiguration.keyId : ""
+      ],
+      appleSignInPrivateKey: [
+        this.data.applicationConfiguration.appleSignInConfiguration ?
+        this.data.applicationConfiguration.appleSignInConfiguration.appleSignInPrivateKey : ""
+      ]
     })
   });
 
