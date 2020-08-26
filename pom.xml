@@ -111,6 +111,7 @@
         <jetty.version>9.4.7.v20170914</jetty.version>
         <flapdoodle.mongo.version>2.2.0</flapdoodle.mongo.version>
         <embedded.redis.version>0.6</embedded.redis.version>
+        <auth0.java.jwt.version>3.10.3</auth0.java.jwt.version>
     </properties>
     <dependencies>
         <dependency>

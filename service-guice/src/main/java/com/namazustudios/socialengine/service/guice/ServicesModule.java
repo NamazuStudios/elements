@@ -34,6 +34,7 @@ import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
 import com.namazustudios.socialengine.service.mission.MissionService;
 import com.namazustudios.socialengine.service.mission.MissionServiceProvider;
 import com.namazustudios.socialengine.service.mission.SuperUserMissionService;
+import com.namazustudios.socialengine.service.name.SimpleAdjectiveAnimalNameService;
 import com.namazustudios.socialengine.service.notification.FCMRegistrationServiceProvider;
 import com.namazustudios.socialengine.service.notification.SuperUserFCMRegistrationService;
 import com.namazustudios.socialengine.service.profile.ProfileOverrideServiceProvider;
@@ -246,6 +247,14 @@ public class ServicesModule extends PrivateModule {
             .toProvider(ProfileOverrideServiceProvider.class)
             .in(scope);
 
+        bind(AppleSignInAuthService.class)
+            .toProvider(AppleSignInAuthServiceProvider.class)
+            .in(scope);
+
+        bind(NameService.class)
+            .to(SimpleAdjectiveAnimalNameService.class)
+            .asEagerSingleton();
+
         bind(AdvancementService.class).to(StandardAdvancementService.class);
 
         bind(SessionService.class).to(DefaultSessionService.class);
@@ -365,6 +374,15 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(StandardAdvancementService.class);
 
+        bind(AppleSignInAuthService.class)
+            .annotatedWith(Unscoped.class)
+            .to(AnonAppleSignInAuthService.class);
+
+        bind(NameService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SimpleAdjectiveAnimalNameService.class)
+            .asEagerSingleton();
+
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
@@ -408,6 +426,7 @@ public class ServicesModule extends PrivateModule {
         expose(AppleIapReceiptService.class);
         expose(GooglePlayIapReceiptService.class);
         expose(AdvancementService.class);
+        expose(AppleSignInAuthService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -437,6 +456,7 @@ public class ServicesModule extends PrivateModule {
         expose(VersionService.class).annotatedWith(Unscoped.class);
         expose(SessionService.class).annotatedWith(Unscoped.class);
         expose(AdvancementService.class).annotatedWith(Unscoped.class);
+        expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
 
     }
 

@@ -49,7 +49,7 @@ public class MongoSessionSecret {
 
     /**
      * Initializes a context-based {@link MongoSessionSecret}.  The context is an extra set of bytes used to append some
-     * sort if identity to a particular {@link MongoSessionSecret}.  This can be, for example, a {@link ObjectId} for
+     * sort if identity to a particular {@link MongoSessionSecret}.  This can be, for example, an {@link ObjectId} for
      * a {@link MongoUser}.
      *
      * @param context

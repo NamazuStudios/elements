@@ -35,6 +35,8 @@ public class User implements Serializable {
 
     private String facebookId;
 
+    private String appleSignInId;
+
     private static final User UNPRIVILIGED = new User() {
 
         @Override
@@ -178,6 +180,23 @@ public class User implements Serializable {
         this.facebookId = facebookId;
     }
 
+    /**
+     * Gets the Apple sign-in ID.
+     *
+     * @return the apple sign-in id
+     */
+    public String getAppleSignInId() {
+        return appleSignInId;
+    }
+
+    /**
+     *
+     * @param appleSignInId
+     */
+    public void setAppleSignInId(String appleSignInId) {
+        this.appleSignInId = appleSignInId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -188,12 +207,13 @@ public class User implements Serializable {
                 Objects.equals(getName(), user.getName()) &&
                 Objects.equals(getEmail(), user.getEmail()) &&
                 getLevel() == user.getLevel() &&
-                Objects.equals(getFacebookId(), user.getFacebookId());
+                Objects.equals(getFacebookId(), user.getFacebookId()) &&
+                Objects.equals(getAppleSignInId(), user.getAppleSignInId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId());
+        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getAppleSignInId());
     }
 
     @Override
@@ -205,6 +225,7 @@ public class User implements Serializable {
                 ", level=" + level +
                 ", active=" + active +
                 ", facebookId='" + facebookId + '\'' +
+                ", appleSignInId='" + appleSignInId + '\'' +
                 '}';
     }
 

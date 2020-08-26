@@ -8,6 +8,7 @@ import org.bson.types.ObjectId;
 import org.mongodb.morphia.annotations.*;
 
 import java.util.Arrays;
+import java.util.Objects;
 
 /**
  * Created by patricktwohig on 3/31/15.
@@ -23,7 +24,8 @@ import java.util.Arrays;
     @SearchableField(name = "email", path = "/email"),
     @SearchableField(name = "active", path = "/active"),
     @SearchableField(name = "level", path = "/level"),
-    @SearchableField(name = "facebookId", path = "/facebookId")
+    @SearchableField(name = "facebookId", path = "/facebookId"),
+    @SearchableField(name = "appleSignInId", path = "/appleSignInId")
 })
 @Entity(value = "user", noClassnameStored = true)
 public class MongoUser {
@@ -58,6 +60,10 @@ public class MongoUser {
     @Property
     @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String facebookId;
+
+    @Property
+    @Indexed(options = @IndexOptions(unique = true, sparse = true))
+    private String appleSignInId;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -131,37 +137,36 @@ public class MongoUser {
         this.facebookId = facebookId;
     }
 
+    public String getAppleSignInId() {
+        return appleSignInId;
+    }
+
+    public void setAppleSignInId(String appleSignInId) {
+        this.appleSignInId = appleSignInId;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MongoUser)) return false;
-
+        if (o == null || getClass() != o.getClass()) return false;
         MongoUser mongoUser = (MongoUser) o;
-
-        if (isActive() != mongoUser.isActive()) return false;
-        if (getObjectId() != null ? !getObjectId().equals(mongoUser.getObjectId()) : mongoUser.getObjectId() != null)
-            return false;
-        if (getName() != null ? !getName().equals(mongoUser.getName()) : mongoUser.getName() != null) return false;
-        if (getEmail() != null ? !getEmail().equals(mongoUser.getEmail()) : mongoUser.getEmail() != null) return false;
-        if (getHashAlgorithm() != null ? !getHashAlgorithm().equals(mongoUser.getHashAlgorithm()) : mongoUser.getHashAlgorithm() != null)
-            return false;
-        if (!Arrays.equals(getSalt(), mongoUser.getSalt())) return false;
-        if (!Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash())) return false;
-        if (getLevel() != mongoUser.getLevel()) return false;
-        return getFacebookId() != null ? getFacebookId().equals(mongoUser.getFacebookId()) : mongoUser.getFacebookId() == null;
+        return isActive() == mongoUser.isActive() &&
+                Objects.equals(getObjectId(), mongoUser.getObjectId()) &&
+                Objects.equals(getName(), mongoUser.getName()) &&
+                Objects.equals(getEmail(), mongoUser.getEmail()) &&
+                Objects.equals(getHashAlgorithm(), mongoUser.getHashAlgorithm()) &&
+                Arrays.equals(getSalt(), mongoUser.getSalt()) &&
+                Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash()) &&
+                getLevel() == mongoUser.getLevel() &&
+                Objects.equals(getFacebookId(), mongoUser.getFacebookId()) &&
+                Objects.equals(getAppleSignInId(), mongoUser.getAppleSignInId());
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getEmail() != null ? getEmail().hashCode() : 0);
-        result = 31 * result + (getHashAlgorithm() != null ? getHashAlgorithm().hashCode() : 0);
+        int result = Objects.hash(getObjectId(), getName(), getEmail(), getHashAlgorithm(), getLevel(), isActive(), getFacebookId(), getAppleSignInId());
         result = 31 * result + Arrays.hashCode(getSalt());
         result = 31 * result + Arrays.hashCode(getPasswordHash());
-        result = 31 * result + (getLevel() != null ? getLevel().hashCode() : 0);
-        result = 31 * result + (isActive() ? 1 : 0);
-        result = 31 * result + (getFacebookId() != null ? getFacebookId().hashCode() : 0);
         return result;
     }
 

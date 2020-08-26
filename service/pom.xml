@@ -90,6 +90,11 @@
             <artifactId>dozer-core</artifactId>
             <version>${dozer.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.auth0</groupId>
+            <artifactId>java-jwt</artifactId>
+            <version>${auth0.java.jwt.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

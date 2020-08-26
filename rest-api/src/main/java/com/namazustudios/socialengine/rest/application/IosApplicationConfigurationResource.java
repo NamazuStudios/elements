@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest.application;
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.service.IosApplicationConfigurationService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -25,6 +26,8 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/ios")
 public class IosApplicationConfigurationResource {
+
+    private ValidationHelper validationHelper;
 
     private IosApplicationConfigurationService iosApplicationConfigurationService;
 
@@ -53,7 +56,7 @@ public class IosApplicationConfigurationResource {
      * Creates a new {@link IosApplicationConfiguration} isntance.
      *
      * @param applicationNameOrId the applciation name or ID
-     * @param iosApplicationConfigurations the iOS appliation profile object to creates
+     * @param iosApplicationConfiguration the iOS appliation profile object to creates
      *
      * @return the {@link IosApplicationConfiguration} the iOS Application Configuration
      */
@@ -64,8 +67,10 @@ public class IosApplicationConfigurationResource {
         notes = "Creates a new iOS ApplicationConfiguration with the specific ID or application.")
     public IosApplicationConfiguration createIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
-            final IosApplicationConfiguration iosApplicationConfigurations) {
-        return getIosApplicationConfigurationService().createApplicationConfiguration(applicationNameOrId, iosApplicationConfigurations);
+            final IosApplicationConfiguration iosApplicationConfiguration) {
+        getValidationHelper().validateModel(iosApplicationConfiguration);
+        return getIosApplicationConfigurationService()
+            .createApplicationConfiguration(applicationNameOrId, iosApplicationConfiguration);
     }
 
     /**
@@ -87,6 +92,7 @@ public class IosApplicationConfigurationResource {
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final IosApplicationConfiguration iosApplicationConfiguration) {
+        getValidationHelper().validateModel(iosApplicationConfiguration);
         return getIosApplicationConfigurationService().updateApplicationConfiguration(
                 applicationNameOrId,
                 applicationConfigurationNameOrId,
@@ -118,6 +124,15 @@ public class IosApplicationConfigurationResource {
     @Inject
     public void setIosApplicationConfigurationService(IosApplicationConfigurationService iosApplicationConfigurationService) {
         this.iosApplicationConfigurationService = iosApplicationConfigurationService;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
     }
 
 }
