@@ -45,6 +45,8 @@ public class ResourceId implements Serializable, HasNodeId {
 
     private transient volatile NodeId nodeId;
 
+    private transient volatile InstanceId instanceId;
+
     private ResourceId() { v1CompoundId = null; }
 
     /**
@@ -99,6 +101,15 @@ public class ResourceId implements Serializable, HasNodeId {
     @Override
     public NodeId getNodeId() {
         return nodeId == null ? (nodeId = new NodeId(v1CompoundId)) : nodeId;
+    }
+
+    /**
+     * Returns the {@link InstanceId}.
+     *
+     * @return the {@link InstanceId} assocaited with this {@link ResourceId}
+     */
+    public InstanceId getInstanceId() {
+        return (instanceId == null) ? (instanceId = new InstanceId(v1CompoundId)) : instanceId;
     }
 
     @Override

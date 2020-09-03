@@ -294,7 +294,8 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      * @return the {@link Path} as represented by an absolute path.
      */
     public String toAbsolutePathString() {
-        return '/' + toNormalizedPathString();
+        final String normalized = toNormalizedPathString();
+        return hasContext() || normalized.startsWith(PATH_SEPARATOR) ? normalized : PATH_SEPARATOR + normalized;
     }
 
     /**
@@ -552,10 +553,9 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
             }
 
             final List<String> contextAndPath = Stream.of(CONTEXT_SPLIT_PATTERN.split(path))
-                    .filter(c -> c != null)
-                    .map(c -> c.trim())
-                    .filter(c -> !c.isEmpty())
-                    .collect(toList());
+                .map(c -> c.trim())
+                .filter(c -> !c.isEmpty())
+                .collect(toList());
 
             if (contextAndPath.size() != 2) {
                 throw new IllegalArgumentException("Expected two results when splitting path with '://': " + path);
@@ -567,7 +567,11 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
                 context = null;
             }
 
-            final List<String> components = componentsFromPath(path, pathSeparator);
+            final List<String> components = Stream.of(Pattern.quote(pathSeparator))
+                .map(c -> c.trim())
+                .filter(c -> ! c.isEmpty())
+                .collect(toList());
+
             return new ContextAndComponents(context, components);
 
         }

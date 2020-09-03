@@ -227,6 +227,7 @@ public class UnixFSCircularBlockBuffer {
             for (final ByteBuffer buffer : slices) {
                 final StructT struct = structSupplier.get();
                 struct.setByteBuffer(buffer, 0);
+                structs.add(struct);
             }
         }
 
@@ -288,6 +289,10 @@ public class UnixFSCircularBlockBuffer {
         public Slice<StructT> nextLeading() {
             final int leading = counter.incrementAndGetLeading();
             return new Slice<>(leading, structs.get(leading), slices.get(leading));
+        }
+
+        public void reset() {
+            counter.reset();
         }
 
     }

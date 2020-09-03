@@ -82,7 +82,8 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Resource getAndAcquireResourceAtPath(final Path path) {
         return computeRO((acm, txn) -> {
-            final ResourceId resourceId = txn.getResourceId(path);
+            final Path normalized = normalize(path);
+            final ResourceId resourceId = txn.getResourceId(normalized);
             return acm.acquire(resourceId);
         });
     }
@@ -90,7 +91,8 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Resource addAndAcquireResource(final Path path, final Resource resource) {
         return computeRW((acm, txn) -> {
-            txn.linkNewResource(path, resource.getId());
+            final Path normalized = normalize(path);
+            txn.linkNewResource(normalized, resource.getId());
             return acm.acquire(resource);
         });
     }
@@ -98,12 +100,16 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public void addAndReleaseResource(final Path path, final Resource resource) {
         executeRW(txn -> {
+
+            final Path normalized = normalize(path);
+
             try (final Resource r = resource;
-                 final WritableByteChannel wbc = txn.saveNewResource(path, r.getId())) {
+                 final WritableByteChannel wbc = txn.saveNewResource(normalized, r.getId())) {
                 r.serialize(wbc);
             } catch (IOException ex) {
                 throw new InternalException(ex);
             }
+
         });
     }
 
@@ -131,24 +137,34 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Spliterator<Listing> list(final Path path) {
         return computeRO(txn -> {
-            final List<Listing> listings = txn.list(path).collect(toList());
+            final Path normalized = normalize(path);
+            final List<Listing> listings = txn.list(normalized).collect(toList());
             return Spliterators.spliterator(listings, SUBSIZED | CONCURRENT | NONNULL);
         });
     }
 
     @Override
     public void link(final ResourceId sourceResourceId, final Path destination) {
-        executeRW(txn -> txn.linkExistingResource(sourceResourceId, destination));
+        executeRW(txn -> {
+            final Path normalized = normalize(destination);
+            txn.linkExistingResource(sourceResourceId, normalized);
+        });
     }
 
     @Override
     public Unlink unlinkPath(final Path path, final Consumer<Resource> removed) {
-        return computeRW(txn -> txn.unlinkPath(path));
+        return computeRW(txn -> {
+            final Path normalized = normalize(path);
+            return txn.unlinkPath(normalized);
+        });
     }
 
     @Override
     public List<Unlink> unlinkMultiple(final Path path, final int max, final Consumer<Resource> removed) {
-        return computeRW(txn -> txn.unlinkMultiple(path, max));
+        return computeRW(txn -> {
+            final Path normalized = normalize(path);
+            return txn.unlinkMultiple(normalized, max);
+        });
     }
 
     @Override
@@ -162,10 +178,15 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public List<ResourceId> removeResources(final Path path, final int max, final Consumer<Resource> removed) {
         return computeRW((acm, txn) -> {
-            final List<ResourceId> resourceIds = txn.removeResources(path, max);
+            final Path normalized = normalize(path);
+            final List<ResourceId> resourceIds = txn.removeResources(normalized, max);
             resourceIds.forEach(resourceId -> acm.evict(resourceId, removed));
             return resourceIds;
         });
+    }
+
+    private Path normalize(final Path path) {
+        return path.hasContext() ? path : path.toPathWithContext(getNodeId().asString());
     }
 
     @Override
@@ -307,7 +328,7 @@ public class TransactionalResourceService implements ResourceService {
         final Context context = getContext();
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
-            try (final ReadWriteTransaction txn = getPersistence()  .openRW(getNodeId());
+        try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId());
                  final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 final T value = operation.apply(acm, txn);
                 txn.commit();

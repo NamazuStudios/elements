@@ -251,6 +251,8 @@ public class UnixFSPathIndex implements PathIndex {
         public Revision<ResourceId> getValueAt(final Revision<?> revision,
                                                final com.namazustudios.socialengine.rt.Path key) {
             final UnixFSPathMapping mapping = UnixFSPathMapping.fromRTPath(utils, nodeId, key);
+            if (!exists(mapping.getPathDirectory())) return revision.withOptionalValue(Optional.empty());
+
             return utils
                 .findLatestForRevision(mapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
                 .map(symlink -> utils.doOperation(() -> {
@@ -275,6 +277,8 @@ public class UnixFSPathIndex implements PathIndex {
                                                                                 final ResourceId key) {
 
             final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, key);
+            if (!exists(resourceIdMapping.getResourceIdDirectory())) return revision.withOptionalValue(Optional.empty());
+
             final Path reverseDirectory = resourceIdMapping.resolveReverseDirectory(nodeId);
 
             final Set<com.namazustudios.socialengine.rt.Path> pathSet =

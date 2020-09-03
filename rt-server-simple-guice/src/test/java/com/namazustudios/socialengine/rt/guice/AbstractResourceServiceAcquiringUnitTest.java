@@ -12,6 +12,7 @@ import org.mockito.Mockito;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -36,14 +37,15 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     private final List<Object[]> linkedIntermediates = new ArrayList<>();
 
+    @Inject
+    private NodeId nodeId;
+
     @DataProvider
-    public static Object[][] initialDataProvider() {
+    public Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
-        final UUID nodeUuid = randomUUID();
 
         for (int i = 0; i < 100; ++i) {
-            final NodeId nodeId = NodeId.randomNodeId();
             final ResourceId resourceId = randomResourceIdForNode(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});

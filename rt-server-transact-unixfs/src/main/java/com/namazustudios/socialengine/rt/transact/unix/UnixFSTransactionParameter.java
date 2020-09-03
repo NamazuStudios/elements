@@ -7,8 +7,11 @@ import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.Charset;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromByteBuffer;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionParameter.Type.*;
 
 public class UnixFSTransactionParameter {
 
@@ -16,7 +19,7 @@ public class UnixFSTransactionParameter {
 
     private final Header header = new Header();
 
-    private final ByteBuffer byteBuffer;
+    private final ByteBuffer commandSlice;
 
     private UnixFSTransactionParameter(final UnixFSTransactionCommandHeader commandHeader, final int index) {
 
@@ -28,18 +31,27 @@ public class UnixFSTransactionParameter {
             throw new IllegalArgumentException("Invalid command parameter index: " + index);
         }
 
-        final int position =
-            commandHeader.size() +
-            commandHeader.getByteBufferPosition() +
-            (header.size() * index);
+        ByteBuffer buffer;
 
-        byteBuffer = commandHeader.getByteBuffer().duplicate();
-        header.setByteBuffer(byteBuffer, position);
+        // Calculates a slice of the command buffer which is aligned to the beginning of the command where the header
+        // starts. We slice the buffer so that all relative manipulation of the command can be accmplished using this
+        // particular buffer.
 
-    }
+        buffer = commandHeader.getByteBuffer().duplicate();
+        buffer.position(commandHeader.getByteBufferPosition());
+        commandSlice = buffer.slice();
 
-    private int calculateHeaderPositionRelative(final UnixFSTransactionCommand command, final int index) {
-        return command.header.size() + (header.size() * index);
+        // The parameter's header position is between the end of the command header and the actual parameter data. It
+        // is calculated as offset of the command added to the command header size, added to the index multiplied by
+        // the size of the parameter header.
+        final int position = buffer.position() + commandHeader.size() + (index * header.size());
+
+        // Defensively we slice apart the buffer and make it the exact size and relative position of the command header
+        // just in case the header has issues.
+
+        buffer.position(position).limit(position + header.size());
+        header.setByteBuffer(buffer.slice(), 0);
+
     }
 
     /**
@@ -67,16 +79,17 @@ public class UnixFSTransactionParameter {
                              final java.nio.file.Path path) {
 
         final ByteBuffer commandByteBuffer = commandHeader.getByteBuffer();
+        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(commandHeader, parameterIndex);
 
         final ByteBuffer encoded = CHARSET.encode(path.toString());
         encoded.rewind();
 
-        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(
-                commandHeader,
-                parameterIndex);
+        final int length = encoded.remaining();
+        final int position = commandByteBuffer.position() - commandHeader.getByteBufferPosition();
 
-        param.header.length.set(encoded.remaining());
-        param.header.position.set(commandByteBuffer.position() + commandHeader.getByteBufferPosition());
+        param.header.type.set(FS_PATH);
+        param.header.length.set(length);
+        param.header.position.set(position);
         commandByteBuffer.put(encoded);
 
     }
@@ -93,16 +106,17 @@ public class UnixFSTransactionParameter {
                              final com.namazustudios.socialengine.rt.Path path) {
 
         final ByteBuffer commandByteBuffer = commandHeader.getByteBuffer();
+        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(commandHeader, parameterIndex);
 
         final ByteBuffer encoded = CHARSET.encode(path.toAbsolutePathString());
         encoded.rewind();
 
-        final UnixFSTransactionParameter param = new UnixFSTransactionParameter(
-                commandHeader,
-                parameterIndex);
+        final int length = encoded.remaining();
+        final int position = commandByteBuffer.position() - commandHeader.getByteBufferPosition();
 
-        param.header.length.set(encoded.remaining());
-        param.header.position.set(commandByteBuffer.position() + commandHeader.getByteBufferPosition());
+        param.header.type.set(RT_PATH);
+        param.header.length.set(length);
+        param.header.position.set(position);
         commandByteBuffer.put(encoded);
 
     }
@@ -117,11 +131,16 @@ public class UnixFSTransactionParameter {
     static void appendResourceId(final UnixFSTransactionCommandHeader commandHeader,
                                  final int parameterIndex,
                                  final ResourceId resourceId) {
+
         final ByteBuffer commandByteBuffer = commandHeader.getByteBuffer();
         final UnixFSTransactionParameter param = new UnixFSTransactionParameter(commandHeader, parameterIndex);
+        final int position = commandByteBuffer.position() - commandHeader.getByteBufferPosition();
+
+        param.header.type.set(RESOURCE_ID);
         param.header.length.set(ResourceId.getSizeInBytes());
-        param.header.position.set(commandByteBuffer.position() - commandHeader.getByteBufferPosition());
+        param.header.position.set(position);
         resourceId.toByteBuffer(commandByteBuffer);
+
     }
 
     /**
@@ -181,6 +200,53 @@ public class UnixFSTransactionParameter {
         }
     }
 
+    @Override
+    public String toString() {
+
+        final StringBuilder sb = new StringBuilder();
+
+        Type type;
+
+        try {
+            type = header.type.get();
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            type = null;
+        }
+
+        final Function<Supplier<Object>, String> safeRender = suppler -> {
+            try {
+                return suppler.get().toString();
+            } catch (Exception ex) {
+                return "<corrupted>";
+            }
+        };
+
+        if (type == null) {
+            sb.append("<unknown>");
+        } else {
+            switch (type) {
+                case NULL:
+                    sb.append("<null>");
+                    break;
+                case FS_PATH:
+                    sb.append(safeRender.apply(this::asFSPath));
+                    break;
+                case RT_PATH:
+                    sb.append(safeRender.apply(this::asRTPath));
+                    break;
+                case RESOURCE_ID:
+                    sb.append(safeRender.apply(this::asResourceId));
+                    break;
+                default:
+                    sb.append("<undefined>");
+                    break;
+            }
+        }
+
+        return sb.append(": ").append(type == null ? "<undefined>" : type).toString();
+
+    }
+
     /**
      * The parameter header.
      */
@@ -232,7 +298,7 @@ public class UnixFSTransactionParameter {
             @Override
             protected ResourceId asResourceId(final UnixFSTransactionParameter unixFSTransactionParameter) {
                 setPositionAndLimit(unixFSTransactionParameter);
-                return resourceIdFromByteBuffer(unixFSTransactionParameter.byteBuffer);
+                return resourceIdFromByteBuffer(unixFSTransactionParameter.commandSlice);
             }
         },
 
@@ -245,7 +311,7 @@ public class UnixFSTransactionParameter {
 
                 setPositionAndLimit(unixFSTransactionParameter);
 
-                final CharBuffer charBuffer = CHARSET.decode(unixFSTransactionParameter.byteBuffer);
+                final CharBuffer charBuffer = CHARSET.decode(unixFSTransactionParameter.commandSlice);
                 final String pathString = charBuffer.toString();
 
                 return java.nio.file.Paths.get(pathString);
@@ -263,7 +329,7 @@ public class UnixFSTransactionParameter {
 
                 setPositionAndLimit(unixFSTransactionParameter);
 
-                final CharBuffer charBuffer = CHARSET.decode(unixFSTransactionParameter.byteBuffer);
+                final CharBuffer charBuffer = CHARSET.decode(unixFSTransactionParameter.commandSlice);
                 final String pathString = charBuffer.toString();
 
                 return com.namazustudios.socialengine.rt.Path.fromPathString(pathString);
@@ -274,11 +340,11 @@ public class UnixFSTransactionParameter {
         protected void setPositionAndLimit(final UnixFSTransactionParameter unixFSTransactionParameter) {
 
             final int position = (int) unixFSTransactionParameter.header.position.get();
-            final int limit = (int) unixFSTransactionParameter.header.length.get();
+            final int length = (int) unixFSTransactionParameter.header.length.get();
 
-            unixFSTransactionParameter.byteBuffer
-                    .position(position)
-                    .limit(position + limit);
+            unixFSTransactionParameter.commandSlice
+                .position(position)
+                .limit(position + length);
 
         }
 

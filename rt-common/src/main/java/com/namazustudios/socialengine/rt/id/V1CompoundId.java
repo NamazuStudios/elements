@@ -150,14 +150,14 @@ class V1CompoundId implements Serializable {
 
         try {
 
-            int count = 0;
             if (byteBufferRepresentation.remaining() == 0) throw new IllegalArgumentException("Got zero-length ByteBuffer");
 
             final byte prefix = byteBufferRepresentation.get();
             if (prefix != PREFIX_BYTE) throw new IllegalArgumentException("Got invalid prefix byte: " + prefix);
 
             while (byteBufferRepresentation.hasRemaining()) {
-                final Field field = FIELDS[byteBufferRepresentation.get()];
+                final int index = byteBufferRepresentation.get();
+                final Field field = FIELDS[index];
                 final long upper = byteBufferRepresentation.getLong();
                 final long lower = byteBufferRepresentation.getLong();
                 final UUID uuid = new UUID(upper, lower);
@@ -180,13 +180,13 @@ class V1CompoundId implements Serializable {
 
         try {
 
-            if (byteBufferRepresentation.remaining() == 0) throw new IllegalArgumentException("Got zero-length ByteBuffer");
-
-            final byte prefix = byteBufferRepresentation.get();
+            final byte prefix = byteBufferRepresentation.get(position++);
             if (prefix != PREFIX_BYTE) throw new IllegalArgumentException("Got invalid prefix byte: " + prefix);
 
             while (position < length) {
-                final Field field = FIELDS[byteBufferRepresentation.get()];
+
+                final int index = byteBufferRepresentation.get(position++);
+                final Field field = FIELDS[index];
 
                 final long upper = byteBufferRepresentation.getLong(position);
                 position += Long.BYTES;
@@ -343,22 +343,25 @@ class V1CompoundId implements Serializable {
             final UUID uuid = getComponent(field).getValue();
             final long upper = uuid.getMostSignificantBits();
             final long lower = uuid.getLeastSignificantBits();
-            byteBuffer.putLong(upper).putLong(lower);
+            byteBuffer.put((byte) field.ordinal()).putLong(upper).putLong(lower);
         }
 
     }
 
     public void toByteBuffer(final ByteBuffer byteBuffer, final int position, final Field ... fields) {
 
-        byteBuffer.put(PREFIX_BYTE);
-
         int pos = position;
+
+        byteBuffer.put(pos++, PREFIX_BYTE);
 
         for (final Field field : fields) {
 
             final UUID uuid = getComponent(field).getValue();
             final long upper = uuid.getMostSignificantBits();
             final long lower = uuid.getLeastSignificantBits();
+
+            byteBuffer.put(pos, (byte) field.ordinal());
+            pos++;
 
             byteBuffer.putLong(pos, upper);
             pos += Long.BYTES;

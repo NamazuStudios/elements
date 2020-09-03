@@ -15,6 +15,7 @@ import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.COMMITTED;
 import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.channels.FileChannel.open;
@@ -60,6 +61,10 @@ public class UnixFSRevisionTable {
     private UnixFSUtils utils;
 
     private int revisionTableCount;
+
+    private UnixFSRevisionPool revisionPool;
+
+    private UnixFSChecksumAlgorithm checksumAlgorithm;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
@@ -123,6 +128,24 @@ public class UnixFSRevisionTable {
         this.revisionTableCount = revisionTableCount;
     }
 
+    public UnixFSRevisionPool getRevisionPool() {
+        return revisionPool;
+    }
+
+    @Inject
+    public void setRevisionPool(UnixFSRevisionPool revisionPool) {
+        this.revisionPool = revisionPool;
+    }
+
+    public UnixFSChecksumAlgorithm getChecksumAlgorithm() {
+        return checksumAlgorithm;
+    }
+
+    @Inject
+    public void setChecksumAlgorithm(UnixFSChecksumAlgorithm checksumAlgorithm) {
+        this.checksumAlgorithm = checksumAlgorithm;
+    }
+
     private class Context {
 
         private final MappedByteBuffer revisionTableBuffer;
@@ -153,21 +176,54 @@ public class UnixFSRevisionTable {
             final Path revisionTableFilePath = getUtils().getRevisionTableFilePath();
 
             if (isRegularFile(revisionTableFilePath)) {
+
                 logger.info("Reading existing revision table {}", revisionTableFilePath);
                 revisionTableBuffer = loadRevisionTableFile(revisionTableFilePath);
+
                 counter = header.atomicLongData.createAtomicLong();
+                revisionTableBuffer.clear().position(header.size());
+
+                this.circularBlockBuffer = new UnixFSCircularBlockBuffer(
+                    counter,
+                    revisionTableBuffer,
+                    UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new);
+
             } else {
-                logger.info("Creating new revision table at {}", revisionTableFilePath);
-                revisionTableBuffer = createRevisionTableFile(revisionTableFilePath);
+
+                final Path temporary = createTempFile(
+                    revisionTableFilePath.getParent(),
+                    "revision-table",
+                    "temp");
+
+                logger.info("Creating new revision table at {}", temporary);
+                revisionTableBuffer = createRevisionTableFile(temporary);
+                revisionTableBuffer.clear().position(header.size());
+
                 counter = header.atomicLongData.createAtomicLong();
+
+                this.circularBlockBuffer = new UnixFSCircularBlockBuffer(
+                    counter,
+                    revisionTableBuffer,
+                    UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new);
+
+                this.circularBlockBuffer.reset();
+
+                final UnixFSRevision<?> revision = getRevisionPool().createNextRevision();
+                final UnixFSRevisionTableEntry entry = circularBlockBuffer.nextLeading().getValue();
+
+                entry.state.set(COMMITTED);
+                entry.algorithm.set(getChecksumAlgorithm());
+                entry.revision.fromRevision(revision);
+                getChecksumAlgorithm().compute(entry);
+
+                if (!getChecksumAlgorithm().isValid(entry)) {
+                    throw new FatalException("Invalid entry during creation.");
+                }
+
+                logger.info("Revision table initialized. Moving {} -> {}", temporary, revisionTableFilePath);
+                move(temporary, revisionTableFilePath);
+
             }
-
-            revisionTableBuffer.clear().position(header.size());
-
-            this.circularBlockBuffer = new UnixFSCircularBlockBuffer(
-                counter,
-                revisionTableBuffer,
-                UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new);
 
         }
 

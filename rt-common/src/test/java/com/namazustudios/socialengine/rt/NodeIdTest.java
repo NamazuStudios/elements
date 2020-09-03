@@ -8,6 +8,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.nio.ByteBuffer;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
@@ -44,7 +45,7 @@ public class NodeIdTest {
     }
 
     @Test
-    public void testSerialization() throws Exception {
+    public void testSerializationByteArray() throws Exception {
 
         final InstanceId instanceId = randomInstanceId();
         final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
@@ -69,5 +70,42 @@ public class NodeIdTest {
         }
 
     }
+
+    @Test
+    public void testToByteBuffer() {
+
+        final InstanceId instanceId = randomInstanceId();
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
+        final ByteBuffer byteBuffer = ByteBuffer.allocate(NodeId.getSizeInBytes());
+
+        nodeId.toByteBuffer(byteBuffer);
+        assertEquals(byteBuffer.position(), NodeId.getSizeInBytes());
+
+        byteBuffer.flip();
+
+        final NodeId read = nodeIdFromByteBuffer(byteBuffer);
+        assertEquals(read, nodeId);
+        assertEquals(byteBuffer.position(), NodeId.getSizeInBytes());
+
+    }
+
+    @Test
+    public void testSerializationByteBufferInPlace() {
+
+        final InstanceId instanceId = randomInstanceId();
+        final NodeId nodeId = forInstanceAndApplication(instanceId, randomApplicationId());
+        final ByteBuffer byteBuffer = ByteBuffer.allocate(NodeId.getSizeInBytes());
+
+        nodeId.toByteBuffer(byteBuffer, 0);
+        assertEquals(byteBuffer.position(), 0);
+        assertEquals(byteBuffer.limit(), byteBuffer.capacity());
+
+        final NodeId read = nodeIdFromByteBuffer(byteBuffer, 0);
+        assertEquals(read, nodeId);
+        assertEquals(byteBuffer.position(), 0);
+        assertEquals(byteBuffer.limit(), byteBuffer.capacity());
+
+    }
+
 
 }

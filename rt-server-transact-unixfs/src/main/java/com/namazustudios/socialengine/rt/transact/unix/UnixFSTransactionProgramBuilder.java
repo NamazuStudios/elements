@@ -17,6 +17,7 @@ import java.util.Map;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommandInstruction.*;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.CLEANUP;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.COMMIT;
+import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -280,14 +281,14 @@ public class UnixFSTransactionProgramBuilder {
 
         program.header.phases.set(phases);
 
-        if ((phases & COMMIT.ordinal()) != 0) {
+        if ((phases & 0x1 << COMMIT.ordinal()) != 0) {
             programLength += compile(COMMIT, program, program.header.commitPos, program.header.commitLen);
         } else {
             program.header.commitPos.set(0);
             program.header.commitLen.set(0);
         }
 
-        if ((phases & CLEANUP.ordinal()) != 0) {
+        if ((phases & 0x1 << CLEANUP.ordinal()) != 0) {
             programLength += compile(CLEANUP, program, program.header.cleanupPos, program.header.cleanupLen);
         } else {
             program.header.cleanupPos.set(0);
@@ -296,7 +297,6 @@ public class UnixFSTransactionProgramBuilder {
 
         program.header.nodeId.set(nodeId);
         program.header.length.set(programLength);
-
         if (revision != null) program.header.revision.fromRevision(revision);
 
         return program;
@@ -311,9 +311,12 @@ public class UnixFSTransactionProgramBuilder {
         final int position = byteBuffer.position() - program.header.getByteBufferPosition();
 
         final List<UnixFSTransactionCommand> commands = getOperations(executionPhase)
-                .stream()
-                .map(writer -> writer.safeWrite(byteBuffer))
-                .collect(toList());
+            .stream()
+            .map(writer -> writer.safeWrite(byteBuffer))
+            .collect(toList());
+
+        // TODO Remove this
+        commands.forEach(c -> c.toString());
 
         this.commands.put(executionPhase, commands);
 

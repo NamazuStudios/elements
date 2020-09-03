@@ -71,6 +71,42 @@ public class UnixFSTransactionCommand {
 
     }
 
+    @Override
+    public String toString() {
+
+        final StringBuilder sb = new StringBuilder();
+
+        UnixFSTransactionCommandInstruction instruction;
+
+        try {
+            instruction = header.instruction.get();
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            instruction = null;
+        }
+
+        UnixFSTransactionProgramExecutionPhase phase;
+
+        try {
+            phase = header.phase.get();
+        } catch (ArrayIndexOutOfBoundsException ex) {
+            phase = null;
+        }
+
+        sb.append(phase == null ? "<undefined>" : phase).append('.')
+          .append(instruction == null ? "<undefined>" : instruction).append("(");
+
+        final int count = header.parameterCount.get();
+
+        for (int i = 0; i < count; ++i) {
+            final UnixFSTransactionParameter parameter = getParameterAt(i);
+            sb.append(parameter.toString());
+            if (i < (count - 1)) sb.append(",");
+        }
+
+        return sb.append(")").toString();
+
+    }
+
     /**
      * USed to build an instance of {@link UnixFSTransactionCommand}. This configures the command header as well as each
      * additional parameter associated with the command.
@@ -117,7 +153,7 @@ public class UnixFSTransactionCommand {
          */
         public Builder addFSPathParameter(final java.nio.file.Path path) {
             if (parameterOperations.size() >= Short.MAX_VALUE) throw new InternalException("Exceeded parameter count");
-            parameterOperations.add((command, param) -> appendFSPath(command, param, path));
+            parameterOperations.add((commandHeader, param) -> appendFSPath(commandHeader, param, path));
             return this;
         }
 
@@ -130,7 +166,7 @@ public class UnixFSTransactionCommand {
          */
         public Builder addRTPathParameter(final com.namazustudios.socialengine.rt.Path path) {
             if (parameterOperations.size() >= Short.MAX_VALUE) throw new InternalException("Exceeded parameter count");
-            parameterOperations.add((command, param) -> appendRTPath(command, param, path));
+            parameterOperations.add((commandHeader, param) -> appendRTPath(commandHeader, param, path));
             return this;
         }
 
@@ -143,7 +179,7 @@ public class UnixFSTransactionCommand {
          */
         public Builder addResourceIdParameter(final ResourceId resourceId) {
             if (parameterOperations.size() >= Short.MAX_VALUE) throw new InternalException("Exceeded parameter count");
-            parameterOperations.add((command, param) -> appendResourceId(command, param, resourceId));
+            parameterOperations.add((commandHeader, param) -> appendResourceId(commandHeader, param, resourceId));
             return this;
         }
 
@@ -156,41 +192,39 @@ public class UnixFSTransactionCommand {
         public UnixFSTransactionCommand build(final ByteBuffer byteBuffer) {
 
             final ByteBuffer duplicate = byteBuffer.duplicate();
-            duplicate.mark();
 
             // Counts the parameters and locks the position of the command to the current byte buffer position
 
             final int paramCount = parameterOperations.size();
-            final int commandPosition = duplicate.position();
+            final int commandPosition = byteBuffer.position();
+
+            // Creates the header and sets its byte buffer to the command position.
+            final UnixFSTransactionCommandHeader header = new UnixFSTransactionCommandHeader();
+            header.setByteBuffer(byteBuffer, commandPosition);
 
             // Fills the header bytes full of place holder data.
-            for (int i = 0; i < UnixFSTransactionCommandHeader.SIZE; ++i) duplicate.put((byte)0xFF);
-
-            // Creates the header and populates
-            final UnixFSTransactionCommandHeader header = new UnixFSTransactionCommandHeader();
+            for (int i = 0; i < UnixFSTransactionCommandHeader.SIZE; ++i) byteBuffer.put((byte)0xFF);
 
             // Set all headers to the desired values, overwriting previous clearing of the buffer.
             header.phase.set(executionPhase);
             header.instruction.set(instruction);
             header.parameterCount.set((short)paramCount);
 
-            // Allocate space for the parameter headers
-            for (int i = 0; i < paramCount * UnixFSTransactionParameter.Header.SIZE; ++i) duplicate.put((byte)0xFF);
+            // Allocate space for the parameter headers, clearing each byte as we go.
+            for (int i = 0; i < paramCount * UnixFSTransactionParameter.Header.SIZE; ++i) byteBuffer.put((byte)0xFF);
 
             // Writes all parameters to the byte buffer
 
             final ListIterator<ParameterWriter> listIterator = parameterOperations.listIterator();
 
             while (listIterator.hasNext()) {
-                final int parameterIndex = listIterator.previousIndex();
+                final int parameterIndex = listIterator.nextIndex();
                 final ParameterWriter parameterWriter = listIterator.next();
                 parameterWriter.write(header, parameterIndex);
             }
 
             final int commandLength = byteBuffer.position() - commandPosition;
             header.length.set(commandLength);
-
-            duplicate.reset();
             duplicate.limit(commandPosition + commandLength);
 
             final ByteBuffer slice = duplicate.slice().asReadOnlyBuffer();
@@ -209,6 +243,7 @@ public class UnixFSTransactionCommand {
          * Writes the command to the
          * @param header
          * @param parameter
+         * @return the number of bytes written to the buffer
          */
         void write(UnixFSTransactionCommandHeader header, int parameter);
 

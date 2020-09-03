@@ -32,15 +32,24 @@ class UnixFSTransactionProgramHeader extends Struct implements UnixFSChecksumAlg
     class PackedNodeId extends Member {
 
         public PackedNodeId() {
-            super(NodeId.getSizeInBytes() * Byte.SIZE, 8);
+            super(NodeId.getSizeInBytes() * Byte.SIZE, 1);
         }
 
         public NodeId get() {
-            return NodeId.nodeIdFromByteBuffer(getByteBuffer(), getByteBufferPosition());
+            return NodeId.nodeIdFromByteBuffer(getByteBuffer(), getByteBufferPosition() + offset());
         }
 
         public void set(final NodeId nodeId) {
-            nodeId.toByteBuffer(getByteBuffer(), getByteBufferPosition());
+            nodeId.toByteBuffer(getByteBuffer(), getByteBufferPosition() + offset());
+        }
+
+        @Override
+        public String toString() {
+            try {
+                return get().toString();
+            } catch (Exception ex) {
+                return "<undefined>";
+            }
         }
 
     }

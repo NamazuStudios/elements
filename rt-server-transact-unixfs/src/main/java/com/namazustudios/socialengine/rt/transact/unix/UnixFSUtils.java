@@ -510,7 +510,7 @@ public class UnixFSUtils {
 
         LinkType(final String extension, final Predicate<Path> typePredicate) {
             this.typePredicate = typePredicate;
-            this.extension = format("%s.%s", extension);
+            this.extension = format(".%s", extension);
         }
 
         /**

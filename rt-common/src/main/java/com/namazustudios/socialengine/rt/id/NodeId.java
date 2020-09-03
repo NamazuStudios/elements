@@ -93,6 +93,17 @@ public class NodeId implements Serializable, HasNodeId {
     }
 
     /**
+     * Writes this {@link NodeId} to a {@link ByteBuffer} at the supplied position. The {@link NodeId} will be placed
+     * at {@link ByteBuffer#position()}. The supplied buffer must have at least {@link #getSizeInBytes()} bytes
+     * remaining.
+     *
+     * @param byteBuffer the byteBuffer to receive the {@link NodeId}
+     */
+    public void toByteBuffer(final ByteBuffer byteBuffer) {
+        v1CompoundId.toByteBuffer(byteBuffer, INSTANCE, APPLICATION);
+    }
+
+    /**
      * Writes this {@link NodeId} to a {@link ByteBuffer} at the supplied position. As the position is specified, this
      * does not affect the buffer's mark, limit, position.
      *
@@ -228,6 +239,20 @@ public class NodeId implements Serializable, HasNodeId {
                 .only(INSTANCE, APPLICATION)
             .build()
         );
+    }
+
+    /**
+     * Reads a {@link NodeId} from the supplied {@link ByteBuffer}. The buffer's position will be advanced by the
+     * size of the {@link NodeId}.
+     *
+     * @param byteBufferRepresentation the byte buffer to read
+     * @return the {@link NodeId} instance
+     */
+    public static NodeId nodeIdFromByteBuffer(final ByteBuffer byteBufferRepresentation) {
+        return new NodeId(new V1CompoundId.Builder()
+            .with(byteBufferRepresentation)
+            .only(INSTANCE, APPLICATION)
+            .build());
     }
 
     /**

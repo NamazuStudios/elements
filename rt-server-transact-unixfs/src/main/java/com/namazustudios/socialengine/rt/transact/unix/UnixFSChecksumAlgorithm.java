@@ -22,28 +22,22 @@ public enum UnixFSChecksumAlgorithm {
 
             final CRC32 crc32 = new CRC32();
 
-            final ByteBuffer contents = checkable.contentsToCheck();
-            final Struct.Unsigned32 checksum = checkable.checksum();
+            return isValid(checkable, new Algorithm() {
+                @Override
+                public void update(final byte b) {
+                    crc32.update(b);
+                }
 
-            // Original limit/position values of the buffer
-            final int limit = contents.limit();
-            final int position = contents.position();
+                @Override
+                public void update(final ByteBuffer byteBuffer) {
+                    crc32.update(byteBuffer);
+                }
 
-            // Sets to read up to the beginning of the checksum member and updates the checksum.
-            contents.limit(position + checksum.offset());
-            crc32.update(contents);
-
-            // Inserts four zero bytes as if it were calculated with zeros in that position
-            for (int i = 0; i < 4; ++i) crc32.update(0);
-
-            // Sets the limit and position to the remainder of the buffer and updates the checksum.
-            contents.position(4 + position + checksum.offset()).limit(limit);
-            crc32.update(contents);
-
-            final long existing = checksum.get();
-            final long calculated = crc32.getValue();
-
-            return existing == calculated;
+                @Override
+                public long getValue() {
+                    return crc32.getValue();
+                }
+            });
 
         }
 
@@ -75,28 +69,22 @@ public enum UnixFSChecksumAlgorithm {
 
             final Adler32 adler32 = new Adler32();
 
-            final ByteBuffer contents = checkable.contentsToCheck();
-            final Struct.Unsigned32 checksum = checkable.checksum();
+            return isValid(checkable, new Algorithm() {
+                @Override
+                public void update(final byte b) {
+                    adler32.update(b);
+                }
 
-            // Original limit/position values of the buffer
-            final int limit = contents.limit();
-            final int position = contents.position();
+                @Override
+                public void update(final ByteBuffer byteBuffer) {
+                    adler32.update(byteBuffer);
+                }
 
-            // Sets to read up to the beginning of the checksum member and updates the checksum.
-            contents.limit(position + checksum.offset());
-            adler32.update(contents);
-
-            // Inserts four zero bytes as if it were calculated with zeros in that position
-            for (int i = 0; i < 4; ++i) adler32.update(0);
-
-            // Sets the limit and position to the remainder of the buffer and updates the checksum.
-            contents.position(4 + position + checksum.offset()).limit(limit);
-            adler32.update(contents);
-
-            final long existing = checksum.get();
-            final long calculated = adler32.getValue();
-
-            return existing == calculated;
+                @Override
+                public long getValue() {
+                    return adler32.getValue();
+                }
+            });
 
         }
 
@@ -117,6 +105,35 @@ public enum UnixFSChecksumAlgorithm {
         }
 
     };
+
+    protected boolean isValid(final Checkable checkable, final Algorithm algorithm) {
+
+        final ByteBuffer contents = checkable.contentsToCheck();
+        final Struct.Unsigned32 checksum = checkable.checksum();
+
+        // Original limit/position values of the buffer
+        final int limit = contents.limit();
+        final int position = contents.position();
+
+        // Sets to read up to the beginning of the checksum member and updates the checksum.
+        if (checksum.offset() > 0) {
+            contents.limit(position + checksum.offset());
+            algorithm.update(contents);
+        }
+
+        // Inserts four zero bytes as if it were calculated with zeros in that position
+        for (int i = 0; i < 4; ++i) algorithm.update((byte) 0x0);
+
+        // Sets the limit and position to the remainder of the buffer and updates the checksum.
+        contents.position(4 + position + checksum.offset()).limit(limit);
+        algorithm.update(contents);
+
+        final long existing = checksum.get();
+        final long calculated = algorithm.getValue();
+
+        return existing == calculated;
+
+    }
 
     /**
      * Checks if this the supplied {@link Checkable} is valid.
@@ -176,4 +193,9 @@ public enum UnixFSChecksumAlgorithm {
 
     }
 
+    private interface Algorithm {
+        void update(byte b);
+        void update(ByteBuffer byteBuffer);
+        long getValue();
+    }
 }

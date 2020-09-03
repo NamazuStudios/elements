@@ -90,7 +90,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
     @Override
     public LockedRevision lockLatestReadUncommitted() {
 
-        final UnixFSRevisionTableEntry operation = revisionTable
+        final UnixFSRevisionTableEntry operation = getRevisionTable()
             .reverse()
             .map(slice -> slice.getValue())
             .filter(op -> op.isValid() && COMMITTED.equals(op.state.get()))
@@ -320,7 +320,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         @Override
         public void cleanup(final TransactionJournal.Entry entry) {
-            throw new FatalException("Not yet supported.");
+            logger.warn("cleanup(Entry) not implemented yet.");
+//            throw new FatalException("Not yet supported.");
         }
 
         @Override
