@@ -100,7 +100,7 @@ public class UnixFSTransactionCommand {
         for (int i = 0; i < count; ++i) {
             final UnixFSTransactionParameter parameter = getParameterAt(i);
             sb.append(parameter.toString());
-            if (i < (count - 1)) sb.append(",");
+            if (i < (count - 1)) sb.append(", ");
         }
 
         return sb.append(")").toString();

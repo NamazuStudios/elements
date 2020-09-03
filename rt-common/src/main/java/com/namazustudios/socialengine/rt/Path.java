@@ -159,9 +159,15 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
         this.components = unmodifiableList(components);
 
         this.components.forEach(c -> {
+
+            if (c.contains(PATH_SEPARATOR)) {
+                throw new IllegalArgumentException(c + " cannot contain separator.");
+            }
+
             if (!VALID_PATH_COMPONENT.matcher(c).matches()) {
                 throw new IllegalArgumentException(c + " has invalid characters");
             }
+
         });
 
     }
@@ -567,7 +573,10 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
                 context = null;
             }
 
-            final List<String> components = Stream.of(Pattern.quote(pathSeparator))
+            final String quoted = Pattern.quote(pathSeparator);
+            final String pathComponent = contextAndPath.get(1);
+
+            final List<String> components = Stream.of(pathComponent.split(quoted))
                 .map(c -> c.trim())
                 .filter(c -> ! c.isEmpty())
                 .collect(toList());

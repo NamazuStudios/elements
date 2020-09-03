@@ -1,7 +1,10 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import javolution.io.Struct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
@@ -14,6 +17,8 @@ import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromByte
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionParameter.Type.*;
 
 public class UnixFSTransactionParameter {
+
+    private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionParameter.class);
 
     private static final Charset CHARSET = Charset.forName("UTF-8");
 
@@ -280,9 +285,9 @@ public class UnixFSTransactionParameter {
          */
         NULL {
             @Override
-            protected <T> T asNull(final UnixFSTransactionParameter unixFSTransactionParameter) {
+            protected <T> T asNull(final UnixFSTransactionParameter param) {
 
-                if (unixFSTransactionParameter.header.length.get() != 0) {
+                if (param.header.length.get() != 0) {
                     throw new UnixFSProgramCorruptionException("null parameter must be zero-length");
                 }
 
@@ -296,9 +301,9 @@ public class UnixFSTransactionParameter {
          */
         RESOURCE_ID {
             @Override
-            protected ResourceId asResourceId(final UnixFSTransactionParameter unixFSTransactionParameter) {
-                setPositionAndLimit(unixFSTransactionParameter);
-                return resourceIdFromByteBuffer(unixFSTransactionParameter.commandSlice);
+            protected ResourceId asResourceId(final UnixFSTransactionParameter param) {
+                setPositionAndLimit(param);
+                return resourceIdFromByteBuffer(param.commandSlice);
             }
         },
 
@@ -307,11 +312,11 @@ public class UnixFSTransactionParameter {
          */
         FS_PATH {
             @Override
-            protected java.nio.file.Path asFSPath(final UnixFSTransactionParameter unixFSTransactionParameter) {
+            protected java.nio.file.Path asFSPath(final UnixFSTransactionParameter param) {
 
-                setPositionAndLimit(unixFSTransactionParameter);
+                setPositionAndLimit(param);
 
-                final CharBuffer charBuffer = CHARSET.decode(unixFSTransactionParameter.commandSlice);
+                final CharBuffer charBuffer = CHARSET.decode(param.commandSlice);
                 final String pathString = charBuffer.toString();
 
                 return java.nio.file.Paths.get(pathString);
@@ -324,12 +329,11 @@ public class UnixFSTransactionParameter {
          */
         RT_PATH {
             @Override
-            protected com.namazustudios.socialengine.rt.Path asRTPath(
-                    final UnixFSTransactionParameter unixFSTransactionParameter) {
+            protected com.namazustudios.socialengine.rt.Path asRTPath(final UnixFSTransactionParameter param) {
 
-                setPositionAndLimit(unixFSTransactionParameter);
+                setPositionAndLimit(param);
 
-                final CharBuffer charBuffer = CHARSET.decode(unixFSTransactionParameter.commandSlice);
+                final CharBuffer charBuffer = CHARSET.decode(param.commandSlice);
                 final String pathString = charBuffer.toString();
 
                 return com.namazustudios.socialengine.rt.Path.fromPathString(pathString);
@@ -337,15 +341,10 @@ public class UnixFSTransactionParameter {
             }
         };
 
-        protected void setPositionAndLimit(final UnixFSTransactionParameter unixFSTransactionParameter) {
-
-            final int position = (int) unixFSTransactionParameter.header.position.get();
-            final int length = (int) unixFSTransactionParameter.header.length.get();
-
-            unixFSTransactionParameter.commandSlice
-                .position(position)
-                .limit(position + length);
-
+        protected void setPositionAndLimit(final UnixFSTransactionParameter param) {
+            final int position = (int) param.header.position.get();
+            final int length = (int) param.header.length.get();
+            param.commandSlice.position(position).limit(position + length);
         }
 
         protected <T> T asNull(UnixFSTransactionParameter unixFSTransactionParameter) {
