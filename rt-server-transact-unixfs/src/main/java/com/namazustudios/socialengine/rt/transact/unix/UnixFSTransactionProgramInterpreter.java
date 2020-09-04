@@ -86,6 +86,9 @@ public class UnixFSTransactionProgramInterpreter {
             case UPDATE_RESOURCE:
                 updateResource(command, executionHandler);
                 break;
+            case ADD_RESOURCE_ID:
+                addResourceId(command, executionHandler);
+                break;
             case LINK_NEW_RESOURCE:
                 linkNewResource(command, executionHandler);
                 break;
@@ -124,6 +127,12 @@ public class UnixFSTransactionProgramInterpreter {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
         final ResourceId resourceId = command.getParameterAt(1).asResourceId();
         executionHandler.updateResource(program, fsPath, resourceId);
+    }
+
+    private void addResourceId(final UnixFSTransactionCommand command,
+                               final ExecutionHandler executionHandler) {
+        final ResourceId resourceId = command.getParameterAt(0).asResourceId();
+        executionHandler.addResourceId(program, resourceId);
     }
 
     private void linkNewResource(final UnixFSTransactionCommand command,
@@ -182,6 +191,15 @@ public class UnixFSTransactionProgramInterpreter {
         void updateResource(UnixFSTransactionProgram program,
                             Path fsPath,
                             ResourceId resourceId);
+
+        /**
+         * Handles the {@link UnixFSTransactionCommandInstruction#ADD_RESOURCE_ID}.
+         *
+         * @param program
+         * @param resourceId
+         */
+        void addResourceId(UnixFSTransactionProgram program,
+                           ResourceId resourceId);
 
         /**
          * Handles {@link UnixFSTransactionCommandInstruction#LINK_NEW_RESOURCE}

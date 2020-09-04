@@ -173,6 +173,30 @@ public class UnixFSTransactionProgramBuilder {
         return this;
     }
 
+    /**
+     * Adds the supplied {@link ResourceId} to the data store.
+     *
+     * @param executionPhase  the execution phase to use
+     * @param resourceId the {@link ResourceId} to link
+     * @return this instance
+     */
+    public UnixFSTransactionProgramBuilder addResourceId(final UnixFSTransactionProgramExecutionPhase executionPhase,
+                                                        final ResourceId resourceId) {
+
+        requireNonNull(executionPhase, "executionPhase");
+        requireNonNull(resourceId, "resourceId");
+
+        getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
+            .withPhase(executionPhase)
+            .withInstruction(ADD_RESOURCE_ID)
+            .addResourceIdParameter(resourceId)
+            .build(byteBuffer)));
+
+        clear();
+
+        return this;
+
+    }
 
     /**
      * Links a {@link ResourceId} to a specific {@link com.namazustudios.socialengine.rt.Path}.

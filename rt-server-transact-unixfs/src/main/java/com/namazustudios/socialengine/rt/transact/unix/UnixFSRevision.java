@@ -33,7 +33,7 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
 
     @Override
     public String getUniqueIdentifier() {
-        return uid == null ? (uid = format("%0X", snapshot.getSnapshot())) : uid;
+        return uid == null ? (uid = format("%016X", snapshot.getSnapshot())) : uid;
     }
 
     @Override

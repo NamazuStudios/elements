@@ -234,6 +234,11 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             }
 
             @Override
+            public void addResourceId(final UnixFSTransactionProgram program, final ResourceId resourceId) {
+                getResourceIndex().addResourceId(revision, resourceId);
+            }
+
+            @Override
             public void linkNewResource(final UnixFSTransactionProgram program,
                                         final Path fsPath,
                                         final ResourceId resourceId) {

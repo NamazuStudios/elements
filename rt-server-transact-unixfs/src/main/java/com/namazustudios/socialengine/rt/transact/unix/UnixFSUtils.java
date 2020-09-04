@@ -143,7 +143,9 @@ public class UnixFSUtils {
      * @param linkType the link type to search
      * @return the {@link Revision<Path>}
      */
-    public Revision<Path> findLatestTombstone(final Path fsPathDirectory, final Revision<?> revision, final LinkType linkType) {
+    public Revision<Path> findLatestTombstone(final Path fsPathDirectory,
+                                              final Revision<?> revision,
+                                              final LinkType linkType) {
         return findLatestForRevision(fsPathDirectory, revision, linkType).filter(this::isTombstone);
     }
 

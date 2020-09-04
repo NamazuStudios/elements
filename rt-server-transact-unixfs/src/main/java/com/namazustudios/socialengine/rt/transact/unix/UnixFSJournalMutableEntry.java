@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
-import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,6 +131,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
             sourceResourceId,
             destination,
             () -> {
+                programBuilder.addResourceId(COMMIT, sourceResourceId);
                 programBuilder.linkResource(COMMIT, sourceResourceId, destination);
             });
     }

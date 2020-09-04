@@ -90,6 +90,17 @@ public class UnixFSResourceIdMapping {
         return utils.findLatestTombstone(fsPath, revision, REVISION_HARD_LINK);
     }
 
+    /**
+     * Finds the latest revision for this {@link UnixFSResourceIdMapping}, if it exists.
+     *
+     * @param revision the revision to find
+     *
+     * @return the {@link Revision<Path>} containing the results
+     */
+    public Revision<Path> findLatestRevision(final Revision<?> revision) {
+        return utils.findLatestForRevision(fsPath, revision, REVISION_HARD_LINK);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

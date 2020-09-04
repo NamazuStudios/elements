@@ -169,6 +169,8 @@ public class UnixFSPathIndex implements PathIndex {
             createDirectories(pathDirectory);
 
             final Path reversePathDirectoryParent = resourceIdMapping.resolveReverseDirectory(nodeId);
+            createDirectories(reversePathDirectoryParent);
+
             final Path reversePathDirectory = utils
                 .findLatestForRevision(reversePathDirectoryParent, revision, REVISION_SYMBOLIC_LINK)
                 .map(symlink -> garbageCollector.pin(symlink, revision))

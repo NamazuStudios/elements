@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.google.common.io.Files;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
@@ -12,10 +13,13 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
+import static com.google.common.io.Files.touch;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.*;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.nio.file.StandardOpenOption.READ;
 
 public class UnixFSResourceIndex implements ResourceIndex {
@@ -155,6 +159,26 @@ public class UnixFSResourceIndex implements ResourceIndex {
     }
 
     /**
+     * Makes this {@link UnixFSResourceIndex} aware of a new {@link ResourceId}.
+     *
+     * @param revision the revision
+     * @param resourceId the {@link ResourceId} to add
+     */
+
+    public void addResourceId(final Revision<?> revision, final ResourceId resourceId) {
+
+        final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+
+        utils.doOperationV(() -> {
+            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
+            checkResourceIdDoesNotExist(mapping, revision);
+            createDirectories(mapping.getResourceIdDirectory());
+            createFile(revisionPath);
+        }, FatalException::new);
+
+    }
+
+    /**
      * Links the supplied FS Path to the ResourceId.
      *
      * @param revision the revision to link
@@ -167,9 +191,24 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
         utils.doOperationV(() -> {
             final Path revisionPath = mapping.resolveRevisionFilePath(revision);
+            checkResourceIdDoesNotExist(mapping, revision);
             createDirectories(mapping.getResourceIdDirectory());
             createLink(fsPath, revisionPath);
         }, FatalException::new);
+
+    }
+
+    private void checkResourceIdDoesNotExist(final UnixFSResourceIdMapping mapping, final Revision<?> revision) {
+
+        if (!exists(mapping.getResourceIdDirectory(), NOFOLLOW_LINKS)) return;
+
+        final Revision<Path> latest = mapping.findLatestRevision(revision);
+
+        latest.getValue().ifPresent(value -> {
+            if (utils.isTombstone(value)) {
+                logger.error("Revision {} already exists at {}.", revision, value);
+            }
+        });
 
     }
 
