@@ -118,25 +118,25 @@ public class MongoSessionDao implements SessionDao {
         final UpdateResults updateResults;
         updateResults = getDatastore().update(query, updates, new UpdateOptions().multi(false).upsert(false));
 
-        if (updateResults.getUpdatedCount() == 0) {
+        final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
 
-            final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
+        if (updateResults.getUpdatedCount() == 0) {
 
             if (mongoSession == null) {
                 throw new NoSessionException("Session not valid.");
-            } else if (mongoSession.getExpiry().before(now)) {
+            } else if (mongoSession.getExpiry() != null && mongoSession.getExpiry().before(now)) {
                 throw new SessionExpiredException("Session expired.");
-            } else {
-                throw new InternalException("Unable to refresh session.");
             }
 
         } else {
-            final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
+
             if (mongoSession.getProfile() != null) {
                 updateProfileLastLogin(mongoSession.getProfile().getObjectId().toString());
             }
-            return getMapper().map(mongoSession, Session.class);
+
         }
+
+        return getMapper().map(mongoSession, Session.class);
 
     }
 
