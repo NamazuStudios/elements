@@ -39,6 +39,13 @@ enum UnixFSTransactionCommandInstruction {
     UPDATE_RESOURCE,
 
     /**
+     * Adds the supplied {@link com.namazustudios.socialengine.rt.Path} to the. This does not actually link the path
+     * but rather makes the underlying datastore aware that the path exists ensuring that the preconditions for usage of
+     * the path is necessary.
+     */
+    ADD_PATH,
+
+    /**
      * Adds a {@link ResourceId} to the underlying data store. Unlike {@link #LINK_NEW_RESOURCE}, there does not need to
      * actually be contents of the resource to link. This simply makes the underlying datastore aware of the existence
      * of the underlying {@link ResourceId}.

@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
@@ -75,6 +76,8 @@ public class UnixFSUtils {
 
     private final Path pathStorageRoot;
 
+    private final Path reversePathStorageRoot;
+
     private final Path resourceStorageRoot;
 
     private final Path temporaryFileDirectory;
@@ -94,6 +97,7 @@ public class UnixFSUtils {
         this.transactionJournalPath = storageRoot.resolve(TRANSACTION_JOURNAL_FILE_NAME).toAbsolutePath().normalize();
         this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath().normalize();
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath().normalize();
+        this.reversePathStorageRoot = storageRoot.resolve(REVERSE_DIRECTORY).toAbsolutePath().normalize();
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath().normalize();
         this.temporaryFileDirectory = storageRoot.resolve(TEMPORARY_DIRECTORY).toAbsolutePath().normalize();
         pathSeparator = pathStorageRoot.getFileSystem().getSeparator();
@@ -121,7 +125,13 @@ public class UnixFSUtils {
                                                 final Revision<?> revision,
                                                 final LinkType linkType) {
 
-        if (!isDirectory(directory)) throw new IllegalArgumentException(directory + " must be a directory.");
+        final boolean exists = exists(directory);
+        final boolean isDirectory = isDirectory(directory);
+
+        if (exists && !isDirectory)
+            throw new IllegalArgumentException(directory + " must be a directory.");
+        else if (!exists)
+            return revision.withOptionalValue(Optional.empty());
 
         return doOperation(() -> Files
             .list(directory)
@@ -193,6 +203,7 @@ public class UnixFSUtils {
             createDirectories(getPathStorageRoot());
             createDirectories(getResourceStorageRoot());
             createDirectories(getTemporaryFileDirectory());
+            createDirectories(getReversePathStorageRoot());
             if (!isRegularFile(tombstone, NOFOLLOW_LINKS)) createFile(tombstone);
         }, FatalException::new);
 
@@ -206,6 +217,7 @@ public class UnixFSUtils {
         fileSystemSet.add(getResourceStorageRoot().getFileSystem());
         fileSystemSet.add(getTemporaryFileDirectory().getFileSystem());
         fileSystemSet.add(getTransactionJournalPath().getFileSystem());
+        fileSystemSet.add(getRevisionTableFilePath().getFileSystem());
 
         if (fileSystemSet.size() > 1) {
             throw new IllegalArgumentException(format("%s %s and %s must share common filesystem.",
@@ -292,6 +304,14 @@ public class UnixFSUtils {
      */
     public Path getPathStorageRoot() {
         return pathStorageRoot;
+    }
+
+    /**
+     * Returns tha {@link Path} to the directory holding the reverse directory mapping.
+     * @return the {@link Path} to the path mapping
+     */
+    public Path getReversePathStorageRoot() {
+        return reversePathStorageRoot;
     }
 
     /**

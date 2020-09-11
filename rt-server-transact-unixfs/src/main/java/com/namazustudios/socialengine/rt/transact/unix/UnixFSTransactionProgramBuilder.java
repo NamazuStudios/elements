@@ -174,10 +174,35 @@ public class UnixFSTransactionProgramBuilder {
     }
 
     /**
+     * Adds the supplied {@link Path} to the data store.
+     *
+     * @param executionPhase  the execution phase to use
+     * @param path the {@link Path} to add
+     * @return this instance
+     */
+    public UnixFSTransactionProgramBuilder addPath(final UnixFSTransactionProgramExecutionPhase executionPhase,
+                                                   final Path path) {
+
+        requireNonNull(executionPhase, "executionPhase");
+        requireNonNull(path, "path");
+
+        getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
+                .withPhase(executionPhase)
+                .withInstruction(ADD_PATH)
+                .addRTPathParameter(path)
+                .build(byteBuffer)));
+
+        clear();
+
+        return this;
+
+    }
+
+    /**
      * Adds the supplied {@link ResourceId} to the data store.
      *
      * @param executionPhase  the execution phase to use
-     * @param resourceId the {@link ResourceId} to link
+     * @param resourceId the {@link ResourceId} to add
      * @return this instance
      */
     public UnixFSTransactionProgramBuilder addResourceId(final UnixFSTransactionProgramExecutionPhase executionPhase,

@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.transact.Revision;
 
 import java.nio.file.Path;
 import java.util.Objects;
+import java.util.Optional;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
 
@@ -21,16 +22,6 @@ public class UnixFSResourceIdMapping {
         this.utils = utils;
         this.fsPath = fsPath.toAbsolutePath().normalize();
         this.resourceId = resourceId;
-    }
-
-    /**
-     * Resolves the symlink path for the supplied revision.
-     *
-     * @param revision the revision to use
-     * @return the symlink path for the revision.
-     */
-    public Path resolveSymlinkPath(final Revision<?> revision) {
-        return utils.resolveSymlinkPath(fsPath, revision);
     }
 
     /**
@@ -68,15 +59,6 @@ public class UnixFSResourceIdMapping {
      */
     public Path resolveReverseDirectories() {
         return utils.resolveRevisionDirectoryPath(fsPath);
-    }
-
-    /**
-     * Given the {@link NodeId} this will resolve the matching reverse-mapping directory for.
-     *
-     * @return the {@link Path} to the reverse-mapping directory
-     */
-    public Path resolveReverseDirectory(final NodeId nodeId) {
-        return utils.resolveRevisionDirectoryPath(fsPath).resolve(nodeId.asString());
     }
 
     /**

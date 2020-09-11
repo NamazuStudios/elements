@@ -13,9 +13,11 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileVisitOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -112,6 +114,13 @@ public class UnixFSPathIndex implements PathIndex {
                 );
     }
 
+    public void addPath(final Revision<?> revision,
+                        final com.namazustudios.socialengine.rt.Path path) {
+        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromRTPath(utils, path);
+        final Path reversePathForNodeId = reversePathMapping.resolveReverseDirectory();
+        utils.doOperationV(() -> createDirectories(reversePathForNodeId), FatalException::new);
+    }
+
     public void link(final Revision<?> revision,
                      final NodeId nodeId,
                      final ResourceId resourceId,
@@ -163,48 +172,84 @@ public class UnixFSPathIndex implements PathIndex {
             final Path resourceIdDirectory = resourceIdMapping.getResourceIdDirectory();
 
             final Path pathSymlink = utils.resolveSymlinkPath(pathDirectory, revision);
-            final Path pathSymlinkTarget = pathSymlink.relativize(resourceIdDirectory);
+            final Path pathSymlinkTarget = pathDirectory.relativize(resourceIdDirectory);
 
             logger.trace("Creating directory {}", pathDirectory);
             createDirectories(pathDirectory);
 
-            final Path reversePathDirectoryParent = resourceIdMapping.resolveReverseDirectory(nodeId);
-            createDirectories(reversePathDirectoryParent);
+            logger.trace("Creating symlink {} -> {}", pathSymlink, pathSymlinkTarget);
+            createSymbolicLink(pathSymlink, pathSymlinkTarget);
 
-            final Path reversePathDirectory = utils
-                .findLatestForRevision(reversePathDirectoryParent, revision, REVISION_SYMBOLIC_LINK)
-                .map(symlink -> garbageCollector.pin(symlink, revision))
-                .map(symlink -> utils.doOperation(() -> readSymbolicLink(symlink)))
-                .getValue()
-                .orElseGet(() -> utils.doOperation(() -> {
+            logger.trace("Created symlink {} -> {}", pathSymlink, pathSymlinkTarget);
 
-                    // No mapping exists for this revision because it can't find the symlink. Therefore, we must make
-                    // the new directory and setup all the links.
+        }, FatalException::new);
 
-                    // The link is determined by the revision number unique ID
-                    final Path link = utils.resolveSymlinkPath(reversePathDirectoryParent, revision);
+    }
 
-                    // The target is a randomly generated UUID.
-                    final Path target = reversePathDirectoryParent.resolve(randomUUID().toString());
+    public void linkReverse(final Revision<?> revision,
+                            final NodeId nodeId,
+                            final ResourceId resourceId,
+                            final com.namazustudios.socialengine.rt.Path rtPath) {
 
-                    logger.trace("Creating directory {}", target);
-                    logger.trace("Creating symbolic link {} -> {} for new reverse mapping.", link, target);
+        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
+        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromRTPath(utils, nodeId, rtPath);
 
-                    createDirectories(target);
-                    createSymbolicLink(link, target.getFileName());
+        utils.doOperationV(() -> {
 
-                    return target;
+            final Path reverseResourceIdDirectory = reversePathMapping.resolveReverseDirectory(resourceId);
+            createDirectories(reverseResourceIdDirectory);
 
-                }));
+            final Revision<Path> latest = reversePathMapping.findLatestSymlink(revision, resourceId);
 
-                final Path reversePathSymlink = reversePathDirectory.resolve(randomUUID().toString());
-                final Path reversePathSymlinkTarget = reversePathSymlink.relativize(pathDirectory);
+            final Path linkDirectory;
 
-                logger.trace("Creating symlink {} -> {}", pathSymlink, pathSymlinkTarget);
-                logger.trace("Creating symlink {} -> {}", reversePathSymlink, reversePathSymlinkTarget);
+            if (Revision.ZERO.compareTo(latest) == 0) {
 
-                createSymbolicLink(pathSymlink, pathSymlinkTarget);
-                createSymbolicLink(reversePathSymlink, reversePathSymlinkTarget);
+                // No revision exists at all and we need to make sure that the directory exists
+
+                final Path symlink = reversePathMapping.resolveSymlink(revision, resourceId);
+                linkDirectory = reverseResourceIdDirectory.resolve(randomUUID().toString());
+
+                // Creates the directory to hold the contents of the link
+                createDirectories(linkDirectory);
+                createSymbolicLink(symlink, linkDirectory.getFileName());
+
+            } else if (latest.compareTo(revision) > 0) {
+
+                // A revision exists, but it is older. So we need to make the symbolic link to a new revision
+                // and copy the existing directory over.
+
+                final Path symlink = reversePathMapping.resolveSymlink(revision, resourceId);
+                linkDirectory = reverseResourceIdDirectory.resolve(randomUUID().toString());
+
+                createDirectories(linkDirectory);
+                createSymbolicLink(symlink, linkDirectory.getFileName());
+
+                final Path olderRevision = readSymbolicLink(latest.getValue().get());
+
+                walk(olderRevision).forEach(
+                    source ->
+                    utils.doOperationV(() ->
+                    copy(source, olderRevision.resolve(olderRevision.relativize(source)))));
+
+            } else if (latest.compareTo(revision) == 0) {
+
+                // We have already prepared the reverse directory, so it is now a simple matter of just using the
+                // existing symbolic link
+
+                final Path symlink = reversePathMapping.resolveSymlink(revision, resourceId);
+                linkDirectory = readSymbolicLink(symlink);
+
+            } else {
+                throw new FatalException("Invalid revision found: " + latest);
+            }
+
+            // At long last we have a link directory we can actually make the reverse mapping. The mapping will have
+            // a randomly assigned UUID for the symbolic link.
+
+            final Path link = linkDirectory.resolve(randomUUID().toString());
+            final Path target = linkDirectory.relativize(pathMapping.getPathDirectory());
+            createSymbolicLink(link, target);
 
         }, FatalException::new);
 
@@ -252,8 +297,8 @@ public class UnixFSPathIndex implements PathIndex {
         @Override
         public Revision<ResourceId> getValueAt(final Revision<?> revision,
                                                final com.namazustudios.socialengine.rt.Path key) {
+
             final UnixFSPathMapping mapping = UnixFSPathMapping.fromRTPath(utils, nodeId, key);
-            if (!exists(mapping.getPathDirectory())) return revision.withOptionalValue(Optional.empty());
 
             return utils
                 .findLatestForRevision(mapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
@@ -263,6 +308,7 @@ public class UnixFSPathIndex implements PathIndex {
                     final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils,fileName);
                     return resourceIdMapping.getResourceId();
                 }, FatalException::new));
+
         }
     }
 
@@ -278,10 +324,10 @@ public class UnixFSPathIndex implements PathIndex {
         public Revision<Set<com.namazustudios.socialengine.rt.Path>> getValueAt(final Revision<?> revision,
                                                                                 final ResourceId key) {
 
-            final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, key);
-            if (!exists(resourceIdMapping.getResourceIdDirectory())) return revision.withOptionalValue(Optional.empty());
+            final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromNodeId(utils, nodeId);
+            final Path reverseDirectory = reversePathMapping.resolveReverseDirectory(key);
 
-            final Path reverseDirectory = resourceIdMapping.resolveReverseDirectory(nodeId);
+            if (!exists(reverseDirectory)) return revision.withOptionalValue(Optional.empty());
 
             final Set<com.namazustudios.socialengine.rt.Path> pathSet =
                 utils.findLatestForRevision(reverseDirectory, revision, REVISION_SYMBOLIC_LINK)
@@ -298,25 +344,6 @@ public class UnixFSPathIndex implements PathIndex {
             return revision.withValue(pathSet);
 
         }
-
-    }
-
-    public static void main(String[] args) throws Exception {
-
-        // Keeping this here for reference
-        final Path tmpdir = Paths.get(".", "tempdir");
-        if (Files.isDirectory(tmpdir)) Files.walk(tmpdir).map(Path::toFile).forEach(File::delete);
-
-        Files.createDirectories(tmpdir);
-
-        final Path original = tmpdir.resolve("file").normalize();
-        final Path target = Paths.get("file");
-        final Path symlink0 = tmpdir.resolve("symlink0").toAbsolutePath().normalize();
-        final Path symlink1 = tmpdir.resolve("symlink1").toAbsolutePath().normalize();
-
-        Files.createFile(original);
-        Files.createSymbolicLink(symlink0, target);
-        Files.createLink(symlink1, symlink0);
 
     }
 

@@ -22,7 +22,7 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
 
         @Override
         public <RevisionT extends Revision>
-        RevisionT getOriginal(Class<RevisionT> cls) { return cls.cast(this);  }
+        RevisionT getOriginal(final Class<RevisionT> cls) { return cls.cast(this);  }
 
         @Override
         public String getUniqueIdentifier() {
@@ -30,8 +30,8 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
         }
 
         @Override
-        public int compareTo(Revision<?> o) {
-            return this == o ? 0 : -1;
+        public int compareTo(final Revision<?> o) {
+            return this == o.getOriginal() ? 0 : -1;
         }
 
         @Override
@@ -49,7 +49,7 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
 
         @Override
         public <RevisionT extends Revision>
-        RevisionT getOriginal(Class<RevisionT> cls) { return cls.cast(this);  }
+        RevisionT getOriginal(final Class<RevisionT> cls) { return cls.cast(this);  }
 
         @Override
         public String getUniqueIdentifier() {
@@ -57,8 +57,8 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
         }
 
         @Override
-        public int compareTo(Revision<?> o) {
-            return this == o ? 0 : 1;
+        public int compareTo(final Revision<?> o) {
+            return this == getOriginal() ? 0 : 1;
         }
 
         @Override
@@ -93,6 +93,15 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      * @return the unique ID
      */
     String getUniqueIdentifier();
+
+    /**
+     * Gets the original {@link Revision<?>} as a {@link Revision<?>}
+     *
+     * @return the {@link Revision<?>}
+     */
+    default Revision<?> getOriginal() {
+        return getOriginal(Revision.class);
+    }
 
     /**
      * Gets the original {@link Revision<RevisionT>}. This is put here to assist the implementation of compareTo as

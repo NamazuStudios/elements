@@ -131,6 +131,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
             sourceResourceId,
             destination,
             () -> {
+                programBuilder.addPath(COMMIT, destination);
                 programBuilder.addResourceId(COMMIT, sourceResourceId);
                 programBuilder.linkResource(COMMIT, sourceResourceId, destination);
             });

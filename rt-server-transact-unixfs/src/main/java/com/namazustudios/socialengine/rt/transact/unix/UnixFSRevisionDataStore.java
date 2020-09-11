@@ -234,6 +234,12 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             }
 
             @Override
+            public void addPath(final UnixFSTransactionProgram program,
+                                final com.namazustudios.socialengine.rt.Path path) {
+                getPathIndex().addPath(revision, path);
+            }
+
+            @Override
             public void addResourceId(final UnixFSTransactionProgram program, final ResourceId resourceId) {
                 getResourceIndex().addResourceId(revision, resourceId);
             }
@@ -250,6 +256,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
                                              final ResourceId resourceId,
                                              final com.namazustudios.socialengine.rt.Path rtPath) {
                 getPathIndex().link(revision, nodeId, resourceId, rtPath);
+                getPathIndex().linkReverse(revision, nodeId, resourceId, rtPath);
             }
 
         };

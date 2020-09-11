@@ -86,6 +86,9 @@ public class UnixFSTransactionProgramInterpreter {
             case UPDATE_RESOURCE:
                 updateResource(command, executionHandler);
                 break;
+            case ADD_PATH:
+                addPath(command, executionHandler);
+                break;
             case ADD_RESOURCE_ID:
                 addResourceId(command, executionHandler);
                 break;
@@ -127,6 +130,12 @@ public class UnixFSTransactionProgramInterpreter {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
         final ResourceId resourceId = command.getParameterAt(1).asResourceId();
         executionHandler.updateResource(program, fsPath, resourceId);
+    }
+
+    private void addPath(final UnixFSTransactionCommand command,
+                         final ExecutionHandler executionHandler) {
+        final com.namazustudios.socialengine.rt.Path path = command.getParameterAt(0).asRTPath();
+        executionHandler.addPath(program, path);
     }
 
     private void addResourceId(final UnixFSTransactionCommand command,
@@ -191,6 +200,14 @@ public class UnixFSTransactionProgramInterpreter {
         void updateResource(UnixFSTransactionProgram program,
                             Path fsPath,
                             ResourceId resourceId);
+
+        /**
+         * Handles the {@link UnixFSTransactionCommandInstruction#ADD_PATH}.
+         *
+         * @param program
+         * @param path
+         */
+        void addPath(UnixFSTransactionProgram program, com.namazustudios.socialengine.rt.Path path);
 
         /**
          * Handles the {@link UnixFSTransactionCommandInstruction#ADD_RESOURCE_ID}.

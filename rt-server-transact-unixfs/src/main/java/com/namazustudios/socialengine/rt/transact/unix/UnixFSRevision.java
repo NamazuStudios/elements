@@ -38,9 +38,9 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
 
     @Override
     public int compareTo(final Revision<?> o) {
-        if (o == Revision.ZERO) {
+        if (o.getOriginal() == Revision.ZERO) {
             return 1;
-        } else if (o == Revision.INFINITY) {
+        } else if (o.getOriginal() == Revision.INFINITY) {
             return -1;
         } else {
             final UnixFSRevision<?> other = o.getOriginal(UnixFSRevision.class);
