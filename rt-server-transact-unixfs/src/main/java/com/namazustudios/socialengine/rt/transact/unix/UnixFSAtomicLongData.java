@@ -38,7 +38,7 @@ public class UnixFSAtomicLongData extends Struct {
      * @return the {@link UnixFSAtomicLong} instance
      */
     public UnixFSAtomicLong createAtomicLong() {
-        final int position = getByteBufferPosition();
+        final int position = getByteBufferPosition() + value.offset();
         final ByteBuffer byteBuffer = getByteBuffer();
         return UnixFSMemoryUtils.getInstance().getAtomicLong(byteBuffer, position);
     }

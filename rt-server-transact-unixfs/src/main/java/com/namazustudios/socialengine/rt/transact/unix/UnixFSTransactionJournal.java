@@ -397,10 +397,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
                 final MappedByteBuffer journalBuffer = channel.map(READ_WRITE, 0, headerSize + totalEntrySize);
 
-                journalBuffer.position(0).limit((int)headerSize);
-
-                final ByteBuffer headerBuffer = journalBuffer.slice();
-                header.setByteBuffer(headerBuffer, 0);
+                header.setByteBuffer(journalBuffer, 0);
 
                 header.magic.set(JOURNAL_MAGIC);
                 header.major.set(VERSION_MAJOR_CURRENT);

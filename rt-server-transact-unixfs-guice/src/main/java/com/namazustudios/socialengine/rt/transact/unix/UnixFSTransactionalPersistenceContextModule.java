@@ -41,10 +41,10 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
         bind(UnixFSTransactionJournal.class).asEagerSingleton();
         bind(UnixFSTransactionalPersistenceContext.class).asEagerSingleton();
 
-        bind(RevisionDataStore.class).to(UnixFSRevisionDataStore.class);
-        bind(Revision.Factory.class).to(UnixFSRevisionPool.class);
-        bind(TransactionJournal.class).to(UnixFSTransactionJournal.class);
-        bind(TransactionalPersistenceContext.class).to(UnixFSTransactionalPersistenceContext.class);
+        bind(RevisionDataStore.class).to(UnixFSRevisionDataStore.class).asEagerSingleton();
+        bind(Revision.Factory.class).to(UnixFSRevisionPool.class).asEagerSingleton();
+        bind(TransactionJournal.class).to(UnixFSTransactionJournal.class).asEagerSingleton();
+        bind(TransactionalPersistenceContext.class).to(UnixFSTransactionalPersistenceContext.class).asEagerSingleton();
 
         storageRootBinding.run();
         transactionSizeBinding.run();
