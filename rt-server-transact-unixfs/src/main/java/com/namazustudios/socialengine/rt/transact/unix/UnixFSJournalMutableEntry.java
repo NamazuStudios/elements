@@ -208,4 +208,8 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
         if (committed || rollback) throw new IllegalStateException();
     }
 
+    public UnixFSTransactionProgramBuilder getProgramBuilder() {
+        return programBuilder;
+    }
+
 }

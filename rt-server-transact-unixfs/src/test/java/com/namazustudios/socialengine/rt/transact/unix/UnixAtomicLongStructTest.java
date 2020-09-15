@@ -13,7 +13,6 @@ import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertTrue;
 
 public class UnixAtomicLongStructTest {
 
@@ -25,19 +24,21 @@ public class UnixAtomicLongStructTest {
 
         try (final FileChannel fileChannel = FileChannel.open(temp, READ, WRITE)) {
             final ByteBuffer bb = ByteBuffer.allocate(struct.size());
+            while(bb.hasRemaining()) bb.put((byte)0xff);
+            bb.rewind();
             fileChannel.write(bb);
             struct.setByteBuffer(fileChannel.map(READ_WRITE, 0, struct.size()), 0);
         }
 
         final UnixFSAtomicLong atomicLong = struct.atomicLongData.createAtomicLong();
 
-        for (long l = 0; l < 10000; l++) {
+        for (long l = 0; l < 100000; l++) {
 
             long value;
 
             do {
                 value = atomicLong.get();
-                assertEquals(value, l);
+                assertEquals(value, l - 1);
             } while (!atomicLong.compareAndSet(value, value + 1));
 
         }
@@ -46,7 +47,7 @@ public class UnixAtomicLongStructTest {
 
     private class TestStruct extends Struct {
 
-        final Signed64 foo = new Signed64();
+        final Signed64 unused = new Signed64(); // Intentional. We want to make sure that the struct properly aligns
 
         final UnixFSAtomicLongData atomicLongData = inner(new UnixFSAtomicLongData());
 

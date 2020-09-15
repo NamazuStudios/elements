@@ -32,6 +32,8 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
 
     private Runnable checksumAlgorithmBinding = () -> {};
 
+    private Runnable exposeDetailsForTesting = () -> {};
+
     @Override
     protected void configure() {
 
@@ -52,6 +54,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
         revisionTableCountBinding.run();
         revisionPoolSizeBinding.run();
         checksumAlgorithmBinding.run();
+        exposeDetailsForTesting.run();
 
         expose(RevisionDataStore.class);
         expose(TransactionJournal.class);
@@ -132,6 +135,24 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
     public UnixFSTransactionalPersistenceContextModule withChecksumAlgorithm(final UnixFSChecksumAlgorithm algo) {
         checksumAlgorithmBinding = () -> bind(UnixFSChecksumAlgorithm.class).toInstance(algo);
         return this;
+    }
+
+    /**
+     * Exposes the details of the {@link UnixFSTransactionalPersistenceContextModule} for testing purposes.
+     * @return this instance
+     */
+    public UnixFSTransactionalPersistenceContextModule exposeDetailsForTesting() {
+
+        exposeDetailsForTesting = () -> {
+            expose(UnixFSGarbageCollector.class);
+            expose(UnixFSRevisionPool.class);
+            expose(UnixFSRevisionTable.class);
+            expose(UnixFSTransactionJournal.class);
+            expose(UnixFSTransactionalPersistenceContext.class);
+        };
+
+        return this;
+
     }
 
     /**

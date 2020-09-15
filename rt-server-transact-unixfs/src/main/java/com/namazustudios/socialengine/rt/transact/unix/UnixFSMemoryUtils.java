@@ -165,7 +165,7 @@ public abstract class UnixFSMemoryUtils {
 
                     @Override
                     public String toString() {
-                        return format("Unsafe counter %s (pos=%d)", byteBuffer, position);
+                        return format("Unsafe counter %s (pos=%d) Value - %d", byteBuffer, position, get());
                     }
 
                 };

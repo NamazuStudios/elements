@@ -17,7 +17,6 @@ import java.util.Map;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionCommandInstruction.*;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.CLEANUP;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramExecutionPhase.COMMIT;
-import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.stream.Collectors.toList;
 
@@ -364,9 +363,6 @@ public class UnixFSTransactionProgramBuilder {
             .map(writer -> writer.safeWrite(byteBuffer))
             .collect(toList());
 
-        // TODO Remove this
-        commands.forEach(c -> c.toString());
-
         this.commands.put(executionPhase, commands);
 
         final int length = byteBuffer.position() - position;
@@ -376,6 +372,41 @@ public class UnixFSTransactionProgramBuilder {
 
         return length;
 
+    }
+
+    /**
+     * Gets the revision to write.
+     *
+     * @return the node id
+     */
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+
+    /**
+     * Gets the {@link ByteBuffer} to store the program contents.
+     *
+     * @return the {@link ByteBuffer}
+     */
+    public ByteBuffer getByteBuffer() {
+        return byteBuffer;
+    }
+
+    /**
+     * Gets the {@link UnixFSChecksumAlgorithm} used to commit the program.
+     *
+     * @return the {@link UnixFSChecksumAlgorithm}
+     */
+    public UnixFSChecksumAlgorithm getChecksumAlgorithm() {
+        return checksumAlgorithm;
+    }
+
+    /**
+     * Gets the {@link UnixFSRevision<?>} associated with this builder.
+     * @return
+     */
+    public UnixFSRevision<?> getRevision() {
+        return revision;
     }
 
     @FunctionalInterface

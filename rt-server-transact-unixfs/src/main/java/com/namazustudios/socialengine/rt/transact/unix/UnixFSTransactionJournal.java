@@ -420,7 +420,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
             // be used to track the resources held in contention.
 
-            final UnixFSCircularBlockBuffer.Slice<ByteBuffer> slice = circularBlockBuffer.next();
+            final UnixFSCircularBlockBuffer.Slice<ByteBuffer> slice = circularBlockBuffer.nextLeading();
 
             // TODO Fix This, we may need to supply the revision from the calling code
             final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadUncommitted();

@@ -32,7 +32,9 @@ public class UnixFSCircularBlockBuffer {
 
     private final List<ByteBuffer> slices = new ArrayList<>();
 
-    public UnixFSCircularBlockBuffer(final UnixFSAtomicLong atomicLong, final ByteBuffer buffer, final int blockSize) {
+    public UnixFSCircularBlockBuffer(final UnixFSAtomicLong atomicLong,
+                                     final ByteBuffer buffer,
+                                     final int blockSize) {
 
         final ByteBuffer toSlice = buffer.slice();
 
@@ -55,52 +57,11 @@ public class UnixFSCircularBlockBuffer {
     }
 
     /**
-     * Resets the underlying {@link UnixFSDualCounter}. The result of this call effectively clears the buffer, but does
-     * not overwrite the data contained therein.
-     */
-    public void reset() {
-        counter.reset();
-    }
-
-    /**
-     * Gets the current leading slice value. Since this presumes that there is at least one in the chain
-     *
-     * @return the current leading slice
-     */
-    public Slice<ByteBuffer> leading() {
-        if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
-        final int leading = counter.getLeading();
-        return new Slice<>(leading, slices.get(leading), slices.get(leading));
-    }
-
-    /**
-     * Gets the current leading slice value. Since this presumes that there is at least one in the chain
-     *
-     * @return the current trailing slice
-     */
-    public Slice<ByteBuffer> trailing() {
-        if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
-        final int trailing = counter.getTrailing();
-        return new Slice<>(trailing, slices.get(trailing), slices.get(trailing));
-    }
-
-    /**
      * Increments the current leading value, and returns the {@link ByteBuffer} associated with the value.
      *
      * @return the next leading value.
      */
     public Slice<ByteBuffer> nextLeading() {
-        final int leading = counter.incrementAndGetLeading();
-        return new Slice<>(leading, slices.get(leading), slices.get(leading));
-    }
-
-    /**
-     * Gets the next {@link Slice}, which will be held by the caller until the returned slice is closed.
-     *
-     * @return the next {@link Slice}
-     * @throws FatalException if the buffer has been exhausted
-     */
-    public Slice<ByteBuffer> next() {
         final int leading = counter.incrementAndGetLeading();
         return new Slice<>(leading, slices.get(leading), slices.get(leading));
     }
@@ -274,12 +235,6 @@ public class UnixFSCircularBlockBuffer {
             return snapshot
                 .reverseRange()
                 .mapToObj(i -> new Slice<>(i, structs.get(i), slices.get(i)));
-        }
-
-
-        public Slice<StructT> nextTrailing() {
-            final int trailing = counter.incrementAndGetTrailing();
-            return new Slice<>(trailing, structs.get(trailing), slices.get(trailing));
         }
 
         /**

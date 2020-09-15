@@ -51,22 +51,7 @@ public class UnixFSDualCounter {
      * @param counter
      */
     public UnixFSDualCounter(final int max, final AtomicLong counter) {
-        this(max, new UnixFSAtomicLong() {
-            @Override
-            public long get() {
-                return counter.get();
-            }
-
-            @Override
-            public void set(final long value) {
-                counter.set(value);
-            }
-
-            @Override
-            public boolean compareAndSet(long expect, long update) {
-                return counter.compareAndSet(expect, update);
-            }
-        });
+        this(max, UnixFSAtomicLong.wrap(counter));
     }
 
     /**
@@ -231,20 +216,6 @@ public class UnixFSDualCounter {
         return value == max ? 0 : value + 1;
     }
 
-    private static int leading(final long packed) {
-        return (int) (packed >> 32);
-    }
-
-    private static int trailing(final long packed) {
-        return (int) (packed & 0xFFFFFFFF);
-    }
-
-    private static long pack(final int trailing, final int leading) {
-        final long lLeading = leading;
-        final long lTrailing = trailing;
-        return lTrailing | (lLeading << 32);
-    }
-
     /**
      * Gets the trailing value.
      *
@@ -263,6 +234,41 @@ public class UnixFSDualCounter {
     public int getLeading() {
         final long value = counter.get();
         return leading(value);
+    }
+
+    /**
+     * Gets the leading value from the the packed long.
+     *
+     * @param packed the packed long
+     * @return the leading value
+     */
+    public static int leading(final long packed) {
+        return (int) (packed >>> 32);
+    }
+
+    /**
+     * Sets the leading value from the packed long.
+     *
+     * @param packed the packed long
+     * @return the trailing value
+     */
+    public static int trailing(final long packed) {
+        return (int) (packed & 0xFFFFFFFF);
+    }
+
+    /**
+     * Packs the leading and trailing values together and returns the long representation.
+     *
+     * @param trailing the trailing value
+     * @param leading the leading value
+     *
+     * @return the packed value
+     */
+    public static long pack(final int trailing, final int leading) {
+        final long lLeading = ((long)leading << 32);
+        final long lTrailing = ((long)trailing << 32) >>> 32;
+        final long packed = lTrailing | lLeading;
+        return packed;
     }
 
     /**
