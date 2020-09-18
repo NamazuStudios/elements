@@ -36,11 +36,14 @@ public class UnixFSDualCounterSortingTest {
 
     @Factory
     public static Object[] getInstances() {
-        return new Object[] { javaAPITest(), memoryMappedTest() };
+        return new Object[] {
+            javaAPITest(),
+            memoryMappedTest()
+        };
     }
 
     private static UnixFSDualCounterSortingTest javaAPITest() {
-        return new UnixFSDualCounterSortingTest(UnixFSDualCounter::new);
+        return new UnixFSDualCounterSortingTest(max -> new UnixFSDualCounter(max).reset());
     }
 
     private static UnixFSDualCounterSortingTest memoryMappedTest() {
@@ -57,7 +60,7 @@ public class UnixFSDualCounterSortingTest {
                 final UnixFSAtomicLong atomicLong = UnixFSMemoryUtils.getInstance().getAtomicLong(mapped);
                 atomicLong.set(pack(maxValue, maxValue));
 
-                return new UnixFSDualCounter(maxValue, atomicLong);
+                return new UnixFSDualCounter(maxValue, atomicLong).reset();
             }
 
         });
@@ -79,8 +82,8 @@ public class UnixFSDualCounterSortingTest {
 
     private Object[] offsetDataSetFilled() throws Exception {
         final UnixFSDualCounter counter = counterSupplier.supply(MAX_VALUE);
-        for (int i = 0; i < 100; ++i) counter.incrementAndGetLeading();
-        for (int i = 0; i < 100; ++i) counter.incrementAndGetTrailing();
+        for (int i = 0; i < 100; ++i) counter.incrementLeadingAndGet();
+        for (int i = 0; i < 100; ++i) counter.getTrailingAndIncrement();
         final List<UnixFSDualCounter.Snapshot> snapshots = fill(counter);
         return new Object[]{counter.getTrailing(), snapshots};
     }
@@ -90,7 +93,7 @@ public class UnixFSDualCounterSortingTest {
         final List<UnixFSDualCounter.Snapshot> snapshots = new ArrayList<>();
 
         while (!counter.isFull()) {
-            counter.incrementAndGetLeading();
+            counter.incrementLeadingAndGet();
             snapshots.add(counter.getSnapshot());
         }
 

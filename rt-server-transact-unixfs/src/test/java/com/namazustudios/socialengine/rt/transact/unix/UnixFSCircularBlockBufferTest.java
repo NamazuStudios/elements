@@ -15,6 +15,7 @@ import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Collections.newSetFromMap;
+import static org.testng.Assert.assertTrue;
 import static org.testng.Assert.fail;
 
 public class UnixFSCircularBlockBufferTest {
@@ -45,7 +46,7 @@ public class UnixFSCircularBlockBufferTest {
         final UnixFSCircularBlockBuffer circularBlockBuffer = new UnixFSCircularBlockBuffer(
             atomicLong,
             buffer,
-            BLOCK_SIZE);
+            BLOCK_SIZE).reset();
 
         return new UnixFSCircularBlockBufferTest(circularBlockBuffer);
 
@@ -80,7 +81,7 @@ public class UnixFSCircularBlockBufferTest {
             final UnixFSCircularBlockBuffer circularBlockBuffer = new UnixFSCircularBlockBuffer(
                     atomicLong,
                     mapped.slice(),
-                    BLOCK_SIZE);
+                    BLOCK_SIZE).reset();
 
             return new UnixFSCircularBlockBufferTest(circularBlockBuffer);
 
@@ -93,11 +94,15 @@ public class UnixFSCircularBlockBufferTest {
 
         final Set<ByteBuffer> slices = newSetFromMap(new IdentityHashMap<>());
 
+        assertTrue(buffer.isEmpty(), "Buffer should be initialized while empty.");
+
         for (int i = 0; i < BLOCK_COUNT; ++i) {
             if (!slices.add(buffer.nextLeading().getValue())) {
                 fail("Got same buffer as was previously returned.");
             }
         }
+
+        assertTrue(buffer.isFull(), "Buffer should be full.");
 
     }
 

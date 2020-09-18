@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.transact.FatalException;
 import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -57,12 +57,40 @@ public class UnixFSCircularBlockBuffer {
     }
 
     /**
+     * Resets the {@link UnixFSCircularBlockBuffer}
+     *
+     * @return this instance
+     */
+    public UnixFSCircularBlockBuffer reset() {
+        counter.reset();
+        return this;
+    }
+
+    /**
+     * Returns true if all space is available in the buffer.
+     *
+     * @return true, if empty. false, otherwise
+     */
+    public boolean isEmpty() {
+        return counter.isEmpty();
+    }
+
+    /**
+     * Returns true if there is no space left in the buffer.
+     *
+     * @return true if no space is left
+     */
+    public boolean isFull() {
+        return counter.isFull();
+    }
+
+    /**
      * Increments the current leading value, and returns the {@link ByteBuffer} associated with the value.
      *
      * @return the next leading value.
      */
     public Slice<ByteBuffer> nextLeading() {
-        final int leading = counter.incrementAndGetLeading();
+        final int leading = counter.incrementLeadingAndGet();
         return new Slice<>(leading, slices.get(leading), slices.get(leading));
     }
 
@@ -173,6 +201,15 @@ public class UnixFSCircularBlockBuffer {
 
     }
 
+    @Override
+    public String toString() {
+        return "UnixFSCircularBlockBuffer{" +
+                "filler=" + Arrays.toString(filler) +
+                ", counter=" + counter +
+                ", slices=" + slices +
+                '}';
+    }
+
     /**
      * Represents a view of this as a cached array of {@link Struct} objects. Mutations to this object are reflected
      * in the original object, and vise-versa. This caches each {@link Struct} instance such that it may be
@@ -190,27 +227,6 @@ public class UnixFSCircularBlockBuffer {
                 struct.setByteBuffer(buffer, 0);
                 structs.add(struct);
             }
-        }
-
-        /**
-         * Functionally similar to {@link UnixFSCircularBlockBuffer#leading()}.
-         *
-         * @return the current leading struct object
-         */
-        public Slice<StructT> leading() {
-            if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
-            final int leading = counter.getLeading();
-            return new Slice<>(leading, structs.get(leading), slices.get(leading));
-        }
-
-        /**
-         * Functionality simialr to {@link UnixFSCircularBlockBuffer#trailing()}
-         * @return the current trailing struct object
-         */
-        public Slice<StructT> trailing() {
-            if (counter.isEmpty()) throw new IllegalStateException("No current slice.");
-            final int trailing = counter.getTrailing();
-            return new Slice<>(trailing, structs.get(trailing), slices.get(trailing));
         }
 
         /**
@@ -242,7 +258,7 @@ public class UnixFSCircularBlockBuffer {
          * @return
          */
         public Slice<StructT> nextLeading() {
-            final int leading = counter.incrementAndGetLeading();
+            final int leading = counter.incrementLeadingAndGet();
             return new Slice<>(leading, structs.get(leading), slices.get(leading));
         }
 

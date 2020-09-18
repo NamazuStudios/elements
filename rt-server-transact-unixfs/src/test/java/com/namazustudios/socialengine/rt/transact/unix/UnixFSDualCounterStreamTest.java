@@ -24,13 +24,13 @@ public class UnixFSDualCounterStreamTest {
     @Factory
     public static Object[] getTestInstances() throws Exception {
         return new Object[]{
-            javaAPITest(),
+//            javaAPITest(),
             memoryMappedTest()
         };
     }
 
     private static UnixFSDualCounterStreamTest javaAPITest() {
-        return new UnixFSDualCounterStreamTest(new UnixFSDualCounter(MAX_VALUE));
+        return new UnixFSDualCounterStreamTest(new UnixFSDualCounter(MAX_VALUE).reset());
     }
 
     private static UnixFSDualCounterStreamTest memoryMappedTest() throws IOException {
@@ -46,7 +46,7 @@ public class UnixFSDualCounterStreamTest {
             final UnixFSAtomicLong atomicLong = UnixFSMemoryUtils.getInstance().getAtomicLong(mapped);
             atomicLong.set(pack(MAX_VALUE, MAX_VALUE));
 
-            final UnixFSDualCounter counter = new UnixFSDualCounter(MAX_VALUE, atomicLong);
+            final UnixFSDualCounter counter = new UnixFSDualCounter(MAX_VALUE, atomicLong).reset();
             return new UnixFSDualCounterStreamTest(counter);
 
         }
@@ -61,36 +61,38 @@ public class UnixFSDualCounterStreamTest {
     public void testInitial() {
         assertFalse(counter.getSnapshot().range().findFirst().isPresent(), "Expected empty range.");
         assertFalse(counter.getSnapshot().reverseRange().findFirst().isPresent(), "Expected empty range.");
-        assertEquals(counter.getLeading(), MAX_VALUE);
-        assertEquals(counter.getTrailing(), MAX_VALUE);
+        assertEquals(counter.getLeading(), 0);
+        assertEquals(counter.getTrailing(), 0);
     }
 
     @Test(dependsOnMethods = "testInitial")
     public void testIncrement() {
-        final int expected[] = new int[99];
-        for (int i = 0; i < 99; ++i) expected[i] = i;
-        for (int i = 0; i < 99; ++i) assertEquals(counter.incrementAndGetLeading(), expected[i]);
+        for (int i = 0; i < 99; ++i) assertEquals(counter.incrementLeadingAndGet(), i);
     }
 
     @Test(dependsOnMethods = "testIncrement")
     public void testRange() {
 
-        final int expected[] = new int[100];
-        for (int i = 0; i < 100; ++i) expected[i] = i == 0 ? MAX_VALUE : i - 1;
+        final int expected[] = new int[99];
+        for (int i = 0; i < 99; ++i) expected[i] = i;
 
         final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
-        assertEquals(expected, snapshot.range().toArray());
+        final int[] actual = snapshot.range().toArray();
+
+        assertEquals(actual, expected);
 
     }
 
     @Test(dependsOnMethods = "testIncrement")
     public void testRangeReverse() {
 
-        final int expected[] = new int[100];
-        for (int i = 0; i < 100; ++i) expected[i] = i == 99 ? MAX_VALUE : 98 - i;
+        final int expected[] = new int[99];
+        for (int i = 0; i < 99; ++i) expected[i] = 98 - i;
 
         final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
-        assertEquals(expected, snapshot.reverseRange().toArray());
+        final int[] actual = snapshot.reverseRange().toArray();
+
+        assertEquals(actual, expected);
 
     }
 

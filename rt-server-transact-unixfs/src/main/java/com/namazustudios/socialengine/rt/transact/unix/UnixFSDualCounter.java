@@ -29,6 +29,10 @@ import static java.util.stream.IntStream.rangeClosed;
  */
 public class UnixFSDualCounter {
 
+    public static final int EMPTY_MASK_INT = 0x80000000;
+
+    public static final long EMPTY_MASK_LONG = 0x8000000080000000l;
+
     private final int max;
 
     private final UnixFSAtomicLong counter;
@@ -41,7 +45,7 @@ public class UnixFSDualCounter {
      * @param max the maximum value, inclusive
      */
     public UnixFSDualCounter(final int max) {
-        this(max, new AtomicLong(pack(max, max)));
+        this(max, new AtomicLong(pack(-1, -1)));
     }
 
     /**
@@ -67,11 +71,12 @@ public class UnixFSDualCounter {
     }
 
     /**
-     * Resets this counter ensuring that both leading/trailing values are equal to the max value. This uses the
-     * counter's currently configured maximum value.
+     * Resets this counter ensuring that both leading/trailing values are equal to zero and the sign bits are set
+     * indicating that the counter is empty.
      */
-    public void reset() {
-        counter.set(pack(max, max));
+    public UnixFSDualCounter reset() {
+        counter.set(EMPTY_MASK_LONG);
+        return this;
     }
 
     /**
@@ -81,7 +86,7 @@ public class UnixFSDualCounter {
      */
     public boolean isEmpty() {
         final long value = counter.get();
-        return leading(value) == trailing(value);
+        return isEmpty(value);
     }
 
     /**
@@ -92,47 +97,43 @@ public class UnixFSDualCounter {
      */
     public boolean isFull() {
         final long value = counter.get();
-        final int trailing = trailing(value);
-        final int leading = increment(leading(value));
-        return trailing == leading;
+        return isFull(value, max);
     }
 
     /**
      * Increments the leading value. This may be incremented up to the maximum value until with a call to
-     * {@link #incrementAndGetTrailing()} before throwing an instance of {@link FatalException}.
+     * {@link #getTrailingAndIncrement()} before throwing an instance of {@link FatalException}.
      *
-     * @return the post-incremented value
+     * @return the pre-incremented value
      * @throws FatalException if the count has been exhausted
      */
-    public int incrementAndGetLeading() {
+    public int incrementLeadingAndGet() {
 
-        long expected;
+        long expected, update;
         int leading, trailing;
 
         do {
 
             expected = counter.get();
-
+            leading = leading(expected);
             trailing = trailing(expected);
-            leading = increment(leading(expected));
 
-            if (trailing == leading) {
-                // This should happen when the entire pool is exhausted. This may happen under normal circumstances, but
-                // ideally this should be extremely rare. Nonetheless, we protect against data loss by simply throwing
-                // an instance of fatal exception to avoid over-writing or corrupting the index. The value is not
-                // actually written so this should preserve the data integrity.
-                throw new FatalException("Exhausted counter at " + format("trailing==leading==%d", trailing));
+            if (isEmpty(expected)) {
+                update = pack(trailing, leading) & ~EMPTY_MASK_LONG;
+            } else {
+                leading = checkAndIncrementLeading(leading, trailing);
+                update = pack(trailing, leading);
             }
 
-        } while (!counter.compareAndSet(expected, pack(trailing, leading)));
+        } while (!counter.compareAndSet(expected, update));
 
-        return leading;
+        return leading(update);
 
     }
 
     /**
      * Increments the leading value. This may be incremented up to the maximum value until with a call to
-     * {@link #incrementAndGetTrailing()} before throwing an instance of {@link FatalException}.
+     * {@link #getTrailingAndIncrement()} before throwing an instance of {@link FatalException}.
      *
      * @return the post-incremented value
      * @throws FatalException if the count has been exhausted
@@ -147,53 +148,91 @@ public class UnixFSDualCounter {
         do {
 
             expected = counter.get();
-
+            leading = leading(expected);
             trailing = trailing(expected);
-            leading = increment(leading(expected));
 
-            if (trailing == leading) {
-                // This should happen when the entire pool is exhausted. This may happen under normal circumstances, but
-                // ideally this should be extremely rare. Nonetheless, we protect against data loss by simply throwing
-                // an instance of fatal exception to avoid over-writing or corrupting the index. The value is not
-                // actually written so this should preserve the data integrity.
-                throw new FatalException("Exhausted counter at " + format("trailing==leading==%d", trailing));
+            if (isEmpty(expected)) {
+                packed = pack(trailing, leading) & ~EMPTY_MASK_LONG;
+            } else {
+                leading = checkAndIncrementLeading(leading, trailing);
+                packed = pack(trailing, leading);
             }
 
-        } while (!counter.compareAndSet(expected, packed = pack(trailing, leading)));
+        } while (!counter.compareAndSet(expected, packed));
 
         return new Snapshot(max, packed);
 
     }
 
-    /**
-     * Increments the lower value. This may not be incremented past the upper value, if so it indicates programmer error
-     * and an instance of {@link IllegalStateException} will be thrown.
-     *
-     * @return the post-increment value
-     */
-    public int incrementAndGetTrailing() {
+    private int checkAndIncrementLeading(final int leading, final int trailing) {
 
-        long expected;
-        int leading, trailing;
+        checkForValidity(leading, trailing);
+
+        final int nextLeading = increment(leading);
+
+        if (nextLeading == trailing) {
+            // This should happen when the entire pool is exhausted. This may happen under normal circumstances, but
+            // ideally this should be extremely rare. Nonetheless, we protect against data loss by simply throwing
+            // an instance of fatal exception to avoid over-writing or corrupting the index. The value is not
+            // actually written so this should preserve the data integrity.
+            throw new FatalException("Exhausted counter at " + format("trailing==leading==%d", trailing));
+        }
+
+        return nextLeading;
+
+    }
+
+    /**
+     * Increments the trailing value. This may not be incremented past the upper value, if so it indicates programmer
+     * error and an instance of {@link IllegalStateException} will be thrown.
+     *
+     * The counter will be flagged as empty once the trailing value matches the leading value.
+     *
+     * @return the pre-increment value
+     */
+    public int getTrailingAndIncrement() {
+
+        long expected, update;
+        int leading, trailing, nextTrailing;
 
         do {
 
             expected = counter.get();
 
-            leading = leading(expected);
-            trailing = trailing(expected);
-
-            if (trailing == leading) {
-                // This should only happen if the counter was incorrectly used.
-                throw new IllegalStateException("Unbalanced trailing " + format("trailing==leading==%d", trailing));
+            if (isEmpty(expected)) {
+                // This should only happen if the counter was incorrectly used. However, this doesn't constitute a
+                // situation in which the counter was exhausted, this is simply improper use of the counter.
+                throw new IllegalStateException("Unbalanced trailing. Dual counter is empty.");
             }
 
-            trailing = increment(trailing);
+            leading = leading(expected);
+            trailing = trailing(expected);
+            nextTrailing = increment(trailing);
 
-        } while (!counter.compareAndSet(expected, pack(trailing, leading)));
+            if (trailing == leading) {
+                // We have brought the trailing value around to the beginning. This means that we should simply clear
+                // out the value by negating the sign bit indicating that both numbers should be
+                update = pack(trailing, leading) | EMPTY_MASK_LONG;
+            } else {
+                // In this case we did not hit the leading value. Threfore, we just pack the numbers together so wecan
+                // attempt the update operation.
+                update = pack(nextTrailing, leading);
+            }
 
-        return leading;
+        } while (!counter.compareAndSet(expected, update));
 
+        return trailing;
+
+    }
+
+    private void checkForValidity(final int leading, final int trailing) {
+        if (leading > max  || trailing > max || leading < -max || trailing < -max) {
+            // This should not happen unless the actual counter was corrupted. For example, the atomic long was
+            // set with invalid values from the beginning or the underlying file backign the counter has been corrupted.
+            // In the case where we detect this condition, we
+            final String values = format("leading=%d trailing=%d (max=%d)", leading, trailing, max);
+            throw new FatalException("Counter has invalid values: " + values);
+        }
     }
 
     /**
@@ -217,23 +256,48 @@ public class UnixFSDualCounter {
     }
 
     /**
-     * Gets the trailing value.
-     *
-     * @return the trailing value
-     */
-    public int getTrailing() {
-        final long value = counter.get();
-        return trailing(value);
-    }
-
-    /**
-     * Gets the leading value.
+     * Gets the leading value, ignoring the empty state.
      *
      * @return the leading
      */
     public int getLeading() {
         final long value = counter.get();
-        return leading(value);
+        return leading(value & ~EMPTY_MASK_LONG);
+    }
+
+    /**
+     * Gets the trailing value, ignoring the empty state.
+     *
+     * @return the trailing value
+     */
+    public int getTrailing() {
+        final long value = counter.get();
+        return trailing(value & ~EMPTY_MASK_LONG);
+    }
+
+    /**
+     * Tests if the packed value represents a full counter. That is the sign bits of the upper and lower values are
+     * set to 0 and the upper and lower bits are equal.
+     *
+     * @param packed the packed value
+     * @return true if empty, false otherwise
+     */
+    public static boolean isFull(final long packed, final int max) {
+        final int trailing = trailing(packed);
+        final int leading = leading(packed);
+        final int next = increment(leading, max);
+        return (packed & EMPTY_MASK_LONG) != EMPTY_MASK_LONG && trailing == next;
+    }
+
+    /**
+     * Tests if the packed value represents an empty counter. That is the sign bits of the upper and lower values are
+     * set to 1.
+     *
+     * @param packed the packed value
+     * @return true if empty, false otherwise
+     */
+    public static boolean isEmpty(final long packed) {
+        return (packed & EMPTY_MASK_LONG) == EMPTY_MASK_LONG;
     }
 
     /**
@@ -257,6 +321,17 @@ public class UnixFSDualCounter {
     }
 
     /**
+     * Increments the supplied value wrapping up to the max value.
+     *
+     * @param value the value to increment
+     * @param max the max value
+     * @return the incremented value
+     */
+    public static int increment(final int value, final int max) {
+        return value == max ? 0 : value + 1;
+    }
+
+    /**
      * Packs the leading and trailing values together and returns the long representation.
      *
      * @param trailing the trailing value
@@ -277,8 +352,6 @@ public class UnixFSDualCounter {
     public static class Snapshot {
 
         public static int SIZE_BYTES = Integer.BYTES + Long.BYTES;
-
-        public static Snapshot UNDEFINED = new Snapshot(0,0);
 
         private static final Pattern SPLIT_PATTERN = Pattern.compile("-");
 
@@ -321,13 +394,13 @@ public class UnixFSDualCounter {
             return trailing;
         }
 
-        /**7
+        /**
          * A null snapshot was taken when leading == trailing.
          *
          * @return true if empty
          */
-        public boolean isNull() {
-            return getLeading() == getTrailing();
+        public boolean isEmpty() {
+            return UnixFSDualCounter.isEmpty(snapshot);
         }
 
         /**
@@ -354,7 +427,9 @@ public class UnixFSDualCounter {
          * @return this range.
          */
         public IntStream range() {
-            if (trailing < leading) {
+            if (isEmpty()) {
+                return IntStream.empty();
+            } else if (trailing < leading) {
                 return rangeClosed(trailing, leading);
             } else if (trailing > leading) {
                 final IntStream trailingToEnd = rangeClosed(trailing, max);
@@ -371,7 +446,9 @@ public class UnixFSDualCounter {
          * @return this range.
          */
         public IntStream reverseRange() {
-            if (trailing < leading) {
+            if (isEmpty()) {
+                return IntStream.empty();
+            } else if (trailing < leading) {
                 return reverseRangeClosed(trailing, leading);
             } else if (trailing > leading) {
                 final IntStream leadingToBegin = reverseRangeClosed(leading, 0);
@@ -383,7 +460,7 @@ public class UnixFSDualCounter {
         }
 
         private static IntStream reverseRangeClosed(final int from, final int to) {
-            return rangeClosed(to, from).map(i -> to - i + from);
+            return rangeClosed(from, to).map(i -> to - i + from);
         }
 
         /**
@@ -414,7 +491,18 @@ public class UnixFSDualCounter {
 
         @Override
         public String toString() {
-            return format("snapshot-%016X (t%d l%d)", snapshot, trailing, leading);
+
+            final boolean empty = isEmpty();
+
+            return format(
+                empty ? "snapshot-%016X (t-0x%X l-0x%X) empty %b" : "snapshot-%016X (t-%d l-%d) empty-%b full-%b",
+                snapshot,
+                empty ? -trailing : trailing,
+                empty ? -leading : leading,
+                empty,
+                isFull(snapshot, max)
+            );
+
         }
 
         /**
@@ -429,9 +517,12 @@ public class UnixFSDualCounter {
             if (reference > max || max != other.max) {
                 final String msg = format("All snapshots must have identical max values %d != %d", max, other.max);
                 throw new IllegalArgumentException(msg);
-            } else if (isNull() || other.isNull()) {
-                final String msg = format("Cannot compare two snapshots where one or more is null %s %s", this, other);
-                throw new IllegalArgumentException(msg);
+            } else if (isEmpty() && other.isEmpty()) {
+                return 0;
+            } else if (isEmpty()) {
+                return -1;
+            } else if (other.isEmpty()) {
+                return 1;
             }
 
             final long lThisValue = normalize(reference);
