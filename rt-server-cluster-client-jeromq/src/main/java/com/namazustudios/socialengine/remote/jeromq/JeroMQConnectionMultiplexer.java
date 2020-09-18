@@ -13,8 +13,11 @@
     import javax.inject.Named;
     import java.net.InetAddress;
     import java.net.UnknownHostException;
+    import java.util.Optional;
     import java.util.UUID;
     import java.util.concurrent.atomic.AtomicReference;
+    import java.util.regex.Pattern;
+    import java.util.stream.Stream;
 
     import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.ROUTING_COMMAND;
     import static com.namazustudios.socialengine.rt.jeromq.CommandPreamble.CommandType.STATUS_RESPONSE;
@@ -229,12 +232,14 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
         private void resolveAndConnect(final Socket socket, final String host) throws Exception {
             for (int attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && !interrupted(); ++attempt) {
                 try {
-                    for (final InetAddress address : InetAddress.getAllByName(host)) {
-                        socket.connect(address.getHostAddress());
+                    socket.connect(host);
+                } catch (ZMQException ex) {
+                    if (ex.getCause() instanceof UnknownHostException) {
+                        logger.info("Couldn't find host {}. Attempting again in {}ms.", host, RESOLVE_TIME);
+                        Thread.sleep(RESOLVE_TIME);
+                    } else {
+                        throw ex;
                     }
-                } catch (UnknownHostException ex) {
-                    logger.info("Couldn't find host {}. Attempting again in {}ms.", host, RESOLVE_TIME);
-                    Thread.sleep(RESOLVE_TIME);
                 }
             }
         }
