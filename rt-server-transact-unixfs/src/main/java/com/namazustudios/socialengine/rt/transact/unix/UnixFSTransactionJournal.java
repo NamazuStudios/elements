@@ -214,21 +214,27 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         private Context() throws IOException {
 
-            final UnixFSAtomicLong counter;
             final Path journalPath = getUtils().getTransactionJournalPath();
 
             if (isRegularFile(journalPath)) {
+
                 logger.info("Reading existing journal file {}", journalPath);
                 journalBuffer = readExistingJournal(journalPath);
-                counter = header.counter.createAtomicLong();
+
+                final UnixFSAtomicLong counter = header.counter.createAtomicLong();
+                journalBuffer.clear().position(header.size());
+                circularBlockBuffer = new UnixFSCircularBlockBuffer(counter, journalBuffer, (int) txnBufferSize);
+
             } else {
+
                 logger.info("Creating new journal file {}", journalPath);
                 journalBuffer = createNewJournal(journalPath);
-                counter = header.counter.createAtomicLong();
-            }
 
-            journalBuffer.clear().position(header.size());
-            circularBlockBuffer = new UnixFSCircularBlockBuffer(counter, journalBuffer, (int) txnBufferSize);
+                final UnixFSAtomicLong counter = header.counter.createAtomicLong();
+                journalBuffer.clear().position(header.size());
+                circularBlockBuffer = new UnixFSCircularBlockBuffer(counter, journalBuffer, (int) txnBufferSize).reset();
+
+            }
 
         }
 
@@ -423,7 +429,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             final UnixFSCircularBlockBuffer.Slice<ByteBuffer> slice = circularBlockBuffer.nextLeading();
 
             // TODO Fix This, we may need to supply the revision from the calling code
-            final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadUncommitted();
+            final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadCommitted();
             final UnixFSPessimisticLocking pessimisticLocking = newPessimisticLocking();
 
             // Sets up a build for the specific slide of the journal file.

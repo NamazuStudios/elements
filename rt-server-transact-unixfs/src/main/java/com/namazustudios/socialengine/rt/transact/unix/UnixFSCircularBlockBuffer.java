@@ -262,8 +262,14 @@ public class UnixFSCircularBlockBuffer {
             return new Slice<>(leading, structs.get(leading), slices.get(leading));
         }
 
-        public void reset() {
+        /**
+         * Resets this {@link StructTypedView<StructT>}.
+         *
+         * @return this instance
+         */
+        public StructTypedView<StructT> reset() {
             counter.reset();
+            return this;
         }
 
     }

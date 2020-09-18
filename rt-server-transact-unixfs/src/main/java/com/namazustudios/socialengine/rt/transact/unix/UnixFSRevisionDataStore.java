@@ -88,13 +88,13 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
     }
 
     @Override
-    public LockedRevision lockLatestReadUncommitted() {
+    public LockedRevision lockLatestReadCommitted() {
 
         final UnixFSRevisionTableEntry operation = getRevisionTable()
             .reverse()
             .map(slice -> slice.getValue())
             .filter(op -> op.isValid() && COMMITTED.equals(op.state.get()))
-            .findFirst()
+            .reduce((a, b) -> a)
             .orElseThrow(FatalException::new);
 
         final UnixFSRevision<?> revision = getRevisionPool().create(operation.revision);

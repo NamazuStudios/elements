@@ -436,7 +436,7 @@ public class UnixFSDualCounter {
                 final IntStream beginToLeading = rangeClosed(0, leading);
                 return concat(trailingToEnd, beginToLeading);
             } else {
-                return IntStream.empty();
+                return IntStream.of(leading);
             }
         }
 
@@ -455,7 +455,7 @@ public class UnixFSDualCounter {
                 final IntStream maxToTrailing = reverseRangeClosed(max, trailing);
                 return concat(leadingToBegin, maxToTrailing);
             } else {
-                return IntStream.empty();
+                return IntStream.of(leading);
             }
         }
 

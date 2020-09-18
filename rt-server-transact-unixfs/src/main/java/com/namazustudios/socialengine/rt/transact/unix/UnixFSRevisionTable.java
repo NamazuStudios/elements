@@ -204,9 +204,7 @@ public class UnixFSRevisionTable {
                 this.circularBlockBuffer = new UnixFSCircularBlockBuffer(
                     counter,
                     revisionTableBuffer,
-                    UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new);
-
-                this.circularBlockBuffer.reset();
+                    UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new).reset();
 
                 final UnixFSRevision<?> revision = getRevisionPool().createNextRevision();
                 final UnixFSRevisionTableEntry entry = circularBlockBuffer.nextLeading().getValue();

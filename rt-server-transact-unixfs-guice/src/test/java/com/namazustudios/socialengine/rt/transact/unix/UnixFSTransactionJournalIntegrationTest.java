@@ -42,7 +42,7 @@ public class UnixFSTransactionJournalIntegrationTest {
 
     @AfterClass
     public void stop() {
-        transactionalPersistenceContext.start();
+        transactionalPersistenceContext.stop();
     }
 
     @Test
@@ -71,7 +71,7 @@ public class UnixFSTransactionJournalIntegrationTest {
             final UnixFSTransactionProgramBuilder builderA = a.getProgramBuilder();
             final UnixFSTransactionProgramBuilder builderB = b.getProgramBuilder();
             assertNotSame(builderA.getByteBuffer(), builderB.getByteBuffer());
-            assertNotEquals(builderA.getRevision(), builderB.getRevision());
+            assertEquals(builderA.getRevision(), builderB.getRevision());
         }
     }
 

@@ -24,7 +24,7 @@ public class UnixFSDualCounterStreamTest {
     @Factory
     public static Object[] getTestInstances() throws Exception {
         return new Object[]{
-//            javaAPITest(),
+            javaAPITest(),
             memoryMappedTest()
         };
     }

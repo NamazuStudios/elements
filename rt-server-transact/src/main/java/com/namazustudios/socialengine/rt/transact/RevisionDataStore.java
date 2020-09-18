@@ -24,7 +24,7 @@ public interface RevisionDataStore {
      *
      * @return the {@link LockedRevision} instance
      */
-    LockedRevision lockLatestReadUncommitted();
+    LockedRevision lockLatestReadCommitted();
 
     /**
      * Begins the revision update process. This returns a {@link PendingRevisionChange} which represents the next

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.transact.FatalException;
 import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
@@ -31,20 +30,6 @@ class UnixFSRevisionTableEntry extends Struct implements UnixFSChecksumAlgorithm
         }
 
         return algorithm.isValid(this);
-
-    }
-
-    public void computeChecksum() {
-
-        final UnixFSChecksumAlgorithm algorithm;
-
-        try {
-            algorithm = this.algorithm.get();
-        } catch (ArrayIndexOutOfBoundsException ex) {
-            throw new FatalException(ex);
-        }
-
-        algorithm.compute(this);
 
     }
 

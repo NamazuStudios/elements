@@ -71,7 +71,7 @@ public class SimpleTransactionalResourceServicePersistence implements Transactio
     public ReadOnlyTransaction openRO(final NodeId nodeId) {
         try {
             lock.lock();
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
+            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadCommitted();
             return new SimpleReadOnlyTransaction(nodeId, revision);
         } finally {
             lock.unlock();
@@ -83,7 +83,7 @@ public class SimpleTransactionalResourceServicePersistence implements Transactio
         try {
             lock.lock();
             final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
+            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadCommitted();
             return new SimpleReadWriteTransaction(nodeId, revision, entry);
         } finally {
             lock.unlock();
@@ -95,7 +95,7 @@ public class SimpleTransactionalResourceServicePersistence implements Transactio
         try {
             exclusiveLock.lock();
             final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadUncommitted();
+            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadCommitted();
             return new ExclusiveSimpleReadWriteTransaction(nodeId, revision, entry);
         } finally {
             exclusiveLock.unlock();
