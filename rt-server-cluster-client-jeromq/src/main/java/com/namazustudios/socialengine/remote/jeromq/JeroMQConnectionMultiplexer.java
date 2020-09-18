@@ -11,6 +11,8 @@
 
     import javax.inject.Inject;
     import javax.inject.Named;
+    import java.net.InetAddress;
+    import java.net.UnknownHostException;
     import java.util.UUID;
     import java.util.concurrent.atomic.AtomicReference;
 
@@ -24,6 +26,8 @@
     import static java.lang.String.format;
     import static java.lang.Thread.interrupted;
     import static java.util.UUID.randomUUID;
+    import static java.util.concurrent.TimeUnit.MILLISECONDS;
+    import static java.util.concurrent.TimeUnit.SECONDS;
     import static java.util.stream.IntStream.range;
     import static org.zeromq.ZContext.shadow;
     import static org.zeromq.ZMQ.*;
@@ -33,6 +37,10 @@
     import static zmq.ZError.EHOSTUNREACH;
 
 public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
+
+    private static final long RESOLVE_TIME = MILLISECONDS.convert(5, SECONDS);
+
+    private static final long RESOLVE_RETRY_ATTEMPTS = 60;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQConnectionMultiplexer.class);
 
@@ -176,7 +184,7 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
                 try {
                     monitorThread.start();
-                    backend.socket().connect(getConnectAddress());
+                    resolveAndConnect(backend.socket(), getConnectAddress());
                     control.socket().bind(getControlAddress());
                     backendIndex = poller.register(backend.socket(), POLLIN | POLLERR);
                     controlIndex = poller.register(control.socket(), POLLIN | POLLERR);
@@ -216,6 +224,19 @@ public class JeroMQConnectionMultiplexer implements ConnectionMultiplexer {
 
             }
 
+        }
+
+        private void resolveAndConnect(final Socket socket, final String host) throws Exception {
+            for (int attempt = 0; attempt < RESOLVE_RETRY_ATTEMPTS && !interrupted(); ++attempt) {
+                try {
+                    for (final InetAddress address : InetAddress.getAllByName(host)) {
+                        socket.connect(address.getHostAddress());
+                    }
+                } catch (UnknownHostException ex) {
+                    logger.info("Couldn't find host {}. Attempting again in {}ms.", host, RESOLVE_TIME);
+                    Thread.sleep(RESOLVE_TIME);
+                }
+            }
         }
 
         private ZMQ.Socket bind(final ZContext context, final UUID uuid) {
