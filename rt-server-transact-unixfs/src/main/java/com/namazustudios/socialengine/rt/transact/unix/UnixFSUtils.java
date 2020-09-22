@@ -136,7 +136,7 @@ public class UnixFSUtils {
         return doOperation(() -> Files
             .list(directory)
             .filter(linkType::matches))
-            .map(path -> getRevisionFactory().create(linkType.stripExtension(path).toString()).withValue(path))
+            .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
             .orElse(zero());
@@ -550,11 +550,22 @@ public class UnixFSUtils {
          * expected extension.
          *
          * @param path the {@link Path}
-         * @return the stripped {@link Path}
+         * @return the stripped {@link Path} without the extension
          */
         public Path stripExtension(final Path path) {
             final String stripped = stripExtension(path.getFileName().toString());
             return path.resolveSibling(stripped);
+        }
+
+        /**
+         * Strips the extension from the provided {@link Path}, throwing an exception if the path does not end with the
+         * expected extension.
+         *
+         * @param path the {@link Path}
+         * @return a {@link String} containing just the filename, sans extension
+         */
+        public String stripExtensionToFilename(final Path path) {
+            return stripExtension(path.getFileName().toString());
         }
 
         /**
@@ -576,7 +587,7 @@ public class UnixFSUtils {
          * @return true if the {@link Path} matches
          */
         public boolean matches(final Path path) {
-            return typePredicate.test(path) && path.endsWith(extension);
+            return typePredicate.test(path) && path.toString().endsWith(extension);
         }
 
     }

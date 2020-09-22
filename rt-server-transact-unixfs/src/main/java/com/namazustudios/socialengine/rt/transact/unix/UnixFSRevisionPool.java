@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
+import static java.nio.file.Files.find;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
 
@@ -64,7 +65,7 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
     public void start() {
 
-        final Context context = utils.doOperation(Context::new, InternalException::new);
+        final Context context = getUtils().doOperation(Context::new, InternalException::new);
 
         if (this.context.compareAndSet(null, context)) {
             logger.info("Started.");
@@ -145,7 +146,7 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
         private Context() throws IOException {
 
-            final Path revisionPoolPath = utils.getRevisionPoolPath();
+            final Path revisionPoolPath = getUtils().getRevisionPoolPath();
 
             if (isRegularFile(revisionPoolPath)) {
                 logger.info("Reading existing revision pool {}", revisionPoolPath);
@@ -260,7 +261,9 @@ public class UnixFSRevisionPool implements Revision.Factory {
         }
 
         public UnixFSRevision<?> create(final String at) {
-            final UnixFSDualCounter.Snapshot snapshot =  UnixFSDualCounter.Snapshot.fromString(at);
+            final int max = revisionCounter.getMax();
+            final long value = Long.parseLong(at, 16);
+            final UnixFSDualCounter.Snapshot snapshot = UnixFSDualCounter.Snapshot.fromIntegralValues(max, value);
             return new UnixFSRevision<>(revisionCounter::getTrailing, snapshot);
         }
 

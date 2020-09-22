@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
-import com.namazustudios.socialengine.rt.exception.InvalidResourceIdException;
 
 import java.io.Serializable;
 import java.nio.ByteBuffer;
@@ -80,7 +79,7 @@ public class NodeId implements Serializable, HasNodeId {
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asString(INSTANCE, APPLICATION)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE, APPLICATION)) : string;
     }
 
     /**

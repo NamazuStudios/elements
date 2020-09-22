@@ -108,7 +108,7 @@ public class ApplicationId implements Serializable {
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asString(APPLICATION)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(APPLICATION)) : string;
     }
 
     @Override

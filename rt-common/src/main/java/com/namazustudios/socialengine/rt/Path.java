@@ -377,13 +377,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
     @Override
     public String toString() {
-        return "Path{" +
-                "context='" + context + '\'' +
-                ", components=" + components +
-                ", maxCompareIndex=" + maxCompareIndex +
-                ", wildcard=" + wildcard +
-                ", normalizedPath=" + toNormalizedPathString() +
-                '}';
+        return toNormalizedPathString();
     }
 
     /**
@@ -554,8 +548,14 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
         public static ContextAndComponents contextAndComponentsFromPath(final String path, final String pathSeparator) {
 
             if (!path.contains(CONTEXT_SEPARATOR)) {
-                final List<String> components = componentsFromPath(path, pathSeparator);
+
+                final List<String> components = Stream.of(path.split(Pattern.quote(pathSeparator)))
+                    .map(c -> c.trim())
+                    .filter(c -> !c.isEmpty())
+                    .collect(toList());
+
                 return new ContextAndComponents(null, components);
+
             }
 
             final List<String> contextAndPath = Stream.of(CONTEXT_SPLIT_PATTERN.split(path))

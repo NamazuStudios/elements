@@ -81,7 +81,7 @@ public class ResourceId implements Serializable, HasNodeId {
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asString(INSTANCE, APPLICATION, RESOURCE)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE, APPLICATION, RESOURCE)) : string;
     }
 
     /**

@@ -2,15 +2,11 @@ package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.InvalidTaskIdException;
-import com.sun.org.apache.regexp.internal.RE;
 
 import java.io.Serializable;
-import java.util.Objects;
 import java.util.UUID;
-import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
-import static com.namazustudios.socialengine.rt.id.V1CompoundId.ID_SEPARATOR_PATTERN;
 import static java.lang.String.format;
 
 /**
@@ -122,7 +118,7 @@ public class TaskId implements Serializable, HasNodeId {
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asString(INSTANCE, APPLICATION, RESOURCE, TASK)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE, APPLICATION, RESOURCE, TASK)) : string;
     }
 
     @Override

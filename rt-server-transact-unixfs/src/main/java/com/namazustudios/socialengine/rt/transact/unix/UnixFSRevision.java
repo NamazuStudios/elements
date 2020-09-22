@@ -12,8 +12,6 @@ import static java.lang.String.format;
 
 public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
 
-    static int SIZE_BYTES = UnixFSDualCounter.Snapshot.SIZE_BYTES;
-
     private volatile String uid;
 
     private final IntSupplier referenceSupplier;
@@ -53,9 +51,9 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
         return snapshot;
     }
 
-    long distance(final UnixFSRevision<?> other) {
-        // TODO Fix this
-        return 0;
+    @Override
+    public String toString() {
+        return snapshot.toString();
     }
 
 }

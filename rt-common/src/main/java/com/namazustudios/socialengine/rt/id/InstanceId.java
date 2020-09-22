@@ -79,7 +79,7 @@ public class InstanceId implements Serializable {
      * @return the string representation
      */
     public String asString() {
-        return string == null ? (string = v1CompoundId.asString(INSTANCE)) : string;
+        return string == null ? (string = v1CompoundId.asEncodedString(INSTANCE)) : string;
     }
 
     public byte[] asBytes() {

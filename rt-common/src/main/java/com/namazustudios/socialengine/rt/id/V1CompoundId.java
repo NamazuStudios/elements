@@ -3,10 +3,9 @@ package com.namazustudios.socialengine.rt.id;
 import java.io.Serializable;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
-import java.util.Arrays;
-import java.util.Objects;
-import java.util.Set;
-import java.util.UUID;
+import java.nio.CharBuffer;
+import java.nio.charset.Charset;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.FIELD_COUNT;
@@ -15,8 +14,7 @@ import static java.util.Arrays.sort;
 import static java.util.Arrays.stream;
 import static java.util.UUID.fromString;
 import static java.util.regex.Pattern.compile;
-import static java.util.stream.Collectors.joining;
-import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Collectors.*;
 
 /**
  * An internal use only compound ID.  This manages a set of hard-coded fields and allows for the basic operations of
@@ -33,9 +31,9 @@ class V1CompoundId implements Serializable {
 
     public static final String  ID_SEPARATOR = ":";
 
-    public static final Pattern ID_SEPARATOR_PATTERN = compile(ID_SEPARATOR);
-
     private static final Field[] FIELDS = Field.values();
+
+    private static final char[] HEX_CHARS = "0123456789abcdef".toCharArray();
 
     private final Component[] components;
 
@@ -50,6 +48,68 @@ class V1CompoundId implements Serializable {
             throw new Error("Detected duplicate field code: " + codes.stream().collect(joining(",")));
         }
 
+    }
+
+    private static String encode(final byte[] raw) {
+
+        final ByteBuffer bytes = ByteBuffer.wrap(raw);
+        final CharBuffer chars = CharBuffer.allocate(raw.length * 2);
+
+        while(bytes.hasRemaining()) {
+            int value = bytes.get() & 0xFF;
+            chars.put(HEX_CHARS[value >>> 4]);
+            chars.put(HEX_CHARS[value & 0xF]);
+        }
+
+        chars.flip();
+        return chars.toString();
+
+    }
+
+    private static byte[] decode(final String hex) {
+
+        if ((hex.length() % 2) == 1) throw new IllegalArgumentException("Invalid hex string " + hex);
+
+        final int length = hex.length();
+        final CharBuffer chars = CharBuffer.wrap(hex);
+        final ByteBuffer bytes = ByteBuffer.allocate(length / 2);
+
+        while (chars.hasRemaining()) {
+            final int upper = decode(chars.get()) << 4;
+            final int lower = decode(chars.get()) & 0xFF;
+            bytes.put((byte)(upper | lower));
+        }
+
+        return bytes.array();
+
+    }
+
+    private static int decode(final char ch) {
+        switch (ch) {
+            case '0': return 0x0;
+            case '1': return 0x1;
+            case '2': return 0x2;
+            case '3': return 0x3;
+            case '4': return 0x4;
+            case '5': return 0x5;
+            case '6': return 0x6;
+            case '7': return 0x7;
+            case '8': return 0x8;
+            case '9': return 0x9;
+            case 'a':
+            case 'A': return 0xA;
+            case 'b':
+            case 'B': return 0xB;
+            case 'c':
+            case 'C': return 0xC;
+            case 'd':
+            case 'D': return 0xD;
+            case 'e':
+            case 'E': return 0xE;
+            case 'f':
+            case 'F': return 0xF;
+            default: throw new IllegalArgumentException("Illegal hex char: " + ch);
+        }
     }
 
     /**
@@ -76,20 +136,7 @@ class V1CompoundId implements Serializable {
      * @param stringRepresentation the string representation
      */
     private V1CompoundId(final String stringRepresentation) {
-
-        components = new Component[FIELD_COUNT];
-
-        if (!stringRepresentation.startsWith(PREFIX)) {
-            throw new IllegalArgumentException("Invalid ID: " + stringRepresentation);
-        }
-
-        final String componentsString = stringRepresentation.substring(PREFIX.length());
-
-        for(final String componentString : ID_SEPARATOR_PATTERN.split(componentsString)) {
-            final Component component = new Component(componentString);
-            components[component.field.ordinal()] = component;
-        }
-
+        this(decode(stringRepresentation));
     }
 
     private V1CompoundId(final byte[] byteRepresentation) {
@@ -237,11 +284,10 @@ class V1CompoundId implements Serializable {
      * @param fields the {@link Field}s to consider.
      * @return
      */
-    String asString(final Field ... fields) {
+    String asEncodedString(final Field ... fields) {
         sort(fields);
-        return PREFIX + stream(fields)
-            .map(field -> getComponent(field).asString())
-            .collect(joining(ID_SEPARATOR));
+        final byte[] raw = asBytes(fields);
+        return encode(raw);
     }
 
     /**

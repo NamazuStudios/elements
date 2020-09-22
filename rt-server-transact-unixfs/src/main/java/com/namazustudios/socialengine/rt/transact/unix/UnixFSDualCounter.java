@@ -347,13 +347,20 @@ public class UnixFSDualCounter {
     }
 
     /**
+     * Gets the maximum value from this counter.
+     *
+     * @return the max value
+     */
+    public int getMax() {
+        return max;
+    }
+
+    /**
      * Gets a snapshot of the counter. This includes both the leading and trailing values.
      */
     public static class Snapshot {
 
         public static int SIZE_BYTES = Integer.BYTES + Long.BYTES;
-
-        private static final Pattern SPLIT_PATTERN = Pattern.compile("-");
 
         private final int max;
         private final int leading;
@@ -365,6 +372,8 @@ public class UnixFSDualCounter {
             this.snapshot = snapshot;
             leading = leading(snapshot);
             trailing = trailing(snapshot);
+            if (leading > max) throw new IllegalArgumentException("leading exceeds max value.");
+            if (trailing > max) throw new IllegalArgumentException("trailing exceeds max value.");
         }
 
         /**
@@ -461,21 +470,6 @@ public class UnixFSDualCounter {
 
         private static IntStream reverseRangeClosed(final int from, final int to) {
             return rangeClosed(from, to).map(i -> to - i + from);
-        }
-
-        /**
-         * Returns a new {@link Snapshot} from the supplied string.
-         *
-         * @param string the string
-         * @return the {@link Snapshot}
-         * {@link IllegalArgumentException} if the string does not parse
-         */
-        static Snapshot fromString(final String string) {
-            final String[] tokens = SPLIT_PATTERN.split(string);
-            if (tokens.length != 2) throw new IllegalArgumentException("Invalid snapshot format: " + string);
-            final String max = tokens[0];
-            final String snapshot = tokens[1];
-            return fromIntegralValues(Integer.parseInt(max), Long.parseLong(snapshot));
         }
 
         /**
