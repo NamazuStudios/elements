@@ -58,7 +58,7 @@ public class TransactionalResource implements Resource {
      */
     public boolean acquire() {
         final int value = acquires.updateAndGet(i -> i == NASCENT_MAGIC ? 1 : i == 0 ? 0 : i + 1);
-        return value == 0;
+        return value > 0;
     }
 
     /**

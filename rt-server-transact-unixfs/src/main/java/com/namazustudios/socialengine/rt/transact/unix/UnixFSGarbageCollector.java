@@ -9,8 +9,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static java.lang.String.format;
-import static java.nio.file.Files.isRegularFile;
-import static java.nio.file.Files.isSymbolicLink;
+import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 
 /**
@@ -33,7 +32,9 @@ public class UnixFSGarbageCollector {
         if (isRegularFile(file, NOFOLLOW_LINKS) || isSymbolicLink(file)) {
             final Path parent = file.getParent();
             final Path pinned = utils.resolveRevisionFilePath(parent, revision);
-            getUtils().doOperationV(() -> Files.createLink(file, pinned), FatalException::new);
+            getUtils().doOperationV(() -> {
+                if (!exists(pinned)) createLink(pinned, file);
+            }, FatalException::new);
             return pinned;
         } else {
             throw new IllegalArgumentException("Not a file path: " + file);
