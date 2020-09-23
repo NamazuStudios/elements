@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.FatalException;
-import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.StructTypedView;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.View;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -152,7 +152,7 @@ public class UnixFSRevisionTable {
 
         private final UnixFSRevisionTableHeader header;
 
-        private final StructTypedView<UnixFSRevisionTableEntry> circularBlockBuffer;
+        private final View<UnixFSRevisionTableEntry> circularBlockBuffer;
 
         private Context() throws IOException {
 

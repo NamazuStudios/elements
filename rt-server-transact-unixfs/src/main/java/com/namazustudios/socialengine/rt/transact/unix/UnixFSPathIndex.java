@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.PathIndex;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.RevisionMap;
+import com.sun.org.apache.regexp.internal.RE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,17 +67,42 @@ public class UnixFSPathIndex implements PathIndex {
 
         return utils.doOperation(() -> {
 
-            final Stream<ResourceService.Listing> listings = Files
-                .walk(mapping.getPathDirectory())
-                .filter(Files::isDirectory)
-                .map(directory -> loadRevisionListing(nodeId, revision, directory))
-                .filter(optional -> optional.isPresent())
-                .map(optional -> optional.get());
+            final Stream<ResourceService.Listing> listings;
+
+            if (isDirectory(mapping.getPathDirectory())) {
+                listings = rtPath.isWildcard() ? recursiveListing(mapping, nodeId, revision) :
+                                                 singularListing(mapping, nodeId, revision);
+            } else {
+                listings = Stream.empty();
+            }
 
             return revision.withValue(listings);
 
         });
 
+    }
+
+    private Stream<ResourceService.Listing> singularListing(
+            final UnixFSPathMapping mapping,
+            final NodeId nodeId,
+            final Revision<?> revision) throws IOException {
+        // TODO Fix This
+        return Stream.empty();
+//        return loadRevisionListing(nodeId, revision, mapping.getPathDirectory())
+//            .map(rl -> Stream.of((ResourceService.Listing)rl))
+//            .orElseGet(() -> (Stream<ResourceService.Listing>) Stream.empty());
+    }
+
+    private Stream<ResourceService.Listing> recursiveListing(
+            final UnixFSPathMapping mapping,
+            final NodeId nodeId,
+            final Revision<?> revision) throws IOException {
+        return Files
+            .walk(mapping.getPathDirectory())
+            .filter(Files::isDirectory)
+            .map(directory -> loadRevisionListing(nodeId, revision, directory))
+            .filter(optional -> optional.isPresent())
+            .map(optional -> optional.get());
     }
 
     public Optional<RevisionListing> loadRevisionListing(final NodeId nodeId,

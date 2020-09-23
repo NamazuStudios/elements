@@ -104,6 +104,7 @@ public class UnixFSPathMapping {
             .orElseGet(() -> rtPath.toPathWithContext(nodeId.asString()));
 
         final Path relative = utils.resolvePathStorageRoot(fqPath.getNodeId()).resolve(fqPath
+            .stripWildcard()
             .getComponents()
             .stream()
             .map(component -> format("%s.%s", component, DIRECTORY_SUFFIX))

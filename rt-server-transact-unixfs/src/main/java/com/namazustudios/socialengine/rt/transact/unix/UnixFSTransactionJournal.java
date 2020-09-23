@@ -195,7 +195,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     public Stream<UnixFSCircularBlockBuffer.Slice<ByteBuffer>> entries() {
-        return getContext().circularBlockBuffer.stream();
+        return getContext().rawView.stream();
     }
 
     private class Context {
@@ -211,6 +211,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         private final MappedByteBuffer journalBuffer;
 
         private final UnixFSCircularBlockBuffer circularBlockBuffer;
+
+        private final UnixFSCircularBlockBuffer.View<ByteBuffer> rawView;
 
         private Context() throws IOException {
 
@@ -235,6 +237,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                 circularBlockBuffer = new UnixFSCircularBlockBuffer(counter, journalBuffer, (int) txnBufferSize).reset();
 
             }
+
+            rawView = circularBlockBuffer.rawView();
 
         }
 
@@ -426,7 +430,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
             // be used to track the resources held in contention.
 
-            final UnixFSCircularBlockBuffer.Slice<ByteBuffer> slice = circularBlockBuffer.nextLeading();
+            final UnixFSCircularBlockBuffer.Slice<ByteBuffer> slice = rawView.nextLeading();
 
             // TODO Fix This, we may need to supply the revision from the calling code
             final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadCommitted();

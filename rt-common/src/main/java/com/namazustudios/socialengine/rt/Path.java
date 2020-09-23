@@ -277,7 +277,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      * @return this path, stripping the wildcard.
      */
     public Path stripWildcard() {
-        return isWildcard() ? new Path(components.subList(0, maxCompareIndex)) : this;
+        return isWildcard() ? new Path(context, components.subList(0, maxCompareIndex)) : this;
     }
 
     /**
@@ -381,8 +381,8 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
     /**
-     * This implementation of {@link #compareTo(Path)} compares the path to the other path
-     * considering wild card matching and can be used to find paths in a sorted collection.
+     * This implementation of {@link #compareTo(Path)} compares the path to the other path considering wild card
+     * matching and can be used to find paths in a sorted collection.
      *
      * @param other the other path
      * @return @see {@link Comparable#compareTo(Object)}

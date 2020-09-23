@@ -8,9 +8,11 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.fill;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Given a {@link ByteBuffer}, this slices the buffer into a series of smaller {@link ByteBuffer}s which represent a
@@ -18,11 +20,14 @@ import static java.util.Arrays.fill;
  * of the content.
  *
  * While this structure's behavior is thread safe, care must be taken by the client code to ensure that the data
- * contained in the block buffer is mutated appropriately.
+ * contained in the block buffer is mutated appropriately. Specifically each {@link Slice} instance returend by this
+ * {@link UnixFSCircularBlockBuffer} is not thread safe. Therefore, additional steps must be taken to ensure predictable
+ * behavior when dealing with the individual {@link Slice}s of this buffer.
  *
- * The {@link #stream()} {@link #reverse()} methods of this class uses a snapshot of the trailing/leading values and it
- * is possible that data has changed while iterating. Therefore, code using an iterator must be prepared to handle such
- * scenarios.
+ * The {@link View#stream()} {@link View#reverse()} methods of this class uses a snapshot of the trailing/leading values
+ * and it is possible that data has changed while iterating. Therefore, code using an iterator must be prepared to
+ * handle such scenarios.
+ *
  */
 public class UnixFSCircularBlockBuffer {
 
@@ -67,63 +72,180 @@ public class UnixFSCircularBlockBuffer {
     }
 
     /**
-     * Returns true if all space is available in the buffer.
+     * Returns a raw-view of the circular block buffer.
      *
-     * @return true, if empty. false, otherwise
+     * @return the raw view
      */
-    public boolean isEmpty() {
-        return counter.isEmpty();
+    public View<ByteBuffer> rawView() {
+        return new View<ByteBuffer>() {
+
+            @Override
+            public boolean isEmpty() {
+                return counter.isEmpty();
+            }
+
+            @Override
+            public boolean isFull() {
+                return counter.isFull();
+            }
+
+            @Override
+            public Stream<Slice<ByteBuffer>> stream() {
+                final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
+                return snapshot.range().mapToObj(UnixFSCircularBlockBuffer.this::rawSliceAt);
+            }
+
+            @Override
+            public Stream<Slice<ByteBuffer>> reverse() {
+                final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
+                return snapshot.reverseRange().mapToObj(UnixFSCircularBlockBuffer.this::rawSliceAt);
+            }
+
+            @Override
+            public Slice<ByteBuffer> nextLeading() {
+                final int leading = counter.incrementLeadingAndGet();
+                return rawSliceAt(leading);
+            }
+
+            @Override
+            public View<ByteBuffer> reset() {
+                counter.reset();
+                return this;
+            }
+
+        };
     }
 
     /**
-     * Returns true if there is no space left in the buffer.
-     *
-     * @return true if no space is left
-     */
-    public boolean isFull() {
-        return counter.isFull();
-    }
-
-    /**
-     * Increments the current leading value, and returns the {@link ByteBuffer} associated with the value.
-     *
-     * @return the next leading value.
-     */
-    public Slice<ByteBuffer> nextLeading() {
-        final int leading = counter.incrementLeadingAndGet();
-        return new Slice<>(leading, slices.get(leading), slices.get(leading));
-    }
-
-    /**
-     * Allows for the creation of a {@link StructTypedView<StructT>} which can represent the underlying data slices
+     * Allows for the creation of a {@link View<StructT>} which can represent the underlying data slices
      * as a fixed-sized array of {@link Struct} types.
      *
      * @param structSuppler the {@link StructT} supplier
      * @param <StructT> the type of the struct
      * @return the new typed view
      */
-    public <StructT extends Struct> StructTypedView<StructT> forStructType(final Supplier<StructT> structSuppler) {
-        return new StructTypedView<>(structSuppler);
+    public <StructT extends Struct> View<StructT> forStructType(final Supplier<StructT> structSuppler) {
+        return rawView().flatMap(bb -> {
+            final StructT struct = structSuppler.get();
+            struct.setByteBuffer(bb, 0);
+            return struct;
+        });
+    }
+
+    private ByteBuffer rawBufferAt(final int index) {
+        // Defensively, we take a duplicate of the slice so that multiple threads may observe or manipulate the
+        // underlying data without but without having worry about breaking the associated buffer's limit and offset.
+        final ByteBuffer slice = slices.get(index).duplicate();
+        return slice;
+    }
+
+    private Slice<ByteBuffer> rawSliceAt(final int index) {
+        final ByteBuffer slice = rawBufferAt(index);
+        return new Slice<>(index, slice, slice);
+    }
+
+    @Override
+    public String toString() {
+        return "UnixFSCircularBlockBuffer{" +
+                "filler=" + Arrays.toString(filler) +
+                ", counter=" + counter +
+                ", slices=" + slices +
+                '}';
     }
 
     /**
-     * Returns a stream of the {@link UnixFSCircularBlockBuffer} in order, trailing to leading.
+     * Represents a view of the underlying {@link UnixFSCircularBlockBuffer}. Unless otherwise stated, all operations
+     * which mutate this View, will also mutate the underling parent buffer.
      *
-     * @return the {@link Stream<ByteBuffer>}
+     * @param <ViewedT>
      */
-    public Stream<Slice<ByteBuffer>> stream() {
-        final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
-        return snapshot.range().mapToObj(i -> new Slice(i, slices.get(i), slices.get(i)));
-    }
+    public interface View<ViewedT> {
 
-    /**
-     * Streams the contents of this {@link UnixFSCircularBlockBuffer} in reverse order, leading to trailing.
-     *
-     * @return the {@link Stream<ByteBuffer>}
-     */
-    public Stream<Slice<ByteBuffer>> reverse() {
-        final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
-        return snapshot.reverseRange().mapToObj(i -> new Slice(i, slices.get(i), slices.get(i)));
+        /**
+         * Returns true if all space is available in the buffer.
+         *
+         * @return true, if empty. false, otherwise
+         */
+        boolean isEmpty();
+
+        /**
+         * Returns true if there is no space left in the buffer.
+         *
+         * @return true if no space is left
+         */
+        boolean isFull();
+
+        /**
+         * Returns a stream view of the current valid elements contained in this buffer.
+         *
+         * @return the {@link Stream<ViewedT>}
+         */
+        Stream<Slice<ViewedT>> stream();
+
+        /**
+         * Returns a stream view of the current valid elements contained in this buffer, in reverse order.
+         *
+         * @return the {@link Stream<ViewedT>}
+         */
+        Stream<Slice<ViewedT>> reverse();
+
+        /**
+         * Increments the leading and gets the next object in the view.
+         * @return
+         */
+        Slice<ViewedT> nextLeading();
+
+        /**
+         * Resets this {@link View<ViewedT>}.
+         *
+         * @return this instance
+         */
+        View<ViewedT> reset();
+
+        /**
+         * Transforms this type of {@link View<View>} to an instance of {@link View<OtherT>}.
+         *
+         * @param transform the transform function to apply.
+         * @param <OtherT> the other type
+         *
+         * @return another {@link View<OtherT>}
+         */
+        default <OtherT> View<OtherT> flatMap(final Function<ViewedT, OtherT> transform) {
+
+            return new View<OtherT>() {
+                @Override
+                public boolean isEmpty() {
+                    return View.this.isEmpty();
+                }
+
+                @Override
+                public boolean isFull() {
+                    return View.this.isFull();
+                }
+
+                @Override
+                public Stream<Slice<OtherT>> stream() {
+                    return View.this.stream().map(s -> s.flatMap(transform));
+                }
+
+                @Override
+                public Stream<Slice<OtherT>> reverse() {
+                    return View.this.reverse().map(s -> s.flatMap(transform));
+                }
+
+                @Override
+                public Slice<OtherT> nextLeading() {
+                    return View.this.nextLeading().flatMap(transform);
+                }
+
+                @Override
+                public View<OtherT> reset() {
+                    View.this.reset();
+                    return this;
+                }
+            };
+        }
+
     }
 
     /**
@@ -142,7 +264,7 @@ public class UnixFSCircularBlockBuffer {
 
         private final UnixFSCircularBlockBuffer owner = UnixFSCircularBlockBuffer.this;
 
-        private Slice(int index, T value, ByteBuffer buffer) {
+        private Slice(final int index, final T value, final ByteBuffer buffer) {
             this.index = index;
             this.value = value;
             this.buffer = buffer;
@@ -190,86 +312,28 @@ public class UnixFSCircularBlockBuffer {
             return index;
         }
 
+        /**
+         * Maps this {@link Slice<T>} to a raw value of type U
+         *
+         * @param mapper the mapper function
+         * @param <U> the return value
+         * @return the value as mapped by the mapper
+         */
         public <U> U map(final Function<T, U> mapper) {
             return mapper.apply(getValue());
         }
 
+        /**
+         * Flat maps this {@link Slice<T>} by applyign the supplied mapper, and returning a new instance of
+         * {@link Slice<U>} with the new value
+         *
+         * @param mapper the mapper function
+         * @param <U> the desired type
+         * @return a new {@link Slice<U>} which was derived from the original value
+         */
         public <U> Slice<U> flatMap(final Function<T, U> mapper) {
             final U value = mapper.apply(getValue());
             return new Slice<U>(index, value, buffer);
-        }
-
-    }
-
-    @Override
-    public String toString() {
-        return "UnixFSCircularBlockBuffer{" +
-                "filler=" + Arrays.toString(filler) +
-                ", counter=" + counter +
-                ", slices=" + slices +
-                '}';
-    }
-
-    /**
-     * Represents a view of this as a cached array of {@link Struct} objects. Mutations to this object are reflected
-     * in the original object, and vise-versa. This caches each {@link Struct} instance such that it may be
-     * automatically recycled and used later.
-     *
-     * @param <StructT>
-     */
-    public class StructTypedView<StructT extends Struct> {
-
-        private final List<StructT> structs = new ArrayList<>();
-
-        private StructTypedView(final Supplier<StructT> structSupplier) {
-            for (final ByteBuffer buffer : slices) {
-                final StructT struct = structSupplier.get();
-                struct.setByteBuffer(buffer, 0);
-                structs.add(struct);
-            }
-        }
-
-        /**
-         * Returns a stream view of the current valid elements contained in this buffer.
-         *
-         * @return the {@link Stream<StructT>}
-         */
-        public Stream<Slice<StructT>> stream() {
-            final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
-            return snapshot
-                .range()
-                .mapToObj(i -> new Slice<>(i, structs.get(i), slices.get(i)));
-        }
-
-        /**
-         * Returns a stream view of the current valid elements contained in this buffer, in reverse order.
-         *
-         * @return the {@link Stream<StructT>}
-         */
-        public Stream<Slice<StructT>> reverse() {
-            final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
-            return snapshot
-                .reverseRange()
-                .mapToObj(i -> new Slice<>(i, structs.get(i), slices.get(i)));
-        }
-
-        /**
-         * Increments the
-         * @return
-         */
-        public Slice<StructT> nextLeading() {
-            final int leading = counter.incrementLeadingAndGet();
-            return new Slice<>(leading, structs.get(leading), slices.get(leading));
-        }
-
-        /**
-         * Resets this {@link StructTypedView<StructT>}.
-         *
-         * @return this instance
-         */
-        public StructTypedView<StructT> reset() {
-            counter.reset();
-            return this;
         }
 
     }

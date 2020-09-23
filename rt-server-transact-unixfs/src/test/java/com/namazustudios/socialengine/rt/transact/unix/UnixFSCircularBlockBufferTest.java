@@ -93,16 +93,17 @@ public class UnixFSCircularBlockBufferTest {
     public void testBufferSlices() {
 
         final Set<ByteBuffer> slices = newSetFromMap(new IdentityHashMap<>());
+        final UnixFSCircularBlockBuffer.View<ByteBuffer> rawView = buffer.rawView();
 
-        assertTrue(buffer.isEmpty(), "Buffer should be initialized while empty.");
+        assertTrue(rawView.isEmpty(), "Buffer should be initialized while empty.");
 
         for (int i = 0; i < BLOCK_COUNT; ++i) {
-            if (!slices.add(buffer.nextLeading().getValue())) {
+            if (!slices.add(rawView.nextLeading().getValue())) {
                 fail("Got same buffer as was previously returned.");
             }
         }
 
-        assertTrue(buffer.isFull(), "Buffer should be full.");
+        assertTrue(rawView.isFull(), "Buffer should be full.");
 
     }
 
