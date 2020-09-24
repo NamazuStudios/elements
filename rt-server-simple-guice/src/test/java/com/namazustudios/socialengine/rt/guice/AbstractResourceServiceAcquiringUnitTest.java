@@ -59,7 +59,7 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
         for (int i = 0; i < 100; ++i) {
             final ResourceId resourceId = randomResourceIdForNode(nodeId);
-            final Path path = new Path(asList("test", randomUUID().toString()));
+            final Path path = new Path(nodeId.asString(), asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
 
@@ -134,65 +134,53 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     }
 
-//    @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
-//    public void testGetResource(final ResourceId resourceId, final Path path, final Resource original) {
-//
-//        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
-//
-//        try {
-//            assertEquals(acquired.getId(), original.getId());
-//        } finally {
-//            getResourceService().release(acquired);
-//        }
-//
-//    }
-//
-//    @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
-//    public void testGetResourceAtPath(final ResourceId resourceId, final Path path, final Resource original) {
-//
-//        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
-//
-//        try {
-//            assertEquals(acquired.getId(), original.getId());
-//        } finally {
-//            getResourceService().release(acquired);
-//        }
-//
-//    }
-//
-//    @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
-//    public void testGetResourceFail(final ResourceId resourceId, final Path path) {
-//
-//        final Resource acquired = getResourceService().getAndAcquireResourceWithId(resourceId);
-//
-//        try {
-//            fail("Expected exception.");
-//        } finally {
-//            getResourceService().release(acquired);
-//        }
-//
-//    }
-//
-//    @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
-//    public void testGetResourceAtPathFail(final ResourceId resourceId, final Path path) {
-//
-//        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
-//
-//        try {
-//            fail("Expected exception.");
-//        } finally {
-//            getResourceService().release(acquired);
-//        }
-//
-//    }
-//
-//    @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
-//    public void testLink(final ResourceId resourceId, final Path path, final Resource original) {
-//        final Path alias = new Path(asList("test_alias", randomUUID().toString()));
-//        getResourceService().link(resourceId, alias);
-//        linkedIntermediates.add(new Object[]{resourceId, alias, original});
-//    }
-//
+    @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
+    public void testGetResource(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
+
+        try {
+            assertEquals(acquired.getId(), original.getId());
+        } finally {
+            getResourceService().release(acquired);
+        }
+
+    }
+
+    @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
+    public void testGetResourceAtPath(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
+
+        try {
+            assertEquals(acquired.getId(), original.getId());
+        } finally {
+            getResourceService().release(acquired);
+        }
+
+    }
+
+    @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testGetResourceFail(final ResourceId resourceId, final Path path) {
+        final Resource acquired = getResourceService().getAndAcquireResourceWithId(resourceId);
+        fail("Expected exception.");
+        getResourceService().release(acquired);
+    }
+
+    @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testGetResourceAtPathFail(final ResourceId resourceId, final Path path) {
+        final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
+        fail("Expected exception.");
+        getResourceService().release(acquired);
+    }
+
+    @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
+    public void testLink(final ResourceId resourceId, final Path path, final Resource original) {
+        final Path alias = new Path(asList("test_alias", randomUUID().toString()));
+        getResourceService().link(resourceId, alias);
+        linkedIntermediates.add(new Object[]{resourceId, alias, original});
+    }
+
 //    @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
 //    public void testLinkPath(final ResourceId resourceId, final Path path, final Resource original) {
 //        final Path alias = new Path(asList("test_alias", randomUUID().toString()));

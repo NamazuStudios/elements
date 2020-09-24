@@ -14,10 +14,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileVisitOption;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.nio.file.*;
 import java.security.SecureRandom;
 import java.util.Collections;
 import java.util.Optional;
@@ -27,6 +24,7 @@ import java.util.stream.Stream;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_SYMBOLIC_LINK;
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
+import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toSet;
 
@@ -99,7 +97,7 @@ public class UnixFSPathIndex implements PathIndex {
             final Revision<?> revision) throws IOException {
         return Files
             .walk(mapping.getPathDirectory())
-            .filter(Files::isDirectory)
+            .filter(p -> isDirectory(p, NOFOLLOW_LINKS))
             .map(directory -> loadRevisionListing(nodeId, revision, directory))
             .filter(optional -> optional.isPresent())
             .map(optional -> optional.get());
@@ -123,7 +121,8 @@ public class UnixFSPathIndex implements PathIndex {
                                 return Optional.empty();
                             }
 
-                            final Path resourceDirectory = readSymbolicLink(pinned);
+                            final Path parent = pinned.getParent();
+                            final Path resourceDirectory = parent.resolve(readSymbolicLink(pinned));
 
                             if (!isDirectory(resourceDirectory)) {
                                 // This should not happen if the garbage collector is doing its job properly.

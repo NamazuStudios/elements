@@ -29,15 +29,24 @@ public class UnixFSGarbageCollector {
      * @return the {@link Path} to the pinned file.
      */
     public Path pin(final Path file, final Revision<?> revision) {
-        if (isRegularFile(file, NOFOLLOW_LINKS) || isSymbolicLink(file)) {
+        if (isRegularFile(file, NOFOLLOW_LINKS)) {
             final Path parent = file.getParent();
             final Path pinned = utils.resolveRevisionFilePath(parent, revision);
-            getUtils().doOperationV(() -> {
-                if (!exists(pinned)) createLink(pinned, file);
+            if (exists(pinned) || pinned.equals(file)) return file;
+            return getUtils().doOperation(() -> createLink(pinned, file), FatalException::new);
+        } else if (isSymbolicLink(file)) {
+
+            final Path parent = file.getParent();
+            final Path pinned = utils.resolveSymlinkPath(parent, revision);
+            if (exists(pinned) || pinned.equals(file)) return file;
+
+            return getUtils().doOperation(() -> {
+                final Path followed = readSymbolicLink(file);
+                return createSymbolicLink(pinned, followed);
             }, FatalException::new);
-            return pinned;
+
         } else {
-            throw new IllegalArgumentException("Not a file path: " + file);
+            throw new IllegalArgumentException("Neither file nor symbolic link: " + file);
         }
     }
 

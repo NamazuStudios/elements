@@ -576,7 +576,8 @@ public class UnixFSUtils {
          * @return the stripped {@link Path}
          */
         public String stripExtension(final String path) {
-            if (!path.endsWith(getExtension())) throw new IllegalArgumentException("Extension not present.");
+            if (!path.endsWith(getExtension()))
+                throw new IllegalArgumentException("Extension not present.");
             return path.substring(0, path.length() - extension.length());
         }
 

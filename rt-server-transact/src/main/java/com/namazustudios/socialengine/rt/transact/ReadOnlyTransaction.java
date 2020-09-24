@@ -35,11 +35,11 @@ public interface ReadOnlyTransaction extends AutoCloseable {
     boolean exists(ResourceId resourceId);
 
     /**
-     * Returns a {@link Stream< Listing>} of all instances reading the current stream.  If nothing,
+     * Returns a {@link Stream<Listing>} of all instances reading the current stream.  If nothing,
      * matches an empty stream is returned.
      *
      * @param path the path to check, may be direct or wildcard
-     * @return a {@link Stream< Listing>}
+     * @return a {@link Stream<Listing>}
      */
     Stream<Listing> list(Path path);
 

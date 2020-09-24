@@ -43,7 +43,7 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
     @AfterClass
     public void stop() {
         transactionalResourceService.stop();
-        transactionalPersistenceContext.start();
+        transactionalPersistenceContext.stop();
     }
 
     public static class Module extends AbstractModule {

@@ -173,7 +173,7 @@ public class UnixFSPathMapping {
                                                        final Path fsPath) {
         return utils.doOperation(() -> {
 
-            final Path relative = utils.resolvePathStorageRoot(nodeId).resolve(fsPath);
+            final Path relative = utils.resolvePathStorageRoot(nodeId).relativize(fsPath);
 
             final List<String> components = new ArrayList<>();
 
