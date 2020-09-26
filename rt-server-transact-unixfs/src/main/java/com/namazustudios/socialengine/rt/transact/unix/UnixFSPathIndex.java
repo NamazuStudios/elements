@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
@@ -84,11 +85,9 @@ public class UnixFSPathIndex implements PathIndex {
             final UnixFSPathMapping mapping,
             final NodeId nodeId,
             final Revision<?> revision) throws IOException {
-        // TODO Fix This
-        return Stream.empty();
-//        return loadRevisionListing(nodeId, revision, mapping.getPathDirectory())
-//            .map(rl -> Stream.of((ResourceService.Listing)rl))
-//            .orElseGet(() -> (Stream<ResourceService.Listing>) Stream.empty());
+        return loadRevisionListing(nodeId, revision, mapping.getPathDirectory())
+            .map(rl -> Stream.of((ResourceService.Listing)rl))
+            .orElseGet(Stream::empty);
     }
 
     private Stream<ResourceService.Listing> recursiveListing(
@@ -99,8 +98,8 @@ public class UnixFSPathIndex implements PathIndex {
             .walk(mapping.getPathDirectory())
             .filter(p -> isDirectory(p, NOFOLLOW_LINKS))
             .map(directory -> loadRevisionListing(nodeId, revision, directory))
-            .filter(optional -> optional.isPresent())
-            .map(optional -> optional.get());
+            .filter(Optional::isPresent)
+            .map(Optional::get);
     }
 
     public Optional<RevisionListing> loadRevisionListing(final NodeId nodeId,
@@ -226,36 +225,37 @@ public class UnixFSPathIndex implements PathIndex {
 
             final Revision<Path> latest = reversePathMapping.findLatestSymlink(revision, resourceId);
 
-            final Path linkDirectory;
+            final Path newerLinkDirectory;
 
             if (Revision.ZERO.compareTo(latest) == 0) {
 
                 // No revision exists at all and we need to make sure that the directory exists
 
                 final Path symlink = reversePathMapping.resolveSymlink(revision, resourceId);
-                linkDirectory = reverseResourceIdDirectory.resolve(randomUUID().toString());
+                newerLinkDirectory = reverseResourceIdDirectory.resolve(randomUUID().toString());
 
                 // Creates the directory to hold the contents of the link
-                createDirectories(linkDirectory);
-                createSymbolicLink(symlink, linkDirectory.getFileName());
+                createDirectories(newerLinkDirectory);
+                createSymbolicLink(symlink, newerLinkDirectory.getFileName());
 
-            } else if (latest.compareTo(revision) > 0) {
+            } else if (latest.compareTo(revision) < 0) {
 
                 // A revision exists, but it is older. So we need to make the symbolic link to a new revision
                 // and copy the existing directory over.
 
                 final Path symlink = reversePathMapping.resolveSymlink(revision, resourceId);
-                linkDirectory = reverseResourceIdDirectory.resolve(randomUUID().toString());
+                newerLinkDirectory = reverseResourceIdDirectory.resolve(randomUUID().toString());
 
-                createDirectories(linkDirectory);
-                createSymbolicLink(symlink, linkDirectory.getFileName());
+                createDirectories(newerLinkDirectory);
+                createSymbolicLink(symlink, newerLinkDirectory.getFileName());
 
-                final Path olderRevision = readSymbolicLink(latest.getValue().get());
+                final Path olderRevisionDirectory = symlink.resolveSibling(readSymbolicLink(latest.getValue().get()));
 
-                walk(olderRevision).forEach(
-                    source ->
-                    utils.doOperationV(() ->
-                    copy(source, olderRevision.resolve(olderRevision.relativize(source)))));
+                Files.list(olderRevisionDirectory).forEach(source -> utils.doOperationV(() -> {
+                    final Path target = readSymbolicLink(source);
+                    final Path link = newerLinkDirectory.resolve(source.getFileName());
+                    createSymbolicLink(link, target);
+                }, FatalException::new));
 
             } else if (latest.compareTo(revision) == 0) {
 
@@ -263,7 +263,7 @@ public class UnixFSPathIndex implements PathIndex {
                 // existing symbolic link
 
                 final Path symlink = reversePathMapping.resolveSymlink(revision, resourceId);
-                linkDirectory = readSymbolicLink(symlink);
+                newerLinkDirectory = readSymbolicLink(symlink);
 
             } else {
                 throw new FatalException("Invalid revision found: " + latest);
@@ -272,8 +272,8 @@ public class UnixFSPathIndex implements PathIndex {
             // At long last we have a link directory we can actually make the reverse mapping. The mapping will have
             // a randomly assigned UUID for the symbolic link.
 
-            final Path link = linkDirectory.resolve(randomUUID().toString());
-            final Path target = linkDirectory.relativize(pathMapping.getPathDirectory());
+            final Path link = reversePathMapping.resolvePath(newerLinkDirectory, rtPath);
+            final Path target = newerLinkDirectory.relativize(pathMapping.getPathDirectory());
             createSymbolicLink(link, target);
 
         }, FatalException::new);
@@ -357,7 +357,7 @@ public class UnixFSPathIndex implements PathIndex {
             final Set<com.namazustudios.socialengine.rt.Path> pathSet =
                 utils.findLatestForRevision(reverseDirectory, revision, REVISION_SYMBOLIC_LINK)
                      .map(symlink -> garbageCollector.pin(symlink, revision))
-                     .map(symlink -> utils.doOperation(() -> readSymbolicLink(symlink)))
+                     .map(symlink -> utils.doOperation(() -> reverseDirectory.resolve(readSymbolicLink(symlink))))
                      .map(directory -> utils.doOperation(() -> Files.list(directory)))
                      .map(symlinkStream -> symlinkStream
                          .filter(path -> utils.doOperation(() -> isSymbolicLink(path)))

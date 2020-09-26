@@ -508,7 +508,10 @@ public class UnixFSDualCounter {
          */
         int compareTo(final int reference, final Snapshot other) {
 
-            if (reference > max || max != other.max) {
+            if (reference > max) {
+                final String msg = format("All reference value must not exceed max value %d != %d", reference, max);
+                throw new IllegalArgumentException(msg);
+            } else if (max != other.max) {
                 final String msg = format("All snapshots must have identical max values %d != %d", max, other.max);
                 throw new IllegalArgumentException(msg);
             } else if (isEmpty() && other.isEmpty()) {

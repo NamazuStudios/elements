@@ -52,7 +52,7 @@ public class UnixFSUtils {
 
     public static final String PATHS_DIRECTORY = "paths";
 
-    public static final String REVERSE_DIRECTORY = format("reverse.%s", DIRECTORY_SUFFIX);
+    public static final String REVERSE_DIRECTORY = "reverse";
 
     public static final String RESOURCES_DIRECTORY = "resources";
 

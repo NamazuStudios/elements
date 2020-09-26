@@ -14,6 +14,7 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.DIRECT
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.DIRECTORY;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
 import static java.lang.String.format;
+import static java.nio.file.Files.isSymbolicLink;
 import static java.nio.file.Files.readSymbolicLink;
 import static java.util.stream.Collectors.joining;
 
@@ -203,7 +204,8 @@ public class UnixFSPathMapping {
      */
     public static UnixFSPathMapping fromFullyQualifiedSymlinkPath(final UnixFSUtils utils, final Path symlink) {
         return utils.doOperation(() -> {
-            final Path fsPath = readSymbolicLink(symlink).toAbsolutePath();
+            final Path target = readSymbolicLink(symlink);
+            final Path fsPath = target.isAbsolute() ? target : symlink.getParent().resolve(target).normalize();
             return fromFullyQualifiedFSPath(utils, fsPath);
         }, FatalException::new);
     }
