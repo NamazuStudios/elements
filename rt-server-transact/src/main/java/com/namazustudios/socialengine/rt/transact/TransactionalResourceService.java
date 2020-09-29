@@ -278,6 +278,7 @@ public class TransactionalResourceService implements ResourceService {
                  final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 operation.apply(acm, txn);
                 txn.commit();
+                return;
             } catch (TransactionConflictException ex) {
                 randomWait(i);
                 continue;
@@ -294,6 +295,7 @@ public class TransactionalResourceService implements ResourceService {
             try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId())) {
                 operation.apply(txn);
                 txn.commit();
+                return;
             } catch (TransactionConflictException ex) {
                 randomWait(i);
                 continue;

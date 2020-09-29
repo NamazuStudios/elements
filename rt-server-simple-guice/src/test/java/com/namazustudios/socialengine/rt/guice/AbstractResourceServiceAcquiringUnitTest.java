@@ -13,10 +13,8 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
@@ -176,36 +174,42 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
     public void testLink(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final Path aliasA = new Path(asList("test_alias_a", randomUUID().toString()));
+        getResourceService().link(resourceId, aliasA);
+        linkedIntermediates.add(new Object[]{resourceId, aliasA, original});
+
+        final Path aliasB = new Path(asList("test_alias_b", randomUUID().toString()));
+        getResourceService().link(resourceId, aliasB);
+        linkedIntermediates.add(new Object[]{resourceId, aliasB, original});
+
+    }
+
+    @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
+    public void testLinkPath(final ResourceId resourceId, final Path path, final Resource original) {
         final Path alias = new Path(asList("test_alias", randomUUID().toString()));
-        getResourceService().link(resourceId, alias);
+        getResourceService().linkPath(path, alias);
         linkedIntermediates.add(new Object[]{resourceId, alias, original});
     }
 
-//    @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
-//    public void testLinkPath(final ResourceId resourceId, final Path path, final Resource original) {
-//        final Path alias = new Path(asList("test_alias", randomUUID().toString()));
-//        getResourceService().linkPath(path, alias);
-//        linkedIntermediates.add(new Object[]{resourceId, alias, original});
-//    }
-//
-//    @DataProvider(parallel = true)
-//    public Object[][] linkedIntermediateProvider() {
-//        return linkedIntermediates.toArray(new Object[][]{});
-//    }
-//
-//    @Test(dependsOnMethods = {"testLink", "testLinkPath"}, dataProvider = "linkedIntermediateProvider")
-//    public void testGetByAlias(final ResourceId resourceId, final Path path, final Resource original) {
-//
-//        final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
-//
-//        try {
-//            assertEquals(resource.getId(), original.getId());
-//        } finally {
-//            getResourceService().release(resource);
-//        }
-//
-//    }
-//
+    @DataProvider(parallel = true)
+    public Object[][] linkedIntermediateProvider() {
+        return linkedIntermediates.toArray(new Object[][]{});
+    }
+
+    @Test(dependsOnMethods = {"testLink", "testLinkPath"}, dataProvider = "linkedIntermediateProvider")
+    public void testGetByAlias(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
+
+        try {
+            assertEquals(resource.getId(), original.getId());
+        } finally {
+            getResourceService().release(resource);
+        }
+
+    }
+
 //    @Test(dependsOnMethods = {"testGetByAlias"}, dataProvider = "linkedIntermediateProvider", expectedExceptions = ResourceNotFoundException.class)
 //    public void testUnlink(final ResourceId resourceId, final Path path, final Resource original) {
 //

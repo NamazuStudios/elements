@@ -13,10 +13,8 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
@@ -150,8 +148,10 @@ class UnixFSWorkingCopy {
 
         // Checks that both paths and resource IDs are free and available for use
 
-        if (isPresent(path)) throw new DuplicateException();
-        if (isPresent(resourceId)) throw new DuplicateException();
+        if (isPresent(path))
+            throw new DuplicateException();
+        if (isPresent(resourceId))
+            throw new DuplicateException();
 
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
@@ -180,8 +180,10 @@ class UnixFSWorkingCopy {
 
         // Checks that both paths and resource IDs are free and available for use
 
-        if (isPresent(path)) throw new DuplicateException();
-        if (isPresent(resourceId)) throw new DuplicateException();
+        if (isPresent(path))
+            throw new DuplicateException();
+        if (isPresent(resourceId))
+            throw new DuplicateException();
 
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
@@ -195,13 +197,23 @@ class UnixFSWorkingCopy {
 
     }
 
+    private static Map<Object, Object> mm = new ConcurrentHashMap<>();
+
     public void linkExistingResource(final ResourceId resourceId,
                                      final Path path,
                                      final Runnable onSuccess) throws TransactionConflictException {
         // Checks that both paths and resource IDs are free and available for use
 
-        if (isPresent(path)) throw new DuplicateException();
-        if (!isPresent(resourceId)) throw new ResourceNotFoundException();
+        if (mm.put(path, path) == null) {
+            logger.warn("No dup.");
+        } else {
+            logger.warn("Found the dup.");
+        }
+
+        if (isPresent(path))
+            throw new DuplicateException();
+        if (!isPresent(resourceId))
+            throw new ResourceNotFoundException();
 
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
