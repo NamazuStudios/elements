@@ -9,8 +9,6 @@ class UnixFSRevisionTableEntry extends Struct implements UnixFSChecksumAlgorithm
 
     static int SIZE = new UnixFSRevisionTableEntry().size();
 
-    final AtomicInteger readers = new AtomicInteger();
-
     final Unsigned32 checksum = new Unsigned32();
 
     final Enum8<UnixFSChecksumAlgorithm> algorithm = new Enum8<>(UnixFSChecksumAlgorithm.values());
@@ -18,6 +16,8 @@ class UnixFSRevisionTableEntry extends Struct implements UnixFSChecksumAlgorithm
     final UnixFSRevisionData revision = inner(new UnixFSRevisionData());
 
     final Enum8<State> state = new Enum8<>(State.values());
+
+    final AtomicInteger readers = new AtomicInteger();
 
     public boolean isValid() {
 

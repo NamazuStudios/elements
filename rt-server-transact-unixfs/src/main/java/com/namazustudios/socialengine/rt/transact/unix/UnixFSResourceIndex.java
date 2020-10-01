@@ -58,8 +58,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
             mapping.getResourceIdDirectory(),
             revision,
             UnixFSUtils.LinkType.REVISION_HARD_LINK
-        ).map(path -> getGarbageCollector().pin(path, revision))
-         .map(path -> isRegularFile(path) && !utils.isTombstone(path));
+        ).map(path -> isRegularFile(path) && !utils.isTombstone(path));
 
     }
 

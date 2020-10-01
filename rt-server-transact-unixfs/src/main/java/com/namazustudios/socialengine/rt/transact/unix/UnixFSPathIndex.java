@@ -112,16 +112,14 @@ public class UnixFSPathIndex implements PathIndex {
                     .getValue()
                     .map(file -> (RevisionListing) utils.doOperation(() -> {
 
-                            final Path pinned = garbageCollector.pin(file, revision);
-
-                            if (utils.isTombstone(pinned)) {
+                            if (utils.isTombstone(file)) {
                                 // Totally expected behavior. A previous revision deleted the path but it hasn't been
                                 // collected yet by the garbage collector. We just filter this one out.
                                 return Optional.empty();
                             }
 
-                            final Path parent = pinned.getParent();
-                            final Path resourceDirectory = parent.resolve(readSymbolicLink(pinned));
+                            final Path parent = file.getParent();
+                            final Path resourceDirectory = parent.resolve(readSymbolicLink(file));
 
                             if (!isDirectory(resourceDirectory)) {
                                 // This should not happen if the garbage collector is doing its job properly.
@@ -356,7 +354,6 @@ public class UnixFSPathIndex implements PathIndex {
 
             final Set<com.namazustudios.socialengine.rt.Path> pathSet =
                 utils.findLatestForRevision(reverseDirectory, revision, REVISION_SYMBOLIC_LINK)
-                     .map(symlink -> garbageCollector.pin(symlink, revision))
                      .map(symlink -> utils.doOperation(() -> reverseDirectory.resolve(readSymbolicLink(symlink))))
                      .map(directory -> utils.doOperation(() -> Files.list(directory)))
                      .map(symlinkStream -> symlinkStream

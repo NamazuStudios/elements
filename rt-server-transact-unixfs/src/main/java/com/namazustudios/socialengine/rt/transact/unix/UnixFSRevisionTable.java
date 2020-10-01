@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.FatalException;
+import com.namazustudios.socialengine.rt.transact.Revision;
+import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.View;
 import org.slf4j.Logger;
 
@@ -12,6 +14,7 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -66,6 +69,8 @@ public class UnixFSRevisionTable {
 
     private UnixFSChecksumAlgorithm checksumAlgorithm;
 
+    private UnixFSGarbageCollector garbageCollector;
+
     private final AtomicReference<Context> context = new AtomicReference<>();
 
     public void start() {
@@ -110,6 +115,35 @@ public class UnixFSRevisionTable {
         return getContext().nextLeading();
     }
 
+    public RevisionDataStore.LockedRevision lockLatestReadCommitted() {
+
+        final UnixFSRevisionTableEntry operation = getContext()
+                .reverse()
+                .map(slice -> slice.getValue())
+                .filter(op -> op.isValid() && COMMITTED.equals(op.state.get()))
+                .reduce((a, b) -> a)
+                .orElseThrow(FatalException::new);
+
+        final UnixFSRevision<?> revision = getRevisionPool().create(operation.revision);
+
+        return new RevisionDataStore.LockedRevision() {
+
+            @Override
+            public Revision<?> getRevision() {
+                return revision;
+            }
+
+            @Override
+            public void close() {
+                if (operation.readers.decrementAndGet() == 0) {
+                    getGarbageCollector().hint(revision);
+                }
+            }
+
+        };
+
+    }
+
     public UnixFSUtils getUtils() {
         return utils;
     }
@@ -144,6 +178,19 @@ public class UnixFSRevisionTable {
     @Inject
     public void setChecksumAlgorithm(UnixFSChecksumAlgorithm checksumAlgorithm) {
         this.checksumAlgorithm = checksumAlgorithm;
+    }
+
+    public UnixFSGarbageCollector getGarbageCollector() {
+        return garbageCollector;
+    }
+
+    @Inject
+    public void setGarbageCollector(UnixFSGarbageCollector garbageCollector) {
+        this.garbageCollector = garbageCollector;
+    }
+
+    public List<UnixFSRevisionTableEntry> findCollectableRevisions() {
+        throw new UnsupportedOperationException();
     }
 
     private class Context {

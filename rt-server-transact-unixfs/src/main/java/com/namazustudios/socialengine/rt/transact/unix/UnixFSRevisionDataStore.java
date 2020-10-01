@@ -56,8 +56,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         logger.info("Recovering journal, if necessary.");
 
         final List<Slice<JournalRecoveryExecution>> executionList = getTransactionJournal()
-            .entries()
-            .map(s -> s.flatMap(bb -> new UnixFSTransactionProgram(bb, 0)))
+            .validPrograms()
             .filter(s -> s.getValue().isValid())
             .map(s -> s.flatMap(p -> p.interpreter()))
             .map(s -> s.flatMap(JournalRecoveryExecution::new))
@@ -66,10 +65,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         // We must execute every journal entry in the order of revision committed as this will be what is necessary
         // for each revision.
         executionList.sort(comparing(Slice::getValue));
-        executionList.forEach(s -> {
-            s.getValue().perform();
-            s.clear();
-        });
+        executionList.forEach(s -> s.getValue().perform());
 
         logger.info("Recovered {} entries.", executionList.size());
 
@@ -89,32 +85,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     @Override
     public LockedRevision lockLatestReadCommitted() {
-
-        final UnixFSRevisionTableEntry operation = getRevisionTable()
-            .reverse()
-            .map(slice -> slice.getValue())
-            .filter(op -> op.isValid() && COMMITTED.equals(op.state.get()))
-            .reduce((a, b) -> a)
-            .orElseThrow(FatalException::new);
-
-        final UnixFSRevision<?> revision = getRevisionPool().create(operation.revision);
-
-        return new LockedRevision() {
-
-            @Override
-            public Revision<?> getRevision() {
-                return revision;
-            }
-
-            @Override
-            public void close() {
-                if (operation.readers.decrementAndGet() == 0) {
-                    getGarbageCollector().hint(revision);
-                }
-            }
-
-        };
-
+        return getRevisionTable().lockLatestReadCommitted();
     }
 
     @Override

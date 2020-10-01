@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -123,6 +124,18 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         return getContext().newMutableEntry(nodeId);
     }
 
+    /**
+     * Returns a {@link Stream<Slice<UnixFSTransactionProgram>>} of all valid programs in the journal.
+     *
+     * @return a {@link Stream<Slice<UnixFSTransactionProgram>>}
+     */
+    public Stream<Slice<UnixFSTransactionProgram>> validPrograms() {
+        return getContext().rawView
+            .stream()
+            .map(s -> s.flatMap(bb -> new UnixFSTransactionProgram(bb, 0)))
+            .filter(s -> s.getValue().isValid());
+    }
+
     private Context getContext() {
         final Context context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
@@ -192,10 +205,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     @Inject
     public void setRevisionDataStore(final UnixFSRevisionDataStore revisionDataStore) {
         this.revisionDataStore = revisionDataStore;
-    }
-
-    public Stream<UnixFSCircularBlockBuffer.Slice<ByteBuffer>> entries() {
-        return getContext().rawView.stream();
     }
 
     private class Context {
@@ -430,7 +439,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
             // be used to track the resources held in contention.
 
-            final UnixFSCircularBlockBuffer.Slice<ByteBuffer> slice = rawView.nextLeading();
+            final Slice<ByteBuffer> slice = rawView.nextLeading();
 
             // TODO Fix This, we may need to supply the revision from the calling code
             final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadCommitted();
