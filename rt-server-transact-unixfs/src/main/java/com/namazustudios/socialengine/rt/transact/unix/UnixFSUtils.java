@@ -20,6 +20,7 @@ import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.Revision.zero;
 import static java.lang.String.format;
@@ -128,10 +129,8 @@ public class UnixFSUtils {
         final boolean exists = exists(directory);
         final boolean isDirectory = isDirectory(directory);
 
-        if (exists && !isDirectory)
-            throw new IllegalArgumentException(directory + " must be a directory.");
-        else if (!exists)
-            return revision.withOptionalValue(Optional.empty());
+        if (exists && !isDirectory) throw new IllegalArgumentException(directory + " must be a directory.");
+        else if (!exists) return revision.withOptionalValue(Optional.empty());
 
         return doOperation(() -> Files
             .list(directory)
@@ -140,6 +139,33 @@ public class UnixFSUtils {
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
             .orElse(zero());
+
+    }
+
+    /**
+     * Searches the supplied {@link Path} to a directory and finds the most suitable revision.  This is the file with
+     * highest {@link Revision<Path>} that is the same as or less than the {@link Revision<?>}.  If no such revision
+     * exists, then this will return the value of {@link Revision#infinity()} indicating that no such value exists.
+     *
+     * @param directory the {@link Path} to a directory holding revisioned content.
+     * @param revision the {@link Revision<?>} to use as reference
+     * @return the {@link Revision<Path>} pointing to the requested file.
+     */
+    public Stream<Revision<Path>> findRevisionsUpTo(final Path directory,
+                                                    final Revision<?> revision,
+                                                    final LinkType linkType) {
+
+        final boolean exists = exists(directory);
+        final boolean isDirectory = isDirectory(directory);
+
+        if (exists && !isDirectory) throw new IllegalArgumentException(directory + " must be a directory.");
+        else if (!exists) return Stream.empty();
+
+        return doOperation(() -> Files
+            .list(directory)
+            .filter(linkType::matches))
+            .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
+            .filter(r -> r.isBeforeOrSame(revision));
 
     }
 
@@ -576,8 +602,7 @@ public class UnixFSUtils {
          * @return the stripped {@link Path}
          */
         public String stripExtension(final String path) {
-            if (!path.endsWith(getExtension()))
-                throw new IllegalArgumentException("Extension not present.");
+            if (!path.endsWith(getExtension())) throw new IllegalArgumentException("Extension not present.");
             return path.substring(0, path.length() - extension.length());
         }
 

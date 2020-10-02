@@ -89,8 +89,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
         try {
 
-            final Path pinned = getGarbageCollector().pin(file, revision);
-            final FileChannel out = fc = open(pinned, READ);
+            final FileChannel out = fc = open(file, READ);
 
             final UnixFSResourceHeader resourceHeader = new UnixFSResourceHeader();
             fc.read(resourceHeader.getByteBuffer());

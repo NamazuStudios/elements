@@ -2,15 +2,12 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistence;
-import com.namazustudios.socialengine.rt.transact.Revision;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.nio.file.Path;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -31,50 +28,9 @@ public class UnixFSGarbageCollector {
 
     private UnixFSRevisionDataStore revisionDataStore;
 
-    private Provider<UnixFSGarbageCollection> collectionProvider;
+    private Provider<UnixFSGarbageCollectionCycle> collectionProvider;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
-
-    /**
-     * Pins the particular file to the supplied {@link Revision<?>}.  This will guarantee that the file pointed to the
-     * {@link Path} will be preserved until the supplied {@link Revision<?>} is released.  This only works if the
-     * garbage collector has the {@link Revision} locked.
-     *
-     * @param file the revision file to pin
-     * @param revision the {@link Revision<?>}
-     * @return the {@link Path} to the pinned file.
-     */
-    public Path pin(final Path file, final Revision<?> revision) {
-        return file;
-//        if (isRegularFile(file, NOFOLLOW_LINKS)) {
-//            final Path parent = file.getParent();
-//            final Path pinned = utils.resolveRevisionFilePath(parent, revision);
-//            if (exists(pinned) || pinned.equals(file)) return file;
-//            return getUtils().doOperation(() -> createLink(pinned, file), FatalException::new);
-//        } else if (isSymbolicLink(file)) {
-//
-//            final Path parent = file.getParent();
-//            final Path pinned = utils.resolveSymlinkPath(parent, revision);
-//            if (exists(pinned) || pinned.equals(file)) return file;
-//
-//            return getUtils().doOperation(() -> {
-//                final Path followed = readSymbolicLink(file);
-//                return createSymbolicLink(pinned, followed);
-//            }, FatalException::new);
-//
-//        } else {
-//            throw new IllegalArgumentException("Neither file nor symbolic link: " + file);
-//        }
-    }
-
-    /**
-     * Hints that the following {@link Revision<?>} may be eligible for garbage collection.
-     *
-     * @param revision
-     */
-    public void hint(final UnixFSRevision<?> revision) {
-        // TODO Implement
-    }
 
     public void start() {
 
@@ -127,12 +83,12 @@ public class UnixFSGarbageCollector {
         this.revisionDataStore = revisionDataStore;
     }
 
-    public Provider<UnixFSGarbageCollection> getCollectionProvider() {
+    public Provider<UnixFSGarbageCollectionCycle> getCollectionProvider() {
         return collectionProvider;
     }
 
     @Inject
-    public void setCollectionProvider(final Provider<UnixFSGarbageCollection> collectionProvider) {
+    public void setCollectionProvider(final Provider<UnixFSGarbageCollectionCycle> collectionProvider) {
         this.collectionProvider = collectionProvider;
     }
 
@@ -157,8 +113,8 @@ public class UnixFSGarbageCollector {
         }
 
         private void collect(final List<UnixFSRevisionTableEntry> revisions) {
-            final UnixFSGarbageCollection collection = getCollectionProvider().get();
-            collection.collectUpTo(revisions.get(revisions.size() - 1));
+            final UnixFSGarbageCollectionCycle collection = getCollectionProvider().get();
+            collection.collect(revisions.get(revisions.size() - 1));
         }
 
         private void stop() {

@@ -12,6 +12,6 @@ public class UnixFSRevisionPoolData extends Struct {
 
     final Signed32 max = new Signed32();
 
-    final UnixFSAtomicLongData atomicLongData = inner(new UnixFSAtomicLongData());
+    final UnixFSAtomicLongData counter = inner(new UnixFSAtomicLongData());
 
 }

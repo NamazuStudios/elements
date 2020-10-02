@@ -66,7 +66,7 @@ public class UnixFSTransactionProgramInterpreter {
     private void interpret(final UnixFSTransactionCommand command, final ExecutionHandler executionHandler) {
 
         final UnixFSTransactionCommandInstruction instruction = command.header.instruction.get();
-        logger.trace("Command {}", command);
+        executionHandler.getLogger().trace("BEGIN Processing Command {}", command);
 
         switch (command.header.instruction.get()) {
             case NOOP:
@@ -98,57 +98,60 @@ public class UnixFSTransactionProgramInterpreter {
             default:
                 throw new InternalException("Unknown instruction: " + instruction);
         }
+
+        executionHandler.getLogger().trace("END Processing Command", command);
+
     }
 
     private void unlinkFSPath(final UnixFSTransactionCommand command,
                               final ExecutionHandler executionHandler) {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
-        executionHandler.unlinkFile(program, fsPath);
+        executionHandler.unlinkFile(program, command, fsPath);
     }
 
     private void unlinkRTPath(final UnixFSTransactionCommand command,
                               final ExecutionHandler executionHandler) {
         final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(0).asRTPath();
-        executionHandler.unlinkRTPath(program, rtPath);
+        executionHandler.unlinkRTPath(program, command, rtPath);
     }
 
     private void removeResource(final UnixFSTransactionCommand command,
                                 final ExecutionHandler executionHandler) {
         final ResourceId resourceId = command.getParameterAt(0).asResourceId();
-        executionHandler.removeResource(program, resourceId);
+        executionHandler.removeResource(program, command, resourceId);
     }
 
     private void linkResourceToRTPath(final UnixFSTransactionCommand command,
                                       final ExecutionHandler executionHandler) {
         final ResourceId resourceId = command.getParameterAt(0).asResourceId();
         final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(1).asRTPath();
-        executionHandler.linkResourceToRTPath(program, resourceId, rtPath);
+        executionHandler.linkResourceToRTPath(program, command, resourceId, rtPath);
     }
 
     private void updateResource(final UnixFSTransactionCommand command,
                                 final ExecutionHandler executionHandler) {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
         final ResourceId resourceId = command.getParameterAt(1).asResourceId();
-        executionHandler.updateResource(program, fsPath, resourceId);
+        executionHandler.updateResource(program, command, fsPath, resourceId);
     }
 
     private void addPath(final UnixFSTransactionCommand command,
                          final ExecutionHandler executionHandler) {
         final com.namazustudios.socialengine.rt.Path path = command.getParameterAt(0).asRTPath();
-        executionHandler.addPath(program, path);
+        executionHandler.addPath(program, command, path);
     }
 
     private void addResourceId(final UnixFSTransactionCommand command,
                                final ExecutionHandler executionHandler) {
         final ResourceId resourceId = command.getParameterAt(0).asResourceId();
-        executionHandler.addResourceId(program, resourceId);
+        executionHandler.addResourceId(program, command, resourceId);
     }
 
     private void linkNewResource(final UnixFSTransactionCommand command,
                                  final ExecutionHandler executionHandler) {
         final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
         final ResourceId resourceId = command.getParameterAt(1).asResourceId();
-        executionHandler.linkNewResource(program, fsPath, resourceId);
+        executionHandler.linkNewResource(program, command, fsPath, resourceId);
     }
 
     /**
@@ -158,75 +161,115 @@ public class UnixFSTransactionProgramInterpreter {
 
         /**
          * Handles {@link UnixFSTransactionCommandInstruction#UNLINK_FS_PATH}
-         *
          * @param program
+         * @param command
          * @param fsPath
          */
-        void unlinkFile(UnixFSTransactionProgram program, Path fsPath);
+        default void unlinkFile(final UnixFSTransactionProgram program,
+                                final UnixFSTransactionCommand command,
+                                final Path fsPath) {
+            getLogger().trace("Ignoring {}", command);
+        }
 
         /**
          * Handles {@link UnixFSTransactionCommandInstruction#UNLINK_RT_PATH}
-         *
          * @param program
+         * @param command
          * @param rtPath
          */
-        void unlinkRTPath(UnixFSTransactionProgram program, com.namazustudios.socialengine.rt.Path rtPath);
+        default void unlinkRTPath(final UnixFSTransactionProgram program,
+                                  final UnixFSTransactionCommand command,
+                                  final com.namazustudios.socialengine.rt.Path rtPath) {
+            getLogger().trace("Ignoring {}", command);
+        }
 
         /**
          * Handles {@link UnixFSTransactionCommandInstruction#REMOVE_RESOURCE}
-         *
          * @param program
+         * @param command
          * @param resourceId
          */
-        void removeResource(UnixFSTransactionProgram program, ResourceId resourceId);
+        default void removeResource(final UnixFSTransactionProgram program,
+                                    final UnixFSTransactionCommand command,
+                                    final ResourceId resourceId) {
+            getLogger().trace("Ignoring {}", command);
+        }
 
         /**
          * Handles {@link UnixFSTransactionCommandInstruction#LINK_RESOURCE_TO_RT_PATH}
          *
          * @param program
+         * @param command
          * @param resourceId
          * @param rtPath
          */
-        void linkResourceToRTPath(UnixFSTransactionProgram program,
-                                  ResourceId resourceId,
-                                  com.namazustudios.socialengine.rt.Path rtPath);
+        default void linkResourceToRTPath(final UnixFSTransactionProgram program,
+                                          final UnixFSTransactionCommand command, ResourceId resourceId,
+                                          final com.namazustudios.socialengine.rt.Path rtPath) {
+            getLogger().trace("Ignoring {}", command);
+        }
 
         /**
          * Handles {@link UnixFSTransactionCommandInstruction#UPDATE_RESOURCE}
          * @param program
+         * @param command
          * @param fsPath
          * @param resourceId
          */
-        void updateResource(UnixFSTransactionProgram program,
-                            Path fsPath,
-                            ResourceId resourceId);
+        default void updateResource(final UnixFSTransactionProgram program,
+                                    final UnixFSTransactionCommand command,
+                                    final Path fsPath,
+                                    final ResourceId resourceId) {
+            getLogger().trace("Ignoring {}", command);
+        }
 
         /**
          * Handles the {@link UnixFSTransactionCommandInstruction#ADD_PATH}.
-         *
-         * @param program
+         *  @param program
+         * @param command
          * @param path
          */
-        void addPath(UnixFSTransactionProgram program, com.namazustudios.socialengine.rt.Path path);
+        default void addPath(final UnixFSTransactionProgram program,
+                             final UnixFSTransactionCommand command,
+                             final com.namazustudios.socialengine.rt.Path path) {
+            getLogger().trace("Ignoring {}", command);
+        }
 
         /**
          * Handles the {@link UnixFSTransactionCommandInstruction#ADD_RESOURCE_ID}.
-         *
          * @param program
+         * @param command
          * @param resourceId
          */
-        void addResourceId(UnixFSTransactionProgram program,
-                           ResourceId resourceId);
+        default void addResourceId(final UnixFSTransactionProgram program,
+                                   final UnixFSTransactionCommand command,
+                                   final ResourceId resourceId) {
+            getLogger().trace("Ignoring {}", command);
+        }
 
         /**
          * Handles {@link UnixFSTransactionCommandInstruction#LINK_NEW_RESOURCE}
          * @param program
+         * @param command
          * @param fsPath
          * @param resourceId
          */
-        void linkNewResource(UnixFSTransactionProgram program,
-                             Path fsPath,
-                             ResourceId resourceId);
+        default void linkNewResource(final UnixFSTransactionProgram program,
+                                     final UnixFSTransactionCommand command,
+                                     final Path fsPath,
+                                     final ResourceId resourceId) {
+            getLogger().trace("Ignoring {}", command);
+        }
+
+        /**
+         * Returns the preferred logger for this {@link ExecutionHandler}. By default, all instructions are logged at
+         * trace level with the supplied {@link Logger}.
+         *
+         * @return the logger
+         */
+        default Logger getLogger() {
+            return LoggerFactory.getLogger(this.getClass());
+        }
 
     }
 

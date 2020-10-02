@@ -17,7 +17,6 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
-import static java.nio.file.Files.find;
 import static java.nio.file.Files.isRegularFile;
 import static java.nio.file.StandardOpenOption.*;
 
@@ -116,10 +115,10 @@ public class UnixFSRevisionPool implements Revision.Factory {
     }
 
     /**
-     * Creates a {@link UnixFSRevision<?>} from the supplied {@link UnixFSRevisionData} (serialized form).
+     * Creates a {@link UnixFSRevision <?>} from the supplied {@link UnixFSRevisionData} (serialized form).
      *
      * @param unixFSRevisionData the {@link UnixFSRevisionData} representing the serialized form
-     * @return the newly created {@link UnixFSRevision<?>}
+     * @return the newly created {@link UnixFSRevision <?>}
      */
     public UnixFSRevision<?> create(final UnixFSRevisionData unixFSRevisionData) {
         return getContext().create(unixFSRevisionData);
@@ -140,7 +139,7 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
         private final MappedByteBuffer poolBuffer;
 
-        private final UnixFSDualCounter revisionCounter;
+        private final UnixFSAtomicLong counter;
 
         private final UnixFSRevisionPoolData revisionPoolData = new UnixFSRevisionPoolData();
 
@@ -151,13 +150,13 @@ public class UnixFSRevisionPool implements Revision.Factory {
             if (isRegularFile(revisionPoolPath)) {
                 logger.info("Reading existing revision pool {}", revisionPoolPath);
                 poolBuffer = readRevisionPoolFile(revisionPoolPath);
+                counter = revisionPoolData.counter.createAtomicLong();
             } else {
                 logger.info("Creating new revision pool at {}", revisionPoolPath);
                 poolBuffer = createNewRevisionPoolFile(revisionPoolPath);
+                counter = revisionPoolData.counter.createAtomicLong();
+                counter.set(0);
             }
-
-            final UnixFSAtomicLong counter = revisionPoolData.atomicLongData.createAtomicLong();
-            revisionCounter = new UnixFSDualCounter(getPoolSize(), counter);
 
         }
 
@@ -253,18 +252,36 @@ public class UnixFSRevisionPool implements Revision.Factory {
         }
 
         public UnixFSRevision<?> creteNextRevision() {
-            return new UnixFSRevision<>(revisionCounter::getTrailing, revisionCounter.incrementLeadingAndGetSnapshot());
+
+            long revision;
+
+            do {
+
+                revision = counter.get();
+
+                if (Long.compareUnsigned(0xFFFFFFFFFFFFFFFFl, revision) == 0) {
+                    // This should never happen, but we want to catch it if it does. A 64-bit long integer would take
+                    // approximately 500 years to roll over if one revision was generated once per nanosecond, so  it
+                    // is very unlikely that this will ever exhaust the pool. If we do run into this problem because I
+                    // made a math error, then we will convert this code to use a BigInteger and take a different
+                    // approach
+                    throw new FatalException("Exhausted revision pool: 0xFFFFFFFFFFFFFFFFl");
+                }
+
+            } while (!counter.compareAndSet(revision, revision + 1));
+
+            return new UnixFSRevision<>(revision);
+
         }
 
         public UnixFSRevision<?> create(final UnixFSRevisionData unixFSRevisionData) {
-            return unixFSRevisionData.toRevision(revisionCounter::getTrailing);
+            final long value = unixFSRevisionData.value.get();
+            return new UnixFSRevision<>(value);
         }
 
         public UnixFSRevision<?> create(final String at) {
-            final int max = revisionCounter.getMax();
             final long value = Long.parseLong(at, 16);
-            final UnixFSDualCounter.Snapshot snapshot = UnixFSDualCounter.Snapshot.fromIntegralValues(max, value);
-            return new UnixFSRevision<>(revisionCounter::getTrailing, snapshot);
+            return new UnixFSRevision<>(value);
         }
 
     }

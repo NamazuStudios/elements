@@ -1,11 +1,7 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.transact.Revision;
-import javolution.io.Struct;
 
-import javax.inject.Provider;
-
-import java.nio.ByteBuffer;
 import java.util.function.IntSupplier;
 
 import static java.lang.String.format;
@@ -14,14 +10,10 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
 
     private volatile String uid;
 
-    private final IntSupplier referenceSupplier;
+    private final long value;
 
-    private final UnixFSDualCounter.Snapshot snapshot;
-
-    UnixFSRevision(final IntSupplier referenceSupplier,
-                   final UnixFSDualCounter.Snapshot snapshot) {
-        this.snapshot = snapshot;
-        this.referenceSupplier = referenceSupplier;
+    UnixFSRevision(final long value) {
+        this.value = value;
     }
 
     @Override
@@ -31,7 +23,7 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
 
     @Override
     public String getUniqueIdentifier() {
-        return uid == null ? (uid = format("%016X", snapshot.getSnapshot())) : uid;
+        return uid == null ? (uid = format("%016X", value)) : uid;
     }
 
     @Override
@@ -42,18 +34,22 @@ public class UnixFSRevision<RevisionT> implements Revision<RevisionT> {
             return -1;
         } else {
             final UnixFSRevision<?> other = o.getOriginal(UnixFSRevision.class);
-            final int reference = referenceSupplier.getAsInt();
-            return snapshot.compareTo(reference, other.snapshot);
+            return Long.compareUnsigned(value, other.value);
         }
     }
 
-    UnixFSDualCounter.Snapshot getSnapshot() {
-        return snapshot;
+    /**
+     * Returns the revision value as a long. For the purposes of this, we consider this a signed long value.
+     *
+     * @return the value as a long
+     */
+    public long asLong() {
+        return value;
     }
 
     @Override
     public String toString() {
-        return snapshot.toString();
+        return getUniqueIdentifier();
     }
 
 }

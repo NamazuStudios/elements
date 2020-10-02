@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import javolution.io.Struct;
 import org.slf4j.Logger;
@@ -339,16 +338,6 @@ public class UnixFSTransactionParameter {
                 return com.namazustudios.socialengine.rt.Path.fromPathString(pathString);
 
             }
-        },
-
-        /**
-         * Represents an instance of {@link UnixFSRevision<?>}
-         */
-        REVISION {
-            @Override
-            protected UnixFSRevisionData asRevision(final UnixFSTransactionParameter unixFSTransactionParameter) {
-                return super.asRevision(unixFSTransactionParameter);
-            }
         };
 
         protected void setPositionAndLimit(final UnixFSTransactionParameter param) {
@@ -371,10 +360,6 @@ public class UnixFSTransactionParameter {
 
         protected ResourceId asResourceId(UnixFSTransactionParameter unixFSTransactionParameter) {
             return badType(ResourceId.class);
-        }
-
-        protected UnixFSRevisionData asRevision(UnixFSTransactionParameter unixFSTransactionParameter) {
-            return badType(UnixFSTransactionParameter.class);
         }
 
         private <T> T badType(final Class<?> cls) {

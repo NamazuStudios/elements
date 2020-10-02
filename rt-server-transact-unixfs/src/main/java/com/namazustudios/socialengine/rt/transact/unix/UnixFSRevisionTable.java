@@ -135,9 +135,7 @@ public class UnixFSRevisionTable {
 
             @Override
             public void close() {
-                if (operation.readers.decrementAndGet() == 0) {
-                    getGarbageCollector().hint(revision);
-                }
+                operation.readers.getAndDecrement();
             }
 
         };

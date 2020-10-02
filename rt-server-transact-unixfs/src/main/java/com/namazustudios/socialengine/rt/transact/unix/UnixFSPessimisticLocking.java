@@ -23,7 +23,17 @@ public interface UnixFSPessimisticLocking {
      * @param path the {@link Path} to lock
      * @throws TransactionConflictException if another process is manipulating the same {@link Path}
      */
-    void lock(Path path) throws TransactionConflictException;
+    default void lock(Path path) throws TransactionConflictException {
+        if (!tryLock(path)) throw new TransactionConflictException();
+    }
+
+    /**
+     * Tries to lock the supplied {@link Path}, returning true if the lock operation succeeded.
+     *
+     * @param path the {@link Path} to lock
+     * @return true if locked, false otherwise.
+     */
+    boolean tryLock(Path path);
 
     /**
      * Attempts to lock the supplied {@link ResourceId}, throwing an instance of
@@ -32,7 +42,17 @@ public interface UnixFSPessimisticLocking {
      * @param resourceId the {@link ResourceId} to lock
      * @throws TransactionConflictException if another process is manipulating the same {@link ResourceId}
      */
-    void lock(ResourceId resourceId) throws TransactionConflictException;
+    default void lock(ResourceId resourceId) throws TransactionConflictException {
+        if (!tryLock(resourceId)) throw new TransactionConflictException();
+    }
+
+    /**
+     * Attempts to lock the supplied {@link ResourceId}, returning true if the lock operation succeeded.
+     *
+     * @param resourceId the {@link ResourceId} to lock
+     * @return true if the operation succeeded, false otherwise
+     */
+    boolean tryLock(ResourceId resourceId);
 
     /**
      * Convenience method to lock multiple {@link Path} values

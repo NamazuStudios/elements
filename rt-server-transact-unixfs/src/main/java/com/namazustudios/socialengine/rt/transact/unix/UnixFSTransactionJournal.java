@@ -136,6 +136,16 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             .filter(s -> s.getValue().isValid());
     }
 
+    /**
+     * Returns a new instance of {@link UnixFSPessimisticLocking} such that {@link ResourceId}s and {@link Path}s may be
+     * locked while a transaction is processing.
+     *
+     * @return a new instance of {@link UnixFSPessimisticLocking}
+     */
+    public UnixFSPessimisticLocking newPessimisticLocking() {
+        return getContext().newPessimisticLocking();
+    }
+
     private Context getContext() {
         final Context context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
@@ -485,26 +495,27 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
                 final List<Object> toRelease = new ArrayList<>();
 
-                private void lock(final Object object) throws TransactionConflictException {
+                private boolean tryLock(final Object object) {
 
                     final Object existing = lockedResources.putIfAbsent(object, this);
 
                     if (existing == null || existing == this) {
                         toRelease.add(object);
+                        return true;
                     } else {
-                        throw new TransactionConflictException();
+                        return false;
                     }
 
                 }
 
                 @Override
-                public void lock(final com.namazustudios.socialengine.rt.Path path) throws TransactionConflictException {
-                    lock((Object)path);
+                public boolean tryLock(final com.namazustudios.socialengine.rt.Path path) {
+                    return tryLock((Object) path);
                 }
 
                 @Override
-                public void lock(final ResourceId resourceId) throws TransactionConflictException {
-                    lock((Object)resourceId);
+                public boolean tryLock(final ResourceId resourceId) {
+                    return tryLock((Object) resourceId);
                 }
 
                 @Override

@@ -10,19 +10,16 @@ public class UnixFSRevisionData extends Struct {
 
     public static final int SIZE = new UnixFSRevisionData().size();
 
-    final Signed32 max = new Signed32();
-
-    final Signed64 snapshot = new Signed64();
+    final Signed64 value = new Signed64();
 
     void fromRevision(final UnixFSRevision<?> revision) {
-        final UnixFSDualCounter.Snapshot snapshot = revision.getSnapshot();
-        this.max.set(snapshot.getMax());
-        this.snapshot.set(snapshot.getSnapshot());
+        final long value = revision.asLong();
+        this.value.set(value);
     }
 
-    UnixFSRevision toRevision(final IntSupplier referenceSupplier) {
-        final UnixFSDualCounter.Snapshot snapshot = fromIntegralValues(this.max.get(), this.snapshot.get());
-        return new UnixFSRevision(referenceSupplier, snapshot);
+    UnixFSRevision<?> toRevision() {
+        final long value = this.value.get();
+        return new UnixFSRevision(value);
     }
 
 }
