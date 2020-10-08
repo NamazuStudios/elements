@@ -210,28 +210,28 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     }
 
-//    @Test(dependsOnMethods = {"testGetByAlias"}, dataProvider = "linkedIntermediateProvider", expectedExceptions = ResourceNotFoundException.class)
-//    public void testUnlink(final ResourceId resourceId, final Path path, final Resource original) {
-//
-//        final ResourceService.Unlink unlink;
-//        unlink = getResourceService().unlinkPath(path, removed -> fail("Did not expect resource removal."));
-//
-//        assertEquals(resourceId, unlink.getResourceId(), "Unlink mismatch");
-//        assertFalse(unlink.isRemoved(), "Resource should not have been removed.");
-//
-//        final Resource first = getResourceService().getAndAcquireResourceWithId(resourceId);
-//
-//        try {
-//            assertEquals(first.getId(), original.getId());
-//        } finally {
-//            getResourceService().release(first);
-//        }
-//
-//        final Resource second = getResourceService().getAndAcquireResourceAtPath(path);
-//        getResourceService().release(second);
-//
-//    }
-//
+    @Test(dependsOnMethods = {"testGetByAlias"}, dataProvider = "linkedIntermediateProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testUnlink(final ResourceId resourceId, final Path path, final Resource original) {
+
+        final ResourceService.Unlink unlink;
+        unlink = getResourceService().unlinkPath(path, removed -> fail("Did not expect resource removal."));
+
+        assertEquals(resourceId, unlink.getResourceId(), "Unlink mismatch");
+        assertFalse(unlink.isRemoved(), "Resource should not have been removed.");
+
+        final Resource first = getResourceService().getAndAcquireResourceWithId(resourceId);
+
+        try {
+            assertEquals(first.getId(), original.getId());
+        } finally {
+            getResourceService().release(first);
+        }
+
+        final Resource second = getResourceService().getAndAcquireResourceAtPath(path);
+        getResourceService().release(second);
+
+    }
+
 //    @Test(dependsOnMethods = {"testUnlink"}, dataProvider = "intermediateDataProvider")
 //    public void testRemove(final ResourceId resourceId, final Path path, final Resource original) {
 //

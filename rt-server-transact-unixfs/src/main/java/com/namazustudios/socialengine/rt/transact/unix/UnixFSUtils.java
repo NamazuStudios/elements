@@ -439,9 +439,9 @@ public class UnixFSUtils {
      * @param revision the {@link Revision<?>} at which to apply the tombstone.
      */
     public void tombstone(final Path directory, final Revision<?> revision) {
-        if (isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
-        final Path destination = directory.resolve(revision.getUniqueIdentifier()).relativize(directory);
-        doOperationV(() -> createLink(tombstone, destination), FatalException::new);
+        if (!isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
+        final Path destination = directory.resolve(revision.getUniqueIdentifier());
+        doOperationV(() -> createLink(destination, tombstone), FatalException::new);
     }
 
     /**

@@ -100,7 +100,7 @@ public class UnixFSGarbageCollector {
 
     private class Context {
 
-        private final AtomicBoolean paused = new AtomicBoolean();
+        private final AtomicBoolean paused = new AtomicBoolean(true);
 
         private final ScheduledExecutorService executor = newSingleThreadScheduledExecutor();
 

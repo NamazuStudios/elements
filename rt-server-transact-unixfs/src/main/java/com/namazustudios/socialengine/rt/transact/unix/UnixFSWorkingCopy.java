@@ -109,7 +109,7 @@ class UnixFSWorkingCopy {
 
     public ResourceService.Unlink unlink(final Path path, final Runnable success) throws TransactionConflictException {
 
-        final ResourceId resourceId = pathToResourceIds.get(path);
+        final ResourceId resourceId = getResourceId(path);
         if (NULL_RESOURCE_ID.equals(resourceId)) throw new ResourceNotFoundException();
 
         pessimisticLocking.lock(path);

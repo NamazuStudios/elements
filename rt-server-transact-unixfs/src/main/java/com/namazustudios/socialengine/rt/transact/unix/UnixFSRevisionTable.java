@@ -157,6 +157,10 @@ public class UnixFSRevisionTable {
         getContext().reclaimInvalidEntries();
     }
 
+    public int size() {
+        return getContext().size();
+    }
+
     private Context getContext() {
         final Context context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
@@ -227,6 +231,7 @@ public class UnixFSRevisionTable {
                         Integer.MAX_VALUE);
 
                 throw new IllegalArgumentException(msg);
+
             }
 
             final UnixFSAtomicLong counter;
@@ -466,29 +471,23 @@ public class UnixFSRevisionTable {
             // If the revision is indeed not valid, then we try again.
 
             if (!entrySlice.getValue().isValid()) {
-                semaphore.release(2);
+                semaphore.release();
                 return null;
             }
 
-            try {
+            return new RevisionMonitor<Slice<UnixFSRevisionTableEntry>>() {
 
-                return new RevisionMonitor<Slice<UnixFSRevisionTableEntry>>() {
+                @Override
+                public Slice<UnixFSRevisionTableEntry> getScope() {
+                    return entrySlice;
+                }
 
-                    @Override
-                    public Slice<UnixFSRevisionTableEntry> getScope() {
-                        return entrySlice;
-                    }
+                @Override
+                public void close() {
+                    semaphore.release();
+                }
 
-                    @Override
-                    public void close() {
-                        semaphore.release();
-                    }
-
-                };
-            } finally {
-                // We release one of the two permits. The second release will be released when the monitor is closed.
-                semaphore.release();
-            }
+            };
 
         }
 
@@ -506,7 +505,6 @@ public class UnixFSRevisionTable {
             } catch (InterruptedException e) {
                 throw new FatalException(e);
             }
-
 
             return new RevisionMonitor<Slice<UnixFSRevisionTableEntry>>() {
 
@@ -580,7 +578,7 @@ public class UnixFSRevisionTable {
                     return existingRevision;
                 }
 
-            } while (readCommitted.compareAndSet(existingEntrySlice.getIndex(), slice.getIndex()));
+            } while (!readCommitted.compareAndSet(existingEntrySlice.getIndex(), slice.getIndex()));
 
             return updateRevision;
 
@@ -592,6 +590,10 @@ public class UnixFSRevisionTable {
 
         public void reclaimInvalidEntries() {
             structView.incrementTrailingUntil(s -> !s.getValue().isValid());
+        }
+
+        public int size() {
+            return structView.size();
         }
 
     }

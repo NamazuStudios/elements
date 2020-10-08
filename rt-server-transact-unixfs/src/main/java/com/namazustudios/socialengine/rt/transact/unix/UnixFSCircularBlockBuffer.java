@@ -90,6 +90,11 @@ public class UnixFSCircularBlockBuffer {
             }
 
             @Override
+            public int size() {
+                return counter.size();
+            }
+
+            @Override
             public Stream<Slice<ByteBuffer>> stream() {
                 final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
                 return snapshot.range().mapToObj(UnixFSCircularBlockBuffer.this::rawSliceAt);
@@ -203,6 +208,13 @@ public class UnixFSCircularBlockBuffer {
         boolean isFull();
 
         /**
+         * Returns the size of the block buffer.
+         *
+         * @return the size
+         */
+        int size();
+
+        /**
          * Returns a stream view of the current valid elements contained in this buffer.
          *
          * @return the {@link Stream<ViewedT>}
@@ -264,6 +276,11 @@ public class UnixFSCircularBlockBuffer {
                 @Override
                 public boolean isFull() {
                     return View.this.isFull();
+                }
+
+                @Override
+                public int size() {
+                    return View.this.size();
                 }
 
                 @Override
