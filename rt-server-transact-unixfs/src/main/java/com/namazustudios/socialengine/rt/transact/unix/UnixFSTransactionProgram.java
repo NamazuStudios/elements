@@ -16,6 +16,16 @@ public class UnixFSTransactionProgram {
     transient UnixFSTransactionProgramInterpreter interpreter = null;
 
     /**
+     * Creates an instance with the bytebuffer assuming that the program's position is 0 in the supplied
+     * {@link ByteBuffer}
+     *
+     * @param byteBuffer the {@link ByteBuffer}
+     */
+    UnixFSTransactionProgram(final ByteBuffer byteBuffer) {
+        this(byteBuffer, 0);
+    }
+
+    /**
      * Creates an instance with the bytebuffer and the program's position within the supplied {@link ByteBuffer}
      *
      * @param byteBuffer

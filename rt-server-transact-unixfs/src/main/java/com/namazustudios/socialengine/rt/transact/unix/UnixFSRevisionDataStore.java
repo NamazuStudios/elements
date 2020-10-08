@@ -17,8 +17,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.COMMITTED;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.WRITING;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.*;
 import static java.util.Comparator.comparing;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -58,8 +57,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         final List<Slice<JournalRecoveryExecution>> executionList = getTransactionJournal()
             .validPrograms()
             .filter(s -> s.getValue().isValid())
-            .map(s -> s.flatMap(p -> p.interpreter()))
-            .map(s -> s.flatMap(JournalRecoveryExecution::new))
+            .map(s -> s.map(p -> p.interpreter()))
+            .map(s -> s.map(JournalRecoveryExecution::new))
             .collect(Collectors.toList());
 
         // We must execute every journal entry in the order of revision committed as this will be what is necessary
@@ -85,7 +84,26 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     @Override
     public LockedRevision lockLatestReadCommitted() {
-        return getRevisionTable().lockLatestReadCommitted();
+
+        final UnixFSRevisionTable.RevisionMonitor<Slice<UnixFSRevisionTableEntry>> monitor;
+        monitor = getRevisionTable().readLockLatestReadCommitted();
+
+        final UnixFSRevision<?> revision = getRevisionPool().create(monitor.getScope().getValue().revision);
+
+        return new LockedRevision() {
+
+            @Override
+            public Revision<?> getRevision() {
+                return revision;
+            }
+
+            @Override
+            public void close() {
+                monitor.close();
+            }
+
+        };
+
     }
 
     @Override
@@ -93,17 +111,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         return new UnixFSPendingRevisionChange();
     }
 
-    public PendingRevisionChange findPendingRevisionChange(final UnixFSRevision<?> revision) {
-        return getRevisionTable()
-            .reverse()
-            .filter(s -> s.getValue().isValid() && WRITING.equals(s.getValue().state.get()))
-            .filter(s -> {
-                final UnixFSRevision<?> opRevision = getRevisionPool().create(s.getValue().revision);
-                return revision.compareTo(opRevision) == 0;
-            })
-            .findFirst()
-            .map(s -> new UnixFSPendingRevisionChange(s))
-            .orElseThrow(FatalException::new);
+    public PendingRevisionChange lockEntryWithRevision(final UnixFSRevision<?> revision) {
+        return new UnixFSPendingRevisionChange();
     }
 
     @Override
@@ -237,79 +246,64 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         private boolean open = true;
 
-        private boolean destroy = false;
+        private final UnixFSRevision<?> revision = getRevisionPool().createNextRevision();
 
-        private final UnixFSRevision<?> revision;
-
-        private final UnixFSRevisionTableEntry tableEntry;
-
-        private final Slice<UnixFSRevisionTableEntry> tableEntrySlice;
+        private final UnixFSRevisionTable.RevisionMonitor<Slice<UnixFSRevisionTableEntry>> monitor = getRevisionTable().writeLockNextLeading();
 
         private UnixFSPendingRevisionChange() {
-
             final UnixFSChecksumAlgorithm preferredAlgorithm = getPreferredChecksum();
-
-            revision = getRevisionPool().createNextRevision();
-            tableEntrySlice = getRevisionTable().nextLeading();
-
-            tableEntry = tableEntrySlice.getValue();
+            final UnixFSRevisionTableEntry tableEntry = monitor.getScope().getValue();
             tableEntry.state.set(WRITING);
             tableEntry.revision.fromRevision(revision);
             tableEntry.algorithm.set(preferredAlgorithm);
-
             preferredAlgorithm.compute(tableEntry);
-
-        }
-
-        private UnixFSPendingRevisionChange(final Slice<UnixFSRevisionTableEntry> tableEntrySlice) {
-            this.tableEntrySlice = tableEntrySlice;
-            this.tableEntry = tableEntrySlice.getValue();
-            this.revision = getRevisionPool().create(tableEntry.revision);
         }
 
         @Override
         public void update() {
-
+            if (!open) throw new IllegalStateException();
             final UnixFSChecksumAlgorithm preferredAlgorithm = getPreferredChecksum();
-            final Slice<UnixFSRevisionTableEntry> slice = revisionTable.nextLeading().clear();
-            final UnixFSRevisionTableEntry op = slice.getValue();
-
-            destroy = true;
-
-            op.state.set(COMMITTED);
-            op.revision.fromRevision(revision);
-            op.algorithm.set(preferredAlgorithm);
-
-            preferredAlgorithm.compute(op);
-
+            final UnixFSRevisionTableEntry tableEntry = monitor.getScope().getValue();
+            tableEntry.state.set(COMMITTED);
+            tableEntry.algorithm.set(preferredAlgorithm);
+            preferredAlgorithm.compute(tableEntry);
+            revisionTable.updateReadCommitted(monitor.getScope());
         }
 
         @Override
         public void apply(final TransactionJournal.Entry entry) {
-
+            check();
             final UnixFSJournalEntry journalEntry = entry.getOriginal(UnixFSJournalEntry.class);
             final NodeId nodeId = journalEntry.getNodeId();
             final UnixFSTransactionProgram transactionProgram = journalEntry.getProgram();
             final UnixFSTransactionProgramInterpreter interpreter = transactionProgram.interpreter();
             final ExecutionHandler executionHandler = newExecutionHandler(nodeId, revision);
-
-            try {
-                interpreter.executeCommitPhase(executionHandler);
-            } finally {
-                interpreter.executeCleanupPhase(executionHandler);
-            }
-
+            interpreter.executeCommitPhase(executionHandler);
         }
 
         @Override
         public void cleanup(final TransactionJournal.Entry entry) {
-            logger.warn("cleanup(Entry) not implemented yet.");
-//            throw new FatalException("Not yet supported.");
+            check();
+            final UnixFSJournalEntry journalEntry = entry.getOriginal(UnixFSJournalEntry.class);
+            final NodeId nodeId = journalEntry.getNodeId();
+            final UnixFSTransactionProgram transactionProgram = journalEntry.getProgram();
+            final UnixFSTransactionProgramInterpreter interpreter = transactionProgram.interpreter();
+            final ExecutionHandler executionHandler = newExecutionHandler(nodeId, revision);
+            interpreter.executeCleanupPhase(executionHandler);
         }
 
         @Override
         public void fail() {
-            tableEntrySlice.clear();
+            check();
+            final UnixFSChecksumAlgorithm preferredAlgorithm = getPreferredChecksum();
+            final UnixFSRevisionTableEntry tableEntry = monitor.getScope().getValue();
+            tableEntry.state.set(FAILED);
+            tableEntry.algorithm.set(preferredAlgorithm);
+            preferredAlgorithm.compute(tableEntry);
+        }
+
+        private void check() {
+            if (!open) throw new IllegalStateException();
         }
 
         @Override
@@ -319,11 +313,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         @Override
         public void close() {
-            try {
-                if (open && destroy) tableEntrySlice.clear();
-            } finally {
-                open = false;
-            }
+            open = false;
+            monitor.close();
         }
 
     }
@@ -349,7 +340,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         public void perform() {
             final ExecutionHandler executionHandler = newExecutionHandler(nodeId, revision);
-            try (final LockedRevision lr = findPendingRevisionChange(revision)) {
+            try (final LockedRevision lr = lockEntryWithRevision(revision)) {
                 try {
                     interpreter.executeCommitPhase(executionHandler);
                 } finally {

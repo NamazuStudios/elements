@@ -17,8 +17,6 @@ class UnixFSRevisionTableEntry extends Struct implements UnixFSChecksumAlgorithm
 
     final Enum8<State> state = new Enum8<>(State.values());
 
-    final AtomicInteger readers = new AtomicInteger();
-
     public boolean isValid() {
 
         final UnixFSChecksumAlgorithm algorithm;
@@ -68,7 +66,12 @@ class UnixFSRevisionTableEntry extends Struct implements UnixFSChecksumAlgorithm
         /**
          * Indicates that the revision has been committed.
          */
-        COMMITTED
+        COMMITTED,
+
+        /**
+         * Indicates that the revision commit had failed.
+         */
+        FAILED
 
     }
 

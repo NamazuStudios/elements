@@ -3,10 +3,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.transact.FatalException;
-import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
-import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
-import com.namazustudios.socialengine.rt.transact.TransactionJournal;
+import com.namazustudios.socialengine.rt.transact.*;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,6 +19,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
@@ -86,6 +84,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
     private UnixFSPathIndex unixFSPathIndex;
 
+    private UnixFSRevisionPool unixFSRevisionPool;
+
     private UnixFSChecksumAlgorithm preferredChecksumAlgorithm;
 
     private Provider<UnixFSTransactionProgramBuilder> programBuilderProvider;
@@ -130,10 +130,24 @@ public class UnixFSTransactionJournal implements TransactionJournal {
      * @return a {@link Stream<Slice<UnixFSTransactionProgram>>}
      */
     public Stream<Slice<UnixFSTransactionProgram>> validPrograms() {
-        return getContext().rawView
+        return getContext().getProgramView()
             .stream()
-            .map(s -> s.flatMap(bb -> new UnixFSTransactionProgram(bb, 0)))
             .filter(s -> s.getValue().isValid());
+    }
+
+    /**
+     * Searches the {@link UnixFSTransactionJournal} for the supplied {@link Revision<?>}.
+     *
+     * @param revision the revision
+     * @return an instance of {@link Optional<Slice<UnixFSTransactionProgram>>}
+     *
+     * */
+    public Optional<Slice<UnixFSTransactionProgram>> findValidProgramForRevision(final Revision<?> revision) {
+        return getContext().getProgramView()
+                .stream()
+                .filter(s -> s.getValue().isValid())
+                .filter(s -> getUnixFSRevisionPool().create(s.getValue().header.revision).isSame(revision))
+                .findFirst();
     }
 
     /**
@@ -144,6 +158,14 @@ public class UnixFSTransactionJournal implements TransactionJournal {
      */
     public UnixFSPessimisticLocking newPessimisticLocking() {
         return getContext().newPessimisticLocking();
+    }
+
+    /**
+     * Beginning at the trailing value, this will increment the trailing as long as they point to invalid values. THis
+     * should happen after
+     */
+    public void reclaimInvalidEntries() {
+        getContext().reclaimInvalidEntries();
     }
 
     private Context getContext() {
@@ -190,6 +212,15 @@ public class UnixFSTransactionJournal implements TransactionJournal {
         this.unixFSPathIndex = unixFSPathIndex;
     }
 
+    public UnixFSRevisionPool getUnixFSRevisionPool() {
+        return unixFSRevisionPool;
+    }
+
+    @Inject
+    public void setUnixFSRevisionPool(UnixFSRevisionPool unixFSRevisionPool) {
+        this.unixFSRevisionPool = unixFSRevisionPool;
+    }
+
     public UnixFSChecksumAlgorithm getPreferredChecksumAlgorithm() {
         return preferredChecksumAlgorithm;
     }
@@ -233,6 +264,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         private final UnixFSCircularBlockBuffer.View<ByteBuffer> rawView;
 
+        private final UnixFSCircularBlockBuffer.View<UnixFSTransactionProgram> programView;
+
         private Context() throws IOException {
 
             final Path journalPath = getUtils().getTransactionJournalPath();
@@ -258,7 +291,16 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             }
 
             rawView = circularBlockBuffer.rawView();
+            programView = rawView.flatMap(UnixFSTransactionProgram::new);
 
+        }
+
+        public UnixFSCircularBlockBuffer.View<ByteBuffer> getRawView() {
+            return rawView;
+        }
+
+        public UnixFSCircularBlockBuffer.View<UnixFSTransactionProgram> getProgramView() {
+            return programView;
         }
 
         private MappedByteBuffer readExistingJournal(final Path journalPath) throws IOException {
@@ -449,7 +491,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             // Fetches, atomically, the next slice, the revision, and sets an instance of OptimisitcLocking which will
             // be used to track the resources held in contention.
 
-            final Slice<ByteBuffer> slice = rawView.nextLeading();
+            final Slice<ByteBuffer> slice = getRawView().nextLeading();
 
             // TODO Fix This, we may need to supply the revision from the calling code
             final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadCommitted();
@@ -488,7 +530,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         }
 
-
         private UnixFSPessimisticLocking newPessimisticLocking() {
 
             return new UnixFSPessimisticLocking() {
@@ -524,6 +565,10 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                 }
 
             };
+        }
+
+        public void reclaimInvalidEntries() {
+            programView.incrementTrailingUntil(slice -> !slice.getValue().isValid());
         }
 
     }

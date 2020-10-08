@@ -207,8 +207,8 @@ public class UnixFSRevisionPool implements Revision.Factory {
                 if (poolSize < max) {
 
                     final String msg = format(
-                            "Cannot reduce pool size from %d to %d",
-                            magic, poolSize
+                        "Cannot reduce pool size from %d to %d",
+                        magic, poolSize
                     );
 
                     throw new FatalException(msg);
@@ -261,7 +261,7 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
                 if (Long.compareUnsigned(0xFFFFFFFFFFFFFFFFl, revision) == 0) {
                     // This should never happen, but we want to catch it if it does. A 64-bit long integer would take
-                    // approximately 500 years to roll over if one revision was generated once per nanosecond, so  it
+                    // approximately 300 years to roll over if one revision was generated once per nanosecond, so  it
                     // is very unlikely that this will ever exhaust the pool. If we do run into this problem because I
                     // made a math error, then we will convert this code to use a BigInteger and take a different
                     // approach

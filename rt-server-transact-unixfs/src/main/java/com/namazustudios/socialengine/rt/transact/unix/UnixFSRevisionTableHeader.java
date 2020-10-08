@@ -13,6 +13,8 @@ class UnixFSRevisionTableHeader extends Struct {
 
     final Signed32 revisionTableCount = new Signed32();
 
-    final UnixFSAtomicLongData atomicLongData = inner(new UnixFSAtomicLongData());
+    final UnixFSAtomicLongData dualCounter = inner(new UnixFSAtomicLongData());
+
+    final UnixFSAtomicLongData readCommitted = inner(new UnixFSAtomicLongData());
 
 }

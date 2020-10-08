@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,11 +10,14 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.List;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toList;
 
 /**
  * Implements the garbage collection for the {@link SimpleTransactionalResourceServicePersistence}.
@@ -26,12 +30,13 @@ public class UnixFSGarbageCollector {
 
     private UnixFSRevisionTable revisionTable;
 
-    private UnixFSRevisionDataStore revisionDataStore;
-
-    private Provider<UnixFSGarbageCollectionCycle> collectionProvider;
+    private Provider<UnixFSGarbageCollectionCycle> collectionCycleProvider;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
+    /**
+     * Starts this garbage collector.
+     */
     public void start() {
 
         final Context context = new Context();
@@ -44,10 +49,20 @@ public class UnixFSGarbageCollector {
 
     }
 
+    /**
+     * Stops this garbage collector.
+     */
     public void stop() {
         final Context context = this.context.getAndSet(null);
         if (context == null) throw new IllegalStateException("Not currently running.");
         context.stop();
+    }
+
+    /**
+     * Hints to the garbage collector that it should run a cycle immediately.
+     */
+    public void hintImmediate() {
+        getContext().hintImmediate();
     }
 
     private Context getContext() {
@@ -74,47 +89,59 @@ public class UnixFSGarbageCollector {
         this.revisionTable = revisionTable;
     }
 
-    public UnixFSRevisionDataStore getRevisionDataStore() {
-        return revisionDataStore;
+    public Provider<UnixFSGarbageCollectionCycle> getCollectionCycleProvider() {
+        return collectionCycleProvider;
     }
 
     @Inject
-    public void setRevisionDataStore(UnixFSRevisionDataStore revisionDataStore) {
-        this.revisionDataStore = revisionDataStore;
-    }
-
-    public Provider<UnixFSGarbageCollectionCycle> getCollectionProvider() {
-        return collectionProvider;
-    }
-
-    @Inject
-    public void setCollectionProvider(final Provider<UnixFSGarbageCollectionCycle> collectionProvider) {
-        this.collectionProvider = collectionProvider;
+    public void setCollectionCycleProvider(final Provider<UnixFSGarbageCollectionCycle> collectionCycleProvider) {
+        this.collectionCycleProvider = collectionCycleProvider;
     }
 
     private class Context {
 
+        private final AtomicBoolean paused = new AtomicBoolean();
+
         private final ScheduledExecutorService executor = newSingleThreadScheduledExecutor();
 
         public Context() {
-            executor.scheduleAtFixedRate(this::collect, 10, 1, SECONDS);
+            executor.scheduleAtFixedRate(this::collect, 10, 30, SECONDS);
+        }
+
+        public void hintImmediate() {
+            executor.execute(this::collect);
         }
 
         private void collect() {
 
-            final List<UnixFSRevisionTableEntry> revisions = getRevisionTable().findCollectableRevisions();
+            if (paused.get()) {
+                logger.info("Garbage Collection paused. Skipping cycle.");
+                return;
+            }
 
-            if (revisions.isEmpty()) {
-                logger.info("No revisions to collect.");
-            } else {
-                collect(revisions);
+            try (final UnixFSRevisionTable.RevisionMonitor<List<Slice<UnixFSRevisionTableEntry>>> monitor = getRevisionTable().writeLockCollectibleRevisions()) {
+
+                final List<Slice<UnixFSRevisionTableEntry>> revisions = monitor.getScope();
+
+                if (revisions.isEmpty()) {
+                    logger.info("No revisions to collect. Skipping this GC Cycle.");
+                } else {
+                    collect(revisions);
+                }
+
+                // After all revisions are collected, this clears out the slices such that they may be reclaimed by
+                // revision table.
+
+                monitor.getScope().forEach(Slice::clear);
+                getRevisionTable().reclaimInvalidEntries();
+
             }
 
         }
 
-        private void collect(final List<UnixFSRevisionTableEntry> revisions) {
-            final UnixFSGarbageCollectionCycle collection = getCollectionProvider().get();
-            collection.collect(revisions.get(revisions.size() - 1));
+        private void collect(final List<Slice<UnixFSRevisionTableEntry>> revisions) {
+            final UnixFSGarbageCollectionCycle collection = getCollectionCycleProvider().get();
+            collection.collect(revisions.stream().map(Slice::getValue).collect(toList()));
         }
 
         private void stop() {
@@ -122,7 +149,7 @@ public class UnixFSGarbageCollector {
             executor.shutdown();
 
             try {
-                executor.awaitTermination(30, SECONDS);
+                executor.awaitTermination(5, MINUTES);
             } catch (InterruptedException e) {
                 throw new InternalException(e);
             }

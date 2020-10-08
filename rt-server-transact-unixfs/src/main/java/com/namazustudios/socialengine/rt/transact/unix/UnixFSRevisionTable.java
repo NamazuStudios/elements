@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.FatalException;
-import com.namazustudios.socialengine.rt.transact.Revision;
-import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
+import com.namazustudios.socialengine.rt.transact.RevisionDataStore.LockedRevision;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.View;
 import org.slf4j.Logger;
 
@@ -14,7 +14,9 @@ import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Semaphore;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
@@ -26,13 +28,24 @@ import static java.nio.file.Files.*;
 import static java.nio.file.StandardCopyOption.ATOMIC_MOVE;
 import static java.nio.file.StandardCopyOption.REPLACE_EXISTING;
 import static java.nio.file.StandardOpenOption.*;
+import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
+/**
+ * Maintains a short list of revisions which are currently uncollected by the garbage collector as well as tracks the
+ * current revision. Additionally, this provides a locking mechanism which allows many readers to read a particular
+ * revision without having to worry about interference from the garbage collector.
+ *
+ * As the collection cycle for revisions are processed, the garbage collector will reclaim entries in the revision table
+ */
 public class UnixFSRevisionTable {
 
     private static final byte FILLER = (byte) 0xFF;
 
     public static final String REVISION_TABLE_COUNT = "com.namazustudios.socialengine.rt.transact.unix.fs.revision.table.count";
+
+    private static final int ACQUIRES_PER_SEMAPHORE = Integer.MAX_VALUE;
 
     /**
      * Some magic bytes int he file to indicate what it is.
@@ -69,8 +82,6 @@ public class UnixFSRevisionTable {
 
     private UnixFSChecksumAlgorithm checksumAlgorithm;
 
-    private UnixFSGarbageCollector garbageCollector;
-
     private final AtomicReference<Context> context = new AtomicReference<>();
 
     public void start() {
@@ -97,49 +108,59 @@ public class UnixFSRevisionTable {
 
     }
 
+    /**
+     * Gets the next leading {@link UnixFSRevisionTableEntry} from the revision table and returns it in a write-locked
+     * state.
+     *
+     * @return the next leading {@link UnixFSRevisionTable}
+     */
+    public RevisionMonitor<Slice<UnixFSRevisionTableEntry>> writeLockNextLeading() {
+        return getContext().writeLockNextLeading();
+    }
+
+    /**
+     * Returns a {@link LockedRevision} for the latest read committed version.
+     *
+     * @return a {@link RevisionMonitor} which will lock the latest read revision
+     */
+    public RevisionMonitor<Slice<UnixFSRevisionTableEntry>> readLockLatestReadCommitted() {
+        return getContext().readLockLatestReadCommitted();
+    }
+
+    /**
+     * Scans all revisions, searching for revisions that are collectible. This returns a
+     * {@link RevisionMonitor<List<Slice<UnixFSRevisionTableEntry>>} for all collectible {@link UnixFSRevision<?>}
+     * instances.
+     *
+     * @return a {@link List<Slice<UnixFSRevisionTableEntry>>} of all revision entries which may be eligible for collection
+     */
+    public RevisionMonitor<List<Slice<UnixFSRevisionTableEntry>>> writeLockCollectibleRevisions() {
+        return getContext().writeLockCollectibleRevisions();
+    }
+
+    /**
+     * Updates the supplied {@link Slice<UnixFSRevisionTableEntry>} to be the latest read committed version. Note that
+     * the actual supplied.
+     *
+     * @param slice the slice
+     * @return the actual updated revision.
+     */
+    public UnixFSRevision<?> updateReadCommitted(final Slice<UnixFSRevisionTableEntry> slice) {
+        return getContext().updateReadCommitted(slice);
+    }
+
+    /**
+     * Reclaims the invalid {@link UnixFSRevisionTableEntry} instances on the trailing end, returning them to the pool
+     * such that they may be used again later.
+     */
+    public void reclaimInvalidEntries() {
+        getContext().reclaimInvalidEntries();
+    }
+
     private Context getContext() {
         final Context context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
         return context;
-    }
-
-    public Stream<UnixFSCircularBlockBuffer.Slice<UnixFSRevisionTableEntry>> stream() {
-        return getContext().stream();
-    }
-
-    public Stream<UnixFSCircularBlockBuffer.Slice<UnixFSRevisionTableEntry>> reverse() {
-        return getContext().reverse();
-    }
-
-    public UnixFSCircularBlockBuffer.Slice<UnixFSRevisionTableEntry> nextLeading() {
-        return getContext().nextLeading();
-    }
-
-    public RevisionDataStore.LockedRevision lockLatestReadCommitted() {
-
-        final UnixFSRevisionTableEntry operation = getContext()
-                .reverse()
-                .map(slice -> slice.getValue())
-                .filter(op -> op.isValid() && COMMITTED.equals(op.state.get()))
-                .reduce((a, b) -> a)
-                .orElseThrow(FatalException::new);
-
-        final UnixFSRevision<?> revision = getRevisionPool().create(operation.revision);
-
-        return new RevisionDataStore.LockedRevision() {
-
-            @Override
-            public Revision<?> getRevision() {
-                return revision;
-            }
-
-            @Override
-            public void close() {
-                operation.readers.getAndDecrement();
-            }
-
-        };
-
     }
 
     public UnixFSUtils getUtils() {
@@ -178,26 +199,17 @@ public class UnixFSRevisionTable {
         this.checksumAlgorithm = checksumAlgorithm;
     }
 
-    public UnixFSGarbageCollector getGarbageCollector() {
-        return garbageCollector;
-    }
-
-    @Inject
-    public void setGarbageCollector(UnixFSGarbageCollector garbageCollector) {
-        this.garbageCollector = garbageCollector;
-    }
-
-    public List<UnixFSRevisionTableEntry> findCollectableRevisions() {
-        throw new UnsupportedOperationException();
-    }
-
     private class Context {
+
+        private final List<Semaphore> semaphores;
 
         private final MappedByteBuffer revisionTableBuffer;
 
         private final UnixFSRevisionTableHeader header;
 
-        private final View<UnixFSRevisionTableEntry> circularBlockBuffer;
+        private final View<UnixFSRevisionTableEntry> structView;
+
+        private final UnixFSAtomicLong readCommitted;
 
         private Context() throws IOException {
 
@@ -225,13 +237,17 @@ public class UnixFSRevisionTable {
                 logger.info("Reading existing revision table {}", revisionTableFilePath);
                 revisionTableBuffer = loadRevisionTableFile(revisionTableFilePath);
 
-                counter = header.atomicLongData.createAtomicLong();
+                counter = header.dualCounter.createAtomicLong();
                 revisionTableBuffer.clear().position(header.size());
 
-                this.circularBlockBuffer = new UnixFSCircularBlockBuffer(
+                final UnixFSCircularBlockBuffer circularBlockBuffer = new UnixFSCircularBlockBuffer(
                     counter,
                     revisionTableBuffer,
-                    UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new);
+                    UnixFSRevisionTableEntry.SIZE
+                );
+
+                this.structView = circularBlockBuffer.forStructType(UnixFSRevisionTableEntry::new);
+                this.readCommitted = header.readCommitted.createAtomicLong();
 
             } else {
 
@@ -244,15 +260,22 @@ public class UnixFSRevisionTable {
                 revisionTableBuffer = createRevisionTableFile(temporary);
                 revisionTableBuffer.clear().position(header.size());
 
-                counter = header.atomicLongData.createAtomicLong();
+                counter = header.dualCounter.createAtomicLong();
 
-                this.circularBlockBuffer = new UnixFSCircularBlockBuffer(
+                final UnixFSCircularBlockBuffer circularBlockBuffer = new UnixFSCircularBlockBuffer(
                     counter,
                     revisionTableBuffer,
-                    UnixFSRevisionTableEntry.SIZE).forStructType(UnixFSRevisionTableEntry::new).reset();
+                    UnixFSRevisionTableEntry.SIZE
+                ).reset();
 
+                this.structView = circularBlockBuffer.forStructType(UnixFSRevisionTableEntry::new);
+                this.readCommitted = header.readCommitted.createAtomicLong();
+
+                final Slice<UnixFSRevisionTableEntry> entrySlice = structView.nextLeading();
+                this.readCommitted.set(entrySlice.getIndex());
+
+                final UnixFSRevisionTableEntry entry = entrySlice.getValue();
                 final UnixFSRevision<?> revision = getRevisionPool().createNextRevision();
-                final UnixFSRevisionTableEntry entry = circularBlockBuffer.nextLeading().getValue();
 
                 entry.state.set(COMMITTED);
                 entry.algorithm.set(getChecksumAlgorithm());
@@ -267,6 +290,13 @@ public class UnixFSRevisionTable {
                 move(temporary, revisionTableFilePath);
 
             }
+
+            final List<Semaphore> semaphores = Stream
+                .generate(() -> new Semaphore(ACQUIRES_PER_SEMAPHORE, true))
+                .limit(getRevisionTableCount())
+                .collect(toList());
+
+            this.semaphores = unmodifiableList(semaphores);
 
         }
 
@@ -400,17 +430,188 @@ public class UnixFSRevisionTable {
             revisionTableBuffer.force();
         }
 
-        public Stream<UnixFSCircularBlockBuffer.Slice<UnixFSRevisionTableEntry>> stream() {
-            return circularBlockBuffer.stream();
+        public Stream<Slice<UnixFSRevisionTableEntry>> stream() {
+            return structView.stream();
         }
 
-        public Stream<UnixFSCircularBlockBuffer.Slice<UnixFSRevisionTableEntry>> reverse() {
-            return circularBlockBuffer.reverse();
+        public RevisionMonitor<Slice<UnixFSRevisionTableEntry>> readLockLatestReadCommitted() {
+
+            RevisionMonitor<Slice<UnixFSRevisionTableEntry>> monitor;
+
+            do {
+                final int index = (int) readCommitted.get();
+                monitor = attemptReadLock(index);
+            } while (monitor == null);
+
+            return monitor;
+
         }
 
-        public UnixFSCircularBlockBuffer.Slice<UnixFSRevisionTableEntry> nextLeading() {
-            return circularBlockBuffer.nextLeading();
+        private RevisionMonitor<Slice<UnixFSRevisionTableEntry>> attemptReadLock(final int index) {
+
+            final Slice<UnixFSRevisionTableEntry> entrySlice = structView.get(index);
+            if (entrySlice == null) throw new FatalException("No latest read committed revision.");
+
+            final Semaphore semaphore = semaphores.get(entrySlice.getIndex());
+
+            try {
+                // Acquire the semaphore and check it.
+                semaphore.acquire(2);
+            } catch (InterruptedException e) {
+                throw new FatalException(e);
+            } finally {
+                semaphore.release();
+            }
+
+            // If the revision is indeed not valid, then we try again.
+
+            if (!entrySlice.getValue().isValid()) {
+                semaphore.release(2);
+                return null;
+            }
+
+            try {
+
+                return new RevisionMonitor<Slice<UnixFSRevisionTableEntry>>() {
+
+                    @Override
+                    public Slice<UnixFSRevisionTableEntry> getScope() {
+                        return entrySlice;
+                    }
+
+                    @Override
+                    public void close() {
+                        semaphore.release();
+                    }
+
+                };
+            } finally {
+                // We release one of the two permits. The second release will be released when the monitor is closed.
+                semaphore.release();
+            }
+
         }
+
+        public RevisionMonitor<Slice<UnixFSRevisionTableEntry>> writeLockNextLeading() {
+            final Slice<UnixFSRevisionTableEntry> entrySlice = structView.nextLeading();
+            return writeLockRevision(entrySlice);
+        }
+
+        private RevisionMonitor<Slice<UnixFSRevisionTableEntry>> writeLockRevision(final Slice<UnixFSRevisionTableEntry> entrySlice) {
+
+            final Semaphore semaphore = semaphores.get(entrySlice.getIndex());
+
+            try {
+                semaphore.acquire(ACQUIRES_PER_SEMAPHORE);
+            } catch (InterruptedException e) {
+                throw new FatalException(e);
+            }
+
+
+            return new RevisionMonitor<Slice<UnixFSRevisionTableEntry>>() {
+
+                @Override
+                public Slice<UnixFSRevisionTableEntry> getScope() {
+                    return entrySlice;
+                }
+
+                @Override
+                public void close() {
+                    semaphore.release(ACQUIRES_PER_SEMAPHORE);
+                }
+
+            };
+
+        }
+
+        public RevisionMonitor<List<Slice<UnixFSRevisionTableEntry>>> writeLockCollectibleRevisions() {
+
+            final List<Semaphore> semaphores = new ArrayList<>();
+            final List<Slice<UnixFSRevisionTableEntry>> slices = new ArrayList<>();
+            final Slice<UnixFSRevisionTableEntry> readCommittedSlice = structView.get((int)readCommitted.get());;
+
+            for (final Slice<UnixFSRevisionTableEntry> slice : structView.stream().collect(toList())) {
+
+                // If we hit the first read committed revision, we break the loop to avoid collecting the latest
+                if (slice.equals(readCommittedSlice)) break;
+
+                // If we can't acquire all readers for the semaphore, we break the loop because we can't safely clear
+                // this version.
+
+                final Semaphore semaphore = semaphores.get(slice.getIndex());
+                if (!semaphore.tryAcquire(ACQUIRES_PER_SEMAPHORE)) break;
+
+                slices.add(slice);
+                semaphores.add(semaphore);
+
+            }
+
+            return new RevisionMonitor<List<Slice<UnixFSRevisionTableEntry>>>() {
+
+                @Override
+                public List<Slice<UnixFSRevisionTableEntry>> getScope() {
+                    return slices;
+                }
+
+                @Override
+                public void close() {
+                    semaphores.forEach(s -> s.release(ACQUIRES_PER_SEMAPHORE));
+                }
+
+            };
+
+        }
+
+        public UnixFSRevision<?> updateReadCommitted(final Slice<UnixFSRevisionTableEntry> slice) {
+
+            final UnixFSRevision<?> updateRevision = getRevisionPool().create(slice.getValue().revision);
+
+            Slice<UnixFSRevisionTableEntry> existingEntrySlice;
+
+            do {
+
+                existingEntrySlice = structView.get((int)readCommitted.get());
+
+                final UnixFSRevision<?> existingRevision = create(existingEntrySlice.getValue());
+
+                if (existingRevision.isAfter(updateRevision)) {
+                    // The update is later than the existing revision, so we skip the update and leave it in place
+                    // but we know the revision supplied would have been properly written.
+                    return existingRevision;
+                }
+
+            } while (readCommitted.compareAndSet(existingEntrySlice.getIndex(), slice.getIndex()));
+
+            return updateRevision;
+
+        }
+
+        public UnixFSRevision<?> create(final UnixFSRevisionTableEntry unixFSRevisionTableEntry) {
+            return getRevisionPool().create(unixFSRevisionTableEntry.revision);
+        }
+
+        public void reclaimInvalidEntries() {
+            structView.incrementTrailingUntil(s -> !s.getValue().isValid());
+        }
+
+    }
+
+    /**
+     * Locks a entry in the revision table. Once closed, the lock is released. The type of lock is specified by the
+     * method that returns the monitor.
+     */
+    public interface RevisionMonitor<LockedT> extends AutoCloseable {
+
+        /**
+         * Returns the {@link Slice<UnixFSRevisionTableEntry>} for the backing entry.
+         * @return
+         */
+        LockedT getScope();
+
+        /**
+         * Closes this, and releases any read locks on the underlying entry in the revision table.
+         */
+        void close();
 
     }
 

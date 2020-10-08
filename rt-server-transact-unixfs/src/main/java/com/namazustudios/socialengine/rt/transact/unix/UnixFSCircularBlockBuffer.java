@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
 import javolution.io.Struct;
 
 import java.nio.ByteBuffer;
@@ -7,12 +8,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.util.Arrays.fill;
-import static java.util.stream.Collectors.toList;
 
 /**
  * Given a {@link ByteBuffer}, this slices the buffer into a series of smaller {@link ByteBuffer}s which represent a
@@ -91,13 +91,13 @@ public class UnixFSCircularBlockBuffer {
 
             @Override
             public Stream<Slice<ByteBuffer>> stream() {
-                final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
+                final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
                 return snapshot.range().mapToObj(UnixFSCircularBlockBuffer.this::rawSliceAt);
             }
 
             @Override
             public Stream<Slice<ByteBuffer>> reverse() {
-                final UnixFSDualCounter.Snapshot snapshot =  counter.getSnapshot();
+                final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
                 return snapshot.reverseRange().mapToObj(UnixFSCircularBlockBuffer.this::rawSliceAt);
             }
 
@@ -105,6 +105,33 @@ public class UnixFSCircularBlockBuffer {
             public Slice<ByteBuffer> nextLeading() {
                 final int leading = counter.incrementLeadingAndGet();
                 return rawSliceAt(leading);
+            }
+
+            @Override
+            public Slice<ByteBuffer> get(int index) {
+                final UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
+                if (!snapshot.inRange(index)) throw new IllegalArgumentException(index + " is out of range " + snapshot);
+                return rawSliceAt(index);
+            }
+
+            @Override
+            public void incrementTrailingUntil(final Predicate<Slice<ByteBuffer>> predicate) {
+
+                UnixFSDualCounter.Snapshot snapshot = counter.getSnapshot();
+
+                while (!snapshot.isEmpty()) {
+
+                    final int trailing = snapshot.getTrailing();
+                    final Slice<ByteBuffer> trailingSlice = rawSliceAt(trailing);
+
+                    if (predicate.test(trailingSlice)) {
+                        counter.compareAndIncrementTrailing(snapshot);
+                    } else {
+                        break;
+                    }
+
+                }
+
             }
 
             @Override
@@ -196,11 +223,27 @@ public class UnixFSCircularBlockBuffer {
         Slice<ViewedT> nextLeading();
 
         /**
+         * Gets the {@link Slice<ViewedT>} associated with the index provided that the index is valid and within
+         * the range of the circular block buffer.
+         *
+         * @param index the index
+         * @return the {@link Slice<ViewedT>}
+         */
+        Slice<ViewedT> get(int index);
+
+        /**
          * Resets this {@link View<ViewedT>}.
          *
          * @return this instance
          */
         View<ViewedT> reset();
+
+        /**
+         * Increments the trailing value, evaluating each {@link Slice<ViewedT>}
+         *
+         * @param predicate
+         */
+        void incrementTrailingUntil(Predicate<Slice<ViewedT>> predicate);
 
         /**
          * Transforms this type of {@link View<View>} to an instance of {@link View<OtherT>}.
@@ -225,17 +268,30 @@ public class UnixFSCircularBlockBuffer {
 
                 @Override
                 public Stream<Slice<OtherT>> stream() {
-                    return View.this.stream().map(s -> s.flatMap(transform));
+                    return View.this.stream().map(s -> s.map(transform));
                 }
 
                 @Override
                 public Stream<Slice<OtherT>> reverse() {
-                    return View.this.reverse().map(s -> s.flatMap(transform));
+                    return View.this.reverse().map(s -> s.map(transform));
                 }
 
                 @Override
                 public Slice<OtherT> nextLeading() {
-                    return View.this.nextLeading().flatMap(transform);
+                    return View.this.nextLeading().map(transform);
+                }
+
+                @Override
+                public Slice<OtherT> get(final int index) {
+                    return View.this.get(index).map(transform);
+                }
+
+                @Override
+                public void incrementTrailingUntil(final Predicate<Slice<OtherT>> predicate) {
+                    View.this.incrementTrailingUntil(s -> {
+                        final Slice<OtherT> other = s.map(transform);
+                        return predicate.test(other);
+                    });
                 }
 
                 @Override
@@ -254,7 +310,7 @@ public class UnixFSCircularBlockBuffer {
      * This may be a little counterintuitive as two {@link Slice<T>} instances of differing generic types may be the
      * same even if they house different values.
      */
-    public class Slice<T> implements Comparable<Slice<?>> {
+    public class Slice<T> {
 
         private final int index;
 
@@ -268,6 +324,15 @@ public class UnixFSCircularBlockBuffer {
             this.index = index;
             this.value = value;
             this.buffer = buffer;
+        }
+
+        /**
+         * Gets the index in the circular block buffer of the {@link Slice<T>}.
+         *
+         * @return the index
+         */
+        public int getIndex() {
+            return index;
         }
 
         /**
@@ -289,12 +354,6 @@ public class UnixFSCircularBlockBuffer {
         }
 
         @Override
-        public int compareTo(final Slice<?> o) {
-            if (owner != o.owner) throw new IllegalArgumentException("Can only compare two Slices with same owner.");
-            return index - o.index;
-        }
-
-        @Override
         public boolean equals(Object o) {
 
             if (this == o) return true;
@@ -313,25 +372,13 @@ public class UnixFSCircularBlockBuffer {
         }
 
         /**
-         * Maps this {@link Slice<T>} to a raw value of type U
-         *
-         * @param mapper the mapper function
-         * @param <U> the return value
-         * @return the value as mapped by the mapper
-         */
-        public <U> U map(final Function<T, U> mapper) {
-            return mapper.apply(getValue());
-        }
-
-        /**
-         * Flat maps this {@link Slice<T>} by applyign the supplied mapper, and returning a new instance of
-         * {@link Slice<U>} with the new value
+         * Flat maps this {@link Slice<T>} by applying the supplied mapper, and returning a new instance of
          *
          * @param mapper the mapper function
          * @param <U> the desired type
          * @return a new {@link Slice<U>} which was derived from the original value
          */
-        public <U> Slice<U> flatMap(final Function<T, U> mapper) {
+        public <U> Slice<U> map(final Function<T, U> mapper) {
             final U value = mapper.apply(getValue());
             return new Slice<U>(index, value, buffer);
         }

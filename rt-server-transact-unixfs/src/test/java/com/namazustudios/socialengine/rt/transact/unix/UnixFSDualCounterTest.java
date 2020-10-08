@@ -130,5 +130,14 @@ public class UnixFSDualCounterTest {
 
     }
 
+    @Test
+    public void testSizeCalculates() {
+
+        final int count = MAX_VALUE / 2;
+        for (int i = 0; i <= count; ++i) assertEquals(counter.incrementLeadingAndGet(), i);
+        for (int i = 0; i <= count; ++i) assertEquals(counter.getTrailingAndIncrement(), i);
+
+    }
+
 }
 

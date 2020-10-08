@@ -13,8 +13,6 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionP
 
 public class UnixFSTransactionProgramInterpreter {
 
-    private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionProgramInterpreter.class);
-
     final UnixFSTransactionProgram program;
 
     final List<UnixFSTransactionCommand> commits;

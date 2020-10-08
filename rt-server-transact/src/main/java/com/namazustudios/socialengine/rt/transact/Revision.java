@@ -136,6 +136,16 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
     }
 
     /**
+     * Checks if this is the same {@link Revision<?>} as another revision.
+     *
+     * @param revision the other revision
+     * @return true if same, false otherwise.
+     */
+    default boolean isSame(final Revision<?> revision) {
+        return compareTo(revision) == 0;
+    }
+
+    /**
      * Returns true if this {@link Revision<?>} is before or the same as the supplied {@link Revision<?>}
      *
      * @param revision to check
@@ -143,6 +153,16 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      */
     default boolean isBeforeOrSame(final Revision<?> revision) {
         return compareTo(revision) <= 0;
+    }
+
+    /**
+     * Checks if this revision is after the supplied revision.
+     *
+     * @param revision the other revision
+     * @return true if this revision is greater than the supplied revision
+     */
+    default boolean isAfter(final Revision<?> revision) {
+        return compareTo(revision) > 0;
     }
 
     /**

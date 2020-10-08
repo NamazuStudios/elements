@@ -270,7 +270,7 @@ However there are a few notable changes you will observe.
 - Code should only be merged into master as the product of a pull request and
   should almost never be pushed right to master.
 - There is no CI (yet) so clean pushes are on the honor system.
-- At least one other person must review and pass code before committing it to
+- At least one other person must review and collectionPassExecutionHandler code before committing it to
   master.
 - If a branch conflicts with master, it is the responsibility of the coder who
   owns the branch to merge master back and ensure it does not conflict.

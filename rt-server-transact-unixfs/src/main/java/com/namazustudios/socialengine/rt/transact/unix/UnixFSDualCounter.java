@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
@@ -28,8 +27,6 @@ import static java.util.stream.IntStream.rangeClosed;
  * leading value as the values wrap around automatically.
  */
 public class UnixFSDualCounter {
-
-    public static final int EMPTY_MASK_INT = 0x80000000;
 
     public static final long EMPTY_MASK_LONG = 0x8000000080000000l;
 
@@ -98,6 +95,15 @@ public class UnixFSDualCounter {
     public boolean isFull() {
         final long value = counter.get();
         return isFull(value, max);
+    }
+
+    /**
+     * Returns the distance between the trailing and leading value.
+     * @return
+     */
+    public int size() {
+        final long value = counter.get();
+        return size(value, max);
     }
 
     /**
@@ -246,6 +252,34 @@ public class UnixFSDualCounter {
         return new Snapshot(max, snapshot);
     }
 
+    /**
+     * Given a {@link Snapshot}, this attempts to increment the trailing value. If the increment succeeds, this method
+     * returns true indicating so. Otherwise, it returns false. This allows for external code to safely and
+     * deterministically replenish trailing values managed by this counter.
+     *
+     * @param snapshot the {@link Snapshot
+     * @return true, if successful. false otherwise.
+     */
+    public boolean compareAndIncrementTrailing(final Snapshot snapshot) {
+
+        long update;
+
+        int nextTrailing = increment(snapshot.getTrailing());
+
+        if (snapshot.getTrailing() == snapshot.getLeading()) {
+            // We have brought the trailing value around to the beginning. This means that we should simply clear
+            // out the value by negating the sign bit indicating that both numbers should be
+            update = pack(snapshot.getTrailing(), snapshot.getTrailing()) | EMPTY_MASK_LONG;
+        } else {
+            // In this case we did not hit the leading value. Therefore, we just pack the numbers together so we can
+            // attempt the update operation.
+            update = pack(nextTrailing, snapshot.getLeading());
+        }
+
+        return counter.compareAndSet(snapshot.getSnapshot(), update);
+
+    }
+
     @Override
     public String toString() {
         return format("UnixFSDualCounter{%s}", getSnapshot());
@@ -287,6 +321,31 @@ public class UnixFSDualCounter {
         final int leading = leading(packed);
         final int next = increment(leading, max);
         return (packed & EMPTY_MASK_LONG) != EMPTY_MASK_LONG && trailing == next;
+    }
+
+    /**
+     * Given the 64-bit packed value, this method reads both the leading and trailing values and finds the distance
+     * between the two numbers.
+     *
+     * @param packed the packed value
+     * @param max the max value
+     * @return the distance between the two numbers
+     */
+    public static int size(final long packed, final int max) {
+
+        if (isEmpty(packed)) return 0;
+
+        final int leading = leading(packed);
+        final int trailing = trailing(packed);
+
+        if (trailing < leading) {
+            return 1 + leading - trailing;
+        } else if (trailing > leading) {
+            return  1 + (max - trailing) + leading;
+        } else {
+            return 1;
+        }
+
     }
 
     /**
@@ -465,6 +524,24 @@ public class UnixFSDualCounter {
                 return concat(leadingToBegin, maxToTrailing);
             } else {
                 return IntStream.of(leading);
+            }
+        }
+
+        /**
+         * Checks if the supplied index is in range.
+         *
+         * @param index the index
+         * @return true if in range, false otherwise
+         */
+        public boolean inRange(final int index) {
+            if (isEmpty() || index < 0) {
+                return false;
+            } else if (trailing < leading) {
+                return index >= trailing && index <= leading;
+            } else if (trailing > leading) {
+                return index <= trailing && index >= leading;
+            } else {
+                return index == leading;
             }
         }
 
