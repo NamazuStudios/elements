@@ -116,7 +116,7 @@ public class UnixFSUtils {
     /**
      * Searches the supplied {@link Path} to a directory and finds the most suitable revision.  This is the file with
      * highest {@link Revision<Path>} that is the same as or less than the {@link Revision<?>}.  If no such revision
-     * exists, then this will return the value of {@link Revision#infinity()} indicating that no such value exists.
+     * exists, then this will return the value of {@link Revision#zero()} indicating that no such value exists.
      *
      * @param directory the {@link Path} to a directory holding revisioned content.
      * @param revision the {@link Revision<?>} to use as reference
@@ -134,10 +134,11 @@ public class UnixFSUtils {
 
         return doOperation(() -> Files
             .list(directory)
-            .filter(linkType::matches))
+            .filter(p -> isTombstone(p) || linkType.matches(p)))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
+            .map(r -> isTombstone(r.getValue().get()) ? null : r)
             .orElse(zero());
 
     }
@@ -163,9 +164,9 @@ public class UnixFSUtils {
 
         return doOperation(() -> Files
             .list(directory)
-            .filter(linkType::matches))
+            .filter(p -> isTombstone(p) || linkType.matches(p))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
-            .filter(r -> r.isBeforeOrSame(revision));
+            .filter(r -> r.isBeforeOrSame(revision)));
 
     }
 
@@ -174,15 +175,30 @@ public class UnixFSUtils {
      * {@link Revision<Path>} with a path indicating the tombstone. Otherwise, the resulting {@link Revision<Path>} will
      * not contain a value.
      *
-     * @param fsPathDirectory the directory
+     * @param directory the directory
      * @param revision the revision to search
      * @param linkType the link type to search
      * @return the {@link Revision<Path>}
      */
-    public Revision<Path> findLatestTombstone(final Path fsPathDirectory,
+    public Revision<Path> findLatestTombstone(final Path directory,
                                               final Revision<?> revision,
                                               final LinkType linkType) {
-        return findLatestForRevision(fsPathDirectory, revision, linkType).filter(this::isTombstone);
+
+        final boolean exists = exists(directory);
+        final boolean isDirectory = isDirectory(directory);
+
+        if (exists && !isDirectory) throw new IllegalArgumentException(directory + " must be a directory.");
+        else if (!exists) return revision.withOptionalValue(Optional.empty());
+
+        return doOperation(() -> Files
+            .list(directory)
+            .filter(p -> isTombstone(p) || linkType.matches(p)))
+            .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
+            .filter(r -> r.isBeforeOrSame(revision))
+            .max(naturalOrder())
+            .map(r -> isTombstone(r.getValue().get()) ? r : null)
+            .orElse(zero());
+
     }
 
     /**
@@ -438,9 +454,9 @@ public class UnixFSUtils {
      * @param directory the {@link Path} to the directory.
      * @param revision the {@link Revision<?>} at which to apply the tombstone.
      */
-    public void tombstone(final Path directory, final Revision<?> revision) {
+    public void tombstone(final Path directory, final Revision<?> revision, final LinkType linkType) {
         if (!isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
-        final Path destination = directory.resolve(revision.getUniqueIdentifier());
+        final Path destination = directory.resolve(revision.getUniqueIdentifier() + linkType.getExtension());
         doOperationV(() -> createLink(destination, tombstone), FatalException::new);
     }
 

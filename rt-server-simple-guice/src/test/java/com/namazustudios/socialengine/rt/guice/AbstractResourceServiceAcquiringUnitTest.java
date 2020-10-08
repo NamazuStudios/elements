@@ -174,15 +174,9 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
     public void testLink(final ResourceId resourceId, final Path path, final Resource original) {
-
-        final Path aliasA = new Path(asList("test_alias_a", randomUUID().toString()));
-        getResourceService().link(resourceId, aliasA);
-        linkedIntermediates.add(new Object[]{resourceId, aliasA, original});
-
-        final Path aliasB = new Path(asList("test_alias_b", randomUUID().toString()));
-        getResourceService().link(resourceId, aliasB);
-        linkedIntermediates.add(new Object[]{resourceId, aliasB, original});
-
+        final Path alias = new Path(asList("test_alias", randomUUID().toString()));
+        getResourceService().link(resourceId, alias);
+        linkedIntermediates.add(new Object[]{resourceId, alias, original});
     }
 
     @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
@@ -232,29 +226,29 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     }
 
-//    @Test(dependsOnMethods = {"testUnlink"}, dataProvider = "intermediateDataProvider")
-//    public void testRemove(final ResourceId resourceId, final Path path, final Resource original) {
-//
-//        getResourceService().removeResource(resourceId);
-//
-//        try {
-//            final Resource resource = getResourceService().getAndAcquireResourceWithId(resourceId);
-//            getResourceService().release(resource);
-//            fail("Resource still exists");
-//        } catch (ResourceNotFoundException ex) {
-//            // Pass Test
-//        }
-//
-//        try {
-//            final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
-//            getResourceService().release(resource);
-//            fail("Resource still exists");
-//        } catch (ResourceNotFoundException ex) {
-//            // Pass Test
-//        }
-//
-//    }
-//
+    @Test(dependsOnMethods = {"testUnlink"}, dataProvider = "intermediateDataProvider")
+    public void testRemove(final ResourceId resourceId, final Path path, final Resource original) {
+
+        getResourceService().removeResource(resourceId);
+
+        try {
+            final Resource resource = getResourceService().getAndAcquireResourceWithId(resourceId);
+            getResourceService().release(resource);
+            fail("Resource still exists");
+        } catch (ResourceNotFoundException ex) {
+            // Pass Test
+        }
+
+        try {
+            final Resource resource = getResourceService().getAndAcquireResourceAtPath(path);
+            getResourceService().release(resource);
+            fail("Resource still exists");
+        } catch (ResourceNotFoundException ex) {
+            // Pass Test
+        }
+
+    }
+
 //    @Test(dependsOnMethods = {"testRemove"}, dataProvider = "intermediateDataProvider", expectedExceptions = ResourceNotFoundException.class)
 //    public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource original) {
 //        getResourceService().removeResource(resourceId);

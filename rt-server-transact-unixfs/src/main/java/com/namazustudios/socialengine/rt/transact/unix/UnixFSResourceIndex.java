@@ -17,6 +17,8 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
 import static com.google.common.io.Files.touch;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_SYMBOLIC_LINK;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -57,7 +59,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
         return utils.findLatestForRevision(
             mapping.getResourceIdDirectory(),
             revision,
-            UnixFSUtils.LinkType.REVISION_HARD_LINK
+            REVISION_HARD_LINK
         ).map(path -> isRegularFile(path) && !utils.isTombstone(path));
 
     }
@@ -73,7 +75,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
         final Revision<Path> pathRevision = utils.findLatestForRevision(
             mapping.getResourceIdDirectory(),
             revision,
-            UnixFSUtils.LinkType.REVISION_HARD_LINK
+            REVISION_HARD_LINK
         );
 
         if (!pathRevision.getValue().isPresent()) return Revision.zero();
@@ -118,7 +120,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
 
         final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
-        getUtils().tombstone(resourceIdMapping.getResourceIdDirectory(), revision);
+        getUtils().tombstone(resourceIdMapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK);
 
         final Path reverseRoot = resourceIdMapping.resolveReverseDirectories();
 
@@ -140,7 +142,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
     private void tombstone(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
         utils.doOperationV(() -> {
             final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRelativeFSPath(utils, nodeId, symbolicLink);
-            getUtils().tombstone(pathMapping.getPathDirectory(), revision);
+            getUtils().tombstone(pathMapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK);
         }, FatalException::new);
     }
 

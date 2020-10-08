@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
@@ -8,15 +7,13 @@ import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.PathIndex;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.RevisionMap;
-import com.sun.org.apache.regexp.internal.RE;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.*;
-import java.security.SecureRandom;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
@@ -33,17 +30,7 @@ public class UnixFSPathIndex implements PathIndex {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSPathIndex.class);
 
-    private final UnixFSUtils utils;
-
-    private final UnixFSGarbageCollector garbageCollector;
-
-    @Inject
-    public UnixFSPathIndex(
-            final UnixFSUtils utils,
-            final UnixFSGarbageCollector garbageCollector) {
-        this.utils = utils;
-        this.garbageCollector = garbageCollector;
-    }
+    private UnixFSUtils utils;
 
     @Override
     public RevisionMap<com.namazustudios.socialengine.rt.Path, ResourceId> getRevisionMap(
@@ -64,7 +51,7 @@ public class UnixFSPathIndex implements PathIndex {
 
         final UnixFSPathMapping mapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
 
-        return utils.doOperation(() -> {
+        return getUtils().doOperation(() -> {
 
             final Stream<ResourceService.Listing> listings;
 
@@ -108,11 +95,11 @@ public class UnixFSPathIndex implements PathIndex {
 
         final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRelativeFSPath(utils, nodeId, directory);
 
-        return utils.findLatestForRevision(pathMapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
+        return getUtils().findLatestForRevision(pathMapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
                     .getValue()
-                    .map(file -> (RevisionListing) utils.doOperation(() -> {
+                    .map(file -> (RevisionListing) getUtils().doOperation(() -> {
 
-                            if (utils.isTombstone(file)) {
+                            if (getUtils().isTombstone(file)) {
                                 // Totally expected behavior. A previous revision deleted the path but it hasn't been
                                 // collected yet by the garbage collector. We just filter this one out.
                                 return Optional.empty();
@@ -138,9 +125,9 @@ public class UnixFSPathIndex implements PathIndex {
 
     public void addPath(final Revision<?> revision,
                         final com.namazustudios.socialengine.rt.Path path) {
-        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromRTPath(utils, path);
+        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromRTPath(getUtils(), path);
         final Path reversePathForNodeId = reversePathMapping.resolveReverseDirectory();
-        utils.doOperationV(() -> createDirectories(reversePathForNodeId), FatalException::new);
+        getUtils().doOperationV(() -> createDirectories(reversePathForNodeId), FatalException::new);
     }
 
     public void link(final Revision<?> revision,
@@ -148,8 +135,8 @@ public class UnixFSPathIndex implements PathIndex {
                      final ResourceId resourceId,
                      final com.namazustudios.socialengine.rt.Path rtPath) {
 
-        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
-        final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(getUtils(), nodeId, rtPath);
+        final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(getUtils(), resourceId);
 
         if (!isDirectory(resourceIdMapping.getResourceIdDirectory())) {
 
@@ -188,12 +175,12 @@ public class UnixFSPathIndex implements PathIndex {
 
         }
 
-        utils.doOperationV(() -> {
+        getUtils().doOperationV(() -> {
 
             final Path pathDirectory = pathMapping.getPathDirectory();
             final Path resourceIdDirectory = resourceIdMapping.getResourceIdDirectory();
 
-            final Path pathSymlink = utils.resolveSymlinkPath(pathDirectory, revision);
+            final Path pathSymlink = getUtils().resolveSymlinkPath(pathDirectory, revision);
             final Path pathSymlinkTarget = pathDirectory.relativize(resourceIdDirectory);
 
             logger.trace("Creating directory {}", pathDirectory);
@@ -213,10 +200,10 @@ public class UnixFSPathIndex implements PathIndex {
                             final ResourceId resourceId,
                             final com.namazustudios.socialengine.rt.Path rtPath) {
 
-        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
-        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromRTPath(utils, nodeId, rtPath);
+        final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(getUtils(), nodeId, rtPath);
+        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromRTPath(getUtils(), nodeId, rtPath);
 
-        utils.doOperationV(() -> {
+        getUtils().doOperationV(() -> {
 
             final Path reverseResourceIdDirectory = reversePathMapping.resolveReverseDirectory(resourceId);
             createDirectories(reverseResourceIdDirectory);
@@ -249,7 +236,7 @@ public class UnixFSPathIndex implements PathIndex {
 
                 final Path olderRevisionDirectory = symlink.resolveSibling(readSymbolicLink(latest.getValue().get()));
 
-                Files.list(olderRevisionDirectory).forEach(source -> utils.doOperationV(() -> {
+                Files.list(olderRevisionDirectory).forEach(source -> getUtils().doOperationV(() -> {
                     final Path target = readSymbolicLink(source);
                     final Path link = newerLinkDirectory.resolve(source.getFileName());
                     createSymbolicLink(link, target);
@@ -282,7 +269,7 @@ public class UnixFSPathIndex implements PathIndex {
                        final NodeId nodeId,
                        final com.namazustudios.socialengine.rt.Path rtPath) {
         final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
-        garbageCollector.getUtils().tombstone(pathMapping.getPathDirectory(), revision);
+        getUtils().tombstone(pathMapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK);
     }
 
     private class RevisionListing implements ResourceService.Listing {
@@ -309,6 +296,15 @@ public class UnixFSPathIndex implements PathIndex {
 
     }
 
+    public UnixFSUtils getUtils() {
+        return utils;
+    }
+
+    @Inject
+    public void setUtils(UnixFSUtils utils) {
+        this.utils = utils;
+    }
+
     private class PathRevisionMap implements RevisionMap<com.namazustudios.socialengine.rt.Path, ResourceId> {
 
         private final NodeId nodeId;
@@ -325,7 +321,7 @@ public class UnixFSPathIndex implements PathIndex {
 
             return utils
                 .findLatestForRevision(mapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
-                .map(symlink -> utils.doOperation(() -> {
+                .map(symlink -> getUtils().doOperation(() -> {
                     final Path revisionDirectory = readSymbolicLink(symlink);
                     final String fileName = revisionDirectory.getFileName().toString();
                     final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils,fileName);
@@ -353,11 +349,11 @@ public class UnixFSPathIndex implements PathIndex {
             if (!exists(reverseDirectory)) return revision.withOptionalValue(Optional.empty());
 
             final Set<com.namazustudios.socialengine.rt.Path> pathSet =
-                utils.findLatestForRevision(reverseDirectory, revision, REVISION_SYMBOLIC_LINK)
-                     .map(symlink -> utils.doOperation(() -> reverseDirectory.resolve(readSymbolicLink(symlink))))
-                     .map(directory -> utils.doOperation(() -> Files.list(directory)))
+                getUtils().findLatestForRevision(reverseDirectory, revision, REVISION_SYMBOLIC_LINK)
+                     .map(symlink -> getUtils().doOperation(() -> reverseDirectory.resolve(readSymbolicLink(symlink))))
+                     .map(directory -> getUtils().doOperation(() -> Files.list(directory)))
                      .map(symlinkStream -> symlinkStream
-                         .filter(path -> utils.doOperation(() -> isSymbolicLink(path)))
+                         .filter(path -> getUtils().doOperation(() -> isSymbolicLink(path)))
                          .map(symlink -> UnixFSPathMapping.fromFullyQualifiedSymlinkPath(utils, symlink))
                          .map(mapping -> mapping.getPath())
                          .collect(toSet())

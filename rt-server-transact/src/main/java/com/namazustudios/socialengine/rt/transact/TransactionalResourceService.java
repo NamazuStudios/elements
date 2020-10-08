@@ -348,7 +348,7 @@ public class TransactionalResourceService implements ResourceService {
     private void randomWait(final int retry) {
 
         final Random random = ThreadLocalRandom.current();
-        final int time = random.nextInt(retry * WAIT_INTERVAL);
+        final int time = random.nextInt((retry + 1) * WAIT_INTERVAL);
 
         try {
             sleep(time);

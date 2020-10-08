@@ -237,7 +237,7 @@ public interface Revision<ValueT> extends Comparable<Revision<?>> {
      * Returns a new {@link Revision} that is comparable to the requested type.
      *
      * @param <T> the requested type
-     * @return a {@link Revision<T>} that will compare to this one.  No data is availble.
+     * @return a {@link Revision<T>} that will compare to this one.  No data is available.
      */
     default <T> Revision<T> comparableTo() {
         return new Revision<T>() {
