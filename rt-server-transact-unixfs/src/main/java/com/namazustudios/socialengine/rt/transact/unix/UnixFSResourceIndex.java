@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.ResourceIndex;
 import com.namazustudios.socialengine.rt.transact.Revision;
+import com.namazustudios.socialengine.rt.transact.NullResourceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,33 +66,12 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
         if (!pathRevision.getValue().isPresent()) return Revision.zero();
 
-        final ReadableByteChannel channel = load(pathRevision.getValue().get(), revision);
+        final Path revisionFilePath = pathRevision.getValue().get();
+        if (getUtils().isNull(revisionFilePath)) throw new NullResourceException();
+        else if (getUtils().isTombstone(revisionFilePath)) return Revision.zero();
+
+        final ReadableByteChannel channel = open(revisionFilePath, READ);
         return revision.withValue(channel);
-
-    }
-
-    private ReadableByteChannel load(final Path file, final Revision<?> revision) throws IOException {
-
-        FileChannel fc = null;
-
-        try {
-
-            final FileChannel out = fc = open(file, READ);
-
-            final UnixFSResourceHeader resourceHeader = new UnixFSResourceHeader();
-            fc.read(resourceHeader.getByteBuffer());
-
-            return out;
-
-        } finally {
-            if (fc != null) {
-                try {
-                    fc.close();
-                } catch (IOException ex) {
-                    logger.error("Unable to close file channel - {}", file, ex);
-                }
-            }
-        }
 
     }
 
@@ -101,8 +82,17 @@ public class UnixFSResourceIndex implements ResourceIndex {
      * @param resourceId the {@link ResourceId} to remove
      */
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
+
         final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
-        getUtils().tombstone(resourceIdMapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK);
+
+        final Path resourceIdDirectory = getUtils()
+            .findLatestForRevision(resourceIdMapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK)
+            .getValue()
+            .map(p -> resourceIdMapping.getResourceIdDirectory())
+            .orElseThrow(() -> new ResourceNotFoundException());
+
+        getUtils().tombstone(resourceIdDirectory, revision, REVISION_HARD_LINK);
+
     }
 
     @Override
@@ -129,10 +119,9 @@ public class UnixFSResourceIndex implements ResourceIndex {
         final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
         utils.doOperationV(() -> {
-            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
             checkResourceIdDoesNotExist(mapping, revision);
             createDirectories(mapping.getResourceIdDirectory());
-            createFile(revisionPath);
+            getUtils().markNull(mapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK);
         }, FatalException::new);
 
     }

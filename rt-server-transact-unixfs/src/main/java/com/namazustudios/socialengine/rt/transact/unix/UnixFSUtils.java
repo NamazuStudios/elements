@@ -61,6 +61,8 @@ public class UnixFSUtils {
 
     public static final String TOMBSTONE_FILE_NAME = "tombstone";
 
+    public static final String NULLMARKER_FILE_NAME = "nullmarker";
+
     public static final int TEMP_NAME_LENGTH_CHARS = 128;
 
     public static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHI0123456789-";
@@ -87,6 +89,8 @@ public class UnixFSUtils {
 
     private final Path tombstone;
 
+    private final Path nullmarker;
+
     private final Path lockFilePath;
 
     @Inject
@@ -97,6 +101,7 @@ public class UnixFSUtils {
         this.revisionPoolPath = storageRoot.resolve(REVISION_POOL_FILE_NAME).toAbsolutePath().normalize();
         this.transactionJournalPath = storageRoot.resolve(TRANSACTION_JOURNAL_FILE_NAME).toAbsolutePath().normalize();
         this.tombstone = storageRoot.resolve(TOMBSTONE_FILE_NAME).toAbsolutePath().normalize();
+        this.nullmarker = storageRoot.resolve(NULLMARKER_FILE_NAME).toAbsolutePath().normalize();
         this.pathStorageRoot = storageRoot.resolve(PATHS_DIRECTORY).toAbsolutePath().normalize();
         this.reversePathStorageRoot = storageRoot.resolve(REVERSE_DIRECTORY).toAbsolutePath().normalize();
         this.resourceStorageRoot = storageRoot.resolve(RESOURCES_DIRECTORY).toAbsolutePath().normalize();
@@ -134,7 +139,7 @@ public class UnixFSUtils {
 
         return doOperation(() -> Files
             .list(directory)
-            .filter(p -> isTombstone(p) || linkType.matches(p)))
+            .filter(p -> isSpecial(p) || linkType.matches(p)))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
@@ -164,7 +169,7 @@ public class UnixFSUtils {
 
         return doOperation(() -> Files
             .list(directory)
-            .filter(p -> isTombstone(p) || linkType.matches(p))
+            .filter(p -> isSpecial(p) || linkType.matches(p))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision)));
 
@@ -192,7 +197,7 @@ public class UnixFSUtils {
 
         return doOperation(() -> Files
             .list(directory)
-            .filter(p -> isTombstone(p) || linkType.matches(p)))
+            .filter(p -> isSpecial(p) || linkType.matches(p)))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
             .max(naturalOrder())
@@ -247,11 +252,13 @@ public class UnixFSUtils {
             createDirectories(getTemporaryFileDirectory());
             createDirectories(getReversePathStorageRoot());
             if (!isRegularFile(tombstone, NOFOLLOW_LINKS)) createFile(tombstone);
+            if (!isRegularFile(nullmarker, NOFOLLOW_LINKS)) createFile(nullmarker);
         }, FatalException::new);
 
         final Set<FileSystem> fileSystemSet = new HashSet<>();
 
         fileSystemSet.add(tombstone.getFileSystem());
+        fileSystemSet.add(nullmarker.getFileSystem());
         fileSystemSet.add(getPathStorageRoot().getFileSystem());
         fileSystemSet.add(getRevisionPoolPath().getFileSystem());
         fileSystemSet.add(getRevisionTableFilePath().getFileSystem());
@@ -442,10 +449,25 @@ public class UnixFSUtils {
      * @param fsPath the {@link Path} to check for a tombstone.
      * @return true if the path represents a tombstone, false otherwise
      */
+    public boolean isNull(final Path fsPath) {
+        return doOperation(() -> exists(fsPath, NOFOLLOW_LINKS) && isSameFile(nullmarker, fsPath), FatalException::new);
+    }
+
+    /**
+     * Returns true if the supplied path is a tombstone path.
+     *
+     * @param fsPath the {@link Path} to check for a tombstone.
+     * @return true if the path represents a tombstone, false otherwise
+     */
     public boolean isTombstone(final Path fsPath) {
-        return doOperation(() ->
-            exists(fsPath, NOFOLLOW_LINKS) &&
-            isSameFile(tombstone, fsPath), FatalException::new);
+        return doOperation(() -> exists(fsPath, NOFOLLOW_LINKS) && isSameFile(tombstone, fsPath), FatalException::new);
+    }
+
+    /**
+     * Checks if this is a special file. Special files are the tombstone and the null marker.
+     */
+    public boolean isSpecial(final Path fsPath) {
+        return isTombstone(fsPath) || isNull(fsPath);
     }
 
     /**
@@ -460,6 +482,20 @@ public class UnixFSUtils {
         if (!isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
         final Path destination = directory.resolve(revision.getUniqueIdentifier() + linkType.getExtension());
         doOperationV(() -> createLink(destination, tombstone), FatalException::new);
+    }
+
+    /**
+     * Flags the supplied directory as null. This essentially links a well-known file, ie the nullmarker file, to
+     * the revision. It is possible to later check that this revision is a tombstone by using
+     * {@link #isNull(Path)}.
+     *
+     * @param directory the {@link Path} to the directory.
+     * @param revision the {@link Revision<?>} at which to apply the tombstone.
+     */
+    public void markNull(final Path directory, final Revision<?> revision, final LinkType linkType) {
+        if (!isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
+        final Path destination = directory.resolve(revision.getUniqueIdentifier() + linkType.getExtension());
+        doOperationV(() -> createLink(destination, nullmarker), FatalException::new);
     }
 
     /**

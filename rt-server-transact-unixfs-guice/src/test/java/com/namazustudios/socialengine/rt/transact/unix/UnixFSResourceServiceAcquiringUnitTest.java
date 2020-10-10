@@ -13,6 +13,7 @@ import org.testng.annotations.Guice;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.channels.ReadableByteChannel;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static org.mockito.ArgumentMatchers.any;
@@ -69,6 +70,11 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
                 fail("No attempt to load resource should be made for this test.");
                 return null;
             }).when(resourceLoader).load(any(InputStream.class));
+
+            doAnswer(a -> {
+                fail("No attempt to load resource should be made for this test.");
+                return null;
+            }).when(resourceLoader).load(any(ReadableByteChannel.class));
 
             bind(ResourceLoader.class).toInstance(resourceLoader);
 

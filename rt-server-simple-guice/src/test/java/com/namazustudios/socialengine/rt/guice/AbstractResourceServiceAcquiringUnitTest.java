@@ -274,7 +274,7 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         when(resource.getId()).thenReturn(resourceId);
 
         final Path path = new Path(randomUUID().toString());
-        getResourceService().addAndReleaseResource(path, resource);
+        getResourceService().addAndAcquireResource(path, resource);
 
         final Path a = new Path(path, Path.fromComponents("a"));
         final Path b = new Path(path, Path.fromComponents("b"));

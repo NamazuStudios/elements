@@ -170,8 +170,15 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Resource removeResource(final ResourceId resourceId) {
         return computeRW((acm, txn) -> {
-            txn.removeResource(resourceId);
-            return acm.evict(resourceId);
+            try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)){
+                txn.removeResource(resourceId);
+                return getResourceLoader().load(rbc);
+            } catch (NullResourceException ex) {
+                txn.removeResource(resourceId);
+                return acm.evict(resourceId);
+            } catch (IOException e) {
+                throw new InternalException(e);
+            }
         });
     }
 
@@ -560,7 +567,7 @@ public class TransactionalResourceService implements ResourceService {
 
         public Resource evict(final ResourceId resourceId) {
             final TransactionalResource tr = context.acquires.remove(resourceId);
-            if (tr == null) throw new ResourceNotFoundException();
+            if (tr == null) throw new InternalException("Should have a Resource present in cache.");
             return tr.getDelegate();
         }
 

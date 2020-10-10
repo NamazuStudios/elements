@@ -159,7 +159,7 @@ public class SimpleTransactionalResourceServicePersistence implements Transactio
 
         final Revision<ReadableByteChannel> readableByteChannelRevision = getRevisionDataStore()
             .getResourceIndex()
-            .loadResourceContentsAt(revision.comparableTo(), resourceId);
+            .loadResourceContentsAt(revision, resourceId);
 
         return readableByteChannelRevision.getValue().orElseThrow(() -> new ResourceNotFoundException());
 
