@@ -107,7 +107,7 @@ class UnixFSWorkingCopy {
         return !NULL_RESOURCE_ID.equals(getResourceId(path));
     }
 
-    public ResourceService.Unlink unlink(final Path path, final Runnable success) throws TransactionConflictException {
+    public ResourceService.Unlink unlink(final Path path, final Consumer<ResourceId> success) throws TransactionConflictException {
 
         final ResourceId resourceId = getResourceId(path);
         if (NULL_RESOURCE_ID.equals(resourceId)) throw new ResourceNotFoundException();
@@ -122,7 +122,7 @@ class UnixFSWorkingCopy {
         resourceIdToPaths.put(resourceId, new HashSet<>());
         pathToResourceIds.put(path, NULL_RESOURCE_ID);
 
-        success.run();
+        success.accept(resourceId);
 
         return new ResourceService.Unlink() {
 

@@ -493,7 +493,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
             final Slice<ByteBuffer> slice = getRawView().nextLeading();
 
-            // TODO Fix This, we may need to supply the revision from the calling code
             final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadCommitted();
             final UnixFSPessimisticLocking pessimisticLocking = newPessimisticLocking();
 
@@ -520,10 +519,10 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
             // Finally, we construct the entry, which we will return.
             final UnixFSJournalMutableEntry entry = new UnixFSJournalMutableEntry(
-                    getUtils(),
-                    builder,
-                    workingCopy,
-                    onClose
+                getUtils(),
+                builder,
+                workingCopy,
+                onClose
             );
 
             return entry;

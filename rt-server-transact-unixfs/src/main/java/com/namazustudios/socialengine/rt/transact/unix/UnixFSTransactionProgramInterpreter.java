@@ -109,8 +109,9 @@ public class UnixFSTransactionProgramInterpreter {
 
     private void unlinkRTPath(final UnixFSTransactionCommand command,
                               final ExecutionHandler executionHandler) {
-        final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(0).asRTPath();
-        executionHandler.unlinkRTPath(program, command, rtPath);
+        final ResourceId resourceId = command.getParameterAt(0).asResourceId();
+        final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(1).asRTPath();
+        executionHandler.unlinkRTPath(program, command, resourceId, rtPath);
     }
 
     private void removeResource(final UnixFSTransactionCommand command,
@@ -177,6 +178,7 @@ public class UnixFSTransactionProgramInterpreter {
          */
         default void unlinkRTPath(final UnixFSTransactionProgram program,
                                   final UnixFSTransactionCommand command,
+                                  final ResourceId resourceId,
                                   final com.namazustudios.socialengine.rt.Path rtPath) {
             getLogger().trace("Ignoring {}", command);
         }

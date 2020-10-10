@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import com.google.common.io.Files;
-import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.ResourceIndex;
@@ -13,12 +11,9 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
-import java.nio.file.LinkOption;
 import java.nio.file.Path;
 
-import static com.google.common.io.Files.touch;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_SYMBOLIC_LINK;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -30,8 +25,6 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
     private UnixFSUtils utils;
 
-    private UnixFSGarbageCollector garbageCollector;
-
     public UnixFSUtils getUtils() {
         return utils;
     }
@@ -39,15 +32,6 @@ public class UnixFSResourceIndex implements ResourceIndex {
     @Inject
     public void setUtils(UnixFSUtils utils) {
         this.utils = utils;
-    }
-
-    public UnixFSGarbageCollector getGarbageCollector() {
-        return garbageCollector;
-    }
-
-    @Inject
-    public void setGarbageCollector(final UnixFSGarbageCollector garbageCollector) {
-        this.garbageCollector = garbageCollector;
     }
 
     @Override
@@ -111,39 +95,14 @@ public class UnixFSResourceIndex implements ResourceIndex {
     }
 
     /**
-     * Removes the {@link ResourceId} from the the {@link UnixFSResourceIndex} by flagging the directory as a tombstone
+     * Removes the {@link ResourceId} from the the {@link UnixFSResourceIndex} by flagging the directory as a tombstone.
      *
-     *
-     * @param revision
-     * @param resourceId
+     * @param revision the revision at which to flag the {@link ResourceId} as removed
+     * @param resourceId the {@link ResourceId} to remove
      */
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
-
         final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
         getUtils().tombstone(resourceIdMapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK);
-
-        final Path reverseRoot = resourceIdMapping.resolveReverseDirectories();
-
-        utils.doOperationV(() ->
-            list(reverseRoot).forEach(nodeIdDirectory -> tombstone(revision, nodeIdDirectory)),
-            FatalException::new
-        );
-
-    }
-
-    private void tombstone(final Revision<?> revision, final Path nodeIdDirectory) {
-        final NodeId nodeId = NodeId.nodeIdFromString(nodeIdDirectory.getFileName().toString());
-        utils.doOperationV(
-            () -> list(nodeIdDirectory).forEach(symlink -> tombstone(revision, nodeId, symlink)),
-            FatalException::new
-        );
-    }
-
-    private void tombstone(final Revision<?> revision, final NodeId nodeId, final Path symbolicLink) {
-        utils.doOperationV(() -> {
-            final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRelativeFSPath(utils, nodeId, symbolicLink);
-            getUtils().tombstone(pathMapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK);
-        }, FatalException::new);
     }
 
     @Override
@@ -189,11 +148,11 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
         final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
-        utils.doOperationV(() -> {
+        getUtils().doOperationV(() -> {
             final Path revisionPath = mapping.resolveRevisionFilePath(revision);
             checkResourceIdDoesNotExist(mapping, revision);
             createDirectories(mapping.getResourceIdDirectory());
-            createLink(fsPath, revisionPath);
+            createLink(revisionPath, fsPath);
         }, FatalException::new);
 
     }

@@ -9,7 +9,10 @@ import org.slf4j.LoggerFactory;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.Semaphore;
 
+import static com.namazustudios.socialengine.rt.Path.fromContextAndComponents;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.DIRECTORY_SUFFIX;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.DIRECTORY;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
@@ -174,7 +177,8 @@ public class UnixFSPathMapping {
                                                        final Path fsPath) {
         return utils.doOperation(() -> {
 
-            final Path relative = utils.resolvePathStorageRoot(nodeId).relativize(fsPath);
+            final Path nodeDir = utils.resolvePathStorageRoot(nodeId);
+            final Path relative = nodeDir.relativize(fsPath);
 
             final List<String> components = new ArrayList<>();
 

@@ -249,45 +249,44 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     }
 
-//    @Test(dependsOnMethods = {"testRemove"}, dataProvider = "intermediateDataProvider", expectedExceptions = ResourceNotFoundException.class)
-//    public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource original) {
-//        getResourceService().removeResource(resourceId);
-//    }
-//
-//    @Test(dependsOnMethods = "testDoubleRemove")
-//    public void testAllPathsUnlinked() {
-//        final Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
-//        final List<ResourceService.Listing> listingList = listingStream.collect(toList());
-//        assertEquals(listingList.size(), 0);
-//    }
-//
-//    @Test(dependsOnMethods = "testAllPathsUnlinked")
-//    public void testDeleteWithPaths() {
-//
-//        Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
-//        List<ResourceService.Listing> listingList = listingStream.collect(toList());
-//        assertEquals(listingList.size(), 0, "Expected empty dataset to start.");
-//
-//        final NodeId nodeId = NodeId.randomNodeId();
-//        final ResourceId resourceId = randomResourceIdForNode(nodeId);
-//        final Resource resource = Mockito.mock(Resource.class);
-//
-//        when(resource.getId()).thenReturn(resourceId);
-//
-//        final Path path = new Path(randomUUID().toString());
-//        getResourceService().addAndReleaseResource(path, resource);
-//
-//        final Path a = new Path(path, Path.fromComponents("a"));
-//        final Path b = new Path(path, Path.fromComponents("b"));
-//        getResourceService().link(resourceId, a);
-//        getResourceService().link(resourceId, b);
-//
-//        getResourceService().destroy(resourceId);
-//
-//        listingStream = getResourceService().listStream(new Path("*"));
-//        listingList = listingStream.collect(toList());
-//        assertEquals(listingList.size(), 0);
-//
-//    }
+    @Test(dependsOnMethods = {"testRemove"}, dataProvider = "intermediateDataProvider", expectedExceptions = ResourceNotFoundException.class)
+    public void testDoubleRemove(final ResourceId resourceId, final Path path, final Resource original) {
+        getResourceService().removeResource(resourceId);
+    }
+
+    @Test(dependsOnMethods = "testDoubleRemove")
+    public void testAllPathsUnlinked() {
+        final Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
+        final List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0);
+    }
+
+    @Test(dependsOnMethods = "testAllPathsUnlinked")
+    public void testDeleteWithPaths() {
+
+        Stream<ResourceService.Listing> listingStream = getResourceService().listStream(new Path("*"));
+        List<ResourceService.Listing> listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0, "Expected empty dataset to start.");
+
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
+        final Resource resource = Mockito.mock(Resource.class);
+
+        when(resource.getId()).thenReturn(resourceId);
+
+        final Path path = new Path(randomUUID().toString());
+        getResourceService().addAndReleaseResource(path, resource);
+
+        final Path a = new Path(path, Path.fromComponents("a"));
+        final Path b = new Path(path, Path.fromComponents("b"));
+        getResourceService().link(resourceId, a);
+        getResourceService().link(resourceId, b);
+
+        getResourceService().destroy(resourceId);
+
+        listingStream = getResourceService().listStream(new Path("*"));
+        listingList = listingStream.collect(toList());
+        assertEquals(listingList.size(), 0);
+
+    }
 
 }

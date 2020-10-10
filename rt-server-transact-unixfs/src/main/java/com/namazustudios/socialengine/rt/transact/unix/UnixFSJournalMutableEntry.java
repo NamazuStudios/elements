@@ -152,7 +152,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     public ResourceService.Unlink unlinkPath(final Path path) throws TransactionConflictException {
         check();
         if (path.isWildcard()) throw new IllegalArgumentException("Wildcard paths not supported.");
-        return workingCopy.unlink(path, () -> programBuilder.unlinkResource(COMMIT, path));
+        return workingCopy.unlink(path, resourceId -> programBuilder.unlinkResource(COMMIT, resourceId, path));
     }
 
     @Override
@@ -163,7 +163,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
         check();
 
         return workingCopy.unlinkMultiple(path, max, (fqPath, resourceId, remove) -> {
-            programBuilder.unlinkResource(COMMIT, fqPath);
+            programBuilder.unlinkResource(COMMIT, resourceId, fqPath);
             if (remove) programBuilder.removeResource(COMMIT, resourceId);
         });
 
@@ -172,7 +172,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     @Override
     public void removeResource(final ResourceId resourceId) throws TransactionConflictException {
         check();
-        workingCopy.removeResource(resourceId, path -> programBuilder.unlinkResource(COMMIT, path));
+        workingCopy.removeResource(resourceId, path -> programBuilder.unlinkResource(COMMIT, resourceId, path));
         programBuilder.removeResource(COMMIT, resourceId);
     }
 
@@ -183,7 +183,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
         final List<ResourceId> removed = workingCopy.removeResources(
             path, max,
-            (fqPath, resourceId) -> programBuilder.unlinkResource(COMMIT, fqPath)
+            (fqPath, resourceId) -> programBuilder.unlinkResource(COMMIT, resourceId, fqPath)
         );
 
         removed.forEach(resourceId -> programBuilder.removeResource(COMMIT, resourceId));

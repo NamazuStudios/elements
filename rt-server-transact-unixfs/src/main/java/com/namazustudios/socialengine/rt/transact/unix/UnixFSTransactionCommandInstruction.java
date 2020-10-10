@@ -23,7 +23,7 @@ enum UnixFSTransactionCommandInstruction {
     UNLINK_FS_PATH,
 
     /**
-     * Unlinks a {@link ResourceId} from a {@link com.namazustudios.socialengine.rt.Path}
+     * Unlinks a {@link ResourceId} from a {@link com.namazustudios.socialengine.rt.Path}.
      */
     UNLINK_RT_PATH,
 

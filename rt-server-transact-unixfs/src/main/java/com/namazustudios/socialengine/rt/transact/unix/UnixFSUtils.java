@@ -443,7 +443,9 @@ public class UnixFSUtils {
      * @return true if the path represents a tombstone, false otherwise
      */
     public boolean isTombstone(final Path fsPath) {
-        return doOperation(() -> isSameFile(tombstone, fsPath), FatalException::new);
+        return doOperation(() ->
+            exists(fsPath, NOFOLLOW_LINKS) &&
+            isSameFile(tombstone, fsPath), FatalException::new);
     }
 
     /**

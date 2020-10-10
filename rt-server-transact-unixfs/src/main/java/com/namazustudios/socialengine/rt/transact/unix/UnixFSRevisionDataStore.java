@@ -38,8 +38,6 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private UnixFSRevisionPool revisionPool;
 
-    private UnixFSGarbageCollector garbageCollector;
-
     private UnixFSChecksumAlgorithm preferredChecksum;
 
     private UnixFSRevisionTable revisionTable;
@@ -149,15 +147,6 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         this.revisionPool = revisionPool;
     }
 
-    public UnixFSGarbageCollector getGarbageCollector() {
-        return garbageCollector;
-    }
-
-    @Inject
-    public void setGarbageCollector(final UnixFSGarbageCollector garbageCollector) {
-        this.garbageCollector = garbageCollector;
-    }
-
     public UnixFSChecksumAlgorithm getPreferredChecksum() {
         return preferredChecksum;
     }
@@ -191,49 +180,62 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         return new ExecutionHandler() {
 
             @Override
-            public void unlinkFile(final UnixFSTransactionProgram program, UnixFSTransactionCommand command, final Path fsPath) {
+            public void unlinkFile(final UnixFSTransactionProgram program,
+                                   final UnixFSTransactionCommand command,
+                                   final Path fsPath) {
                 getUtils().doOperationV(() -> Files.delete(fsPath), FatalException::new);
             }
 
             @Override
             public void unlinkRTPath(final UnixFSTransactionProgram program,
-                                     UnixFSTransactionCommand command, final com.namazustudios.socialengine.rt.Path rtPath) {
-                getPathIndex().unlink(revision, nodeId, rtPath);
+                                     final UnixFSTransactionCommand command,
+                                     final ResourceId resourceId,
+                                     final com.namazustudios.socialengine.rt.Path rtPath) {
+                getPathIndex().unlink(revision, nodeId, resourceId, rtPath);
+                getPathIndex().unlinkReverse(revision, nodeId, resourceId, rtPath);
             }
 
             @Override
-            public void removeResource(final UnixFSTransactionProgram program, UnixFSTransactionCommand command, final ResourceId resourceId) {
+            public void removeResource(final UnixFSTransactionProgram program,
+                                       final UnixFSTransactionCommand command,
+                                       final ResourceId resourceId) {
                 getResourceIndex().removeResource(revision, resourceId);
             }
 
             @Override
             public void updateResource(final UnixFSTransactionProgram program,
-                                       UnixFSTransactionCommand command, final Path fsPath,
+                                       final UnixFSTransactionCommand command,
+                                       final Path fsPath,
                                        final ResourceId resourceId) {
                 getResourceIndex().updateResource(revision, fsPath, resourceId);
             }
 
             @Override
             public void addPath(final UnixFSTransactionProgram program,
-                                UnixFSTransactionCommand command, final com.namazustudios.socialengine.rt.Path path) {
+                                final UnixFSTransactionCommand command,
+                                final com.namazustudios.socialengine.rt.Path path) {
                 getPathIndex().addPath(revision, path);
             }
 
             @Override
-            public void addResourceId(final UnixFSTransactionProgram program, UnixFSTransactionCommand command, final ResourceId resourceId) {
+            public void addResourceId(final UnixFSTransactionProgram program,
+                                      final UnixFSTransactionCommand command,
+                                      final ResourceId resourceId) {
                 getResourceIndex().addResourceId(revision, resourceId);
             }
 
             @Override
             public void linkNewResource(final UnixFSTransactionProgram program,
-                                        UnixFSTransactionCommand command, final Path fsPath,
+                                        final UnixFSTransactionCommand command,
+                                        final Path fsPath,
                                         final ResourceId resourceId) {
                 getResourceIndex().linkNewResource(revision, fsPath, resourceId);
             }
 
             @Override
             public void linkResourceToRTPath(final UnixFSTransactionProgram program,
-                                             UnixFSTransactionCommand command, final ResourceId resourceId,
+                                             final UnixFSTransactionCommand command,
+                                             final ResourceId resourceId,
                                              final com.namazustudios.socialengine.rt.Path rtPath) {
                 getPathIndex().link(revision, nodeId, resourceId, rtPath);
                 getPathIndex().linkReverse(revision, nodeId, resourceId, rtPath);

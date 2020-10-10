@@ -108,6 +108,7 @@ public class UnixFSTransactionProgramBuilder {
      * @return this instance
      */
     public UnixFSTransactionProgramBuilder unlinkResource(final UnixFSTransactionProgramExecutionPhase executionPhase,
+                                                          final ResourceId resourceId,
                                                           final com.namazustudios.socialengine.rt.Path rtPath) {
 
         requireNonNull(executionPhase);
@@ -116,6 +117,7 @@ public class UnixFSTransactionProgramBuilder {
         getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
                 .withPhase(executionPhase)
                 .withInstruction(UNLINK_RT_PATH)
+                .addResourceIdParameter(resourceId)
                 .addRTPathParameter(rtPath)
             .build(byteBuffer)));
 

@@ -123,11 +123,15 @@ public class UnixFSGarbageCollectionCycle {
 
         @Override
         public void unlinkRTPath(final UnixFSTransactionProgram program,
-                                 UnixFSTransactionCommand command, final com.namazustudios.socialengine.rt.Path rtPath) {
+                                 final UnixFSTransactionCommand command,
+                                 final ResourceId resourceId,
+                                 final com.namazustudios.socialengine.rt.Path rtPath) {
 
             final NodeId nodeId = program.header.nodeId.get();
             final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, rtPath);
             final UnixFSRevision<?> revision = unixFSRevisionPool.create(program.header.revision);
+
+            // TODO Delete the reverse mapping directory for this revision
 
             utils.findRevisionsUpTo(pathMapping.getPathDirectory(), revision, REVISION_SYMBOLIC_LINK)
                  .filter(r -> r.getValue().isPresent())

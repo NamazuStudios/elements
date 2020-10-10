@@ -83,7 +83,8 @@ public class UnixFSReversePathMapping {
         final String encoded = encode(output);
         final Path path = Paths.get(encoded);
 
-        return fsPath.resolve(path);
+        final Path resolved = fsPath.resolve(path);
+        return resolved;
 
     }
 
