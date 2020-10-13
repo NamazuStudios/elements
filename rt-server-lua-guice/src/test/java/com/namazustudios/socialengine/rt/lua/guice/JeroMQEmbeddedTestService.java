@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.*;
+import com.google.inject.Module;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;

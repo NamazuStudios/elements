@@ -557,7 +557,7 @@ public class XodusResourceService implements ResourceService {
 
             return () -> {
 
-                try (final Monitor _ = getResourceLockService().getMonitor(xodusResource.getId())) {
+                try (final Monitor _m = getResourceLockService().getMonitor(xodusResource.getId())) {
 
                     final XodusResource removed;
                     removed = getStorage().getResourceIdResourceMap().remove(xodusResource.getXodusCacheKey());

@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt;
 
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
-
 import static java.lang.reflect.Proxy.newProxyInstance;
 
 public class ProxyLockService<LockT> implements OptimisticLockService<LockT> {
@@ -31,7 +29,7 @@ public class ProxyLockService<LockT> implements OptimisticLockService<LockT> {
                 } else if ("toString".equals(method.getName()) && args == null) {
                     return "Proxy Lock for " + tClass;
                 } else {
-                    throw new NotImplementedException();
+                    throw new UnsupportedOperationException("not implemented");
                 }
             });
     }

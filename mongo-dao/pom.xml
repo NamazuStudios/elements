@@ -120,15 +120,21 @@
             <version>${jeromq.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-guice</artifactId>
-            <version>${bval.guice.version}</version>
+            <groupId>ru.vyarus</groupId>
+            <artifactId>guice-validator</artifactId>
+            <version>${hibernate.validator.guice.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>commons-logging</groupId>
-            <artifactId>commons-logging</artifactId>
-            <version>${commons.logging.version}</version>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate.validator.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>${javax.el.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>
