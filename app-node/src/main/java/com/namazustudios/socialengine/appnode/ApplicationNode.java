@@ -16,8 +16,8 @@ import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceMo
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
-import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
-import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
+import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
+import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -10,17 +10,15 @@ import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
-import com.namazustudios.socialengine.service.firebase.guice.FirebaseAppFactoryModule;
-import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
-import com.namazustudios.socialengine.service.notification.guice.GuiceStandardNotificationFactoryModule;
-import com.namazustudios.socialengine.service.notification.guice.NotificationServiceModule;
+
+import com.namazustudios.socialengine.service.guice.*;
+import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.apache.bval.guice.ValidationModule;
 
@@ -28,7 +26,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 import javax.servlet.annotation.WebListener;
 import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Properties;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
@@ -92,12 +89,12 @@ public class GuiceMain extends GuiceServletContextListener {
                     enableAllResources();
                 }
             },
-            new ServicesModule(),
+            new RestAPIServicesModule(),
             new NotificationServiceModule(),
             new GuiceStandardNotificationFactoryModule(),
             new FirebaseAppFactoryModule(),
-            new RedissonServicesModule(),
-            new SecurityModule(),
+            new RestAPIRedissonServicesModule(),
+            new RestAPISecurityModule(),
             new MongoCoreModule(),
             new MongoDaoModule(),
             new MongoSearchModule(),
