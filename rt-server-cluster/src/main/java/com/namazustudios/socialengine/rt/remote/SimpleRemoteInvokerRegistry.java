@@ -81,7 +81,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     }
 
     @Override
-    public List<RemoteInvoker> getAllRemoteInvokers(ApplicationId applicationId) {
+    public List<RemoteInvoker> getAllRemoteInvokers(final ApplicationId applicationId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
         return snapshot.getAllRemoteInvokersForApplication(applicationId);
     }
