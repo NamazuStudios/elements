@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.dao.mongo.provider.MongoLockFactoryProvider;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;

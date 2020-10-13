@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.appserve.provider;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.security.SessionExpiredException;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.security.SessionSecretHeader;
 import com.namazustudios.socialengine.service.SessionService;
@@ -26,7 +27,7 @@ public class RequestOptionalSessionProvider implements Provider<Optional<Session
     private Optional<Session> checkAndRefreshSession(String secret) {
         try {
             return Optional.of(getSessionService().checkAndRefreshSessionIfNecessary(secret));
-        } catch (ForbiddenException ex) {
+        } catch (SessionExpiredException | ForbiddenException ex) {
             return Optional.empty();
         }
     }

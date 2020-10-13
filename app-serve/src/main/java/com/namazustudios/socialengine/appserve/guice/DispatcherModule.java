@@ -2,8 +2,8 @@ package com.namazustudios.socialengine.appserve.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.appserve.ServiceExceptionMapper;
 import com.namazustudios.socialengine.dao.rt.guice.RTFileAssetLoaderModule;
-import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.guice.ExceptionMapperModule;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.handler.SessionRequestDispatcher;
@@ -30,7 +30,12 @@ public class DispatcherModule extends PrivateModule {
         install(new LuaModule());
         install(new GuiceIoCResolverModule());
         install(new RTFileAssetLoaderModule(assetRootDirectory));
-        install(new ExceptionMapperModule());
+        install(new ExceptionMapperModule() {
+            @Override
+            protected void configureExceptionMappers() {
+                bind(ServiceExceptionMapper.class);
+            }
+        });
         install(new MultiContentTypeJacksonPayloadReaderModule());
         install(new MultiContentTypeJacksonPayloadWriterModule());
 

@@ -71,6 +71,9 @@
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
         <module>web-ui-angular</module>
+        <module>rest-api-test</module>
+        <module>rest-jetty</module>
+        <module>code-serve-jetty</module>
         <module>rt-server-transact</module>
         <module>rt-server-transact-unixfs</module>
         <module>rt-server-transact-unixfs-guice</module>
@@ -116,7 +119,6 @@
         <jetty.version>9.4.7.v20170914</jetty.version>
         <flapdoodle.mongo.version>2.2.0</flapdoodle.mongo.version>
         <embedded.redis.version>0.6</embedded.redis.version>
-        <spotify.dns.version>3.1.5</spotify.dns.version>
     </properties>
     <dependencies>
         <dependency>

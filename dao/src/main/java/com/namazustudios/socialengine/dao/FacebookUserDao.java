@@ -50,4 +50,5 @@ public interface FacebookUserDao {
      * @return the User, as written to the database
      */
     User createReactivateOrUpdateUser(final User user);
+
 }

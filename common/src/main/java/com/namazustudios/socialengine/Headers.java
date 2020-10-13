@@ -53,4 +53,9 @@ public interface Headers {
      */
     String FACEBOOK_OAUTH_TOKEN = "Facebook-OAuthToken";
 
+    /**
+     * Preferred auth method, bearer.
+     */
+    String BEARER = "Bearer";
+
 }
