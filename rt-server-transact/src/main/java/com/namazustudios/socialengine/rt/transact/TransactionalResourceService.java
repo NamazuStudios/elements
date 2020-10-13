@@ -153,9 +153,30 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public Unlink unlinkPath(final Path path, final Consumer<Resource> removed) {
-        return computeRW(txn -> {
+        return computeRW((acm, txn) -> {
+
             final Path normalized = normalize(path);
-            return txn.unlinkPath(normalized);
+            final ResourceId resourceId = txn.getResourceId(normalized);
+
+            try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
+
+                final Unlink unlink = txn.unlinkPath(normalized);
+
+                if (unlink.isRemoved()) {
+                    final Resource resource = getResourceLoader().load(rbc);
+                    removed.accept(resource);
+                }
+
+                return unlink;
+
+            } catch (NullResourceException ex) {
+                final Unlink unlink = txn.unlinkPath(normalized);
+                acm.evict(resourceId, removed);
+                return unlink;
+            } catch (IOException ex) {
+                throw new InternalException(ex);
+            }
+
         });
     }
 
@@ -567,8 +588,7 @@ public class TransactionalResourceService implements ResourceService {
 
         public Resource evict(final ResourceId resourceId) {
             final TransactionalResource tr = context.acquires.remove(resourceId);
-            if (tr == null)
-                throw new InternalException("Should have a Resource present in cache.");
+            if (tr == null) throw new InternalException("Should have a Resource present in cache.");
             return tr.getDelegate();
         }
 

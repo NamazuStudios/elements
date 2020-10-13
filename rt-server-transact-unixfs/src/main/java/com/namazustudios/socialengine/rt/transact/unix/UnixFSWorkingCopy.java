@@ -146,16 +146,14 @@ class UnixFSWorkingCopy {
             final UnixFSUtils.IOOperation<WritableByteChannel> writableByteChannelSupplier)
             throws TransactionConflictException, IOException {
 
-        // Checks that both paths and resource IDs are free and available for use
-
-        if (isPresent(path))
-            throw new DuplicateException();
-        if (isPresent(resourceId))
-            throw new DuplicateException();
-
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
         pessimisticLocking.lock(resourceId);
+
+        // Checks that both paths and resource IDs are free and available for use
+
+        if (isPresent(path)) throw new DuplicateException();
+        if (isPresent(resourceId)) throw new DuplicateException();
 
         // Performs the linkage to the resource ID and the path.
         pathToResourceIds.put(path, resourceId);
@@ -178,16 +176,14 @@ class UnixFSWorkingCopy {
                                 final Path path,
                                 final Runnable onSuccess) throws TransactionConflictException {
 
-        // Checks that both paths and resource IDs are free and available for use
-
-        if (isPresent(path))
-            throw new DuplicateException();
-        if (isPresent(resourceId))
-            throw new DuplicateException();
-
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
         pessimisticLocking.lock(resourceId);
+
+        // Checks that both paths and resource IDs are free and available for use
+
+        if (isPresent(path)) throw new DuplicateException();
+        if (isPresent(resourceId)) throw new DuplicateException();
 
         // Performs the linkage to the resource ID and the path.
         pathToResourceIds.put(path, resourceId);
@@ -197,27 +193,17 @@ class UnixFSWorkingCopy {
 
     }
 
-    private static Map<Object, Object> mm = new ConcurrentHashMap<>();
-
     public void linkExistingResource(final ResourceId resourceId,
                                      final Path path,
                                      final Runnable onSuccess) throws TransactionConflictException {
-        // Checks that both paths and resource IDs are free and available for use
-
-        if (mm.put(path, path) == null) {
-            logger.warn("No dup.");
-        } else {
-            logger.warn("Found the dup.");
-        }
-
-        if (isPresent(path))
-            throw new DuplicateException();
-        if (!isPresent(resourceId))
-            throw new ResourceNotFoundException();
 
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
         pessimisticLocking.lock(resourceId);
+
+        if (isPresent(path)) throw new DuplicateException();
+        if (!isPresent(resourceId))
+            throw new ResourceNotFoundException();
 
         // Performs the linkage to the resource ID and the path.
         pathToResourceIds.put(path, resourceId);
@@ -230,6 +216,8 @@ class UnixFSWorkingCopy {
     public List<ResourceService.Unlink> unlinkMultiple(
             final Path path, final int max,
             final UnlinkOperation unlinkOperation) throws TransactionConflictException {
+
+        pessimisticLocking.lock(path);
 
         final List<ResourceService.Listing> listings = unixFSPathIndex.list(nodeId, revision, path)
             .getValue()

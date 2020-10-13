@@ -196,7 +196,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             public void unlinkFile(final UnixFSTransactionProgram program,
                                    final UnixFSTransactionCommand command,
                                    final Path fsPath) {
-                getUtils().doOperationV(() -> Files.delete(fsPath), FatalException::new);
+                getUtils().doOperationV(() -> Files.deleteIfExists(fsPath), FatalException::new);
             }
 
             @Override

@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
@@ -28,9 +29,9 @@ import static org.testng.AssertJUnit.fail;
 
 public abstract class AbstractResourceServiceAcquiringUnitTest {
 
-    private final List<Object[]> intermediates = new ArrayList<>();
+    private final List<Object[]> intermediates = new CopyOnWriteArrayList<>();
 
-    private final List<Object[]> linkedIntermediates = new ArrayList<>();
+    private final List<Object[]> linkedIntermediates = new CopyOnWriteArrayList<>();
 
     /**
      * Returns the actual {@link ResourceService} we need to fetch.

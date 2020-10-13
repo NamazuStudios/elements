@@ -221,6 +221,25 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
     /**
+     * Returns {@link Path} that is the parent to this {@link Path}, preserving the context (if any). If this path is
+     * the root path (ie having no components), then this will return this object.
+     *
+     * @return the parent {@link Path}, or this if this is a root path
+     */
+    public Path parent() {
+        return components.isEmpty() ? this : new Path(context, components.subList(0, components.size() - 1));
+    }
+
+    /**
+     * Returns true if this is a root path (ie having no components).
+     *
+     * @return true if this is a root path
+     */
+    public boolean isRoot() {
+        return components.isEmpty();
+    }
+
+    /**
      * Gets the context of this {@link Path}, or null if no context exists.
      *
      * @return the context or null

@@ -10,14 +10,12 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
+import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_SYMBOLIC_LINK;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.*;
 import static java.nio.file.Files.*;
 import static java.util.Collections.reverseOrder;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -78,6 +76,7 @@ public class UnixFSGarbageCollectionCycle {
             revisionsToCollect.forEach(this::collect);
             pathOperations.values().stream().forEach(Operation::performNoThrow);
             resourceOperations.values().stream().forEach(Operation::performNoThrow);
+            reverseMappingOperations.values().stream().forEach(Operation::performNoThrow);
             uncategorizedOperations.stream().forEach(Operation::performNoThrow);
             transactionJournal.reclaimInvalidEntries();
         } finally {
@@ -114,6 +113,7 @@ public class UnixFSGarbageCollectionCycle {
     private void clear() {
         pathOperations.clear();
         resourceOperations.clear();
+        reverseMappingOperations.clear();
         uncategorizedOperations.clear();
         pessimisticLocking.unlock();
     }
@@ -135,25 +135,29 @@ public class UnixFSGarbageCollectionCycle {
                 .sorted()
                 .filter(r -> r.getValue().isPresent())
                 .map(r -> (Operation) () -> {
-                    collectPathRevision(r);
+                    final Path path = r.getValue().get();
+                    logger.trace("Deleting file {} @ revision {}", path, revision.getUniqueIdentifier());
+                    deleteIfExists(path);
                     collectPathDirectoryIfEmpty(pathMapping);
                 })
                 .reduce(Operation.initial(), Operation::andThen);
 
+            collectAncestorDirectories(rtPath);
             pathOperations.put(rtPath, aggregateOperation);
 
         }
 
-        private void collectPathRevision(final Revision<Path> revision) throws IOException {
-            final Path path = revision.getValue().get();
-            logger.trace("Deleting file {} @ revision {}", path, revision.getUniqueIdentifier());
-            deleteIfExists(path);
+        private void collectAncestorDirectories(final com.namazustudios.socialengine.rt.Path rtPath) {
+            for (com.namazustudios.socialengine.rt.Path parent = rtPath.parent(); !parent.isRoot(); parent = parent.parent()) {
+                final NodeId nodeId = rtPath.getNodeId();
+                final UnixFSPathMapping pathMapping = UnixFSPathMapping.fromRTPath(utils, nodeId, parent);
+                pathOperations.put(parent, () -> collectPathDirectoryIfEmpty(pathMapping));
+            }
         }
 
         private void collectPathDirectoryIfEmpty(final UnixFSPathMapping pathMapping) throws IOException {
 
-            final Path path = pathMapping.getPathDirectory();
-            final Path directory = path.getParent();
+            final Path directory = pathMapping.getPathDirectory();
 
             try {
                 if (!list(directory).findAny().isPresent() && pessimisticLocking.tryLock(pathMapping.getPath())) {
@@ -190,6 +194,7 @@ public class UnixFSGarbageCollectionCycle {
 
                     try {
                         collectResource(resourceId, path, r);
+                        collectReverse(program, resourceId);
                     } finally {
                         pessimisticLocking.unlock(resourceId);
                     }
@@ -232,24 +237,6 @@ public class UnixFSGarbageCollectionCycle {
             });
         }
 
-        @Override
-        public void linkResourceToRTPath(
-                final UnixFSTransactionProgram program,
-                final UnixFSTransactionCommand command,
-                final ResourceId resourceId,
-                final com.namazustudios.socialengine.rt.Path rtPath) {
-//            collectReverse(program, resourceId);
-        }
-
-        @Override
-        public void linkNewResource(
-                final UnixFSTransactionProgram program,
-                final UnixFSTransactionCommand command,
-                final Path fsPath,
-                final ResourceId resourceId) {
-//            collectReverse(program, resourceId);
-        }
-
         private void collectReverse(final UnixFSTransactionProgram program,
                                     final ResourceId resourceId) {
 
@@ -259,37 +246,32 @@ public class UnixFSGarbageCollectionCycle {
             final UnixFSRevision<?> revision = unixFSRevisionPool.create(program.header.revision);
 
             final Operation aggregateOperation = utils
-                    .findRevisionsUpTo(directory, revision, REVISION_SYMBOLIC_LINK)
-                    .filter(r -> r.getValue().isPresent())
-                    .map(r -> (Operation) () -> collectReverseSingleRevision(resourceId, r))
-                    .reduce(Operation.initial(), Operation::andThen);
+                .findRevisionsUpTo(directory, revision, DIRECTORY)
+                .filter(r -> r.getValue().isPresent())
+                .flatMap(r -> collectReverseSingleRevision(resourceId, r))
+                .reduce(Operation.initial(), Operation::andThen);
 
             reverseMappingOperations.put(resourceId, aggregateOperation);
 
         }
 
-        private void collectReverseSingleRevision(final ResourceId resourceId,
-                                                  final Revision<?> revision) throws IOException {
+        private Stream<Operation> collectReverseSingleRevision(final ResourceId resourceId,
+                                                               final Revision<?> revision) {
 
             final NodeId nodeId = resourceId.getNodeId();
             final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromNodeId(utils, nodeId);
-            final Path symlink = reversePathMapping.resolveDirectory(revision, resourceId);
-            final Path target = readSymbolicLink(symlink);
+            final Path directory = reversePathMapping.resolveDirectory(revision, resourceId);
 
-            logger.trace("Deleting reverse mapping symbolic link {}", symlink);
-            deleteIfExists(symlink);
+            if (utils.isTombstone(directory)) return Stream.of(() -> deleteIfExists(directory));
 
-            walk(target).forEach(item -> {
-                try {
+            try {
+                return walk(directory).sorted(Comparator.reverseOrder()).map(item -> () -> {
                     logger.trace("Deleting reverse mapping link {}", item);
                     deleteIfExists(item);
-                } catch (IOException ex) {
-                    logger.error("Error deleting file {}", item, ex);
-                }
-            });
-
-            logger.trace("Deleting reverse mapping target {}", target);
-            deleteIfExists(target);
+                });
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
 
         }
 
@@ -308,7 +290,7 @@ public class UnixFSGarbageCollectionCycle {
         default void performNoThrow() {
             try {
                 perform();
-            } catch (IOException ex) {
+            } catch (UncheckedIOException | IOException ex) {
                 logger.error("Caught exception performing garbage collection operation.", ex);
             }
         }
