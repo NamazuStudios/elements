@@ -563,6 +563,16 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                     lockedResources.keySet().removeAll(toRelease);
                 }
 
+                @Override
+                public boolean unlock(final com.namazustudios.socialengine.rt.Path rtPath) {
+                    return lockedResources.remove(rtPath, this);
+                }
+
+                @Override
+                public boolean unlock(final ResourceId resourceId) {
+                    return lockedResources.remove(resourceId, this);
+                }
+
             };
         }
 

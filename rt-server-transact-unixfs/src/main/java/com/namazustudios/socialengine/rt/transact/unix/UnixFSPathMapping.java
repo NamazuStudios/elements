@@ -57,25 +57,6 @@ public class UnixFSPathMapping {
         return fsPath;
     }
 
-    /**
-     * Returns the relative path directory. This ist he path relative to the root of the storage system.
-     *
-     * @return the relative path directory.
-     */
-    public Path getRelativePathDirectory() {
-        return fsPath.relativize(utils.getPathStorageRoot());
-    }
-
-    /**
-     * Given the {@link Revision<?>} this will resolve the symbolic link
-     *
-     * @param revision the {@link Revision<?>}
-     * @return the {@link Path} to the revision
-     */
-    public Path resolveSymlinkPath(final Revision<?> revision) {
-        return utils.resolveSymlinkPath(fsPath, revision);
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;

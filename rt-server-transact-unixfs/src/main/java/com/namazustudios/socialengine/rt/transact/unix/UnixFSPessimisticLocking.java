@@ -79,4 +79,21 @@ public interface UnixFSPessimisticLocking {
      */
     void unlock();
 
+    /**
+     * Unlocks a specific {@link Path}. If the {@link Path} was not previously locked, this will have no side effect.
+     *
+     * @param rtPath the {@link Path}
+     * @return true if the value was originally locked
+     */
+    boolean unlock(Path rtPath);
+
+    /**
+     * Unlocks a specific {@link ResourceId}. if the {@link ResourceId} was not previously locked, this will have no
+     * side effects.
+     *
+     * @param resourceId the {@link ResourceId}
+     * @return true if the value was originally locked
+     */
+    boolean unlock(ResourceId resourceId);
+
 }

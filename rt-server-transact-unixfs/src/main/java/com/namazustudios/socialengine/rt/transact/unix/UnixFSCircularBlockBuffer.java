@@ -131,6 +131,7 @@ public class UnixFSCircularBlockBuffer {
 
                     if (predicate.test(trailingSlice)) {
                         counter.compareAndIncrementTrailing(snapshot);
+                        snapshot = counter.getSnapshot();
                     } else {
                         break;
                     }

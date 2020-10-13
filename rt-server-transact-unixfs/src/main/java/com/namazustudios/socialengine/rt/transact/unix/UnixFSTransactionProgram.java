@@ -55,7 +55,7 @@ public class UnixFSTransactionProgram {
         try {
             algorithm = header.algorithm.get();
         } catch (ArrayIndexOutOfBoundsException ex) {
-            logger.debug("Unable to determine checksum algorithm.", ex);
+            logger.trace("Unable to determine checksum algorithm.", ex);
             return false;
         }
 

@@ -53,15 +53,6 @@ public class UnixFSResourceIdMapping {
     }
 
     /**
-     * Will return the root of all reverse-mapping directories.
-     *
-     * @return the {@link Path} to the reverse-mapping directory
-     */
-    public Path resolveReverseDirectories() {
-        return utils.resolveRevisionDirectoryPath(fsPath);
-    }
-
-    /**
      * Finds the the tombstone file, if it exists.
      *
      * @param revision the {@link Revision<?>} to check

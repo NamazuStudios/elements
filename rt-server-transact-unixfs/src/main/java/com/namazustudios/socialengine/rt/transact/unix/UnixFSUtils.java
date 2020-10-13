@@ -230,14 +230,14 @@ public class UnixFSUtils {
     }
 
     /**
-     * Resolves a revision directory by appending the value of {@link #REVISION_SUFFIX} to the end of the file name.
+     * Resolves a directory with the parent path.
      *
-     * @param parent the parent {@link Path} owning the file
-     *
-     * @return the {@link Path} to the fully-resolved file with revision suffix
+     * @param parent the parent path
+     * @param revision the revision
+     * @return the resolved diectory name
      */
-    public Path resolveRevisionDirectoryPath(final Path parent) {
-        return parent.resolve(REVERSE_DIRECTORY);
+    public Path resolveDirectory(final Path parent, final Revision<?> revision) {
+        return parent.resolve(format("%s.%s", revision.getUniqueIdentifier(), DIRECTORY_SUFFIX));
     }
 
     /**
@@ -591,11 +591,6 @@ public class UnixFSUtils {
          * Indicates that the path is a directory.
          */
         DIRECTORY(DIRECTORY_SUFFIX, Files::isDirectory),
-
-        /**
-         * Indicates that the path is revision symbolic link to a directory.
-         */
-        REVISION_DIRECTORY(REVISION_SYMBOLIC_LINK_SUFFIX, Files::isSymbolicLink),
 
         /**
          * Indicates that the type is a hard link to a file (ie regular file).

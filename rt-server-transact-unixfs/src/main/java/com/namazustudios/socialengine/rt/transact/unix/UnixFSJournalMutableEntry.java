@@ -152,7 +152,10 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
     public ResourceService.Unlink unlinkPath(final Path path) throws TransactionConflictException {
         check();
         if (path.isWildcard()) throw new IllegalArgumentException("Wildcard paths not supported.");
-        return workingCopy.unlink(path, resourceId -> programBuilder.unlinkResource(COMMIT, resourceId, path));
+        return workingCopy.unlink(path, (resourceId, removed) -> {
+            programBuilder.unlinkResource(COMMIT, resourceId, path);
+            if (removed) programBuilder.removeResource(COMMIT, resourceId);
+        });
     }
 
     @Override

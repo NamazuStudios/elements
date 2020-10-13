@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
-import javolution.context.LocalContext;
 import javolution.io.Struct;
 
 class UnixFSRevisionTableHeader extends Struct {

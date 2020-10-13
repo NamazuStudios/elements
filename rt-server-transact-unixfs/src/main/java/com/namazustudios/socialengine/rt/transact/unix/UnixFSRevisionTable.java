@@ -21,6 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.COMMITTED;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.FAILED;
 import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.channels.FileChannel.open;
@@ -536,7 +537,7 @@ public class UnixFSRevisionTable {
                 // If we can't acquire all readers for the semaphore, we break the loop because we can't safely clear
                 // this version.
 
-                final Semaphore semaphore = semaphores.get(slice.getIndex());
+                final Semaphore semaphore = this.semaphores.get(slice.getIndex());
                 if (!semaphore.tryAcquire(ACQUIRES_PER_SEMAPHORE)) break;
 
                 slices.add(slice);

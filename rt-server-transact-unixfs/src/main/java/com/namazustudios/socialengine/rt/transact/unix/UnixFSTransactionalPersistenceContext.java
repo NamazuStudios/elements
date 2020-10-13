@@ -7,10 +7,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
-import java.io.IOException;
-
-import static java.nio.file.Files.createDirectories;
-
 public class UnixFSTransactionalPersistenceContext implements TransactionalPersistenceContext {
 
     private final Logger logger = LoggerFactory.getLogger(UnixFSTransactionalPersistenceContext.class);
@@ -37,8 +33,8 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
             getRevisionPool().start();
             getRevisionTable().start();
             getTransactionJournal().start();
-            getGarbageCollector().start();
             getRevisionDataStore().start();
+            getGarbageCollector().start();
         } catch (IllegalStateException ex) {
             logger.error("Inconsistent state.", ex);
             throw ex;
@@ -53,17 +49,17 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
     @Override
     public void stop() {
         try {
-            safeStop(getRevisionDataStore()::stop);
-            safeStop(getGarbageCollector()::stop);
-            safeStop(getTransactionJournal()::stop);
-            safeStop(getRevisionTable()::stop);
-            safeStop(getRevisionPool()::stop);
+            tryRun(getGarbageCollector()::stop);
+            tryRun(getRevisionDataStore()::stop);
+            tryRun(getTransactionJournal()::stop);
+            tryRun(getRevisionTable()::stop);
+            tryRun(getRevisionPool()::stop);
         } finally {
             getUnixFSUtils().unlockStorageRoot();
         }
     }
 
-    private void safeStop(final Runnable action) {
+    private void tryRun(final Runnable action) {
         try {
             action.run();
         } catch (Exception ex) {

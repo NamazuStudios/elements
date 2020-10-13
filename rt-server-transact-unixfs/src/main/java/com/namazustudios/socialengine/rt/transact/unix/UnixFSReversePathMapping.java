@@ -10,7 +10,7 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_SYMBOLIC_LINK;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.DIRECTORY;
 import static com.namazustudios.socialengine.rt.util.Hex.encode;
 
 public class UnixFSReversePathMapping {
@@ -114,9 +114,9 @@ public class UnixFSReversePathMapping {
      *
      * @return the {@link Revision<Path>}
      */
-    public Revision<Path> findLatestSymlink(Revision<?> revision, ResourceId resourceId) {
+    public Revision<Path> findLatestDirectory(Revision<?> revision, ResourceId resourceId) {
         final Path reverseDirectory = resolveReverseDirectory(resourceId);
-        return utils.findLatestForRevision(reverseDirectory, revision, REVISION_SYMBOLIC_LINK);
+        return utils.findLatestForRevision(reverseDirectory, revision, DIRECTORY);
     }
 
     /**
@@ -127,9 +127,9 @@ public class UnixFSReversePathMapping {
      *
      * @return the {@link Revision<Path>}
      */
-    public Path resolveSymlink(final Revision<?> revision, final ResourceId resourceId) {
+    public Path resolveDirectory(final Revision<?> revision, final ResourceId resourceId) {
         final Path reverseDirectory = resolveReverseDirectory(resourceId);
-        return utils.resolveSymlinkPath(reverseDirectory, revision);
+        return utils.resolveDirectory(reverseDirectory, revision);
     }
 
 }

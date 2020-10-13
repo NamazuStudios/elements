@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.ResourceIndex;
@@ -15,7 +16,7 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Path;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_HARD_LINK;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.*;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -93,6 +94,19 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
         getUtils().tombstone(resourceIdDirectory, revision, REVISION_HARD_LINK);
 
+    }
+
+    /**
+     * Places a tombstone at the reverse mapping for the particular {@link ResourceId}.
+     *
+     * @param revision
+     * @param resourceId
+     */
+    public void removeResourceReverseMappings(final Revision<?> revision, final ResourceId resourceId) {
+        final NodeId nodeId = resourceId.getNodeId();
+        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromNodeId(utils, nodeId);
+        final Path reverseDirectory = reversePathMapping.resolveReverseDirectory(resourceId);
+        getUtils().tombstone(reverseDirectory, revision, DIRECTORY);
     }
 
     @Override

@@ -567,7 +567,8 @@ public class TransactionalResourceService implements ResourceService {
 
         public Resource evict(final ResourceId resourceId) {
             final TransactionalResource tr = context.acquires.remove(resourceId);
-            if (tr == null) throw new InternalException("Should have a Resource present in cache.");
+            if (tr == null)
+                throw new InternalException("Should have a Resource present in cache.");
             return tr.getDelegate();
         }
 

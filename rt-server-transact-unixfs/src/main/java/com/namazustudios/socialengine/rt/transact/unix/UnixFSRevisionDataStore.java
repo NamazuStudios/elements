@@ -14,11 +14,11 @@ import javax.inject.Inject;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.*;
 import static java.util.Comparator.comparing;
+import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
 
 /**
@@ -27,6 +27,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * whereby pending operations are
  */
 public class UnixFSRevisionDataStore implements RevisionDataStore {
+
+    private static final int REVISION_COLLECTION_THRESHOLD = 25;
 
     private static final Logger logger = getLogger(UnixFSRevisionDataStore.class);
 
@@ -44,6 +46,8 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
     private UnixFSTransactionJournal transactionJournal;
 
+    private UnixFSGarbageCollector garbageCollector;
+
     public void start() {
         recoverJournal();
     }
@@ -57,7 +61,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             .filter(s -> s.getValue().isValid())
             .map(s -> s.map(p -> p.interpreter()))
             .map(s -> s.map(JournalRecoveryExecution::new))
-            .collect(Collectors.toList());
+            .collect(toList());
 
         // We must execute every journal entry in the order of revision committed as this will be what is necessary
         // for each revision.
@@ -174,6 +178,15 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         this.transactionJournal = transactionJournal;
     }
 
+    public UnixFSGarbageCollector getGarbageCollector() {
+        return garbageCollector;
+    }
+
+    @Inject
+    public void setGarbageCollector(UnixFSGarbageCollector garbageCollector) {
+        this.garbageCollector = garbageCollector;
+    }
+
     private ExecutionHandler newExecutionHandler(
             final NodeId nodeId,
             final Revision<?> revision) {
@@ -200,6 +213,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
                                        final UnixFSTransactionCommand command,
                                        final ResourceId resourceId) {
                 getResourceIndex().removeResource(revision, resourceId);
+                getResourceIndex().removeResourceReverseMappings(revision, resourceId);
             }
 
             @Override
@@ -315,8 +329,14 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
 
         @Override
         public void close() {
+
             open = false;
             monitor.close();
+
+            if (revisionTable.size() >= REVISION_COLLECTION_THRESHOLD) {
+                getGarbageCollector().hintImmediateAsync();
+            }
+
         }
 
     }

@@ -34,6 +34,8 @@ public class UnixFSGarbageCollector {
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
+    private final AtomicReference<Thread.UncaughtExceptionHandler> uncaughtExceptionHandler = new AtomicReference<>();
+
     /**
      * Starts this garbage collector.
      */
@@ -59,10 +61,47 @@ public class UnixFSGarbageCollector {
     }
 
     /**
-     * Hints to the garbage collector that it should run a cycle immediately.
+     * Forces a garbage collection cycle synchronously. This will perform a collection and block until the cycle runs.
+     * If a cycle is currently running, or multiple requests are queued, it this will block until the requested cycle
+     * has run. If the garbage collector is paused, this will ignore the pause flag and process the cycle anyhow.
      */
-    public void hintImmediate() {
-        getContext().hintImmediate();
+    public void forceSync() {
+
+        final Future<Void> future = getContext().forceSync();
+
+        try {
+            future.get();
+        } catch (InterruptedException ex) {
+            throw new InternalException("Interrupted while waiting.", ex);
+        } catch (ExecutionException e) {
+
+            final Throwable cause = e.getCause();
+
+            if (cause instanceof RuntimeException) {
+                throw (RuntimeException)cause;
+            } else {
+                throw new InternalException(e);
+            }
+
+        }
+
+    }
+
+    /**
+     * Hints to the garbage collector that it should run a cycle immediately. If the collector is paused or currently
+     * running the collector will ignore the hint.
+     */
+    public void hintImmediateAsync() {
+        getContext().hintImmediateAsync();
+    }
+
+    /**
+     * Pauses or un-pauses the garbage collector.
+     *
+     * @param paused true if paused, false otherwise
+     */
+    public void setPaused(final boolean paused) {
+        getContext().setPaused(paused);
     }
 
     private Context getContext() {
@@ -98,28 +137,65 @@ public class UnixFSGarbageCollector {
         this.collectionCycleProvider = collectionCycleProvider;
     }
 
+    public Thread.UncaughtExceptionHandler getUncaughtExceptionHandler() {
+        return uncaughtExceptionHandler.get();
+    }
+
+    public void setUncaughtExceptionHandler(final Thread.UncaughtExceptionHandler uncaughtExceptionHandler) {
+        this.uncaughtExceptionHandler.set(uncaughtExceptionHandler);
+    }
+
     private class Context {
 
-        private final AtomicBoolean paused = new AtomicBoolean(true);
+        private final ScheduledFuture<?> timedCycle;
 
-        private final ScheduledExecutorService executor = newSingleThreadScheduledExecutor();
+        private final AtomicBoolean paused = new AtomicBoolean(false);
+
+        private final AtomicBoolean running = new AtomicBoolean(false);
+
+        private final ScheduledExecutorService executor = newSingleThreadScheduledExecutor(r -> {
+
+            final Thread thread = new Thread(r);
+
+            thread.setDaemon(true);
+            thread.setName(UnixFSGarbageCollector.class.getSimpleName() + " Thread");
+
+            thread.setUncaughtExceptionHandler((t, e) -> {
+                final Thread.UncaughtExceptionHandler handler = uncaughtExceptionHandler.get();
+                logger.error("Error in garbage collection cycle {}", t, e);
+                if (handler != null) handler.uncaughtException(t, e);
+            });
+
+            return thread;
+
+        });
 
         public Context() {
-            executor.scheduleAtFixedRate(this::collect, 10, 30, SECONDS);
+            timedCycle = executor.scheduleAtFixedRate(() -> collect(false), 30, 30, SECONDS);
         }
 
-        public void hintImmediate() {
-            executor.execute(this::collect);
+        public Future<Void> forceSync() {
+            return executor.submit(() -> {
+                this.collect(true);
+                return null;
+            });
         }
 
-        private void collect() {
+        public void hintImmediateAsync() {
+            if (!running.get()) executor.execute(() -> collect(false));
+        }
 
-            if (paused.get()) {
+        private void collect(final boolean force) {
+
+            if (!force && paused.get()) {
                 logger.info("Garbage Collection paused. Skipping cycle.");
                 return;
             }
 
-            try (final UnixFSRevisionTable.RevisionMonitor<List<Slice<UnixFSRevisionTableEntry>>> monitor = getRevisionTable().writeLockCollectibleRevisions()) {
+            running.set(true);
+
+            try (final UnixFSRevisionTable.RevisionMonitor<List<Slice<UnixFSRevisionTableEntry>>> monitor =
+                         getRevisionTable().writeLockCollectibleRevisions()) {
 
                 final List<Slice<UnixFSRevisionTableEntry>> revisions = monitor.getScope();
 
@@ -135,6 +211,8 @@ public class UnixFSGarbageCollector {
                 monitor.getScope().forEach(Slice::clear);
                 getRevisionTable().reclaimInvalidEntries();
 
+            } finally {
+                running.set(false);
             }
 
         }
@@ -146,7 +224,8 @@ public class UnixFSGarbageCollector {
 
         private void stop() {
 
-            executor.shutdown();
+            timedCycle.cancel(false);
+            executor.shutdownNow();
 
             try {
                 executor.awaitTermination(5, MINUTES);
@@ -154,6 +233,10 @@ public class UnixFSGarbageCollector {
                 throw new InternalException(e);
             }
 
+        }
+
+        public void setPaused(final boolean paused) {
+            this.paused.set(paused);
         }
 
     }
