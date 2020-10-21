@@ -22,7 +22,6 @@ import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
-import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.mockito.Mockito.*;
@@ -97,7 +96,7 @@ public class SimpleRemoteInvokerRegistryTest {
             when(mockInstanceConnection.getInstanceMetadataContext()).thenReturn(mockInstanceMetadataContext);
 
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
-            when(mockInstanceMetadataContext.getInstanceLoad()).thenReturn(load);
+            when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
             nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
 
             mockLoadMap.put(instanceId, load);
@@ -189,7 +188,7 @@ public class SimpleRemoteInvokerRegistryTest {
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
             verify(c.getInstanceMetadataContext(), atLeastOnce()).getNodeIds();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceLoad();
+            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceQuality();
 
             mockApplicationIds.forEach(a -> {
                 final NodeId nodeId = forInstanceAndApplication(instanceId, a);
@@ -271,7 +270,7 @@ public class SimpleRemoteInvokerRegistryTest {
             when(mockInstanceConnection.getInstanceMetadataContext()).thenReturn(mockInstanceMetadataContext);
 
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
-            when(mockInstanceMetadataContext.getInstanceLoad()).thenReturn(load);
+            when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
             nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
 
             mockLoadMap.put(instanceId, load);
@@ -280,8 +279,8 @@ public class SimpleRemoteInvokerRegistryTest {
             return mockInstanceConnection;
 
         }).sorted((i0, i1) -> {
-            final double load0 = i0.getInstanceMetadataContext().getInstanceLoad();
-            final double load1 = i1.getInstanceMetadataContext().getInstanceLoad();
+            final double load0 = i0.getInstanceMetadataContext().getInstanceQuality();
+            final double load1 = i1.getInstanceMetadataContext().getInstanceQuality();
             return Double.compare(load0, load1);
         }).collect(toList()));
 
@@ -340,7 +339,7 @@ public class SimpleRemoteInvokerRegistryTest {
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
             verify(c.getInstanceMetadataContext(), atLeastOnce()).getNodeIds();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceLoad();
+            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceQuality();
 
             mockApplicationIds.forEach(a -> {
                 final NodeId nodeId = forInstanceAndApplication(instanceId, a);
@@ -398,7 +397,7 @@ public class SimpleRemoteInvokerRegistryTest {
             when(mockInstanceConnection.getInstanceMetadataContext()).thenReturn(mockInstanceMetadataContext);
 
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
-            when(mockInstanceMetadataContext.getInstanceLoad()).thenReturn(load);
+            when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
             nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
 
             mockLoadMap.put(instanceId, load);
@@ -407,8 +406,8 @@ public class SimpleRemoteInvokerRegistryTest {
             return mockInstanceConnection;
 
         }).sorted((i0, i1) -> {
-            final double load0 = i0.getInstanceMetadataContext().getInstanceLoad();
-            final double load1 = i1.getInstanceMetadataContext().getInstanceLoad();
+            final double load0 = i0.getInstanceMetadataContext().getInstanceQuality();
+            final double load1 = i1.getInstanceMetadataContext().getInstanceQuality();
             return Double.compare(load0, load1);
         }).collect(toList()));
 
@@ -500,7 +499,7 @@ public class SimpleRemoteInvokerRegistryTest {
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
             verify(c.getInstanceMetadataContext(), atLeastOnce()).getNodeIds();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceLoad();
+            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceQuality();
 
             mockApplicationIds.forEach(a -> {
                 final NodeId nodeId = forInstanceAndApplication(instanceId, a);
@@ -544,6 +543,9 @@ public class SimpleRemoteInvokerRegistryTest {
 
         @Override
         protected void configure() {
+
+            final InstanceId instanceId = randomInstanceId();
+            bind(InstanceId.class).toInstance(instanceId);
 
             final Supplier<RemoteInvoker> remoteInvokerSupplier = mock(Supplier.class);
             bind(new TypeLiteral<Supplier<RemoteInvoker>>(){}).toInstance(remoteInvokerSupplier);

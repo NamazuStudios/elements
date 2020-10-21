@@ -451,7 +451,7 @@ public class JeroMQEndToEndIntegrationTest {
 
             when(mock.getInstanceId()).thenReturn(instanceId);
             when(mock.getNodeIds()).thenReturn(singleton(forInstanceAndApplication(instanceId, applicationId)));
-            when(mock.getInstanceLoad()).thenReturn(threadLocalRandom.nextDouble());
+            when(mock.getInstanceQuality()).thenReturn(threadLocalRandom.nextDouble());
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {
                 @Override

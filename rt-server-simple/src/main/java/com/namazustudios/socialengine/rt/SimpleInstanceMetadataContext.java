@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Set;
@@ -14,6 +16,8 @@ import static java.util.stream.Collectors.toSet;
  * Provides data for an Instance.
  */
 public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleInstanceMetadataContext.class);
 
     private Worker worker;
 
@@ -33,12 +37,16 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
 
     @Override
     public Set<NodeId> getNodeIds() {
-        return getWorker().getActiveNodeIds();
+        final Set<NodeId> nodeIdSet = getWorker().getActiveNodeIds();
+        logger.info("Returning active node IDs for instance {} - {}", getInstanceId(),nodeIdSet);
+        return nodeIdSet;
     }
 
     @Override
-    public double getInstanceLoad() {
-        return getLoadMonitorService().getInstanceQuality();
+    public double getInstanceQuality() {
+        final double load = getLoadMonitorService().getInstanceQuality();
+        logger.info("Reporting instance load {} - {}", getInstanceId(), load);
+        return load;
     }
 
     @Override

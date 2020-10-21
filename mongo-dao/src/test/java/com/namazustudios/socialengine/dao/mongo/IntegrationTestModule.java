@@ -13,8 +13,8 @@ import de.flapdoodle.embed.mongo.config.IMongodConfig;
 import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
-import org.apache.bval.guice.ValidationModule;
 import org.mongodb.morphia.AdvancedDatastore;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import java.io.IOException;
 import java.util.Properties;

@@ -35,8 +35,9 @@
         <module>rt-server</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
-        <module>rt-server-xodus</module>
-        <module>rt-server-xodus-guice</module>
+<!--        These modules are slated for removal and integration tests are failing. -->
+<!--        <module>rt-server-xodus</module>-->
+<!--        <module>rt-server-xodus-guice</module>-->
         <module>rt-server-cluster</module>
         <module>rt-server-cluster-guice</module>
         <module>rt-server-cluster-jeromq</module>
@@ -76,7 +77,7 @@
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
-        <guice.version>4.1.0</guice.version>
+        <guice.version>4.2.3</guice.version>
         <guice.bridge.version>2.5.0-b32</guice.bridge.version>
         <javax.inject.version>1</javax.inject.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

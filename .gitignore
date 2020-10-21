@@ -31,3 +31,5 @@ node_modules
 .idea/codeStyles/
 .idea/dbnavigator.xml
 .idea/jarRepositories.xml
+.idea/dictionaries
+

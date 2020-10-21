@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 
 class MethodHandleKey {
@@ -26,6 +27,10 @@ class MethodHandleKey {
 
     public Method getMethod() {
         return method;
+    }
+
+    public MethodType getMethodType() {
+        return MethodType.methodType(method.getReturnType(), method.getParameterTypes());
     }
 
     @Override

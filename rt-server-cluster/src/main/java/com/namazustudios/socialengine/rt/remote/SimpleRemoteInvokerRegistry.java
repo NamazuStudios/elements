@@ -36,6 +36,8 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
     private static final TimeUnit SHUTDOWN_UNITS = MINUTES;
 
+    private InstanceId instanceId;
+
     private Provider<RemoteInvoker> remoteInvokerProvider;
 
     private InstanceConnectionService instanceConnectionService;
@@ -106,6 +108,15 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         return context.snapshot;
     }
 
+    public InstanceId getInstanceId() {
+        return instanceId;
+    }
+
+    @Inject
+    public void setInstanceId(InstanceId instanceId) {
+        this.instanceId = instanceId;
+    }
+
     public InstanceConnectionService getInstanceConnectionService() {
         return instanceConnectionService;
     }
@@ -141,7 +152,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             scheduledExecutorService = newSingleThreadScheduledExecutor(r -> {
                 final Thread thread = new Thread(r);
                 thread.setDaemon(true);
-                thread.setName(SimpleRemoteInvokerRegistry.class.getSimpleName() + " refresher.");
+                thread.setName(SimpleRemoteInvokerRegistry.class.getSimpleName() + " refresher " + getInstanceId());
                 thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Caught exception in {}", t, e)));
                 return thread;
             });
@@ -256,12 +267,14 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private RefreshBuilder add(final RefreshBuilder builder, final InstanceConnection connection) {
 
-            final double load;
+            final double quality;
             final Set<NodeId> nodeIdSet;
             final InstanceId instanceId = connection.getInstanceId();
 
             try {
-                load = connection.getInstanceMetadataContext().getInstanceLoad();
+                logger.debug("Establishing quality for {}", connection.getInstanceId());
+                quality = connection.getInstanceMetadataContext().getInstanceQuality();
+                logger.debug("Established quality for {} as {}", connection.getInstanceId(), quality);
             } catch (InstanceNotFoundException | NodeNotFoundException ex) {
                 logger.debug("Instance or node not found.", ex);
                 return builder;
@@ -271,7 +284,9 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             }
 
             try {
+                logger.debug("Finding nodes for {}", connection.getInstanceId());
                 nodeIdSet = connection.getInstanceMetadataContext().getNodeIds();
+                logger.debug("Found nodes for {} as {}", connection.getInstanceId(), nodeIdSet);
             } catch (InstanceNotFoundException | NodeNotFoundException ex) {
                 logger.debug("Instance or node not found.", ex);
                 return builder;
@@ -281,7 +296,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             }
 
             for (final NodeId nodeId : nodeIdSet) {
-                builder.add(nodeId, load, () -> establishNewConnection(nodeId, connection));
+                builder.add(nodeId, quality, () -> establishNewConnection(nodeId, connection));
             }
 
             return builder;

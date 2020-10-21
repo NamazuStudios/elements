@@ -47,6 +47,7 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
         startupList = concat(of(getMasterNode()), getNodeSet().stream()).map(node -> {
             try {
+                logger.debug("Beginning node startup for node {}", node.getNodeId());
                 return node.beginStartup();
             } catch (Exception ex) {
                 logger.error("Error beginning node startup process.", ex);
@@ -57,6 +58,7 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
         startupList = startupList.stream().map(s -> {
             try {
+                logger.debug("Executing pre-start operations for node {}", s.getNodeId());
                 s.preStart();
                 return s;
             } catch (Exception ex) {
@@ -69,10 +71,15 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
         startupList = startupList.stream().map(s -> {
 
+            logger.debug("Opening binding for node id {}", s.getNodeId());
+
             final InstanceBinding binding = getInstanceConnectionService().openBinding(s.getNodeId());
             bindingSet.add(binding);
 
+            logger.debug("Opened binding for node {}.", s.getNodeId());
+
             try {
+                logger.debug("Executing start operations for node {}", s.getNodeId());
                 s.start(binding);
                 return s;
             } catch (Exception ex) {
@@ -90,6 +97,7 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
         startupList.stream().map(s -> {
             try {
+                logger.debug("Executing post-start operations for node {}.", s.getNodeId());
                 s.postStart();
                 return null;
             } catch (Exception ex) {

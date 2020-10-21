@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -78,18 +79,14 @@ public class ProxyBuilder<ProxyT> {
             final Supplier<MethodHandle> methodHandleSupplier = () -> {
                 try {
 
-                    final Constructor<MethodHandles.Lookup> constructor;
-                    constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
-                    constructor.setAccessible(true);
+                    final Class<?> clazz = methodHandleKey.getInterfaceClassT();
+                    final MethodType methodType = methodHandleKey.getMethodType();
 
-                    final Class<?> declaringClass = methodHandleKey.getMethod().getDeclaringClass();
-
-                    return constructor.newInstance(declaringClass, MethodHandles.Lookup.PRIVATE)
-                        .in(declaringClass)
-                        .unreflectSpecial(methodHandleKey.getMethod(), declaringClass)
+                    return MethodHandles.lookup()
+                        .findSpecial(clazz, method.getName(), methodType, clazz)
                         .bindTo(methodHandleKey.getProxy());
 
-                } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                } catch (NoSuchMethodException | IllegalAccessException e) {
                     throw new InternalException(e);
                 }
             };

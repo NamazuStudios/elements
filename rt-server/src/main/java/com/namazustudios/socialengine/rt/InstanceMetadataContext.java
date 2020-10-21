@@ -51,6 +51,6 @@ public interface InstanceMetadataContext {
      * @return the instance's load
      */
     @RemotelyInvokable
-    double getInstanceLoad();
+    double getInstanceQuality();
 
 }

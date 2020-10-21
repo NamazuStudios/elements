@@ -32,38 +32,46 @@ public class SimpleInstance implements Instance {
         final List<Exception> exceptionList = new ArrayList<>();
 
         try {
+            logger.debug("Starting async connection service. Instance ID {}", instanceId);
             getAsyncConnectionService().start();
+            logger.debug("Started async connection service. Instance ID {}", instanceId);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Caught exception starting AsyncConnectionService.", ex);
         }
 
         try {
+            logger.debug("Starting instance discovery service. Instance ID {}", instanceId);
             getInstanceDiscoveryService().start();
+            logger.debug("Started instance discovery service. Instance ID {}", instanceId);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Caught exception starting InstanceDiscoveryService.", ex);
         }
 
         try {
+            logger.debug("Starting instance connection service. Instance ID {}", instanceId);
             getInstanceConnectionService().start();
+            logger.debug("Started instance connection service. Instance ID {}", instanceId);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Caught exception starting InstanceConnectionService.", ex);
         }
 
         try {
+            logger.debug("Starting remote invoker registry. Instance ID {}", instanceId);
             getRemoteInvokerRegistry().start();
+            logger.debug("Started remote invoker registry. Instance ID {}", instanceId);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Caught exception starting RemoteInvokerRegistry.", ex);
         }
 
+        logger.debug("Running post-start tasks for Instance ID {}", instanceId);
         postStart(exceptionList::add);
 
-        if (!exceptionList.isEmpty()) {
-            throw new MultiException(exceptionList);
-        }
+        logger.debug("Completed post-start tasks for Instance ID {}", instanceId);
+        if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
 
     }
 
@@ -77,14 +85,18 @@ public class SimpleInstance implements Instance {
         preClose(exceptionList::add);
 
         try {
+            logger.debug("Stopping remote invoker registry. Instance ID {}", instanceId);
             getRemoteInvokerRegistry().stop();
+            logger.debug("Stopped remote invoker registry. Instance ID {}", instanceId);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Caught exception stopping RemoteInvokerRegistry.", ex);
         }
 
         try {
+            logger.debug("Stopping instance connection service. Instance ID {}", instanceId);
             getInstanceConnectionService().stop();
+            logger.debug("Stopped instance connection service. Instance ID {}", instanceId);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Caught exception stopping InstanceDiscoveryService.", ex);
