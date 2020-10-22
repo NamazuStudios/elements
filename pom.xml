@@ -35,9 +35,8 @@
         <module>rt-server</module>
         <module>rt-server-simple</module>
         <module>rt-server-simple-guice</module>
-<!--        These modules are slated for removal and integration tests are failing. -->
-<!--        <module>rt-server-xodus</module>-->
-<!--        <module>rt-server-xodus-guice</module>-->
+        <module>rt-server-xodus</module>
+        <module>rt-server-xodus-guice</module>
         <module>rt-server-cluster</module>
         <module>rt-server-cluster-guice</module>
         <module>rt-server-cluster-jeromq</module>

@@ -3,15 +3,19 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.remote.Worker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.namazustudios.socialengine.rt.remote.Worker.EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.remote.Worker.SCHEDULED_EXECUTOR_SERVICE;
 import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
@@ -27,10 +31,6 @@ public class SimpleScheduler implements Scheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
 
-    public static final String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.scheduledExecutorService";
-
-    public static final String DISPATCHER_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.dispatcherExecutorService";
-
     private ResourceLockService resourceLockService;
 
     private ResourceService resourceService;
@@ -38,6 +38,8 @@ public class SimpleScheduler implements Scheduler {
     private ExecutorService dispatcherExecutorService;
 
     private ScheduledExecutorService scheduledExecutorService;
+
+    private AtomicReference<SimpleExecutorContext> context = new AtomicReference<>();
 
     @Override
     public <T> Future<T> submit(Callable<T> tCallable) {
@@ -211,38 +213,44 @@ public class SimpleScheduler implements Scheduler {
     }
 
     @Override
-    public void shutdown() {
-        try {
+    public void start() {
 
-            logger.info("Shutting down dispatcher threads.");
-            dispatcherExecutorService.shutdown();
+        final SimpleExecutorContext context = new SimpleExecutorContext(getScheduledExecutorService());
 
-            logger.info("Shutting down scheduler threads.");
-            scheduledExecutorService.shutdownNow();
-
-            if (scheduledExecutorService.awaitTermination(5, MINUTES)) {
-                logger.info("Shut down scheduler threads.");
-            } else {
-                logger.error("Timed out shutting down scheduler threads.");
-            }
-
-            if (dispatcherExecutorService.awaitTermination(5, TimeUnit.MINUTES)) {
-                logger.info("Shut down dispatcher threads.");
-            } else {
-                logger.error("Timed out shutting down dispatcher threads.");
-            }
-
-        } catch (InterruptedException ex) {
-            throw new InternalException(ex);
+        if (this.context.compareAndSet(null, context)) {
+            logger.info("Started.");
+        } else {
+            throw new IllegalStateException("Scheduler already running.");
         }
+
     }
+
+    @Override
+    public void stop() {
+
+        final SimpleExecutorContext context = this.context.getAndSet(null);
+
+        if (context == null) {
+            throw new IllegalStateException("Scheduler not running.");
+        } else {
+            logger.info("Shutting down.");
+            context.stop();
+            logger.info("Finished shutting down.");
+        }
+
+    }
+
+    private SimpleExecutorContext getContext() {
+        return this.context.get();
+    }
+
 
     public ExecutorService getDispatcherExecutorService() {
         return dispatcherExecutorService;
     }
 
     @Inject
-    public void setDispatcherExecutorService(@Named(DISPATCHER_EXECUTOR_SERVICE) ExecutorService dispatcherExecutorService) {
+    public void setDispatcherExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService dispatcherExecutorService) {
         this.dispatcherExecutorService = dispatcherExecutorService;
     }
 

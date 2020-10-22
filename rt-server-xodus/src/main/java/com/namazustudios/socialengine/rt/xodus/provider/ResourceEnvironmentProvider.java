@@ -13,7 +13,10 @@ public class ResourceEnvironmentProvider implements Provider<Environment> {
 
     private static final Logger logger = LoggerFactory.getLogger(ResourceEnvironmentProvider.class);
 
+    public static final String RESOURCE_ENVIRONMENT = "com.namazustudios.socialengine.rt.xodus.resource";
+
     public static final String RESOURCE_ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.environment.path";
+
 
     private Provider<String> environmentPathProvider;
 

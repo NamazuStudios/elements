@@ -237,11 +237,19 @@ public interface Scheduler {
     }
 
     /**
-     * Shuts down the Scheduler.  All resources are removed and then the server is shut down.  Attempting to invoke any
-     * the other methods after invoking this will result in an {@link IllegalStateException}.
+     * Shuts down the Scheduler.  Attempting to invoke any the other methods after invoking this will result in an
+     * {@link IllegalStateException} until a subsequent call to {@link #start()} is made.
      *
      * @throws {@link IllegalStateException}
      */
-    void shutdown() throws IllegalStateException;
+    default void stop() throws IllegalStateException {}
+
+    /**
+     * Starts the Scheduler.  Attempting to invoke any the other methods before invoking this will result in an
+     * {@link IllegalStateException}.
+     *
+     * @throws {@link IllegalStateException}
+     */
+    default void start() throws IllegalStateException {}
 
 }

@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.util.SyncWait;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,11 +20,7 @@ public class TestYielding {
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withWorkerModule(new LuaModule())
         .withDefaultHttpClient()
-        .withWorkerModule(new XodusContextModule()
-            .withSchedulerThreads(1)
-            .withHandlerTimeout(3, MINUTES))
-        .withWorkerModule(new XodusEnvironmentModule()
-            .withTempEnvironments())
+        .withWorkerModule(new XodusEnvironmentModule().withSchedulerEnvironment())
         .start();
 
     private final Context context = embeddedTestService.getContext();

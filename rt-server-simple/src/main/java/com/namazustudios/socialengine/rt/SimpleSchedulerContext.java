@@ -15,8 +15,13 @@ public class SimpleSchedulerContext implements SchedulerContext {
     private Scheduler scheduler;
 
     @Override
+    public void start() {
+        getScheduler().start();
+    }
+
+    @Override
     public void stop() {
-        getScheduler().shutdown();
+        getScheduler().stop();
     }
 
     @Override

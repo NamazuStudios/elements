@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,7 +13,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.assertEquals;
 
 public class LuaResourceLinkingAdvancedTest {
@@ -23,11 +21,7 @@ public class LuaResourceLinkingAdvancedTest {
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
             .withWorkerModule(new LuaModule())
-            .withWorkerModule(new XodusContextModule()
-                .withSchedulerThreads(1)
-                .withHandlerTimeout(3, MINUTES))
-            .withWorkerModule(new XodusEnvironmentModule()
-                .withTempEnvironments())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
             .withDefaultHttpClient()
         .start();
 

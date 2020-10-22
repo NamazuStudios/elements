@@ -11,10 +11,14 @@ import javax.inject.Named;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
@@ -32,6 +36,10 @@ public class WorkerInstance extends SimpleInstance implements Worker {
     private Node masterNode;
 
     private Set<Node> nodeSet;
+
+    private ExecutorService executorService;
+
+    private ScheduledExecutorService scheduledExecutorService;
 
     private final Set<InstanceBinding> bindingSet = new HashSet<>();
 
@@ -165,6 +173,39 @@ public class WorkerInstance extends SimpleInstance implements Worker {
     }
 
     @Override
+    protected void postClose(Consumer<Exception> exceptionConsumer) {
+
+        logger.info("Shutting down scheduler threads.");
+        getScheduledExecutorService().shutdown();
+
+        logger.info("Shutting down dispatcher threads.");
+        getScheduledExecutorService().shutdown();
+
+        try {
+            if (getScheduledExecutorService().awaitTermination(5, MINUTES)) {
+                logger.info("Shut down scheduler threads.");
+            } else {
+                logger.error("Timed out shutting down scheduler threads.");
+            }
+        } catch (InterruptedException ex) {
+            logger.error("Interrupted while shutting down scheduler threads.", ex);
+            exceptionConsumer.accept(ex);
+        }
+
+        try {
+            if (getScheduledExecutorService().awaitTermination(5, TimeUnit.MINUTES)) {
+                logger.info("Shut down worker threads.");
+            } else {
+                logger.error("Timed out shutting down worker threads.");
+            }
+        } catch (InterruptedException ex) {
+            logger.error("Interrupted while shutting down worker threads.", ex);
+            exceptionConsumer.accept(ex);
+        }
+
+    }
+
+    @Override
     public Set<NodeId> getActiveNodeIds() {
         return getNodeSet().stream().map(n -> n.getNodeId()).collect(toSet());
     }
@@ -190,6 +231,24 @@ public class WorkerInstance extends SimpleInstance implements Worker {
     @Inject
     public void setInstanceId(InstanceId instanceId) {
         this.instanceId = instanceId;
+    }
+
+    public ExecutorService getExecutorService() {
+        return executorService;
+    }
+
+    @Inject
+    public void setExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService executorService) {
+        this.executorService = executorService;
+    }
+
+    public ScheduledExecutorService getScheduledExecutorService() {
+        return scheduledExecutorService;
+    }
+
+    @Inject
+    public void setScheduledExecutorService(@Named(SCHEDULED_EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
+        this.scheduledExecutorService = scheduledExecutorService;
     }
 
 }

@@ -9,6 +9,10 @@ import java.util.Set;
  */
 public interface Worker {
 
+    String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.worker.executor";
+
+    String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.scheduled.executor";
+
     /**
      * Gets a set of all active nodes.  This may change as new nodes may be introduced as well as removed.  The returned
      * {@link Set<NodeId>} shall be an instantaneous snapshot.  The returned set may be empty if no nodes are active.

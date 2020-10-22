@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.PrivateModule;
-import com.google.inject.name.Names;
 import com.namazustudios.socialengine.rt.ResourceContext;
 import com.namazustudios.socialengine.rt.SimpleResourceContext;
-import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
+import com.namazustudios.socialengine.rt.remote.provider.CPUCountThreadPoolProvider;
 
 import java.util.concurrent.ExecutorService;
 

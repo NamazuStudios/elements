@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.remote.WorkerInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,8 +15,6 @@ import java.util.function.Consumer;
 public class SimpleResourceContext implements ResourceContext {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceContext.class);
-
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleResourceContext.executorService";
 
     private Scheduler scheduler;
 
@@ -130,7 +129,7 @@ public class SimpleResourceContext implements ResourceContext {
     }
 
     @Inject
-    public void setExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService executorService) {
+    public void setExecutorService(@Named(WorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
         this.executorService = executorService;
     }
 

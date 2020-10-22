@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.*;
 import com.google.inject.Module;
+import com.google.inject.*;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
@@ -130,8 +130,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 install(new TestWorkerInstanceModule());
                 install(new TestMasterNodeModule(workerInstanceId));
                 install(new TestWorkerNodeModule(workerInstanceId, applicationId, workerModules));
-                install(new JeroMQInstanceConnectionServiceModule()
-                    .withBindAddress(workerBindAddress));
+                install(new JeroMQInstanceConnectionServiceModule().withBindAddress(workerBindAddress));
 
             }
         };

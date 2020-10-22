@@ -116,13 +116,14 @@ public class SimpleInstance implements Instance {
             logger.error("Caught exception stopping AsyncConnectionService.", ex);
         }
 
-        if (!exceptionList.isEmpty()) {
-            throw new MultiException(exceptionList);
-        }
+        postClose(exceptionList::add);
+        if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
 
     }
 
     protected void preClose(final Consumer<Exception> exceptionConsumer) {}
+
+    protected void postClose(final Consumer<Exception> exceptionConsumer) {}
 
     @Override
     public void refreshConnections() {
