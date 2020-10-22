@@ -3,13 +3,6 @@ package com.namazustudios.socialengine.codeserve;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceServletContextListener;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTGitBootstrapModule;
-import com.namazustudios.socialengine.guice.ConfigurationModule;
-import org.apache.bval.guice.ValidationModule;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;

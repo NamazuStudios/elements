@@ -23,10 +23,10 @@ import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
 import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
 import com.namazustudios.socialengine.util.AppleDateFormat;
-import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import javax.inject.Inject;
 import java.text.DateFormat;

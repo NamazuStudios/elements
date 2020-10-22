@@ -18,9 +18,9 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConne
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
-import org.apache.bval.guice.ValidationModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import static java.lang.Thread.interrupted;
 

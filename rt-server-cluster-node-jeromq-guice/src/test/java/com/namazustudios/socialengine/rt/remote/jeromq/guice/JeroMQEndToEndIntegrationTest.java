@@ -110,11 +110,21 @@ public class JeroMQEndToEndIntegrationTest {
     public void startWorkers() throws Exception {
 
         final ExecutorService executor = newCachedThreadPool(r -> {
-            final Thread thread = new Thread(r);
+
+            final Thread thread = new Thread(() -> {
+                try {
+                    r.run();
+                } finally {
+                    logger.info("Terminated.");
+                }
+            });
+
             thread.setDaemon(true);
             thread.setUncaughtExceptionHandler((t, e) -> logger.error("Caught exception.", e));
             thread.setName(JeroMQEndToEndIntegrationTest.class.getSimpleName() + " startup.");
+
             return thread;
+
         });
 
         try {
@@ -449,9 +459,21 @@ public class JeroMQEndToEndIntegrationTest {
             final InstanceMetadataContext mock = mock(InstanceMetadataContext.class);
             bind(InstanceMetadataContext.class).toInstance(mock);
 
-            when(mock.getInstanceId()).thenReturn(instanceId);
-            when(mock.getNodeIds()).thenReturn(singleton(forInstanceAndApplication(instanceId, applicationId)));
-            when(mock.getInstanceQuality()).thenReturn(threadLocalRandom.nextDouble());
+            when(mock.getInstanceId()).thenAnswer(i -> {
+                logger.info("Reporting Instance ID for {}", instanceId);
+                return instanceId;
+            });
+
+            when(mock.getNodeIds()).thenAnswer(i -> {
+                logger.info("Reporting NodeID {} for instance {}", nodeId, instanceId);
+                return singleton(nodeId);
+            });
+
+            when(mock.getInstanceQuality()).thenAnswer(i -> {
+                final double quality = threadLocalRandom.nextDouble();
+                logger.info("Reporting quality {} for instance {}", quality, instanceId);
+                return quality;
+            });
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {
                 @Override

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.rt;
 
-import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.name.Names;
@@ -20,6 +19,8 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.UUID;
 import java.util.function.Function;
 
@@ -65,9 +66,9 @@ public class GitBootstrapDaoTest {
     }
 
     @AfterTest
-    public void destroyTestDirectory() {
-        Files.fileTreeTraverser()
-            .postOrderTraversal(getStorageDirectory())
+    public void destroyTestDirectory() throws IOException {
+        Files.walk(getStorageDirectory().toPath())
+            .map(p -> p.toFile())
             .filter(f -> f.isFile() || f.isDirectory())
             .forEach(f -> f.delete());
     }
