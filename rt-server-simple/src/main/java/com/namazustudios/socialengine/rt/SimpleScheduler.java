@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.remote.Worker;
+import com.namazustudios.socialengine.rt.util.CompletionServiceLatch;
+import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
+import com.namazustudios.socialengine.rt.util.LatchedScheduledExecutorServiceCompletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +17,6 @@ import java.util.function.Function;
 
 import static com.namazustudios.socialengine.rt.remote.Worker.EXECUTOR_SERVICE;
 import static com.namazustudios.socialengine.rt.remote.Worker.SCHEDULED_EXECUTOR_SERVICE;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
@@ -39,22 +39,58 @@ public class SimpleScheduler implements Scheduler {
 
     private ScheduledExecutorService scheduledExecutorService;
 
-    private AtomicReference<SimpleExecutorContext> context = new AtomicReference<>();
+    private AtomicReference<Context> context = new AtomicReference<>();
+
+    @Override
+    public void start() {
+
+        final var context = new Context();
+
+        logger.info("Starting.");
+
+        if (this.context.compareAndSet(null, context)) {
+            logger.info("Started.");
+        } else {
+            throw new IllegalStateException("Scheduler already running.");
+        }
+
+    }
+
+    @Override
+    public void stop() {
+
+        final var context = this.context.getAndSet(null);
+
+        if (context == null) {
+            throw new IllegalStateException("Scheduler not running.");
+        } else {
+            logger.info("Shutting down.");
+            context.stop();
+            logger.info("Finished shutting down.");
+        }
+
+    }
+
+    private Context getContext() {
+        final Context context = this.context.get();
+        if (context == null) throw new IllegalStateException("Not running.");
+        return context;
+    }
 
     @Override
     public <T> Future<T> submit(Callable<T> tCallable) {
-        return getDispatcherExecutorService().submit(tCallable);
+        return getContext().getDispatcher().submit(tCallable);
     }
 
     @Override
     public RunnableFuture<Void> scheduleUnlink(final Path path, final long delay, final TimeUnit timeUnit) {
         return shortCircuitFuture(
             () -> scheduleUnlink(path),
-            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
+            r -> getContext().getScheduler().schedule(r , delay, timeUnit));
     }
 
     private Future<Void> scheduleUnlink(final Path path) {
-        return getDispatcherExecutorService().submit(() -> { getResourceService().unlinkPath(path, resource -> {
+        return getContext().getDispatcher().submit(() -> { getResourceService().unlinkPath(path, resource -> {
 
             final ResourceId resourceId = resource.getId();
 
@@ -74,11 +110,11 @@ public class SimpleScheduler implements Scheduler {
     public RunnableFuture<Void> scheduleDestruction(final ResourceId resourceId, final long delay, final TimeUnit timeUnit) {
         return shortCircuitFuture(
             () -> scheduleDestruction(resourceId),
-            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
+            r -> getContext().getScheduler().schedule(r , delay, timeUnit));
     }
 
     public Future<Void> scheduleDestruction(final ResourceId resourceId) {
-        return getDispatcherExecutorService().submit(() -> {
+        return getContext().getDispatcher().submit(() -> {
             try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
                 getResourceService().destroy(resourceId);
             } catch (ResourceNotFoundException ex) {
@@ -93,14 +129,14 @@ public class SimpleScheduler implements Scheduler {
     public <T> Future<T> perform(final ResourceId resourceId,
                                  final Function<Resource, T> operation,
                                  final Consumer<Throwable> failure) {
-        return getDispatcherExecutorService().submit(protectedCallable(resourceId, operation, failure));
+        return getContext().getDispatcher().submit(protectedCallable(resourceId, operation, failure));
     }
 
     @Override
     public <T> Future<T> perform(final Path path,
                                  final Function<Resource, T> operation,
                                  final Consumer<Throwable> failure) {
-        return getDispatcherExecutorService().submit(protectedCallable(path, operation, failure));
+        return getContext().getDispatcher().submit(protectedCallable(path, operation, failure));
     }
 
     @Override
@@ -109,10 +145,10 @@ public class SimpleScheduler implements Scheduler {
                                            final Function<Resource, T> operation,
                                            final Consumer<Throwable> failure) {
 
-        final FutureTask<T> task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
+        final var task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
 
-        final Future<?> scheduled = getScheduledExecutorService()
-            .schedule(() -> getDispatcherExecutorService().submit(task), time, timeUnit);
+        final var scheduled = getContext().getScheduler()
+            .schedule(() -> getContext().getDispatcher().submit(task), time, timeUnit);
 
         return new Future<T>() {
             @Override
@@ -212,39 +248,6 @@ public class SimpleScheduler implements Scheduler {
         }
     }
 
-    @Override
-    public void start() {
-
-        final SimpleExecutorContext context = new SimpleExecutorContext(getScheduledExecutorService());
-
-        if (this.context.compareAndSet(null, context)) {
-            logger.info("Started.");
-        } else {
-            throw new IllegalStateException("Scheduler already running.");
-        }
-
-    }
-
-    @Override
-    public void stop() {
-
-        final SimpleExecutorContext context = this.context.getAndSet(null);
-
-        if (context == null) {
-            throw new IllegalStateException("Scheduler not running.");
-        } else {
-            logger.info("Shutting down.");
-            context.stop();
-            logger.info("Finished shutting down.");
-        }
-
-    }
-
-    private SimpleExecutorContext getContext() {
-        return this.context.get();
-    }
-
-
     public ExecutorService getDispatcherExecutorService() {
         return dispatcherExecutorService;
     }
@@ -284,7 +287,7 @@ public class SimpleScheduler implements Scheduler {
 
     private static FutureTask<Void> shortCircuitFuture(final Runnable runnable,
                                                        final Function<Runnable, Future<?>> delegateFutureSupplier) {
-        return new FutureTask<Void>(runnable, null) {
+        return new FutureTask<>(runnable, null) {
 
             final Future<?> delegate = delegateFutureSupplier.apply(this);
 
@@ -300,6 +303,30 @@ public class SimpleScheduler implements Scheduler {
             }
 
         };
+    }
+
+    private class Context {
+
+        private final CompletionServiceLatch latch = new CompletionServiceLatch();
+
+        private final LatchedExecutorServiceCompletionService dispatcher =
+            new LatchedExecutorServiceCompletionService(getDispatcherExecutorService(), latch);
+
+        private final LatchedScheduledExecutorServiceCompletionService scheduler =
+            new LatchedScheduledExecutorServiceCompletionService(getScheduledExecutorService(), latch);
+
+        public LatchedExecutorServiceCompletionService getDispatcher() {
+            return dispatcher;
+        }
+
+        public LatchedScheduledExecutorServiceCompletionService getScheduler() {
+            return scheduler;
+        }
+
+        private void stop() {
+            latch.stop();
+        }
+
     }
 
 }

@@ -3,12 +3,14 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.remote.WorkerInstance;
+import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 
@@ -24,14 +26,60 @@ public class SimpleResourceContext implements ResourceContext {
 
     private ExecutorService executorService;
 
+    private final AtomicReference<LatchedExecutorServiceCompletionService> completionService = new AtomicReference<>();
+
     @Override
     public void start() {
-        getResourceService().start();
+
+        final var service = new LatchedExecutorServiceCompletionService(getExecutorService());
+
+        if (completionService.compareAndSet(null, service)) {
+
+            logger.info("Starting.");
+
+            try {
+                getResourceService().start();
+            } catch (Exception ex) {
+                completionService.compareAndSet(service, null);
+                throw ex;
+            }
+
+            logger.info("Started.");
+
+        } else {
+            throw new IllegalStateException("Already running.");
+        }
+
     }
 
     @Override
     public void stop() {
-        getResourceService().stop();
+        final var completionService = this.completionService.getAndSet(null);
+
+        if (completionService == null) {
+            throw new IllegalStateException("Not running.");
+        } else {
+
+            try {
+                completionService.stop();
+            } catch (Exception ex) {
+                logger.error("Caught exception stopping completion service.", ex);
+            }
+
+            try {
+                getResourceService().stop();
+            } catch (Exception ex) {
+                logger.error("Caught exception stoppping resource service.", ex);
+            }
+
+        }
+
+    }
+
+    private LatchedExecutorServiceCompletionService getCompletionService() {
+        final LatchedExecutorServiceCompletionService completionService = this.completionService.get();
+        if (completionService == null) throw new IllegalStateException("Already running.");
+        return completionService;
     }
 
     @Override
@@ -46,7 +94,7 @@ public class SimpleResourceContext implements ResourceContext {
     @Override
     public void createAttributesAsync(final Consumer<ResourceId> success, final Consumer<Throwable> failure,
                                       final String module, final Path path, final Attributes attributes, final Object... args) {
-        getExecutorService().submit(() -> {
+        getCompletionService().submit(() -> {
             try {
                 final ResourceId resourceId = createAttributes(module, path, attributes, args);
                 success.accept(resourceId);
@@ -140,7 +188,7 @@ public class SimpleResourceContext implements ResourceContext {
 
     @Override
     public void destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure) {
-        getExecutorService().submit(() -> {
+        getCompletionService().submit(() -> {
 
             try {
                 getResourceService().removeAndCloseAllResources();

@@ -3,14 +3,23 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Represents the worker, hosing one or more nodes performing work.
  */
 public interface Worker {
 
+    /**
+     * Used with {@link javax.inject.Named} to name an instance of {@link ExecutorService} which is a general purpose
+     * pool of threads used for performing various tasks within the system.
+     */
     String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.worker.executor";
 
+    /**
+     * Used with {@link javax.inject.Named} to name an instance of {@link java.util.concurrent.ScheduledExecutorService}
+     * which is a general purpose pool of threads used for performing various tasks within the system.
+     */
     String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.scheduled.executor";
 
     /**

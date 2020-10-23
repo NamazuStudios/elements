@@ -1,9 +1,7 @@
 package com.namazustudios.socialengine.rt.guice;
 
-import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.SimpleIndexContext;
-import com.namazustudios.socialengine.rt.SimpleResourceContext;
 import com.namazustudios.socialengine.rt.remote.provider.CachedThreadPoolProvider;
 import com.namazustudios.socialengine.rt.remote.provider.ScheduledExecutorServiceProvider;
 

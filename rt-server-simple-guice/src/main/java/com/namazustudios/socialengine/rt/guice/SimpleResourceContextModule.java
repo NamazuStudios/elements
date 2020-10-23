@@ -9,7 +9,6 @@ import java.util.concurrent.ExecutorService;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.LOCAL;
-import static com.namazustudios.socialengine.rt.SimpleResourceContext.*;
 
 public class SimpleResourceContextModule extends PrivateModule {
 
@@ -23,10 +22,6 @@ public class SimpleResourceContextModule extends PrivateModule {
             .annotatedWith(named(LOCAL))
             .to(SimpleResourceContext.class)
             .asEagerSingleton();
-
-        bind(ExecutorService.class)
-            .annotatedWith(named(EXECUTOR_SERVICE))
-            .toProvider(new CPUCountThreadPoolProvider(SimpleResourceContext.class));
 
     }
 

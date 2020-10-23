@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.annotation.Routing;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.remote.WorkerInstance;
 import com.namazustudios.socialengine.rt.routing.ListAggregateRoutingStrategy;
+import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
@@ -23,6 +25,45 @@ public class SimpleIndexContext implements IndexContext {
     private ExecutorService executorService;
 
     private ResourceService resourceService;
+
+    private final AtomicReference<LatchedExecutorServiceCompletionService> completionService = new AtomicReference<>();
+
+    @Override
+    public void start() {
+
+        final var service = new LatchedExecutorServiceCompletionService(getExecutorService());
+
+        if (completionService.compareAndSet(null, service)) {
+
+            logger.info("Starting.");
+
+            try {
+                getResourceService().start();
+            } catch (Exception ex) {
+                completionService.compareAndSet(service, null);
+                throw ex;
+            }
+
+            logger.info("Started.");
+
+        } else {
+            throw new IllegalStateException("Already running.");
+        }
+
+    }
+
+    @Override
+    public void stop() {
+
+        final var completionService = this.completionService.getAndSet(null);
+
+        if (completionService == null) {
+            throw new IllegalStateException("Not running.");
+        } else {
+            completionService.stop();
+        }
+
+    }
 
     @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
     @Override
