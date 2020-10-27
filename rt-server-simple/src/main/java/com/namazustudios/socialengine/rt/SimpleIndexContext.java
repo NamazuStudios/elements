@@ -29,30 +29,6 @@ public class SimpleIndexContext implements IndexContext {
     private final AtomicReference<LatchedExecutorServiceCompletionService> completionService = new AtomicReference<>();
 
     @Override
-    public void start() {
-
-        final var service = new LatchedExecutorServiceCompletionService(getExecutorService());
-
-        if (completionService.compareAndSet(null, service)) {
-
-            logger.info("Starting.");
-
-            try {
-                getResourceService().start();
-            } catch (Exception ex) {
-                completionService.compareAndSet(service, null);
-                throw ex;
-            }
-
-            logger.info("Started.");
-
-        } else {
-            throw new IllegalStateException("Already running.");
-        }
-
-    }
-
-    @Override
     public void stop() {
 
         final var completionService = this.completionService.getAndSet(null);
