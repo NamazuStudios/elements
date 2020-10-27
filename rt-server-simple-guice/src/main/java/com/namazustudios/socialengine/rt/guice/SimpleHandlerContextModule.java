@@ -11,10 +11,18 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
 public class SimpleHandlerContextModule extends PrivateModule {
 
     private Runnable bindTimeout = () -> {};
+
+    /**
+     * Specifies the {@link HandlerContext} timeout to the default values.
+     */
+    public SimpleHandlerContextModule withDefaultTimeout() {
+        return withTimeout(60, SECONDS);
+    }
 
     /**
      * Specifies the {@link HandlerContext} timeout.

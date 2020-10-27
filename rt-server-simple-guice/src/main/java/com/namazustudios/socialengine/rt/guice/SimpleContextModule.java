@@ -31,7 +31,7 @@ public class SimpleContextModule extends PrivateModule {
         bindIndexContext = () -> install(new SimpleIndexContextModule());
         bindResourceContext = () -> install(new SimpleResourceContextModule());
         bindSchedulerContext = () -> install(new SimpleSchedulerContextModule());
-        bindHandlerContext = () -> install(new SimpleHandlerContextModule());
+        bindHandlerContext = () -> install(new SimpleHandlerContextModule().withDefaultTimeout());
         bindTaskContext = () -> install(new SimpleTaskContextModule());
         return this;
     }
