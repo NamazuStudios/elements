@@ -15,7 +15,6 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockito.Mockito.spy;
 
 public class UnitTestModule extends AbstractModule {

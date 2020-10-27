@@ -5,6 +5,7 @@ import com.google.inject.*;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -18,6 +19,10 @@ import com.namazustudios.socialengine.rt.remote.guice.ClusterContextModule;
 import com.namazustudios.socialengine.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
+import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
+import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -78,14 +83,14 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     public JeroMQEmbeddedTestService start() {
 
-        final InstanceId clientInstanceId = randomInstanceId();
-        final InstanceId workerInstanceId = randomInstanceId();
-        final ApplicationId applicationId = randomApplicationId();
+        final var clientInstanceId = randomInstanceId();
+        final var workerInstanceId = randomInstanceId();
+        final var applicationId = randomApplicationId();
 
-        final String clientBindAddress = format("inproc://integration-test-client/%s", clientInstanceId.asString());
-        final String workerBindAddress = format("inproc://integration-test-worker/%s", workerInstanceId.asString());
+        final var clientBindAddress = format("inproc://integration-test-client/%s", clientInstanceId.asString());
+        final var workerBindAddress = format("inproc://integration-test-worker/%s", workerInstanceId.asString());
 
-        final Module commonModule = new AbstractModule() {
+        final var commonModule = new AbstractModule() {
             @Override
             protected void configure() {
 
@@ -117,7 +122,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             }
         };
 
-        final Module workerModule = new AbstractModule() {
+        final var workerModule = new AbstractModule() {
             @Override
             protected void configure() {
 
@@ -125,19 +130,30 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 bind(ApplicationId.class).toInstance(applicationId);
                 bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(ClassLoader.getSystemClassLoader()));
 
+                final var allWorkerModules = new ArrayList<>(workerModules);
+
+                allWorkerModules.add(new TestServicesModule());
+                allWorkerModules.add(new TransactionalResourceServiceModule());
+                allWorkerModules.add(new SimpleContextModule()
+                    .withDefaultContexts()
+                    .withSchedulerContextModules(new XodusSchedulerContextModule())
+                );
+
                 install(commonModule);
                 install(new ClusterContextModule());
                 install(new FSTPayloadReaderWriterModule());
                 install(new TestWorkerInstanceModule());
                 install(new TestMasterNodeModule(workerInstanceId));
-                install(new TestWorkerNodeModule(workerInstanceId, applicationId, workerModules));
+                install(new TestWorkerNodeModule(workerInstanceId, applicationId, allWorkerModules));
                 install(new JeroMQInstanceConnectionServiceModule().withBindAddress(workerBindAddress));
                 install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
+                install(new SimpleTransactionalResourceServicePersistenceModule());
+                install(new UnixFSTransactionalPersistenceContextModule().withTestingDefaults());
 
             }
         };
 
-        final Module clientModule = new AbstractModule() {
+        final var clientModule = new AbstractModule() {
             @Override
             protected void configure() {
 
@@ -151,16 +167,15 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 install(new ClusterContextModule());
                 install(new FSTPayloadReaderWriterModule());
                 install(new TestClientInstanceModule());
-                install(new JeroMQInstanceConnectionServiceModule()
-                    .withBindAddress(clientBindAddress));
+                install(new JeroMQInstanceConnectionServiceModule().withBindAddress(clientBindAddress));
 
             }
         };
 
-        final Injector workerInjector = Guice.createInjector(workerModule);
+        final var workerInjector = Guice.createInjector(workerModule);
         worker = workerInjector.getInstance(Instance.class);
 
-        final Injector clientInjector = Guice.createInjector(clientModule);
+        final var clientInjector = Guice.createInjector(clientModule);
         client = clientInjector.getInstance(Instance.class);
         context = clientInjector.getInstance(get(Context.class, named(REMOTE)));
 

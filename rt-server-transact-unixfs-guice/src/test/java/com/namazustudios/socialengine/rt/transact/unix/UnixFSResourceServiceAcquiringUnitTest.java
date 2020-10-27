@@ -102,13 +102,9 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
             install(new TransactionalResourceServiceModule().exposeTransactionalResourceService());
             install(new SimpleTransactionalResourceServicePersistenceModule());
 
-            try {
-                install(new UnixFSTransactionalPersistenceContextModule()
-                    .exposeDetailsForTesting()
-                    .withTestingDefaults(name));
-            } catch (IOException e) {
-                addError(e);
-            }
+            install(new UnixFSTransactionalPersistenceContextModule()
+                .exposeDetailsForTesting()
+                .withTestingDefaults(name));
 
             final ResourceLoader resourceLoader = mock(ResourceLoader.class);
 

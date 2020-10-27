@@ -8,8 +8,6 @@ import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.ContextLocalInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 
 import javax.inject.Provider;
 import java.io.File;
@@ -37,14 +35,14 @@ public class ApplicationModule extends AbstractModule {
     protected void configure() {
 
         install(new LuaModule());
-        install(new XodusContextModule());
+//        install(new XodusContextModule());
 
         final File resources = new File(storageDirectory, RESOURCES_PATH);
         final File scheduler = new File(storageDirectory, SCHEDULER_PATH);
 
-        install(new XodusEnvironmentModule()
-            .withResourceEnvironmentPath(resources.getAbsolutePath())
-            .withSchedulerEnvironmentPath(scheduler.getAbsolutePath()));
+//        install(new XodusEnvironmentModule()
+//            .withResourceEnvironmentPath(resources.getAbsolutePath())
+//            .withSchedulerEnvironmentPath(scheduler.getAbsolutePath()));
 
         install(new GuiceIoCResolverModule());
         install(new RTFileAssetLoaderModule(codeDirectory));

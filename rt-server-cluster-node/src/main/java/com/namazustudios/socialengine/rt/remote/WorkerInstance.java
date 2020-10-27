@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
@@ -15,7 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -37,6 +37,8 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
     private Set<Node> nodeSet;
 
+    private Persistence persistence;
+
     private ExecutorService executorService;
 
     private ScheduledExecutorService scheduledExecutorService;
@@ -50,6 +52,13 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
     @Override
     protected void postStart(final Consumer<Exception> exceptionConsumer) {
+
+        try {
+            getPersistence().start();
+        } catch (Exception ex) {
+            logger.error("Could not start worker instance persistence.", ex);
+            exceptionConsumer.accept(ex);
+        }
 
         List<Node.Startup> startupList;
 
@@ -176,7 +185,7 @@ public class WorkerInstance extends SimpleInstance implements Worker {
     protected void postClose(Consumer<Exception> exceptionConsumer) {
 
         logger.info("Shutting down scheduler threads.");
-        getScheduledExecutorService().shutdown();
+        getExecutorService().shutdown();
 
         logger.info("Shutting down dispatcher threads.");
         getScheduledExecutorService().shutdown();
@@ -203,6 +212,13 @@ public class WorkerInstance extends SimpleInstance implements Worker {
             exceptionConsumer.accept(ex);
         }
 
+        try {
+            getPersistence().stop();
+        } catch (Exception ex) {
+            logger.error("Could not stop worker instance persistence.", ex);
+            exceptionConsumer.accept(ex);
+        }
+
     }
 
     @Override
@@ -212,6 +228,15 @@ public class WorkerInstance extends SimpleInstance implements Worker {
 
     public Set<Node> getNodeSet() {
         return nodeSet;
+    }
+
+    public Persistence getPersistence() {
+        return persistence;
+    }
+
+    @Inject
+    public void setPersistence(Persistence persistence) {
+        this.persistence = persistence;
     }
 
     @Inject

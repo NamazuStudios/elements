@@ -43,7 +43,7 @@ public class SerialStressTest {
                     }
                 });
 
-                install(new SimpleContextModule());
+                install(new SimpleContextModule().withDefaultContexts());
 
                 bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
                 bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();

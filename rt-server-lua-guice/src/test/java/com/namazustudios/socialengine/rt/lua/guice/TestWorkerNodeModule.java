@@ -40,7 +40,8 @@ public class TestWorkerNodeModule extends PrivateModule {
         install(new JeroMQNodeModule()
             .withNodeName("integration-test-node")
             .withMinimumConnections(MINIMUM_CONNECTIONS)
-            .withMaximumConnections(MAXIMUM_CONNECTIONS));
+            .withMaximumConnections(MAXIMUM_CONNECTIONS)
+        );
 
         bind(NodeId.class).toInstance(nodeId);
 

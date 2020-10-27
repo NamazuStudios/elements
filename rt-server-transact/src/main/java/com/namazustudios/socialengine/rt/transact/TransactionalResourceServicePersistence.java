@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.transact;
 
+import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 /**
@@ -8,18 +9,6 @@ import com.namazustudios.socialengine.rt.id.NodeId;
  *
  */
 public interface TransactionalResourceServicePersistence {
-
-    /**
-     * Starts the {@link TransactionalResourceServicePersistence} instance and obtains all resources necessary to
-     * begin accessing the underlying datastore.
-     */
-    void start();
-
-    /**
-     * Closes this {@link TransactionalResourceServicePersistence} instance and releases any underlying connections to
-     * the data storage. Outstanding transactions may be forcibly closed if this is called.
-     */
-    void stop();
 
     /**
      * Opens an instance of {@link ReadOnlyTransaction} with the underlying data store.

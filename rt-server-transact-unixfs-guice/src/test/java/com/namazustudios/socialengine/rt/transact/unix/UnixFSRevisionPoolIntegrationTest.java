@@ -110,14 +110,10 @@ public class UnixFSRevisionPoolIntegrationTest {
 
             bind(NodeId.class).toInstance(randomNodeId());
 
-            try {
-                install(new UnixFSTransactionalPersistenceContextModule()
-                        .exposeDetailsForTesting()
-                        .withTestingDefaults()
-                );
-            } catch (IOException e) {
-                addError(e);
-            }
+            install(new UnixFSTransactionalPersistenceContextModule()
+                .exposeDetailsForTesting()
+                .withTestingDefaults()
+            );
 
         }
     }

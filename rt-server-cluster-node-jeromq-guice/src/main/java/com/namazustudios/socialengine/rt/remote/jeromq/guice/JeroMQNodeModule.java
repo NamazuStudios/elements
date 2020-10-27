@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 
 import javax.inject.Provider;
 
@@ -32,7 +33,7 @@ public class JeroMQNodeModule extends PrivateModule {
 
     private Runnable bindTimeoutAction = () -> {};
 
-    private Function<AnnotatedBindingBuilder<Node>, LinkedBindingBuilder<Node>> bindAnnotationAction = a -> a;
+    private Function<AnnotatedBindingBuilder<Node>, LinkedBindingBuilder<Node>> bindNodeAction = a -> a;
 
     private Runnable exposeNodeAction = () -> expose(Node.class);
 
@@ -96,8 +97,8 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMinimumConnections(final int minimumConnections) {
         bindMinConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(MIN_CONNECTIONS))
-                .toInstance(minimumConnections);
+            .annotatedWith(named(MIN_CONNECTIONS))
+            .toInstance(minimumConnections);
         return this;
     }
 
@@ -117,23 +118,11 @@ public class JeroMQNodeModule extends PrivateModule {
     /**
      * Specifies an {@link Annotation} to bind to the underlying {@link Node}.
      *
-     * @param cls the annotation type to bind
-     * @return this instance
-     */
-    public JeroMQNodeModule withAnnotation(final Class<? extends Annotation> cls) {
-        bindAnnotationAction = a -> a.annotatedWith(cls);
-        exposeNodeAction = () -> expose(Node.class).annotatedWith(cls);
-        return this;
-    }
-
-    /**
-     * Specifies an {@link Annotation} to bind to the underlying {@link Node}.
-     *
      * @param annotation the literal annotation to bind
      * @return this instance
      */
     public JeroMQNodeModule withAnnotation(final Annotation annotation) {
-        bindAnnotationAction = a -> a.annotatedWith(annotation);
+        bindNodeAction = a -> a.annotatedWith(annotation);
         exposeNodeAction = () -> expose(Node.class).annotatedWith(annotation);
         return this;
     }
@@ -154,7 +143,7 @@ public class JeroMQNodeModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        bindAnnotationAction.apply(bind(Node.class)).to(JeroMQNode.class).asEagerSingleton();
+        bindNodeAction.apply(bind(Node.class)).to(JeroMQNode.class).asEagerSingleton();
 
         bindNodeIdAction.run();
         bindNodeNameAction.run();

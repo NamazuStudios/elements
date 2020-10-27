@@ -18,6 +18,7 @@ public class TransactionalResourceServiceModule extends PrivateModule {
 
         expose(ResourceService.class);
         expose(PersistenceStrategy.class);
+
         exposeTransactionalResourceServiceAction.run();
 
     }

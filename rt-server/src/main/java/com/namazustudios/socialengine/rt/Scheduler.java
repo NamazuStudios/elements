@@ -32,7 +32,7 @@ public interface Scheduler {
      * @param runnable the {@link Runnable} to run
      * @return a {@link Future<Void>} to control the execution state of the task
      */
-    default Future<Void> submitV(Runnable runnable) {
+    default Future<Void> submitV(final Runnable runnable) {
         return submit(() -> {
             runnable.run();
             return null;

@@ -126,13 +126,9 @@ public class UnixFSGarbageCollectorTest {
             install(new TransactionalResourceServiceModule().exposeTransactionalResourceService());
             install(new SimpleTransactionalResourceServicePersistenceModule());
 
-            try {
-                install(new UnixFSTransactionalPersistenceContextModule()
-                    .exposeDetailsForTesting()
-                    .withTestingDefaults());
-            } catch (IOException e) {
-                addError(e);
-            }
+            install(new UnixFSTransactionalPersistenceContextModule()
+                .exposeDetailsForTesting()
+                .withTestingDefaults());
 
             final ResourceLoader resourceLoader = mock(ResourceLoader.class);
 

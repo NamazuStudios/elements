@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -23,7 +24,7 @@ import java.util.stream.Stream;
 import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class SimpleTransactionalResourceServicePersistence implements TransactionalResourceServicePersistence {
+public class SimpleTransactionalResourceServicePersistence implements Persistence, TransactionalResourceServicePersistence {
 
     private static final Logger logger = getLogger(SimpleTransactionalResourceServicePersistence.class);
 

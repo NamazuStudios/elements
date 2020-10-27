@@ -18,6 +18,7 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJ
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.TRANSACTION_BUFFER_SIZE;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.STORAGE_ROOT_DIRECTORY;
 import static java.lang.String.format;
+import static java.nio.file.Files.createTempDirectory;
 
 public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
 
@@ -165,7 +166,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
      * @return this instance
      * @throws IOException if there was an error creating the test directory
      */
-    public UnixFSTransactionalPersistenceContextModule withTestingDefaults() throws IOException {
+    public UnixFSTransactionalPersistenceContextModule withTestingDefaults() {
         return withTestingDefaults("");
     }
 
@@ -177,19 +178,26 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
      * @return this instance
      * @throws IOException if there was an error creating the test directory
      */
-    public UnixFSTransactionalPersistenceContextModule withTestingDefaults(final String name) throws IOException {
+    public UnixFSTransactionalPersistenceContextModule withTestingDefaults(final String name) {
 
         final String prefix = name == null || name.trim().isEmpty() ?
             "elements-unixfs-test" :
             format("elements-unixfs-test-%s", name);
 
-        final Path path = Files.createTempDirectory(prefix);
-        return withStorageRoot(path)
-               .withTransactionBufferSize(4096)
-               .withTransactionBufferCount(4096)
-               .withRevisionTableCount(4096)
-               .withChecksumAlgorithm(ADLER_32)
-               .withRevisionPoolSize(Integer.MAX_VALUE);
+        storageRootBinding = () -> bind(Path.class).annotatedWith(named(STORAGE_ROOT_DIRECTORY)).toProvider(() -> {
+            try {
+                return createTempDirectory(prefix);
+            } catch (IOException ex) {
+                addError(ex);
+                return null;
+            }
+        });
+
+        return withTransactionBufferSize(4096)
+                .withTransactionBufferCount(4096)
+                .withRevisionTableCount(4096)
+                .withChecksumAlgorithm(ADLER_32)
+                .withRevisionPoolSize(Integer.MAX_VALUE);
 
     }
 

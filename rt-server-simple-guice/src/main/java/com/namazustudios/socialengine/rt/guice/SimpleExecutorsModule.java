@@ -55,6 +55,9 @@ public class SimpleExecutorsModule extends PrivateModule {
             .toProvider(new CachedThreadPoolProvider(SimpleIndexContext.class, "Shared Context"))
             .asEagerSingleton();
 
+        expose(ExecutorService.class).annotatedWith(named(EXECUTOR_SERVICE));
+        expose(ScheduledExecutorService.class).annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE));
+
     }
 
 }
