@@ -28,8 +28,8 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.AdvancedDatastore;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;

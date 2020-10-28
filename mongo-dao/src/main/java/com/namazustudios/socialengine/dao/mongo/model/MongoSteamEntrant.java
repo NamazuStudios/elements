@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Indexed;
+import dev.morphia.annotations.Property;
 
 /**
  * Created by patricktwohig on 3/26/15.

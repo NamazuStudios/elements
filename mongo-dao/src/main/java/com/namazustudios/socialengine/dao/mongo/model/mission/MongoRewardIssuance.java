@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.model.reward.RewardIssuance.Type;
 import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
 import java.util.List;

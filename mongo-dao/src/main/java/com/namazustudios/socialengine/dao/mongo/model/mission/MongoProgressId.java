@@ -3,9 +3,9 @@ package com.namazustudios.socialengine.dao.mongo.model.mission;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Indexed;
+import dev.morphia.annotations.Property;
 
 import java.util.Base64;
 import java.util.Objects;

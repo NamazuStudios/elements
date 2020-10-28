@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import org.mongodb.morphia.annotations.*;
-import org.mongodb.morphia.utils.IndexType;
+import dev.morphia.annotations.*;
+import dev.morphia.utils.IndexType;
 
 import java.sql.Timestamp;
 

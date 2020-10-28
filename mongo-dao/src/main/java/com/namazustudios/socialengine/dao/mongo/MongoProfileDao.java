@@ -21,10 +21,10 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.*;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.*;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.AdvancedDatastore;
+import dev.morphia.FindAndModifyOptions;
+import dev.morphia.query.*;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.util.Date;

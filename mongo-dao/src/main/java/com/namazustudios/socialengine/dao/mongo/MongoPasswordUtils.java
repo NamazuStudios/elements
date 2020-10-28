@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.InternalException;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import javax.inject.Named;

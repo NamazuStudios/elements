@@ -16,8 +16,8 @@ import com.namazustudios.socialengine.model.ShortLink;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Singleton;

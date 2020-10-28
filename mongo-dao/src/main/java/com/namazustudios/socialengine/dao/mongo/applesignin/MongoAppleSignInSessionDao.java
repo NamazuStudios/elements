@@ -15,8 +15,8 @@ import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;

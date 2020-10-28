@@ -11,9 +11,9 @@ import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import org.dozer.Mapper;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
+import dev.morphia.query.Sort;
 
 import javax.inject.Inject;
 import java.util.List;

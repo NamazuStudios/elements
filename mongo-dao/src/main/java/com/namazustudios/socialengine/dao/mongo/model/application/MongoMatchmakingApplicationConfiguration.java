@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model.application;
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.socialengine.dao.mongo.model.MongoCallbackDefinition;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
-import org.mongodb.morphia.annotations.Entity;
+import dev.morphia.annotations.Entity;
 
 /**
  * Maps to {@link com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration}.

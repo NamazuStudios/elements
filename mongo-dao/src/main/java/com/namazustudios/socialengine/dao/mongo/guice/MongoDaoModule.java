@@ -18,8 +18,8 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunction
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Datastore;
+import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 
 import java.security.MessageDigest;
 import java.util.function.Function;

@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.Objects;
 import java.util.Set;

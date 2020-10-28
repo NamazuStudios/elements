@@ -7,7 +7,7 @@ import com.namazustudios.elements.fts.annotation.SearchableDocument;
         import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
         import com.namazustudios.socialengine.model.application.ConfigurationCategory;
         import org.bson.types.ObjectId;
-        import org.mongodb.morphia.annotations.*;
+        import dev.morphia.annotations.*;
 
 import java.util.*;
 

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model.match;
 
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
 import java.util.UUID;

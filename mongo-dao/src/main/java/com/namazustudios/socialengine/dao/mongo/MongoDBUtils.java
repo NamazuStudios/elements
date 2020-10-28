@@ -13,9 +13,9 @@ import com.namazustudios.elements.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.AdvancedDatastore;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;

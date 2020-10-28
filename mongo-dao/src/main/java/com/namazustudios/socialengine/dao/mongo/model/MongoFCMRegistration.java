@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 @Entity(value = "fcm_registration", noClassnameStored = true)
 @Indexes({

@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.model.application;
 
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Property;
 
 @SearchableDocument
 @Entity(value = "application_configuration", noClassnameStored = true)

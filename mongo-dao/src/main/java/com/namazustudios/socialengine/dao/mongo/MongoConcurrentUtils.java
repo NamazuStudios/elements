@@ -1,11 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateResults;
+import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
+import dev.morphia.Key;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -92,7 +92,7 @@ public class MongoConcurrentUtils {
 
     /**
      * A basic a atomic operation.  The operation is supplied with a
-     * {@link org.mongodb.morphia.Datastore} instance which is used to handel the atomic
+     * {@link dev.morphia.Datastore} instance which is used to handel the atomic
      * operation.
      *
      * @param <ReturnT> the operation

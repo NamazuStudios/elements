@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo.model.match;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Reference;
+import dev.morphia.annotations.Indexed;
+import dev.morphia.annotations.Property;
+import dev.morphia.annotations.Reference;
 
 import java.sql.Timestamp;
 

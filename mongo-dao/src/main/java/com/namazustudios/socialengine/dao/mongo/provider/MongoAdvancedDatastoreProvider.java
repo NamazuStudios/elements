@@ -10,8 +10,8 @@ import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoMission;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Morphia;
+import dev.morphia.AdvancedDatastore;
+import dev.morphia.Morphia;
 
 import javax.inject.Inject;
 import javax.inject.Named;
