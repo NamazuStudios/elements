@@ -367,12 +367,12 @@ public class UnixFSPathIndex implements PathIndex {
         public Revision<Set<com.namazustudios.socialengine.rt.Path>> getValueAt(final Revision<?> revision,
                                                                                 final ResourceId key) {
 
-            final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromNodeId(utils, nodeId);
-            final Path reverseDirectory = reversePathMapping.resolveReverseDirectory(key);
+            final var reversePathMapping = UnixFSReversePathMapping.fromNodeId(utils, nodeId);
+            final var reverseDirectory = reversePathMapping.resolveReverseDirectory(key);
 
             if (!exists(reverseDirectory)) return revision.withOptionalValue(Optional.empty());
 
-            final Set<com.namazustudios.socialengine.rt.Path> pathSet = getUtils()
+            final var value = getUtils()
                 .findLatestForRevision(reverseDirectory, revision, DIRECTORY)
                 .map(directory -> getUtils().doOperation(() -> Files.list(directory)))
                 .map(symlinkStream -> symlinkStream
@@ -380,9 +380,9 @@ public class UnixFSPathIndex implements PathIndex {
                     .map(symlink -> UnixFSPathMapping.fromFullyQualifiedSymlinkPath(utils, symlink))
                     .map(mapping -> mapping.getPath())
                     .collect(toSet())
-                ).getValue().orElseGet(Collections::emptySet);
+                ).getValue();
 
-            return revision.withValue(pathSet);
+            return revision.withOptionalValue(value);
 
         }
 

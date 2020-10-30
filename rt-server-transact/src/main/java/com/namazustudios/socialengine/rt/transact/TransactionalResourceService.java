@@ -171,7 +171,7 @@ public class TransactionalResourceService implements ResourceService {
 
             } catch (NullResourceException ex) {
                 final Unlink unlink = txn.unlinkPath(normalized);
-                acm.evict(resourceId, removed);
+                if (unlink.isRemoved()) acm.evict(resourceId, removed);
                 return unlink;
             } catch (IOException ex) {
                 throw new InternalException(ex);

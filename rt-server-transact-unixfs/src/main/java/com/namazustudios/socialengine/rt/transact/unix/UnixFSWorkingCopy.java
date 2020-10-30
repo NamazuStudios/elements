@@ -14,14 +14,14 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceId;
-import static java.util.Collections.emptySet;
+import static java.util.Collections.singleton;
 import static java.util.Objects.requireNonNull;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -32,8 +32,6 @@ class UnixFSWorkingCopy {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSWorkingCopy.class);
 
-    private static final ResourceId NULL_RESOURCE_ID = randomResourceId();
-
     private final NodeId nodeId;
 
     private final Revision<?> revision;
@@ -42,9 +40,7 @@ class UnixFSWorkingCopy {
 
     private final UnixFSPessimisticLocking pessimisticLocking;
 
-    private final HashMap<Path, ResourceId> pathToResourceIds = new HashMap<>();
-
-    private final HashMap<ResourceId, Set<Path>> resourceIdToPaths = new HashMap<>();
+    private final Map<Object, Modification> modifications = new HashMap<>();
 
     public UnixFSWorkingCopy(final NodeId nodeId,
                              final Revision<?> revision,
@@ -56,79 +52,63 @@ class UnixFSWorkingCopy {
         this.pessimisticLocking = pessimisticLocking;
     }
 
-    private ResourceId getResourceId(final Path path) {
+    private Modification get(final Path path) {
         requireNonNull(path, "path");
-        return pathToResourceIds.compute(path, (p, rid) -> rid == null ? load(path) : rid);
+        return modifications.compute(path, (p, old) -> old == null ? load(path) : old).reindex();
     }
 
-    private ResourceId load(final Path path) {
-
-        if (path.isWildcard()) throw new IllegalArgumentException("Must be regular path.");
+    private Modification load(final Path path) {
 
         final ResourceId resourceId = unixFSPathIndex
-                .getRevisionMap(nodeId)
-                .getValueAt(revision, path)
-                .getValue()
-            .orElse(NULL_RESOURCE_ID);
+            .getRevisionMap(nodeId)
+            .getValueAt(revision, path)
+            .getValue()
+            .orElse(null);
 
-        load(resourceId);
-        return resourceId;
+        final Set<Path> paths = resourceId == null ? new HashSet<>(singleton(path)) : unixFSPathIndex
+            .getReverseRevisionMap(nodeId)
+            .getValueAt(revision, resourceId)
+            .getValue()
+            .orElseGet(() -> new HashSet<>(singleton(path)));
+
+        return new Modification(resourceId, paths);
 
     }
 
-    private Set<Path> getPathsForResourceId(final ResourceId resourceId) {
+    private Modification get(final ResourceId resourceId) {
         requireNonNull(resourceId, "resourceId");
-        return resourceIdToPaths.compute(resourceId, (rid, p) -> p == null ? load(rid) : p);
+        return modifications.compute(resourceId, (r, old) -> old == null ? load(resourceId) : old);
     }
 
-    private Set<Path> load(final ResourceId resourceId) {
-
-        if (resourceId.equals(NULL_RESOURCE_ID)) return emptySet();
+    private Modification load(final ResourceId resourceId) {
 
         final Set<Path> paths = unixFSPathIndex
-                .getReverseRevisionMap(nodeId)
-                .getValueAt(revision, resourceId)
-                .getValue()
-                .map(HashSet::new)
+            .getReverseRevisionMap(nodeId)
+            .getValueAt(revision, resourceId)
+            .getValue()
             .orElseGet(HashSet::new);
 
-        paths.forEach(path -> this.pathToResourceIds.put(path, resourceId));
-        if (this.resourceIdToPaths.putIfAbsent(resourceId, paths) != null) throw new IllegalStateException("Already loaded");
+        return new Modification(resourceId, paths);
 
-        return paths;
-
-    }
-
-    private boolean isPresent(final ResourceId resourceId) {
-        return !getPathsForResourceId(resourceId).isEmpty();
-    }
-
-    private boolean isPresent(final Path path) {
-        return !NULL_RESOURCE_ID.equals(getResourceId(path));
     }
 
     public ResourceService.Unlink unlink(final Path path, final BiConsumer<ResourceId, Boolean> success) throws TransactionConflictException {
 
-        final ResourceId resourceId = getResourceId(path);
-        if (NULL_RESOURCE_ID.equals(resourceId)) throw new ResourceNotFoundException();
+        final var modification = get(path).enforceExistence();
 
         pessimisticLocking.lock(path);
-        pessimisticLocking.lock(resourceId);
+        pessimisticLocking.lock(modification.resourceId);
 
-        final Set<Path> paths = getPathsForResourceId(resourceId);
-        if (paths.remove(path)) logger.warn("Consistency error. Reverse mapping broken.");
+        modification.remove(path);
 
-        final boolean removed = paths.isEmpty();
-        resourceIdToPaths.put(resourceId, new HashSet<>());
-        pathToResourceIds.put(path, NULL_RESOURCE_ID);
-
-        success.accept(resourceId, removed);
+        final var removed = modification.isEmpty();
+        success.accept(modification.resourceId, removed);
 
         return new ResourceService.Unlink() {
 
             @Override
             public ResourceId getResourceId() {
-                return resourceId;
+                return modification.resourceId;
             }
 
             @Override
@@ -146,18 +126,19 @@ class UnixFSWorkingCopy {
             final UnixFSUtils.IOOperation<WritableByteChannel> writableByteChannelSupplier)
             throws TransactionConflictException, IOException {
 
+        final var pathMod = get(path);
+        final var resourceIdMod = get(resourceId);
+
+        // Checks that both paths and resource IDs are free and available for use
+        pathMod.checkDuplicate();
+        resourceIdMod.checkDuplicate();
+
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
         pessimisticLocking.lock(resourceId);
 
-        // Checks that both paths and resource IDs are free and available for use
-
-        if (isPresent(path)) throw new DuplicateException();
-        if (isPresent(resourceId)) throw new DuplicateException();
-
         // Performs the linkage to the resource ID and the path.
-        pathToResourceIds.put(path, resourceId);
-        getPathsForResourceId(resourceId).add(path);
+        resourceIdMod.merge(pathMod).reindex();
 
         return writableByteChannelSupplier.perform();
 
@@ -167,7 +148,7 @@ class UnixFSWorkingCopy {
             final ResourceId resourceId,
             final UnixFSUtils.IOOperation<WritableByteChannel> writableByteChannelSupplier)
             throws TransactionConflictException, IOException {
-        if (!isPresent(resourceId)) throw new ResourceNotFoundException();
+        get(resourceId).enforceExistence();
         pessimisticLocking.lock(resourceId);
         return writableByteChannelSupplier.perform();
     }
@@ -176,19 +157,17 @@ class UnixFSWorkingCopy {
                                 final Path path,
                                 final Runnable onSuccess) throws TransactionConflictException {
 
+        // Checks that both paths and resource IDs are free and available for use
+
+        final var pathMod = get(path).checkDuplicate();
+        final var resourceIdMod = get(resourceId).checkDuplicate();
+
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
         pessimisticLocking.lock(resourceId);
 
-        // Checks that both paths and resource IDs are free and available for use
-
-        if (isPresent(path)) throw new DuplicateException();
-        if (isPresent(resourceId)) throw new DuplicateException();
-
         // Performs the linkage to the resource ID and the path.
-        pathToResourceIds.put(path, resourceId);
-        getPathsForResourceId(resourceId).add(path);
-
+        resourceIdMod.merge(pathMod).reindex();
         onSuccess.run();
 
     }
@@ -197,18 +176,17 @@ class UnixFSWorkingCopy {
                                      final Path path,
                                      final Runnable onSuccess) throws TransactionConflictException {
 
+        final var pathMod = get(path).checkDuplicate();
+        final var resourceIdMod = get(resourceId).enforceExistence();
+
+        final Modification modification = get(resourceId);
+
         // Locks them to ensure that this transactional entry can access them.
         pessimisticLocking.lock(path);
         pessimisticLocking.lock(resourceId);
 
-        if (isPresent(path)) throw new DuplicateException();
-        if (!isPresent(resourceId))
-            throw new ResourceNotFoundException();
-
         // Performs the linkage to the resource ID and the path.
-        pathToResourceIds.put(path, resourceId);
-        getPathsForResourceId(resourceId).add(path);
-
+        resourceIdMod.merge(pathMod).reindex();
         onSuccess.run();
 
     }
@@ -219,13 +197,9 @@ class UnixFSWorkingCopy {
 
         pessimisticLocking.lock(path);
 
-        final List<ResourceService.Listing> listings = unixFSPathIndex.list(nodeId, revision, path)
-            .getValue()
-            .orElseGet(Stream::empty)
-            .limit(max)
-            .collect(toList());
+        final var listings = list(path).limit(max).collect(toList());
 
-        for (final ResourceService.Listing listing : listings) {
+        for (final var listing : listings) {
             // Lock Everything we want to clear out
             pessimisticLocking.lock(listing.getPath());
             pessimisticLocking.lock(listing.getResourceId());
@@ -235,13 +209,11 @@ class UnixFSWorkingCopy {
             .stream()
             .map(listing -> {
 
-                final Set<Path> paths = getPathsForResourceId(listing.getResourceId());
+                final var modification = get(listing.getResourceId());
+                modification.remove(listing.getPath());
 
-                pathToResourceIds.put(listing.getPath(), NULL_RESOURCE_ID);
-                if (!paths.remove(paths)) logger.warn("Consistency Error. Reverse path mapping broken.");
-
-                final boolean removed = paths.isEmpty();
-                unlinkOperation.processRemoval(listing.getPath(), listing.getResourceId(), paths.isEmpty());
+                final var removed = modification.paths.isEmpty();
+                unlinkOperation.processRemoval(listing.getPath(), listing.getResourceId(), removed);
 
                 return new ResourceService.Unlink() {
 
@@ -263,26 +235,17 @@ class UnixFSWorkingCopy {
 
     public void removeResource(final ResourceId resourceId,
                                final Consumer<Path> onRemove) throws TransactionConflictException {
-
-        if (!isPresent(resourceId)) throw new ResourceNotFoundException();
-        final Set<Path> paths = getPathsForResourceId(resourceId);
-
+        final var resourceIdMod = get(resourceId).enforceExistence();
         pessimisticLocking.lock(resourceId);
-        pessimisticLocking.lockPaths(paths);
-
-        doRemove(paths, onRemove);
-
+        pessimisticLocking.lockPaths(resourceIdMod.paths);
+        resourceIdMod.clear(onRemove);
     }
 
-    public List<ResourceId> removeResources(
+    public List<ResourceId>  removeResources(
             final Path path, final int max,
             final BiConsumer<Path, ResourceId> onRemove) throws TransactionConflictException {
 
-        final List<ResourceService.Listing> listings = unixFSPathIndex.list(nodeId, revision, path)
-                .getValue()
-                .orElseGet(Stream::empty)
-                .limit(max)
-            .collect(toList());
+        final var listings = list(path).limit(max).collect(toList());
 
         for (final ResourceService.Listing listing : listings) {
             // Lock Everything we want to clear out
@@ -290,27 +253,35 @@ class UnixFSWorkingCopy {
             pessimisticLocking.lock(listing.getResourceId());
         }
 
-        return listings
-            .stream()
-            .map(listing -> {
-                final ResourceId resourceId = listing.getResourceId();
-                final Set<Path> paths = getPathsForResourceId(resourceId);
-                doRemove(paths, p -> onRemove.accept(p, resourceId));
-                return listing.getResourceId();
-            }).collect(toList());
+        final List<ResourceId> removed = new ArrayList<>();
+
+        for (final var listing : listings) {
+
+            final var resourceId = listing.getResourceId();
+            final var modification = get(listing.getResourceId());
+
+            if (modification.isPresent()) {
+                removed.add(resourceId);
+                modification.clear(p -> onRemove.accept(p, resourceId));
+            }
+
+        }
+
+        return removed;
 
     }
 
-    private void doRemove(final Set<Path> paths, final Consumer<Path> onRemove) {
+    private final Stream<ResourceService.Listing> list(final Path path) {
 
-        final Set<Path> removed = new HashSet<>();
+        final Predicate<ResourceService.Listing> filter = l -> {
+            final var mod = modifications.get(l.getPath());
+            return mod != null && !mod.isEmpty();
+        };
 
-        try {
-            paths.forEach(onRemove.andThen(removed::add));
-        } finally {
-            paths.removeAll(removed);
-            pathToResourceIds.keySet().removeAll(removed);
-        }
+        return unixFSPathIndex.list(nodeId, revision, path)
+            .getValue()
+            .map(s -> s.filter(filter))
+            .orElseGet(Stream::empty);
 
     }
 
@@ -318,6 +289,91 @@ class UnixFSWorkingCopy {
     public interface UnlinkOperation {
 
         void processRemoval(final Path fqPath, final ResourceId resourceId, final boolean delete);
+
+    }
+
+    private class Modification {
+
+        private ResourceId resourceId;
+
+        private final Set<Path> paths;
+
+        public Modification(final Path path) {
+            this(null, new HashSet<>(singleton(path)));
+        }
+
+        public Modification(final ResourceId resourceId, final Set<Path> paths) {
+            this.paths = paths;
+            this.resourceId = resourceId;
+        }
+
+        @Override
+        public String toString() {
+            return "Modification " + resourceId +
+                    " -> " +
+                   "{" + paths.stream().map(p -> p.toAbsolutePathString()).collect(joining()) + "}";
+        }
+
+        private boolean isEmpty() {
+            return resourceId == null || paths.isEmpty();
+        }
+
+        private boolean isPresent() {
+            return !isEmpty();
+        }
+
+        private Modification reindex() {
+            reindexPaths();
+            reindexResourceId();
+            return this;
+        }
+
+        private Modification reindexPaths() {
+            paths.forEach(p -> modifications.put(p, this));
+            return this;
+        }
+
+        private Modification reindexResourceId() {
+            if (resourceId != null) modifications.put(resourceId, this);
+            return this;
+        }
+
+        public Modification merge(Modification other) {
+
+            final var paths = new HashSet<Path>();
+            paths.addAll(this.paths);
+            paths.addAll(other.paths);
+
+            final var resourceId =
+                this.resourceId != null && other.resourceId == null ? this.resourceId :
+                this.resourceId == null && other.resourceId != null ? other.resourceId :
+                null;
+
+            if (paths.isEmpty()) throw new IllegalArgumentException("Must have at least one path.");
+            if (resourceId == null) throw new IllegalArgumentException("Must have at least one resourceId.");
+
+            return new Modification(resourceId, paths);
+
+        }
+
+        public Modification checkDuplicate() {
+            if (isPresent()) throw new DuplicateException();
+            return this;
+        }
+
+        private Modification enforceExistence() {
+            if (isEmpty()) throw new ResourceNotFoundException();
+            return this;
+        }
+
+        public void clear(final Consumer<Path> onRemove) {
+            paths.forEach(onRemove.andThen(p -> modifications.put(p, new Modification(p))));
+        }
+
+        private void remove(final Path path) {
+            paths.remove(path);
+            modifications.put(path, new Modification(path));
+        }
 
     }
 
