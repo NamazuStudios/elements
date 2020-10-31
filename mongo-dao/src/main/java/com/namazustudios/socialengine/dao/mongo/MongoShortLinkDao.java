@@ -4,6 +4,7 @@ import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.google.common.io.BaseEncoding;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.ShortLinkDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoShortLink;
@@ -13,6 +14,8 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ShortLink;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
@@ -73,14 +76,14 @@ public class MongoShortLinkDao implements ShortLinkDao {
     public ShortLink getShortLinkWithId(String id) {
 
         final ObjectId objectId = mongoDBUtils.parseOrThrowNotFoundException(id);
-        final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, objectId);
+        final MongoShortLink mongoShortLink = datastore.find(MongoShortLink.class)
+                .filter(Filters.eq("_id", objectId)).first();
 
         if (mongoShortLink == null) {
             throw new NotFoundException("short link with id " + id + " not found");
         }
 
         return transform(mongoShortLink);
-
     }
 
     @Override
@@ -101,7 +104,8 @@ public class MongoShortLinkDao implements ShortLinkDao {
             throw new NotFoundException();
         }
 
-        final MongoShortLink mongoShortLink = datastore.get(MongoShortLink.class, objectId);
+        final MongoShortLink mongoShortLink = datastore.find(MongoShortLink.class)
+                .filter(Filters.eq("_id", objectId)).first();
 
         if (mongoShortLink == null) {
             throw new NotFoundException();
@@ -144,9 +148,10 @@ public class MongoShortLinkDao implements ShortLinkDao {
             throw new NotFoundException();
         }
 
-        final WriteResult writeResult = datastore.delete(MongoShortLink.class, objectId);
+        final DeleteResult deleteResult = datastore.find(MongoShortLink.class)
+                .filter(Filters.eq("_id", objectId)).delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException();
         }
 
@@ -193,7 +198,7 @@ public class MongoShortLinkDao implements ShortLinkDao {
                         return transform(input);
                     }
 
-                });
+                }, new FindOptions());
     }
 
     public void validate(final ShortLink shortLink) {

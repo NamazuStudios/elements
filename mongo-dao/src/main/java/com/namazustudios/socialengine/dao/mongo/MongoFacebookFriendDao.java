@@ -11,7 +11,10 @@ import dev.morphia.Datastore;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
-import dev.morphia.query.UpdateResults;
+import com.mongodb.client.result.UpdateResult;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperator;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,20 +59,15 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
             final MongoFriendshipId mongoFriendshipId;
             mongoFriendshipId = new MongoFriendshipId(mongoUser.getObjectId(), friend.getObjectId());
 
-            final UpdateOperations<MongoFriendship> update;
-            update = getDatastore().createUpdateOperations(MongoFriendship.class);
+            final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
+            final UpdateResult r = query.filter(Filters.eq("_id", mongoFriendshipId))
+                    .update(UpdateOperators.set("_id", mongoFriendshipId),
+                            UpdateOperators.set("lesserAccepted", true),
+                            UpdateOperators.set("greaterAccepted", true))
+                    .execute();
+            logger.debug("Updated {}.", r.getModifiedCount());
 
-            update.set("_id", mongoFriendshipId);
-            update.set("lesserAccepted", true);
-            update.set("greaterAccepted", true);
-
-            final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
-            query.field("_id").equal(mongoFriendshipId);
-
-            final UpdateResults r = getDatastore().update(query, update, new UpdateOptions().upsert(true));
-            logger.debug("Updated {}.  Inserted {}", r.getUpdatedCount(), r.getInsertedCount());
-
-            getObjectIndex().index(query.get());
+            getObjectIndex().index(query.first());
 
         }
     }

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.GooglePlayIapReceiptDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoGooglePlayIapReceipt;
@@ -13,6 +14,8 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 import dev.morphia.AdvancedDatastore;
 import dev.morphia.query.Query;
@@ -42,9 +45,9 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
 
     @Override
     public Pagination<GooglePlayIapReceipt> getGooglePlayIapReceipts(User user, int offset, int count) {
-        final Query<MongoGooglePlayIapReceipt> query = getDatastore().createQuery(MongoGooglePlayIapReceipt.class);
+        final Query<MongoGooglePlayIapReceipt> query = getDatastore().find(MongoGooglePlayIapReceipt.class);
 
-        query.field("user").equal(getDozerMapper().map(user, MongoUser.class));
+        query.filter(Filters.eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
@@ -60,11 +63,11 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
         }
 
         final Query<MongoGooglePlayIapReceipt> receiptQuery =
-                getDatastore().createQuery(MongoGooglePlayIapReceipt.class);
+                getDatastore().find(MongoGooglePlayIapReceipt.class);
 
-        receiptQuery.criteria("_id").equal(orderId);
+        receiptQuery.filter(Filters.eq("_id", orderId));
 
-        final MongoGooglePlayIapReceipt mongoGooglePlayIapReceipt = receiptQuery.get();
+        final MongoGooglePlayIapReceipt mongoGooglePlayIapReceipt = receiptQuery.first();
 
         if(null == mongoGooglePlayIapReceipt) {
             throw new NotFoundException("Unable to find google play iap receipt with an id of " + orderId);
@@ -97,14 +100,17 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
 
         getObjectIndex().index(mongoGooglePlayIapReceipt);
 
-        return getDozerMapper().map(getDatastore().get(mongoGooglePlayIapReceipt), GooglePlayIapReceipt.class);
+        final Query<MongoGooglePlayIapReceipt> query = getDatastore().find(MongoGooglePlayIapReceipt.class);
+        query.filter(Filters.eq("_id", mongoGooglePlayIapReceipt.getOrderId()));
+        return getDozerMapper().map(query.first(), GooglePlayIapReceipt.class);
     }
 
     @Override
     public void deleteGooglePlayIapReceipt(String orderId) {
-        final WriteResult writeResult = getDatastore().delete(MongoGooglePlayIapReceipt.class, orderId);
+        final DeleteResult deleteResult = getDatastore().find(MongoGooglePlayIapReceipt.class)
+                .filter(Filters.eq("_id", orderId)).delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Google Play IAP Receipt not found: " + orderId);
         }
     }

@@ -15,7 +15,9 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.*;
 import dev.morphia.Datastore;
+import dev.morphia.query.CountOptions;
 import dev.morphia.query.Query;
+import dev.morphia.query.experimental.filters.Filters;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -71,7 +73,8 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
         validate(socialCampaign);
 
-        final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, socialCampaign.getName());
+        final MongoSocialCampaign mongoSocialCampaign = datastore.find(MongoSocialCampaign.class)
+                .filter(Filters.eq("name", socialCampaign.getName())).first();
 
         if (mongoSocialCampaign == null) {
             throw new NotFoundException("Social campaign " + socialCampaign.getName() + " was not found.");
@@ -94,12 +97,11 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
         final Query<MongoSocialCampaign> campaigns = datastore.find(MongoSocialCampaign.class);
 
         count = Math.min(count, queryMaxResults);
-        campaigns.offset(offset).limit(count);
 
         final Pagination<SocialCampaign> socialCampaignPagination = new Pagination<>();
 
         socialCampaignPagination.setOffset(offset);
-        socialCampaignPagination.setTotal((int)campaigns.getCollection().getCount());
+        socialCampaignPagination.setTotal((int)campaigns.count(new CountOptions().skip(offset).limit(count)));
 
         final Iterable<SocialCampaign> socialCampaignIterable =
                 Iterables.transform(campaigns, new Function<MongoSocialCampaign, SocialCampaign>() {
@@ -117,7 +119,8 @@ public class MongoSocialCampaignDao implements SocialCampaignDao {
 
     @Override
     public SocialCampaign getSocialCampaign(String name) {
-        final MongoSocialCampaign mongoSocialCampaign = datastore.get(MongoSocialCampaign.class, name);
+        final MongoSocialCampaign mongoSocialCampaign = datastore.find(MongoSocialCampaign.class)
+                .filter(Filters.eq("name", name)).first();
 
         if (mongoSocialCampaign == null) {
             throw new NotFoundException("Social campaign " + name + " was not found.");

@@ -14,6 +14,10 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filter;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import dev.morphia.AdvancedDatastore;
@@ -22,6 +26,10 @@ import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
@@ -49,45 +57,40 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> updates = getDatastore().createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        Map<String, Object> insertMap = new HashMap<>(Collections.emptyMap());
 
         if (user.getId() == null) {
-            updates.setOnInsert("_id", new ObjectId());
+            insertMap.put("_id", new ObjectId());
         } else {
             final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
-            query.field("_id").equal(objectId);
+            query.filter(Filters.eq("_id", objectId));
         }
 
-        query.or(
-
-            // Either we find a user with the supplied Apple Sign-In ID.
-            query.criteria("appleSignInId").equal(user.getAppleSignInId()),
-
-            // Or we find a user who has no Apple Sign-In ID and the email does match.
-            query.and(
-                query.criteria("appleSignInId").doesNotExist(),
-                query.criteria("email").equal(user.getEmail())
-            )
-
-        );
+        query.filter(Filters.or(
+                Filters.eq("appleSignInId", user.getAppleSignInId()),
+                Filters.and(
+                    Filters.exists("appleSignInId").not(),
+                    Filters.eq("email", user.getEmail())
+                )
+        ));
 
         // We only reactivate the existing user, all other fields are left untouched if the user exists.
-        updates.set("active", true);
+        insertMap.put("email", user.getEmail());
+        insertMap.put("name", user.getName());
+        insertMap.put("level", user.getLevel());
+        insertMap.put("appleSignInId", user.getAppleSignInId());
 
-        updates.setOnInsert("email", user.getEmail());
-        updates.setOnInsert("name", user.getName());
-        updates.setOnInsert("level", user.getLevel());
-        updates.setOnInsert("appleSignInId", user.getAppleSignInId());
+        insertMap = getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
 
-        getMongoPasswordUtils().scramblePasswordOnInsert(updates);
+        query.update(UpdateOperators.set("active", true),
+                UpdateOperators.setOnInsert(insertMap)
+                ).execute(new UpdateOptions().upsert(true));
 
         final MongoUser mongoUser;
 
         try {
-            mongoUser = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
-                .upsert(true)
-                .returnNew(true));
+            mongoUser = query.first();
         } catch (MongoException ex) {
             if (ex.getCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -106,8 +109,7 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = getDatastore().createQuery(MongoUser.class);
-        final UpdateOperations<MongoUser> updates = getDatastore().createUpdateOperations(MongoUser.class);
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         if (user.getId() == null) {
             throw new IllegalArgumentException("User must have user id.");
@@ -115,23 +117,21 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
 
-        query.field("_id").equal(objectId);
-        query.field("active").equal(true);
+        query.filter(Filters.eq("_id", objectId));
+        query.filter(Filters.eq("active", true));
 
-        query.or(
-            query.criteria("appleSignInId").doesNotExist(),
-            query.criteria("appleSignInId").equal(user.getAppleSignInId())
-        );
+        query.filter(Filters.or(
+                Filters.exists("appleSignInId").not(),
+                Filters.eq("appleSignInId", user.getAppleSignInId())
+        ));
 
-        updates.set("appleSignInId", user.getAppleSignInId());
+        query.update(UpdateOperators.set("appleSignInId", user.getAppleSignInId()))
+                .execute(new UpdateOptions().upsert(true));
 
         final MongoUser mongoUser;
 
         try {
-            mongoUser = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
-                .upsert(true)
-                .returnNew(true)
-            );
+            mongoUser = query.first();
         } catch (MongoException ex) {
             if (ex.getCode() == 11000) {
                 throw new DuplicateException(ex);

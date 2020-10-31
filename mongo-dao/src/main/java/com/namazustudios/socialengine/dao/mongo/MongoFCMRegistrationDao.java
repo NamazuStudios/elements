@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.socialengine.dao.FCMRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFCMRegistration;
@@ -9,13 +11,14 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
-import dev.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
 import java.util.stream.Stream;
@@ -60,25 +63,19 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistration.getId());
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(fcmRegistration.getProfile());
 
-        final Query<MongoFCMRegistration> query = getDatastore().createQuery(MongoFCMRegistration.class);
-        query.and(query.criteria("_id").equal(registrationId));
+        final Query<MongoFCMRegistration> query = getDatastore().find(MongoFCMRegistration.class);
+        query.filter(Filters.and(Filters.eq("_id", registrationId)));
 
-        final UpdateOperations<MongoFCMRegistration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoFCMRegistration.class);
+        final UpdateResult updateResults = query.update(UpdateOperators.set("profile", mongoProfile),
+                UpdateOperators.set("registrationToken", fcmRegistration.getRegistrationToken()))
+                .execute();
 
-        updateOperations.set("profile", mongoProfile);
-        updateOperations.set("registrationToken", fcmRegistration.getRegistrationToken());
-
-        final UpdateResults updateResults = getDatastore().update(query, updateOperations, new UpdateOptions()
-                .upsert(false)
-                .multi(false));
-
-        if (updateResults.getUpdatedCount() == 0) {
+        if (updateResults.getModifiedCount() == 0) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistration.getId());
         }
 
         final MongoFCMRegistration mongoFCMRegistration;
-        mongoFCMRegistration = getDatastore().get(MongoFCMRegistration.class, registrationId);
+        mongoFCMRegistration = getDatastore().find(MongoFCMRegistration.class).filter(Filters.eq("_id", registrationId)).first();
 
         return getMapper().map(mongoFCMRegistration, FCMRegistration.class);
 
@@ -88,9 +85,9 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
     public void deleteRegistration(final String fcmRegistrationId) {
 
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistrationId);
-        final WriteResult writeResult = getDatastore().delete(MongoFCMRegistration.class, registrationId);
+        final DeleteResult deleteResult = getDatastore().find(MongoFCMRegistration.class).filter(Filters.eq("_id", registrationId)).delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistrationId);
         }
 
@@ -102,16 +99,12 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistrationId);
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
 
-        final Query<MongoFCMRegistration> query = getDatastore().createQuery(MongoFCMRegistration.class);
+        final Query<MongoFCMRegistration> query = getDatastore().find(MongoFCMRegistration.class);
+        query.filter(Filters.and(Filters.eq("_id", registrationId), Filters.eq("profile", mongoProfile)));
 
-        query.and(
-            query.criteria("_id").equal(registrationId),
-            query.criteria("profile").equal(mongoProfile)
-        );
+        final DeleteResult deleteResult = query.delete();
 
-        final WriteResult writeResult = getDatastore().delete(query);
-
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistrationId);
         }
 
@@ -137,7 +130,7 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
             query.criteria("profile").equal(recipient)
         );
 
-        return query.asList().stream().map(p -> getMapper().map(p, FCMRegistration.class));
+        return query.iterator().toList().stream().map(p -> getMapper().map(p, FCMRegistration.class));
     }
 
     public Mapper getMapper() {

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.LeaderboardDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoLeaderboard;
@@ -14,6 +15,9 @@ import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.Score
 
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
@@ -126,15 +130,15 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
     public MongoLeaderboard getMongoLeaderboard(final String nameOrId) {
 
-        final Query<MongoLeaderboard> query = datastore.createQuery(MongoLeaderboard.class);
+        final Query<MongoLeaderboard> query = datastore.find(MongoLeaderboard.class);
 
         try {
-            query.filter("_id", new ObjectId(nameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(nameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("name =", nameOrId);
+            query.filter(Filters.eq("name", nameOrId));
         }
 
-        final MongoLeaderboard mongoLeaderboard = query.get();
+        final MongoLeaderboard mongoLeaderboard = query.first();
 
         if (mongoLeaderboard == null) {
             throw new LeaderboardNotFoundException("Leaderboard " + nameOrId + " not found.");
@@ -153,28 +157,24 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
         getValidationHelper().validateModel(leaderboard, ValidationGroups.Update.class);
 
-        final Query<MongoLeaderboard> query = datastore.createQuery(MongoLeaderboard.class);
+        final Query<MongoLeaderboard> query = datastore.find(MongoLeaderboard.class);
 
         try {
-            query.field("_id").equal(new ObjectId(leaderboardNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(leaderboardNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.field("name").equal(leaderboardNameOrId);
+            query.filter(Filters.eq("_id", leaderboardNameOrId));
         }
 
-        final UpdateOperations<MongoLeaderboard> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoLeaderboard.class);
-
-        updateOperations.set("name", leaderboard.getName());
-        updateOperations.set("title", leaderboard.getTitle());
-        updateOperations.set("scoreUnits", leaderboard.getScoreUnits());
+        query.update(UpdateOperators.set("name", leaderboard.getName()),
+                UpdateOperators.set("title", leaderboard.getTitle()),
+                UpdateOperators.set("scoreUnits", leaderboard.getScoreUnits())
+                ).execute(new UpdateOptions().upsert(false));
         // for now, do not allow updating of firstEpochTimestamp or epochInterval
 
         final MongoLeaderboard mongoLeaderboard;
 
         try {
-            mongoLeaderboard = datastore.findAndModify(query, updateOperations, new FindAndModifyOptions()
-                .upsert(false)
-                .returnNew(true));
+            mongoLeaderboard = query.first();
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -195,21 +195,23 @@ public class MongoLeaderboardDao implements LeaderboardDao {
     @Override
     public void deleteLeaderboard(final String leaderboardNameOrId) {
 
-        final Query<MongoLeaderboard> query = datastore.createQuery(MongoLeaderboard.class);
+        final Query<MongoLeaderboard> query = datastore.find(MongoLeaderboard.class);
 
-        query.filter("active =", true);
+        query.filter(Filters.eq("active", true));
 
         try {
-            query.filter("_id", new ObjectId(leaderboardNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(leaderboardNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("name =", leaderboardNameOrId);
+            query.filter(Filters.eq("name", leaderboardNameOrId));
         }
 
-        final MongoLeaderboard mongoLeaderboard = getDatastore().findAndDelete(query, new FindAndModifyOptions()
-            .remove(true)
-            .returnNew(false));
+        final MongoLeaderboard mongoLeaderboard = query.first();
 
-        getObjectIndex().delete(mongoLeaderboard);
+        final DeleteResult deleteResult = query.delete();
+
+        if(deleteResult.getDeletedCount() == 1){
+            getObjectIndex().delete(mongoLeaderboard);
+        }
 
     }
 

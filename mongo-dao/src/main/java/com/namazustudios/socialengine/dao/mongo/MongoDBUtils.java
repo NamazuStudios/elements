@@ -122,7 +122,7 @@ public class MongoDBUtils {
     public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
             final Query<MongoModelT> query, final int offset, final int count,
             final Class<ModelT> modelTClass) {
-        return paginationFromQuery(query, offset, count, o -> getMapper().map(o, modelTClass));
+        return paginationFromQuery(query, offset, count, o -> getMapper().map(o, modelTClass), new FindOptions());
     }
 
     /**
@@ -138,7 +138,7 @@ public class MongoDBUtils {
      */
     public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
             final Query<MongoModelT> query, final int offset, final int count,
-            final Function<MongoModelT,  ModelT> function) {
+            final Function<MongoModelT,  ModelT> function, FindOptions options) {
 
 
         final Pagination<ModelT> pagination = new Pagination<>();
@@ -148,11 +148,10 @@ public class MongoDBUtils {
 
         final int limit = min(getQueryMaxResults(), count);
 
-        final FindOptions options = new FindOptions()
-            .skip(offset)
-            .limit(limit);
+        options.skip(offset);
+        options.limit(limit);
 
-        final List<ModelT> modelTList = query.asList(options)
+        final List<ModelT> modelTList = query.iterator(options).toList()
             .stream()
             .map(function)
             .collect(toList());
@@ -197,7 +196,7 @@ public class MongoDBUtils {
 
     /**
      * Combines the functionality of {@link #queryForSearch(Class, org.apache.lucene.search.Query, int, int)} with
-     * the functionality of {@link #paginationFromQuery(Query, int, int, Function)} together to simplify
+     * the functionality of {@link #paginationFromQuery(Query, int, int, Function, FindOptions)} together to simplify
      * searching for objects.
      *
      * @param kind the kind to search
@@ -219,14 +218,14 @@ public class MongoDBUtils {
 
     /**
      * Combines the functionality of {@link #queryForSearch(Class, org.apache.lucene.search.Query, int, int)} with
-     * the functionality of {@link #paginationFromQuery(Query, int, int, Function)} together to simplify
+     * the functionality of {@link #paginationFromQuery(Query, int, int, Function, FindOptions)} together to simplify
      * searching for objects.
      *
      * @param kind the kind to search
      * @param searchQuery the search query
      * @param offset the offset
      * @param count the count
-     * @param function the function to transform the values {@see {@link #paginationFromQuery(Query, int, int, Function)}}
+     * @param function the function to transform the values {@see {@link #paginationFromQuery(Query, int, int, Function, FindOptions)}}
      * @param <ModelT>
      * @param <MongoModelT>
      * @return the pagination object
@@ -238,7 +237,7 @@ public class MongoDBUtils {
             final Function<MongoModelT,  ModelT> function) {
         try {
             final Query<MongoModelT> mongoQuery = queryForSearch(kind, searchQuery, offset, count);
-            final Pagination<ModelT> pagination = paginationFromQuery(mongoQuery, offset, count, function);
+            final Pagination<ModelT> pagination = paginationFromQuery(mongoQuery, offset, count, function, new FindOptions());
             pagination.setApproximation(true);
             return pagination;
         } catch (NoResultException ex) {

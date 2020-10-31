@@ -15,6 +15,9 @@ import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeS
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
 import dev.morphia.FindAndModifyOptions;
@@ -55,7 +58,8 @@ public class MongoScoreDao implements ScoreDao {
 
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpoch);
 
-        final MongoScore originalMongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+        final MongoScore originalMongoScore = getDatastore().find(MongoScore.class)
+                .filter(Filters.eq("_id", mongoScoreId)).first();
 
         final double originalPointValue;
 
@@ -80,27 +84,23 @@ public class MongoScoreDao implements ScoreDao {
         }
 
 
-        final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
+        final Query<MongoScore> query = getDatastore().find(MongoScore.class);
 
-        query.field("_id").equal(mongoScoreId);
-
-        final UpdateOperations<MongoScore> updateOperations = getDatastore().createUpdateOperations(MongoScore.class);
-        updateOperations.set("_id", mongoScoreId);
-        updateOperations.set("profile", mongoProfile);
-        updateOperations.set("leaderboard", mongoLeaderboard);
-        updateOperations.set("pointValue", newPointValue);
-        updateOperations.set("leaderboardEpoch", leaderboardEpoch);
+        query.filter(Filters.eq("_id", mongoScoreId));
 
         // Set the timestamp to be "now" on create as well as update since an update essentially resets an existing
         // record
         final Date nowDate = new Date();
-        updateOperations.set("creationTimestamp", nowDate);
+        query.update(UpdateOperators.set("_id", mongoScoreId),
+                UpdateOperators.set("profile", mongoProfile),
+                UpdateOperators.set("leaderboard", mongoLeaderboard),
+                UpdateOperators.set("pointValue", newPointValue),
+                UpdateOperators.set("leaderboardEpoch", leaderboardEpoch),
+                UpdateOperators.set("creationTimestamp", nowDate)
+                ).execute(new UpdateOptions().upsert(true));
 
         try {
-            final MongoScore mongoScore = getDatastore()
-                .findAndModify(query, updateOperations, new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(true));
+            final MongoScore mongoScore = query.first();
             return getBeanMapper().map(mongoScore, Score.class);
         } catch (MongoCommandException ex) {
 
@@ -108,7 +108,8 @@ public class MongoScoreDao implements ScoreDao {
             // return the existing score.  All other outcomes will either update or create the score.
 
             if (ex.getErrorCode() == 11000) {
-                final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+                final MongoScore mongoScore = getDatastore().find(MongoScore.class)
+                        .filter(Filters.eq("_id", mongoScoreId)).first();
                 return getBeanMapper().map(mongoScore, Score.class);
             } else {
                 throw new InternalException(ex);

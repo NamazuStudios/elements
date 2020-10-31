@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MissionDao;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
@@ -16,6 +17,9 @@ import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
@@ -56,10 +60,10 @@ public class MongoMissionDao implements MissionDao {
     @Override
     public Pagination<Mission> getMissions(int offset, int count, List<String> tags)  {
 
-        final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
+        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
 
         if (tags != null && !tags.isEmpty()) {
-            query.criteria("tags").hasAnyOf(tags);
+            query.filter(Filters.in("tags", tags));
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
@@ -75,7 +79,7 @@ public class MongoMissionDao implements MissionDao {
                     "string parameter.  This field is presently ignored and will return all values");
         }
 
-        final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
+        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
             mongoItem -> getDozerMapper().map(mongoItem, Mission.class));
@@ -94,15 +98,15 @@ public class MongoMissionDao implements MissionDao {
             throw new NotFoundException("Unable to find mission with an id or name of " + missionNameOrId);
         }
 
-        final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
+        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
 
         if (ObjectId.isValid(missionNameOrId)) {
-            query.criteria("_id").equal(new ObjectId(missionNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(missionNameOrId)));
         } else {
-            query.criteria("name").equal(missionNameOrId);
+            query.filter(Filters.eq("name", missionNameOrId));
         }
 
-        final MongoMission mission = query.get();
+        final MongoMission mission = query.first();
 
         if (mission == null) {
             throw new NotFoundException("Unable to find item with an id or name of " + missionNameOrId);
@@ -124,50 +128,54 @@ public class MongoMissionDao implements MissionDao {
         final MongoMission mongoMission = checkMission(mission);
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
-        final Query<MongoMission> query = getDatastore().createQuery(MongoMission.class);
+        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
 
-        query.criteria("_id").equal(objectId);
+        query.filter(Filters.eq("_id", objectId));
 
-        final UpdateOperations<MongoMission> operations = getDatastore().createUpdateOperations(MongoMission.class);
-        operations.set("name", mongoMission.getName());
-        operations.set("displayName", mongoMission.getDisplayName());
-        operations.set("description", mongoMission.getDescription());
+        query.update(UpdateOperators.set("name", mongoMission.getName()),
+                UpdateOperators.set("displayName", mongoMission.getDisplayName()),
+                UpdateOperators.set("description", mongoMission.getDescription())
+        ).execute(new UpdateOptions().upsert(false));
 
         mission.validateTags();
 
         if (mission.getTags() != null) {
-            operations.set("tags", mongoMission.getTags());
+            query.update(UpdateOperators.set("tags", mongoMission.getTags()))
+                    .execute(new UpdateOptions().upsert(false));
         }
         else {
-            operations.unset("tags");
+            query.update(UpdateOperators.unset("tags"))
+                .execute(new UpdateOptions().upsert(false));
         }
 
         if (mission.getSteps() != null) {
-            operations.set("steps", mongoMission.getSteps());
+            query.update(UpdateOperators.set("steps", mongoMission.getSteps()))
+                    .execute(new UpdateOptions().upsert(false));
         }
         else {
-            operations.unset("steps");
+            query.update(UpdateOperators.unset("steps"))
+                    .execute(new UpdateOptions().upsert(false));
         }
 
         if (mission.getFinalRepeatStep() != null) {
-            operations.set("finalRepeatStep", mongoMission.getFinalRepeatStep());
+            query.update(UpdateOperators.set("finalRepeatStep", mongoMission.getFinalRepeatStep()))
+                    .execute(new UpdateOptions().upsert(false));
         }
         else {
-            operations.unset("finalRepeatStep");
+            query.update(UpdateOperators.unset("finalRepeatStep"))
+                    .execute(new UpdateOptions().upsert(false));
         }
 
         if (mission.getMetadata() != null) {
-            operations.set("metadata", mongoMission.getMetadata());
+            query.update(UpdateOperators.set("metadata", mongoMission.getMetadata()))
+                    .execute(new UpdateOptions().upsert(false));
         }
         else {
-            operations.unset("metadata");
+            query.update(UpdateOperators.unset("metadata"))
+                    .execute(new UpdateOptions().upsert(false));
         }
 
-        final FindAndModifyOptions options = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(false);
-
-        final MongoMission updatedMongoItem = getDatastore().findAndModify(query, operations, options);
+        final MongoMission updatedMongoItem = query.first();
         if (updatedMongoItem == null) {
             throw new NotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
         }
@@ -198,7 +206,10 @@ public class MongoMissionDao implements MissionDao {
 
         getObjectIndex().index(mongoMission);
 
-        return getDozerMapper().map(getDatastore().get(mongoMission), Mission.class);
+        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
+        query.filter(Filters.eq("_id", mongoMission.getObjectId()));
+
+        return getDozerMapper().map(query.first(), Mission.class);
 
     }
 
@@ -254,9 +265,13 @@ public class MongoMissionDao implements MissionDao {
     public void deleteMission(String missionId) {
 
         final ObjectId id = getMongoDBUtils().parseOrThrowNotFoundException(missionId);
-        final WriteResult writeResult = getDatastore().delete(MongoMission.class, id);
 
-        if (writeResult.getN() == 0) {
+        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
+        query.filter(Filters.eq("_id", id));
+
+        final DeleteResult deleteResult = query.delete();
+
+        if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Mission not found: " + missionId);
         }
 

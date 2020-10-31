@@ -5,7 +5,6 @@ import dev.morphia.AdvancedDatastore;
 import dev.morphia.Datastore;
 import dev.morphia.Key;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateResults;
 
 import javax.inject.Inject;
 import javax.inject.Named;

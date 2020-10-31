@@ -3,7 +3,11 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -11,6 +15,9 @@ import javax.inject.Provider;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Created by patricktwohig on 6/25/17.
@@ -28,10 +35,10 @@ public class MongoPasswordUtils {
     /**
      * Generates salt and password hash according to the configuration.
      *
-     * @param operations the operations to mutate
+     * @param query the query to mutate
      * @param password the password
      */
-    public void addPasswordToOperations(final UpdateOperations<MongoUser> operations, final String password) {
+    public void addPasswordToQuery(final Query<MongoUser> query, final String password) {
 
         final byte[] passwordBytes;
 
@@ -50,19 +57,19 @@ public class MongoPasswordUtils {
         digest.update(salt);
         digest.update(passwordBytes);
 
-        operations.set("salt", salt);
-        operations.set("passwordHash", digest.digest());
-        operations.set("hashAlgorithm", digest.getAlgorithm());
-
+        query.update(UpdateOperators.set("salt", salt),
+                UpdateOperators.set("passwordHash", digest.digest()),
+                UpdateOperators.set("hashAlgorithm", digest.getAlgorithm())
+        ).execute(new UpdateOptions().upsert(true));
     }
 
     /**
      * Scrambles both the salt and the password.  This effectively wipes out the account's
      * password making it inaccessible.
      *
-     * @param operations the operations
+     * @param query the query
      */
-    public void scramblePassword(final UpdateOperations<MongoUser> operations) {
+    public void scramblePassword(final Query<MongoUser> query) {
 
         final SecureRandom secureRandom = new SecureRandom();
 
@@ -70,14 +77,16 @@ public class MongoPasswordUtils {
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.set("salt", tmp);
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.set("passwordHash", tmp);
 
         final MessageDigest digest = getMessageDigestProvider().get();
-        operations.set("hashAlgorithm", digest.getAlgorithm());
+
+        query.update(UpdateOperators.set("salt", tmp),
+                UpdateOperators.set("passwordHash", tmp),
+                UpdateOperators.set("hashAlgorithm", digest.getAlgorithm())
+        ).execute(new UpdateOptions().upsert(true));
 
     }
 
@@ -85,9 +94,10 @@ public class MongoPasswordUtils {
      * Scrambles both the salt and the password.  This effectively wipes out the account's
      * password making it inaccessible.
      *
-     * @param operations the operations
+     * @param insertMap the map of objects to set on insert
+     * @return a map with scrambled password added to it
      */
-    public void scramblePasswordOnInsert(final UpdateOperations<MongoUser> operations) {
+    public Map<String, Object> scramblePasswordOnInsert(final Map<String, Object> insertMap) {
 
         final SecureRandom secureRandom = new SecureRandom();
 
@@ -95,15 +105,16 @@ public class MongoPasswordUtils {
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.setOnInsert("salt", tmp);
+        insertMap.put("salt", tmp);
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.setOnInsert("passwordHash", tmp);
+        insertMap.put("passwordHash", tmp);
 
         final MessageDigest digest = getMessageDigestProvider().get();
-        operations.setOnInsert("hashAlgorithm", digest.getAlgorithm());
+        insertMap.put("hashAlgorithm", digest.getAlgorithm());
 
+        return insertMap;
     }
 
     /**
