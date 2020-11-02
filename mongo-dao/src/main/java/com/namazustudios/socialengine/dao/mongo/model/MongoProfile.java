@@ -29,7 +29,7 @@ import java.util.Objects;
         @SearchableField(name = "lastLogin", path = "/lastLogin"),
         @SearchableField(name = "metadata", path = "/metadata")
     })
-@Entity(value = "profile")
+@Entity(value = "profile", useDiscriminator = false)
 @Indexes({
     @Index(fields = {@Field("user"), @Field("application")})
 })

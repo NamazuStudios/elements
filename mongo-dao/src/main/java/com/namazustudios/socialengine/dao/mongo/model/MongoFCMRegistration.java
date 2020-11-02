@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
-@Entity(value = "fcm_registration")
+@Entity(value = "fcm_registration", useDiscriminator = false)
 @Indexes({
     @Index(fields = {@Field("user"), @Field("application")}, options = @IndexOptions(unique = true))
 })

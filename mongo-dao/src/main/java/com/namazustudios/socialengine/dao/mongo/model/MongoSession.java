@@ -6,7 +6,7 @@ import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
 
-@Entity(value = "session")
+@Entity(value = "session", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "type")),
     @Index(fields = @Field(value = "expiry"), options = @IndexOptions(expireAfterSeconds = MongoSession.SESSION_LINGER_SECONDS)),

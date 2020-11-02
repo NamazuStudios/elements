@@ -18,7 +18,7 @@ import dev.morphia.annotations.*;
     @Index(fields = @Field("lesserAccepted")),
     @Index(fields = @Field("greaterAccepted"))
 })
-@Entity(value = "friendship")
+@Entity(value = "friendship", useDiscriminator = false)
 public class MongoFriendship {
 
     @Id

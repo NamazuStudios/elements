@@ -27,7 +27,7 @@ import static java.lang.System.currentTimeMillis;
         @SearchableField(name = "timeStrategyType",  path = "/timeStrategyType"),
         @SearchableField(name = "scoreStrategyType",  path = "/scoreStrategyType"),
     })
-@Entity(value = "leaderboard")
+@Entity(value = "leaderboard", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "name"), options = @IndexOptions(unique = true))
 })

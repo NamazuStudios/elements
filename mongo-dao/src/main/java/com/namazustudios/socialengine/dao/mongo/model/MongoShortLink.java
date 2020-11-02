@@ -11,7 +11,7 @@ import dev.morphia.annotations.Property;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity(value = "short_link")
+@Entity(value = "short_link", useDiscriminator = false)
 @SearchableIdentity(@SearchableField(
         name = "id",
         path = "/objectId",

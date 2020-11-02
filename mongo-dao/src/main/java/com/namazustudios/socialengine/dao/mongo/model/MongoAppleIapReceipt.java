@@ -12,7 +12,7 @@ import java.util.Objects;
         @SearchableField(name = "originalTransactionId", path = "/originalTransactionId", type = String.class)
 )
 @SearchableDocument()
-@Entity(value = "apple_iap_receipt")
+@Entity(value = "apple_iap_receipt", useDiscriminator = false)
 public class MongoAppleIapReceipt {
 
     @Id

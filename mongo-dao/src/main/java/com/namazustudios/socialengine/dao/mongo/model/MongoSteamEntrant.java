@@ -5,7 +5,7 @@ import dev.morphia.annotations.*;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity(value = "entrant")
+@Entity(value = "entrant", useDiscriminator = false)
 @Indexes({
         @Index(fields = @Field("steamId"), options = @IndexOptions(name = "indexing_test"))
 })
