@@ -24,7 +24,7 @@ import dev.morphia.annotations.*;
         @SearchableField(name = "userEmail",   path = "/user/email"),
         @SearchableField(name = "displayName", path = "/profile/displayName")
     })
-@Entity(value = "game_on_registration", noClassnameStored = true)
+@Entity(value = "game_on_registration")
 public class MongoGameOnRegistration {
 
     @Id

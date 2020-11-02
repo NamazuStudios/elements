@@ -9,6 +9,7 @@ import dev.morphia.AdvancedDatastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
+import dev.morphia.query.experimental.filters.Filters;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -39,20 +40,21 @@ public class MongoFIFOMatchmaker implements Matchmaker {
             final int maxCandidatesToConsider,
             final BiFunction<Match, Match, String> finalizer) throws NoSuitableMatchException {
 
-        final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+        final Query<MongoMatch> query = getDatastore().find(MongoMatch.class);
         final MongoMatch mongoMatch = getMongoMatchDao().getMongoMatch(match.getId());
 
-        query.order(Sort.ascending("lastUpdatedTimestamp"))
-             .field("player").notEqual(mongoMatch.getPlayer())
-             .field("scheme").equal(match.getScheme())
-             .field("gameId").doesNotExist()
-             .field("opponent").doesNotExist()
-             .field("lock").doesNotExist();
+        query.filter(Filters.and(
+                Filters.eq("player", mongoMatch.getPlayer()).not()),
+                Filters.eq("scheme", match.getScheme()),
+                Filters.exists("gameId").not(),
+                Filters.exists("opponent").not(),
+                Filters.exists("lock").not()
+        );
 
         applyScope.accept(query);
 
         final FindOptions findOptions = new FindOptions().limit(maxCandidatesToConsider);
-        final List<MongoMatch> mongoMatchList = query.asList(findOptions);
+        final List<MongoMatch> mongoMatchList = query.iterator(new FindOptions().sort(Sort.ascending("lastUpdatedTimestamp"))).toList();
         return getMongoMatchUtils().attemptToPairCandidates(mongoMatch, mongoMatchList, finalizer);
 
     }

@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity(value = "entrant", noClassnameStored = true)
+@Entity(value = "entrant")
 public class MongoBasicEntrant {
 
     @Id

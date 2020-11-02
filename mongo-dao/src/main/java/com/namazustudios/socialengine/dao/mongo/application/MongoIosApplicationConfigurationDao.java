@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
+import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoAppleSignInConfiguration;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoProductBundle;
@@ -12,6 +13,9 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import dev.morphia.AdvancedDatastore;
@@ -55,23 +59,16 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         validate(iosApplicationConfiguration);
 
         final Query<MongoIosApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
+        query = getDatastore().find(MongoIosApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(false),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria("category").equal(IOS_APP_STORE),
-            query.criteria("uniqueIdentifier").equal(iosApplicationConfiguration.getApplicationId())
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", false),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq("category", IOS_APP_STORE),
+                Filters.eq("uniqueIdentifier", iosApplicationConfiguration.getApplicationId())
+        ));
 
-        final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
-
-        updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set("active", true);
-        updateOperations.set( "category", iosApplicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-
+        UpdateResult updateResult;
         if (iosApplicationConfiguration.getProductBundles() != null &&
                 iosApplicationConfiguration.getProductBundles().size() > 0) {
             final List<MongoProductBundle> mongoProductBundles = iosApplicationConfiguration
@@ -79,17 +76,37 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
                     .stream()
                     .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
                     .collect(Collectors.toList());
-            updateOperations.set("productBundles", mongoProductBundles);
+            updateResult = query.update(UpdateOperators.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set("active", true),
+                    UpdateOperators.set( "category", iosApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("productBundles", mongoProductBundles)
+            ).execute(new UpdateOptions().upsert(true));
+        } else {
+            updateResult = query.update(UpdateOperators.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set("active", true),
+                    UpdateOperators.set( "category", iosApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication)
+            ).execute(new UpdateOptions().upsert(true));
         }
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(true);
 
         final MongoIosApplicationConfiguration mongoIosApplicationProfile;
 
         mongoIosApplicationProfile = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+            .perform(ds -> {
+                if(updateResult.getUpsertedId() != null){
+                    return ds.find(MongoIosApplicationConfiguration.class)
+                            .filter(Filters.eq("_id", updateResult.getUpsertedId())).first();
+                } else {
+                    return ds.find(MongoIosApplicationConfiguration.class)
+                            .filter(Filters.and(
+                                    Filters.eq("active", true),
+                                    Filters.eq("parent", mongoApplication),
+                                    Filters.eq("category", IOS_APP_STORE),
+                                    Filters.eq("uniqueIdentifier", iosApplicationConfiguration.getApplicationId())
+                            )).first();
+                }
+            });
 
         getObjectIndex().index(mongoIosApplicationProfile);
         return getBeanMapper().map(mongoIosApplicationProfile, IosApplicationConfiguration.class);
@@ -105,21 +122,21 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final Query<MongoIosApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
+        query = getDatastore().find(MongoIosApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(IOS_APP_STORE)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq( "category", IOS_APP_STORE)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final MongoIosApplicationConfiguration mongoIosApplicationProfile = query.get();
+        final MongoIosApplicationConfiguration mongoIosApplicationProfile = query.first();
 
         if (mongoIosApplicationProfile == null) {
             final String msg = format("application profile %s not found", applicationConfigurationNameOrId);
@@ -141,30 +158,24 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         validate(iosApplicationConfiguration);
 
         final Query<MongoIosApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
+        query = getDatastore().find(MongoIosApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(IOS_APP_STORE)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq( "category", IOS_APP_STORE)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationProfileNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier = ", applicationProfileNameOrId));
         }
-
-        final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
 
         final MongoAppleSignInConfiguration mongoAppleSignInConfiguration = getBeanMapper()
             .map(iosApplicationConfiguration.getAppleSignInConfiguration(), MongoAppleSignInConfiguration.class);
 
-        updateOperations.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set("category", iosApplicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-        updateOperations.set("appleSignInConfiguration", mongoAppleSignInConfiguration);
+
 
         if (iosApplicationConfiguration.getProductBundles() != null &&
                 iosApplicationConfiguration.getProductBundles().size() > 0) {
@@ -173,19 +184,32 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
                     .stream()
                     .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
                     .collect(Collectors.toList());
-            updateOperations.set("productBundles", mongoProductBundles);
+            query.update(UpdateOperators.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set("category", iosApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("appleSignInConfiguration", mongoAppleSignInConfiguration),
+                    UpdateOperators.set("productBundles", mongoProductBundles)
+            ).execute(new UpdateOptions().upsert(false));
         }
         else {
-            updateOperations.unset("productBundles");
+            query.update(UpdateOperators.set("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set("category", iosApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("appleSignInConfiguration", mongoAppleSignInConfiguration),
+                    UpdateOperators.unset("productBundles")
+            ).execute(new UpdateOptions().upsert(false));
         }
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(false);
 
         final MongoIosApplicationConfiguration mongoIosApplicationProfile;
         mongoIosApplicationProfile = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+            .perform(ds -> ds.find(MongoIosApplicationConfiguration.class)
+                    .filter(Filters.and(
+                        Filters.eq("active", true),
+                        Filters.eq("parent", mongoApplication),
+                        Filters.eq( "category", IOS_APP_STORE),
+                        Filters.eq("uniqueIdentifier", iosApplicationConfiguration.getApplicationId().trim())
+                )).first()
+            );
 
         if (mongoIosApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
@@ -205,33 +229,44 @@ public class MongoIosApplicationConfigurationDao implements IosApplicationConfig
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final Query<MongoIosApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoIosApplicationConfiguration.class);
+        query = getDatastore().find(MongoIosApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(IOS_APP_STORE)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq( "category", IOS_APP_STORE)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier = ", applicationConfigurationNameOrId));
         }
 
-        final UpdateOperations<MongoIosApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoIosApplicationConfiguration.class);
-
-        updateOperations.set("active", false);
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
+        query.update(UpdateOperators.set("active", false)).execute(new UpdateOptions().upsert(false));
 
         final MongoIosApplicationConfiguration mongoIosApplicationProfile;
 
         mongoIosApplicationProfile = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+            .perform(ds -> {
+                try {
+                    return ds.find(MongoIosApplicationConfiguration.class)
+                            .filter(Filters.and(
+                                    Filters.eq("active", true),
+                                    Filters.eq("parent", mongoApplication),
+                                    Filters.eq( "category", IOS_APP_STORE),
+                                    Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId))
+                            )).first();
+                } catch (IllegalArgumentException ex) {
+                    return ds.find(MongoIosApplicationConfiguration.class)
+                            .filter(Filters.and(
+                                    Filters.eq("active", true),
+                                    Filters.eq("parent", mongoApplication),
+                                    Filters.eq( "category", IOS_APP_STORE),
+                                    Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId)
+                            )).first();
+                }
+            });
 
         if (mongoIosApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + mongoIosApplicationProfile.getObjectId());

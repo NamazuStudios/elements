@@ -30,7 +30,7 @@ import static java.util.stream.Collectors.toSet;
         @SearchableField(name = "userName",         path = "/user/name"),
         @SearchableField(name = "userEmail",        path = "/user/email")
 })
-@Entity(value = "inventoryitems", noClassnameStored = true)
+@Entity(value = "inventoryitems")
 public class MongoInventoryItem {
 
     @Id

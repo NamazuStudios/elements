@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.gameon;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.GameOnSessionDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
@@ -21,6 +22,7 @@ import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -55,8 +57,8 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
     @Override
     public Pagination<GameOnSession> getSessionsForUser(final User user, final int offset, final int count) {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().createQuery(MongoGameOnSession.class);
-        query.field("user").equal(mongoUser);
+        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
+        query.filter(Filters.eq("user", mongoUser));
         return getMongoDBUtils().paginationFromQuery(query, offset, count, GameOnSession.class);
     }
 
@@ -97,14 +99,14 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         }
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().createQuery(MongoGameOnSession.class);
+        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
 
-        query.and(
-            query.criteria("_id").equal(sessionId),
-            query.criteria("user").equal(mongoUser)
-        );
+        query.filter(Filters.and(
+                Filters.eq("_id", sessionId),
+                Filters.eq("user", mongoUser)
+        ));
 
-        final MongoGameOnSession mongoGameOnSession = query.get();
+        final MongoGameOnSession mongoGameOnSession = query.first();
 
         if (mongoGameOnSession == null) {
             throw new GameOnSessionNotFoundException("GameOn session not found " + gameOnSessionId);
@@ -118,14 +120,14 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
     public GameOnSession getSessionForProfile(final Profile profile, final DeviceOSType deviceOSType) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().createQuery(MongoGameOnSession.class);
+        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
 
-        query.and(
-            query.criteria("profile").equal(mongoProfile),
-            query.criteria("_id.deviceOSType").equal(deviceOSType)
-        );
+        query.filter(Filters.and(
+                Filters.eq("profile", mongoProfile),
+                Filters.eq("_id.deviceOSType", deviceOSType)
+        ));
 
-        final MongoGameOnSession mongoGameOnSession = query.get();
+        final MongoGameOnSession mongoGameOnSession = query.first();
 
         if (mongoGameOnSession == null) {
             throw new GameOnSessionNotFoundException("GameOn session not found for profile and OS " + profile.getId() + " " + deviceOSType);
@@ -147,16 +149,16 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         }
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().createQuery(MongoGameOnSession.class);
+        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
 
-        query.and(
-            query.criteria("_id").equal(sessionId),
-            query.criteria("user").equal(mongoUser)
-        );
+        query.filter(Filters.and(
+                Filters.eq("_id", sessionId),
+                Filters.eq("user", mongoUser)
+        ));
 
-        final WriteResult writeResult = getAdvancedDatastore().delete(query);
+        final DeleteResult deleteResult = query.delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new GameOnSessionNotFoundException("GameOn session not found " + gameOnSessionId);
         } else {
             getObjectIndex().delete(MongoGameOnSession.class, gameOnSessionId);
@@ -174,9 +176,10 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
             throw new GameOnSessionNotFoundException("GameOn session not found " + id);
         }
 
-        final WriteResult writeResult = getAdvancedDatastore().delete(MongoGameOnSession.class, sessionId);
+        final DeleteResult deleteResult = getAdvancedDatastore().find(MongoGameOnSession.class)
+                .filter(Filters.eq("_id", sessionId)).delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new GameOnSessionNotFoundException("GameOn session not found " + id);
         } else {
             getObjectIndex().delete(MongoGameOnSession.class, id);

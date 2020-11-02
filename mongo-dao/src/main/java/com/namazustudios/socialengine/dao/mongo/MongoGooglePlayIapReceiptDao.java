@@ -52,7 +52,7 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
                 mongoGooglePlayIapReceipt ->
-                        getDozerMapper().map(mongoGooglePlayIapReceipt, GooglePlayIapReceipt.class)
+                        getDozerMapper().map(mongoGooglePlayIapReceipt, GooglePlayIapReceipt.class), new FindOptions()
         );
     }
 

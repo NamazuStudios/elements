@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
@@ -146,7 +147,7 @@ public class MongoItemDao implements ItemDao {
         }
 
         return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Item.class));
+            mongoItem -> getDozerMapper().map(mongoItem, Item.class), new FindOptions());
     }
 
     @Override

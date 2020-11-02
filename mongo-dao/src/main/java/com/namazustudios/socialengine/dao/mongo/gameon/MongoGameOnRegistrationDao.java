@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.gameon;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.GameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
@@ -19,6 +20,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -57,7 +59,8 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
 
         final MongoGameOnRegistration mongoGameOnRegistration;
-        mongoGameOnRegistration = getAdvancedDatastore().get(MongoGameOnRegistration.class, mongoProfile.getObjectId());
+        mongoGameOnRegistration = getAdvancedDatastore().find(MongoGameOnRegistration.class)
+                .filter(Filters.eq("_id", mongoProfile.getObjectId())).first();
 
         if (mongoGameOnRegistration == null) {
             throw new GameOnRegistrationNotFoundException("Registration not found: " + profile.getId());
@@ -73,14 +76,14 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(gameOnRegistrationId);
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().createQuery(MongoGameOnRegistration.class);
+        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().find(MongoGameOnRegistration.class);
 
-        query.and(
-            query.criteria("_id").equal(registrationId),
-            query.criteria("user").equal(mongoUser)
-        );
+        query.filter(Filters.and(
+                Filters.eq("_id", registrationId),
+                Filters.eq("user", mongoUser)
+        ));
 
-        final MongoGameOnRegistration mongoGameOnRegistration = query.get();
+        final MongoGameOnRegistration mongoGameOnRegistration = query.first();
 
         if (mongoGameOnRegistration == null) {
             throw new GameOnRegistrationNotFoundException("Registration not found " + gameOnRegistrationId);
@@ -93,8 +96,8 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     @Override
     public Pagination<GameOnRegistration> getRegistrationsForUser(final User user, final int offset, final int count) {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().createQuery(MongoGameOnRegistration.class);
-        query.field("user").equal(mongoUser);
+        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().find(MongoGameOnRegistration.class);
+        query.filter(Filters.eq("user", mongoUser));
         return getMongoDBUtils().paginationFromQuery(query, offset, count, GameOnRegistration.class);
     }
 
@@ -156,16 +159,16 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(gameOnRegistrationId);
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().createQuery(MongoGameOnRegistration.class);
+        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().find(MongoGameOnRegistration.class);
 
-        query.and(
-            query.criteria("_id").equal(registrationId),
-            query.criteria("user").equal(mongoUser)
-        );
+        query.filter(Filters.and(
+                Filters.eq("_id", registrationId),
+                Filters.eq("user", mongoUser)
+        ));
 
-        final WriteResult writeResult = getAdvancedDatastore().delete(query);
+        final DeleteResult deleteResult = query.delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new GameOnRegistrationNotFoundException("Registration not found " + gameOnRegistrationId);
         } else {
             getObjectIndex().delete(MongoGameOnRegistration.class, registrationId);
@@ -177,10 +180,10 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     public GameOnRegistration getRegistrationForExternalPlayerId(final String externalPlayerId) {
 
         final Query<MongoGameOnRegistration> query = getAdvancedDatastore()
-            .createQuery(MongoGameOnRegistration.class)
-            .field("externalPlayerId").equal(externalPlayerId);
+            .find(MongoGameOnRegistration.class)
+            .filter(Filters.eq("externalPlayerId", externalPlayerId));
 
-        final MongoGameOnRegistration mongoGameOnRegistration = query.get();
+        final MongoGameOnRegistration mongoGameOnRegistration = query.first();
 
         if (mongoGameOnRegistration == null ||
             !mongoGameOnRegistration.getProfile().isActive() ||

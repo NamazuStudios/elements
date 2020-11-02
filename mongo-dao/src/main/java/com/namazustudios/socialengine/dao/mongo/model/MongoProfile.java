@@ -29,7 +29,7 @@ import java.util.Objects;
         @SearchableField(name = "lastLogin", path = "/lastLogin"),
         @SearchableField(name = "metadata", path = "/metadata")
     })
-@Entity(value = "profile", noClassnameStored = true)
+@Entity(value = "profile")
 @Indexes({
     @Index(fields = {@Field("user"), @Field("application")})
 })
@@ -56,7 +56,6 @@ public class MongoProfile {
     @Property
     private String displayName;
 
-    @Embedded
     private Map<String, Object> metadata;
 
     @Indexed

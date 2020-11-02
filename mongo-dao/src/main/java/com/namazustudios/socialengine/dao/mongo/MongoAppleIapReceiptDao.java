@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.DeleteOptions;
+import dev.morphia.query.FindOptions;
 import org.dozer.Mapper;
 import dev.morphia.AdvancedDatastore;
 import dev.morphia.query.experimental.filters.Filters;
@@ -53,7 +54,7 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
-                mongoAppleIapReceipt -> getDozerMapper().map(mongoAppleIapReceipt, AppleIapReceipt.class));
+                mongoAppleIapReceipt -> getDozerMapper().map(mongoAppleIapReceipt, AppleIapReceipt.class), new FindOptions());
     }
 
     @Override

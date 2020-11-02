@@ -5,7 +5,7 @@ import dev.morphia.annotations.*;
 import java.sql.Timestamp;
 import java.util.Objects;
 
-@Entity(value = "session", noClassnameStored = true)
+@Entity(value = "session")
 public class MongoAppleSignInSession extends MongoSession {
 
     @Property

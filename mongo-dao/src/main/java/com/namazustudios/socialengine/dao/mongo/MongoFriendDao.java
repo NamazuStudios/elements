@@ -15,6 +15,7 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -56,20 +57,20 @@ public class MongoFriendDao implements FriendDao {
     public Pagination<Friend> getFriendsForUser(final User user, final int offset, final int count) {
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user.getId());
-        final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
+        final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
 
-        query.and(
-            query.or(
-                query.criteria("_id.lesser").equal(mongoUser.getObjectId()),
-                query.criteria("_id.greater").equal(mongoUser.getObjectId())
-            ),
-            query.or(
-                query.criteria("lesserAccepted").equal(true),
-                query.criteria("greaterAccepted").equal(true)
-            )
-        );
+        query.filter(Filters.and(
+                Filters.or(
+                        Filters.eq("_id.lesser", mongoUser.getObjectId()),
+                        Filters.eq("_id.greater", mongoUser.getObjectId())
+                ),
+                Filters.or(
+                        Filters.eq("lesserAccepted", true),
+                        Filters.eq("greaterAccepted", true)
+                )
+        ));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, f -> transform(mongoUser, f));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, f -> transform(mongoUser, f), new FindOptions());
 
     }
 

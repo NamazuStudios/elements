@@ -18,6 +18,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
@@ -67,7 +68,7 @@ public class MongoMissionDao implements MissionDao {
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Mission.class));
+            mongoItem -> getDozerMapper().map(mongoItem, Mission.class), new FindOptions());
 
     }
 
@@ -82,7 +83,7 @@ public class MongoMissionDao implements MissionDao {
         final Query<MongoMission> query = getDatastore().find(MongoMission.class);
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Mission.class));
+            mongoItem -> getDozerMapper().map(mongoItem, Mission.class), new FindOptions());
 
     }
 

@@ -28,7 +28,7 @@ import java.util.Objects;
         @SearchableField(name = "userEmail",   path = "/user/email"),
         @SearchableField(name = "displayName", path = "/profile/displayName")
     })
-@Entity(value = "game_on_session", noClassnameStored = true)
+@Entity(value = "game_on_session")
 @Indexes({
     @Index(fields = @Field("_id.deviceOSType"))
 })

@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 /**
  * Created by patricktwohig on 6/28/17.
  */
-@Entity(value = "score", noClassnameStored = true)
+@Entity(value = "score")
 @Indexes({
     @Index(fields = @Field("profile")),
     @Index(fields = @Field("leaderboard")),

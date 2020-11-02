@@ -16,6 +16,7 @@ import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.Score
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
@@ -99,7 +100,7 @@ public class MongoLeaderboardDao implements LeaderboardDao {
     @Override
     public Pagination<Leaderboard> getLeaderboards(final int offset, final int count) {
         final Query<MongoLeaderboard> query = datastore.createQuery(MongoLeaderboard.class);
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, l -> getBeanMapper().map(l, Leaderboard.class));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, l -> getBeanMapper().map(l, Leaderboard.class), new FindOptions());
     }
 
     @Override

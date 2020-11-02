@@ -11,7 +11,7 @@ import java.util.Objects;
         @SearchableField(name = "orderId", path = "/orderId", type = String.class)
 )
 @SearchableDocument()
-@Entity(value = "google_play_iap_receipt", noClassnameStored = true)
+@Entity(value = "google_play_iap_receipt")
 public class MongoGooglePlayIapReceipt {
 
     @Id

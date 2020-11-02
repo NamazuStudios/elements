@@ -21,6 +21,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
@@ -119,7 +120,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class));
+            mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class), new FindOptions());
     }
 
     @Override

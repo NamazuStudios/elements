@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity(value = "social_campaign", noClassnameStored = true)
+@Entity(value = "social_campaign")
 public class MongoSocialCampaign {
 
     @Id

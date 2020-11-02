@@ -27,7 +27,7 @@ import java.util.Objects;
     @SearchableField(name = "facebookId", path = "/facebookId"),
     @SearchableField(name = "appleSignInId", path = "/appleSignInId")
 })
-@Entity(value = "user", noClassnameStored = true)
+@Entity(value = "user")
 public class MongoUser {
 
     @Id

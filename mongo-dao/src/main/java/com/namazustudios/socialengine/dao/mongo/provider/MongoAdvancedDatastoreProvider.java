@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanc
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgress;
 import dev.morphia.AdvancedDatastore;
 import dev.morphia.Morphia;
+import dev.morphia.mapping.MapperOptions;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -32,36 +33,11 @@ public class MongoAdvancedDatastoreProvider implements Provider<AdvancedDatastor
     @Override
     public AdvancedDatastore get() {
 
-        final Morphia morphia = new Morphia();
-
-        morphia.map(
-            MongoApplication.class,
-            MongoApplicationConfiguration.class,
-            MongoBasicEntrant.class,
-            MongoFacebookApplicationConfiguration.class,
-            MongoGooglePlayApplicationConfiguration.class,
-            MongoIosApplicationConfiguration.class,
-            MongoGameOnApplicationConfiguration.class,
-            MongoProfile.class,
-            MongoPSNApplicationConfiguration.class,
-            MongoShortLink.class,
-            MongoSocialCampaign.class,
-            MongoSteamEntrant.class,
-            MongoUser.class,
-            MongoMatch.class,
-            MongoMatchmakingApplicationConfiguration.class,
-            MongoGameOnRegistration.class,
-            MongoGameOnSession.class,
-            MongoItem.class,
-            MongoMission.class,
-            MongoProgress.class,
-            MongoRewardIssuance.class
-        );
-
         final MongoClient mongoClient = mongoProvider.get();
 
         final AdvancedDatastore advancedDatastore;
-        advancedDatastore = (AdvancedDatastore) morphia.createDatastore(mongoClient, databaseName);
+        advancedDatastore = (AdvancedDatastore) Morphia.createDatastore(mongoClient, databaseName);
+        advancedDatastore.getMapper().mapPackage("com.namazustudios.socialengine.dao.mongo");
         advancedDatastore.ensureIndexes();
 
         return advancedDatastore;

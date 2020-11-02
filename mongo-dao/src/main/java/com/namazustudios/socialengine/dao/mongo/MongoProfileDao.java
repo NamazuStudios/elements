@@ -156,7 +156,7 @@ public class MongoProfileDao implements ProfileDao {
             ));
         }
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
 
     }
 
