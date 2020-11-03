@@ -550,7 +550,7 @@ public class TransactionalResourceService implements ResourceService {
             }
 
             try {
-                transactionalResource.close();
+                transactionalResource.unload();
             } catch (Exception ex) {
                 logger.error("Error closing resource {}", transactionalResource, ex);
             }

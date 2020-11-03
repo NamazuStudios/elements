@@ -76,7 +76,7 @@ public class SimpleTaskService implements TaskService {
         final Task task = getMap().remove(taskId);
         if (task == null) return false;
 
-        task.finish(error);
+        task.fail(error);
         return true;
 
     }
