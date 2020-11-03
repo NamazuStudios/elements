@@ -23,6 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiFunction;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -125,12 +126,17 @@ public class TransactionalResourceService implements ResourceService {
         }
 
         return computeRW((acm, txn) -> {
-            if (txn.exists(resource.getId())) {
-                return acm.tryRelease(transactionalResource);
-            } else {
-                return false;
+            try (final WritableByteChannel wbc = txn.updateResource(resource.getId())) {
+                if (txn.exists(resource.getId())) {
+                    transactionalResource.serialize(wbc);
+                    return (BooleanSupplier) () -> acm.tryRelease(transactionalResource);
+                } else {
+                    return (BooleanSupplier) () -> false;
+                }
+            } catch (IOException ex) {
+                throw new InternalException(ex);
             }
-        });
+        }).getAsBoolean();
 
     }
 
@@ -359,7 +365,7 @@ public class TransactionalResourceService implements ResourceService {
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
         try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId());
-                 final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
+             final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 final T value = operation.apply(acm, txn);
                 txn.commit();
                 return value;
@@ -452,8 +458,7 @@ public class TransactionalResourceService implements ResourceService {
 
             final ResourceId resourceId = resource.getId();
 
-            final TransactionalResource transactionalResource;
-            transactionalResource = new TransactionalResource(txn.getReadRevision(), resource, this::purge);
+            final TransactionalResource transactionalResource = new TransactionalResource(resource, this::purge);
             transactionalResource.acquire();
 
             final TransactionalResource result = context.acquires.putIfAbsent(resourceId, transactionalResource);
@@ -477,34 +482,12 @@ public class TransactionalResourceService implements ResourceService {
                 // released when the operation completes.
                 releaseOnClose(existing);
 
-// TODO We need to move the updating code somewhere else
-//
-//                // Revisions will only ever move forward.  Therefore, we can skip an allocation completely if we check
-//                // this first and just return the existing value.  We can safely assume that at some point some other
-//                // thread will be in the process of applying a later revision.  In any case, the version we currently
-//                // have will soon be replaced and it's not worth it.  However we have to check again to ensure we don't
-//                // leak memory.
-//                if (existing.getRevision().isBefore(txn.getReadRevision()));
-//
-//                // Take the penalty allocating a large resource.  This may still fail, but the above check should avoid
-//                // any several iterations.
-//                final Resource update = loadResource(resourceId);
-//
-//                 try (final Resource stale = existing.update(update, txn.getReadRevision())) {
-//                    // Even though we may make several allocations, it's okay.  We are guaranteed to make and destroy
-//                    // one resource per iteration.
-//                    logger.debug("Updated resource {} -> {}", update, stale);
-//                } catch (Exception ex) {
-//                    logger.error("Caught exception closing out stale resource.", ex);
-//                }
-
                 return existing;
 
             });
 
             // We must make sure that it won't be closed with this cache manipulation.  This is side-effect free if we
             // didn't ever allocate a new resource in the first place.
-
             keep(result);
 
             // And we also must make sure that the resource will definitely be acquired.
@@ -550,7 +533,7 @@ public class TransactionalResourceService implements ResourceService {
                 final Resource resource = getResourceLoader().load(rbc, false);
 
                 final TransactionalResource transactionalResource;
-                transactionalResource = new TransactionalResource(txn.getReadRevision(), resource, this::purge);
+                transactionalResource = new TransactionalResource(resource, this::purge);
 
                 toClose.add(transactionalResource);
                 return transactionalResource;

@@ -68,8 +68,11 @@ public class UnixFSResourceIndex implements ResourceIndex {
         if (!pathRevision.getValue().isPresent()) return Revision.zero();
 
         final Path revisionFilePath = pathRevision.getValue().get();
-        if (getUtils().isNull(revisionFilePath)) throw new NullResourceException();
-        else if (getUtils().isTombstone(revisionFilePath)) return Revision.zero();
+
+        if (getUtils().isNull(revisionFilePath))
+            throw new NullResourceException();
+        else if (getUtils().isTombstone(revisionFilePath))
+            return Revision.zero();
 
         final ReadableByteChannel channel = open(revisionFilePath, READ);
         return revision.withValue(channel);

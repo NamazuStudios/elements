@@ -23,8 +23,6 @@ public class TransactionalResource implements Resource {
 
     private static final int NASCENT_MAGIC = MIN_VALUE;
 
-    private static final Context DEAD_CONTEXT = new Context(DeadResource.getInstance(), Revision.infinity());
-
     private static final Consumer<TransactionalResource> ON_DESTROY_DEAD = _t -> {};
 
     private final AtomicReference<Context> context;
@@ -40,11 +38,10 @@ public class TransactionalResource implements Resource {
      * @param delegate the delegate backs this {@link TransactionalResource}
      * @param onDestroy the routine which defines the on-destroy operation, guaranteed to only be run once.
      */
-    public TransactionalResource(final Revision<?> revision,
-                                 final Resource delegate,
+    public TransactionalResource(final Resource delegate,
                                  final Consumer<TransactionalResource> onDestroy) {
         this.onDestroy = new AtomicReference<>(onDestroy);
-        this.context = new AtomicReference<>(new Context(delegate, revision));
+        this.context = new AtomicReference<>(new Context(delegate));
     }
 
     /**
@@ -180,57 +177,17 @@ public class TransactionalResource implements Resource {
         getDelegate().unload();
     }
 
-    public static TransactionalResource deadResource(final Consumer<TransactionalResource> onDestroy) {
-        return new TransactionalResource(Revision.zero(), DeadResource.getInstance(), onDestroy) {
-
-            @Override
-            public boolean acquire() {
-                return false;
-            }
-
-            @Override
-            public boolean isNascent() {
-                return false;
-            }
-
-        };
-    }
-
-    public Resource update(final Resource update, final Revision<?> revision) {
-
-        final Context replacement = new Context(update, revision);
-
-        boolean success;
-        Context existing;
-
-        do {
-            existing = context.get();
-            success = existing.revision.isBefore(revision);
-        } while(!context.compareAndSet(existing, success ? replacement : existing));
-
-        return success ? existing.delegate : update;
-
-    }
-
     public Resource getDelegate() {
         final Context context = this.context.get();
         return context.delegate;
-    }
-
-    public Revision<?> getRevision() {
-        final Context context = this.context.get();
-        return context.revision;
     }
 
     public static class Context {
 
         private final Resource delegate;
 
-        private final Revision<?> revision;
-
-        public Context(Resource delegate, Revision<?> revision) {
+        public Context(final Resource delegate) {
             this.delegate = delegate;
-            this.revision = revision;
         }
 
     }

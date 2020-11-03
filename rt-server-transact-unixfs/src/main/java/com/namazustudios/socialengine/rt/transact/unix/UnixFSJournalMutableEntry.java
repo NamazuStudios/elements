@@ -112,8 +112,8 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
                 public void close() throws IOException {
                     fileChannel.close();
                     programBuilder
-                            .updateResource(COMMIT, resourceId, temporaryFile)
-                            .unlinkFile(CLEANUP, temporaryFile);
+                        .updateResource(COMMIT, resourceId, temporaryFile)
+                        .unlinkFile(CLEANUP, temporaryFile);
                 }
 
             };
