@@ -55,8 +55,8 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
         return workingCopy.saveNewResource(path, resourceId, () -> {
 
-            final java.nio.file.Path temporaryFile = unixFSUtils.allocateTemporaryFile();
-            final FileChannel fileChannel = FileChannel.open(temporaryFile, WRITE);
+            final var temporaryFile = unixFSUtils.allocateTemporaryFile();
+            final var fileChannel = FileChannel.open(temporaryFile, WRITE);
 
             return new WritableByteChannel() {
 
@@ -72,9 +72,12 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
                 @Override
                 public void close() throws IOException {
+
+                    final var relative = unixFSUtils.getStorageRoot().relativize(temporaryFile);
+
                     fileChannel.close();
                     programBuilder
-                        .linkNewResource(COMMIT, temporaryFile, resourceId)
+                        .linkNewResource(COMMIT, relative, resourceId)
                         .linkResource(COMMIT, resourceId, path)
                         .unlinkFile(CLEANUP, temporaryFile);
                 }
@@ -93,8 +96,8 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
         return workingCopy.updateResource(resourceId, () -> {
 
-            final java.nio.file.Path temporaryFile = unixFSUtils.allocateTemporaryFile();
-            final FileChannel fileChannel = FileChannel.open(temporaryFile, WRITE);
+            final var temporaryFile = unixFSUtils.allocateTemporaryFile();
+            final var fileChannel = FileChannel.open(temporaryFile, WRITE);
 
             return new WritableByteChannel() {
 
@@ -110,10 +113,14 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
                 @Override
                 public void close() throws IOException {
+
+                    final var relative = unixFSUtils.getStorageRoot().relativize(temporaryFile);
+
                     fileChannel.close();
                     programBuilder
-                        .updateResource(COMMIT, resourceId, temporaryFile)
+                        .updateResource(COMMIT, relative, resourceId)
                         .unlinkFile(CLEANUP, temporaryFile);
+
                 }
 
             };

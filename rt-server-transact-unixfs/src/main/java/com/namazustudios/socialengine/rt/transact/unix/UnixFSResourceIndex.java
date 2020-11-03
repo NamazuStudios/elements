@@ -115,11 +115,12 @@ public class UnixFSResourceIndex implements ResourceIndex {
     @Override
     public void updateResource(final Revision<?> revision, final Path fsPath, final ResourceId resourceId) {
 
-        final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        final var mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        final var absolute = getUtils().getStorageRoot().resolve(fsPath);
 
         utils.doOperationV(() -> {
             final Path revisionPath = mapping.resolveRevisionFilePath(revision);
-            createLink(fsPath, revisionPath);
+            createLink(revisionPath, absolute);
         }, FatalException::new);
 
     }
@@ -152,13 +153,14 @@ public class UnixFSResourceIndex implements ResourceIndex {
      */
     public void linkNewResource(final Revision<?> revision, final Path fsPath, final ResourceId resourceId) {
 
-        final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        final var mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        final var absolute = getUtils().getStorageRoot().resolve(fsPath);
 
         getUtils().doOperationV(() -> {
             final Path revisionPath = mapping.resolveRevisionFilePath(revision);
             checkResourceIdDoesNotExist(mapping, revision);
             createDirectories(mapping.getResourceIdDirectory());
-            createLink(revisionPath, fsPath);
+            createLink(revisionPath, absolute);
         }, FatalException::new);
 
     }

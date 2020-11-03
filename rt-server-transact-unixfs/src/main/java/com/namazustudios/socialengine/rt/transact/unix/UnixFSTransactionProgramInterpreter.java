@@ -103,34 +103,34 @@ public class UnixFSTransactionProgramInterpreter {
 
     private void unlinkFSPath(final UnixFSTransactionCommand command,
                               final ExecutionHandler executionHandler) {
-        final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
+        final var fsPath = command.getParameterAt(0).asFSPath();
         executionHandler.unlinkFile(program, command, fsPath);
     }
 
     private void unlinkRTPath(final UnixFSTransactionCommand command,
                               final ExecutionHandler executionHandler) {
-        final ResourceId resourceId = command.getParameterAt(0).asResourceId();
-        final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(1).asRTPath();
+        final var resourceId = command.getParameterAt(0).asResourceId();
+        final var rtPath = command.getParameterAt(1).asRTPath();
         executionHandler.unlinkRTPath(program, command, resourceId, rtPath);
     }
 
     private void removeResource(final UnixFSTransactionCommand command,
                                 final ExecutionHandler executionHandler) {
-        final ResourceId resourceId = command.getParameterAt(0).asResourceId();
+        final var resourceId = command.getParameterAt(0).asResourceId();
         executionHandler.removeResource(program, command, resourceId);
     }
 
     private void linkResourceToRTPath(final UnixFSTransactionCommand command,
                                       final ExecutionHandler executionHandler) {
-        final ResourceId resourceId = command.getParameterAt(0).asResourceId();
-        final com.namazustudios.socialengine.rt.Path rtPath = command.getParameterAt(1).asRTPath();
+        final var resourceId = command.getParameterAt(0).asResourceId();
+        final var rtPath = command.getParameterAt(1).asRTPath();
         executionHandler.linkResourceToRTPath(program, command, resourceId, rtPath);
     }
 
     private void updateResource(final UnixFSTransactionCommand command,
                                 final ExecutionHandler executionHandler) {
-        final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
-        final ResourceId resourceId = command.getParameterAt(1).asResourceId();
+        final var fsPath = command.getParameterAt(0).asFSPath();
+        final var resourceId = command.getParameterAt(1).asResourceId();
         executionHandler.updateResource(program, command, fsPath, resourceId);
     }
 
@@ -142,14 +142,14 @@ public class UnixFSTransactionProgramInterpreter {
 
     private void addResourceId(final UnixFSTransactionCommand command,
                                final ExecutionHandler executionHandler) {
-        final ResourceId resourceId = command.getParameterAt(0).asResourceId();
+        final var resourceId = command.getParameterAt(0).asResourceId();
         executionHandler.addResourceId(program, command, resourceId);
     }
 
     private void linkNewResource(final UnixFSTransactionCommand command,
                                  final ExecutionHandler executionHandler) {
-        final java.nio.file.Path fsPath = command.getParameterAt(0).asFSPath();
-        final ResourceId resourceId = command.getParameterAt(1).asResourceId();
+        final var fsPath = command.getParameterAt(0).asFSPath();
+        final var resourceId = command.getParameterAt(1).asResourceId();
         executionHandler.linkNewResource(program, command, fsPath, resourceId);
     }
 

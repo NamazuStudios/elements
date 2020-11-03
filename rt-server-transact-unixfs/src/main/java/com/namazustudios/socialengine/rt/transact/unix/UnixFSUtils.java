@@ -65,7 +65,7 @@ public class UnixFSUtils {
 
     public static final int TEMP_NAME_LENGTH_CHARS = 128;
 
-    public static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHI0123456789-";
+    public static final String TEMP_FILE_CHARACTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHI0123456789";
 
     private Revision.Factory revisionFactory;
 

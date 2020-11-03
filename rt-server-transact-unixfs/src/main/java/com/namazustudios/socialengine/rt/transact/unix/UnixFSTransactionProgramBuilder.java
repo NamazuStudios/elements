@@ -157,8 +157,8 @@ public class UnixFSTransactionProgramBuilder {
 
 
     public UnixFSTransactionProgramBuilder updateResource(final UnixFSTransactionProgramExecutionPhase executionPhase,
-                                                          final ResourceId resourceId,
-                                                          final java.nio.file.Path fsPath) {
+                                                          final java.nio.file.Path fsPath,
+                                                          final ResourceId resourceId) {
 
         requireNonNull(fsPath);
         requireNonNull(resourceId);
@@ -167,8 +167,8 @@ public class UnixFSTransactionProgramBuilder {
         getOperations(executionPhase).add((byteBuffer -> UnixFSTransactionCommand.builder()
                 .withPhase(executionPhase)
                 .withInstruction(UPDATE_RESOURCE)
-                .addResourceIdParameter(resourceId)
                 .addFSPathParameter(fsPath)
+                .addResourceIdParameter(resourceId)
             .build(byteBuffer)));
 
         return this;
