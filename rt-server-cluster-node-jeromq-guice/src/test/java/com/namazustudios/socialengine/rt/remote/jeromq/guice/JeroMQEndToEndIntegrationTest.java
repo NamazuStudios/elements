@@ -5,9 +5,11 @@ import com.google.inject.name.Named;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
 import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
+import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.SharedAsyncConnectionService;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
+import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -491,6 +493,11 @@ public class JeroMQEndToEndIntegrationTest {
             bind(new TypeLiteral<Set<Node>>(){}).toProvider(() -> singleton(nodeProvider.get()));
 
             // Sets up the worker instance
+            final Persistence pMock = mock(Persistence.class);
+            bind(Persistence.class).toInstance(pMock);
+
+            install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
+
             bind(WorkerInstance.class).asEagerSingleton();
             bind(Worker.class).to(WorkerInstance.class);
             bind(Instance.class).annotatedWith(instanceNamedAnnotation).to(WorkerInstance.class);

@@ -32,6 +32,7 @@ public class SimpleResourceServiceReleasingUnitTest extends AbstractResourceServ
         protected void configure() {
 
             install(new SimpleServicesModule());
+            install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
 
             final AssetLoader mockAssetLoader = Mockito.mock(AssetLoader.class);
             bind(AssetLoader.class).toInstance(mockAssetLoader);
