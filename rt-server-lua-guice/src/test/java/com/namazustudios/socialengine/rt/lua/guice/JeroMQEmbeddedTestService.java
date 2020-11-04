@@ -195,6 +195,9 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             logger.error("Exception starting test client instance.", ex);
         }
 
+        getClient().refreshConnections();
+        getWorker().refreshConnections();
+
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
 
         return this;

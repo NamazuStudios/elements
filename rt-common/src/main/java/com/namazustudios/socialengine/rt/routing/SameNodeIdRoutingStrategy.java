@@ -13,7 +13,7 @@ import static com.namazustudios.socialengine.rt.routing.RoutingUtility.reduceAdd
 
 /**
  * A {@link RoutingStrategy} which ensures that accepts all address components are instances of {@link HasNodeId} and
- * that all {@link NodeId} instances pont to the same place.  Instances of {@link HasNodeId} which do not specify the
+ * that all {@link NodeId} instances point to the same place.  Instances of {@link HasNodeId} which do not specify the
  * {@link NodeId} will be ignored and the call dispatched to the specific {@link NodeId} that it determines or an
  * exception will be thrown otherwise.
  *

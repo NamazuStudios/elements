@@ -128,7 +128,7 @@ public interface IndexContext {
 
     /**
      * Unlinks the provided {@link Path} and if this is the last {@link Path} reference to a {@link ResourceId}, then
-     * the cluster will remove and destroy the associated {@link Resource}. Futher details on the operation can be
+     * the cluster will remove and destroy the associated {@link Resource}. Further details on the operation can be
      * obtained through the {@link Unlink} interface.
      *
      * If the result is a complete removal, then this will have the same end result as
