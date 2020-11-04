@@ -162,6 +162,8 @@ public class IndexDetailBuiltin implements Builtin {
                         .getSchedulerContext()
                         .resumeWithError(taskId, throwable);
 
+
+
             getLuaResource()
                 .getRemoteContext()
                 .getIndexContext()

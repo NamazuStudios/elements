@@ -327,7 +327,7 @@ public class LuaResource implements Resource {
 
             getTasks().forEach(taskId -> {
                 final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
-                localContext.getTaskContext().finishWithError(taskId, resourceDestroyedException);
+                getLocalContext().getTaskContext().finishWithError(taskId, resourceDestroyedException);
             });
 
             getLuaState().close();
@@ -380,7 +380,7 @@ public class LuaResource implements Resource {
                 final int status = luaState.checkInteger(2);                          // thread status
 
                 if (status == YIELD) {
-                    localContext.getTaskContext().register(taskId, consumer, throwableConsumer);
+                    getLocalContext().getTaskContext().register(taskId, consumer, throwableConsumer);
                 } else {
                     final Object result = luaState.checkJavaObject(3, Object.class);      // result
                     finish(taskId, consumer, result);
