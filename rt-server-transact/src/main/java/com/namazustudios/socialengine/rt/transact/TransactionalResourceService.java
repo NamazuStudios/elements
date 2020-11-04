@@ -194,19 +194,18 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Resource removeResource(final ResourceId resourceId) {
         return computeRW((acm, txn) -> {
-            final Resource resource = acm.evict(resourceId, () -> {
+            try{
+                txn.removeResource(resourceId);
+            } catch (TransactionConflictException ex){
+                throw new FatalException(ex);
+            }
+            return acm.evict(resourceId, () -> {
                 try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
                     return getResourceLoader().load(rbc);
                 } catch (NullResourceException | IOException x) {
                     throw new NullResourceException(x);
                 }
             });
-            try{
-                txn.removeResource(resourceId);
-            } catch (TransactionConflictException ex){
-                throw new FatalException(ex);
-            }
-            return resource;
         });
     }
 
