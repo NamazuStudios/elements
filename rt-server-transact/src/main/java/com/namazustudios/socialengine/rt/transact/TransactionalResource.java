@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 
@@ -22,6 +23,8 @@ import static java.lang.Math.max;
 public class TransactionalResource implements Resource {
 
     private static final int NASCENT_MAGIC = MIN_VALUE;
+
+    private static final int TOMBSTONE_MAGIC = MIN_VALUE + 1;
 
     private static final Consumer<TransactionalResource> ON_DESTROY_DEAD = _t -> {};
 
@@ -54,7 +57,11 @@ public class TransactionalResource implements Resource {
      * @return true if this Resource is still active, false otherwise
      */
     public boolean acquire() {
-        final int value = acquires.updateAndGet(i -> i == NASCENT_MAGIC ? 1 : i == 0 ? 0 : i + 1);
+        final int value = acquires.updateAndGet(i -> {
+            if (i == NASCENT_MAGIC) return 1;
+            else if (i == TOMBSTONE_MAGIC) throw new ResourceNotFoundException();
+            else return i + 1;
+        });
         return value > 0;
     }
 
@@ -95,6 +102,10 @@ public class TransactionalResource implements Resource {
      */
     public boolean isNascent() {
         return acquires.get() == NASCENT_MAGIC;
+    }
+
+    public void setTombstoneState(){
+        acquires.set(TOMBSTONE_MAGIC);
     }
 
     @Override

@@ -22,10 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.BiFunction;
-import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.Function;
+import java.util.function.*;
 import java.util.stream.Stream;
 
 import static java.lang.Thread.sleep;
@@ -197,15 +194,19 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Resource removeResource(final ResourceId resourceId) {
         return computeRW((acm, txn) -> {
-            try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)){
+            final Resource resource = acm.evict(resourceId, () -> {
+                try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
+                    return getResourceLoader().load(rbc);
+                } catch (NullResourceException | IOException x) {
+                    throw new NullResourceException(x);
+                }
+            });
+            try{
                 txn.removeResource(resourceId);
-                return getResourceLoader().load(rbc);
-            } catch (NullResourceException ex) {
-                txn.removeResource(resourceId);
-                return acm.evict(resourceId);
-            } catch (IOException e) {
-                throw new InternalException(e);
+            } catch (TransactionConflictException ex){
+                throw new FatalException(ex);
             }
+            return resource;
         });
     }
 
@@ -569,9 +570,12 @@ public class TransactionalResourceService implements ResourceService {
             toRelease.add(transactionalResource);
         }
 
-        public Resource evict(final ResourceId resourceId) {
+        public Resource evict(final ResourceId resourceId, Supplier<Resource> resourceSupplier) {
             final TransactionalResource tr = context.acquires.remove(resourceId);
-            if (tr == null) throw new InternalException("Should have a Resource present in cache.");
+            if (tr == null){
+                return resourceSupplier.get();
+            }
+            tr.setTombstoneState();
             return tr.getDelegate();
         }
 
