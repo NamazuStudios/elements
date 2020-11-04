@@ -21,7 +21,7 @@ public class LuaResourceLinkingAdvancedTest {
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
             .withWorkerModule(new LuaModule())
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .withDefaultHttpClient()
         .start();
 

@@ -15,7 +15,7 @@ public class LuaHandlerIntegrationTest {
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withWorkerModule(new LuaModule())
-        .withWorkerModule(new XodusEnvironmentModule().withSchedulerEnvironment())
+        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
         .withDefaultHttpClient()
         .start();
 

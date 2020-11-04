@@ -23,7 +23,7 @@ public class HttpClientIntegrationTest {
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withDefaultHttpClient()
         .withWorkerModule(new LuaModule())
-        .withWorkerModule(new XodusEnvironmentModule().withSchedulerEnvironment())
+        .withWorkerModule(new XodusEnvironmentModule().withTempResourceEnvironment().withTempSchedulerEnvironment())
         .start();
 
     private final Context context = getEmbeddedTestService().getContext();

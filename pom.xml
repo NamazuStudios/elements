@@ -86,7 +86,7 @@
         <guava.version>21.0</guava.version>
         <commons.lang.version>3.3.2</commons.lang.version>
         <jaxrs.api.version>2.1</jaxrs.api.version>
-        <jersey.version>2.27</jersey.version>
+        <jersey.version>2.32</jersey.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <lucene.version>7.2.0</lucene.version>
         <mongo.java.driver.version>3.4.0</mongo.java.driver.version>

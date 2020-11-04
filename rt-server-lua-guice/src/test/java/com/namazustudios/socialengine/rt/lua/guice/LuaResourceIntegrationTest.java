@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -31,6 +32,7 @@ public class LuaResourceIntegrationTest {
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withWorkerModule(new LuaModule())
+        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
         .withDefaultHttpClient()
         .start();
 
@@ -174,7 +176,11 @@ public class LuaResourceIntegrationTest {
 
     @AfterMethod
     public void clearResourceService() {
-        getContext().getResourceContext().destroyAllResources();
+        try{
+            getContext().getResourceContext().destroyAllResources();
+        } catch (UnsupportedOperationException ex){
+
+        }
     }
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
