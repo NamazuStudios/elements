@@ -476,7 +476,7 @@ public class UnixFSRevisionTable {
                 return null;
             }
 
-            return new RevisionMonitor<Slice<UnixFSRevisionTableEntry>>() {
+            return new RevisionMonitor<>() {
 
                 @Override
                 public Slice<UnixFSRevisionTableEntry> getScope() {

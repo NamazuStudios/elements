@@ -19,6 +19,8 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
+import java.nio.channels.FileChannel;
+import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -28,14 +30,18 @@ import java.util.regex.Pattern;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static java.nio.channels.FileChannel.open;
+import static java.nio.file.Files.createTempFile;
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
-@Guice(modules = TestCorePersistence.Module.class)
-public class TestCorePersistence {
+@Guice(modules = TestCoreErisPersistence.Module.class)
+public class TestCoreErisPersistence {
 
-    private static final Logger logger = LoggerFactory.getLogger(TestCorePersistence.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistence.class);
 
     private ResourceLoader resourceLoader;
 
@@ -75,17 +81,22 @@ public class TestCorePersistence {
 
         logger.info("Testing Persistence for {}", moduleName);
 
-        final byte[] bytes;
+        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
+
+        try (final FileChannel wbc = open(tempFile, WRITE);
+             final Resource resource = getResourceLoader().load(moduleName)) {
+            resource.setVerbose(true);
+            resource.serialize(wbc);
+        }
 
         try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
              final Resource resource = getResourceLoader().load(moduleName)) {
             resource.setVerbose(true);
             resource.serialize(bos);
-            bytes = bos.toByteArray();
         }
 
-        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-             final Resource resource = getResourceLoader().load(bis)) {
+        try (final FileChannel rbc = open(tempFile, READ);
+             final Resource resource = getResourceLoader().load(rbc)) {
             logger.info("Successfully loaded {}", resource);
         }
 
@@ -94,9 +105,9 @@ public class TestCorePersistence {
     @Test
     public void testIocIsRestoredAfterUnpersist() throws IOException {
 
-        final byte[] bytes;
+        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
 
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (final FileChannel wbc = open(tempFile, WRITE);
              final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
@@ -110,13 +121,12 @@ public class TestCorePersistence {
             assertEquals(result.get(), "Hello World!");
 
             resource.setVerbose(true);
-            resource.serialize(bos);
-            bytes = bos.toByteArray();
+            resource.serialize(wbc);
 
         }
 
-        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-             final Resource resource = getResourceLoader().load(bis, true)) {
+        try (final FileChannel rbc = open(tempFile, READ);
+             final Resource resource = getResourceLoader().load(rbc, true)) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -135,9 +145,9 @@ public class TestCorePersistence {
     @Test
     public void testIocProviderIsRestoredAfterUnpersist() throws IOException {
 
-        final byte[] bytes;
+        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
 
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (final FileChannel wbc = open(tempFile, WRITE);
              final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
@@ -151,13 +161,12 @@ public class TestCorePersistence {
             assertEquals(result.get(), "Hello World!");
 
             resource.setVerbose(true);
-            resource.serialize(bos);
-            bytes = bos.toByteArray();
+            resource.serialize(wbc);
 
         }
 
-        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-             final Resource resource = getResourceLoader().load(bis, true)) {
+        try (final FileChannel rbc = open(tempFile, READ);
+             final Resource resource = getResourceLoader().load(rbc, true)) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -176,11 +185,11 @@ public class TestCorePersistence {
     @Test(threadPoolSize = 100, invocationCount = 100)
     public void testUpvaluesArePersisted() throws Exception {
 
-        byte[] bytes;
         final Set<TaskId> tasks;
         final DummyObject original = new DummyObject();
+        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
 
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        try (final FileChannel wbc = open(tempFile, WRITE);
              final Resource resource = getResourceLoader().load("test.persist_upvalue")) {
 
             resource.getMethodDispatcher("set_upval")
@@ -188,21 +197,18 @@ public class TestCorePersistence {
                     .dispatch(o -> assertNull(o), ex -> fail("No error expected."));
 
             tasks = resource.getTasks();
-            resource.serialize(bos);
-            bytes = bos.toByteArray();
+            resource.serialize(wbc);
 
         }
 
-        for (int i = 0; i < 100; ++i) try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                                           final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-                                           final Resource resource = getResourceLoader().load(bis)) {
+        for (int i = 0; i < 100; ++i) try (final FileChannel rbc = open(tempFile, READ);
+                                           final Resource resource = getResourceLoader().load(rbc)) {
 
             resource.getMethodDispatcher("assert_upval")
                     .params()
                     .dispatch(o -> assertEquals(original, o), ex -> fail("No error expected."));
 
-            resource.serialize(bos);
-            bytes = bos.toByteArray();
+            resource.serialize(rbc);
 
         }
 
@@ -211,12 +217,12 @@ public class TestCorePersistence {
     @Test
     public void testCoroutinesAreRestored() throws IOException {
 
-        final byte[] bytes;
-
         final TaskId taskId;
         final Set<TaskId> taskIdSet;
 
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
+
+        try (final FileChannel wbc = open(tempFile, WRITE);
              final Resource resource = getResourceLoader().load("test.simple_yield")) {
 
             final AtomicReference<String> taskIdAtomicReference = new AtomicReference<>();
@@ -233,13 +239,12 @@ public class TestCorePersistence {
             assertTrue(taskIdSet.contains(taskId), "TaskID is not in TaskID Set.");
 
             resource.setVerbose(true);
-            resource.serialize(bos);
-            bytes = bos.toByteArray();
+            resource.serialize(wbc);
 
         }
 
-        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
-             final Resource resource = getResourceLoader().load(bis, true)) {
+        try (final FileChannel rbc = open(tempFile, READ);
+             final Resource resource = getResourceLoader().load(rbc, true)) {
             assertEquals(resource.getTasks(), taskIdSet);
             final Set<TaskId> restoredIdSet = resource.getTasks();
             assertEquals(restoredIdSet, taskIdSet);

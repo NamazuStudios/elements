@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
 import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,8 @@ public class SimpleSchedulerContext implements SchedulerContext {
     private static final Logger logger = LoggerFactory.getLogger(SimpleSchedulerContext.class);
 
     private Scheduler scheduler;
+
+    private TaskService taskService;
 
     @Override
     public void start() {
@@ -27,8 +30,14 @@ public class SimpleSchedulerContext implements SchedulerContext {
     @Override
     public void resume(final TaskId taskId, final Object ... results) {
         getScheduler().performV(taskId.getResourceId(),
-            r  -> { logger.trace("Resumed task {}:{}", taskId); r.resume(taskId, results); },
-            th ->   logger.error("Caught exception resuming {}.", taskId, th)
+            r -> FinallyAction.begin(logger)
+                    .then(() -> logger.trace("Resumed task {}:{}", taskId))
+                    .then(() -> r.resume(taskId, results))
+                .run(),
+            th -> FinallyAction.begin(logger)
+                    .then(() -> logger.error("Caught exception resuming {}.", taskId, th))
+                    .then(() -> getTaskService().finishWithError(taskId, th))
+                .run()
         );
     }
 
@@ -36,8 +45,13 @@ public class SimpleSchedulerContext implements SchedulerContext {
     public void resumeTaskAfterDelay(final TaskId taskId, final long time, final TimeUnit timeUnit) {
         getScheduler().resumeTaskAfterDelay(
             taskId, time, timeUnit,
-            () -> logger.trace("Resumed task {}:{}", taskId),
-            th -> logger.error("Caught exception resuming {}.", taskId, th)
+            () -> FinallyAction.begin(logger)
+                    .then(() -> logger.trace("Resumed task {}", taskId))
+                .run(),
+            th -> FinallyAction.begin(logger)
+                    .then(() -> logger.error("Caught exception resuming {}.", taskId, th))
+                    .then(() -> getTaskService().finishWithError(taskId, th))
+                .run()
         );
     }
 
@@ -46,15 +60,27 @@ public class SimpleSchedulerContext implements SchedulerContext {
                                      final Runnable resumed) {
         getScheduler().resumeTaskAfterDelay(
             taskId, time, timeUnit,
-            () -> { logger.trace("Resumed task {}", taskId); resumed.run(); },
-            th -> { logger.error("Caught exception resuming {}.", taskId, th); resumed.run(); } );
+            () -> FinallyAction.begin(logger)
+                    .then(() -> logger.trace("Resumed task {}", taskId))
+                    .then(resumed)
+                .run(),
+            th -> FinallyAction.begin(logger)
+                    .then(() -> logger.error("Caught exception resuming {}.", taskId, th))
+                    .then(() -> getTaskService().finishWithError(taskId, th))
+                    .then(resumed)
+                .run()
+            );
     }
 
     @Override
     public void resumeFromNetwork(final TaskId taskId, final Object result) {
         getScheduler().performV(taskId.getResourceId(),
             resource -> resumeFromNetwork(resource, taskId, result),
-            th -> logger.error("Caught exception resuming {}.", taskId, th));
+            th -> FinallyAction.begin(logger)
+                    .then(() -> logger.error("Caught exception resuming {}.", taskId, th))
+                    .then(() -> getTaskService().finishWithError(taskId, th))
+                .run()
+        );
     }
 
     private void resumeFromNetwork(final Resource resource, final TaskId taskId, final Object result) {
@@ -87,6 +113,15 @@ public class SimpleSchedulerContext implements SchedulerContext {
     @Inject
     public void setScheduler(Scheduler scheduler) {
         this.scheduler = scheduler;
+    }
+
+    public TaskService getTaskService() {
+        return taskService;
+    }
+
+    @Inject
+    public void setTaskService(TaskService taskService) {
+        this.taskService = taskService;
     }
 
 }

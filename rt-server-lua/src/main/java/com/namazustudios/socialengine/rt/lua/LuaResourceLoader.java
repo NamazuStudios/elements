@@ -101,7 +101,7 @@ public class LuaResourceLoader implements ResourceLoader {
         luaResource.setVerbose(verbose);
 
         final IocResolver iocResolver;
-        iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getPersistence());
+        iocResolver = new PersistenceAwareIocResolver(getIocResolverProvider().get(), luaResource.getErisPersistence());
 
         luaResource.getBuiltinManager().installBuiltin(new AttributesBuiltin(luaResource::getAttributes));
         luaResource.getBuiltinManager().installBuiltin(getClasspathBuiltinProvider().get());

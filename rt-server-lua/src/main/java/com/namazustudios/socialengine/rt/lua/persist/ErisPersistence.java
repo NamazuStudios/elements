@@ -27,7 +27,7 @@ import static java.lang.String.format;
 /**
  * Provides persistence support for {@link com.namazustudios.socialengine.rt.lua.LuaResource}
  */
-public class Persistence {
+public class ErisPersistence {
 
     private static final int NULL_OBJ_IDX = -1;
 
@@ -53,11 +53,11 @@ public class Persistence {
 
     private static final String COROUTINES = "_c";
 
-    private static final String UNPERSIST = mangle(Persistence.class, "u");
+    private static final String UNPERSIST = mangle(ErisPersistence.class, "u");
 
-    private static final String PERMANENT_OBJECT_TABLE = mangle(Persistence.class, "PERMANENT_OBJECT_TABLE");
+    private static final String PERMANENT_OBJECT_TABLE = mangle(ErisPersistence.class, "PERMANENT_OBJECT_TABLE");
 
-    private static final String INVERSE_PERMANENT_OBJECT_TABLE = mangle(Persistence.class, "INVERSE_PERMANENT_OBJECT_TABLE");
+    private static final String INVERSE_PERMANENT_OBJECT_TABLE = mangle(ErisPersistence.class, "INVERSE_PERMANENT_OBJECT_TABLE");
 
     private static final JavaFunction PLACEHODLER_UNPERSIST = l -> {
         // A placeholder JavaFunction which will be used in place of the actual unpersist function during
@@ -75,8 +75,8 @@ public class Persistence {
 
     private final Map<Object, CustomPersistenceEntry> customPersistence = new MapMaker().weakKeys().makeMap();
 
-    public Persistence(final LuaResource luaResource,
-                       final Supplier<Logger> loggerSupplier) {
+    public ErisPersistence(final LuaResource luaResource,
+                           final Supplier<Logger> loggerSupplier) {
 
         this.luaResource = luaResource;
         this.loggerSupplier = loggerSupplier;

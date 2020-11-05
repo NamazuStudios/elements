@@ -31,8 +31,6 @@ public class SimpleScheduler implements Scheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
 
-    private ResourceLockService resourceLockService;
-
     private ResourceService resourceService;
 
     private ExecutorService dispatcherExecutorService;
@@ -115,7 +113,7 @@ public class SimpleScheduler implements Scheduler {
 
     public Future<Void> scheduleDestruction(final ResourceId resourceId) {
         return getContext().getDispatcher().submit(() -> {
-            try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
+            try {
                 getResourceService().destroy(resourceId);
             } catch (ResourceNotFoundException ex) {
                 logger.debug("Resource already destroyed {}.  Disregarding.", resourceId, ex);
@@ -186,25 +184,22 @@ public class SimpleScheduler implements Scheduler {
 
             final Resource resource;
 
-            try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
-
-                try {
-                    resource = getResourceService().getAndAcquireResourceWithId(resourceId);
-                } catch (Throwable th) {
-                    failure.accept(th);
-                    throw th;
-                }
-
-                try {
-                    return performProtected(resource, operation);
-                } catch (Throwable th) {
-                    failure.accept(th);
-                    throw th;
-                } finally {
-                    getResourceService().release(resource);
-                }
-
+            try {
+                resource = getResourceService().getAndAcquireResourceWithId(resourceId);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
             }
+
+            try {
+                return performProtected(resource, operation);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
+            } finally {
+                getResourceService().release(resource);
+            }
+
 
         };
     }
@@ -237,7 +232,7 @@ public class SimpleScheduler implements Scheduler {
 
     private <T> T performProtected(final Resource resource,
                                    final Function<Resource, T> operation) {
-        try (final Monitor m = getResourceLockService().getMonitor(resource.getId())){
+        try {
             logger.trace("Applying operation for resource {}", resource.getId());
             return operation.apply(resource);
         } catch (Throwable th) {
@@ -264,15 +259,6 @@ public class SimpleScheduler implements Scheduler {
     @Inject
     public void setScheduledExecutorService(@Named(SCHEDULED_EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
         this.scheduledExecutorService = scheduledExecutorService;
-    }
-
-    public ResourceLockService getResourceLockService() {
-        return resourceLockService;
-    }
-
-    @Inject
-    public void setResourceLockService(ResourceLockService resourceLockService) {
-        this.resourceLockService = resourceLockService;
     }
 
     public ResourceService getResourceService() {

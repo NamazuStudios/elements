@@ -346,7 +346,7 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
                 .then(() -> entry.close())
                 .then(() -> lock.unlock())
                 .then(() -> revision.close())
-            .perform();
+            .run();
         }
 
         private void write(final PendingRevisionChange pending) {

@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
-import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -57,16 +56,16 @@ public class ResourceDetailBuiltin implements Builtin {
                 .setAttributes(attributesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue())))
                 .build();
 
-            getLuaResource().getContextFor(taskId).getResourceContext().createAttributesAsync(
-                rid -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, rid.asString()),
-                throwable -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
+            getLuaResource().getLocalContextOrContextFor(taskId).getResourceContext().createAttributesAsync(
+                rid -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, rid.asString()),
+                throwable -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
                 module, path, attributes, params);
 
             return 0;
 
         } catch (Exception ex) {
             logAssist.error("Error invoking method.", ex);
-            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
             throw ex;
         }
 
@@ -85,16 +84,16 @@ public class ResourceDetailBuiltin implements Builtin {
 
             logger.trace("Invoking {} {} {}", resourceId, methodName, params);
 
-            getLuaResource().getContextFor(resourceId).getResourceContext().invokeAsync(
-                object -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, object),
-                throwable -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
+            getLuaResource().getLocalContextOrContextFor(resourceId).getResourceContext().invokeAsync(
+                object -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, object),
+                throwable -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
                 resourceId, methodName, params);
 
             return 0;
 
         } catch (Exception ex) {
             logAssist.error("Error invoking method.", ex);
-            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
             throw ex;
         }
 
@@ -111,16 +110,16 @@ public class ResourceDetailBuiltin implements Builtin {
             final String methodName = luaState.checkString(2);
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
 
-            getLuaResource().getContextFor(path).getResourceContext().invokePathAsync(
-                    object -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, object),
-                    throwable -> getLuaResource().getContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
+            getLuaResource().getLocalContextOrContextFor(path).getResourceContext().invokePathAsync(
+                    object -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, object),
+                    throwable -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
                     path, methodName, params);
 
             return 0;
 
         } catch (Exception ex) {
             logAssist.error("Error invoking method.", ex);
-            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
             throw ex;
         }
 
@@ -135,13 +134,13 @@ public class ResourceDetailBuiltin implements Builtin {
 
             final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
 
-            getLuaResource().getContextFor(resourceId).getResourceContext().destroyAsync(
+            getLuaResource().getLocalContextOrContextFor(resourceId).getResourceContext().destroyAsync(
                 object -> {
                     if (taskId.getResourceId().equals(resourceId)) {
                         logger.info("Destroyed {}", resourceId);
                     } else {
                         getLuaResource()
-                            .getContextFor(taskId)
+                            .getLocalContextOrContextFor(taskId)
                             .getSchedulerContext()
                             .resumeFromNetwork(taskId, null);
                     }
@@ -153,7 +152,7 @@ public class ResourceDetailBuiltin implements Builtin {
                     }
 
                     getLuaResource()
-                        .getContextFor(taskId)
+                        .getLocalContextOrContextFor(taskId)
                         .getSchedulerContext().resumeWithError(taskId, throwable);
 
                 },
@@ -164,7 +163,7 @@ public class ResourceDetailBuiltin implements Builtin {
 
         } catch (Exception ex) {
             logAssist.error("Error invoking method.", ex);
-            getLuaResource().getContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
             throw ex;
         }
 
@@ -208,11 +207,11 @@ public class ResourceDetailBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
-        persistence.addPermanentJavaObject(create, IndexDetailBuiltin.class, CREATE);
-        persistence.addPermanentJavaObject(invoke, IndexDetailBuiltin.class, INVOKE);
-        persistence.addPermanentJavaObject(invokePath, IndexDetailBuiltin.class, INVOKE_PATH);
-        persistence.addPermanentJavaObject(destroy, IndexDetailBuiltin.class, DESTROY);
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(create, IndexDetailBuiltin.class, CREATE);
+        erisPersistence.addPermanentJavaObject(invoke, IndexDetailBuiltin.class, INVOKE);
+        erisPersistence.addPermanentJavaObject(invokePath, IndexDetailBuiltin.class, INVOKE_PATH);
+        erisPersistence.addPermanentJavaObject(destroy, IndexDetailBuiltin.class, DESTROY);
     }
 
     public LuaResource getLuaResource() {

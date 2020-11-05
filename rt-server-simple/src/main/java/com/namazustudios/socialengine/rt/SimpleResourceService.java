@@ -255,7 +255,7 @@ public class SimpleResourceService implements ResourceService {
                 }
 
             } finally {
-                finallyAction.perform();
+                finallyAction.run();
             }
 
         });
@@ -350,7 +350,7 @@ public class SimpleResourceService implements ResourceService {
                 };
 
             } finally {
-                finallyAction.perform();
+                finallyAction.run();
             }
 
         });
@@ -421,7 +421,7 @@ public class SimpleResourceService implements ResourceService {
                 return removed;
 
             } finally {
-                finallyAction.perform();
+                finallyAction.run();
             }
 
         });

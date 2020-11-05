@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +105,7 @@ public interface Builtin {
     }
 
     /**
-     * Gets the permanent name of the object so that it can be handled appropriately by the {@link Persistence} class
+     * Gets the permanent name of the object so that it can be handled appropriately by the {@link ErisPersistence} class
      * when serializing the underlying {@link LuaResource}.  The default implementation returns the name of this
      * object's {@link Class}.  However, for some implementations, this may not be sufficient.
      *
@@ -126,9 +126,9 @@ public interface Builtin {
      *
      * The default implementation of this method does nothing as not all builtins will require this feature.
      *
-     * @param persistence the {@link Persistence} instance.
+     * @param erisPersistence the {@link ErisPersistence} instance.
      */
-    default void makePersistenceAware(Persistence persistence) {}
+    default void makePersistenceAware(ErisPersistence erisPersistence) {}
 
     /**
      * An internal interface to represent a module.  Returns what is needed by the loader {@link JavaFunction} to

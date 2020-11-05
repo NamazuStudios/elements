@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.id.TaskId;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +22,6 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.Context.LOCAL;
-import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.INDEFINITELY;
 import static java.lang.String.format;
@@ -280,8 +279,8 @@ public class HttpClientBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
-        persistence.addPermanentJavaObject(send, HttpClientBuiltin.class, SEND);
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(send, HttpClientBuiltin.class, SEND);
     }
 
     public Client getClient() {

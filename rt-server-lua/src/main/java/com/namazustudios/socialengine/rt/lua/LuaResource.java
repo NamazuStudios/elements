@@ -13,7 +13,7 @@ import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,8 +25,8 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.locks.Lock;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.*;
@@ -66,7 +66,7 @@ public class LuaResource implements Resource {
 
     private final LogAssist logAssist;
 
-    private final Persistence persistence;
+    private final ErisPersistence erisPersistence;
 
     private final BuiltinManager builtinManager;
 
@@ -110,8 +110,8 @@ public class LuaResource implements Resource {
             this.remoteContext = remoteContext;
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
-            this.persistence = new Persistence(this, this::getScriptLog);
-            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, persistence);
+            this.erisPersistence = new ErisPersistence(this, this::getScriptLog);
+            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, erisPersistence);
 
             openLibs();
             setupFunctionOverrides();
@@ -147,7 +147,7 @@ public class LuaResource implements Resource {
                 luaState.pop(1);
 
                 // Adds it as a permanent object and then pops it off the stack.
-                persistence.addPermanentObject(-1, LuaResource.class, name);
+                erisPersistence.addPermanentObject(-1, LuaResource.class, name);
 
             }
 
@@ -170,8 +170,8 @@ public class LuaResource implements Resource {
         luaState.pushJavaFunction(printToScriptLog);
         luaState.setGlobal(PRINT_FUNCTION);
 
-        persistence.addPermanentJavaObject(scriptAssert, LuaResource.class, ASSERT_FUNCTION);
-        persistence.addPermanentJavaObject(printToScriptLog, LuaResource.class, PRINT_FUNCTION);
+        erisPersistence.addPermanentJavaObject(scriptAssert, LuaResource.class, ASSERT_FUNCTION);
+        erisPersistence.addPermanentJavaObject(printToScriptLog, LuaResource.class, PRINT_FUNCTION);
 
     }
 
@@ -259,12 +259,12 @@ public class LuaResource implements Resource {
 
     @Override
     public void serialize(final OutputStream os) throws IOException {
-        getPersistence().serialize(os);
+        getErisPersistence().serialize(os);
     }
 
     @Override
     public void deserialize(final InputStream is) throws IOException {
-        getPersistence().deserialize(is, sh -> {
+        getErisPersistence().deserialize(is, sh -> {
             resourceId = sh.getResourceId();
             attributes = sh.getAttributes();
         });
@@ -393,7 +393,7 @@ public class LuaResource implements Resource {
                 throwableConsumer.accept(ex);
                 throw ex;
             } finally {
-                finalOperation.perform();
+                finalOperation.run();
             }
 
         };
@@ -448,7 +448,7 @@ public class LuaResource implements Resource {
             getLocalContext().getTaskContext().finishWithError(taskId, ex);
             throw ex;
         } finally {
-            finalOperation.perform();
+            finalOperation.run();
         }
 
     }
@@ -493,13 +493,39 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}.
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
+     * hasn't been specified then this will return the value of {@link #getLocalContext()}.
      *
      * @param hasNodeId the {@link HasNodeId} instance to test
      * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
      */
-    public Context getContextFor(final HasNodeId hasNodeId) {
-        return resourceId.getNodeId().equals(hasNodeId.getNodeId()) ? getLocalContext() : getRemoteContext();
+    public Context getLocalContextOrContextFor(final HasNodeId hasNodeId) {
+        return getContextFor(hasNodeId, this::getLocalContext);
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
+     * hasn't been specified then this will return the value of {@link #getRemoteContext()}.
+     *
+     * @param hasNodeId the {@link HasNodeId} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getRemoteContextOrContextFor(final HasNodeId hasNodeId) {
+        return getContextFor(hasNodeId, this::getRemoteContext);
+    }
+
+    /**
+     * Gets the {@link Context} for the supplied {@link HasNodeId} and if unable to determine the NodeId it will return
+     * the {@link Context} returned by the.
+     *
+     * @param hasNodeId
+     * @param contextSupplier
+     * @return the {@link Context}
+     */
+    public Context getContextFor(final HasNodeId hasNodeId, final Supplier<Context> contextSupplier) {
+        return hasNodeId.getOptionalNodeId()
+            .map(nodeId -> nodeId.getNodeId().equals(nodeId) ? getLocalContext() : getRemoteContext())
+            .orElseGet(contextSupplier);
     }
 
     /**
@@ -521,12 +547,12 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * Gets the {@link Persistence} instance used by this {@link LuaResource}.
+     * Gets the {@link ErisPersistence} instance used by this {@link LuaResource}.
      *
-     * @return the {@link Persistence} instance
+     * @return the {@link ErisPersistence} instance
      */
-    public Persistence getPersistence() {
-        return persistence;
+    public ErisPersistence getErisPersistence() {
+        return erisPersistence;
     }
 
     /**

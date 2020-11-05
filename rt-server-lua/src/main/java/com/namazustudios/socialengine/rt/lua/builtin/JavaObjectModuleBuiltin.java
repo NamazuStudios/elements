@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 
 import javax.inject.Provider;
 import java.lang.reflect.InvocationTargetException;
@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static com.namazustudios.socialengine.rt.lua.persist.Persistence.mangle;
+import static com.namazustudios.socialengine.rt.lua.persist.ErisPersistence.mangle;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
 
@@ -75,17 +75,17 @@ public class JavaObjectModuleBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
 
         final String type = mangle(JavaObjectModuleBuiltin.class, moduleName);
 
-        persistence.addCustomUnpersistence(type, l -> {
+        erisPersistence.addCustomUnpersistence(type, l -> {
             l.pushJavaObject(makeJavaReflector());
             return 1;
         });
 
         persistenceJavaReflectorConsumer = r -> {
-            persistence.addCustomPersistence(r, type, l -> {
+            erisPersistence.addCustomPersistence(r, type, l -> {
                 l.pushNil();
                 return 1;
             });

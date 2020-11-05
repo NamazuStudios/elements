@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 
 import java.util.function.Supplier;
@@ -47,8 +47,8 @@ public class LoggerDetailBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(Persistence persistence) {
-        persistence.addPermanentJavaObject(logger, LoggerDetailBuiltin.class, LOGGER);
+    public void makePersistenceAware(ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(logger, LoggerDetailBuiltin.class, LOGGER);
     }
 
 }

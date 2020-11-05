@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,14 +46,16 @@ public class IndexDetailBuiltin implements Builtin {
             final TaskId taskId = currentTaskId(luaState);
 
             final Consumer<List<IndexContext.Listing>> success = listings ->
-                getLuaResource().getContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, listings);
+                getLuaResource().getLocalContextOrContextFor(taskId)
+                .getSchedulerContext()
+                .resumeFromNetwork(taskId, listings);
 
-            final Consumer<Throwable> failure = throwable -> getLuaResource().getContextFor(taskId)
+            final Consumer<Throwable> failure = throwable -> getLuaResource().getLocalContextOrContextFor(taskId)
                 .getSchedulerContext()
                 .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getRemoteContext()
+                .getLocalContextOrContextFor(path)
                 .getIndexContext()
                 .listAsync(path, success, failure);
 
@@ -79,13 +81,13 @@ public class IndexDetailBuiltin implements Builtin {
 
             final Consumer<Void> success = v ->
                 getLuaResource()
-                    .getContextFor(taskId)
+                    .getLocalContextOrContextFor(taskId)
                     .getSchedulerContext()
                     .resumeFromNetwork(taskId, null);
 
             final Consumer<Throwable> failure = throwable ->
                 getLuaResource()
-                    .getContextFor(taskId)
+                    .getLocalContextOrContextFor(taskId)
                     .getSchedulerContext()
                     .resumeWithError(taskId, throwable);
 
@@ -116,13 +118,13 @@ public class IndexDetailBuiltin implements Builtin {
 
             final Consumer<Void> success = v ->
                     getLuaResource()
-                        .getContextFor(taskId)
+                        .getLocalContextOrContextFor(taskId)
                         .getSchedulerContext()
                         .resumeFromNetwork(taskId, null);
 
             final Consumer<Throwable> failure = throwable ->
                     getLuaResource()
-                        .getContextFor(taskId)
+                        .getLocalContextOrContextFor(taskId)
                         .getSchedulerContext()
                         .resumeWithError(taskId, throwable);
 
@@ -146,26 +148,23 @@ public class IndexDetailBuiltin implements Builtin {
 
         try {
 
+            final TaskId taskId = currentTaskId(luaState);
             final Path path = new Path(luaState.checkString(1));
 
-            final TaskId taskId = currentTaskId(luaState);
-
             final Consumer<IndexContext.Unlink> success = u ->
-                    getLuaResource()
-                        .getContextFor(taskId)
-                        .getSchedulerContext()
-                        .resumeFromNetwork(taskId, u);
+                getLuaResource()
+                    .getLocalContextOrContextFor(taskId)
+                    .getSchedulerContext()
+                    .resumeFromNetwork(taskId, u);
 
             final Consumer<Throwable> failure = throwable ->
-                    getLuaResource()
-                        .getContextFor(taskId)
-                        .getSchedulerContext()
-                        .resumeWithError(taskId, throwable);
-
-
+                getLuaResource()
+                    .getLocalContextOrContextFor(taskId)
+                    .getSchedulerContext()
+                    .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getRemoteContext()
+                .getLocalContextOrContextFor(path)
                 .getIndexContext()
                 .unlinkAsync(path, success, failure);
 
@@ -216,11 +215,11 @@ public class IndexDetailBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
-        persistence.addPermanentJavaObject(list, IndexDetailBuiltin.class, LIST);
-        persistence.addPermanentJavaObject(link, IndexDetailBuiltin.class, LINK);
-        persistence.addPermanentJavaObject(linkPath, IndexDetailBuiltin.class, LINK_PATH);
-        persistence.addPermanentJavaObject(unlink, IndexDetailBuiltin.class, UNLINK);
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(list, IndexDetailBuiltin.class, LIST);
+        erisPersistence.addPermanentJavaObject(link, IndexDetailBuiltin.class, LINK);
+        erisPersistence.addPermanentJavaObject(linkPath, IndexDetailBuiltin.class, LINK_PATH);
+        erisPersistence.addPermanentJavaObject(unlink, IndexDetailBuiltin.class, UNLINK);
     }
 
     public LuaResource getLuaResource() {
