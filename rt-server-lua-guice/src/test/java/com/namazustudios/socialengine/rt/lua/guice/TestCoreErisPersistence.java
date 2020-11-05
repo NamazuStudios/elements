@@ -5,6 +5,7 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -28,10 +29,14 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.createTempFile;
+import static java.nio.file.Files.find;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.UUID.randomUUID;
@@ -45,18 +50,6 @@ public class TestCoreErisPersistence {
 
     private ResourceLoader resourceLoader;
 
-    private Context context;
-
-    @BeforeClass
-    private void start() {
-        getContext().start();
-    }
-
-    @AfterClass
-    private void stop() {
-        getContext().shutdown();
-    }
-
     @DataProvider
     public static Object[][] allLuaResources() {
 
@@ -65,6 +58,7 @@ public class TestCoreErisPersistence {
         final Reflections reflections = new Reflections(new ConfigurationBuilder()
             .setUrls(ClasspathHelper.forJavaClassPath())
             .setScanners(new ResourcesScanner()));
+
         final Set<String> luaResources = new TreeSet<>(reflections.getResources(Pattern.compile(".*\\.lua")));
 
         return luaResources
@@ -262,28 +256,33 @@ public class TestCoreErisPersistence {
         this.resourceLoader = resourceLoader;
     }
 
-    public Context getContext() {
-        return context;
-    }
-
-    @Inject
-    public void setContext(Context context) {
-        this.context = context;
-    }
-
     public static class Module extends AbstractModule {
 
         @Override
         protected void configure() {
 
             install(new LuaModule());
-            install(new SimpleContextModule().withDefaultContexts());
 
-            bind(Client.class).toInstance(mock(Client.class));
+            final NodeId nodeId = randomNodeId();
+            bind(NodeId.class).toInstance(nodeId);
+
+            // Types backed by actual implementations
             bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
             bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
-            bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
-            bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
+            bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
+
+            // Configurations that are ne
+//            bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
+//            bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
+
+            // Types that are mocks
+
+            bind(Client.class).toInstance(mock(Client.class));
+
+            bind(Context.class).annotatedWith(named(LOCAL)).toInstance(mock(Context.class));
+            bind(Context.class).annotatedWith(named(REMOTE)).toInstance(mock(Context.class));
+
+            bind(PersistenceStrategy.class).toInstance(mock(PersistenceStrategy.class));
 
         }
 
