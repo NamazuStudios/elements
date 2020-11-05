@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
-import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import org.reflections.Reflections;
@@ -13,15 +12,14 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.*;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
 
 import javax.ws.rs.client.Client;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.Serializable;
 import java.nio.channels.FileChannel;
-import java.nio.file.Files;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -31,12 +29,9 @@ import java.util.regex.Pattern;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
-import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
-import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.createTempFile;
-import static java.nio.file.Files.find;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.UUID.randomUUID;
@@ -81,12 +76,6 @@ public class TestCoreErisPersistence {
              final Resource resource = getResourceLoader().load(moduleName)) {
             resource.setVerbose(true);
             resource.serialize(wbc);
-        }
-
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-             final Resource resource = getResourceLoader().load(moduleName)) {
-            resource.setVerbose(true);
-            resource.serialize(bos);
         }
 
         try (final FileChannel rbc = open(tempFile, READ);

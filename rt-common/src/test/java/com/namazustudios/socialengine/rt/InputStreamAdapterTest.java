@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
+import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -10,9 +12,12 @@ import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.file.Files;
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiFunction;
+import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
 import static java.nio.ByteBuffer.allocateDirect;
@@ -24,10 +29,24 @@ import static org.testng.Assert.assertEquals;
 
 public class InputStreamAdapterTest {
 
-    private java.nio.file.Path testFile;
+    private static java.nio.file.Path testFile;
+
+    private final BiFunction<ReadableByteChannel, ByteBuffer, InputStreamAdapter> supplier;
+
+    public InputStreamAdapterTest(final BiFunction<ReadableByteChannel, ByteBuffer, InputStreamAdapter> supplier) {
+        this.supplier = supplier;
+    }
+
+    @Factory
+    public static Object[] getTestObjects() {
+        return IntStream
+            .range(0, 1)
+            .mapToObj(flags -> new InputStreamAdapterTest((rbc, bb) -> new InputStreamAdapter(rbc, bb, flags)))
+            .toArray();
+    }
 
     @BeforeClass
-    public void setupGarbageFile() throws IOException  {
+    public static void setupGarbageFile() throws IOException  {
 
         testFile = Files.createTempFile(InputStreamAdapterTest.class.getSimpleName(), "garbage");
 
@@ -47,7 +66,7 @@ public class InputStreamAdapterTest {
     }
 
     @AfterClass
-    public void destroyGarbageFile() throws IOException {
+    public static void destroyGarbageFile() throws IOException {
         Files.delete(testFile);
     }
 
@@ -57,7 +76,7 @@ public class InputStreamAdapterTest {
         final ByteBuffer streamBuffer = allocateDirect(4096);
 
         try (final FileChannel channel = FileChannel.open(testFile, READ);
-             final InputStreamAdapter is = new InputStreamAdapter(channel, streamBuffer, 0)) {
+             final InputStreamAdapter is = supplier.apply(channel, streamBuffer)) {
             final MappedByteBuffer reference = channel.map(READ_ONLY,0, channel.size());
             while (reference.hasRemaining()) assertEquals(reference.get(), (byte)is.read());
         }
@@ -73,7 +92,7 @@ public class InputStreamAdapterTest {
         final ByteBuffer streamBuffer = allocateDirect(4096);
 
         try (final FileChannel channel = FileChannel.open(testFile, READ);
-             final InputStreamAdapter is = new InputStreamAdapter(channel, streamBuffer, 0)) {
+             final InputStreamAdapter is = supplier.apply(channel, streamBuffer)) {
             final MappedByteBuffer reference = channel.map(READ_ONLY,0, channel.size());
             while (reference.hasRemaining()) {
                 readFully(is, isBuf);
@@ -95,7 +114,7 @@ public class InputStreamAdapterTest {
         final ByteBuffer streamBuffer = allocateDirect(4096);
 
         try (final FileChannel channel = FileChannel.open(testFile, READ);
-             final InputStreamAdapter is = new InputStreamAdapter(channel, streamBuffer, 0)) {
+             final InputStreamAdapter is = supplier.apply(channel, streamBuffer)) {
 
             final MappedByteBuffer reference = channel.map(READ_ONLY,0, channel.size());
 

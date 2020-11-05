@@ -2,22 +2,31 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
+import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Random;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.BiFunction;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 
+import static com.namazustudios.socialengine.rt.util.OutputStreamAdapter.FLUSH;
 import static java.lang.String.format;
 import static java.nio.ByteBuffer.allocateDirect;
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import static java.nio.file.Files.createTempFile;
+import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.testng.Assert.assertEquals;
@@ -29,13 +38,27 @@ public class OutputStreamAdapterTest {
 
     private static final int WRITE_OPERATIONS = 1024 * 8;
 
-    private final Deque<java.nio.file.Path> paths = new ConcurrentLinkedDeque<>();
+    private static final Deque<java.nio.file.Path> paths = new ConcurrentLinkedDeque<>();
+
+    private final BiFunction<WritableByteChannel, ByteBuffer, OutputStreamAdapter> supplier;
+
+    @Factory
+    public static Object[] getTestObjects() {
+        return IntStream
+            .range(0, 3)
+            .mapToObj(flags -> new OutputStreamAdapterTest((wbc, bb) -> new OutputStreamAdapter(wbc, bb, flags)))
+            .toArray();
+    }
+
+    public OutputStreamAdapterTest(final BiFunction<WritableByteChannel, ByteBuffer, OutputStreamAdapter> supplier) {
+        this.supplier = supplier;
+    }
 
     @AfterClass
-    public void cleanup() {
+    public static void cleanup() {
         paths.forEach(p -> {
             try {
-                Files.delete(p);
+                deleteIfExists(p);
             } catch (IOException ex) {
                 fail("Failed to clean up.", ex);
             }
@@ -54,7 +77,7 @@ public class OutputStreamAdapterTest {
 
         try (final FileChannel test = FileChannel.open(testFilePath, WRITE);
              final FileChannel reference = FileChannel.open(referenceFilePath, WRITE);
-             final OutputStreamAdapter os = new OutputStreamAdapter(test, allocateDirect(4096), 0)) {
+             final OutputStreamAdapter os = supplier.apply(test, allocateDirect(4096))) {
 
             for (int i = 0; i < BLOCKS_TO_WRITE; ++i) {
                 byteBuffer.clear();
@@ -84,7 +107,7 @@ public class OutputStreamAdapterTest {
 
         try (final FileChannel test = FileChannel.open(testFilePath, WRITE);
              final FileChannel reference = FileChannel.open(referenceFilePath, WRITE);
-             final OutputStreamAdapter os = new OutputStreamAdapter(test, allocateDirect(4096), 0)) {
+             final OutputStreamAdapter os = supplier.apply(test, allocateDirect(4096))) {
 
             for (int i = 0; i < BLOCKS_TO_WRITE; ++i) {
 
@@ -102,7 +125,7 @@ public class OutputStreamAdapterTest {
 
     }
 
-    @Test(invocationCount = 100, threadPoolSize = 16)
+    @Test(invocationCount = 10, threadPoolSize = 10)
     public void testMixedWrites() throws IOException {
 
         final java.nio.file.Path testFilePath = createTemporary();
@@ -113,7 +136,7 @@ public class OutputStreamAdapterTest {
 
         try (final FileChannel test = FileChannel.open(testFilePath, WRITE);
              final FileChannel reference = FileChannel.open(referenceFilePath, WRITE);
-             final OutputStreamAdapter os = new OutputStreamAdapter(test, allocateDirect(4096), 0)) {
+             final OutputStreamAdapter os = supplier.apply(test, allocateDirect(4096))) {
 
             for (int i = 0; i < WRITE_OPERATIONS; ++i) {
 
@@ -166,7 +189,7 @@ public class OutputStreamAdapterTest {
         }
     }
 
-    private java.nio.file.Path createTemporary() throws IOException {
+    private static java.nio.file.Path createTemporary() throws IOException {
         final java.nio.file.Path path = createTempFile(OutputStreamAdapterTest.class.getSimpleName(), "garbage");
         paths.add(path);
         return path;
