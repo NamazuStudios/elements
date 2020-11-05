@@ -35,7 +35,7 @@ function test_resource.test_create()
     local ResourceId = java.require "com.namazustudios.socialengine.rt.id.ResourceId"
 
     log.info("Making Resource")
-    local rid = resource.create("test.helloworlda", path)
+    local rid = resource.create("test.helloworld", path)
 
     log.info("Made Resource")
     assert(type(rid) == "string", "Expected string for resource_id got: " .. type(rid))
