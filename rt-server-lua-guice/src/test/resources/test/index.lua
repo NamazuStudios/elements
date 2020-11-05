@@ -145,7 +145,7 @@ function test_index.test_link_yield_and_list()
     end
 
     -- Check player 1 listing
-    local listing = index.list(p1_id .. "/*")
+    local listing = index.list("test/" .. p1_id .. "/*")
     print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
 
     for path, resource_id in pairs(listing)
@@ -156,7 +156,7 @@ function test_index.test_link_yield_and_list()
     assert(#listing == #original, "Listing for player one failed to find all resources! Expected: " .. tostring(#original) .. " Found: " .. tostring(#listing))
 
     -- Check player 2 listing
-    listing = index.list(p2_id .. "/*")
+    listing = index.list("test/" .. p2_id .. "/*")
     print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
 
     for path, resource_id in pairs(listing)
