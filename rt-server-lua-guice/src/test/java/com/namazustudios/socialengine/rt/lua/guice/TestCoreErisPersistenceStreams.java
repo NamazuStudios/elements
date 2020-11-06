@@ -1,10 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
-import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -12,38 +10,34 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.client.Client;
-import java.io.IOException;
-import java.io.Serializable;
-import java.nio.channels.FileChannel;
+import java.io.*;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.Context.LOCAL;
-import static com.namazustudios.socialengine.rt.Context.REMOTE;
-import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
-import static java.nio.channels.FileChannel.open;
-import static java.nio.file.Files.createTempFile;
-import static java.nio.file.StandardOpenOption.READ;
-import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.UUID.randomUUID;
-import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
-@Guice(modules = TestCoreErisPersistence.Module.class)
-public class TestCoreErisPersistence {
+@Guice(modules = ErisPersistenceTestModule.class)
+public class TestCoreErisPersistenceStreams {
 
-    private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistence.class);
+    private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistenceStreams.class);
+
+    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles();
 
     private ResourceLoader resourceLoader;
+
+    @AfterSuite
+    public static void deleteTempFiles() {
+        testTemporaryFiles.deleteTempFiles();
+    }
 
     @DataProvider
     public static Object[][] allLuaResources() {
@@ -51,17 +45,17 @@ public class TestCoreErisPersistence {
         // This ensures that we can persist all Lua source code provided in this package, including test code.
 
         final Reflections reflections = new Reflections(new ConfigurationBuilder()
-            .setUrls(ClasspathHelper.forJavaClassPath())
-            .setScanners(new ResourcesScanner()));
+                .setUrls(ClasspathHelper.forJavaClassPath())
+                .setScanners(new ResourcesScanner()));
 
         final Set<String> luaResources = new TreeSet<>(reflections.getResources(Pattern.compile(".*\\.lua")));
 
         return luaResources
-            .stream()
-            .map(s -> s.replace('/', '.').substring(0, s.length() - ".lua".length()))
-            .filter(s -> !"main".equals(s))              // Manifests aren't persistence aware
-            .map(s -> new Object[]{s})
-            .toArray(Object[][]::new);
+                .stream()
+                .map(s -> s.replace('/', '.').substring(0, s.length() - ".lua".length()))
+                .filter(s -> !"main".equals(s))              // Manifests aren't persistence aware
+                .map(s -> new Object[]{s})
+                .toArray(Object[][]::new);
 
     }
 
@@ -70,16 +64,18 @@ public class TestCoreErisPersistence {
 
         logger.info("Testing Persistence for {}", moduleName);
 
-        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
+        final var tempFile = testTemporaryFiles.createTempFile();
 
-        try (final FileChannel wbc = open(tempFile, WRITE);
-             final Resource resource = getResourceLoader().load(moduleName)) {
+        try (final var fos = new FileOutputStream(tempFile.toFile());
+             final var bos = new BufferedOutputStream(fos);
+             final var resource = getResourceLoader().load(moduleName)) {
             resource.setVerbose(true);
-            resource.serialize(wbc);
+            resource.serialize(bos);
         }
 
-        try (final FileChannel rbc = open(tempFile, READ);
-             final Resource resource = getResourceLoader().load(rbc)) {
+        try (final var fis = new FileInputStream(tempFile.toFile());
+             final var bis = new BufferedInputStream(fis);
+             final var resource = getResourceLoader().load(bis)) {
             logger.info("Successfully loaded {}", resource);
         }
 
@@ -88,10 +84,11 @@ public class TestCoreErisPersistence {
     @Test
     public void testIocIsRestoredAfterUnpersist() throws IOException {
 
-        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
+        final var tempFile = testTemporaryFiles.createTempFile();
 
-        try (final FileChannel wbc = open(tempFile, WRITE);
-             final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
+        try (final var fos = new FileOutputStream(tempFile.toFile());
+             final var bos = new BufferedOutputStream(fos);
+             final var resource = getResourceLoader().load("test.ioc_resolve")) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -104,12 +101,13 @@ public class TestCoreErisPersistence {
             assertEquals(result.get(), "Hello World!");
 
             resource.setVerbose(true);
-            resource.serialize(wbc);
+            resource.serialize(bos);
 
         }
 
-        try (final FileChannel rbc = open(tempFile, READ);
-             final Resource resource = getResourceLoader().load(rbc, true)) {
+        try (final var fis = new FileInputStream(tempFile.toFile());
+             final var bis = new BufferedInputStream(fis);
+             final var resource = getResourceLoader().load(bis, true)) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -128,10 +126,11 @@ public class TestCoreErisPersistence {
     @Test
     public void testIocProviderIsRestoredAfterUnpersist() throws IOException {
 
-        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
+        final var tempFile = testTemporaryFiles.createTempFile();
 
-        try (final FileChannel wbc = open(tempFile, WRITE);
-             final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
+        try (final var fos = new FileOutputStream(tempFile.toFile());
+             final var bos = new BufferedOutputStream(fos);
+             final var resource = getResourceLoader().load("test.ioc_resolve")) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -144,12 +143,13 @@ public class TestCoreErisPersistence {
             assertEquals(result.get(), "Hello World!");
 
             resource.setVerbose(true);
-            resource.serialize(wbc);
+            resource.serialize(bos);
 
         }
 
-        try (final FileChannel rbc = open(tempFile, READ);
-             final Resource resource = getResourceLoader().load(rbc, true)) {
+        try (final var fis = new FileInputStream(tempFile.toFile());
+             final var bis = new BufferedInputStream(fis);
+             final var resource = getResourceLoader().load(bis, true)) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -168,30 +168,39 @@ public class TestCoreErisPersistence {
     @Test(threadPoolSize = 100, invocationCount = 100)
     public void testUpvaluesArePersisted() throws Exception {
 
-        final Set<TaskId> tasks;
-        final DummyObject original = new DummyObject();
-        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
+        final var original = new DummyObject();
+        final var tempFile = testTemporaryFiles.createTempFile();
 
-        try (final FileChannel wbc = open(tempFile, WRITE);
-             final Resource resource = getResourceLoader().load("test.persist_upvalue")) {
+        try (final var fos = new FileOutputStream(tempFile.toFile());
+             final var bos = new BufferedOutputStream(fos);
+             final var resource = getResourceLoader().load("test.persist_upvalue")) {
 
             resource.getMethodDispatcher("set_upval")
                     .params(original)
                     .dispatch(o -> assertNull(o), ex -> fail("No error expected."));
 
-            tasks = resource.getTasks();
-            resource.serialize(wbc);
+            resource.getTasks();
+            resource.serialize(bos);
 
         }
 
-        for (int i = 0; i < 100; ++i) try (final FileChannel rbc = open(tempFile, READ);
-                                           final Resource resource = getResourceLoader().load(rbc)) {
+        var toRead = tempFile;
+        var toWrite = testTemporaryFiles.createTempFile();
+
+        for (int i = 0; i < 100; ++i) try (final var fis = new FileInputStream(toRead.toFile());
+                                           final var bis = new BufferedInputStream(fis);
+                                           final var resource = getResourceLoader().load(bis);
+                                           final var fos = new FileOutputStream(toWrite.toFile());
+                                           final var bos = new BufferedOutputStream(fos)) {
 
             resource.getMethodDispatcher("assert_upval")
                     .params()
                     .dispatch(o -> assertEquals(original, o), ex -> fail("No error expected."));
 
-            resource.serialize(rbc);
+            resource.serialize(bos);
+
+            toRead = toWrite;
+            toWrite = testTemporaryFiles.createTempFile();
 
         }
 
@@ -203,10 +212,11 @@ public class TestCoreErisPersistence {
         final TaskId taskId;
         final Set<TaskId> taskIdSet;
 
-        final var tempFile = createTempFile(TestCoreErisPersistence.class.getSimpleName(), "resource");
+        final var tempFile = testTemporaryFiles.createTempFile();
 
-        try (final FileChannel wbc = open(tempFile, WRITE);
-             final Resource resource = getResourceLoader().load("test.simple_yield")) {
+        try (final var fos = new FileOutputStream(tempFile.toFile());
+             final var bos = new BufferedOutputStream(fos);
+             final var resource = getResourceLoader().load("test.simple_yield")) {
 
             final AtomicReference<String> taskIdAtomicReference = new AtomicReference<>();
 
@@ -222,12 +232,13 @@ public class TestCoreErisPersistence {
             assertTrue(taskIdSet.contains(taskId), "TaskID is not in TaskID Set.");
 
             resource.setVerbose(true);
-            resource.serialize(wbc);
+            resource.serialize(bos);
 
         }
 
-        try (final FileChannel rbc = open(tempFile, READ);
-             final Resource resource = getResourceLoader().load(rbc, true)) {
+        try (final var fis = new FileInputStream(tempFile.toFile());
+             final var bis = new BufferedInputStream(fis);
+             final Resource resource = getResourceLoader().load(bis, true)) {
             assertEquals(resource.getTasks(), taskIdSet);
             final Set<TaskId> restoredIdSet = resource.getTasks();
             assertEquals(restoredIdSet, taskIdSet);
@@ -241,40 +252,8 @@ public class TestCoreErisPersistence {
     }
 
     @Inject
-    public void setResourceLoader(ResourceLoader resourceLoader) {
+    public void setResourceLoader(final ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
-    }
-
-    public static class Module extends AbstractModule {
-
-        @Override
-        protected void configure() {
-
-            install(new LuaModule());
-
-            final NodeId nodeId = randomNodeId();
-            bind(NodeId.class).toInstance(nodeId);
-
-            // Types backed by actual implementations
-            bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
-            bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
-            bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
-
-            // Configurations that are ne
-//            bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
-//            bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
-
-            // Types that are mocks
-
-            bind(Client.class).toInstance(mock(Client.class));
-
-            bind(Context.class).annotatedWith(named(LOCAL)).toInstance(mock(Context.class));
-            bind(Context.class).annotatedWith(named(REMOTE)).toInstance(mock(Context.class));
-
-            bind(PersistenceStrategy.class).toInstance(mock(PersistenceStrategy.class));
-
-        }
-
     }
 
     private static final class DummyObject implements Serializable {

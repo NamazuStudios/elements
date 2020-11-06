@@ -20,8 +20,12 @@ import java.util.function.BiFunction;
 import java.util.stream.IntStream;
 
 import static java.lang.Math.min;
+import static java.nio.ByteBuffer.allocate;
 import static java.nio.ByteBuffer.allocateDirect;
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
+import static java.nio.channels.FileChannel.open;
+import static java.nio.file.Files.deleteIfExists;
+import static java.nio.file.Files.find;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Arrays.fill;
@@ -55,7 +59,7 @@ public class InputStreamAdapterTest {
 
         // We fill a file full of garbage bytes, so we can compare the reads from the adapter versus the core Java
         // APIs
-        try (final FileChannel fc = FileChannel.open(testFile, WRITE)) {
+        try (final FileChannel fc = open(testFile, WRITE)) {
             for (int i = 0; i < 500; ++i) {
                 buffer.clear();
                 random.nextBytes(buffer.array());
@@ -75,7 +79,7 @@ public class InputStreamAdapterTest {
 
         final ByteBuffer streamBuffer = allocateDirect(4096);
 
-        try (final FileChannel channel = FileChannel.open(testFile, READ);
+        try (final FileChannel channel = open(testFile, READ);
              final InputStreamAdapter is = supplier.apply(channel, streamBuffer)) {
             final MappedByteBuffer reference = channel.map(READ_ONLY,0, channel.size());
             while (reference.hasRemaining()) assertEquals(reference.get(), (byte)is.read());
@@ -91,7 +95,7 @@ public class InputStreamAdapterTest {
 
         final ByteBuffer streamBuffer = allocateDirect(4096);
 
-        try (final FileChannel channel = FileChannel.open(testFile, READ);
+        try (final FileChannel channel = open(testFile, READ);
              final InputStreamAdapter is = supplier.apply(channel, streamBuffer)) {
             final MappedByteBuffer reference = channel.map(READ_ONLY,0, channel.size());
             while (reference.hasRemaining()) {
@@ -113,7 +117,7 @@ public class InputStreamAdapterTest {
         final Random random = ThreadLocalRandom.current();
         final ByteBuffer streamBuffer = allocateDirect(4096);
 
-        try (final FileChannel channel = FileChannel.open(testFile, READ);
+        try (final FileChannel channel = open(testFile, READ);
              final InputStreamAdapter is = supplier.apply(channel, streamBuffer)) {
 
             final MappedByteBuffer reference = channel.map(READ_ONLY,0, channel.size());
@@ -143,6 +147,31 @@ public class InputStreamAdapterTest {
                 reference.get(refBuf, 0, min(reference.remaining(), refBuf.length));
                 assertEquals(refBuf, isBuf);
             }
+        }
+
+    }
+
+    @Test
+    public void testUnsignedByteRead() throws IOException {
+
+        final var signedByte = Files.createTempFile(InputStreamAdapterTest.class.getSimpleName(), "test");
+        final ByteBuffer fileContents = allocate(256);
+        for (int i = 0; fileContents.hasRemaining(); ++i) fileContents.put((byte)i);
+
+        try (final var wbc = open(signedByte, WRITE)) {
+            fileContents.rewind();
+            wbc.write(fileContents);
+        } catch (IOException ex) {
+            deleteIfExists(signedByte);
+            throw ex;
+        }
+
+        try (final var rbc = open(signedByte, READ);
+             final var isa = new InputStreamAdapter(rbc, allocate(256), 0)) {
+            byte b = 0;
+            do { assertEquals(isa.read(), Byte.toUnsignedInt(b)); } while (++b != 0);
+        } finally {
+            deleteIfExists(signedByte);
         }
 
     }

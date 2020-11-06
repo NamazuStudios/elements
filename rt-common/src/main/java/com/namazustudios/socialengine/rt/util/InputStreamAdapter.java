@@ -37,7 +37,7 @@ public class InputStreamAdapter extends InputStream {
     @Override
     public int read() throws IOException {
         if (byteBuffer.hasRemaining() || loadBuffer(false)) {
-            return byteBuffer.get();
+            return Byte.toUnsignedInt(byteBuffer.get());
         } else {
             return -1;
         }
