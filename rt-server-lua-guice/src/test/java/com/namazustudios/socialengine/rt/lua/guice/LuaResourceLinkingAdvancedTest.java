@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import static com.namazustudios.socialengine.rt.Path.fromContextAndComponents;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static org.testng.Assert.assertEquals;
 
@@ -64,8 +65,8 @@ public class LuaResourceLinkingAdvancedTest {
         assertEquals(resultsA.size(), 1);
         assertEquals(resultsB.size(), 1);
 
-        final Path patha = Path.fromComponents("test_case", pathASuffix, resourceId.toString());
-        final Path pathb = Path.fromComponents("test_case", pathBSuffix, resourceId.toString());
+        final var patha = fromContextAndComponents(resourceId, "test_case", pathASuffix, resourceId.toString());
+        final var pathb = fromContextAndComponents(resourceId, "test_case", pathBSuffix, resourceId.toString());
 
         assertEquals(resultsA.get(patha.toNormalizedPathString()), resourceId.toString());
         assertEquals(resultsB.get(pathb.toNormalizedPathString()), resourceId.toString());

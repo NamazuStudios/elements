@@ -116,7 +116,7 @@ public interface ResourceService extends AutoCloseable {
      * initially, which can be thought of as the primary path, and then subsequent aliases or links be maintained, even
      * if those particular {@link Path}s may collide.
      *
-     * Unlike {@link #addAndAcquireResource(Path, Resource)}, this will not immediately scheduleRelease the {@link Resource}
+     * Unlike {@link #addAndAcquireResource(Path, Resource)}, this will not immediately release the {@link Resource}
      * therefore forcing it to stay in memory until a subsequent call to {@link #release(Resource)} is made.  This is
      * useful for {@link Resource} instances that are short-lived and may never need to be serialized (such as those
      * {@link Resource}s used by the {@link HandlerContext}).
@@ -131,10 +131,10 @@ public interface ResourceService extends AutoCloseable {
     Resource addAndAcquireResource(Path path, Resource resource);
 
     /**
-     * Attempts to scheduleRelease ownership of the specified {@link Resource}, throwing an instance of
+     * Attempts to release ownership of the specified {@link Resource}, throwing an instance of
      * {@link ResourceNotFoundException} if the operation failed.
      *
-     * @param resource the {@link Resource} to scheduleRelease
+     * @param resource the {@link Resource} to release
      */
     default void release(final Resource resource) {
         if (!tryRelease(resource)) {
@@ -148,7 +148,7 @@ public interface ResourceService extends AutoCloseable {
      *
      * This does not guarantee that the {@link Resource} will be serialized.  It does however, make it a candidate
      * for serialization as soon as possible.  Usually when all other processes operating against the {@link Resource}
-     * scheduleRelease their implementation.
+     * release their implementation.
      *
      * The default implementation of this does nothing as in-memory implementations do not need to implement this.  If
      * the {@link Resource} is not managed by this {@link ResourceService} then the behavior of this call is undefined.

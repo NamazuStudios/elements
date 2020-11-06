@@ -7,10 +7,17 @@ import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -22,7 +29,7 @@ import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.fail;
@@ -39,9 +46,29 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
      */
     public abstract ResourceService getResourceService();
 
-    public Resource getMockResource(final ResourceId resourceId) {
+    public Resource getMockResource(final ResourceId resourceId)  {
         final Resource resource = Mockito.mock(Resource.class);
+
         when(resource.getId()).thenReturn(resourceId);
+
+        try {
+            doAnswer(a -> {
+                Assert.fail("No attempt to save resource should be made for this test.");
+                return null;
+            }).when(resource).serialize(any(OutputStream.class));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        try {
+            doAnswer(a -> {
+                Assert.fail("No attempt to save resource should be made for this test.");
+                return null;
+            }).when(resource).serialize(any(WritableByteChannel.class));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
         return resource;
     }
 

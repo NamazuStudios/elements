@@ -259,7 +259,9 @@ public class LuaResource implements Resource {
 
     @Override
     public void serialize(final OutputStream os) throws IOException {
-        getErisPersistence().serialize(os);
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+            getErisPersistence().serialize(os);
+        }
     }
 
     @Override
@@ -272,44 +274,47 @@ public class LuaResource implements Resource {
 
     @Override
     public Set<TaskId> getTasks() {
+        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
 
-        luaState.pushJavaFunction(l -> {
+            luaState.pushJavaFunction(l -> {
 
-            int index = 0;
-            luaState.newTable();
-
-            luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
-
-            if (luaState.isNil(-1)) {
+                int index = 0;
                 luaState.newTable();
-                return 1;
-            }
 
-            luaState.pushNil();
-            while (luaState.next(2)) {
+                luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
 
-                luaState.pushValue(-2);
-                luaState.rawSet(1, ++index);
-
-                if (logger.isErrorEnabled() && !LuaType.THREAD.equals(luaState.type(-1))) {
-                    logger.error("Expected THREAD got: ", luaState.type(-1));
+                if (luaState.isNil(-1)) {
+                    luaState.newTable();
+                    return 1;
                 }
 
-                luaState.pop(1);
+                luaState.pushNil();
+                while (luaState.next(2)) {
 
-            }
+                    luaState.pushValue(-2);
+                    luaState.rawSet(1, ++index);
 
-            luaState.setTop(1);
-            return 1;
+                    if (logger.isErrorEnabled() && !LuaType.THREAD.equals(luaState.type(-1))) {
+                        logger.error("Expected THREAD got: ", luaState.type(-1));
+                    }
 
-        });
+                    luaState.pop(1);
 
-        luaState.call(0, 1);
+                }
 
-        final List<String> taskIds = luaState.toJavaObject(-1, List.class);
-        luaState.pop(1);
+                luaState.setTop(1);
+                return 1;
 
-        return taskIds.stream().map(TaskId::new).collect(Collectors.toSet());
+            });
+
+            luaState.call(0, 1);
+
+            final List<String> taskIds = luaState.toJavaObject(-1, List.class);
+            luaState.pop(1);
+
+            return taskIds.stream().map(TaskId::new).collect(Collectors.toSet());
+
+        }
 
     }
 
@@ -400,7 +405,7 @@ public class LuaResource implements Resource {
     }
 
     private void finish(final TaskId taskId, final Consumer<Object> consumer, final Object result) {
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+        try {
             consumer.accept(result);
         } catch (Exception ex) {
             logger.error("Caught exception finishing task {}", taskId, ex);

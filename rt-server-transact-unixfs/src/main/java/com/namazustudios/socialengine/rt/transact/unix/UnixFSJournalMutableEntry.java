@@ -116,10 +116,13 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
 
                     final var relative = unixFSUtils.getStorageRoot().relativize(temporaryFile);
 
+                    if (fileChannel.size() > 0) {
+                        programBuilder
+                            .updateResource(COMMIT, relative, resourceId)
+                            .unlinkFile(CLEANUP, temporaryFile);
+                    }
+
                     fileChannel.close();
-                    programBuilder
-                        .updateResource(COMMIT, relative, resourceId)
-                        .unlinkFile(CLEANUP, temporaryFile);
 
                 }
 

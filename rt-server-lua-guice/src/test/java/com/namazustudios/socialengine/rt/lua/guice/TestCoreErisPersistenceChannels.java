@@ -181,7 +181,7 @@ public class TestCoreErisPersistenceChannels {
 
         for (int i = 0; i < 100; ++i) try (final FileChannel rbc = open(toRead, READ);
                                            final Resource resource = getResourceLoader().load(rbc);
-                                           final WritableByteChannel wbc = open(toWrite)) {
+                                           final WritableByteChannel wbc = open(toWrite, WRITE)) {
 
             resource.getMethodDispatcher("assert_upval")
                     .params()

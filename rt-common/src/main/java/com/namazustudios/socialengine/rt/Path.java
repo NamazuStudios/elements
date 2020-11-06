@@ -496,6 +496,24 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
     /**
+     * Gets the a {@link Path} from the supplied context and components.
+     *
+     * @param hasNodeId the {@link HasNodeId} from which to derive the context string
+     * @param components the components
+     * @return the {@link Path} instance
+     */
+    public static Path fromContextAndComponents(final HasNodeId hasNodeId, final String ... components) {
+
+        final String context = hasNodeId
+            .getOptionalNodeId()
+            .map(NodeId::asString)
+            .orElse(null);
+
+        return fromContextAndComponents(context, components);
+
+    }
+
+    /**
      * Converts the supplied string representation of he {@link Path} using {@link #PATH_SEPARATOR} as the
      * separator.
      *

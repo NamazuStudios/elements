@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,17 +24,42 @@ import static java.lang.Math.max;
 
 public class TransactionalResource implements Resource {
 
+    private static final Logger logger = LoggerFactory.getLogger(TransactionalResource.class);
+
     private static final int NASCENT_MAGIC = MIN_VALUE;
 
     private static final int TOMBSTONE_MAGIC = MIN_VALUE + 1;
 
-    private static final Consumer<TransactionalResource> ON_DESTROY_DEAD = _t -> {};
+    private static final TransactionalResource tombstone = new TransactionalResource() {
+        @Override
+        public boolean acquire() { throw new ResourceNotFoundException(); }
+        @Override
+        public int release() { return 0; }
+    };
 
-    private final AtomicReference<Context> context;
+    private static final Consumer<TransactionalResource> ON_DESTROY_DEAD = _t -> {};
 
     private final AtomicReference<Consumer<TransactionalResource>> onDestroy;
 
+    private final Resource delegate;
+
     private final AtomicInteger acquires = new AtomicInteger(MIN_VALUE);
+
+    /**
+     * Gets the tombstone {@link TransactionalResource}. This is a {@link TransactionalResource} that is used as
+     * placeholder when removing resources from the internal cache.
+     *
+     * @return the {@link TransactionalResource} that serves as a tombstone marker
+     */
+    public static TransactionalResource getTombstone() {
+        return tombstone;
+    }
+
+    private TransactionalResource() {
+        this.acquires.set(TOMBSTONE_MAGIC);
+        this.delegate = DeadResource.getInstance();
+        this.onDestroy = new AtomicReference<>(ON_DESTROY_DEAD);
+    }
 
     /**
      * Creates a new instance of {@link TransactionalResource} with the supplied {@link Runnable} which will execute
@@ -43,8 +70,8 @@ public class TransactionalResource implements Resource {
      */
     public TransactionalResource(final Resource delegate,
                                  final Consumer<TransactionalResource> onDestroy) {
+        this.delegate = delegate;
         this.onDestroy = new AtomicReference<>(onDestroy);
-        this.context = new AtomicReference<>(new Context(delegate));
     }
 
     /**
@@ -57,12 +84,18 @@ public class TransactionalResource implements Resource {
      * @return true if this Resource is still active, false otherwise
      */
     public boolean acquire() {
+
         final int value = acquires.updateAndGet(i -> {
-            if (i == NASCENT_MAGIC) return 1;
-            else if (i == TOMBSTONE_MAGIC) throw new ResourceNotFoundException();
-            else return i + 1;
+            if (i == 0)
+                return 0;
+            else if (i == NASCENT_MAGIC)
+                return 1;
+            else
+                return i + 1;
         });
+
         return value > 0;
+
     }
 
     /**
@@ -71,26 +104,18 @@ public class TransactionalResource implements Resource {
      * longer be {@link #acquire()}-able.  The first thread to set the acquire count to zero will immediately execute
      * the associated destruction routine and subsequent threads will simply skip any sort of destruction.
      *
-     * @return true if the resource is still active, was still active prior to the invocation of this method, or false
-     *         otherwise.
+     * @return true the value of acquires after the operation has been applied
      */
-    public boolean release() {
+    public int release() {
 
-        final int value = acquires.updateAndGet(i -> max(0, i - 1));
+        final int value = acquires.updateAndGet(i -> i == 0 ? 0 : max(0, i - 1));
 
         if (value == 0) {
-
-            // Executes the object's destructor to the singleton and executes the destructor that was already in
-            // the atomic reference to the destructor.
             final Consumer<TransactionalResource> onDestroy = this.onDestroy.getAndSet(ON_DESTROY_DEAD);
             onDestroy.accept(this);
-
-            // Tests if the destructor was supplied to the constructor of this object, or if it is the singleton
-            // dead on-destroy routine.  If it was indeed the object's destructor then we consider the operation
-            return onDestroy != ON_DESTROY_DEAD;
-        } else {
-            return true;
         }
+
+        return value;
 
     }
 
@@ -104,8 +129,13 @@ public class TransactionalResource implements Resource {
         return acquires.get() == NASCENT_MAGIC;
     }
 
-    public void setTombstoneState(){
-        acquires.set(TOMBSTONE_MAGIC);
+    /**
+     * Returns true if this instance is a tombstone, false otherwise.
+     *
+     * @return true if tombstone, false otherwise
+     */
+    public boolean isTombstone() {
+        return acquires.get() == TOMBSTONE_MAGIC;
     }
 
     @Override
@@ -189,18 +219,7 @@ public class TransactionalResource implements Resource {
     }
 
     public Resource getDelegate() {
-        final Context context = this.context.get();
-        return context.delegate;
-    }
-
-    public static class Context {
-
-        private final Resource delegate;
-
-        public Context(final Resource delegate) {
-            this.delegate = delegate;
-        }
-
+        return delegate;
     }
 
 }

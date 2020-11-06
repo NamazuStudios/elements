@@ -6,9 +6,11 @@ import java.io.Serializable;
 
 public class SimpleIndexContextListing implements IndexContext.Listing, Serializable {
 
-    private final Path path;
+    private Path path;
 
-    private final ResourceId resourceId;
+    private ResourceId resourceId;
+
+    public SimpleIndexContextListing() {}
 
     public SimpleIndexContextListing(final ResourceService.Listing listing) {
         this.path = listing.getPath();
@@ -17,12 +19,12 @@ public class SimpleIndexContextListing implements IndexContext.Listing, Serializ
 
     @Override
     public Path getPath() {
-        return null;
+        return path;
     }
 
     @Override
     public ResourceId getResourceId() {
-        return null;
+        return resourceId;
     }
 
 }
