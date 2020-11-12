@@ -138,7 +138,7 @@ public class TransactionalResource implements Resource {
 
         });
 
-        if (value == TOMBSTONE_MAGIC) {
+        if (value == 0) {
             final Consumer<TransactionalResource> onDestroy = this.onDestroy.getAndSet(ON_DESTROY_DEAD);
             onDestroy.accept(this);
         }

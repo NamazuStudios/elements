@@ -131,11 +131,11 @@ public class TransactionalResourceService implements ResourceService {
                     throw new IllegalArgumentException("Resource should not be nascent.");
 
                 final int acquires = tr.acquireAndGet();
+                acm.releaseOnClose(tr);
 
                 if (acquires == 1) {
                     throw new IllegalStateException("This should never happen.");
                 } else if (acquires == 2) {
-                    acm.releaseOnClose(tr);
                     tr.serialize(wbc);
                 }
 
