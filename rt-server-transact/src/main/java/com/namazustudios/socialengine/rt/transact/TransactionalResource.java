@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.DeadResource;
+import com.namazustudios.socialengine.rt.MethodDispatcher;
+import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
@@ -12,13 +15,12 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceId;
 import static java.lang.Integer.MIN_VALUE;
 import static java.lang.Math.max;
 
@@ -26,9 +28,9 @@ public class TransactionalResource implements Resource {
 
     private static final Logger logger = LoggerFactory.getLogger(TransactionalResource.class);
 
-    private static final int NASCENT_MAGIC = MIN_VALUE;
+    public static final int NASCENT_MAGIC = MIN_VALUE;
 
-    private static final int TOMBSTONE_MAGIC = MIN_VALUE + 1;
+    public static final int TOMBSTONE_MAGIC = MIN_VALUE + 1;
 
     private static final TransactionalResource tombstone = new TransactionalResource() {
         @Override
@@ -38,6 +40,8 @@ public class TransactionalResource implements Resource {
     };
 
     private static final Consumer<TransactionalResource> ON_DESTROY_DEAD = _t -> {};
+
+    private final ResourceId resourceId;
 
     private final AtomicReference<Consumer<TransactionalResource>> onDestroy;
 
@@ -56,6 +60,7 @@ public class TransactionalResource implements Resource {
     }
 
     private TransactionalResource() {
+        this.resourceId = randomResourceId();
         this.acquires.set(TOMBSTONE_MAGIC);
         this.delegate = DeadResource.getInstance();
         this.onDestroy = new AtomicReference<>(ON_DESTROY_DEAD);
@@ -70,6 +75,7 @@ public class TransactionalResource implements Resource {
      */
     public TransactionalResource(final Resource delegate,
                                  final Consumer<TransactionalResource> onDestroy) {
+        this.resourceId = delegate.getId();
         this.delegate = delegate;
         this.onDestroy = new AtomicReference<>(onDestroy);
     }
@@ -84,6 +90,10 @@ public class TransactionalResource implements Resource {
      * @return true if this Resource is still active, false otherwise
      */
     public boolean acquire() {
+        return acquireAndGet() > 0;
+    }
+
+    public int acquireAndGet() {
 
         final int value = acquires.updateAndGet(i -> {
             if (i == 0)
@@ -94,7 +104,7 @@ public class TransactionalResource implements Resource {
                 return i + 1;
         });
 
-        return value > 0;
+        return value;
 
     }
 
@@ -108,9 +118,27 @@ public class TransactionalResource implements Resource {
      */
     public int release() {
 
-        final int value = acquires.updateAndGet(i -> i == 0 ? 0 : max(0, i - 1));
+        final int value = acquires.updateAndGet(i -> {
 
-        if (value == 0) {
+            if (i == NASCENT_MAGIC) {
+                throw new IllegalStateException("Can't release nascent resource.");
+            }
+
+            if (i == 0) {
+                return 0;
+            }
+
+            final int next = i - 1;
+
+            if (next < 0) {
+                throw new IllegalStateException("Unbalanced acquire/release.");
+            } else {
+                return next;
+            }
+
+        });
+
+        if (value == TOMBSTONE_MAGIC) {
             final Consumer<TransactionalResource> onDestroy = this.onDestroy.getAndSet(ON_DESTROY_DEAD);
             onDestroy.accept(this);
         }
@@ -140,7 +168,7 @@ public class TransactionalResource implements Resource {
 
     @Override
     public ResourceId getId() {
-        return getDelegate().getId();
+        return resourceId;
     }
 
     @Override
@@ -185,7 +213,7 @@ public class TransactionalResource implements Resource {
 
     @Override
     public void serialize(WritableByteChannel wbc) throws IOException {
-        getDelegate().serialize(wbc);
+        delegate.serialize(wbc);
     }
 
     @Override
@@ -215,11 +243,16 @@ public class TransactionalResource implements Resource {
 
     @Override
     public void unload() {
-        getDelegate().unload();
+        delegate.unload();
     }
 
     public Resource getDelegate() {
+
+        if (acquires.get() == 0)
+            throw new IllegalStateException("Resource is toast.");
+
         return delegate;
+
     }
 
 }

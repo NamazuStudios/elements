@@ -121,18 +121,30 @@ public class TransactionalResourceService implements ResourceService {
         }
 
         final boolean result = computeRW((acm, txn) -> {
-            if (acm.tryRelease(tr)) {
-                try (final WritableByteChannel wbc = txn.updateResource(tr.getId())) {
+
+            if (!txn.exists(tr.getId()))
+                return false;
+
+            try (final WritableByteChannel wbc = txn.updateResource(tr.getId())) {
+
+                if (tr.isNascent())
+                    throw new IllegalArgumentException("Resource should not be nascent.");
+
+                final int acquires = tr.acquireAndGet();
+
+                if (acquires == 1) {
+                    throw new IllegalStateException("This should never happen.");
+                } else if (acquires == 2) {
+                    acm.releaseOnClose(tr);
                     tr.serialize(wbc);
-                    return true;
-                } catch (IOException ex) {
-                    throw new InternalException(ex);
-                } catch (ResourceNotFoundException ex) {
-                    return false;
                 }
-            } else {
-                return txn.exists(tr.getId());
+
+                return true;
+
+            } catch (IOException ex) {
+                throw new InternalException(ex);
             }
+
         });
 
         if (result) tr.release();
@@ -363,8 +375,6 @@ public class TransactionalResourceService implements ResourceService {
 
     private <T> T computeRW(final UncachedTransactionOperation<T> operation) {
 
-        final Context context = getContext();
-
         for (int i = 0; i < RETRY_COUNT; ++i) {
             try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId())) {
                 final T value = operation.apply(txn);
@@ -417,6 +427,22 @@ public class TransactionalResourceService implements ResourceService {
     private class Context {
 
         private final ConcurrentMap<ResourceId, TransactionalResource> acquires = new ConcurrentHashMap<>();
+
+        private void purge(final TransactionalResource transactionalResource) {
+
+            if (acquires.remove(transactionalResource.getId(), transactionalResource)) {
+
+                logger.trace("Resource {} previously evicted", transactionalResource.getId());
+
+                try {
+                    transactionalResource.unload();
+                } catch (Exception ex) {
+                    logger.error("Error closing resource {}", transactionalResource, ex);
+                }
+
+            }
+
+        }
 
     }
 
@@ -490,7 +516,7 @@ public class TransactionalResourceService implements ResourceService {
 
             final ResourceId resourceId = resource.getId();
 
-            final TransactionalResource transactionalResource = new TransactionalResource(resource, this::purge);
+            final TransactionalResource transactionalResource = new TransactionalResource(resource, context::purge);
             transactionalResource.acquire();
 
             final TransactionalResource result = context.acquires.putIfAbsent(resourceId, transactionalResource);
@@ -504,56 +530,30 @@ public class TransactionalResourceService implements ResourceService {
 
             final TransactionalResource result = context.acquires.compute(resourceId, (k, existing) -> {
 
+                final TransactionalResource r;
+
                 if (existing == null || !existing.acquire()) {
                     // Either this Resource does not exist in the cache, or somebody else recently released it, so
                     // the solution is to load it in either case.
-                    return loadTransactionalResource(resourceId);
+                    r = loadTransactionalResource(resourceId);
+                } else {
+                    r = existing;
                 }
 
                 // Since we have conservatively acquired the above resource, we must ensure that it will be
                 // released when the operation completes.
                 releaseOnClose(existing);
 
-                return existing;
+                return r;
 
             });
 
             // We must make sure that it won't be closed with this cache manipulation.  This is side-effect free if we
             // didn't ever allocate a new resource in the first place.
             keep(result);
-
-            // And we also must make sure that the resource will definitely be acquired.
             acquireOnClose(result);
 
             return result;
-
-        }
-
-        public boolean tryRelease(final TransactionalResource resource) {
-
-            // Preemptively keep the resource acquired for the duration of this mutation. Final release will happen
-            // only after the transaction has been committed.
-            resource.acquire();
-
-            // This isn't a valid use-case for this method.  Any resource that is nascent state, we really can't make
-            // sense of this so we throw an exception to avoid corrupting the cache.  This would only happen if
-            // the coe to this class was modified.
-            if (resource.isNascent()) throw new IllegalArgumentException("Nascent-state Resource supplied to tryRelease");
-
-            // Check that the supplied resource matches the one that is actually stored in the resource storage service
-            final ResourceId resourceId = resource.getId();
-            final TransactionalResource result = context.acquires.get(resourceId);
-
-            // If the object in the map does not equal the supplied resource, then we simply fail the operation.  This
-            // would only happen if the caller didn't have balanced code as we guarantee a memory-resident Resource to
-            // be valid as long as it has a positive reference count. We consider this a failure. So we don't serialize
-            // result erroneously.
-            if (result != resource) throw new IllegalArgumentException("Supplied release an orphaned resource.");
-
-            // So after we release this resource, if there is only one acquire left we will serialize it. Even if we
-            // another process increments it before the transaction is over, this will guarantee that the the resource
-            // will get written even if this write isn't strictly necessary.
-            return resource.release() == 1;
 
         }
 
@@ -563,7 +563,8 @@ public class TransactionalResourceService implements ResourceService {
                 final Resource resource = getResourceLoader().load(rbc, false);
 
                 final TransactionalResource transactionalResource;
-                transactionalResource = new TransactionalResource(resource, this::purge);
+                transactionalResource = new TransactionalResource(resource, context::purge);
+                transactionalResource.acquire();
 
                 toClose.add(transactionalResource);
                 return transactionalResource;
@@ -571,22 +572,6 @@ public class TransactionalResourceService implements ResourceService {
             } catch (IOException e) {
                 throw new InternalException(e);
             }
-        }
-
-        private void purge(final TransactionalResource transactionalResource) {
-
-            if (context.acquires.remove(transactionalResource.getId(), transactionalResource)) {
-
-                logger.trace("Resource {} previously evicted", transactionalResource.getId());
-
-                try {
-                    transactionalResource.unload();
-                } catch (Exception ex) {
-                    logger.error("Error closing resource {}", transactionalResource, ex);
-                }
-
-            }
-
         }
 
         private void keep(final Resource resource) {

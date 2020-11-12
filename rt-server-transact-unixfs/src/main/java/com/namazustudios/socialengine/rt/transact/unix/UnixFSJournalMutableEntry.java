@@ -102,7 +102,7 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
             return new WritableByteChannel() {
 
                 @Override
-                public int write(ByteBuffer byteBuffer) throws IOException {
+                public int write(final ByteBuffer byteBuffer) throws IOException {
                     return fileChannel.write(byteBuffer);
                 }
 
@@ -120,6 +120,8 @@ class UnixFSJournalMutableEntry extends UnixFSJournalEntry implements Transactio
                         programBuilder
                             .updateResource(COMMIT, relative, resourceId)
                             .unlinkFile(CLEANUP, temporaryFile);
+                    } else {
+                        programBuilder.unlinkFile(CLEANUP, temporaryFile);
                     }
 
                     fileChannel.close();

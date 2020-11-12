@@ -104,8 +104,6 @@ public class LuaResourceIntegrationTest {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
         final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
-        final ObjectMapper om = new ObjectMapper();
-        final String value = om.writeValueAsString(result);
         logger.info("Successfuly got test result {}", result);
         resultConsumer.accept(result);
         getContext().getResourceContext().destroy(resourceId);
@@ -159,6 +157,7 @@ public class LuaResourceIntegrationTest {
 
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create("test.util.java", path);
+
 
         try {
             getContext().getResourceContext().invoke(resourceId, "test_pcallx_unhandled");

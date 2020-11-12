@@ -12,6 +12,7 @@ public class TestServicesModule extends PrivateModule {
     @Override
     protected void configure() {
 
+        bind(SimpleTaskService.class).asEagerSingleton();
         bind(TaskService.class).to(SimpleTaskService.class);
         bind(Scheduler.class).to(SimpleScheduler.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
