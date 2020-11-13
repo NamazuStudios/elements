@@ -20,7 +20,7 @@ public class TestYielding {
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withWorkerModule(new LuaModule())
         .withDefaultHttpClient()
-        .withWorkerModule(new XodusEnvironmentModule().withSchedulerEnvironment())
+        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
         .start();
 
     private final Context context = embeddedTestService.getContext();
