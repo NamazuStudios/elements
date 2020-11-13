@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.lua.guice.JeroMQEmbeddedTestService;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.NotificationBuilder;
 import org.mockito.Mockito;
 
@@ -42,8 +43,7 @@ public class UnitTestModule extends AbstractModule {
 //            .withWorkerModule(new XodusContextModule()
 //                .withSchedulerThreads(1)
 //                .withHandlerTimeout(3, MINUTES))
-//            .withWorkerModule(new XodusEnvironmentModule()
-//                .withTempEnvironments())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .start());
 
         bind(Context.class).toProvider(embeddedTestService::getContext);
