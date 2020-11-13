@@ -44,7 +44,7 @@ public class TestErisPersistenceCrossValidation {
     @Test(dataProvider = "allLuaResources", invocationCount = 10)
     public void testStreamAndFileProduceIdenticalOutput(final String moduleName) throws IOException {
 
-        logger.info("Testing Persistence for {}", moduleName);
+        logger.debug("Testing Persistence for {}", moduleName);
 
         final var streamFile = testTemporaryFiles.createTempFile();
         final var channelFile = testTemporaryFiles.createTempFile();
@@ -88,12 +88,12 @@ public class TestErisPersistenceCrossValidation {
     @Test(dataProvider = "intermediateFiles", dependsOnMethods = "testStreamAndFileProduceIdenticalOutput", invocationCount = 10)
     public void testReadStream(final String source, final Path file, final boolean verbose) throws IOException {
 
-        logger.info("Loading file {} written by {} using InputStream", file, source);
+        logger.debug("Loading file {} written by {} using InputStream", file, source);
 
         try (final var fis = new FileInputStream(file.toFile());
              final var bis = new BufferedInputStream(fis);
              final var resource = getResourceLoader().load(bis, verbose)) {
-            logger.info("Loaded {} file {} (verbose: {})", resource.getId(), file, verbose);
+            logger.debug("Loaded {} file {} (verbose: {})", resource.getId(), file, verbose);
         }
 
     }
@@ -105,7 +105,7 @@ public class TestErisPersistenceCrossValidation {
 
         try (final var rbc = open(file, READ);
              final var resource = getResourceLoader().load(rbc, verbose)) {
-            logger.info("Loaded {} file {} (verbose: {})", resource.getId(), file, verbose);
+            logger.debug("Loaded {} file {} (verbose: {})", resource.getId(), file, verbose);
         }
 
     }

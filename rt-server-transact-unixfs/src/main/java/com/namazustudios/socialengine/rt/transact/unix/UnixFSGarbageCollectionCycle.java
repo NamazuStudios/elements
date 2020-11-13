@@ -98,14 +98,14 @@ public class UnixFSGarbageCollectionCycle {
         final Stopwatch stopwatch = Stopwatch.createStarted();
         final UnixFSTransactionProgram program = slice.getValue();
         final UnixFSRevision<?> revision = unixFSRevisionPool.create(program.header.revision);
-        logger.info("Beginning pass for revision {}", revision);
+        logger.debug("Beginning pass for revision {}", revision);
 
         try {
             program.interpreter().executeCleanupPhase(collectionPassExecutionHandler);
             program.interpreter().executeCommitPhase(collectionPassExecutionHandler);
             uncategorizedOperations.add(() -> slice.clear());
         } finally {
-            logger.info("Pass completed for revision {} in {}ms", revision, stopwatch.elapsed(MILLISECONDS));
+            logger.debug("Pass completed for revision {} in {}ms", revision, stopwatch.elapsed(MILLISECONDS));
         }
 
     }

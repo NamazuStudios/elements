@@ -267,10 +267,7 @@ public class LuaResource implements Resource {
     public void serialize(final OutputStream os) throws IOException {
         try (var mon = lock.lock()) {
             getErisPersistence().serialize(os);
-            var strack = logAssist.getStack();
-            logger.info("Stack {}", strack);
         }
-
     }
 
     @Override

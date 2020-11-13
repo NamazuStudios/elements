@@ -15,7 +15,6 @@ import org.mockito.Mockito;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ReadableByteChannel;
 import java.util.ArrayList;

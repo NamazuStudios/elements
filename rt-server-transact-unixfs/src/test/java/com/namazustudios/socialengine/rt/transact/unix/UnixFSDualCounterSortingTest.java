@@ -115,7 +115,7 @@ public class UnixFSDualCounterSortingTest {
         final UnixFSDualCounter.Snapshot lValue = snapshots.get(lIndex);
         final UnixFSDualCounter.Snapshot rValue = snapshots.get(rIndex);
 
-        logger.info("Testing {} compareTo {}", lValue, rValue);
+        logger.debug("Testing {} compareTo {}", lValue, rValue);
 
         if (lIndex == rIndex) {
             final String condition = format("expected =0 when comparing %s to %s", lValue, rValue);

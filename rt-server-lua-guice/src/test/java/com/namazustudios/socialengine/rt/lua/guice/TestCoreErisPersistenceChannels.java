@@ -61,7 +61,7 @@ public class TestCoreErisPersistenceChannels {
     @Test(dataProvider = "allLuaResources", invocationCount = 10)
     public void testPersistUnpersist(final String moduleName) throws IOException {
 
-        logger.info("Testing Persistence for {}", moduleName);
+        logger.debug("Testing Persistence for {}", moduleName);
 
         final var tempFile = testTemporaryFiles.createTempFile();
 
@@ -73,7 +73,7 @@ public class TestCoreErisPersistenceChannels {
 
         try (final var rbc = open(tempFile, READ);
              final var resource = getResourceLoader().load(rbc)) {
-            logger.info("Successfully loaded {}", resource);
+            logger.debug("Successfully loaded {}", resource);
         }
 
     }

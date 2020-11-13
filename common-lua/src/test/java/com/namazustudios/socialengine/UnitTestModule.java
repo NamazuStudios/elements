@@ -40,9 +40,6 @@ public class UnitTestModule extends AbstractModule {
         bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService
             .withWorkerModule(new LuaModule().visitDiscoveredExtension((m, c) -> mockModule.mock(c)))
             .withWorkerModule(mockModule)
-//            .withWorkerModule(new XodusContextModule()
-//                .withSchedulerThreads(1)
-//                .withHandlerTimeout(3, MINUTES))
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .start());
 
