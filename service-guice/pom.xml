@@ -118,6 +118,12 @@
             <version>${mockito.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.module</groupId>
+            <artifactId>jackson-module-jaxb-annotations</artifactId>
+            <version>${annotations.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
 </project>
