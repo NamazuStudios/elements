@@ -10,6 +10,7 @@ import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -23,6 +24,8 @@ public class SimpleResourceLockService implements ResourceLockService {
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceLockService.class);
 
     private static final Thread vacuum;
+
+    private static final AtomicLong orphans = new AtomicLong();
 
     private static final ReferenceQueue<SharedLock> references;
 
@@ -44,9 +47,15 @@ public class SimpleResourceLockService implements ResourceLockService {
         try {
             while(!interrupted()) {
                 try {
+
                     final Reference<?> ref = references.remove();
                     final Runnable collection = collections.remove(ref);
-                    if (collection != null) collection.run();
+
+                    if (collection != null) {
+                        orphans.incrementAndGet();
+                        collection.run();
+                    }
+
                 } catch (InterruptedException ex) {
                     logger.info("Interrupted.  Exiting.", ex);
                     break;
@@ -62,6 +71,20 @@ public class SimpleResourceLockService implements ResourceLockService {
     }
 
     private final ConcurrentMap<ResourceId, Reference<SharedLock>> resourceIdLockMap = new ConcurrentHashMap<>();
+
+    /**
+     * Returns the number of orphan locks across all {@link SimpleResourceLockService} instances.
+     *
+     * @return the orphan count
+     */
+    public static long getOrphanCount() {
+        return orphans.get();
+    }
+
+    @Override
+    public int size() {
+        return resourceIdLockMap.size();
+    }
 
     @Override
     public SharedLock getLock(final ResourceId resourceId) {

@@ -15,6 +15,13 @@ import java.util.concurrent.locks.Lock;
 public interface ResourceLockService {
 
     /**
+     * Returns the number of {@link SharedLock} instances tracked in this {@link ResourceLockService}.
+     *
+     * @return the number of {@link SharedLock} instances
+     */
+    int size();
+
+    /**
      * Returns a {@link SharedLock} for the provided {@link ResourceId}.
      *
      * @param resourceId the resource ID
