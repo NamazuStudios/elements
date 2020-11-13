@@ -527,23 +527,16 @@ public class TransactionalResourceService implements ResourceService {
         private TransactionalResource acquire(final ResourceId resourceId) {
 
             final TransactionalResource result = context.acquires.compute(resourceId, (k, existing) -> {
-
-                final TransactionalResource r;
-
                 if (existing == null || !existing.acquire()) {
                     // Either this Resource does not exist in the cache, or somebody else recently released it, so
                     // the solution is to load it in either case.
-                    r = loadTransactionalResource(resourceId);
+                    return loadTransactionalResource(resourceId);
                 } else {
-                    r = existing;
+                    // Since we have conservatively acquired the above resource, we must ensure that it will be
+                    // released when the operation completes.
+                    releaseOnClose(existing);
+                    return existing;
                 }
-
-                // Since we have conservatively acquired the above resource, we must ensure that it will be
-                // released when the operation completes.
-                releaseOnClose(existing);
-
-                return r;
-
             });
 
             // We must make sure that it won't be closed with this cache manipulation.  This is side-effect free if we
