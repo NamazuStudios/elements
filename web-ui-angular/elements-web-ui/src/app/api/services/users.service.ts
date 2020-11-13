@@ -254,11 +254,11 @@ class UsersService extends BaseService {
    */
   createUserResponse(params: UsersService.CreateUserParams): Observable<StrictHttpResponse<User>> {
     let __params = this.newParams();
-    let __headers = new HttpHeaders();
+    let __headers = new HttpHeaders({['content-type']:["application/json"]})
     let __body: any = null;
 
-    //if (params.password != null) __params = __params.set('password', params.password.toString());
     __body = params.body;
+    delete __body.id;
     let req = new HttpRequest<any>(
       'POST',
       this.rootUrl + `/user`,
