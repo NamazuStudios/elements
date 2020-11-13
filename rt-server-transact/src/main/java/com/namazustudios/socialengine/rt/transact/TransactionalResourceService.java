@@ -222,14 +222,6 @@ public class TransactionalResourceService implements ResourceService {
             // destruction of the resource in the acm instance.
             acm.keep(evicted);
 
-            try {
-                // This ensures the destruction routines get run properly by pumping ResourceDestroyedException to
-                // all tasks waiting on a result for the Resource.
-                evicted.close();
-            } catch (Exception ex) {
-                logger.error("Could not close resource.", ex);
-            }
-
             if (!acm.clearTombstone(resourceId)) {
                 // This would happen because another process has aggressively reloaded the resource while the final
                 // removal didn't actually take place.
@@ -487,7 +479,13 @@ public class TransactionalResourceService implements ResourceService {
                 // This should also never fail because of the same reason above.  Each of the acquires happens before
                 // this, so even any overlaps should have been acquired.  Any of these will be purged after the
                 // reference count hits zero.
-                r.release();
+
+                try {
+                    r.release();
+                } catch (Exception ex) {
+                    logger.warn("Caught exception releasing resource.", ex);
+                }
+
             });
 
             toClose.forEach(r -> {

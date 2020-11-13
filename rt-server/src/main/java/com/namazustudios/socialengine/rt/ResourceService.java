@@ -292,14 +292,14 @@ public interface ResourceService extends AutoCloseable {
     /**
      * Removes a {@link Resource} instance from this resource service.
      *
-     * @param resoureIdString the path as a string
+     * @param resourceIdString the path as a string
      * @return the removed {@link Resource}
      *
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      *
      */
-    default Resource removeResource(final  String resoureIdString) {
-        final ResourceId resourceId = resourceIdFromString(resoureIdString);
+    default Resource removeResource(final  String resourceIdString) {
+        final ResourceId resourceId = resourceIdFromString(resourceIdString);
         return removeResource(resourceId);
     }
 

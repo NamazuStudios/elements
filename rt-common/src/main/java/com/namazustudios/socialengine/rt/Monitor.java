@@ -14,12 +14,4 @@ public interface Monitor extends AutoCloseable {
     @Override
     void close();
 
-    /**
-     * Gets a {@link Condition} with an arbitrary name associated with the supplied {@link Monitor}.
-     *
-     * @param name the name of the {@link Condition}
-     * @return the {@link Condition}
-     */
-    Condition getCondition(final String name);
-
 }

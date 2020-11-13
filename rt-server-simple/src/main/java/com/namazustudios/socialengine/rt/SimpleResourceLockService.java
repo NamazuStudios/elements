@@ -31,7 +31,7 @@ public class SimpleResourceLockService implements ResourceLockService {
     static {
         references = new ReferenceQueue<>();
         collections = new ConcurrentHashMap<>();
-        vacuum = new Thread(() -> vacuum());
+        vacuum = new Thread(SimpleResourceLockService::vacuum);
         vacuum.setName(SimpleResourceLockService.class.getSimpleName() + " vacuum.");
         vacuum.setDaemon(true);
         vacuum.start();
@@ -64,36 +64,14 @@ public class SimpleResourceLockService implements ResourceLockService {
     private final ConcurrentMap<ResourceId, Reference<SharedLock>> resourceIdLockMap = new ConcurrentHashMap<>();
 
     @Override
-    public Monitor getMonitor(final ResourceId resourceId) {
-
-        final SharedLock lock = getLockForId(resourceId);
-
-        lock.lock.lock();
-
-        return new Monitor() {
-
-            @Override
-            public Condition getCondition(final String name) {
-                return lock.conditions.computeIfAbsent(name, k -> lock.lock.newCondition());
-            }
-
-            @Override
-            public void close() {
-                lock.lock.unlock();
-            }
-
-        };
-
-    }
-
-    private SharedLock getLockForId(final ResourceId resourceId) {
+    public SharedLock getLock(final ResourceId resourceId) {
 
         SharedLock lock;
 
         do {
 
             lock = resourceIdLockMap.computeIfAbsent(resourceId, rid -> {
-                final SharedLock l = new SharedLock();
+                final SharedLock l = new SimpleSharedLock();
                 final Reference<SharedLock> ref = new SoftReference<>(l, references);
                 collections.put(ref, () -> cleanup(rid));
                 return ref;
@@ -128,11 +106,15 @@ public class SimpleResourceLockService implements ResourceLockService {
 
     }
 
-    private class SharedLock {
+    private static class SimpleSharedLock implements SharedLock {
 
         private final ReentrantLock lock = new ReentrantLock();
 
-        private final Map<String, Condition> conditions = new ConcurrentHashMap<>();
+        @Override
+        public Monitor lock() {
+            lock.lock();
+            return lock::unlock;
+        }
 
     }
 

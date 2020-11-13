@@ -15,13 +15,25 @@ import java.util.concurrent.locks.Lock;
 public interface ResourceLockService {
 
     /**
+     * Returns a {@link SharedLock} for the provided {@link ResourceId}.
+     *
+     * @param resourceId the resource ID
+     *
+     * @return the {@link Monitor}
+     */
+    SharedLock getLock(ResourceId resourceId);
+
+    /**
      * Returns a {@link Monitor} for the provided {@link ResourceId}.
      *
      * @param resourceId the resource ID
      *
      * @return the {@link Monitor}
      */
-    Monitor getMonitor(final ResourceId resourceId);
+    default Monitor getMonitor(final ResourceId resourceId) {
+        final var lock = getLock(resourceId);
+        return lock.lock();
+    }
 
     /**
      * Deletes the lock with the given {@link ResourceId}.

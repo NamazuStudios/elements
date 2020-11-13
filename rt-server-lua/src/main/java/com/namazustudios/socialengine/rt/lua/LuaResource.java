@@ -54,6 +54,8 @@ public class LuaResource implements Resource {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
+    private SharedLock lock;
+
     private ResourceId resourceId;
 
     private Attributes attributes = Attributes.emptyAttributes();
@@ -106,6 +108,7 @@ public class LuaResource implements Resource {
 
             this.resourceLockService = resourceLockService;
             this.resourceId = randomResourceIdForNode(nodeId);
+            this.lock = resourceLockService.getLock(resourceId);
             this.localContext = localContext;
             this.remoteContext = remoteContext;
             this.luaState = luaState;
@@ -204,13 +207,14 @@ public class LuaResource implements Resource {
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId);
-             final InputStream inputStream = assetLoader.open(modulePath)) {
+        try (var mon = lock.lock();
+             var is = assetLoader.open(modulePath);
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
 
             // We substitute the logger for the name of the file we actually are trying to open.  This way the
             // actual logger reads the name of the source file.
             scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
-            luaState.load(inputStream, moduleName, "bt");
+            luaState.load(is, moduleName, "bt");
             scriptLog.debug("Loaded script {}", moduleName);
 
             for (final Object object : params) {
@@ -241,7 +245,8 @@ public class LuaResource implements Resource {
 
     @Override
     public void setVerbose(boolean verbose) {
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+        try (var mon = lock.lock();
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
             luaState.pushBoolean(verbose);
             luaState.setPersistenceSetting("path", -1);
         }
@@ -249,7 +254,8 @@ public class LuaResource implements Resource {
 
     @Override
     public boolean isVerbose() {
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+        try (var mon = lock.lock();
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
             luaState.getPersistenceSetting("debug");
             return luaState.toBoolean(-1);
         } finally {
@@ -259,22 +265,28 @@ public class LuaResource implements Resource {
 
     @Override
     public void serialize(final OutputStream os) throws IOException {
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+        try (var mon = lock.lock()) {
             getErisPersistence().serialize(os);
+            var strack = logAssist.getStack();
+            logger.info("Stack {}", strack);
         }
+
     }
 
     @Override
     public void deserialize(final InputStream is) throws IOException {
         getErisPersistence().deserialize(is, sh -> {
-            resourceId = sh.getResourceId();
+            final var original = resourceId;
             attributes = sh.getAttributes();
+            resourceId = sh.getResourceId();
+            lock = resourceLockService.getLock(resourceId);
+            resourceLockService.delete(original);
         });
     }
 
     @Override
     public Set<TaskId> getTasks() {
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+        try (var mon = lock.lock()) {
 
             luaState.pushJavaFunction(l -> {
 
@@ -328,7 +340,7 @@ public class LuaResource implements Resource {
     @Override
     public void close() {
 
-        try(final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+        try(var mon = lock.lock()) {
 
             getTasks().forEach(taskId -> {
                 final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
@@ -345,7 +357,7 @@ public class LuaResource implements Resource {
 
     @Override
     public void unload() {
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
+        try (var mon = lock.lock()) {
             getLuaState().close();
         }
     }
@@ -355,11 +367,9 @@ public class LuaResource implements Resource {
         return params -> (consumer, throwableConsumer) -> {
 
             final LuaState luaState = getLuaState();
-            FinallyAction finalOperation = FinallyAction.begin();
 
-            try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
-
-                finalOperation = finalOperation.then(() -> luaState.setTop(0));
+            try (var mon = lock.lock();
+                 var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
                 luaState.getGlobal(REQUIRE);
                 luaState.pushString(CoroutineBuiltin.MODULE_NAME);
@@ -397,8 +407,6 @@ public class LuaResource implements Resource {
                 logAssist.error("Error dispatching method: " + name, ex);
                 throwableConsumer.accept(ex);
                 throw ex;
-            } finally {
-                finalOperation.run();
             }
 
         };
@@ -416,11 +424,9 @@ public class LuaResource implements Resource {
     public void resume(final TaskId taskId, final Object ... results) {
 
         final LuaState luaState = getLuaState();
-        FinallyAction finalOperation = FinallyAction.begin();
 
-        try (final Monitor monitor = resourceLockService.getMonitor(resourceId)) {
-
-            finalOperation = finalOperation.then(() -> luaState.setTop(0));
+        try (var mon = lock.lock();
+             var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
             luaState.getGlobal(REQUIRE);
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);
@@ -452,8 +458,6 @@ public class LuaResource implements Resource {
             getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
             getLocalContext().getTaskContext().finishWithError(taskId, ex);
             throw ex;
-        } finally {
-            finalOperation.run();
         }
 
     }
