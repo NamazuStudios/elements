@@ -115,7 +115,7 @@ public class UnixFSMemoryUtilsTest {
         for (final UnixFSAtomicLong counter : counters) {
             final long cValue = counter.get();
             final long bValue = buffer.getLong();
-            logger.info("Buffer value {}. Counter value {}.", bValue, cValue);
+            logger.debug("Buffer value {}. Counter value {}.", bValue, cValue);
             assertEquals(bValue, cValue, "Buffer value mismatch.");
         }
     }

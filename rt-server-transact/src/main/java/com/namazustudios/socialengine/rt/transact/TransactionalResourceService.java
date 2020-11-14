@@ -29,7 +29,7 @@ import static java.util.stream.Collectors.toList;
 
 public class TransactionalResourceService implements ResourceService {
 
-    private static final int RETRY_COUNT = 250;
+    private static final int RETRY_COUNT = 256;
 
     private static final int WAIT_INTERVAL = 5;
 
@@ -70,17 +70,25 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
         return computeRO((acm, txn) -> {
-            if (!txn.exists(resourceId)) throw new ResourceNotFoundException();
-            return acm.acquire(resourceId);
+            try {
+                if (!txn.exists(resourceId)) throw new ResourceNotFoundException();
+                return acm.acquire(resourceId);
+            } catch (NullResourceException ex) {
+                throw new TransactionConflictException();
+            }
         });
     }
 
     @Override
     public Resource getAndAcquireResourceAtPath(final Path path) {
         return computeRO((acm, txn) -> {
-            final Path normalized = normalize(path);
-            final ResourceId resourceId = txn.getResourceId(normalized);
-            return acm.acquire(resourceId);
+            try {
+                final Path normalized = normalize(path);
+                final ResourceId resourceId = txn.getResourceId(normalized);
+                return acm.acquire(resourceId);
+            } catch (NullResourceException ex) {
+                throw new TransactionConflictException();
+            }
         });
     }
 
@@ -316,15 +324,22 @@ public class TransactionalResourceService implements ResourceService {
         }
     }
 
-    private <T> T computeRO(final BiFunction<AcquiresCacheMutator, ReadOnlyTransaction, T> operation) {
+    private <T> T computeRO(final TransactionOperation<ReadOnlyTransaction, T> operation) {
 
         final Context context = getContext();
 
-        try (final ReadOnlyTransaction txn = getPersistence().openRO(getNodeId());
-             final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
-            final T value = operation.apply(acm, txn);
-            return value;
+        for (int i = 0; i < RETRY_COUNT; ++i) {
+            try (final ReadOnlyTransaction txn = getPersistence().openRO(getNodeId());
+                 final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
+                final T value = operation.apply(acm, txn);
+                return value;
+            } catch (TransactionConflictException ex) {
+                randomWait(i);
+                continue;
+            }
         }
+
+        throw new ContentionException();
 
     }
 
@@ -382,7 +397,7 @@ public class TransactionalResourceService implements ResourceService {
 
     }
 
-    private <T> T computeRW(final TransactionOperation<T> operation) {
+    private <T> T computeRW(final TransactionOperation<ReadWriteTransaction, T> operation) {
 
         final Context context = getContext();
 
@@ -639,9 +654,9 @@ public class TransactionalResourceService implements ResourceService {
     }
 
     @FunctionalInterface
-    private interface TransactionOperation<ReturnT> {
+    private interface TransactionOperation<TransactionT extends ReadOnlyTransaction, ReturnT> {
 
-        ReturnT apply(AcquiresCacheMutator acm, ReadWriteTransaction txn) throws TransactionConflictException;
+        ReturnT apply(AcquiresCacheMutator acm, TransactionT txn) throws TransactionConflictException;
 
     }
 

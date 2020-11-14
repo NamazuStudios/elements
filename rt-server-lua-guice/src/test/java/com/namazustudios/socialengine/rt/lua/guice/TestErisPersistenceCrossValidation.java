@@ -101,7 +101,7 @@ public class TestErisPersistenceCrossValidation {
     @Test(dataProvider = "intermediateFiles", dependsOnMethods = "testStreamAndFileProduceIdenticalOutput", invocationCount = 10)
     public void testReadChannel(final String source, final Path file, final boolean verbose) throws IOException {
 
-        logger.info("Loading file {} written by {} using ReadableByteChannel", file, source);
+        logger.debug("Loading file {} written by {} using ReadableByteChannel", file, source);
 
         try (final var rbc = open(file, READ);
              final var resource = getResourceLoader().load(rbc, verbose)) {
