@@ -368,6 +368,7 @@ public class MongoProgressDao implements ProgressDao {
                     issuance.setSource(MISSION_PROGRESS_SOURCE);
                     issuance.setMetadata(metadata);
                     issuance.setTags(tags);
+                    issuance.setContext(context);
 
                     final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(issuance);
 
