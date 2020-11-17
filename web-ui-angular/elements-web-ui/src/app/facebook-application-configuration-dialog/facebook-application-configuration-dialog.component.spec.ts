@@ -1,20 +1,20 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { FacebookApplicationConfigurationsDialogComponent } from './facebook-application-configuration-dialog.component';
+import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog.component';
 
 describe('FacebookApplicationConfigurationsDialogComponent', () => {
-  let component: FacebookApplicationConfigurationsDialogComponent;
-  let fixture: ComponentFixture<FacebookApplicationConfigurationsDialogComponent>;
+  let component: FacebookApplicationConfigurationDialogComponent;
+  let fixture: ComponentFixture<FacebookApplicationConfigurationDialogComponent>;
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ FacebookApplicationConfigurationsDialogComponent ]
+      declarations: [ FacebookApplicationConfigurationDialogComponent ]
     })
     .compileComponents();
   }));
 
   beforeEach(() => {
-    fixture = TestBed.createComponent(FacebookApplicationConfigurationsDialogComponent);
+    fixture = TestBed.createComponent(FacebookApplicationConfigurationDialogComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });
