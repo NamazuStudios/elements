@@ -29,7 +29,6 @@ public class RTDaoModule extends PrivateModule {
         expose(new TypeLiteral<Function<String, Context>>(){});
 
         bind(ManifestDao.class).to(RTManifestDao.class).asEagerSingleton();
-        bind(ZContext.class).asEagerSingleton();
         bind(ContextFactory.class).to(DefaultContextFactory.class).asEagerSingleton();
         bind(new TypeLiteral<Function<String, Context>>(){}).toProvider(RTContextProvider.class);
 
