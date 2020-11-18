@@ -419,8 +419,6 @@ public class UnixFSDualCounter {
      */
     public static class Snapshot {
 
-        public static int SIZE_BYTES = Integer.BYTES + Long.BYTES;
-
         private final int max;
         private final int leading;
         private final int trailing;
@@ -469,15 +467,6 @@ public class UnixFSDualCounter {
          */
         public boolean isEmpty() {
             return UnixFSDualCounter.isEmpty(snapshot);
-        }
-
-        /**
-         * Returns this {@link Snapshot} as a string
-         *
-         * @return the string-formatted version
-         */
-        public String asString() {
-            return format("0x%016X-0x%016X", max, snapshot);
         }
 
         /**
@@ -572,43 +561,9 @@ public class UnixFSDualCounter {
                 empty ? -leading : leading,
                 empty,
                 isFull(snapshot, max)
+
             );
 
-        }
-
-        /**
-         * Compares two {@link Snapshot}s using the supplied {@link Snapshot} instance as an absolute reference.
-         *
-         * @param reference
-         * @param other
-         * @return
-         */
-        int compareTo(final int reference, final Snapshot other) {
-
-            if (reference > max) {
-                final String msg = format("All reference value must not exceed max value %d != %d", reference, max);
-                throw new IllegalArgumentException(msg);
-            } else if (max != other.max) {
-                final String msg = format("All snapshots must have identical max values %d != %d", max, other.max);
-                throw new IllegalArgumentException(msg);
-            } else if (isEmpty() && other.isEmpty()) {
-                return 0;
-            } else if (isEmpty()) {
-                return -1;
-            } else if (other.isEmpty()) {
-                return 1;
-            }
-
-            final long lThisValue = normalize(reference);
-            final long lOtherValue = other.normalize(reference);
-
-            return lThisValue < lOtherValue ? -1 :
-                   lThisValue > lOtherValue ?  1 : 0;
-
-        }
-
-        private long normalize(final long reference) {
-            return reference <= leading ? leading - reference : leading + (max - reference);
         }
 
     }
