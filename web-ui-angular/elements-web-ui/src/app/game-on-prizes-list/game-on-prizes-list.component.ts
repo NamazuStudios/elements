@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
 import {GameOnPrizesDataSource} from "../game-on-prizes.datasource";
-import {MatDialog } from "@angular/material";
+import {MatDialog} from "@angular/material/dialog";
 import {AlertService} from "../alert.service";
 import {GameOnPrizeDialogComponent} from "../game-on-prize-dialog/game-on-prize-dialog.component";
 import {filter} from "rxjs/operators";

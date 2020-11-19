@@ -6,7 +6,8 @@ import {debounceTime, distinctUntilChanged, filter, tap} from "rxjs/operators";
 import {fromEvent} from "rxjs";
 import {SelectionModel} from "@angular/cdk/collections";
 import {Application} from "../api/models/application";
-import {MatDialog, MatTable} from "@angular/material";
+import {MatDialog} from "@angular/material/dialog";
+import {MatTable} from '@angular/material/table';
 import {AlertService} from "../alert.service";
 import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
 import {ApplicationDialogComponent} from "../application-dialog/application-dialog.component";
@@ -33,11 +34,11 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.selection = new SelectionModel<Application>(true, []);
     this.dataSource = new ApplicationsDataSource(this.applicationsService);
-    this.paginator.pageSize = 10;
     this.refresh(0);
   }
 
   ngAfterViewInit() {
+    this.paginator.pageSize = 10;
     // server-side search
     fromEvent(this.input.nativeElement,'keyup')
       .pipe(
@@ -56,7 +57,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
       )
       .subscribe();
 
-    this.selection.onChange.subscribe(s => this.hasSelection = this.selection.hasValue());
+    this.selection.changed.subscribe(s => this.hasSelection = this.selection.hasValue());
     this.dataSource.applications$.subscribe(currentApplications => this.currentApplications = currentApplications);
     this.dataSource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
   }

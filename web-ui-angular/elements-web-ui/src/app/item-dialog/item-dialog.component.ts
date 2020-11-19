@@ -1,6 +1,8 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef, MatSnackBar} from '@angular/material';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MatChipInputEvent} from '@angular/material/chips';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
 import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
@@ -73,9 +75,9 @@ export class ItemDialogComponent implements OnInit {
     if (this.data.item.tags !== undefined) {
       formData.tags = this.data.item.tags;
     }
-    if (this.data.item.metadata !== undefined) {
-      formData.metadata = this.data.item.metadata;
-    }
+    // if (this.data.item.metadata !== undefined) {
+    //   formData.metadata = this.data.item.metadata;
+    // }
 
     this.data.next(formData).subscribe(r => {
       this.dialogRef.close();
@@ -87,8 +89,8 @@ export class ItemDialogComponent implements OnInit {
 
   ngOnInit() {
     this.alertService.getMessage().subscribe((message: any) => {
-      if(message) {
-        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+      if (message) {
+        this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
   }

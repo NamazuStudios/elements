@@ -1,6 +1,10 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { GameOnPrizesListComponent } from './game-on-prizes-list.component';
+import {HttpClientTestingModule} from "@angular/common/http/testing";
+import {AlertService} from "../alert.service";
+import {RouterTestingModule} from "@angular/router/testing";
+import {MatDialog, MatDialogModule} from "@angular/material/dialog";
 
 describe('GameOnApplicationPrizesListComponent', () => {
   let component: GameOnPrizesListComponent;
@@ -8,7 +12,9 @@ describe('GameOnApplicationPrizesListComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ GameOnPrizesListComponent ]
+      declarations: [ GameOnPrizesListComponent ],
+      imports: [HttpClientTestingModule, RouterTestingModule, MatDialogModule],
+      providers: [AlertService, MatDialog]
     })
     .compileComponents();
   }));

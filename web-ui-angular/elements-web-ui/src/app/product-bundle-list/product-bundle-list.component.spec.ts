@@ -1,14 +1,24 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
 import { ProductBundleListComponent } from './product-bundle-list.component';
+import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
+import {MatDialog, MatDialogModule} from '@angular/material/dialog';
+import {MatPaginator, MatPaginatorModule} from '@angular/material/paginator';
+import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
 
 describe('ProductBundleListComponent', () => {
   let component: ProductBundleListComponent;
   let fixture: ComponentFixture<ProductBundleListComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ ProductBundleListComponent ]
+      declarations: [ ProductBundleListComponent ],
+      imports: [MatDialogModule, MatPaginatorModule, BrowserAnimationsModule],
+      providers: [
+        ConfirmationDialogService,
+        MatDialog,
+        MatPaginator
+      ]
     })
     .compileComponents();
   }));

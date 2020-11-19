@@ -1,6 +1,8 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {SelectionModel} from '@angular/cdk/collections';
-import {MatDialog, MatPaginator, MatTable} from '@angular/material';
+import {MatDialog} from '@angular/material/dialog';
+import {MatPaginator} from '@angular/material/paginator';
+import {MatTable} from '@angular/material/table';
 import {AlertService} from '../alert.service';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
 import {fromEvent} from 'rxjs';
@@ -27,16 +29,17 @@ export class MissionsListComponent implements OnInit, AfterViewInit {
   @ViewChild('input') input: ElementRef;
   @ViewChild(MatTable) table: MatTable<Mission>;
 
-  constructor(private missionsService: MissionsService, private alertService: AlertService, private dialogService: ConfirmationDialogService, public dialog: MatDialog) { }
+  constructor(private missionsService: MissionsService, private alertService: AlertService,
+              private dialogService: ConfirmationDialogService, public dialog: MatDialog) { }
 
   ngOnInit() {
     this.selection = new SelectionModel<Mission>(true, []);
     this.dataSource = new MissionsDatasource(this.missionsService);
-    this.paginator.pageSize = 10;
     this.refresh(0);
   }
 
   ngAfterViewInit() {
+    this.paginator.pageSize = 10;
     // server-side search
     fromEvent(this.input.nativeElement, 'keyup')
       .pipe(
@@ -55,7 +58,7 @@ export class MissionsListComponent implements OnInit, AfterViewInit {
       )
       .subscribe();
 
-    this.selection.onChange.subscribe(s => this.hasSelection = this.selection.hasValue());
+    this.selection.changed.subscribe(s => this.hasSelection = this.selection.hasValue());
     this.dataSource.missions$.subscribe(currentMissions => this.currentMissions = currentMissions);
     this.dataSource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
   }

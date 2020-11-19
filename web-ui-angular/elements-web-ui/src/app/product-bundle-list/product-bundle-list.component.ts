@@ -3,7 +3,9 @@ import {ApplicationConfigurationsDataSource} from '../application-configuration.
 import {ProductBundle} from '../api/models/product-bundle';
 import {filter} from 'rxjs/operators';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
-import {MatDialog, MatPaginator, MatTableDataSource} from '@angular/material';
+import {MatDialog} from '@angular/material/dialog';
+import {MatPaginator} from '@angular/material/paginator';
+import {MatTableDataSource} from '@angular/material/table'
 import {ProductBundleEditorComponent} from '../product-bundle-editor/product-bundle-editor.component';
 import {ProductBundleViewModel} from '../models/product-bundle-view-model';
 import {SelectionModel} from '@angular/cdk/collections';
@@ -30,14 +32,14 @@ export class ProductBundleListComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.selection = new SelectionModel<ProductBundle>(true, []);
+    if (!this.productBundles) { this.productBundles = new Array<ProductBundle>(); }
     this.refreshDataSource();
-    this.paginator.pageSize = 10;
-    this.paginator.length = this.productBundles.length;
-    this.tableDataSource.paginator = this.paginator;
   }
 
   ngAfterViewInit() {
-
+    this.paginator.pageSize = 10;
+    this.paginator.length = this.productBundles.length;
+    this.tableDataSource.paginator = this.paginator;
   }
 
   isAllSelected() {

@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog.component';
+import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
+import {FormBuilder, FormsModule, ReactiveFormsModule} from "@angular/forms";
 
 describe('FacebookApplicationConfigurationsDialogComponent', () => {
   let component: FacebookApplicationConfigurationDialogComponent;
@@ -8,7 +10,19 @@ describe('FacebookApplicationConfigurationsDialogComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ FacebookApplicationConfigurationDialogComponent ]
+      declarations: [ FacebookApplicationConfigurationDialogComponent ],
+      imports: [MatDialogModule, FormsModule, ReactiveFormsModule],
+      providers: [
+        FormBuilder,
+        { provide: MatDialogRef, useValue: {} },
+        { provide: MAT_DIALOG_DATA, useValue: { applicationConfiguration: {
+              applicationId: 1234,
+              applicationSecret: "secret",
+              parent: {
+                  id: 1234
+                }
+            }}}
+        ]
     })
     .compileComponents();
   }));

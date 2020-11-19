@@ -1,12 +1,12 @@
 import {Component, OnDestroy, OnInit} from '@angular/core';
 import {ActivatedRoute, Router} from '@angular/router';
 
-import { AuthenticationService } from "../authentication.service";
-import { AlertService } from "../alert.service";
-import {MatSnackBar } from "@angular/material";
-import {Subscription} from "rxjs";
-import {first} from "rxjs/operators";
-import {FormBuilder, FormGroup, Validators} from "@angular/forms";
+import { AuthenticationService } from '../authentication.service';
+import { AlertService } from '../alert.service';
+import {MatSnackBar } from '@angular/material/snack-bar';
+import {Subscription} from 'rxjs';
+import {first} from 'rxjs/operators';
+import {FormBuilder, FormGroup, Validators} from '@angular/forms';
 
 @Component({
   selector: 'login',
@@ -25,7 +25,9 @@ export class LoginComponent implements OnInit, OnDestroy {
 
   get f() { return this.loginForm.controls; }
 
-  constructor(private formBuilder: FormBuilder, private route: ActivatedRoute, private router: Router, private authenticationService: AuthenticationService, private alertService: AlertService, private snackBar: MatSnackBar) {
+  constructor(private formBuilder: FormBuilder, private route: ActivatedRoute,
+              private router: Router, private authenticationService: AuthenticationService,
+              private alertService: AlertService, private snackBar: MatSnackBar) {
   }
 
   ngOnInit() {
@@ -41,8 +43,8 @@ export class LoginComponent implements OnInit, OnDestroy {
     this.paramMapSubscription = this.route.queryParams.subscribe(params => this.returnUrl = params.returnUrl || '/');
 
     this.alertSubscription = this.alertService.getMessage().subscribe((message: any) => {
-      if(message) {
-        this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
+      if (message) {
+        this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
   }
@@ -55,8 +57,9 @@ export class LoginComponent implements OnInit, OnDestroy {
   login() {
     this.submitted = true;
 
-    if(this.loginForm.invalid)
+    if (this.loginForm.invalid) {
       return;
+    }
 
     this.loading = true;
 
@@ -64,7 +67,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       .pipe(first())
       .subscribe(result => {
           this.router.navigate([this.returnUrl]);
-          this.alertService.success("login success");
+          this.alertService.success('login success');
         },
         err => {
           this.alertService.error(err);

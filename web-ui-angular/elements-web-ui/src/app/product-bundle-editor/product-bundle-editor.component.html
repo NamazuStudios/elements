@@ -3,7 +3,7 @@
     <span>Edit Product Bundle</span>
     <span class="disp-checkbox">
       <mat-checkbox matInput name="display" formControlName="display" [checked]="data.productBundle.display"></mat-checkbox>
-      Display
+      display
     </span>
   </h1>
 
@@ -33,6 +33,6 @@
 </form>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!productBundleForm.valid || !editorCard.isJSONValid">OK</button>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!productBundleForm.valid || !editorCard?.isJSONValid">OK</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>

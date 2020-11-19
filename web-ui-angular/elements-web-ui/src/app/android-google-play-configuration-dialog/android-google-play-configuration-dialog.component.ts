@@ -1,7 +1,8 @@
 import {Component, Inject, OnInit} from '@angular/core';
 import {ProductBundle} from '../api/models/product-bundle';
 import {FormBuilder, Validators} from '@angular/forms';
-import {MAT_DIALOG_DATA, MatDialogRef, MatSnackBar} from '@angular/material';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {AlertService} from '../alert.service';
 
 @Component({

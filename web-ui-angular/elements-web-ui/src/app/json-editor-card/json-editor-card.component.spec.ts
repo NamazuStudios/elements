@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import {async, ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
 
 import { JsonEditorCardComponent } from './json-editor-card.component';
 
@@ -6,7 +6,7 @@ describe('JsonEditorCardComponent', () => {
   let component: JsonEditorCardComponent;
   let fixture: ComponentFixture<JsonEditorCardComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ JsonEditorCardComponent ]
     })

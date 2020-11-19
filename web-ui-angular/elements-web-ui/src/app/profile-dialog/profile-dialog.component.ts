@@ -1,6 +1,7 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
-import {MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatSnackBar} from '@angular/material';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
+import {MatSnackBar} from '@angular/material/snack-bar';
 import {FormBuilder, Validators} from '@angular/forms';
 import {AlertService} from '../alert.service';
 import {Application} from '../api/models/application';
@@ -70,7 +71,7 @@ export class ProfileDialogComponent implements OnInit {
 
   showEditUserDialog(user: User) {
     this.dialog.open(UserDialogComponent, {
-      width: "500px",
+      width: '500px',
       data: {
         isNew: false, user: user, next: result => {
           const password = result.password;
@@ -87,19 +88,19 @@ export class ProfileDialogComponent implements OnInit {
 
   showSelectUserDialog() {
     this.dialog.open(UserSelectDialogComponent, {
-      width: "700px",
+      width: '700px',
       data: {
         next: result => {
           this.data.profile.user = result;
         }
       }
-    })
+    });
   }
 
   compareApps(app1, app2) {
-    if (app1 == undefined || app2 == undefined) return false;
-    if (app1 == null && app2 == null) return true;
-    return app1.name == app2.name;
+    if (app1 === undefined || app2 === undefined) { return false; }
+    if (app1 == null && app2 == null) { return true; }
+    return app1.name === app2.name;
   }
 
   parseDate(timestamp: number) {

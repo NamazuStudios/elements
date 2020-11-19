@@ -1,12 +1,18 @@
-import { TestBed, async } from '@angular/core/testing';
+import {TestBed, async, waitForAsync} from '@angular/core/testing';
 import { AppComponent } from './app.component';
+import {ConfigService} from './config.service';
+import {HttpClientTestingModule} from '@angular/common/http/testing';
 
 describe('AppComponent', () => {
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [
         AppComponent
       ],
+      imports: [HttpClientTestingModule],
+      providers: [
+        ConfigService
+      ]
     }).compileComponents();
   }));
 
@@ -16,16 +22,16 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'elements-web-ui'`, () => {
+  it(`should have as title 'Namazu Elements'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('elements-web-ui');
+    expect(app.title).toEqual('Namazu Elements');
   });
 
   it('should render title in a h1 tag', () => {
     const fixture = TestBed.createComponent(AppComponent);
-    fixture.detectChanges();
     const compiled = fixture.debugElement.nativeElement;
+    fixture.detectChanges();
     expect(compiled.querySelector('h1').textContent).toContain('Welcome to elements-web-ui!');
   });
 });

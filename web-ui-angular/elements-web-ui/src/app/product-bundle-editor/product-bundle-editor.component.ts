@@ -1,5 +1,5 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
-import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {FormBuilder, Validators} from '@angular/forms';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {BundleRewardsEditorComponent} from '../bundle-rewards-editor/bundle-rewards-editor.component';
