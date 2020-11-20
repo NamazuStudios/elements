@@ -46,7 +46,7 @@ import static java.lang.String.join;
  * configuration parameter.
  *
  * Note that the {@link GitLoader} interface essentially calls for unpacking of the {@link Application} code to a
- * local directory.  The designation "Filesystem" refers to the source of the repository as opposed to the destination
+ * local directory.  The designation "Filesystem" refers to the source of the repository as opposed to the inprocIdentifier
  * of the working directory.
  *
  * Created by patricktwohig on 8/19/17.

@@ -10,11 +10,13 @@ buildNumber.properties
 test-repositories
 storage.xodus
 node_modules
+.DS_Store
 
 # Default Script storage
 /repositories/*
 
 #IntelliJ Configurations (except shared run configurations
+.idea/jarRepositories.xml
 .idea/artifacts/
 .idea/compiler.xml
 .idea/encodings.xml
@@ -29,3 +31,5 @@ node_modules
 .idea/codeStyles/
 .idea/dbnavigator.xml
 .idea/jarRepositories.xml
+.idea/dictionaries
+

@@ -1,6 +1,6 @@
 import {Component, OnInit} from '@angular/core';
-import {ConfigService} from "./config.service";
-import {ApiConfiguration} from "./api/api-configuration";
+import {ConfigService} from './config.service';
+import {ApiConfiguration} from './api/api-configuration';
 
 @Component({
   selector: 'app-root',
@@ -13,6 +13,9 @@ export class AppComponent implements OnInit {
   constructor(private configService: ConfigService, private apiConfiguration: ApiConfiguration) { }
 
   ngOnInit() {
-    this.apiConfiguration.rootUrl = this.configService.get().api.url;
+    this.configService.load().then(r => {
+        this.apiConfiguration.rootUrl = this.configService.get().api.url;
+      }
+    );
   }
 }

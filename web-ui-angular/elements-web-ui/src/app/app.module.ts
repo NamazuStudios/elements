@@ -3,8 +3,9 @@ import { APP_INITIALIZER, NgModule} from '@angular/core';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { LayoutModule } from '@angular/cdk/layout';
-import { FlexLayoutModule } from "@angular/flex-layout";
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import {MatDialogModule} from '@angular/material/dialog';
+import {MatFormFieldModule} from "@angular/material/form-field";
 
 import { routing } from './app.routing';
 import { AuthenticationGuard } from './authentication.guard';
@@ -110,11 +111,12 @@ export function initialize(configService: ConfigService) {
   ],
   imports: [
     BrowserModule,
+    MatDialogModule,
+    MatFormFieldModule,
     FormsModule,
     BrowserAnimationsModule,
     HttpClientModule,
     LayoutModule,
-    FlexLayoutModule,
     ReactiveFormsModule,
     MaterialModule,
     routing,
@@ -129,7 +131,7 @@ export function initialize(configService: ConfigService) {
     AuthenticationGuard,
     { provide: APP_INITIALIZER, useFactory: initialize, multi: true, deps: [ ConfigService ] },
     { provide: HTTP_INTERCEPTORS, useClass: AuthenticationInterceptor, multi: true },
-    { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true },
+    { provide: HTTP_INTERCEPTORS, useClass: ApiErrorInterceptor, multi: true }
   ],
   bootstrap: [AppComponent]
 })

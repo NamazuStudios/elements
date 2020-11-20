@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.persist;
 
 import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.io.Serializable;
 import java.util.List;

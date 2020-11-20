@@ -2,6 +2,7 @@
   <configuration default="false" name="AppNodeMain" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appnode.ApplicationNodeMain" />
     <module name="app-node" />
+    <option name="VM_PARAMETERS" value="-Dcom.namazustudios.socialengine.git.storage.directory=$USER_HOME$/socialengine-repos -Dcom.namazustudios.socialengine.rt.is_local_environment=true -Dcom.namazustudios.socialengine.rt.static_instance_invoker_addresses=localhost:28883,localhost:28884 -Dcom.namazustudios.socialengine.rt.static_instance_control_addresses=localhost:20883,localhost:20884 -Dcom.namazustudios.socialengine.rt.current_instance_invoker_port=28883 -Dcom.namazustudios.socialengine.rt.current_instance_control_port=20883" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

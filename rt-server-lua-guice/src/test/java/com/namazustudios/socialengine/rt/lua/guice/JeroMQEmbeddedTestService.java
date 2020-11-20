@@ -1,19 +1,45 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQClientModule;
+import com.google.inject.*;
+import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.exception.MultiException;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
+import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService;
+import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
+import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry;
+import com.namazustudios.socialengine.rt.remote.guice.ClusterContextModule;
+import com.namazustudios.socialengine.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
+import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
+import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static com.google.inject.Key.get;
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
+import static java.lang.String.format;
 import static org.zeromq.ZContext.shadow;
 
 /**
@@ -21,20 +47,28 @@ import static org.zeromq.ZContext.shadow;
  */
 public class JeroMQEmbeddedTestService implements AutoCloseable {
 
-    private static final String INTERNAL_NODE_ADDRESS = "inproc://integration-test";
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQEmbeddedTestService.class);
 
-    private Node node;
+    public static final int MINIMUM_CONNECTIONS = 5;
+
+    public static final int MAXIMUM_CONNECTIONS = 250;
 
     private Context context;
 
-    private List<Module> nodeModules = new ArrayList<>();
+    private Instance worker;
 
-    private List<Module> clientModules = new ArrayList<>();
+    private Instance client;
+
+    private final ZContext zContext = new ZContext();
+
+    private final List<Module> workerModules = new ArrayList<>();
+
+    private final List<Module> clientModules = new ArrayList<>();
 
     public JeroMQEmbeddedTestService() {}
 
-    public JeroMQEmbeddedTestService withNodeModule(final Module module) {
-        nodeModules.add(module);
+    public JeroMQEmbeddedTestService withWorkerModule(final Module module) {
+        workerModules.add(module);
         return this;
     }
 
@@ -44,56 +78,165 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
     }
 
     public JeroMQEmbeddedTestService withDefaultHttpClient() {
-        return withNodeModule(binder -> binder.bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton());
+        return withWorkerModule(binder -> binder.bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton());
     }
 
     public JeroMQEmbeddedTestService start() {
 
-        final ZContext zContext = new ZContext();
+        final var clientInstanceId = randomInstanceId();
+        final var workerInstanceId = randomInstanceId();
+        final var applicationId = randomApplicationId();
 
-        final Injector nodeInjector = Guice.createInjector(new TestJeroMQNodeModule()
-            .withNodeModules(nodeModules)
-            .withZContext(shadow(zContext))
-            .withBindAddress(INTERNAL_NODE_ADDRESS)
-            .withNodeId("integration-test-node")
-            .withNodeName("integration-test-node")
-            .withMinimumConnections(5)
-            .withMaximumConnections(250)
-            .withTimeout(60));
+        final var clientBindAddress = format("inproc://integration-test-client/%s", clientInstanceId.asString());
+        final var workerBindAddress = format("inproc://integration-test-worker/%s", workerInstanceId.asString());
 
-        final List<Module> clientModules = new ArrayList<>(this.clientModules);
+        final var commonModule = new AbstractModule() {
+            @Override
+            protected void configure() {
 
-        clientModules.add(new JeroMQClientModule()
-            .withDefaultExecutorServiceProvider()
-            .withZContext(shadow(zContext))
-            .withConnectAddress(INTERNAL_NODE_ADDRESS)
-            .withMinimumConnections(5)
-            .withMaximumConnections(250)
-            .withTimeout(60));
+                final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
+                bind(ApplicationId.class).toInstance(applicationId);
 
-        final Injector clientInjector = Guice.createInjector(clientModules);
+                bind(ZContext.class).toProvider(() -> shadow(zContext));
 
-        node = nodeInjector.getInstance(Node.class);
-        context = clientInjector.getInstance(Context.class);
+                bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
 
-        getNode().start();
-        getContext().start();
+                bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
+                    .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))
+                    .asEagerSingleton();
+
+                bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
+                    .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
+
+                bind(RemoteInvokerRegistry.class)
+                    .to(SimpleRemoteInvokerRegistry.class)
+                    .asEagerSingleton();
+
+                install(new StaticInstanceDiscoveryServiceModule()
+                    .withInstanceAddresses(workerBindAddress));
+
+                install(new JeroMQRemoteInvokerModule()
+                    .withMinimumConnections(MINIMUM_CONNECTIONS)
+                    .withMaximumConnections(MAXIMUM_CONNECTIONS));
+
+            }
+        };
+
+        final var workerModule = new AbstractModule() {
+            @Override
+            protected void configure() {
+
+                bind(InstanceId.class).toInstance(workerInstanceId);
+                bind(ApplicationId.class).toInstance(applicationId);
+                bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(ClassLoader.getSystemClassLoader()));
+
+                final var allWorkerModules = new ArrayList<>(workerModules);
+
+                allWorkerModules.add(new TestServicesModule());
+                allWorkerModules.add(new TransactionalResourceServiceModule());
+                allWorkerModules.add(new SimpleContextModule()
+                    .withDefaultContexts()
+                    .withSchedulerContextModules(new XodusSchedulerContextModule())
+                );
+
+                install(commonModule);
+                install(new ClusterContextModule());
+                install(new FSTPayloadReaderWriterModule());
+                install(new TestWorkerInstanceModule());
+                install(new TestMasterNodeModule(workerInstanceId));
+                install(new TestWorkerNodeModule(workerInstanceId, applicationId, allWorkerModules));
+                install(new JeroMQInstanceConnectionServiceModule().withBindAddress(workerBindAddress));
+                install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
+                install(new SimpleTransactionalResourceServicePersistenceModule());
+                install(new UnixFSTransactionalPersistenceContextModule().withTestingDefaults());
+
+            }
+        };
+
+        final var clientModule = new AbstractModule() {
+            @Override
+            protected void configure() {
+
+                bind(InstanceId.class).toInstance(clientInstanceId);
+                bind(ApplicationId.class).toInstance(applicationId);
+                bind(NodeId.class).toInstance(forInstanceAndApplication(clientInstanceId, applicationId));
+
+                install(commonModule);
+                clientModules.forEach(this::install);
+
+                install(new ClusterContextModule());
+                install(new FSTPayloadReaderWriterModule());
+                install(new TestClientInstanceModule());
+                install(new JeroMQInstanceConnectionServiceModule().withBindAddress(clientBindAddress));
+
+            }
+        };
+
+        final var workerInjector = Guice.createInjector(workerModule);
+        worker = workerInjector.getInstance(Instance.class);
+
+        final var clientInjector = Guice.createInjector(clientModule);
+        client = clientInjector.getInstance(Instance.class);
+        context = clientInjector.getInstance(get(Context.class, named(REMOTE)));
+
+        final List<Exception> exceptionList = new ArrayList<>();
+
+        try {
+            getWorker().start();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Exception starting test worker instance.", ex);
+        }
+
+        try {
+            getClient().start();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Exception starting test client instance.", ex);
+        }
+
+        getClient().refreshConnections();
+        getWorker().refreshConnections();
+
+        if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
+
         return this;
 
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {
         return context;
     }
 
+    public Instance getClient() {
+        return client;
+    }
+
+    public Instance getWorker() {
+        return worker;
+    }
+
     @Override
     public void close() {
-        getContext().shutdown();
-        getNode().stop();
+
+        final List<Exception> exceptionList = new ArrayList<>();
+
+        try {
+            getClient().close();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Exception stopping test client instance.", ex);
+        }
+
+        try {
+            getWorker().close();
+        } catch (Exception ex) {
+            exceptionList.add(ex);
+            logger.error("Exception stopping test worker instance.", ex);
+        }
+
+        if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
+
     }
 
 }

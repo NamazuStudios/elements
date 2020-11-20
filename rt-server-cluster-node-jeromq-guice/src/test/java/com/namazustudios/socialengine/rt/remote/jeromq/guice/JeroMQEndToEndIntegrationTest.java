@@ -1,96 +1,183 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
-import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import com.namazustudios.socialengine.remote.TestServiceInterface;
-import com.namazustudios.socialengine.rt.IocResolver;
-import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.NodeLifecycle;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
-import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.remote.InvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.IoCInvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
-import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
+import com.google.inject.*;
+import com.google.inject.name.Named;
+import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
+import com.namazustudios.socialengine.rt.AsyncConnectionService;
+import com.namazustudios.socialengine.rt.InstanceMetadataContext;
+import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.SharedAsyncConnectionService;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
+import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService;
+import com.namazustudios.socialengine.rt.remote.*;
+import com.namazustudios.socialengine.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
+import java.util.stream.IntStream;
 
+import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.*;
-import static com.namazustudios.socialengine.remote.jeromq.JeroMQRemoteInvoker.CONNECT_ADDRESS;
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
+import static java.lang.String.format;
+import static java.util.Collections.singleton;
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.Executors.newCachedThreadPool;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.of;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 
 public class JeroMQEndToEndIntegrationTest {
 
+    private static final int TEST_NODE_COUNT = 3;
+
     private static final Logger logger = LoggerFactory.getLogger(JeroMQEndToEndIntegrationTest.class);
 
-    private Node node;
+    private Instance client;
 
-    private RemoteInvoker remoteInvoker;
+    private List<Instance> workers;
 
     private TestServiceInterface testServiceInterface;
 
     @BeforeClass
     public void setup() {
 
-        final ZContext zContext = new ZContext();
+        final Injector sharedInjector = Guice.createInjector(
+                new ZContextModule().withMaxSockets(8096).withDefaultIoThreads(),
+                new AbstractModule() {
+                    @Override
+                    protected void configure() {
 
-        final Injector nodeInjector = Guice.createInjector(new NodeModule(zContext));
-        final Injector clientInvoker = Guice.createInjector(new ClientModule(zContext));
+                        final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
 
-        setNode(nodeInjector.getInstance(Node.class));
+                        bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
 
-        setRemoteInvoker(clientInvoker.getInstance(RemoteInvoker.class));
-        setTestServiceInterface(clientInvoker.getInstance(TestServiceInterface.class));
+                        bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
+                                .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))
+                                .asEagerSingleton();
 
-        getNode().start();
-        getRemoteInvoker().start();
+                        bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
+                            .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
+
+                    }
+                });
+
+        final ZContext zContext = sharedInjector.getInstance(ZContext.class);
+        final AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService = sharedInjector
+            .getInstance(Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){}));
+
+        final ApplicationId applicationId = randomApplicationId();
+        final List<InstanceId> instanceIdList = IntStream.range(0, TEST_NODE_COUNT)
+            .mapToObj(i -> randomInstanceId())
+            .collect(toList());
+
+        final Injector clientInjector = createInjector(new ClientModule(zContext, asyncConnectionService, applicationId, instanceIdList));
+        setTestServiceInterface(clientInjector.getInstance(TestServiceInterface.class));
+        client = clientInjector.getInstance(Instance.class);
+
+        final Injector workerInjector = createInjector(new WorkerInstanceModule(zContext, asyncConnectionService, applicationId, instanceIdList));
+        workers = instanceIdList.stream()
+            .map(instanceId -> workerInjector.getInstance(Key.get(Instance.class, named(instanceId.asString()))))
+            .collect(toList());
 
     }
 
     @AfterClass
     public void shutdown() {
-        getRemoteInvoker().stop();
-        getNode().stop();
+        client.close();
+        workers.forEach(i -> i.close());
+        workers.clear();
     }
 
-    public Node getNode() {
-        return node;
+    @Test
+    public void startWorkers() throws Exception {
+
+        final ExecutorService executor = newCachedThreadPool(r -> {
+
+            final Thread thread = new Thread(() -> {
+                try {
+                    r.run();
+                } finally {
+                    logger.info("Terminated.");
+                }
+            });
+
+            thread.setDaemon(true);
+            thread.setUncaughtExceptionHandler((t, e) -> logger.error("Caught exception.", e));
+            thread.setName(JeroMQEndToEndIntegrationTest.class.getSimpleName() + " startup.");
+
+            return thread;
+
+        });
+
+        try {
+
+            final CompletionService<Void> completionService = new ExecutorCompletionService<>(executor);
+            final Set<Future<Void>> futureSet = new HashSet<>();
+
+            workers.forEach(w -> futureSet.add(completionService.submit(() -> w.start(), null)));
+            while (!futureSet.isEmpty()) futureSet.remove(completionService.take());
+
+        } finally {
+            executor.shutdown();
+            executor.awaitTermination(1, MINUTES);
+        }
+
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = "startWorkers")
+    void refreshPeers() throws Exception {
+        workers.forEach(w -> w.refreshConnections());
+    }
+
+    @Test(dependsOnMethods = "startWorkers")
+    public void startClient() {
+        client.start();
+        client.refreshConnections();
+    }
+
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testRemoteInvokeSync() {
         getTestServiceInterface().testSyncVoid("Hello");
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10, expectedExceptions = IllegalArgumentException.class)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1, expectedExceptions = IllegalArgumentException.class)
     public void testRemoteInvokeSyncException() {
         getTestServiceInterface().testSyncVoid("testSyncVoid");
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testRemoteInvokeSyncReturn() {
         final double result = getTestServiceInterface().testSyncReturn("Hello");
         assertEquals(result, 40.42);
     }
 
-    @Test(enabled = true, expectedExceptions = IllegalArgumentException.class)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, expectedExceptions = IllegalArgumentException.class)
     public void testRemoteInvokeSyncReturnException() {
         getTestServiceInterface().testSyncReturn("testSyncReturn");
         fail("Did not expect return.");
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnVoid() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -106,7 +193,7 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnVoidException() throws Exception {
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
         getTestServiceInterface().testAsyncReturnVoid(
@@ -122,14 +209,14 @@ public class JeroMQEndToEndIntegrationTest {
         bq.take().call();
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnFuture() throws ExecutionException, InterruptedException {
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("Hello");
         final int result = integerFuture.get();
         assertEquals(result, 42);
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnFutureException() throws InterruptedException {
 
         final Future<Integer> integerFuture = getTestServiceInterface().testAsyncReturnFuture("testAsyncReturnFuture");
@@ -142,7 +229,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnFutureWithConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -163,7 +250,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnFutureWithConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -189,7 +276,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnFutureWithCustomConsumers() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -210,7 +297,7 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testAsyncReturnFutureWithCustomConsumersException() throws Exception {
 
         final BlockingQueue<Callable<?>> bq = new LinkedBlockingDeque<>();
@@ -238,14 +325,14 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    @Test(enabled = true, invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testEcho() {
         final UUID uuid = randomUUID();
         final String result = getTestServiceInterface().testEcho(uuid.toString(), 0.0);
         assertEquals(result, uuid.toString());
     }
 
-    @Test(invocationCount = 10, threadPoolSize = 10)
+    @Test(dependsOnMethods = {"startClient", "startWorkers"}, invocationCount = 1, threadPoolSize = 1)
     public void testEchoWithSomeErrors() {
 
         final UUID uuid = randomUUID();
@@ -260,18 +347,6 @@ public class JeroMQEndToEndIntegrationTest {
 
     }
 
-    public void setNode(Node node) {
-        this.node = node;
-    }
-
-    public RemoteInvoker getRemoteInvoker() {
-        return remoteInvoker;
-    }
-
-    public void setRemoteInvoker(RemoteInvoker remoteInvoker) {
-        this.remoteInvoker = remoteInvoker;
-    }
-
     public TestServiceInterface getTestServiceInterface() {
         return testServiceInterface;
     }
@@ -280,45 +355,153 @@ public class JeroMQEndToEndIntegrationTest {
         this.testServiceInterface = testServiceInterface;
     }
 
-    public static class NodeModule extends AbstractModule {
+    public static class WorkerInstanceModule extends PrivateModule {
 
         private final ZContext zContext;
 
-        public NodeModule(ZContext zContext) {
+        private final ApplicationId applicationId;
+
+        private final List<InstanceId> instanceIdList;
+
+        private final AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
+
+        public WorkerInstanceModule(final ZContext zContext,
+                                    final AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService,
+                                    final ApplicationId applicationId,
+                                    final List<InstanceId> instanceIdList) {
             this.zContext = zContext;
+            this.asyncConnectionService = asyncConnectionService;
+            this.applicationId = applicationId;
+            this.instanceIdList = instanceIdList;
         }
 
         @Override
         protected void configure() {
 
-            install(new JeroMQNodeModule());
+            bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
+
+            bind(new TypeLiteral<AsyncConnectionService<?, ?>>(){}).toInstance(asyncConnectionService);
+            bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){}).toInstance(asyncConnectionService);
+
+            install(new FSTPayloadReaderWriterModule());
 
             bind(ZContext.class).toInstance(zContext);
 
-            bind(String.class).annotatedWith(named(ConnectionPool.TIMEOUT)).toInstance("60");
-            bind(String.class).annotatedWith(named(ConnectionPool.MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(ConnectionPool.MAX_CONNECTIONS)).toInstance("250");
+            bind(String.class).annotatedWith(named(JeroMQNode.MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(JeroMQNode.MAX_CONNECTIONS)).toInstance("25");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("25");
 
-            bind(IocResolver.class).to(GuiceIoCResolver.class);
+            instanceIdList.forEach(i -> install(new NodeModule(i, instanceIdList, applicationId)));
+            instanceIdList.forEach(i -> expose(Instance.class).annotatedWith(named(i.asString())));
+
+        }
+
+    }
+
+    public static class NodeModule extends PrivateModule {
+
+        private final InstanceId instanceId;
+
+        private final ApplicationId applicationId;
+
+        private final List<InstanceId> instanceIdList;
+
+        private final String instanceBindAddress;
+
+        public NodeModule(final InstanceId instanceId,
+                          final List<InstanceId> instanceIdList,
+                          final ApplicationId applicationId) {
+            this.instanceId = instanceId;
+            this.instanceIdList = instanceIdList;
+            this.applicationId = applicationId;
+            this.instanceBindAddress = getBindAddress(instanceId);
+        }
+
+        @Override
+        protected void configure() {
+
+            final NodeId nodeId = forInstanceAndApplication(instanceId, applicationId);
+            final Named nodeNamedAnnotation = named(nodeId.asString());
+            final Named instanceNamedAnnotation = named(instanceId.asString());
+
+            install(new JeroMQRemoteInvokerModule());
+
+            install(new JeroMQNodeModule()
+                .withNodeId(nodeId)
+                .withAnnotation(nodeNamedAnnotation)
+                .withDefaultNodeName());
+
+            install(new JeroMQNodeModule()
+                .withMasterNodeForInstanceId(instanceId)
+                .withDefaultNodeName());
+
+            install(new GuiceIoCResolverModule());
+            install(new JeroMQInstanceConnectionServiceModule().withBindAddress(this.instanceBindAddress));
+            install(new StaticInstanceDiscoveryServiceModule().withInstanceAddresses(
+                concat(of(instanceBindAddress), instanceIdList
+                    .stream()
+                    .map(JeroMQEndToEndIntegrationTest::getBindAddress)
+                )
+                .collect(toList())
+            ));
+
+            // Binds the IDs
+            bind(InstanceId.class).toInstance(instanceId);
+            bind(ApplicationId.class).toInstance(applicationId);
+
             bind(TestServiceInterface.class).to(IntegrationTestService.class);
-            bind(InvocationDispatcher.class).to(IoCInvocationDispatcher.class);
+            bind(LocalInvocationDispatcher.class).to(IoCLocalInvocationDispatcher.class);
+            bind(RemoteInvocationDispatcher.class).to(SimpleRemoteInvocationDispatcher.class);
 
-            bind(String.class).annotatedWith(named(BIND_ADDRESS)).toInstance("inproc://integration-test");
+            bind(SimpleRemoteInvokerRegistry.class).asEagerSingleton();
+            bind(RemoteInvokerRegistry.class).to(SimpleRemoteInvokerRegistry.class);
 
-            bind(String.class).annotatedWith(named(ID)).toInstance("integration-test");
-            bind(String.class).annotatedWith(named(NAME)).toInstance("integration-test");
+            final Random threadLocalRandom = ThreadLocalRandom.current();
+            final InstanceMetadataContext mock = mock(InstanceMetadataContext.class);
+            bind(InstanceMetadataContext.class).toInstance(mock);
+
+            when(mock.getInstanceId()).thenAnswer(i -> {
+                logger.info("Reporting Instance ID for {}", instanceId);
+                return instanceId;
+            });
+
+            when(mock.getNodeIds()).thenAnswer(i -> {
+                logger.info("Reporting NodeID {} for instance {}", nodeId, instanceId);
+                return singleton(nodeId);
+            });
+
+            when(mock.getInstanceQuality()).thenAnswer(i -> {
+                final double quality = threadLocalRandom.nextDouble();
+                logger.info("Reporting quality {} for instance {}", quality, instanceId);
+                return quality;
+            });
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {
                 @Override
-                public void start() {
+                public void nodePreStart(Node node) {
                     logger.info("Starting test node lifecycle.");
                 }
 
                 @Override
-                public void shutdown() {
+                public void nodePostStop(Node node) {
                     logger.info("Shutting down test node lifecycle.");
                 }
             });
+
+            final Provider<Node> nodeProvider = getProvider(Key.get(Node.class, nodeNamedAnnotation));
+            bind(new TypeLiteral<Set<Node>>(){}).toProvider(() -> singleton(nodeProvider.get()));
+
+            // Sets up the worker instance
+            final Persistence pMock = mock(Persistence.class);
+            bind(Persistence.class).toInstance(pMock);
+
+            install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
+
+            bind(WorkerInstance.class).asEagerSingleton();
+            bind(Worker.class).to(WorkerInstance.class);
+            bind(Instance.class).annotatedWith(instanceNamedAnnotation).to(WorkerInstance.class);
+            expose(Instance.class).annotatedWith(instanceNamedAnnotation);
 
         }
 
@@ -328,30 +511,67 @@ public class JeroMQEndToEndIntegrationTest {
 
         private final ZContext zContext;
 
-        public ClientModule(ZContext zContext) {
+        private final InstanceId instanceId;
+
+        private final ApplicationId applicationId;
+
+        private final List<InstanceId> instanceIdList;
+
+        private final String instanceBindAddress;
+
+        private final AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
+
+        public ClientModule(final ZContext zContext,
+                            final AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService,
+                            final ApplicationId applicationId,
+                            final List<InstanceId> instanceIdList) {
             this.zContext = zContext;
+            this.asyncConnectionService = asyncConnectionService;
+            this.applicationId = applicationId;
+            this.instanceId = randomInstanceId();
+            this.instanceIdList = instanceIdList;
+            this.instanceBindAddress = getBindAddress(instanceId);
         }
 
         @Override
         protected void configure() {
 
-            install(new JeroMQRemoteInvokerModule().withDefaultExecutorServiceProvider());
+            install(new GuiceIoCResolverModule());
+            install(new FSTPayloadReaderWriterModule());
+            install(new JeroMQRemoteInvokerModule());
+            install(new JeroMQInstanceConnectionServiceModule().withBindAddress(this.instanceBindAddress));
+            install(new StaticInstanceDiscoveryServiceModule().withInstanceAddresses(
+                concat(of(instanceBindAddress), instanceIdList
+                        .stream()
+                        .map(JeroMQEndToEndIntegrationTest::getBindAddress)
+                    )
+                .collect(toList())
+            ));
+
+            bind(new TypeLiteral<AsyncConnectionService<?, ?>>(){}).toInstance(asyncConnectionService);
+            bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){}).toInstance(asyncConnectionService);
+
+            bind(RemoteInvocationDispatcher.class).to(SimpleRemoteInvocationDispatcher.class);
+            bind(RemoteInvokerRegistry.class).to(SimpleRemoteInvokerRegistry.class).asEagerSingleton();
+
+            bind(InstanceId.class).toInstance(instanceId);
+            bind(ApplicationId.class).toInstance(applicationId);
 
             bind(ZContext.class).toInstance(zContext);
+            bind(TestServiceInterface.class).toProvider(new RemoteProxyProvider<>(TestServiceInterface.class));
 
-            bind(String.class).annotatedWith(named(ConnectionPool.TIMEOUT)).toInstance("10");
-            bind(String.class).annotatedWith(named(ConnectionPool.MIN_CONNECTIONS)).toInstance("10");
-            bind(String.class).annotatedWith(named(ConnectionPool.MAX_CONNECTIONS)).toInstance("250");
+            bind(Instance.class).to(SimpleInstance.class).asEagerSingleton();
 
-            bind(String.class)
-                .annotatedWith(named(CONNECT_ADDRESS))
-                .toInstance("inproc://integration-test");
-
-            bind(TestServiceInterface.class)
-                .toProvider(new RemoteProxyProvider<>(TestServiceInterface.class));
+            bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("25");
 
         }
 
+    }
+
+    private static String getBindAddress(final InstanceId instanceId) {
+        final String str = instanceId.asString();
+        return format("inproc://instance/%s", str);
     }
 
 }

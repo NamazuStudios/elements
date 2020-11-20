@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.exception.ContentionException;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -254,7 +255,7 @@ public class SimpleResourceService implements ResourceService {
                 }
 
             } finally {
-                finallyAction.perform();
+                finallyAction.run();
             }
 
         });
@@ -349,7 +350,7 @@ public class SimpleResourceService implements ResourceService {
                 };
 
             } finally {
-                finallyAction.perform();
+                finallyAction.run();
             }
 
         });
@@ -420,7 +421,7 @@ public class SimpleResourceService implements ResourceService {
                 return removed;
 
             } finally {
-                finallyAction.perform();
+                finallyAction.run();
             }
 
         });
@@ -444,7 +445,7 @@ public class SimpleResourceService implements ResourceService {
     }
 
     @Override
-    public void close() {
+    public void stop() {
 
         final Storage storage = storageAtomicReference.getAndSet(null);
 
@@ -462,6 +463,11 @@ public class SimpleResourceService implements ResourceService {
         final Storage storage = storageAtomicReference.get();
         if (storage == null) throw new IllegalStateException("closed");
         return storage;
+    }
+
+    @Override
+    public long getInMemoryResourceCount() {
+        return getStorage().getResources().size();
     }
 
     public ResourceLockService getResourceLockService() {

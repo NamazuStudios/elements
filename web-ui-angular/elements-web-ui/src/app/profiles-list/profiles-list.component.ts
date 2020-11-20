@@ -4,7 +4,8 @@ import {MatPaginator} from "@angular/material/paginator";
 import {debounceTime, distinctUntilChanged, filter, tap} from "rxjs/operators";
 import {fromEvent} from "rxjs";
 import {SelectionModel} from "@angular/cdk/collections";
-import {MatDialog, MatTable} from "@angular/material";
+import {MatDialog} from "@angular/material/dialog";
+import {MatTable} from '@angular/material/table';
 import {AlertService} from "../alert.service";
 import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
 import {ProfileDialogComponent} from "../profile-dialog/profile-dialog.component";
@@ -39,11 +40,11 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.selection = new SelectionModel<Profile>(true, []);
     this.dataSource = new ProfilesDataSource(this.profilesService);
-    this.paginator.pageSize = 10;
     this.refresh(0);
   }
 
   ngAfterViewInit() {
+    this.paginator.pageSize = 10;
     // server-side search
     fromEvent(this.input.nativeElement,'keyup')
       .pipe(
@@ -62,7 +63,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
       )
       .subscribe();
 
-    this.selection.onChange.subscribe(s => this.hasSelection = this.selection.hasValue());
+    this.selection.changed.subscribe(s => this.hasSelection = this.selection.hasValue());
     this.dataSource.profiles$.subscribe(currentProfiles => this.currentProfiles = currentProfiles);
     this.dataSource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
   }

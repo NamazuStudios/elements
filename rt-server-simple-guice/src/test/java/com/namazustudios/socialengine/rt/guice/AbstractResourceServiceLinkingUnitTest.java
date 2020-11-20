@@ -2,20 +2,23 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,7 +30,10 @@ import static org.testng.FileAssert.fail;
 
 public abstract class AbstractResourceServiceLinkingUnitTest {
 
-    private final List<Object[]> intermediates = new ArrayList<>();
+    private final List<Object[]> intermediates = new CopyOnWriteArrayList<>();
+
+    @Inject
+    private NodeId nodeId;
 
     @DataProvider
     public Object[][] initialDataProvider() {
@@ -35,7 +41,7 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
         final List<Object[]> testData = new ArrayList<>();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId();
+            final ResourceId resourceId = randomResourceIdForNode(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             final Path alias = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path, alias});
@@ -52,12 +58,11 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
         Mockito.when(resource.getId()).thenReturn(resourceId);
 
         doAnswer(a -> {
-            final OutputStream os = a.getArgument(0);
-            final String resourceIdString = resourceId.asString();
-            final byte[] resourceIdBytes = resourceIdString.getBytes(UTF_8);
-            os.write(resourceIdBytes);
+            final WritableByteChannel wbc = a.getArgument(0);
+            final byte[] resourceIdBytes = resourceId.asBytes();
+            wbc.write(ByteBuffer.wrap(resourceIdBytes));
             return null;
-        }).when(resource).serialize(any());
+        }).when(resource).serialize(any(WritableByteChannel.class));
 
         getResourceService().addAndReleaseResource(path, resource);
         getResourceService().link(resourceId, alias);

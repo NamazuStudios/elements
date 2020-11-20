@@ -14,11 +14,17 @@ import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
 import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
-import org.apache.bval.guice.ValidationModule;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import java.text.DateFormat;
 import java.util.List;
@@ -60,6 +66,7 @@ public class RestAPIModule extends AbstractModule {
         final Properties properties = configurationSupplier.get();
         final String apiRoot = properties.getProperty(Constants.API_PREFIX);
 
+        install(new InstanceDiscoveryServiceModule(configurationSupplier));
         install(new ConfigurationModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
         install(new JerseyModule(apiRoot) {
@@ -84,6 +91,10 @@ public class RestAPIModule extends AbstractModule {
         install(new ValidationModule());
         install(new GameOnInvokerModule());
         install(new AppleIapReceiptInvokerModule());
+        install(new JeroMQAsyncConnectionServiceModule());
+        install(new JeroMQInstanceConnectionServiceModule());
+        install(new JeroMQRemoteInvokerModule());
+        install(new FSTPayloadReaderWriterModule());
         install(new JacksonHttpClientModule()
             .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
             .withDefaultObjectMapperProvider(() -> {
@@ -100,6 +111,6 @@ public class RestAPIModule extends AbstractModule {
                 return objectMapper;
             })
         );
-
+        bind(InstanceId.class).toInstance(InstanceId.randomInstanceId());
     }
 }

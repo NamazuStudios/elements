@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,8 +48,8 @@ public class JavaObjectBuiltin<T> implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
-        persistence.addPermanentJavaObject(object, JavaObjectBuiltin.class, moduleName);
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(object, JavaObjectBuiltin.class, moduleName);
     }
 
     public T getObject() {

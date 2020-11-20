@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.guice.RestAPIModule;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -29,6 +30,7 @@ import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
 import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
+import static org.mockito.Mockito.mock;
 
 public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
@@ -86,6 +88,7 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         bind(RestAPIMain.class).asEagerSingleton();
         bind(EmbeddedRestApi.class).asEagerSingleton();
+        bind(InstanceConnectionService.class).toInstance(mock(InstanceConnectionService.class));
 
     }
 

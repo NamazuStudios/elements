@@ -3,6 +3,7 @@ package com.namazustudios.socialengine;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.service.Notification;
 import com.namazustudios.socialengine.service.NotificationBuilder;
 import org.slf4j.Logger;

@@ -1,0 +1,80 @@
+package com.namazustudios.socialengine.rt;
+
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.Worker;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.inject.Inject;
+import java.util.Set;
+
+import static java.util.stream.Collectors.toSet;
+
+/**
+ * Provides data for an Instance.
+ */
+public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
+
+    private static final Logger logger = LoggerFactory.getLogger(SimpleInstanceMetadataContext.class);
+
+    private Worker worker;
+
+    private InstanceId instanceId;
+
+    private LoadMonitorService loadMonitorService;
+
+    @Override
+    public void start() {
+        getLoadMonitorService().start();
+    }
+
+    @Override
+    public void stop() {
+        getLoadMonitorService().stop();
+    }
+
+    @Override
+    public Set<NodeId> getNodeIds() {
+        final Set<NodeId> nodeIdSet = getWorker().getActiveNodeIds();
+        logger.info("Returning active node IDs for instance {} - {}", getInstanceId(),nodeIdSet);
+        return nodeIdSet;
+    }
+
+    @Override
+    public double getInstanceQuality() {
+        final double load = getLoadMonitorService().getInstanceQuality();
+        logger.info("Reporting instance load {} - {}", getInstanceId(), load);
+        return load;
+    }
+
+    @Override
+    public InstanceId getInstanceId() {
+        return instanceId;
+    }
+
+    public Worker getWorker() {
+        return worker;
+    }
+
+    @Inject
+    public void setWorker(Worker worker) {
+        this.worker = worker;
+    }
+
+    @Inject
+    public void setInstanceId(InstanceId instanceId) {
+        this.instanceId = instanceId;
+    }
+
+    public LoadMonitorService getLoadMonitorService() {
+        return loadMonitorService;
+    }
+
+    @Inject
+    public void setLoadMonitorService(LoadMonitorService loadMonitorService) {
+        this.loadMonitorService = loadMonitorService;
+    }
+
+}

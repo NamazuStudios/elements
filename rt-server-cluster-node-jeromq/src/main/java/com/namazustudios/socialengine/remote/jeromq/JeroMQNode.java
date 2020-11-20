@@ -1,163 +1,204 @@
 package com.namazustudios.socialengine.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.NodeLifecycle;
-import com.namazustudios.socialengine.rt.PayloadReader;
-import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.ConnectionPool;
-import com.namazustudios.socialengine.rt.jeromq.Identity;
-import com.namazustudios.socialengine.rt.remote.*;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
+import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.inject.Provider;
-import java.io.IOException;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Consumer;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.jeromq.Identity.EMPTY_DELIMITER;
-import static com.namazustudios.socialengine.rt.remote.MessageType.INVOCATION_ERROR;
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.ERROR;
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.READ;
 import static java.lang.String.format;
-import static java.lang.Thread.interrupted;
+import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.IntStream.range;
-import static org.zeromq.ZMQ.*;
-import static org.zeromq.ZMQ.Poller.POLLERR;
-import static org.zeromq.ZMQ.Poller.POLLIN;
+import static org.zeromq.SocketType.*;
+import static org.zeromq.ZMQ.Socket;
 
 public class JeroMQNode implements Node {
 
     private static final Logger staticLogger = LoggerFactory.getLogger(JeroMQNode.class);
 
-    private static final String INBOUND_ADDR_FORMAT = "inproc://node.%s.in";
+    private static final String OUTBOUND_ADDR_FORMAT = "inproc://node/%s/out";
 
-    private static final String OUTBOUND_ADDR_FORMAT = "inproc://node.%s.out";
+    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.min.connections";
 
-    public static final String ID = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.id";
+    public static final String MAX_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.max.connections";
 
-    public static final String NAME = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.name";
-
-    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.remote.jeromq.JeroMQNode.bindAddress";
-
-    private final AtomicReference<NodeContext> nodeContext = new AtomicReference<>();
-
-    private String id;
+    private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
     private String name;
 
-    private Identity identity;
+    private NodeId nodeId;
 
-    private ZContext zContext;
+    private int minConnections;
 
-    private String  bindAddress;
+    private int maxConnections;
 
-    private InvocationDispatcher invocationDispatcher;
+    private LocalInvocationDispatcher invocationDispatcher;
 
     private PayloadReader payloadReader;
 
     private PayloadWriter payloadWriter;
 
-    private Provider<ConnectionPool> connectionPoolProvider;
-
     private NodeLifecycle nodeLifecycle;
 
-    private Logger logger = staticLogger;
-
-    @Override
-    public String getId() {
-        return id;
-    }
+    private AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
 
     @Override
     public String getName() {
         return name;
     }
 
-    public String getInboundAddr() {
-        return format(INBOUND_ADDR_FORMAT, getId());
+    @Override
+    public NodeId getNodeId() {
+        return nodeId;
     }
 
     public String getOutboundAddr() {
-        return format(OUTBOUND_ADDR_FORMAT, getId());
+        return format(OUTBOUND_ADDR_FORMAT, getNodeId().asString());
     }
 
     @Override
-    public void start() {
+    public Startup beginStartup() {
 
         final NodeContext c = new NodeContext();
 
-        if (nodeContext.compareAndSet(null, c)) {
-            logger.info("Starting up.");
-            getNodeLifecycle().start();
-            c.start();
-        } else {
+        c.logger.info("Begging startup.");
+
+        if (!context.compareAndSet(null, c)) {
             throw new IllegalStateException("Already started.");
         }
 
+        return new Startup() {
+
+            @Override
+            public Node getNode() {
+                return JeroMQNode.this;
+            }
+
+            @Override
+            public void preStart() {
+                try {
+                    check();
+                    c.logger.info("Issuing pre-start command.");
+                    getNodeLifecycle().nodePreStart(getNode());
+                } catch (Exception ex) {
+                    c.logger.error("Caught excpetion issuing pre-start command.", ex);
+                    throw ex;
+                }
+            }
+
+            @Override
+            public void start(InstanceBinding binding) {
+                try {
+                    check();
+                    c.logger.info("Issuing start command with binding {}.", binding);
+                    c.start(binding);
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing start command.", ex);
+                    throw ex;
+                }
+            }
+
+            @Override
+            public void postStart() {
+                try {
+                    check();
+                    c.logger.info("Issuing post-start command with binding.");
+                    getNodeLifecycle().nodePostStart(getNode());
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing post-start command.  Terminating node.", ex);
+                    throw ex;
+                }
+            }
+
+            @Override
+            public void cancel() {
+
+                try {
+                    c.stop();
+                } catch (Exception ex) {
+                    c.logger.error("Error Canceling startup.", ex);
+                }
+
+                if (!context.compareAndSet(c, null)) {
+                    c.logger.error("Inconsistent state.  Startup does not reflect current state.");
+                }
+
+            }
+
+            private void check() {
+                if (context.get() != c) throw new IllegalStateException("Incorrect/mismatched startup routine.");
+            }
+
+        };
     }
 
     @Override
-    public void stop() {
+    public Shutdown beginShutdown() {
 
-        final NodeContext c = nodeContext.get();
+        final NodeContext c = context.getAndSet(null);
+        return new Shutdown() {
 
-        if (nodeContext.compareAndSet(c, null)) {
-            logger.info("Shutting down.");
-            c.stop();
-            getNodeLifecycle().shutdown();
-        } else {
-            throw new IllegalStateException("Already stopped.");
-        }
+            @Override
+            public void preStop() {
+                try {
+                    c.logger.info("Issuing NodeLifecycle pre-stop command.");
+                    getNodeLifecycle().nodePreStop(JeroMQNode.this);
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing pre-stop command.", ex);
+                }
+            }
 
+            @Override
+            public void stop() {
+                try {
+                    c.stop();
+                    c.logger.info("Shutdown.  Issuing NodeLifecycle post-stop command.");
+                } catch (Exception ex) {
+                    c.logger.error("Caught exception issuing stop command.", ex);
+                }
+            }
+
+            @Override
+            public void postStop() {
+                try {
+                    c.logger.info("Shutdown.  Issued NodeLifecycle stop command.");
+                    getNodeLifecycle().nodePostStop(JeroMQNode.this);
+                } catch (Exception ex) {
+                    c.logger.error("Caught excpetion issuing post-stop command.", ex);
+                }
+            }
+        };
     }
 
-    public Identity getIdentity() {
-        return identity;
+    private Logger loggerForNode() {
+        final String prefix = JeroMQNode.class.getName();
+        if (getName() != null) return LoggerFactory.getLogger(format("%s.%s", prefix, getName()));
+        else if (getNodeId() != null) return LoggerFactory.getLogger(format("%s.%s", prefix, getNodeId().asString()));
+        else return staticLogger;
     }
 
-    @Inject
-    public void setIdentity(Identity identity) {
-        this.identity = identity;
-    }
-
-    public ZContext getzContext() {
-        return zContext;
-    }
-
-    @Inject
-    public void setzContext(ZContext zContext) {
-        this.zContext = zContext;
-    }
-
-    public String getBindAddress() {
-        return bindAddress;
-    }
-
-    @Inject
-    public void setBindAddress(@Named(BIND_ADDRESS) String bindAddress) {
-        this.bindAddress = bindAddress;
-    }
-
-    public InvocationDispatcher getInvocationDispatcher() {
+    public LocalInvocationDispatcher getInvocationDispatcher() {
         return invocationDispatcher;
     }
 
     @Inject
-    public void setInvocationDispatcher(InvocationDispatcher invocationDispatcher) {
+    public void setInvocationDispatcher(LocalInvocationDispatcher invocationDispatcher) {
         this.invocationDispatcher = invocationDispatcher;
     }
 
@@ -179,25 +220,41 @@ public class JeroMQNode implements Node {
         this.payloadWriter = payloadWriter;
     }
 
-    public Provider<ConnectionPool> getConnectionPoolProvider() {
-        return connectionPoolProvider;
+    public AsyncConnectionService<ZContext, ZMQ.Socket> getAsyncConnectionService() {
+        return asyncConnectionService;
     }
 
     @Inject
-    public void setConnectionPoolProvider(Provider<ConnectionPool> connectionPoolProvider) {
-        this.connectionPoolProvider = connectionPoolProvider;
+    public void setAsyncConnectionService(AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService) {
+        this.asyncConnectionService = asyncConnectionService;
     }
 
     @Inject
-    public void setId(@Named(ID) String id) {
-        this.id = id;
-        logger = LoggerFactory.getLogger(loggerName());
+    public void setNodeId(NodeId nodeId) {
+        this.nodeId = nodeId;
     }
 
     @Inject
     public void setName(@Named(NAME) String name) {
         this.name = name;
-        logger = LoggerFactory.getLogger(loggerName());
+    }
+
+    public int getMinConnections() {
+        return minConnections;
+    }
+
+    @Inject
+    public void setMinConnections(@Named(MIN_CONNECTIONS) int minConnections) {
+        this.minConnections = minConnections;
+    }
+
+    public int getMaxConnections() {
+        return maxConnections;
+    }
+
+    @Inject
+    public void setMaxConnections(@Named(MAX_CONNECTIONS) int maxConnections) {
+        this.maxConnections = maxConnections;
     }
 
     public NodeLifecycle getNodeLifecycle() {
@@ -209,262 +266,124 @@ public class JeroMQNode implements Node {
         this.nodeLifecycle = nodeLifecycle;
     }
 
-    private String loggerName() {
-        return Stream.of(JeroMQNode.class.getName(), getName(), getId())
-                     .filter(s -> s != null)
-                     .collect(Collectors.joining("."));
-    }
-
     private class NodeContext {
 
-        private final AtomicBoolean running = new AtomicBoolean();
+        private final Logger logger = loggerForNode();
 
-        private final ConnectionPool outboundConnectionPool = getConnectionPoolProvider().get();
+        private AsyncConnection<ZContext, ZMQ.Socket> frontendConnection;
 
-        private final CountDownLatch proxyStartupLatch = new CountDownLatch(1);
+        private AsyncConnectionGroup mainConnectionGroup;
 
-        final AtomicInteger dispatcherCount = new AtomicInteger();
+        private AsyncConnectionPool<ZContext, ZMQ.Socket> outboundConnectionPool;
 
-        private final ExecutorService dispatchExecutorService = Executors.newCachedThreadPool(r -> {
+        private final AtomicInteger dispatcherCount = new AtomicInteger();
+
+        private final ExecutorService dispatchExecutorService = newCachedThreadPool(r -> {
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
-            thread.setName(format("%s.in #%d", getName(), dispatcherCount.incrementAndGet()));
+            thread.setName(format("%s %s.in #%d", getClass().getSimpleName(), getName(), dispatcherCount.incrementAndGet()));
             thread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
             return thread;
         });
 
-        private final Thread proxyThread;
-        {
-            proxyThread = new Thread(() -> bindFrontendSocketAndPerformWork());
-            proxyThread.setDaemon(true);
-            proxyThread.setName(JeroMQNode.this.getClass().getSimpleName() + " dispatch");
-            proxyThread.setUncaughtExceptionHandler(((t, e) -> logger.error("Fatal Error: {}", t, e)));
-        }
+        public void start(final InstanceBinding instanceBinding) {
 
-        public void start() {
+            final CountDownLatch latch = new CountDownLatch(3);
 
-            running.set(true);
-            proxyThread.start();
+            outboundConnectionPool = getAsyncConnectionService().allocatePool(
+                "JeroMQNode Outbound",
+                getMinConnections(),
+                getMaxConnections(),
+                z -> {
+                    final Socket socket = z.createSocket(PUSH);
+                    socket.connect(getOutboundAddr());
+                    return socket;
+                });
+
+            getAsyncConnectionService().group()
+                .connection(z -> {
+                    final Socket socket = z.createSocket(ROUTER);
+                    socket.bind(instanceBinding.getBindAddress());
+                    return socket;
+                }, connection -> {
+                    frontendConnection = connection;
+                    connection.setEvents(READ, ERROR);
+                    connection.onRead(this::onFrontendRead);
+                    connection.onError(this::onFrontendError);
+                    latch.countDown();
+                })
+                .connection(z -> {
+                    final Socket socket = z.createSocket(PULL);
+                    socket.bind(getOutboundAddr());
+                    return socket;
+                }, connection -> {
+                    connection.setEvents(READ, ERROR);
+                    connection.onRead(this::onBackendRead);
+                    connection.onError(this::onBackendError);
+                    latch.countDown();
+                }).build(group -> {
+                    mainConnectionGroup = group;
+                    latch.countDown();
+                });
 
             try {
-                proxyStartupLatch.await();
+                latch.await();
             } catch (InterruptedException e) {
                 throw new InternalException(e);
             }
 
-            outboundConnectionPool.start(zc -> {
-                final Socket socket = zc.createSocket(PUSH);
-                socket.connect(getOutboundAddr());
-                return socket;
-            }, getName() + ".out");
+        }
 
+        private void onFrontendRead(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            final ZMsg msg = ZMsg.recvMsg(connection.socket());
+            dispatchExecutorService.submit(() -> dispatch(msg));
+        }
+
+        private void onFrontendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            logger.error("Frontend Connection Error {} - errno {}", connection, connection.socket().errno());
+        }
+
+        private void onBackendRead(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            final ZMsg msg = ZMsg.recvMsg(connection.socket());
+            msg.send(frontendConnection.socket());
+        }
+
+        private void onBackendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            logger.error("Backend Connection Error {} - errno {}", connection, connection.socket().errno());
         }
 
         public void stop() {
 
-            outboundConnectionPool.stop();
-            dispatchExecutorService.shutdown();
-
-            running.set(false);
-            proxyThread.interrupt();
-
-            try {
-                proxyThread.join();
-            } catch (InterruptedException e) {
-                logger.error("Interrupted while shutting down Node.", e);
-            }
+            mainConnectionGroup.close();
+            outboundConnectionPool.close();
+            dispatchExecutorService.shutdownNow();
 
             try {
                 if (!dispatchExecutorService.awaitTermination(10, MINUTES)) {
                     logger.error("Terminating dispatchers timed out.");
                 }
             } catch (InterruptedException e) {
-                logger.error("Interrupted while shutting down Node.", e);
+                logger.error("Interrupted while shutting down Node Thread Pool", e);
             }
 
         }
 
-        private void bindFrontendSocketAndPerformWork() {
+        private void dispatch(final ZMsg msg) {
 
-            try (final ZContext context = ZContext.shadow(getzContext());
-                 final Socket frontend = context.createSocket(ROUTER);
-                 final Socket outbound = context.createSocket(PULL);
-                 final Poller poller = context.createPoller(4)) {
+            final JeroMQNodeInvocation invocation = new JeroMQNodeInvocation(
+                msg,
+                getInvocationDispatcher(),
+                getPayloadReader(),
+                getPayloadWriter(),
+                outboundConnectionPool
+            );
 
-                frontend.setRouterMandatory(true);
-                frontend.bind(getBindAddress());
-
-                outbound.bind(getOutboundAddr());
-
-                final int frontendIndex = poller.register(frontend, POLLIN | POLLERR);
-                final int outboundIndex = poller.register(outbound, POLLIN | POLLERR);
-
-                proxyStartupLatch.countDown();
-                logger.info("Started up.");
-
-                while (running.get() && !interrupted()) {
-                    try {
-                        if (poller.poll(10000) < 0) {
-                            logger.info("Poller signaled interruption.  Terminating frontend socket.");
-                            break;
-                        }
-
-                        if (poller.pollin(frontendIndex)) {
-                            final ZMsg msg = ZMsg.recvMsg(frontend);
-                            dispatchExecutorService.submit(() -> dispatchMethodInvocation(msg));
-                        } else if (poller.pollerr(frontendIndex)) {
-                            logger.error("Error in frontend socket.");
-                        }
-
-                        if (poller.pollin(outboundIndex)) {
-                            final ZMsg msg = ZMsg.recvMsg(outbound);
-                            msg.send(frontend);
-                        } else if (poller.pollerr(outboundIndex)) {
-                            logger.error("Error in outbound socket.");
-                        }
-                    } catch (Exception ex) {
-                        logger.error("Exception in main IO Thread.", ex);
-                    }
-                }
-
-            }
-
-        }
-
-        private void dispatchMethodInvocation(final ZMsg msg) {
-
-            final ZMsg identity = getIdentity().popIdentity(msg);
-
-            final AtomicReference<Invocation> invocationAtomicReference = new AtomicReference<>();
-
-            final RequestHeader requestHeader = new RequestHeader();
-            requestHeader.getByteBuffer().put(msg.remove().getData());
-
-            final AtomicBoolean sync = new AtomicBoolean();
-            final AtomicInteger remaining = new AtomicInteger(requestHeader.additionalParts.get());
-
-            final Consumer<InvocationError> syncInvocationErrorConsumer = invocationError -> {
-                if (sync.getAndSet(true)) {
-                    logger.error("Already set sync response.  Ignoring {}", invocationError);
-                } else {
-                    outboundConnectionPool.processV(outbound -> sendError(outbound.socket(), invocationError, 0, identity));
-                }
-            };
-
-            final Consumer<InvocationError> asyncInvocationErrorConsumer = invocationError -> {
-                if (remaining.getAndSet(0) <= 0) {
-                    logger.error("Suppressing invocation error.  Already sent.", invocationError.getThrowable());
-                } else {
-                    outboundConnectionPool.processV(outbound -> sendError(outbound.socket(), invocationError, 1, identity));
-                }
-            };
-
-            final Consumer<InvocationResult> syncInvocationResultConsumer = invocationResult -> {
-                if (sync.getAndSet(true)) {
-                    logger.error("Already set sync response.  Ignoring {}", invocationResult);
-                } else {
-                    outboundConnectionPool.processV(outbound -> sendResult(outbound.socket(), invocationResult, 0, identity, syncInvocationErrorConsumer));
-                }
-            };
-
-            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList = range(0, requestHeader.additionalParts.get())
-                .map(index -> index + 1)
-                .mapToObj(part -> (Consumer<InvocationResult>) invocationResult -> {
-                    if (remaining.getAndDecrement() <= 0) {
-                        logger.debug("Ignoring invocation result {} because of previous errors.", invocationResult);
-                    } else {
-                        outboundConnectionPool.processV(outbound -> sendResult(outbound.socket(), invocationResult, part, identity, asyncInvocationErrorConsumer));
-                    }
-                }).collect(toList());
-
-            try {
-
-                final byte[] payload = msg.remove().getData();
-                final Invocation invocation = getPayloadReader().read(Invocation.class, payload);
-                invocationAtomicReference.set(invocation);
-
-                getInvocationDispatcher().dispatch(
-                    invocation,
-                    syncInvocationResultConsumer, syncInvocationErrorConsumer,
-                    asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
-
-                if (!sync.get()) {
-                    logger.error("Neither return nor error callback was invoked.");
-                }
-
-            } catch (IOException e) {
-                final InvocationError invocationError = new InvocationError();
-                invocationError.setThrowable(e);
-                asyncInvocationErrorConsumer.accept(invocationError);
-            }
-
-        }
-
-        private void sendResult(final Socket socket,
-                                final InvocationResult invocationResult,
-                                final int part,
-                                final ZMsg identity,
-                                final Consumer<InvocationError> invocationErrorConsumer) {
-
-            final ResponseHeader responseHeader = new ResponseHeader();
-            responseHeader.type.set(MessageType.INVOCATION_RESULT);
-            responseHeader.part.set(part);
-
-            final byte[] responseHeaderBytes = new byte[responseHeader.size()];
-            responseHeader.getByteBuffer().get(responseHeaderBytes);
-
-            try {
-
-                final byte[] payload = getPayloadWriter().write(invocationResult);
-                final ZMsg msg = identity.duplicate();
-
-                msg.addLast(EMPTY_DELIMITER);
-                msg.addLast(responseHeaderBytes);
-                msg.addLast(payload);
-
-                msg.send(socket);
-
-            } catch (IOException e) {
-                logger.error("Could not write payload to byte stream.  Sending empty.", e);
-                final InvocationError invocationError = new InvocationError();
-                invocationError.setThrowable(e);
-                sendError(socket, invocationError, part, identity);
-            }
-
-        }
-
-        private void sendError(final Socket socket,
-                               final InvocationError invocationError,
-                               final int part,
-                               final ZMsg identity) {
-
-            final ResponseHeader responseHeader = new ResponseHeader();
-            responseHeader.type.set(INVOCATION_ERROR);
-            responseHeader.part.set(part);
-
-            final byte[] responseHeaderBytes = new byte[responseHeader.size()];
-            responseHeader.getByteBuffer().get(responseHeaderBytes);
-
-            byte[] payload;
-
-            try {
-                payload = getPayloadWriter().write(invocationError);
-            } catch (Exception e) {
-                logger.error("Could not write payload to byte stream.  Sending empty payload.", e);
-                payload = new byte[0];
-            }
-
-            final ZMsg msg = identity.duplicate();
-
-            msg.addLast(EMPTY_DELIMITER);
-            msg.addLast(responseHeaderBytes);
-            msg.addLast(payload);
-
-            msg.send(socket);
+            invocation.dispatch();
 
         }
 
     }
 
 }
+
 

@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTGitBootstrapModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
-import org.apache.bval.guice.ValidationModule;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.Properties;
 import java.util.function.Supplier;

@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.testkit.TestKit;
 import com.namazustudios.socialengine.rt.testkit.UnitTestModule;
 import joptsimple.OptionSpec;
-import org.apache.bval.guice.ValidationModule;
+import ru.vyarus.guice.validator.ValidationModule;
 
 public class AppServeTestKitMain {
 

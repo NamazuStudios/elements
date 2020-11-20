@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.DuplicateTaskException;
 import com.namazustudios.socialengine.rt.exception.TaskKilledException;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -75,7 +76,7 @@ public class SimpleTaskService implements TaskService {
         final Task task = getMap().remove(taskId);
         if (task == null) return false;
 
-        task.finish(error);
+        task.fail(error);
         return true;
 
     }

@@ -24,6 +24,7 @@
         <module>dao</module>
         <module>setup</module>
         <module>rest-war</module>
+        <module>rest-jetty</module>
         <module>guice</module>
         <module>rest-guice</module>
         <module>search-tools</module>
@@ -37,13 +38,12 @@
         <module>rt-server-xodus</module>
         <module>rt-server-xodus-guice</module>
         <module>rt-server-cluster</module>
+        <module>rt-server-cluster-guice</module>
         <module>rt-server-cluster-jeromq</module>
+        <module>rt-server-cluster-jeromq-guice</module>
         <module>rt-server-cluster-node</module>
         <module>rt-server-cluster-node-jeromq</module>
         <module>rt-server-cluster-node-jeromq-guice</module>
-        <module>rt-server-cluster-client</module>
-        <module>rt-server-cluster-client-jeromq</module>
-        <module>rt-server-cluster-client-jeromq-guice</module>
         <module>rt-server-lua</module>
         <module>rt-server-lua-guice</module>
         <module>rt-server-lua-stress-tests</module>
@@ -59,6 +59,7 @@
         <module>code-serve</module>
         <module>code-serve-guice</module>
         <module>code-serve-war</module>
+        <module>code-serve-jetty</module>
         <module>app-serve</module>
         <module>app-serve-testkit</module>
         <module>app-node</module>
@@ -68,39 +69,43 @@
         <module>common-lua</module>
         <module>web-ui-angular</module>
         <module>rest-api-test</module>
-        <module>rest-jetty</module>
-        <module>code-serve-jetty</module>
+        <module>rt-server-transact</module>
+        <module>rt-server-transact-unixfs</module>
+        <module>rt-server-transact-unixfs-guice</module>
+        <module>rt-server-transact-guice</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
-        <guice.version>4.1.0</guice.version>
+        <guice.version>4.2.3</guice.version>
         <guice.bridge.version>2.5.0-b32</guice.bridge.version>
         <javax.inject.version>1</javax.inject.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javax.servlet.api.version>3.1.0</javax.servlet.api.version>
+        <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
         <slf4j.version>1.7.25</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <guava.version>21.0</guava.version>
         <commons.lang.version>3.3.2</commons.lang.version>
         <jaxrs.api.version>2.1</jaxrs.api.version>
-        <jersey.version>2.27</jersey.version>
-        <javax.validation.version>1.0.0.GA</javax.validation.version>
+        <jersey.version>2.32</jersey.version>
+        <javax.validation.version>2.0.1.Final</javax.validation.version>
         <lucene.version>7.2.0</lucene.version>
         <testng.version>6.13.1</testng.version>
         <test.groups>unit</test.groups>
-        <surefire.version>2.18.1</surefire.version>
+        <surefire.version>3.0.0-M5</surefire.version>
         <jackson.version>2.8.8</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
-        <reflections.version>0.9.10</reflections.version>
+        <reflections.version>0.9.12</reflections.version>
         <swagger.version>1.5.13</swagger.version>
         <rocoto.version>6.2</rocoto.version>
         <dozer.version>6.0.0</dozer.version>
-        <bval.version>1.1.2</bval.version>
-        <bval.guice.version>0.5</bval.guice.version>
+        <hibernate.validator.version>6.1.0.Final</hibernate.validator.version>
+        <hibernate.validator.guice.version>2.0.0</hibernate.validator.guice.version>
+        <javax.el.version>3.0.1-b12</javax.el.version>
         <commons.logging.version>1.2</commons.logging.version>
         <restfb.version>3.0.0-RC.2</restfb.version>
         <jgit.version>4.8.0.201706111038-r</jgit.version>
-        <mockito.version>2.11.0</mockito.version>
+        <mockito.version>3.5.13</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
         <jeromq.version>0.5.1</jeromq.version>
         <javolution.version>6.0.0</javolution.version>
@@ -111,6 +116,8 @@
         <flapdoodle.mongo.version>2.2.0</flapdoodle.mongo.version>
         <embedded.redis.version>0.6</embedded.redis.version>
         <auth0.java.jwt.version>3.10.3</auth0.java.jwt.version>
+        <spotify.dns.version>3.2.2</spotify.dns.version>
+        <annotations.version>2.11.3</annotations.version>
     </properties>
     <dependencies>
         <dependency>
@@ -129,11 +136,10 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>2.5.1</version>
+                <version>3.8.1</version>
                 <inherited>true</inherited>
                 <configuration>
-                    <source>1.8</source>
-                    <target>1.8</target>
+                    <release>11</release>
                 </configuration>
             </plugin>
             <plugin>
@@ -158,6 +164,44 @@
                     <doUpdate>false</doUpdate>
                     <timestampFormat>yyyy-MM-dd HH:mm:ss</timestampFormat>
                     <addOutputDirectoryToResources>true</addOutputDirectoryToResources>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>versions-maven-plugin</artifactId>
+                <version>2.5</version>
+                <configuration>
+                    <generateBackupPoms>false</generateBackupPoms>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.0.0-M3</version>
+                <executions>
+                    <execution>
+                        <id>enforce-maven</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireMavenVersion>
+                                    <version>3.1.0</version>
+                                </requireMavenVersion>
+                            </rules>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>${surefire.version}</version>
+                <configuration>
+                    <argLine>
+                        --illegal-access=permit
+                    </argLine>
                 </configuration>
             </plugin>
         </plugins>

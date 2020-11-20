@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,7 @@ import java.lang.ref.SoftReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -24,6 +25,8 @@ public class SimpleResourceLockService implements ResourceLockService {
 
     private static final Thread vacuum;
 
+    private static final AtomicLong orphans = new AtomicLong();
+
     private static final ReferenceQueue<SharedLock> references;
 
     private static final Map<Reference<SharedLock>, Runnable> collections;
@@ -31,7 +34,7 @@ public class SimpleResourceLockService implements ResourceLockService {
     static {
         references = new ReferenceQueue<>();
         collections = new ConcurrentHashMap<>();
-        vacuum = new Thread(() -> vacuum());
+        vacuum = new Thread(SimpleResourceLockService::vacuum);
         vacuum.setName(SimpleResourceLockService.class.getSimpleName() + " vacuum.");
         vacuum.setDaemon(true);
         vacuum.start();
@@ -44,9 +47,15 @@ public class SimpleResourceLockService implements ResourceLockService {
         try {
             while(!interrupted()) {
                 try {
+
                     final Reference<?> ref = references.remove();
                     final Runnable collection = collections.remove(ref);
-                    if (collection != null) collection.run();
+
+                    if (collection != null) {
+                        orphans.incrementAndGet();
+                        collection.run();
+                    }
+
                 } catch (InterruptedException ex) {
                     logger.info("Interrupted.  Exiting.", ex);
                     break;
@@ -63,37 +72,29 @@ public class SimpleResourceLockService implements ResourceLockService {
 
     private final ConcurrentMap<ResourceId, Reference<SharedLock>> resourceIdLockMap = new ConcurrentHashMap<>();
 
-    @Override
-    public Monitor getMonitor(final ResourceId resourceId) {
-
-        final SharedLock lock = getLockForId(resourceId);
-
-        lock.lock.lock();
-
-        return new Monitor() {
-
-            @Override
-            public Condition getCondition(final String name) {
-                return lock.conditions.computeIfAbsent(name, k -> lock.lock.newCondition());
-            }
-
-            @Override
-            public void close() {
-                lock.lock.unlock();
-            }
-
-        };
-
+    /**
+     * Returns the number of orphan locks across all {@link SimpleResourceLockService} instances.
+     *
+     * @return the orphan count
+     */
+    public static long getOrphanCount() {
+        return orphans.get();
     }
 
-    private SharedLock getLockForId(final ResourceId resourceId) {
+    @Override
+    public int size() {
+        return resourceIdLockMap.size();
+    }
+
+    @Override
+    public SharedLock getLock(final ResourceId resourceId) {
 
         SharedLock lock;
 
         do {
 
             lock = resourceIdLockMap.computeIfAbsent(resourceId, rid -> {
-                final SharedLock l = new SharedLock();
+                final SharedLock l = new SimpleSharedLock();
                 final Reference<SharedLock> ref = new SoftReference<>(l, references);
                 collections.put(ref, () -> cleanup(rid));
                 return ref;
@@ -128,11 +129,15 @@ public class SimpleResourceLockService implements ResourceLockService {
 
     }
 
-    private class SharedLock {
+    private static class SimpleSharedLock implements SharedLock {
 
         private final ReentrantLock lock = new ReentrantLock();
 
-        private final Map<String, Condition> conditions = new ConcurrentHashMap<>();
+        @Override
+        public Monitor lock() {
+            lock.lock();
+            return lock::unlock;
+        }
 
     }
 

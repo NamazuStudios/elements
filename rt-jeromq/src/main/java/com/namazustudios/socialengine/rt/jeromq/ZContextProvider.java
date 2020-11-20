@@ -12,25 +12,25 @@ public class ZContextProvider implements Provider<ZContext> {
 
     public static final String MAX_SOCKETS = "com.namazustudios.socialengine.rt.jeromq.max.sockets";
 
-    private Provider<Integer> ioThreadsProvier;
+    private Provider<Integer> ioThreadsProvider;
 
     private Provider<Integer> maxSocketsProvider;
 
     @Override
     public ZContext get() {
         final ZContext zContext = new ZContext();
-        zContext.getContext().setIOThreads(getIoThreadsProvier().get());
+        zContext.getContext().setIOThreads(getIoThreadsProvider().get());
         zContext.getContext().setMaxSockets(getMaxSocketsProvider().get());
         return zContext;
     }
 
-    public Provider<Integer> getIoThreadsProvier() {
-        return ioThreadsProvier;
+    public Provider<Integer> getIoThreadsProvider() {
+        return ioThreadsProvider;
     }
 
     @Inject
-    public void setIoThreadsProvier(@Named(IO_THREADS) Provider<Integer> ioThreadsProvier) {
-        this.ioThreadsProvier = ioThreadsProvier;
+    public void setIoThreadsProvider(@Named(IO_THREADS) Provider<Integer> ioThreadsProvider) {
+        this.ioThreadsProvider = ioThreadsProvider;
     }
 
     public Provider<Integer> getMaxSocketsProvider() {

@@ -93,14 +93,19 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-core</artifactId>
-            <version>${bval.version}</version>
+            <groupId>ru.vyarus</groupId>
+            <artifactId>guice-validator</artifactId>
+            <version>${hibernate.validator.guice.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-guice</artifactId>
-            <version>${bval.guice.version}</version>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate.validator.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>${javax.el.version}</version>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -137,16 +142,16 @@
             <artifactId>jeromq</artifactId>
             <version>${jeromq.version}</version>
         </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-server-xodus</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-server-xodus-guice</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+<!--        <dependency>-->
+<!--            <groupId>com.namazustudios.socialengine</groupId>-->
+<!--            <artifactId>rt-server-xodus</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
+<!--        <dependency>-->
+<!--            <groupId>com.namazustudios.socialengine</groupId>-->
+<!--            <artifactId>rt-server-xodus-guice</artifactId>-->
+<!--            <version>${project.version}</version>-->
+<!--        </dependency>-->
         <dependency>
             <groupId>javax.ws.rs</groupId>
             <artifactId>javax.ws.rs-api</artifactId>
@@ -166,6 +171,11 @@
             <groupId>org.glassfish.jersey.inject</groupId>
             <artifactId>jersey-hk2</artifactId>
             <version>${jersey.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.sf.jopt-simple</groupId>
+            <artifactId>jopt-simple</artifactId>
+            <version>${jopt.version}</version>
         </dependency>
     </dependencies>
 

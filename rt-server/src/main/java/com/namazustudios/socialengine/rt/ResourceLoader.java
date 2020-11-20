@@ -2,11 +2,15 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.ModuleNotFoundException;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
+import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
 import org.w3c.dom.Attr;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
 
@@ -19,13 +23,23 @@ public interface ResourceLoader extends AutoCloseable {
     /**
      * Loads the {@link Resource} from the {@link InputStream} in non-verbose mode.
      *
-     *
-     * @param is
-     * @return
+     * @param is the {@link InputStream} from which to load the {@link Resource}
+     * @return the {@link Resource}
      * @throws ResourcePersistenceException
      */
     default Resource load(final InputStream is) throws ResourcePersistenceException {
         return load(is, false);
+    }
+
+    /**
+     * Loads the {@link Resource} from the {@link ReadableByteChannel} in non-verbose mode.
+     *
+     * @param rbc the {@link InputStream} from which to load the {@link Resource}
+     * @return the {@link Resource}
+     * @throws ResourcePersistenceException
+     */
+    default Resource load(final ReadableByteChannel rbc) throws ResourcePersistenceException {
+        return load(rbc, false);
     }
 
     /**
@@ -42,6 +56,22 @@ public interface ResourceLoader extends AutoCloseable {
      *
      */
     Resource load(final InputStream is, boolean verbose) throws ResourcePersistenceException;
+
+    /**
+     * Loads a {@link Resource} from the supplied {@link ReadableByteChannel}.  The contents of the {@link InputStream}
+     * should be generated form a call to {@link Resource#serialize(OutputStream)} or
+     * {@link Resource#serialize(WritableByteChannel)}.
+     *
+     * {@see {@link Resource#setVerbose(boolean)}}
+     *
+     * @param rbc the {@link InputStream} from which to load the {@link Resource}
+     * @param verbose indicates if the resource shoudl be loaded verbosely.
+     * @return the loaded {@link Resource}
+     *
+     * @throws {@link ResourcePersistenceException} if the resource was corrupted of failed to load for some reason
+     *
+     */
+    Resource load(final ReadableByteChannel rbc, boolean verbose) throws ResourcePersistenceException;
 
     /**
      * Performs the same operation as {@link #load(String, Attributes, Object...)} using {@link Attributes#EMPTY}

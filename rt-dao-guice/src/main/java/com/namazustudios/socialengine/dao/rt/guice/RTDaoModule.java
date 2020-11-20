@@ -6,10 +6,9 @@ import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.dao.rt.DefaultContextFactory;
 import com.namazustudios.socialengine.dao.rt.RTManifestDao;
-import com.namazustudios.socialengine.guice.ZContextModule;
-import com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionMultiplexer;
-import com.namazustudios.socialengine.rt.ConnectionMultiplexer;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.Context;
+import org.zeromq.ZContext;
 
 import java.util.function.Function;
 
@@ -18,18 +17,32 @@ import java.util.function.Function;
  */
 public class RTDaoModule extends PrivateModule {
 
+    private boolean isLocalInstance;
+
     @Override
     protected void configure() {
 
         expose(ManifestDao.class);
         expose(ContextFactory.class);
-        expose(ConnectionMultiplexer.class);
+// TODO Fix this
+//        expose(ConnectionMultiplexer.class);
         expose(new TypeLiteral<Function<String, Context>>(){});
 
         bind(ManifestDao.class).to(RTManifestDao.class).asEagerSingleton();
-        bind(ConnectionMultiplexer.class).to(JeroMQConnectionMultiplexer.class).asEagerSingleton();
         bind(ContextFactory.class).to(DefaultContextFactory.class).asEagerSingleton();
         bind(new TypeLiteral<Function<String, Context>>(){}).toProvider(RTContextProvider.class);
+
+// TODO
+//        if (isLocalInstance) {
+//            bind(InstanceDiscoveryService.class)
+//                    .to(StaticInstanceDiscoveryService.class)
+//                    .asEagerSingleton();
+//        }
+//        else {
+//            bind(InstanceDiscoveryService.class)
+//                    .to(SrvInstanceDiscoveryService.class)
+//                    .asEagerSingleton();
+//        }
 
     }
 

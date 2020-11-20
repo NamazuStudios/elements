@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.namazustudios.socialengine.rt.ResourceId;
-import com.namazustudios.socialengine.rt.TaskId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import jetbrains.exodus.ByteIterable;
 
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;

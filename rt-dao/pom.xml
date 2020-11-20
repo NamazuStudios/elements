@@ -49,7 +49,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-server-cluster-client-jeromq</artifactId>
+            <artifactId>rt-server-cluster-jeromq</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>

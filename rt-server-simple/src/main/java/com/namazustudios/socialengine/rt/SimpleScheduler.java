@@ -1,17 +1,22 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.util.CompletionServiceLatch;
+import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
+import com.namazustudios.socialengine.rt.util.LatchedScheduledExecutorServiceCompletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static com.namazustudios.socialengine.rt.remote.Worker.EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.remote.Worker.SCHEDULED_EXECUTOR_SERVICE;
 
 /**
  * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
@@ -26,32 +31,64 @@ public class SimpleScheduler implements Scheduler {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleScheduler.class);
 
-    public static final String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.scheduledExecutorService";
-
-    public static final String DISPATCHER_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleScheduler.dispatcherExecutorService";
-
-    private ResourceLockService resourceLockService;
-
     private ResourceService resourceService;
 
     private ExecutorService dispatcherExecutorService;
 
     private ScheduledExecutorService scheduledExecutorService;
 
+    private AtomicReference<Context> context = new AtomicReference<>();
+
+    @Override
+    public void start() {
+
+        final var context = new Context();
+
+        logger.info("Starting.");
+
+        if (this.context.compareAndSet(null, context)) {
+            logger.info("Started.");
+        } else {
+            throw new IllegalStateException("Scheduler already running.");
+        }
+
+    }
+
+    @Override
+    public void stop() {
+
+        final var context = this.context.getAndSet(null);
+
+        if (context == null) {
+            throw new IllegalStateException("Scheduler not running.");
+        } else {
+            logger.info("Shutting down.");
+            context.stop();
+            logger.info("Finished shutting down.");
+        }
+
+    }
+
+    private Context getContext() {
+        final Context context = this.context.get();
+        if (context == null) throw new IllegalStateException("Not running.");
+        return context;
+    }
+
     @Override
     public <T> Future<T> submit(Callable<T> tCallable) {
-        return getDispatcherExecutorService().submit(tCallable);
+        return getContext().getDispatcher().submit(tCallable);
     }
 
     @Override
     public RunnableFuture<Void> scheduleUnlink(final Path path, final long delay, final TimeUnit timeUnit) {
         return shortCircuitFuture(
             () -> scheduleUnlink(path),
-            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
+            r -> getContext().getScheduler().schedule(r , delay, timeUnit));
     }
 
     private Future<Void> scheduleUnlink(final Path path) {
-        return getDispatcherExecutorService().submit(() -> { getResourceService().unlinkPath(path, resource -> {
+        return getContext().getDispatcher().submit(() -> { getResourceService().unlinkPath(path, resource -> {
 
             final ResourceId resourceId = resource.getId();
 
@@ -71,12 +108,12 @@ public class SimpleScheduler implements Scheduler {
     public RunnableFuture<Void> scheduleDestruction(final ResourceId resourceId, final long delay, final TimeUnit timeUnit) {
         return shortCircuitFuture(
             () -> scheduleDestruction(resourceId),
-            r -> getScheduledExecutorService().schedule(r , delay, timeUnit));
+            r -> getContext().getScheduler().schedule(r , delay, timeUnit));
     }
 
     public Future<Void> scheduleDestruction(final ResourceId resourceId) {
-        return getDispatcherExecutorService().submit(() -> {
-            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+        return getContext().getDispatcher().submit(() -> {
+            try {
                 getResourceService().destroy(resourceId);
             } catch (ResourceNotFoundException ex) {
                 logger.debug("Resource already destroyed {}.  Disregarding.", resourceId, ex);
@@ -90,14 +127,14 @@ public class SimpleScheduler implements Scheduler {
     public <T> Future<T> perform(final ResourceId resourceId,
                                  final Function<Resource, T> operation,
                                  final Consumer<Throwable> failure) {
-        return getDispatcherExecutorService().submit(protectedCallable(resourceId, operation, failure));
+        return getContext().getDispatcher().submit(protectedCallable(resourceId, operation, failure));
     }
 
     @Override
     public <T> Future<T> perform(final Path path,
                                  final Function<Resource, T> operation,
                                  final Consumer<Throwable> failure) {
-        return getDispatcherExecutorService().submit(protectedCallable(path, operation, failure));
+        return getContext().getDispatcher().submit(protectedCallable(path, operation, failure));
     }
 
     @Override
@@ -106,10 +143,10 @@ public class SimpleScheduler implements Scheduler {
                                            final Function<Resource, T> operation,
                                            final Consumer<Throwable> failure) {
 
-        final FutureTask<T> task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
+        final var task = new FutureTask<T>(protectedCallable(resourceId, operation, failure));
 
-        final Future<?> scheduled = getScheduledExecutorService()
-            .schedule(() -> getDispatcherExecutorService().submit(task), time, timeUnit);
+        final var scheduled = getContext().getScheduler()
+            .schedule(() -> getContext().getDispatcher().submit(task), time, timeUnit);
 
         return new Future<T>() {
             @Override
@@ -147,25 +184,22 @@ public class SimpleScheduler implements Scheduler {
 
             final Resource resource;
 
-            try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
-
-                try {
-                    resource = getResourceService().getAndAcquireResourceWithId(resourceId);
-                } catch (Throwable th) {
-                    failure.accept(th);
-                    throw th;
-                }
-
-                try {
-                    return performProtected(resource, operation);
-                } catch (Throwable th) {
-                    failure.accept(th);
-                    throw th;
-                } finally {
-                    getResourceService().release(resource);
-                }
-
+            try {
+                resource = getResourceService().getAndAcquireResourceWithId(resourceId);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
             }
+
+            try {
+                return performProtected(resource, operation);
+            } catch (Exception ex) {
+                failure.accept(ex);
+                throw ex;
+            } finally {
+                getResourceService().release(resource);
+            }
+
 
         };
     }
@@ -198,7 +232,7 @@ public class SimpleScheduler implements Scheduler {
 
     private <T> T performProtected(final Resource resource,
                                    final Function<Resource, T> operation) {
-        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resource.getId())){
+        try {
             logger.trace("Applying operation for resource {}", resource.getId());
             return operation.apply(resource);
         } catch (Throwable th) {
@@ -209,39 +243,12 @@ public class SimpleScheduler implements Scheduler {
         }
     }
 
-    @Override
-    public void shutdown() {
-        try {
-
-            logger.info("Shutting down dispatcher threads.");
-            dispatcherExecutorService.shutdown();
-
-            logger.info("Shutting down scheduler threads.");
-            scheduledExecutorService.shutdownNow();
-
-            if (scheduledExecutorService.awaitTermination(5, MINUTES)) {
-                logger.info("Shut down scheduler threads.");
-            } else {
-                logger.error("Timed out shutting down scheduler threads.");
-            }
-
-            if (dispatcherExecutorService.awaitTermination(5, TimeUnit.MINUTES)) {
-                logger.info("Shut down dispatcher threads.");
-            } else {
-                logger.error("Timed out shutting down dispatcher threads.");
-            }
-
-        } catch (InterruptedException ex) {
-            throw new InternalException(ex);
-        }
-    }
-
     public ExecutorService getDispatcherExecutorService() {
         return dispatcherExecutorService;
     }
 
     @Inject
-    public void setDispatcherExecutorService(@Named(DISPATCHER_EXECUTOR_SERVICE) ExecutorService dispatcherExecutorService) {
+    public void setDispatcherExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService dispatcherExecutorService) {
         this.dispatcherExecutorService = dispatcherExecutorService;
     }
 
@@ -252,15 +259,6 @@ public class SimpleScheduler implements Scheduler {
     @Inject
     public void setScheduledExecutorService(@Named(SCHEDULED_EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
         this.scheduledExecutorService = scheduledExecutorService;
-    }
-
-    public ResourceLockService getResourceLockService() {
-        return resourceLockService;
-    }
-
-    @Inject
-    public void setResourceLockService(ResourceLockService resourceLockService) {
-        this.resourceLockService = resourceLockService;
     }
 
     public ResourceService getResourceService() {
@@ -275,7 +273,7 @@ public class SimpleScheduler implements Scheduler {
 
     private static FutureTask<Void> shortCircuitFuture(final Runnable runnable,
                                                        final Function<Runnable, Future<?>> delegateFutureSupplier) {
-        return new FutureTask<Void>(runnable, null) {
+        return new FutureTask<>(runnable, null) {
 
             final Future<?> delegate = delegateFutureSupplier.apply(this);
 
@@ -291,6 +289,30 @@ public class SimpleScheduler implements Scheduler {
             }
 
         };
+    }
+
+    private class Context {
+
+        private final CompletionServiceLatch latch = new CompletionServiceLatch();
+
+        private final LatchedExecutorServiceCompletionService dispatcher =
+            new LatchedExecutorServiceCompletionService(getDispatcherExecutorService(), latch);
+
+        private final LatchedScheduledExecutorServiceCompletionService scheduler =
+            new LatchedScheduledExecutorServiceCompletionService(getScheduledExecutorService(), latch);
+
+        public LatchedExecutorServiceCompletionService getDispatcher() {
+            return dispatcher;
+        }
+
+        public LatchedScheduledExecutorServiceCompletionService getScheduler() {
+            return scheduler;
+        }
+
+        private void stop() {
+            latch.stop();
+        }
+
     }
 
 }

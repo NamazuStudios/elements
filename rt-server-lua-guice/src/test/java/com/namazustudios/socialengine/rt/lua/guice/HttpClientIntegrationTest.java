@@ -1,11 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,15 +22,9 @@ public class HttpClientIntegrationTest {
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
         .withDefaultHttpClient()
-        .withNodeModule(new LuaModule())
-        .withNodeModule(new XodusContextModule()
-            .withSchedulerThreads(1)
-            .withHandlerTimeout(3, MINUTES))
-        .withNodeModule(new XodusEnvironmentModule()
-            .withTempEnvironments())
+        .withWorkerModule(new LuaModule())
+        .withWorkerModule(new XodusEnvironmentModule().withTempResourceEnvironment().withTempSchedulerEnvironment())
         .start();
-
-    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -44,7 +35,6 @@ public class HttpClientIntegrationTest {
 
     @AfterClass
     private void stop() throws Exception {
-        getNode().stop();
         getJettyEmbeddedRESTService().stop();
     }
 
@@ -75,10 +65,6 @@ public class HttpClientIntegrationTest {
 
     public JettyEmbeddedRESTService getJettyEmbeddedRESTService() {
         return jettyEmbeddedRESTService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

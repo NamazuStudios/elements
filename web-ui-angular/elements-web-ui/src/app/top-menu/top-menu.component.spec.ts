@@ -2,6 +2,9 @@
 import { fakeAsync, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { TopMenuComponent } from './top-menu.component';
+import {RouterTestingModule} from '@angular/router/testing';
+import {AlertService} from '../alert.service';
+import {HttpClientTestingModule} from '@angular/common/http/testing';
 
 describe('TopMenuComponent', () => {
   let component: TopMenuComponent;
@@ -9,7 +12,11 @@ describe('TopMenuComponent', () => {
 
   beforeEach(fakeAsync(() => {
     TestBed.configureTestingModule({
-      declarations: [ TopMenuComponent ]
+      declarations: [ TopMenuComponent ],
+      imports: [RouterTestingModule, HttpClientTestingModule],
+      providers: [
+        AlertService
+      ]
     })
     .compileComponents();
 

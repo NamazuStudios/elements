@@ -1,6 +1,9 @@
 import {AfterViewInit, Component, ElementRef, Inject, OnInit, ViewChild} from '@angular/core';
 import {User} from '../api/models/user';
-import {MAT_DIALOG_DATA, MatDialog, MatDialogRef, MatPaginator, MatSnackBar, MatTable} from '@angular/material';
+import {MAT_DIALOG_DATA, MatDialog, MatDialogRef} from '@angular/material/dialog';
+import {MatPaginator} from '@angular/material/paginator';
+import {MatSnackBar} from '@angular/material/snack-bar';
+import {MatTable} from '@angular/material/table';
 import {UsersService} from '../api/services/users.service';
 import {AlertService} from '../alert.service';
 import {UsersDataSource} from '../users.datasource';
@@ -26,11 +29,11 @@ export class UserSelectDialogComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.dataSource = new UsersDataSource(this.usersService);
-    this.paginator.pageSize = 10;
     this.refresh(0);
   }
 
   ngAfterViewInit() {
+    this.paginator.pageSize = 10;
     // server-side search
     fromEvent(this.input.nativeElement,'keyup')
       .pipe(

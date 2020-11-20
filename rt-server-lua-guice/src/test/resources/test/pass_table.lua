@@ -121,7 +121,7 @@ function pass_table.pass_complex_table_to_multiple_resources()
 
     for test = 1, 5 do
 
-        local subdirectory = tostring(test) .. "/"
+        local subdirectory = tostring(test) .. util.uuid() .. "/"
 
         for i = 1, resources_per_path do
             result, code = make_resource(subdirectory)

@@ -5,26 +5,35 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.*;
+import com.namazustudios.socialengine.rt.id.HasNodeId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.ResumeReasonBuiltin;
 import com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstructionBuiltin;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import com.namazustudios.socialengine.rt.util.FinallyAction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.jnlua.LuaState.*;
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.Path.fromPathString;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static com.namazustudios.socialengine.rt.lua.Constants.*;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.CoroutineBuiltin.COROUTINES_TABLE;
 
@@ -45,19 +54,25 @@ public class LuaResource implements Resource {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResource.class);
 
-    private ResourceId resourceId = new ResourceId();
+    private SharedLock lock;
+
+    private ResourceId resourceId;
 
     private Attributes attributes = Attributes.emptyAttributes();
 
-    private final Context context;
+    private final Context localContext;
+
+    private final Context remoteContext;
 
     private final LuaState luaState;
 
     private final LogAssist logAssist;
 
-    private final Persistence persistence;
+    private final ErisPersistence erisPersistence;
 
     private final BuiltinManager builtinManager;
+
+    private final ResourceLockService resourceLockService;
 
     private Logger scriptLog = logger;
 
@@ -82,21 +97,31 @@ public class LuaResource implements Resource {
      * @param luaState the luaState
      */
     @Inject
-    public LuaResource(final LuaState luaState, final Context context, final PersistenceStrategy persistenceStrategy) {
+    public LuaResource(
+            final LuaState luaState,
+            final @Named(LOCAL) Context localContext,
+            final @Named(REMOTE) Context remoteContext,
+            final PersistenceStrategy persistenceStrategy,
+            final ResourceLockService resourceLockService,
+            final NodeId nodeId) {
         try {
 
-            this.context = context;
+            this.resourceLockService = resourceLockService;
+            this.resourceId = randomResourceIdForNode(nodeId);
+            this.lock = resourceLockService.getLock(resourceId);
+            this.localContext = localContext;
+            this.remoteContext = remoteContext;
             this.luaState = luaState;
             this.logAssist = new LogAssist(this::getScriptLog, this::getLuaState);
-            this.persistence = new Persistence(this, this::getScriptLog);
-            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, persistence);
+            this.erisPersistence = new ErisPersistence(this, this::getScriptLog);
+            this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, erisPersistence);
 
             openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
-            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, context, persistenceStrategy));
-            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this, context));
-            getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this, context));
+            getBuiltinManager().installBuiltin(new CoroutineBuiltin(this, persistenceStrategy));
+            getBuiltinManager().installBuiltin(new ResourceDetailBuiltin(this));
+            getBuiltinManager().installBuiltin(new IndexDetailBuiltin(this));
             getBuiltinManager().installBuiltin(new YieldInstructionBuiltin());
             getBuiltinManager().installBuiltin(new ResumeReasonBuiltin());
             getBuiltinManager().installBuiltin(new LoggerDetailBuiltin(this::getScriptLog));
@@ -125,7 +150,7 @@ public class LuaResource implements Resource {
                 luaState.pop(1);
 
                 // Adds it as a permanent object and then pops it off the stack.
-                persistence.addPermanentObject(-1, LuaResource.class, name);
+                erisPersistence.addPermanentObject(-1, LuaResource.class, name);
 
             }
 
@@ -148,8 +173,8 @@ public class LuaResource implements Resource {
         luaState.pushJavaFunction(printToScriptLog);
         luaState.setGlobal(PRINT_FUNCTION);
 
-        persistence.addPermanentJavaObject(scriptAssert, LuaResource.class, ASSERT_FUNCTION);
-        persistence.addPermanentJavaObject(printToScriptLog, LuaResource.class, PRINT_FUNCTION);
+        erisPersistence.addPermanentJavaObject(scriptAssert, LuaResource.class, ASSERT_FUNCTION);
+        erisPersistence.addPermanentJavaObject(printToScriptLog, LuaResource.class, PRINT_FUNCTION);
 
     }
 
@@ -182,12 +207,14 @@ public class LuaResource implements Resource {
         final LuaState luaState = getLuaState();
         final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
-        try (final InputStream inputStream = assetLoader.open(modulePath)) {
+        try (var mon = lock.lock();
+             var is = assetLoader.open(modulePath);
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
 
             // We substitute the logger for the name of the file we actually are trying to open.  This way the
             // actual logger reads the name of the source file.
             scriptLog = LoggerFactory.getLogger(modulePath.toNormalizedPathString());
-            luaState.load(inputStream, moduleName, "bt");
+            luaState.load(is, moduleName, "bt");
             scriptLog.debug("Loaded script {}", moduleName);
 
             for (final Object object : params) {
@@ -218,13 +245,17 @@ public class LuaResource implements Resource {
 
     @Override
     public void setVerbose(boolean verbose) {
-        luaState.pushBoolean(verbose);
-        luaState.setPersistenceSetting("path", -1);
+        try (var mon = lock.lock();
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
+            luaState.pushBoolean(verbose);
+            luaState.setPersistenceSetting("path", -1);
+        }
     }
 
     @Override
     public boolean isVerbose() {
-        try {
+        try (var mon = lock.lock();
+             var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
             luaState.getPersistenceSetting("debug");
             return luaState.toBoolean(-1);
         } finally {
@@ -233,58 +264,66 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public void serialize(OutputStream os) throws IOException {
-        getPersistence().serialize(os);
+    public void serialize(final OutputStream os) throws IOException {
+        try (var mon = lock.lock()) {
+            getErisPersistence().serialize(os);
+        }
     }
 
     @Override
-    public void deserialize(InputStream is) throws IOException {
-        getPersistence().deserialize(is, sh -> {
-            resourceId = sh.getResourceId();
+    public void deserialize(final InputStream is) throws IOException {
+        getErisPersistence().deserialize(is, sh -> {
+            final var original = resourceId;
             attributes = sh.getAttributes();
+            resourceId = sh.getResourceId();
+            lock = resourceLockService.getLock(resourceId);
+            resourceLockService.delete(original);
         });
     }
 
     @Override
     public Set<TaskId> getTasks() {
+        try (var mon = lock.lock()) {
 
-        luaState.pushJavaFunction(l -> {
+            luaState.pushJavaFunction(l -> {
 
-            int index = 0;
-            luaState.newTable();
-
-            luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
-
-            if (luaState.isNil(-1)) {
+                int index = 0;
                 luaState.newTable();
-                return 1;
-            }
 
-            luaState.pushNil();
-            while (luaState.next(2)) {
+                luaState.getField(REGISTRYINDEX, COROUTINES_TABLE);
 
-                luaState.pushValue(-2);
-                luaState.rawSet(1, ++index);
-
-                if (logger.isErrorEnabled() && !LuaType.THREAD.equals(luaState.type(-1))) {
-                    logger.error("Expected THREAD got: ", luaState.type(-1));
+                if (luaState.isNil(-1)) {
+                    luaState.newTable();
+                    return 1;
                 }
 
-                luaState.pop(1);
+                luaState.pushNil();
+                while (luaState.next(2)) {
 
-            }
+                    luaState.pushValue(-2);
+                    luaState.rawSet(1, ++index);
 
-            luaState.setTop(1);
-            return 1;
+                    if (logger.isErrorEnabled() && !LuaType.THREAD.equals(luaState.type(-1))) {
+                        logger.error("Expected THREAD got: ", luaState.type(-1));
+                    }
 
-        });
+                    luaState.pop(1);
 
-        luaState.call(0, 1);
+                }
 
-        final List<String> taskIds = luaState.toJavaObject(-1, List.class);
-        luaState.pop(1);
+                luaState.setTop(1);
+                return 1;
 
-        return taskIds.stream().map(TaskId::new).collect(Collectors.toSet());
+            });
+
+            luaState.call(0, 1);
+
+            final List<String> taskIds = luaState.toJavaObject(-1, List.class);
+            luaState.pop(1);
+
+            return taskIds.stream().map(TaskId::new).collect(Collectors.toSet());
+
+        }
 
     }
 
@@ -298,18 +337,26 @@ public class LuaResource implements Resource {
     @Override
     public void close() {
 
-        getTasks().forEach(taskId -> {
-            final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
-            context.getTaskContext().finishWithError(taskId, resourceDestroyedException);
-        });
+        try(var mon = lock.lock()) {
 
-        getLuaState().close();
+            getTasks().forEach(taskId -> {
+                final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
+                getLocalContext().getTaskContext().finishWithError(taskId, resourceDestroyedException);
+            });
+
+            getLuaState().close();
+
+        } finally {
+            resourceLockService.delete(resourceId);
+        }
 
     }
 
     @Override
     public void unload() {
-        getLuaState().close();
+        try (var mon = lock.lock()) {
+            getLuaState().close();
+        }
     }
 
     @Override
@@ -317,9 +364,9 @@ public class LuaResource implements Resource {
         return params -> (consumer, throwableConsumer) -> {
 
             final LuaState luaState = getLuaState();
-            FinallyAction finalOperation = () -> luaState.setTop(0);
 
-            try {
+            try (var mon = lock.lock();
+                 var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
                 luaState.getGlobal(REQUIRE);
                 luaState.pushString(CoroutineBuiltin.MODULE_NAME);
@@ -345,7 +392,7 @@ public class LuaResource implements Resource {
                 final int status = luaState.checkInteger(2);                          // thread status
 
                 if (status == YIELD) {
-                    context.getTaskContext().register(taskId, consumer, throwableConsumer);
+                    getLocalContext().getTaskContext().register(taskId, consumer, throwableConsumer);
                 } else {
                     final Object result = luaState.checkJavaObject(3, Object.class);      // result
                     finish(taskId, consumer, result);
@@ -355,9 +402,8 @@ public class LuaResource implements Resource {
 
             } catch (Exception ex) {
                 logAssist.error("Error dispatching method: " + name, ex);
+                throwableConsumer.accept(ex);
                 throw ex;
-            } finally {
-                finalOperation.perform();
             }
 
         };
@@ -375,9 +421,9 @@ public class LuaResource implements Resource {
     public void resume(final TaskId taskId, final Object ... results) {
 
         final LuaState luaState = getLuaState();
-        FinallyAction finalOperation = () -> luaState.setTop(0);
 
-        try {
+        try (var mon = lock.lock();
+             var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
             luaState.getGlobal(REQUIRE);
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);
@@ -407,10 +453,8 @@ public class LuaResource implements Resource {
             throw ex;
         } catch (Exception ex) {
             getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
-            getContext().getTaskContext().finishWithError(taskId, ex);
+            getLocalContext().getTaskContext().finishWithError(taskId, ex);
             throw ex;
-        } finally {
-            finalOperation.perform();
         }
 
     }
@@ -437,12 +481,57 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * Gets the {@link Context} associated with this {@link LuaResource}.
+     * Gets the remote {@link Context} associated with this {@link LuaResource}.
      *
      * @return the {@link Context}.
      */
-    public Context getContext() {
-        return context;
+    public Context getLocalContext() {
+        return localContext;
+    }
+
+    /**
+     * Gets the local {@link Context} associated with this {@link LuaResource}.
+     *
+     * @return the {@link Context}.
+     */
+    public Context getRemoteContext() {
+        return remoteContext;
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
+     * hasn't been specified then this will return the value of {@link #getLocalContext()}.
+     *
+     * @param hasNodeId the {@link HasNodeId} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getLocalContextOrContextFor(final HasNodeId hasNodeId) {
+        return getContextFor(hasNodeId, this::getLocalContext);
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
+     * hasn't been specified then this will return the value of {@link #getRemoteContext()}.
+     *
+     * @param hasNodeId the {@link HasNodeId} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getRemoteContextOrContextFor(final HasNodeId hasNodeId) {
+        return getContextFor(hasNodeId, this::getRemoteContext);
+    }
+
+    /**
+     * Gets the {@link Context} for the supplied {@link HasNodeId} and if unable to determine the NodeId it will return
+     * the {@link Context} returned by the.
+     *
+     * @param hasNodeId
+     * @param contextSupplier
+     * @return the {@link Context}
+     */
+    public Context getContextFor(final HasNodeId hasNodeId, final Supplier<Context> contextSupplier) {
+        return hasNodeId.getOptionalNodeId()
+            .map(nodeId -> nodeId.getNodeId().equals(nodeId) ? getLocalContext() : getRemoteContext())
+            .orElseGet(contextSupplier);
     }
 
     /**
@@ -464,12 +553,12 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * Gets the {@link Persistence} instance used by this {@link LuaResource}.
+     * Gets the {@link ErisPersistence} instance used by this {@link LuaResource}.
      *
-     * @return the {@link Persistence} instance
+     * @return the {@link ErisPersistence} instance
      */
-    public Persistence getPersistence() {
-        return persistence;
+    public ErisPersistence getErisPersistence() {
+        return erisPersistence;
     }
 
     /**

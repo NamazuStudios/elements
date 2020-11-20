@@ -3,12 +3,14 @@ package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.PersistenceStrategy;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.quartz.CronExpression;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,17 +47,13 @@ public class CoroutineBuiltin implements Builtin {
 
     private final LuaResource luaResource;
 
-    private final Context context;
-
     private final PersistenceStrategy persistenceStrategy;
 
     private TaskId runningTaskId;
 
     public CoroutineBuiltin(final LuaResource luaResource,
-                            final Context context,
                             final PersistenceStrategy persistenceStrategy) {
         this.luaResource = luaResource;
-        this.context = context;
         this.persistenceStrategy = persistenceStrategy;
     }
 
@@ -208,7 +206,7 @@ public class CoroutineBuiltin implements Builtin {
                     luaState.insert(1);
 
                     final Object result = luaState.getTop() == 2 ? null : luaState.checkJavaObject(3, Object.class);
-                    getContext().getTaskContext().finishWithResult(taskId, result);
+                    getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithResult(taskId, result);
 
                     return returned + 2;
 
@@ -218,7 +216,7 @@ public class CoroutineBuiltin implements Builtin {
         } catch (Throwable th) {
             // All exceptions will clean up the coroutine such that it will no longer be in the table.
             cleanup(taskId, luaState);
-            getContext().getTaskContext().finishWithError(taskId, th);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, th);
             throw th;
         }
     }
@@ -260,12 +258,12 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     private void scheduleImmediate(final TaskId taskId, final LogAssist logAssist) {
-        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, 0, MILLISECONDS);
+        getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeTaskAfterDelay(taskId, 0, MILLISECONDS);
     }
 
     private void scheduleUntil(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilMilliseconds(luaState);
-        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
+        getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
     }
 
     private long delayUntilMilliseconds(final LuaState luaState) {
@@ -276,7 +274,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleFor(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = timeValueInMilliseconds(luaState);
-        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
+        getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
     }
 
     private long timeValueInMilliseconds(final LuaState luaState) {
@@ -298,7 +296,7 @@ public class CoroutineBuiltin implements Builtin {
 
     private void scheduleUntilNextCron(final TaskId taskId, final LuaState luaState, final LogAssist logAssist) {
         final long delay = delayUntilNextCronMilliseconds(luaState);
-        getContext().getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
+        getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeTaskAfterDelay(taskId, delay, MILLISECONDS);
     }
 
     private long delayUntilNextCronMilliseconds(final LuaState luaState) {
@@ -381,14 +379,10 @@ public class CoroutineBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
-        persistence.addPermanentJavaObject(start, CoroutineBuiltin.class, START);
-        persistence.addPermanentJavaObject(resume, CoroutineBuiltin.class, RESUME);
-        persistence.addPermanentJavaObject(currentTaskId, CoroutineBuiltin.class, CURRENT_TASK_ID);
-    }
-
-    public Context getContext() {
-        return context;
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(start, CoroutineBuiltin.class, START);
+        erisPersistence.addPermanentJavaObject(resume, CoroutineBuiltin.class, RESUME);
+        erisPersistence.addPermanentJavaObject(currentTaskId, CoroutineBuiltin.class, CURRENT_TASK_ID);
     }
 
     public LuaResource getLuaResource() {

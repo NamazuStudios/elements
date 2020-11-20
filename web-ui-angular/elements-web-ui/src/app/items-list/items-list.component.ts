@@ -2,7 +2,9 @@ import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/
 import {Item} from '../api/models/item';
 import {SelectionModel} from '@angular/cdk/collections';
 import {ItemsDatasource} from '../items.datasource';
-import {MatDialog, MatPaginator, MatTable} from '@angular/material';
+import {MatDialog} from '@angular/material/dialog';
+import {MatPaginator} from '@angular/material/paginator';
+import {MatTable} from '@angular/material/table';
 import {ItemsService} from '../api/services/items.service';
 import {AlertService} from '../alert.service';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
@@ -32,11 +34,11 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
   ngOnInit() {
     this.selection = new SelectionModel<Item>(true, []);
     this.dataSource = new ItemsDatasource(this.itemsService);
-    this.paginator.pageSize = 10;
     this.refresh(0);
   }
 
   ngAfterViewInit() {
+    this.paginator.pageSize = 10;
     // server-side search
     fromEvent(this.input.nativeElement, 'keyup')
       .pipe(
@@ -55,7 +57,7 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
       )
       .subscribe();
 
-    this.selection.onChange.subscribe(s => this.hasSelection = this.selection.hasValue());
+    this.selection.changed.subscribe(s => this.hasSelection = this.selection.hasValue());
     this.dataSource.items$.subscribe(currentItems => this.currentItems = currentItems);
     this.dataSource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
   }

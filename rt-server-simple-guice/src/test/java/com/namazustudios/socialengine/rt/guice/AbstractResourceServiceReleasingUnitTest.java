@@ -2,21 +2,29 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import org.mockito.Mockito;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.UUID;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static java.util.Arrays.asList;
+import static java.util.Arrays.fill;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -34,10 +42,11 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
     @DataProvider
     public static Object[][] initialDataProvider() {
 
+        final NodeId nodeId = randomNodeId();
         final List<Object[]> testData = new ArrayList<>();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId();
+            final ResourceId resourceId = randomResourceIdForNode(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
@@ -256,7 +265,9 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
 
     @Test(dependsOnMethods = "testAllPathsUnlinked")
     public void testDeleteWithPaths() {
-        final ResourceId resourceId = new ResourceId();
+
+        final NodeId nodeId = randomNodeId();
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final Resource resource = Mockito.mock(Resource.class);
 
         when(resource.getId()).thenReturn(resourceId);

@@ -3,7 +3,8 @@ import {MatPaginator} from '@angular/material/paginator';
 import {debounceTime, distinctUntilChanged, filter, tap} from 'rxjs/operators';
 import {fromEvent} from 'rxjs';
 import {SelectionModel} from '@angular/cdk/collections';
-import {MatDialog, MatTable} from '@angular/material';
+import {MatDialog} from '@angular/material/dialog';
+import {MatTable} from '@angular/material/table';
 import {AlertService} from '../alert.service';
 import {ConfirmationDialogService} from '../confirmation-dialog/confirmation-dialog.service';
 import {ApplicationConfigurationViewModel} from '../models/application-configuration-view-model';
@@ -53,11 +54,11 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
   ngOnInit() {
     this.selection = new SelectionModel<ApplicationConfiguration>(true, []);
     this.dataSource = new ApplicationConfigurationsDataSource(this.applicationConfigurationsService);
-    this.paginator.pageSize = 10;
     this.refresh(0);
   }
 
   ngAfterViewInit() {
+    this.paginator.pageSize = 10;
     // server-side search
     fromEvent(this.input.nativeElement, 'keyup')
       .pipe(
@@ -76,7 +77,7 @@ export class ApplicationConfigurationsListComponent implements OnInit, AfterView
       )
       .subscribe();
 
-    this.selection.onChange.subscribe(s => this.hasSelection = this.selection.hasValue());
+    this.selection.changed.subscribe(s => this.hasSelection = this.selection.hasValue());
     this.dataSource.applicationConfigurations$.subscribe(currentApplicationConfigurations => this.currentApplicationConfigurations = currentApplicationConfigurations);
     this.dataSource.totalCount$.subscribe(totalCount => this.paginator.length = totalCount);
   }

@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
 
+import javax.inject.Named;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -12,6 +14,18 @@ import java.util.concurrent.Future;
  * Represents the connection the backend cluster of services.
  */
 public interface Context {
+
+    /**
+     * Used with the {@link Named} annotation to designate context types which are local, as in they are not sent
+     * via remote invocation.
+     */
+    String LOCAL = "com.namazustudios.socialengine.rt.context.local";
+
+    /**
+     * Used with the {@link Named} annotation to designate context types which are remote, as in they are sent via
+     * remote invocation.
+     */
+    String REMOTE = "com.namazustudios.socialengine.rt.context.remote";
 
     /**
      * Starts the context.

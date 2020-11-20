@@ -43,6 +43,11 @@
             <version>${reflections.version}</version>
         </dependency>
         <dependency>
+            <groupId>commons-beanutils</groupId>
+            <artifactId>commons-beanutils</artifactId>
+            <version>${beanutils.version}</version>
+        </dependency>
+        <dependency>
             <groupId>javax.servlet</groupId>
             <artifactId>javax.servlet-api</artifactId>
             <version>${javax.servlet.api.version}</version>
@@ -50,15 +55,21 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-core</artifactId>
-            <version>${bval.version}</version>
+            <groupId>ru.vyarus</groupId>
+            <artifactId>guice-validator</artifactId>
+            <version>${hibernate.validator.guice.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-guice</artifactId>
-            <version>${bval.guice.version}</version>
+            <groupId>org.hibernate</groupId>
+            <artifactId>hibernate-validator</artifactId>
+            <version>${hibernate.validator.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.glassfish</groupId>
+            <artifactId>javax.el</artifactId>
+            <version>${javax.el.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -66,11 +77,6 @@
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>commons-beanutils</groupId>
-            <artifactId>commons-beanutils</artifactId>
-            <version>${beanutils.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>

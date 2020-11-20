@@ -11,7 +11,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import org.apache.bval.guice.ValidationModule;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import java.io.Console;
 import java.util.Arrays;

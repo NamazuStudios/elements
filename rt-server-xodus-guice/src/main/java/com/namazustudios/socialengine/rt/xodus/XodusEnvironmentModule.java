@@ -9,8 +9,8 @@ import jetbrains.exodus.env.Environment;
 import java.io.File;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT;
+import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
 
@@ -40,19 +40,6 @@ public class XodusEnvironmentModule extends AbstractModule {
         return this;
     }
 
-    public XodusEnvironmentModule withTempEnvironments() {
-
-        final File resourceDirectory = Files.createTempDir();
-        final File schedulerDirectory = Files.createTempDir();
-
-        resourceDirectory.deleteOnExit();
-        schedulerDirectory.deleteOnExit();
-
-        return withResourceEnvironmentPath(resourceDirectory.getAbsolutePath()).
-               withSchedulerEnvironmentPath(schedulerDirectory.getAbsolutePath());
-
-    }
-
     public XodusEnvironmentModule withResourceEnvironmentPath(final String path) {
         bindResourceEnvironmentPath = () -> bind(String.class)
             .annotatedWith(named(RESOURCE_ENVIRONMENT_PATH))
@@ -65,6 +52,18 @@ public class XodusEnvironmentModule extends AbstractModule {
             .annotatedWith(named(SCHEDULER_ENVIRONMENT_PATH))
             .toInstance(path);
         return withSchedulerEnvironment();
+    }
+
+    public XodusEnvironmentModule withTempResourceEnvironment() {
+        final File resourceDirectory = Files.createTempDir();
+        resourceDirectory.deleteOnExit();
+        return withResourceEnvironmentPath(resourceDirectory.getAbsolutePath());
+    }
+
+    public XodusEnvironmentModule withTempSchedulerEnvironment() {
+        final File schedulerDirectory = Files.createTempDir();
+        schedulerDirectory.deleteOnExit();
+        return withSchedulerEnvironmentPath(schedulerDirectory.getAbsolutePath());
     }
 
     @Override

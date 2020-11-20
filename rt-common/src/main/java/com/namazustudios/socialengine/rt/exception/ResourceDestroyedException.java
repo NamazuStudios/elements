@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.exception;
 
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.ResponseCode;
 
 public class ResourceDestroyedException extends BaseException {

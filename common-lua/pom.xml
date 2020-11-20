@@ -38,6 +38,12 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-transact-guice</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-server-lua-guice</artifactId>
             <version>${project.version}</version>
             <classifier>tests</classifier>
@@ -74,6 +80,12 @@
             <scope>test</scope>
         </dependency>
         <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-transact-unixfs-guice</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>org.zeromq</groupId>
             <artifactId>jeromq</artifactId>
             <version>${jeromq.version}</version>
@@ -81,7 +93,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-server-cluster-client-jeromq-guice</artifactId>
+            <artifactId>rt-server-cluster-jeromq</artifactId>
             <version>${project.version}</version>
             <scope>test</scope>
         </dependency>
@@ -113,6 +125,23 @@
             <artifactId>jersey-hk2</artifactId>
             <version>${jersey.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.spotify</groupId>
+            <artifactId>dns</artifactId>
+            <version>${spotify.dns.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.api.version}</version>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>javax.xml.bind</groupId>
+            <artifactId>jaxb-api</artifactId>
+            <version>${javax.xml.bind.version}</version>
         </dependency>
     </dependencies>
 

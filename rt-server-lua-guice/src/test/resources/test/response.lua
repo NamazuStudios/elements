@@ -16,7 +16,7 @@ function test_response.test_payload()
     local code = responsecode.OK
     local response_payload = { value = "PAYLOAD SUCCESS" }
 
-    return response.formulate(code, response_payload)
+    return response.formulate(code, response_payload), code
 end
 
 local function make_resource()

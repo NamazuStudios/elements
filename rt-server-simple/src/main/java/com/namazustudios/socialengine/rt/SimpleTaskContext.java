@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.TaskId;
+
 import javax.inject.Inject;
 import java.util.function.Consumer;
 

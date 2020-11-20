@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
-import com.namazustudios.socialengine.remote.TestServiceInterface;
+import com.namazustudios.socialengine.rt.remote.TestServiceInterface;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ public class IntegrationTestService implements TestServiceInterface {
 
     private static final Logger logger = LoggerFactory.getLogger(IntegrationTestService.class);
 
-    private final ScheduledExecutorService scheduledExecutorService = newScheduledThreadPool(50);
+    private final ScheduledExecutorService scheduledExecutorService = newScheduledThreadPool(1);
 
     @Override
     public void testSyncVoid(final String msg) {

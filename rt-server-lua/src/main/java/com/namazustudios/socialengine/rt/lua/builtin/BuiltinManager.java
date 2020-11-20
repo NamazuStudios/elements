@@ -3,12 +3,10 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.lua.Constants;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
-import java.util.WeakHashMap;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -33,10 +31,10 @@ public class BuiltinManager {
 
     public BuiltinManager(final Supplier<LuaState> luaStateSupplier,
                           final Supplier<Logger> loggerSupplier,
-                          final Persistence persistence) {
+                          final ErisPersistence erisPersistence) {
         this.luaStateSupplier = luaStateSupplier;
         logAssist = new LogAssist(loggerSupplier, luaStateSupplier);
-        handlePersistence = b -> b.makePersistenceAware(persistence);
+        handlePersistence = b -> b.makePersistenceAware(erisPersistence);
     }
 
     /**
