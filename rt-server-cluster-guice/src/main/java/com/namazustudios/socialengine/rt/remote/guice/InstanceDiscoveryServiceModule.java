@@ -46,7 +46,7 @@ public class InstanceDiscoveryServiceModule extends PrivateModule {
 
         STATIC(StaticInstanceDiscoveryServiceModule::new),
 
-        SPOTIFY_SRV(StaticInstanceDiscoveryServiceModule::new);
+        SPOTIFY_SRV(SpotifySrvInstanceDiscoveryServiceModule::new);
 
         final Supplier<Module> moduleSupplier;
 

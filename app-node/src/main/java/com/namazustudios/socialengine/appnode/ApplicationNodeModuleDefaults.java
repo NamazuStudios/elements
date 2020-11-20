@@ -11,7 +11,7 @@ import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.remote.PersistentInstanceIdProvider.INSTANCE_ID_FILE;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
 
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
 
@@ -23,7 +23,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(HANDLER_TIMEOUT_MSEC, "180000");
         properties.setProperty(STORAGE_BASE_DIRECTORY, "storage.xodus");
         properties.setProperty(INSTANCE_ID_FILE, "instance-id.txt");
-        properties.setProperty(BIND_ADDRESS, "tcp://localhost:28883");
+        properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, "STATIC");
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         return properties;

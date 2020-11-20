@@ -37,7 +37,7 @@ import static java.util.stream.Collectors.toList;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
 
-    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.bind.addr";
+    public static final String JEROMQ_CLUSTER_BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.bind.addr";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
@@ -145,7 +145,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     }
 
     @Inject
-    public void setBindAddress(@Named(BIND_ADDRESS) String bindAddress) {
+    public void setBindAddress(@Named(JEROMQ_CLUSTER_BIND_ADDRESS) String bindAddress) {
         this.bindAddress = bindAddress;
     }
 

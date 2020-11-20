@@ -37,7 +37,7 @@ import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.BIND_ADDRESS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -328,7 +328,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                         .asEagerSingleton();
 
                     bind(String.class)
-                        .annotatedWith(named(BIND_ADDRESS))
+                        .annotatedWith(named(JEROMQ_CLUSTER_BIND_ADDRESS))
                         .toInstance(BIND_URL_FIRST);
 
                     bind(InstanceId.class).toInstance(randomInstanceId());
@@ -348,7 +348,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                         .asEagerSingleton();
 
                     bind(String.class)
-                        .annotatedWith(named(BIND_ADDRESS))
+                        .annotatedWith(named(JEROMQ_CLUSTER_BIND_ADDRESS))
                         .toInstance(BIND_URL_SECOND);
 
                     bind(InstanceId.class).toInstance(randomInstanceId());

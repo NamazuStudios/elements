@@ -42,9 +42,9 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
     private static final OptionParser optionParser = new OptionParser();
 
-    public static final String BIND_ADDRESS = "com.namazustudios.socialengine.rest.api.bind.address";
+    public static final String HTTP_BIND_ADDRESS = "com.namazustudios.socialengine.rest.api.bind.address";
 
-    public static final String PORT = "com.namazustudios.socialengine.rest.api.port";
+    public static final String HTTP_PORT = "com.namazustudios.socialengine.rest.api.port";
 
     public static final String API_CONTEXT = "com.namazustudios.socialengine.rest.api.context";
 
@@ -152,8 +152,8 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     }
 
     @Inject
-    private RestAPIMain(@Named(PORT) final int port,
-                        @Named(BIND_ADDRESS) final String bind,
+    private RestAPIMain(@Named(HTTP_PORT) final int port,
+                        @Named(HTTP_BIND_ADDRESS) final String bind,
                         @Named(API_CONTEXT) final String apiContext,
                         final Injector injector) {
 
