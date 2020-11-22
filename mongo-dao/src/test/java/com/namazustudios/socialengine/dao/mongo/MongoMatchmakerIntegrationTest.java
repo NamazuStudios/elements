@@ -10,8 +10,9 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
+import dev.morphia.query.experimental.filters.Filters;
 import org.bson.types.ObjectId;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.*;
@@ -20,10 +21,8 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Stream;
 
-import static com.google.common.collect.Lists.newArrayList;
 import static com.namazustudios.socialengine.model.match.MatchingAlgorithm.FIFO;
 import static java.util.Arrays.asList;
-import static java.util.Arrays.fill;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.testng.Assert.*;
@@ -46,7 +45,7 @@ public class MongoMatchmakerIntegrationTest {
 
     private MatchDao matchDao;
 
-    private AdvancedDatastore advancedDatastore;
+    private Datastore Datastore;
 
     private List<Match> intermediateMatches = new ArrayList<>();
 
@@ -98,10 +97,12 @@ public class MongoMatchmakerIntegrationTest {
         crossValidateMatch(successfulMatchTuple, profileb, profilea);
 
         final MongoMatch mongoMatcha;
-        mongoMatcha = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getPlayerMatch().getId()));
+        mongoMatcha = getDatastore().find(MongoMatch.class)
+                .filter(Filters.eq("_id", new ObjectId(successfulMatchTuple.getPlayerMatch().getId()))).first();
 
         final MongoMatch mongoMatchb;
-        mongoMatchb = getAdvancedDatastore().get(MongoMatch.class, new ObjectId(successfulMatchTuple.getOpponentMatch().getId()));
+        mongoMatchb = getDatastore().find(MongoMatch.class)
+                .filter(Filters.eq("_id", new ObjectId(successfulMatchTuple.getOpponentMatch().getId()))).first();
 
         assertEquals(mongoMatcha.getScope(), scope);
         assertEquals(mongoMatchb.getScope(), scope);
@@ -224,13 +225,13 @@ public class MongoMatchmakerIntegrationTest {
         this.matchDao = matchDao;
     }
 
-    public AdvancedDatastore getAdvancedDatastore() {
-        return advancedDatastore;
+    public Datastore getDatastore() {
+        return Datastore;
     }
 
     @Inject
-    public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
-        this.advancedDatastore = advancedDatastore;
+    public void setDatastore(Datastore Datastore) {
+        this.Datastore = Datastore;
     }
 
     public EmbeddedMongo getEmbeddedMongo() {

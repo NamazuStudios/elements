@@ -27,7 +27,7 @@ import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
@@ -50,7 +50,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -299,12 +299,12 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         // leave this stub here in case we implement some normalization logic later
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.guice;
 
 import com.google.inject.AbstractModule;
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatabaseProvider;

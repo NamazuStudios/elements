@@ -9,7 +9,7 @@ import java.util.Map;
  * Created by patricktwohig on 5/31/17.
  */
 @SearchableDocument
-@Entity(value = "application_configuration", noClassnameStored = true)
+@Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoGooglePlayApplicationConfiguration extends MongoApplicationConfiguration {
     // TODO This will likely be populated with more information.
     // The unique app id (eg com.mycompany.myapp) is stored as the unique ID in the parent

@@ -25,10 +25,8 @@ public class MongoProgressMissionInfo {
     @Property
     private String description;
 
-    @Embedded
     private List<MongoStep> steps;
 
-    @Embedded
     private MongoStep finalRepeatStep;
 
     @Indexed

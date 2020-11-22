@@ -29,7 +29,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.Query;
 
 import javax.inject.Inject;
@@ -46,7 +46,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
 
     private ValidationHelper validationHelper;
 
-    private AdvancedDatastore advancedDatastore;
+    private Datastore Datastore;
 
     private ObjectIndex objectIndex;
 
@@ -59,7 +59,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
 
         final MongoGameOnRegistration mongoGameOnRegistration;
-        mongoGameOnRegistration = getAdvancedDatastore().find(MongoGameOnRegistration.class)
+        mongoGameOnRegistration = getDatastore().find(MongoGameOnRegistration.class)
                 .filter(Filters.eq("_id", mongoProfile.getObjectId())).first();
 
         if (mongoGameOnRegistration == null) {
@@ -76,7 +76,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(gameOnRegistrationId);
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().find(MongoGameOnRegistration.class);
+        final Query<MongoGameOnRegistration> query = getDatastore().find(MongoGameOnRegistration.class);
 
         query.filter(Filters.and(
                 Filters.eq("_id", registrationId),
@@ -96,7 +96,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     @Override
     public Pagination<GameOnRegistration> getRegistrationsForUser(final User user, final int offset, final int count) {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().find(MongoGameOnRegistration.class);
+        final Query<MongoGameOnRegistration> query = getDatastore().find(MongoGameOnRegistration.class);
         query.filter(Filters.eq("user", mongoUser));
         return getMongoDBUtils().paginationFromQuery(query, offset, count, GameOnRegistration.class);
     }
@@ -142,7 +142,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         mongoGameOnRegistration.setExternalPlayerId(gameOnRegistration.getExternalPlayerId().trim());
 
         try {
-            getAdvancedDatastore().insert(mongoGameOnRegistration);
+            getDatastore().insert(mongoGameOnRegistration);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException("Registration already exists for profile: " + mongoProfile.getObjectId(), ex);
         }
@@ -159,7 +159,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(gameOnRegistrationId);
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnRegistration> query = getAdvancedDatastore().find(MongoGameOnRegistration.class);
+        final Query<MongoGameOnRegistration> query = getDatastore().find(MongoGameOnRegistration.class);
 
         query.filter(Filters.and(
                 Filters.eq("_id", registrationId),
@@ -179,7 +179,7 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
     @Override
     public GameOnRegistration getRegistrationForExternalPlayerId(final String externalPlayerId) {
 
-        final Query<MongoGameOnRegistration> query = getAdvancedDatastore()
+        final Query<MongoGameOnRegistration> query = getDatastore()
             .find(MongoGameOnRegistration.class)
             .filter(Filters.eq("externalPlayerId", externalPlayerId));
 
@@ -240,13 +240,13 @@ public class MongoGameOnRegistrationDao implements GameOnRegistrationDao {
         this.validationHelper = validationHelper;
     }
 
-    public AdvancedDatastore getAdvancedDatastore() {
-        return advancedDatastore;
+    public Datastore getDatastore() {
+        return Datastore;
     }
 
     @Inject
-    public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
-        this.advancedDatastore = advancedDatastore;
+    public void setDatastore(Datastore Datastore) {
+        this.Datastore = Datastore;
     }
 
     public ObjectIndex getObjectIndex() {

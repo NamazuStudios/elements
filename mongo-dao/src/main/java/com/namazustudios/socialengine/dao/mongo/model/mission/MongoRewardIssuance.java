@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Objects;
 
 
-@Entity(value = "progress_pending_award", noClassnameStored = true)
+@Entity(value = "progress_pending_award", useDiscriminator = false)
 public class MongoRewardIssuance {
     @Id
     private MongoRewardIssuanceId objectId;
@@ -39,10 +39,8 @@ public class MongoRewardIssuance {
     @Property
     private String source;
 
-    @Embedded
     private Map<String, Object> metadata;
 
-    @Embedded
     private List<String> tags;
 
     @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

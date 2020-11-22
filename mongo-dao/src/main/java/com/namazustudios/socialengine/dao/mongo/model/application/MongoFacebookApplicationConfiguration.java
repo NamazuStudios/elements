@@ -8,7 +8,7 @@ import dev.morphia.annotations.Property;
  * Created by patricktwohig on 6/15/17.
  */
 @SearchableDocument
-@Entity(value = "application_configuration", noClassnameStored = true)
+@Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoFacebookApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property

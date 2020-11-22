@@ -5,7 +5,7 @@ import dev.morphia.annotations.Entity;
 import dev.morphia.annotations.Property;
 
 @SearchableDocument
-@Entity(value = "application_configuration", noClassnameStored = true)
+@Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoFirebaseApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property

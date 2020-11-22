@@ -12,13 +12,11 @@ import javax.inject.Provider;
  */
 public class MongoDatabaseProvider implements Provider<MongoDatabase> {
 
-    public static final String DATABASE_NAME = "com.namazustudios.socialengine.mongo.database.name";
-
     @Inject
     private Provider<MongoClient> mongoClientProvider;
 
     @Inject
-    @Named(DATABASE_NAME)
+    @Named(MongoDatastoreProvider.DATABASE_NAME)
     private String databaseName;
 
     @Override

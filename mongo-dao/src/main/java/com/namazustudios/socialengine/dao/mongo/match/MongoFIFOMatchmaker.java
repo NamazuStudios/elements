@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.Sort;
@@ -21,7 +21,7 @@ import java.util.function.Consumer;
  */
 public class MongoFIFOMatchmaker implements Matchmaker {
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoMatchDao mongoMatchDao;
 
@@ -70,12 +70,12 @@ public class MongoFIFOMatchmaker implements Matchmaker {
 
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

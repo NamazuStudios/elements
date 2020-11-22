@@ -23,7 +23,7 @@ import java.util.*;
     @SearchableField(name = "description", path = "/description"),
     @SearchableField(name = "tags", path = "/tags")
 })
-@Entity(value = "items", noClassnameStored = true)
+@Entity(value = "items", useDiscriminator = false)
 public class MongoItem {
 
     @Id

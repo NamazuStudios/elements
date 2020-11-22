@@ -1,23 +1,16 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.MongoClient;
-import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoDatabase;
 import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.client.gridfs.GridFSBuckets;
-import com.mongodb.gridfs.GridFS;
-import com.namazustudios.elements.fts.mongo.GridFSDirectory;
 import com.namazustudios.elements.fts.mongo.GridFSDirectoryBuilder;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.LockFactory;
-import org.apache.lucene.store.SleepingLockWrapper;
-import org.bson.Document;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-
-import static com.namazustudios.socialengine.dao.mongo.provider.MongoDatabaseProvider.*;
 
 /**
  * Created by patricktwohig on 5/17/15.
@@ -48,7 +41,7 @@ public class MongoDirectoryProvider implements Provider<Directory> {
     }
 
     @Inject
-    public void setMongoDatabaseName(@Named(DATABASE_NAME) String mongoDatabaseName) {
+    public void setMongoDatabaseName(@Named(MongoDatastoreProvider.DATABASE_NAME) String mongoDatabaseName) {
         this.mongoDatabaseName = mongoDatabaseName;
     }
 

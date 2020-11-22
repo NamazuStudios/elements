@@ -23,7 +23,7 @@ import java.util.Properties;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_DB_URLS;
+import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static com.namazustudios.socialengine.rest.ClientContext.CONTEXT_APPLICATION;
 import static com.namazustudios.socialengine.service.RedissonClientProvider.REDIS_URL;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
@@ -82,7 +82,7 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
         install(new RestAPIModule(() -> {
             final Properties properties = defaultConfigurationSupplier.get();
             properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
-            properties.put(MONGO_DB_URLS, format("mongo://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
+            properties.put(MONGO_CLIENT_URI, format("mongo://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
             return properties;
         }));
 

@@ -17,7 +17,7 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.DeleteOptions;
 import dev.morphia.query.FindOptions;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.Query;
 import org.slf4j.Logger;
@@ -36,7 +36,7 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -120,12 +120,12 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
         }
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

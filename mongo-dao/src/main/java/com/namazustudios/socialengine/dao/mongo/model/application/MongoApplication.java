@@ -28,7 +28,7 @@ import java.util.Objects;
                 @SearchableField(name = "active", path = "/active")
         }
 )
-@Entity(value = "application", noClassnameStored = true)
+@Entity(value = "application", useDiscriminator = false)
 @Indexes({
         @Index(fields = @Field("name"), options = @IndexOptions(unique = true))
 })

@@ -30,7 +30,7 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.Query;
 
 import javax.inject.Inject;
@@ -48,7 +48,7 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
 
     private ValidationHelper validationHelper;
 
-    private AdvancedDatastore advancedDatastore;
+    private Datastore Datastore;
 
     private ObjectIndex objectIndex;
 
@@ -57,7 +57,7 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
     @Override
     public Pagination<GameOnSession> getSessionsForUser(final User user, final int offset, final int count) {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
+        final Query<MongoGameOnSession> query = getDatastore().find(MongoGameOnSession.class);
         query.filter(Filters.eq("user", mongoUser));
         return getMongoDBUtils().paginationFromQuery(query, offset, count, GameOnSession.class);
     }
@@ -99,7 +99,7 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         }
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
+        final Query<MongoGameOnSession> query = getDatastore().find(MongoGameOnSession.class);
 
         query.filter(Filters.and(
                 Filters.eq("_id", sessionId),
@@ -120,7 +120,7 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
     public GameOnSession getSessionForProfile(final Profile profile, final DeviceOSType deviceOSType) {
 
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
+        final Query<MongoGameOnSession> query = getDatastore().find(MongoGameOnSession.class);
 
         query.filter(Filters.and(
                 Filters.eq("profile", mongoProfile),
@@ -149,7 +149,7 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         }
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final Query<MongoGameOnSession> query = getAdvancedDatastore().find(MongoGameOnSession.class);
+        final Query<MongoGameOnSession> query = getDatastore().find(MongoGameOnSession.class);
 
         query.filter(Filters.and(
                 Filters.eq("_id", sessionId),
@@ -176,7 +176,7 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
             throw new GameOnSessionNotFoundException("GameOn session not found " + id);
         }
 
-        final DeleteResult deleteResult = getAdvancedDatastore().find(MongoGameOnSession.class)
+        final DeleteResult deleteResult = getDatastore().find(MongoGameOnSession.class)
                 .filter(Filters.eq("_id", sessionId)).delete();
 
         if (deleteResult.getDeletedCount() == 0) {
@@ -213,7 +213,7 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         mongoGameOnSession.setSessionExpirationDate(timestamp);
 
         try {
-            getAdvancedDatastore().insert(mongoGameOnSession);
+            getDatastore().insert(mongoGameOnSession);
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException("Session already exists for profile and OS " +
                                          mongoProfile.getObjectId() + " " + authenticated.getDeviceOSType(), ex);
@@ -268,13 +268,13 @@ public class MongoGameOnSessionDao implements GameOnSessionDao {
         this.validationHelper = validationHelper;
     }
 
-    public AdvancedDatastore getAdvancedDatastore() {
-        return advancedDatastore;
+    public Datastore getDatastore() {
+        return Datastore;
     }
 
     @Inject
-    public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
-        this.advancedDatastore = advancedDatastore;
+    public void setDatastore(Datastore Datastore) {
+        this.Datastore = Datastore;
     }
 
     public ObjectIndex getObjectIndex() {

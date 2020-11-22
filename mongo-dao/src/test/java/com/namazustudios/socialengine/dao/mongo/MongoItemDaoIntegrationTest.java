@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bson.types.ObjectId;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
@@ -34,7 +34,7 @@ public class MongoItemDaoIntegrationTest {
 
     private EmbeddedMongo embeddedMongo;
 
-    private AdvancedDatastore advancedDatastore;
+    private Datastore Datastore;
 
     private MatchingMockObjects matchingMockObjects;
 
@@ -206,13 +206,13 @@ public class MongoItemDaoIntegrationTest {
         this.embeddedMongo = embeddedMongo;
     }
 
-    public AdvancedDatastore getAdvancedDatastore() {
-        return advancedDatastore;
+    public Datastore getDatastore() {
+        return Datastore;
     }
 
     @Inject
-    public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
-        this.advancedDatastore = advancedDatastore;
+    public void setDatastore(Datastore Datastore) {
+        this.Datastore = Datastore;
     }
 
     public MatchingMockObjects getMatchingMockObjects() {
@@ -226,7 +226,7 @@ public class MongoItemDaoIntegrationTest {
 
     @BeforeMethod
     public void deleteAllItems() {
-        advancedDatastore.delete(advancedDatastore.createQuery(MongoItem.class));
+        Datastore.delete(Datastore.createQuery(MongoItem.class));
     }
 
     @AfterSuite

@@ -12,13 +12,12 @@ import com.namazustudios.socialengine.dao.mongo.application.*;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
 import com.namazustudios.socialengine.dao.mongo.match.MongoMatchDao;
-import com.namazustudios.socialengine.dao.mongo.provider.MongoAdvancedDatastoreProvider;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
 import dev.morphia.Datastore;
 
 import java.security.MessageDigest;
@@ -74,11 +73,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(AppleSignInSessionDao.class).to(MongoAppleSignInSessionDao.class);
 
         bind(Datastore.class)
-            .toProvider(MongoAdvancedDatastoreProvider.class)
-            .asEagerSingleton();
-
-        bind(AdvancedDatastore.class)
-            .toProvider(MongoAdvancedDatastoreProvider.class)
+            .toProvider(MongoDatastoreProvider.class)
             .asEagerSingleton();
 
         bind(MessageDigest.class)

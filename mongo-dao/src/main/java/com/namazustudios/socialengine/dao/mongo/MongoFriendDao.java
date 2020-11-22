@@ -25,7 +25,7 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.Query;
 
 import javax.inject.Inject;
@@ -37,7 +37,7 @@ import static java.util.stream.Collectors.toList;
 
 public class MongoFriendDao implements FriendDao {
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -198,12 +198,12 @@ public class MongoFriendDao implements FriendDao {
 
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

@@ -17,7 +17,7 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +33,7 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -115,12 +115,12 @@ public class MongoGooglePlayIapReceiptDao implements GooglePlayIapReceiptDao {
         }
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

@@ -29,7 +29,7 @@ import java.util.Set;
         @SearchableField(name = "displayName",  path = "/displayName"),
         @SearchableField(name = "description",  path = "/description")
 })
-@Entity(value = "mission", noClassnameStored = true)
+@Entity(value = "mission", useDiscriminator = false)
 public class MongoMission {
 
     @Id
@@ -45,16 +45,12 @@ public class MongoMission {
     @Property
     private String description;
 
-    @Embedded
     private List<String> tags;
 
-    @Embedded
     private List<MongoStep> steps;
 
-    @Embedded
     private MongoStep finalRepeatStep;
 
-    @Embedded
     private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {

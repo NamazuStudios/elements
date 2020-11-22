@@ -25,7 +25,7 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
 
@@ -51,7 +51,7 @@ public class MongoApplicationDao implements ApplicationDao {
     private MongoDBUtils mongoDBUtils;
 
     @Inject
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     @Override
     public Application createOrUpdateInactiveApplication(final Application application) {

@@ -32,7 +32,7 @@ import java.util.*;
 @Indexes({
         @Index(fields = {@Field("category"), @Field("parent"), @Field("name") }, options = @IndexOptions(unique = true)),
 })
-@Entity(value = "application_configuration", noClassnameStored = true)
+@Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoApplicationConfiguration {
 
     @Id
@@ -46,7 +46,6 @@ public class MongoApplicationConfiguration {
     @Reference("parent")
     private MongoApplication parent;
 
-    @Embedded
     private List<MongoProductBundle> productBundles = new ArrayList<>();
 
     @Indexed

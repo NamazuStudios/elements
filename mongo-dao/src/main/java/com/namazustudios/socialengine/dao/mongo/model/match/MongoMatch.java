@@ -30,7 +30,7 @@ import java.util.Objects;
         @SearchableField(name = "playerId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class),
         @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
     })
-@Entity(value = "match", noClassnameStored = true)
+@Entity(value = "match", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "gameId")),
     @Index(fields = @Field(value = "lock.uuid")),
@@ -76,10 +76,8 @@ public class MongoMatch {
     private Timestamp expiry;
 
     @Indexed
-    @Embedded
     private MongoMatchLock lock;
 
-    @Embedded
     private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {

@@ -30,7 +30,6 @@ public class MongoStep {
     @Property
     private int count;
 
-    @Embedded
     private List<MongoReward> rewards;
 
     @Property

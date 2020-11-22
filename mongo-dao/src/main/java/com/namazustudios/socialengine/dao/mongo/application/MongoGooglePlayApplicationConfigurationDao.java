@@ -17,7 +17,7 @@ import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
@@ -36,7 +36,7 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoApplicationDao mongoApplicationDao;
 
@@ -326,12 +326,12 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
         this.objectIndex = objectIndex;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

@@ -9,7 +9,7 @@ import dev.morphia.annotations.Entity;
  * Maps to {@link com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration}.
  */
 @SearchableDocument
-@Entity(value = "application_configuration", noClassnameStored = true)
+@Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoMatchmakingApplicationConfiguration extends MongoApplicationConfiguration {
 
     private MatchingAlgorithm algorithm;

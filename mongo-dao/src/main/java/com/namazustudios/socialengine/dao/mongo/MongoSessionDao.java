@@ -22,7 +22,7 @@ import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.FindAndModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
@@ -48,7 +48,7 @@ public class MongoSessionDao implements SessionDao {
 
     private MongoDBUtils mongoDBUtils;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoUserDao mongoUserDao;
 
@@ -265,12 +265,12 @@ public class MongoSessionDao implements SessionDao {
         this.mongoDBUtils = mongoDBUtils;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

@@ -13,7 +13,7 @@ import com.namazustudios.elements.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 
@@ -33,7 +33,7 @@ import static java.util.stream.Collectors.*;
  */
 public class MongoDBUtils {
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ObjectIndex objectIndex;
 
@@ -49,7 +49,7 @@ public class MongoDBUtils {
      * @param <T> the expected return type
      * @return the object retured by the supplied operation
      */
-    public <T> T perform(final Function<AdvancedDatastore, T> operation) {
+    public <T> T perform(final Function<Datastore, T> operation) {
         try {
             return operation.apply(getDatastore());
         } catch (MongoCommandException ex) {
@@ -249,12 +249,12 @@ public class MongoDBUtils {
         }
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

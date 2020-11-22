@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.Datastore;
 import dev.morphia.Key;
 import dev.morphia.query.Query;
@@ -37,7 +37,7 @@ public class MongoConcurrentUtils {
     public static final String FALLOFF_TIME_MAX_MS = "com.namazustudios.socialengine.mongo.optimistic.falloff.time.max.msec";
 
     @Inject
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     @Inject
     @Named(OPTIMISTIC_RETRY_COUNT)
@@ -104,7 +104,7 @@ public class MongoConcurrentUtils {
          * @param datastore the datastore
          * @return the return type
          */
-        ReturnT attempt(final AdvancedDatastore datastore) throws ContentionException;
+        ReturnT attempt(final Datastore datastore) throws ContentionException;
 
     }
 

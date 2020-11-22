@@ -7,7 +7,7 @@ import dev.morphia.annotations.*;
  * Created by patricktwohig on 7/10/15.
  */
 @SearchableDocument
-@Entity(value = "application_configuration", noClassnameStored = true)
+@Entity(value = "application_configuration", useDiscriminator = false)
 public class MongoPSNApplicationConfiguration extends MongoApplicationConfiguration {
 
     @Property

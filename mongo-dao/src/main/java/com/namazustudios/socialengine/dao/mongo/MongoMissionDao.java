@@ -25,7 +25,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
@@ -48,7 +48,7 @@ public class MongoMissionDao implements MissionDao {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -282,12 +282,12 @@ public class MongoMissionDao implements MissionDao {
         item.validateTags();
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

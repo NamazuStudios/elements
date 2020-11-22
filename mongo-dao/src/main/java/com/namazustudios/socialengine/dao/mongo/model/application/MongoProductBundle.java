@@ -23,10 +23,8 @@ public class MongoProductBundle {
     @Property
     private String description;
 
-    @Embedded
     private List<MongoProductBundleReward> productBundleRewards = new ArrayList<>();
 
-    @Embedded
     private Map<String, Object> metadata = new HashMap<>();
 
     @Property
