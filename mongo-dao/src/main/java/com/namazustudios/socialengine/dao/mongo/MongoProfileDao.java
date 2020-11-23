@@ -388,7 +388,9 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.set("application", application);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
-
+        final Date nowDate = new Date();
+        updateOperations.set("lastLogin", nowDate);
+        
         if (profile.getMetadata() == null) {
             updateOperations.unset("metadata");
         } else {
@@ -437,6 +439,8 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.set("application", application);
         updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
+        final Date nowDate = new Date();
+        updateOperations.set("lastLogin", nowDate);
 
         if (metadata == null) {
             updateOperations.unset("metadata");
@@ -488,6 +492,8 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.setOnInsert("user", user);
         updateOperations.setOnInsert("application", application);
         updateOperations.setOnInsert("displayName", nullToEmpty(profile.getDisplayName()).trim());
+        final Date nowDate = new Date();
+        updateOperations.set("lastLogin", nowDate);
 
         final MongoProfile mongoProfile;
 
