@@ -49,7 +49,6 @@ public class ApplicationNode {
         this.injector = Guice.createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
-            new JeroMQRemoteInvokerModule(),
             new FSTPayloadReaderWriterModule(),
             new PersistentInstanceIdModule(),
             new ZContextModule(),
@@ -58,7 +57,6 @@ public class ApplicationNode {
             new JeroMQRemoteInvokerModule(),
             new JeroMQAsyncConnectionServiceModule(),
             new JeroMQInstanceConnectionServiceModule(),
-            new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new MongoCoreModule(),
             new SimpleRemoteInvokerRegistryModule(),
             new MongoDaoModule(),
@@ -68,10 +66,8 @@ public class ApplicationNode {
             new WorkerInstanceModule(),
             new FirebaseAppFactoryModule(),
             new GuiceStandardNotificationFactoryModule(),
-            new JaxRSClientModule(),
             new VersionModule(),
             new ServicesModule(),
-            new FSTPayloadReaderWriterModule(),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
             new UnixFSTransactionalPersistenceContextModule().withChecksumAlgorithm(ADLER_32),
             new JacksonHttpClientModule()

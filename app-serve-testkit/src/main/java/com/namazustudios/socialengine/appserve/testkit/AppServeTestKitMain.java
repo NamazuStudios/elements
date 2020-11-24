@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.appserve.testkit;
 
-import com.namazustudios.socialengine.appnode.guice.JaxRSClientModule;
 import com.namazustudios.socialengine.appserve.guice.AppServeServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
