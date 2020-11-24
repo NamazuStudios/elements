@@ -27,13 +27,9 @@ public class MongoClientProvider implements Provider<MongoClient> {
     }
 
     private MongoClient getWithClientUri() {
-
-        logger.info("Using MongoClient URI.");
-
+        logger.info("Using Connection String.");
         final ConnectionString connectionString = new ConnectionString(getMongoDbUri());
-
         return MongoClients.create(connectionString);
-
     }
 
     public String getMongoDbUri() {

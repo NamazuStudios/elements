@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.util.ShutdownHooks;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -30,6 +32,8 @@ public class IntegrationTestModule extends AbstractModule {
 
     private static final String TEST_BIND_IP = "localhost";
 
+    private static final ShutdownHooks hooks = new ShutdownHooks(IntegrationTestModule.class);
+
     @Override
     protected void configure() {
 
@@ -37,6 +41,7 @@ public class IntegrationTestModule extends AbstractModule {
             final MongodExecutable executable = mongodExecutable();
             bind(MongodExecutable.class).toInstance(executable);
             bind(MongodProcess.class).toInstance(executable.start());
+            hooks.add(this, executable::stop);
         } catch (IOException e) {
             addError(e);
             return;

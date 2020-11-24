@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 import javax.inject.Inject;
@@ -21,8 +21,8 @@ public class MongoDatabaseProvider implements Provider<MongoDatabase> {
 
     @Override
     public MongoDatabase get() {
-        final MongoClient mongoClient = mongoClientProvider.get();
-        return mongoClient.getDatabase(databaseName);
+        final var client = mongoClientProvider.get();
+        return client.getDatabase(databaseName);
     }
 
 }
