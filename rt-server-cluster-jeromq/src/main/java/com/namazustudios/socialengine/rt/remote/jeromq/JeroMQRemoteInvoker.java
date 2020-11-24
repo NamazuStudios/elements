@@ -181,7 +181,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     @Inject
-    public void setMinConnections(@Named(MIN_CONNECTIONS) int minConnections) {
+    public void setMinConnections(@Named(REMOTE_INVOKER_MIN_CONNECTIONS) int minConnections) {
         this.minConnections = minConnections;
     }
 
@@ -190,7 +190,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     @Inject
-    public void setMaxConnections(@Named(MAX_CONNECTIONS) int maxConnections) {
+    public void setMaxConnections(@Named(REMOTE_INVOKER_MAX_CONNECTIONS) int maxConnections) {
         this.maxConnections = maxConnections;
     }
 

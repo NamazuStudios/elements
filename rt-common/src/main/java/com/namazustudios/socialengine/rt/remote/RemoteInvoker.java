@@ -30,12 +30,12 @@ public interface RemoteInvoker {
     /**
      * The minimum underlying connections to maintain.
      */
-    String MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.remote.RemoteInvoker.minConnections";
+    String REMOTE_INVOKER_MIN_CONNECTIONS = "com.namazustudios.socialengine.rt.remote.RemoteInvoker.minConnections";
 
     /**
      * The maximum underlying connections to maintain.
      */
-    String MAX_CONNECTIONS = "com.namazustudios.socialengine.rt.remote.RemoteInvoker.maxConnections";
+    String REMOTE_INVOKER_MAX_CONNECTIONS = "com.namazustudios.socialengine.rt.remote.RemoteInvoker.maxConnections";
 
     /**
      * Starts this {@link RemoteInvoker} and connects to the supplied address.

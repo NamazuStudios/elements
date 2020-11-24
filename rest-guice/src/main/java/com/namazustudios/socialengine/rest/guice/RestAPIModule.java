@@ -34,6 +34,7 @@ import java.util.function.Supplier;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 
 public class RestAPIModule extends AbstractModule {
 
@@ -111,6 +112,8 @@ public class RestAPIModule extends AbstractModule {
                 return objectMapper;
             })
         );
-        bind(InstanceId.class).toInstance(InstanceId.randomInstanceId());
+
+        bind(InstanceId.class).toInstance(randomInstanceId());
+
     }
 }

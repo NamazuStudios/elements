@@ -34,9 +34,9 @@ public class JeroMQNode implements Node {
 
     private static final String OUTBOUND_ADDR_FORMAT = "inproc://node/%s/out";
 
-    public static final String MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.min.connections";
+    public static final String JEROMQ_NODE_MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.min.connections";
 
-    public static final String MAX_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.max.connections";
+    public static final String JEROMQ_NODE_MAX_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.max.connections";
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
@@ -244,7 +244,7 @@ public class JeroMQNode implements Node {
     }
 
     @Inject
-    public void setMinConnections(@Named(MIN_CONNECTIONS) int minConnections) {
+    public void setMinConnections(@Named(JEROMQ_NODE_MIN_CONNECTIONS) int minConnections) {
         this.minConnections = minConnections;
     }
 
@@ -253,7 +253,7 @@ public class JeroMQNode implements Node {
     }
 
     @Inject
-    public void setMaxConnections(@Named(MAX_CONNECTIONS) int maxConnections) {
+    public void setMaxConnections(@Named(JEROMQ_NODE_MAX_CONNECTIONS) int maxConnections) {
         this.maxConnections = maxConnections;
     }
 

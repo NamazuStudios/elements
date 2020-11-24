@@ -387,10 +387,10 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(ZContext.class).toInstance(zContext);
 
-            bind(String.class).annotatedWith(named(JeroMQNode.MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(JeroMQNode.MAX_CONNECTIONS)).toInstance("25");
-            bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("25");
+            bind(String.class).annotatedWith(named(JeroMQNode.JEROMQ_NODE_MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(JeroMQNode.JEROMQ_NODE_MAX_CONNECTIONS)).toInstance("25");
+            bind(String.class).annotatedWith(named(RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS)).toInstance("25");
 
             instanceIdList.forEach(i -> install(new NodeModule(i, instanceIdList, applicationId)));
             instanceIdList.forEach(i -> expose(Instance.class).annotatedWith(named(i.asString())));
@@ -562,8 +562,8 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(Instance.class).to(SimpleInstance.class).asEagerSingleton();
 
-            bind(String.class).annotatedWith(named(RemoteInvoker.MIN_CONNECTIONS)).toInstance("5");
-            bind(String.class).annotatedWith(named(RemoteInvoker.MAX_CONNECTIONS)).toInstance("25");
+            bind(String.class).annotatedWith(named(RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS)).toInstance("5");
+            bind(String.class).annotatedWith(named(RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS)).toInstance("25");
 
         }
 

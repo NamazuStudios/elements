@@ -21,7 +21,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.COMMITTED;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.FAILED;
 import static java.lang.String.format;
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
 import static java.nio.channels.FileChannel.open;
@@ -44,7 +43,7 @@ public class UnixFSRevisionTable {
 
     private static final byte FILLER = (byte) 0xFF;
 
-    public static final String REVISION_TABLE_COUNT = "com.namazustudios.socialengine.rt.transact.unix.fs.revision.table.count";
+    public static final String UNIXFS_REVISION_TABLE_COUNT = "com.namazustudios.socialengine.rt.transact.unix.fs.revision.table.count";
 
     private static final int ACQUIRES_PER_SEMAPHORE = Integer.MAX_VALUE;
 
@@ -182,7 +181,7 @@ public class UnixFSRevisionTable {
     }
 
     @Inject
-    public void setRevisionTableCount(@Named(REVISION_TABLE_COUNT) int revisionTableCount) {
+    public void setRevisionTableCount(@Named(UNIXFS_REVISION_TABLE_COUNT) int revisionTableCount) {
         this.revisionTableCount = revisionTableCount;
     }
 

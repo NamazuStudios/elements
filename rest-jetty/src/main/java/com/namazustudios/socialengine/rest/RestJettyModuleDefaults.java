@@ -6,8 +6,8 @@ import java.util.Properties;
 
 import static com.namazustudios.socialengine.rest.RestAPIMain.*;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
-import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MAX_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
@@ -20,8 +20,8 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.put(HTTP_BIND_ADDRESS, DEFAULT_BIND_ADDRESS);
         properties.put(HTTP_PORT, Integer.toString(DEFAULT_PORT));
         properties.put(API_CONTEXT, DEFAULT_API_CONTEXT);
-        properties.put(MAX_CONNECTIONS, "100");
-        properties.put(MIN_CONNECTIONS, "10");
+        properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
+        properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());

@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Node;
-import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 
 import javax.inject.Provider;
 
@@ -97,7 +96,7 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMinimumConnections(final int minimumConnections) {
         bindMinConnectionsAction = () -> bind(Integer.class)
-            .annotatedWith(named(MIN_CONNECTIONS))
+            .annotatedWith(named(JEROMQ_NODE_MIN_CONNECTIONS))
             .toInstance(minimumConnections);
         return this;
     }
@@ -110,7 +109,7 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMaximumConnections(int maximumConnections) {
         bindMaxConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(MAX_CONNECTIONS))
+                .annotatedWith(named(JEROMQ_NODE_MAX_CONNECTIONS))
                 .toInstance(maximumConnections);
         return this;
     }

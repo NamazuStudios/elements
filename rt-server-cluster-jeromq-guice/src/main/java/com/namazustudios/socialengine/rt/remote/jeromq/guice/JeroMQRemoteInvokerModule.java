@@ -5,8 +5,8 @@ import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvoker;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MAX_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
 
@@ -28,7 +28,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withMinimumConnections(final int minimumConnections) {
         bindMinConnectionsAction = () -> bind(Integer.class)
-            .annotatedWith(named(MIN_CONNECTIONS))
+            .annotatedWith(named(REMOTE_INVOKER_MIN_CONNECTIONS))
             .toInstance(minimumConnections);
         return this;
     }
@@ -41,7 +41,7 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
      */
     public JeroMQRemoteInvokerModule withMaximumConnections(int maximumConnections) {
         bindMaxConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(MAX_CONNECTIONS))
+                .annotatedWith(named(REMOTE_INVOKER_MAX_CONNECTIONS))
                 .toInstance(maximumConnections);
         return this;
     }
