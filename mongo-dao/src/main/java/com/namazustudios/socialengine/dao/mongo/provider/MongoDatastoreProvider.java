@@ -24,7 +24,7 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
         final MongoClient mongoClient = mongoProvider.get();
 
         final Datastore Datastore;
-        Datastore = Morphia.createDatastore(mongoClient, DATABASE_NAME);
+        Datastore = Morphia.createDatastore(mongoClient, "elements");
         Datastore.getMapper().mapPackage("com.namazustudios.socialengine.dao.mongo");
         Datastore.ensureIndexes();
 

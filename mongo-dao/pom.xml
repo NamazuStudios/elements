@@ -17,8 +17,8 @@
     <name>mongo-dao</name>
 
     <properties>
-        <morphia.version>2.0.2</morphia.version>
-        <mongo.driver.version>4.1.1</mongo.driver.version>
+        <morphia.version>2.1.0</morphia.version>
+        <mongo.driver.version>3.12.7</mongo.driver.version>
     </properties>
 
     <dependencies>
@@ -56,6 +56,11 @@
             <groupId>dev.morphia.morphia</groupId>
             <artifactId>morphia-core</artifactId>
             <version>${morphia.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.mongodb</groupId>
+            <artifactId>mongo-java-driver</artifactId>
+            <version>${mongo.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.inject</groupId>
@@ -103,11 +108,6 @@
             <artifactId>testng</artifactId>
             <version>${testng.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver-sync</artifactId>
-            <version>${mongo.driver.version}</version>
         </dependency>
         <dependency>
             <groupId>de.flapdoodle.embed</groupId>

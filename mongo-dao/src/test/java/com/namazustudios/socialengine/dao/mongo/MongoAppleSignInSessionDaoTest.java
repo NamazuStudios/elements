@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
+import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -37,6 +38,8 @@ public class MongoAppleSignInSessionDaoTest {
     private User testUser;
 
     private Profile testProfile;
+
+    private EmbeddedMongo embeddedMongo;
 
     @BeforeClass
     public void setup() {
@@ -130,6 +133,20 @@ public class MongoAppleSignInSessionDaoTest {
     @Inject
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
+    }
+
+    public EmbeddedMongo getEmbeddedMongo() {
+        return embeddedMongo;
+    }
+
+    @Inject
+    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
+        this.embeddedMongo = embeddedMongo;
+    }
+
+    @AfterSuite
+    public void killProcess() {
+        getEmbeddedMongo().stop();
     }
 
 }

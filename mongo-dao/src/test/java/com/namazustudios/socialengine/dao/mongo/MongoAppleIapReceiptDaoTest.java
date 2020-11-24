@@ -5,10 +5,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import org.testng.ITestContext;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
 
@@ -26,6 +23,8 @@ public class MongoAppleIapReceiptDaoTest {
     private AppleIapReceiptDao appleIapReceiptDao;
 
     private User testUser;
+
+    private EmbeddedMongo embeddedMongo;
 
     @BeforeClass
     public void createTestUser() {
@@ -143,6 +142,20 @@ public class MongoAppleIapReceiptDaoTest {
     @Inject
     public void setAppleIapReceiptDao(AppleIapReceiptDao appleIapReceiptDao) {
         this.appleIapReceiptDao = appleIapReceiptDao;
+    }
+
+    public EmbeddedMongo getEmbeddedMongo() {
+        return embeddedMongo;
+    }
+
+    @Inject
+    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
+        this.embeddedMongo = embeddedMongo;
+    }
+
+    @AfterSuite
+    public void killProcess() {
+        getEmbeddedMongo().stop();
     }
 
 }

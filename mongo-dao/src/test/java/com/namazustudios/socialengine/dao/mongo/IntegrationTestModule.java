@@ -48,7 +48,7 @@ public class IntegrationTestModule extends AbstractModule {
         install(new ConfigurationModule(() -> {
             final Properties properties = defaultConfigurationSupplier.get();
             properties.put(LOCK_TIMEOUT, format("%d", 120000));
-            properties.put(MONGO_CLIENT_URI, format("mongo://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
             return properties;
         }));
 

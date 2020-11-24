@@ -17,8 +17,6 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoClientProvider.class);
 
-    public static final int DEFAULT_MONGO_PORT = 27017;
-
     public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.client.uri";
 
     private String mongoDbUri;
@@ -32,7 +30,7 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
         logger.info("Using MongoClient URI.");
 
-        var connectionString = new ConnectionString(getMongoDbUri());
+        final ConnectionString connectionString = new ConnectionString(getMongoDbUri());
 
         return MongoClients.create(connectionString);
 

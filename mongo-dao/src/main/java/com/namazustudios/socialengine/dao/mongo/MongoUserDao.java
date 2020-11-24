@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
+import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -11,8 +12,10 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Modify;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.index.Term;
@@ -24,9 +27,7 @@ import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -237,25 +238,25 @@ public class MongoUserDao implements UserDao {
                 Filters.eq("active", false)
         ));
 
+        MongoUser mongoUser;
         if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
+            mongoUser = query.modify(UpdateOperators.set("facebookId", user.getFacebookId()),
                     UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new UpdateOptions().upsert(true));
+            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
         } else {
-            query.update(UpdateOperators.set("active", true),
+            mongoUser = query.modify(UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new UpdateOptions().upsert(true));
+            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
         }
 
-        getMongoPasswordUtils().addPasswordToQuery(query, password);
+        mongoUser = getMongoPasswordUtils().addPasswordToQuery(query, password);
 
         try {
-            final MongoUser mongoUser = query.first();
             getObjectIndex().index(mongoUser);
 
             return getDozerMapper().map(mongoUser, User.class);
@@ -283,24 +284,23 @@ public class MongoUserDao implements UserDao {
         ));
 
         if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
+            query.modify(UpdateOperators.set("facebookId", user.getFacebookId()),
                     UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new UpdateOptions().upsert(true));
+            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
         } else {
-            query.update(UpdateOperators.set("active", true),
+            query.modify(UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new UpdateOptions().upsert(true));
+            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
         }
 
-        getMongoPasswordUtils().scramblePassword(query);
+        final MongoUser mongoUser = getMongoPasswordUtils().scramblePassword(query);
 
         try {
-            final MongoUser mongoUser = query.first();
             getObjectIndex().index(mongoUser);
 
             return getDozerMapper().map(mongoUser, User.class);
@@ -359,7 +359,6 @@ public class MongoUserDao implements UserDao {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-        final UpdateOperations<MongoUser> operations = getDatastore().createUpdateOperations(MongoUser.class);
 
         query.filter(Filters.and(
                 Filters.eq("_id", objectId),
