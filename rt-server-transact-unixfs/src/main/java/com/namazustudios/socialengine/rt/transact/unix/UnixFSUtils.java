@@ -35,7 +35,7 @@ public class UnixFSUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSUtils.class);
 
-    public static final String STORAGE_ROOT_DIRECTORY = "com.namazustudios.socialengine.rt.transact.unix.fs.root";
+    public static final String UNIXFS_STORAGE_ROOT_DIRECTORY = "com.namazustudios.socialengine.rt.transact.unix.fs.root";
 
     public static final String REVISION_SUFFIX = "rlink";
 
@@ -94,7 +94,7 @@ public class UnixFSUtils {
     private final Path lockFilePath;
 
     @Inject
-    public UnixFSUtils(@Named(STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
+    public UnixFSUtils(@Named(UNIXFS_STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
         this.storageRoot = storageRoot;
         this.lockFilePath = storageRoot.resolve(LOCK_FILE_NAME);
         this.revisionTablePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();

@@ -32,11 +32,4 @@
     <modelVersion>4.0.0</modelVersion>
     <packaging>pom</packaging>
 
-    <build>
-        <pluginManagement>
-            <plugins>
-            </plugins>
-        </pluginManagement>
-    </build>
-
 </project>

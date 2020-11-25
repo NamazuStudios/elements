@@ -29,8 +29,6 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSRevisionPool.class);
 
-    public static final String REVISION_POOL_SIZE = "com.namazustudios.socialengine.rt.transact.unix.fs.revision.pool.size";
-
     /**
      * Some magic bytes int he file to indicate what it is.
      */
@@ -85,15 +83,6 @@ public class UnixFSRevisionPool implements Revision.Factory {
             throw new IllegalStateException("Not running.");
         }
 
-    }
-
-    public int getPoolSize() {
-        return poolSize;
-    }
-
-    @Inject
-    public void setPoolSize(@Named(REVISION_POOL_SIZE) final int poolSize) {
-        this.poolSize = poolSize;
     }
 
     public UnixFSUtils getUtils() {
@@ -187,7 +176,6 @@ public class UnixFSRevisionPool implements Revision.Factory {
                 final String magic = revisionPoolData.magic.get();
                 final int major = revisionPoolData.major.get();
                 final int minor = revisionPoolData.minor.get();
-                final int max = revisionPoolData.max.get();
 
                 if (!POOL_FILE_MAGIC.equals(magic)) {
                     final String msg = format("Unexpected magic!=expected %s!=%s",POOL_FILE_MAGIC, magic);
@@ -199,16 +187,6 @@ public class UnixFSRevisionPool implements Revision.Factory {
                     final String msg = format("Unsupported version %d.%d!=%d%d",
                             VERSION_MAJOR_CURRENT, VERSION_MINOR_CURRENT,
                             major, minor
-                    );
-
-                    throw new FatalException(msg);
-                }
-
-                if (poolSize < max) {
-
-                    final String msg = format(
-                        "Cannot reduce pool size from %d to %d",
-                        magic, poolSize
                     );
 
                     throw new FatalException(msg);

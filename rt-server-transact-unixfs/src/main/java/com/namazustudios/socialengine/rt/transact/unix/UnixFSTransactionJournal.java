@@ -43,13 +43,13 @@ public class UnixFSTransactionJournal implements TransactionJournal {
      * The size of each transaction entry.  This is a fixed size.  If a transaction attempts to write more bytes than
      * the size allows, then an exception will result.
      */
-    public static final String TRANSACTION_BUFFER_SIZE = "com.namazustudios.socialengine.rt.transact.journal.buffer.size";
+    public static final String UNIXFS_TRANSACTION_BUFFER_SIZE = "com.namazustudios.socialengine.rt.transact.journal.buffer.size";
 
     /**
      * The journal buffer count.  This should be large enough to accommodate all running transactions.  The larger this
      * number the better as it will give the journal sufficient breathing room for processing transactions.
      */
-    public static final String TRANSACTION_BUFFER_COUNT = "com.namazustudios.socialengine.rt.transact.journal.buffer.count";
+    public static final String UNIXFS_TRANSACTION_BUFFER_COUNT = "com.namazustudios.socialengine.rt.transact.journal.buffer.count";
 
     /**
      * Some magic bytes int he file to indicate what it is.
@@ -179,7 +179,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Inject
-    public void setTxnBufferSize(@Named(TRANSACTION_BUFFER_SIZE) long txnBufferSize) {
+    public void setTxnBufferSize(@Named(UNIXFS_TRANSACTION_BUFFER_SIZE) long txnBufferSize) {
         if (txnBufferSize > Integer.MAX_VALUE) throw new IllegalArgumentException("tnx buffer size too large");
         this.txnBufferSize = txnBufferSize;
     }
@@ -189,7 +189,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     @Inject
-    public void setTxnBufferCount(@Named(TRANSACTION_BUFFER_COUNT) long txnBufferCount) {
+    public void setTxnBufferCount(@Named(UNIXFS_TRANSACTION_BUFFER_COUNT) long txnBufferCount) {
         if (txnBufferCount > Integer.MAX_VALUE) throw new IllegalArgumentException("tnx buffer count too large");
         this.txnBufferCount = txnBufferCount;
     }

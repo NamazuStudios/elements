@@ -115,13 +115,13 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
         public void start() {
 
             dnsSrvResolver = DnsSrvResolvers.newBuilder()
-                .cachingLookups(true)
-                .dnsLookupTimeoutMillis(DNS_LOOKUP_TIMEOUT)
+                    .cachingLookups(true)
+                    .dnsLookupTimeoutMillis(DNS_LOOKUP_TIMEOUT)
                 .build();
 
             dnsSrvWatcher = DnsSrvWatchers.newBuilder(dnsSrvResolver)
-                .polling(DNS_LOOKUP_POLLING_RATE, DNS_LOOKUP_POLLING_RATE_UNITS)
-                .withErrorHandler(this)
+                    .polling(DNS_LOOKUP_POLLING_RATE, DNS_LOOKUP_POLLING_RATE_UNITS)
+                    .withErrorHandler(this)
                 .build();
 
             nodeChangeNotifier = dnsSrvWatcher.watch(getSrvQuery());

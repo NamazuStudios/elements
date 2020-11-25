@@ -7,16 +7,14 @@ import com.namazustudios.socialengine.rt.transact.TransactionJournal;
 import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSChecksumAlgorithm.ADLER_32;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionPool.REVISION_POOL_SIZE;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTable.REVISION_TABLE_COUNT;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.TRANSACTION_BUFFER_COUNT;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.TRANSACTION_BUFFER_SIZE;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.STORAGE_ROOT_DIRECTORY;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTable.UNIXFS_REVISION_TABLE_COUNT;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_COUNT;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_SIZE;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.UNIXFS_STORAGE_ROOT_DIRECTORY;
 import static java.lang.String.format;
 import static java.nio.file.Files.createTempDirectory;
 
@@ -72,7 +70,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
      * @return
      */
     public UnixFSTransactionalPersistenceContextModule withStorageRoot(final Path path) {
-        storageRootBinding = () -> bind(Path.class).annotatedWith(named(STORAGE_ROOT_DIRECTORY)).toInstance(path);
+        storageRootBinding = () -> bind(Path.class).annotatedWith(named(UNIXFS_STORAGE_ROOT_DIRECTORY)).toInstance(path);
         return this;
     }
 
@@ -85,7 +83,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
     public UnixFSTransactionalPersistenceContextModule withTransactionBufferSize(final int size) {
         transactionSizeBinding = () ->
             bind(long.class)
-                .annotatedWith(named(TRANSACTION_BUFFER_SIZE))
+                .annotatedWith(named(UNIXFS_TRANSACTION_BUFFER_SIZE))
                 .toInstance((long)size);
         return this;
     }
@@ -100,7 +98,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
     public UnixFSTransactionalPersistenceContextModule withTransactionBufferCount(final int count) {
         transactionCountBinding = () ->
             bind(long.class)
-                .annotatedWith(named(TRANSACTION_BUFFER_COUNT))
+                .annotatedWith(named(UNIXFS_TRANSACTION_BUFFER_COUNT))
                 .toInstance((long)count);
         return this;
     }
@@ -113,19 +111,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
      * @return this instance
      */
     public UnixFSTransactionalPersistenceContextModule withRevisionTableCount(final int count) {
-        revisionTableCountBinding = () -> bind(int.class).annotatedWith(named(REVISION_TABLE_COUNT)).toInstance(count);
-        return this;
-    }
-
-    /**
-     * Specifies the size of the revision pool. This is the highest value a revision number will have before rolling
-     * over, this also limits the number of concurrent transactions. However, this should not be greatly exceed the
-     *
-     * @param size
-     * @return
-     */
-    public UnixFSTransactionalPersistenceContextModule withRevisionPoolSize(final int size) {
-        revisionPoolSizeBinding = () -> bind(int.class).annotatedWith(named(REVISION_POOL_SIZE)).toInstance(size);
+        revisionTableCountBinding = () -> bind(int.class).annotatedWith(named(UNIXFS_REVISION_TABLE_COUNT)).toInstance(count);
         return this;
     }
 
@@ -184,7 +170,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
             "elements-unixfs-test" :
             format("elements-unixfs-test-%s", name);
 
-        storageRootBinding = () -> bind(Path.class).annotatedWith(named(STORAGE_ROOT_DIRECTORY)).toProvider(() -> {
+        storageRootBinding = () -> bind(Path.class).annotatedWith(named(UNIXFS_STORAGE_ROOT_DIRECTORY)).toProvider(() -> {
             try {
                 return createTempDirectory(prefix);
             } catch (IOException ex) {
@@ -196,8 +182,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
         return withTransactionBufferSize(4096)
                 .withTransactionBufferCount(4096)
                 .withRevisionTableCount(4096)
-                .withChecksumAlgorithm(ADLER_32)
-                .withRevisionPoolSize(Integer.MAX_VALUE);
+                .withChecksumAlgorithm(ADLER_32);
 
     }
 
