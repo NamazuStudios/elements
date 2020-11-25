@@ -232,29 +232,26 @@ public class MongoUserDao implements UserDao {
         query.filter(Filters.or(
                 Filters.eq("name", user.getName()),
                 Filters.eq("email", user.getEmail())
-        ));
-
-        query.filter(Filters.and(
+        )).filter(Filters.and(
                 Filters.eq("active", false)
         ));
 
-        MongoUser mongoUser;
         if (user.getFacebookId() != null) {
-            mongoUser = query.modify(UpdateOperators.set("facebookId", user.getFacebookId()),
+            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
                     UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+            ).execute(new UpdateOptions().upsert(true));
         } else {
-            mongoUser = query.modify(UpdateOperators.set("active", true),
+            query.update(UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+            ).execute(new UpdateOptions().upsert(true));
         }
 
-        mongoUser = getMongoPasswordUtils().addPasswordToQuery(query, password);
+        final MongoUser mongoUser = getMongoPasswordUtils().addPasswordToQuery(query, password);
 
         try {
             getObjectIndex().index(mongoUser);
@@ -274,7 +271,7 @@ public class MongoUserDao implements UserDao {
     public User createOrReactivateUser(final User user) {
         validate(user);
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         query.filter(Filters.or(
                 Filters.eq("name", user.getName()),
@@ -284,19 +281,28 @@ public class MongoUserDao implements UserDao {
         ));
 
         if (user.getFacebookId() != null) {
-            query.modify(UpdateOperators.set("facebookId", user.getFacebookId()),
+            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
                     UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+            ).execute(new UpdateOptions().upsert(true));
         } else {
-            query.modify(UpdateOperators.set("active", true),
+            query.update(UpdateOperators.set("active", true),
                     UpdateOperators.set("name", user.getName()),
                     UpdateOperators.set("email", user.getEmail()),
                     UpdateOperators.set("level", user.getLevel())
-            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+            ).execute(new UpdateOptions().upsert(true));
         }
+
+        query = getDatastore().find(MongoUser.class);
+
+        query.filter(Filters.or(
+                Filters.eq("name", user.getName()),
+                Filters.eq("email", user.getEmail())
+        )).filter(Filters.and(
+                Filters.eq("active", true)
+        ));
 
         final MongoUser mongoUser = getMongoPasswordUtils().scramblePassword(query);
 

@@ -24,8 +24,6 @@ public class MongoAppleIapReceiptDaoTest {
 
     private User testUser;
 
-    private EmbeddedMongo embeddedMongo;
-
     @BeforeClass
     public void createTestUser() {
         testUser = new User();
@@ -33,7 +31,6 @@ public class MongoAppleIapReceiptDaoTest {
         testUser.setEmail("testy.mctesterson.5@example.com");
         testUser.setLevel(USER);
 
-        testUser = getUserDao().createOrReactivateUser(testUser);
         testUser = getUserDao().createOrReactivateUser(testUser);
     }
 
@@ -142,20 +139,6 @@ public class MongoAppleIapReceiptDaoTest {
     @Inject
     public void setAppleIapReceiptDao(AppleIapReceiptDao appleIapReceiptDao) {
         this.appleIapReceiptDao = appleIapReceiptDao;
-    }
-
-    public EmbeddedMongo getEmbeddedMongo() {
-        return embeddedMongo;
-    }
-
-    @Inject
-    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
-        this.embeddedMongo = embeddedMongo;
-    }
-
-    @AfterSuite
-    public void killProcess() {
-        getEmbeddedMongo().stop();
     }
 
 }
