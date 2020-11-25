@@ -10,8 +10,7 @@ import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.IMongodConfig;
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
+import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
 import org.slf4j.Logger;
@@ -94,7 +93,7 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
     public MongodExecutable mongodExecutable() throws IOException {
 
-        final IMongodConfig config = new MongodConfigBuilder()
+        final MongodConfig config = MongodConfig.builder()
                 .version(Version.V3_4_5)
                 .net(new Net(TEST_MONGO_BIND_IP, TEST_MONGO_PORT, localhostIsIPv6()))
                 .build();
