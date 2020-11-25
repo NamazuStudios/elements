@@ -17,6 +17,12 @@ import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
+import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
@@ -93,43 +99,49 @@ public class AppServeMain implements Runnable {
         facebookPermissionListSupplier =  new FacebookBuiltinPermissionsSupplier();
 
         return createInjector(
-                new ConfigurationModule(defaultConfigurationSupplier),
-                new MongoCoreModule(),
-                new ServerModule(),
-                new AppServeFilterModule(),
-                new AppServeSecurityModule(),
-                new AppServeServicesModule(),
-                new MongoDaoModule(),
-                new ValidationModule(),
-                new MongoSearchModule(),
-                new ZContextModule(),
-                new GameOnInvokerModule(),
-                new RTFilesystemGitLoaderModule(),
-                new RTDaoModule(),
-                new RTGitApplicationModule(),
-                new AppServeRedissonServicesmodule(),
-                new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
-                new AbstractModule() {
-                    @Override
-                    protected void configure() {
-                        bind(PersistenceStrategy.class).toInstance(getNullPersistence());
-                    }
-                },
-                new AppleIapReceiptInvokerModule(),
-                new JacksonHttpClientModule()
-                    .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-                    .withDefaultObjectMapperProvider(() -> {
-                        final ObjectMapper objectMapper = new ObjectMapper();
-                        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                        return objectMapper;
-                    }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                        final ObjectMapper objectMapper = new ObjectMapper();
-                        final DateFormat dateFormat = new AppleDateFormat();
-                        objectMapper.setDateFormat(dateFormat);
-                        objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                        return objectMapper;
-                    })
+            new ConfigurationModule(defaultConfigurationSupplier),
+            new MongoCoreModule(),
+            new ServerModule(),
+            new AppServeFilterModule(),
+            new AppServeSecurityModule(),
+            new AppServeServicesModule(),
+            new MongoDaoModule(),
+            new ValidationModule(),
+            new MongoSearchModule(),
+            new ZContextModule(),
+            new GameOnInvokerModule(),
+            new RTFilesystemGitLoaderModule(),
+            new RTDaoModule(),
+            new RTGitApplicationModule(),
+            new AppServeRedissonServicesmodule(),
+            new JeroMQRemoteInvokerModule(),
+            new JeroMQInstanceConnectionServiceModule(),
+            new JeroMQAsyncConnectionServiceModule(),
+            new SimpleRemoteInvokerRegistryModule(),
+            new FSTPayloadReaderWriterModule(),
+            new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
+            new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
+            new AbstractModule() {
+                @Override
+                protected void configure() {
+                    bind(PersistenceStrategy.class).toInstance(getNullPersistence());
+                }
+            },
+            new AppleIapReceiptInvokerModule(),
+            new JacksonHttpClientModule()
+                .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
+                .withDefaultObjectMapperProvider(() -> {
+                    final ObjectMapper objectMapper = new ObjectMapper();
+                    objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    return objectMapper;
+                }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
+                    final ObjectMapper objectMapper = new ObjectMapper();
+                    final DateFormat dateFormat = new AppleDateFormat();
+                    objectMapper.setDateFormat(dateFormat);
+                    objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+                    objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    return objectMapper;
+                })
         ).getInstance(Server.class);
 
     }

@@ -173,14 +173,14 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
         }
 
         public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group() {
-            return new AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket>() {
+            return new AsyncConnectionGroup.Builder<>() {
 
                 private List<Function<JeroMQAsyncThreadContext, AsyncConnection<ZContext, ZMQ.Socket>>> connectionSupplierList = new ArrayList<>();
 
                 @Override
                 public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket>
-                        connection(final Function<ZContext, ZMQ.Socket> socketSupplier,
-                                   final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
+                connection(final Function<ZContext, ZMQ.Socket> socketSupplier,
+                           final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
                     connectionSupplierList.add(context -> {
                         final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
@@ -199,14 +199,14 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
                     context.doInThread(() -> {
 
-                        final List<AsyncConnection<ZContext, ZMQ.Socket>> connectionList = connectionSupplierList
-                            .stream()
-                            .map(supplier -> supplier.apply(context))
-                            .collect(toList());
+                        final var connectionList = connectionSupplierList
+                                .stream()
+                                .map(supplier -> supplier.apply(context))
+                                .collect(toList());
 
-                        final JeroMQAsyncConnectionGroup group = new JeroMQAsyncConnectionGroup(
-                            connectionList,
-                            (g, c) -> context.doInThread(() -> c.accept(g)));
+                        final var group = new JeroMQAsyncConnectionGroup(
+                                connectionList,
+                                (g, c) -> context.doInThread(() -> c.accept(g)));
 
                         consumer.accept(group);
 

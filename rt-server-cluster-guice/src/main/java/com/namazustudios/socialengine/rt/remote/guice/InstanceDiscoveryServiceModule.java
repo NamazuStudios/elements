@@ -13,7 +13,7 @@ public class InstanceDiscoveryServiceModule extends PrivateModule {
 
     private final Supplier<Properties> configurationSupplier;
 
-    public InstanceDiscoveryServiceModule(Supplier<Properties> configurationSupplier) {
+    public InstanceDiscoveryServiceModule(final Supplier<Properties> configurationSupplier) {
         this.configurationSupplier = configurationSupplier;
     }
 

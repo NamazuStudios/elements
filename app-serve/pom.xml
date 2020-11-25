@@ -84,6 +84,16 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-cluster</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-cluster-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-server-lua-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -100,6 +110,16 @@
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-dao</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-fst</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-fst-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
