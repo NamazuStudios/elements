@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ProgressDao;
@@ -23,6 +24,7 @@ import com.namazustudios.socialengine.model.mission.Step;
 import static com.namazustudios.socialengine.model.mission.Step.buildRewardIssuanceTags;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
@@ -30,9 +32,7 @@ import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -294,25 +294,18 @@ public class MongoProgressDao implements ProgressDao {
         progressQuery.filter(Filters.eq("_id", mongoProgressId));
         final MongoProgress mongoProgress = progressQuery.first();
 
-        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
-
-        query.filter(Filters.eq("_id", mongoProgressId));
-        query.filter(Filters.eq("version", mongoProgress.getVersion()));
-
         if (mongoProgress == null) {
             throw new NotFoundException("Progress with id not found: " + progress.getId());
         }
 
-        final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
-
         if ((progress.getRemaining() - actionsPerformed) > 0) {
-            query.update(UpdateOperators.dec("remaining", actionsPerformed))
+            progressQuery.update(UpdateOperators.dec("remaining", actionsPerformed))
             .execute(new UpdateOptions().upsert(false));
         } else {
-            advanceMission(query, mongoProgress, actionsPerformed);
+            advanceMission(progressQuery, mongoProgress, actionsPerformed);
         }
 
-        final MongoProgress result = query.first();
+        final MongoProgress result = progressQuery.first();
 
         if (result == null) {
             // This happens because either the Progress was deleted while applying the rewards, the version mismatched

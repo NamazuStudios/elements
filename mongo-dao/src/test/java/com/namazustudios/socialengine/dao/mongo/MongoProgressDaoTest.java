@@ -26,6 +26,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.*;
 
@@ -283,6 +284,9 @@ public class MongoProgressDaoTest  {
 
             while (progress.getRemaining() > 1) {
                 progress = getProgressDao().advanceProgress(progress, 1);
+                if(progress.getRewardIssuances() == null){
+                    progress.setRewardIssuances(emptyList());
+                }
                 assertEquals(progress.getRewardIssuances().size(), expectedRewards);
             }
 

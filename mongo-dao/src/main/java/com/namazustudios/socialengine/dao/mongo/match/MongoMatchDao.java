@@ -112,7 +112,7 @@ public class MongoMatchDao implements MatchDao {
 
         final Query<MongoMatch> mongoMatchQuery = getDatastore()
             .find(MongoMatch.class)
-            .filter("player", playerProfile);
+            .filter(Filters.eq("player", playerProfile));
 
         return getMongoDBUtils().paginationFromQuery(mongoMatchQuery, offset, count, m -> getDozerMapper().map(m, Match.class), new FindOptions());
 

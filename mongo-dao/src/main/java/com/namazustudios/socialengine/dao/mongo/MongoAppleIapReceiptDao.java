@@ -51,7 +51,7 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
         final Query<MongoAppleIapReceipt> query = getDatastore().find(MongoAppleIapReceipt.class);
 
-        query.field("user").equal(getDozerMapper().map(user, MongoUser.class));
+        query.filter(Filters.eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
@@ -93,7 +93,7 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
                 getDozerMapper().map(appleIapReceipt, MongoAppleIapReceipt.class);
 
         try {
-            getDatastore().save(mongoAppleIapReceipt);
+            getDatastore().insert(mongoAppleIapReceipt);
         } catch (DuplicateKeyException e) {
             throw new DuplicateException(e);
         }

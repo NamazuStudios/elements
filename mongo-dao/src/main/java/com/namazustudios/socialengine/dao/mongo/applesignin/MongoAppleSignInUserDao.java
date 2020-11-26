@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.applesignin;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.AppleSignInUserDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
@@ -14,16 +15,14 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
-import dev.morphia.query.experimental.filters.Filter;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
@@ -125,13 +124,13 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
                 Filters.eq("appleSignInId", user.getAppleSignInId())
         ));
 
-        query.update(UpdateOperators.set("appleSignInId", user.getAppleSignInId()))
-                .execute(new UpdateOptions().upsert(true));
+
 
         final MongoUser mongoUser;
 
         try {
-            mongoUser = query.first();
+            mongoUser = query.modify(UpdateOperators.set("appleSignInId", user.getAppleSignInId()))
+                    .execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
         } catch (MongoException ex) {
             if (ex.getCode() == 11000) {
                 throw new DuplicateException(ex);

@@ -7,14 +7,11 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
+import dev.morphia.DeleteOptions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bson.types.ObjectId;
 import dev.morphia.Datastore;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 import org.testng.collections.Lists;
 
 import javax.inject.Inject;
@@ -23,6 +20,8 @@ import java.util.*;
 
 import java.util.stream.Collectors;
 
+import static java.lang.String.format;
+import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.fail;
@@ -37,6 +36,8 @@ public class MongoItemDaoIntegrationTest {
     private Datastore Datastore;
 
     private MatchingMockObjects matchingMockObjects;
+
+    private int itemCount = 0;
 
     @Test
     public void testCreateAndRead() {
@@ -226,7 +227,7 @@ public class MongoItemDaoIntegrationTest {
 
     @BeforeMethod
     public void deleteAllItems() {
-        Datastore.delete(Datastore.createQuery(MongoItem.class));
+        Datastore.find(MongoItem.class).delete(new DeleteOptions().multi(true));
     }
 
     @AfterSuite

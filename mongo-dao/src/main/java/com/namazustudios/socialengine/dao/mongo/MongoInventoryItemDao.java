@@ -1,8 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
-import com.mongodb.WriteResult;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
@@ -12,6 +13,7 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -20,6 +22,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
@@ -28,9 +31,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,8 +141,12 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         try {
             getDatastore().insert(mongoInventoryItem);
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
+        } catch (MongoException ex) {
+            if (ex.getCode() == 11000) {
+                throw new DuplicateException(ex);
+            } else {
+                throw new InternalException(ex);
+            }
         }
 
         getObjectIndex().index(mongoInventoryItem);
@@ -164,12 +169,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         query.filter(Filters.eq("_id", objectId));
 
-        final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
-
-        query.update(UpdateOperators.set("version", randomUUID().toString()),
-                UpdateOperators.set("quantity", inventoryItem.getQuantity())).execute(new UpdateOptions().upsert(true));
-
-        final MongoInventoryItem mongoInventoryItem = query.first();
+        final MongoInventoryItem mongoInventoryItem = query.modify(UpdateOperators.set("version", randomUUID().toString()),
+                UpdateOperators.set("quantity", inventoryItem.getQuantity())).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
 
         if (mongoInventoryItem == null) {
             throw new NotFoundException("Inventory item with id of " + inventoryItem.getId() + " does not exist");
@@ -205,11 +206,10 @@ public class MongoInventoryItemDao implements InventoryItemDao {
                     .execute(new UpdateOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED));
         }
 
-        query.update(UpdateOperators.set("quantity", quantity),
+        final MongoInventoryItem resultMongoInventoryItem = query.modify(UpdateOperators.set("quantity", quantity),
                 UpdateOperators.set("version", randomUUID().toString()))
-                .execute(new UpdateOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED));
+                .execute(new ModifyOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED).returnDocument(ReturnDocument.AFTER));
 
-        final MongoInventoryItem resultMongoInventoryItem = query.first();
         return getDozerMapper().map(resultMongoInventoryItem, InventoryItem.class);
 
     }
@@ -246,8 +246,6 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final MongoInventoryItem mongoInventoryItem = query.first();
 
-        final UpdateOperations<MongoInventoryItem> operations = getDatastore().createUpdateOperations(MongoInventoryItem.class);
-
         query.filter(Filters.eq("version", mongoInventoryItem == null ? randomUUID().toString() : mongoInventoryItem.getVersion()));
 
         final int base;
@@ -268,11 +266,9 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final int quantity = max(0, base + quantityDelta);
 
-        query.update(UpdateOperators.set("quantity", quantity),
+        final MongoInventoryItem item = query.modify(UpdateOperators.set("quantity", quantity),
                 UpdateOperators.set("version", randomUUID().toString()))
-                .execute(new UpdateOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED));
-
-        final MongoInventoryItem item = query.first();
+                .execute(new ModifyOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED).returnDocument(ReturnDocument.AFTER));;
 
         if (item == null) {
             throw new ContentionException();

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
@@ -11,7 +12,7 @@ import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import dev.morphia.UpdateOptions;
+import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
@@ -20,18 +21,12 @@ import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
@@ -160,17 +155,19 @@ public class MongoItemDao implements ItemDao {
         final Query<MongoItem> query = getDatastore().find(MongoItem.class);
         query.filter(Filters.eq("_id", objectId));
 
-        query.update(UpdateOperators.set("name", item.getName()),
+        final MongoItem mongoItem = query.first();
+
+        if (mongoItem == null) {
+            throw new NotFoundException("Item with id or name of " + item.getId() + " does not exist");
+        }
+
+        final MongoItem updatedMongoItem = query.modify(UpdateOperators.set("name", item.getName()),
                 UpdateOperators.set("displayName", item.getDisplayName()),
                 UpdateOperators.set("metadata", item.getMetadata()),
                 UpdateOperators.set("tags", item.getTags()),
                 UpdateOperators.set("description", item.getDescription())
-                ).execute(new UpdateOptions().upsert(true));
+        ).execute(new ModifyOptions().returnDocument(ReturnDocument.AFTER));
 
-        final MongoItem updatedMongoItem = query.first();
-        if (updatedMongoItem == null) {
-            throw new NotFoundException("Item with id or name of " + item.getId() + " does not exist");
-        }
         getObjectIndex().index(updatedMongoItem);
 
         return getDozerMapper().map(updatedMongoItem, Item.class);

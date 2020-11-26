@@ -4,6 +4,7 @@ import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.Date;
 import java.util.UUID;
 
 import static java.lang.System.currentTimeMillis;
@@ -25,7 +26,7 @@ public class MongoMatchLock {
 
     @Indexed
     @Property
-    private Timestamp timestamp = new Timestamp(currentTimeMillis());
+    private Date timestamp = new Date(currentTimeMillis());
 
     @Indexed
     @Property
@@ -33,11 +34,11 @@ public class MongoMatchLock {
 
     public MongoMatchLock() {}
 
-    public Timestamp getTimestamp() {
+    public Date getTimestamp() {
         return timestamp;
     }
 
-    public void setTimestamp(Timestamp timestamp) {
+    public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
 
