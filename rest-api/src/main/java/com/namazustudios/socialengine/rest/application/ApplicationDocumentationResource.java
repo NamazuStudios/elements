@@ -300,7 +300,7 @@ public class ApplicationDocumentationResource {
             .map(entry -> {
                 final QueryParameter parameter = new QueryParameter();
                 parameter.setName(entry.getKey());
-                parameter.setType(entry.getValue().name());
+                parameter.setType(entry.getValue().getType().name());
                 return parameter;
             }).forEach(parameters::add);
 
