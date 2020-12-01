@@ -4,6 +4,7 @@ import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
+import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
@@ -31,7 +32,8 @@ import java.util.Objects;
     })
 @Entity(value = "profile", useDiscriminator = false)
 @Indexes({
-    @Index(fields = {@Field("user"), @Field("application")})
+    @Index(fields = {@Field("user"), @Field("application")}),
+    @Index(fields = @Field(value = "displayName", type = IndexType.TEXT))
 })
 public class MongoProfile {
 
