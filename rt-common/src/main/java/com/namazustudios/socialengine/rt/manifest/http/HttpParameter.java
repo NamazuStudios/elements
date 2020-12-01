@@ -36,17 +36,6 @@ public class HttpParameter {
          */
         public void setType(Type type) { this.type = type; }
 
-//        // Compare Two HttpParameters based on their index
-//        /**
-//         * @param   other - The HttpParameter to be compared.
-//         * @return  A negative integer, zero, or a positive integer as this parameter
-//         *          is less than, equal to, or greater than the supplied object's index.
-//         */
-//        @Override
-//        public int compareTo(HttpParameter other) {
-//                return this.getIndex() - other.getIndex();
-//        }
-
         // Two HttpParameters are equal if their indices and types are equal
         @Override
         public boolean equals(Object o) {
