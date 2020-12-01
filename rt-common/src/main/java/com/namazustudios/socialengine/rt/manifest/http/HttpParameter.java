@@ -2,25 +2,25 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
-public class HttpParameter implements Comparable<HttpParameter> {
+public class HttpParameter {
 
-        private int index;
+        private String name;
 
         private Type type;
 
         /**
-         * The index of the parameter
+         * The type of the parameter.
          *
-         * @return the {@link Integer} representing the index of the parameter
+         * @return the String representing the name of the parameter
          */
-        public int getIndex() { return index; }
+        public String getName() { return name; }
 
         /**
-         * Sets the index of the parameter
+         * Sets the name of the parameter
          *
-         * @param index the index of the parameter
+         * @param name of the parameter
          */
-        public void setIndex(int index) { this.index = index; }
+        public void setName(String name) { this.name = name; }
 
         /**
          * The type of the parameter.
@@ -36,16 +36,16 @@ public class HttpParameter implements Comparable<HttpParameter> {
          */
         public void setType(Type type) { this.type = type; }
 
-        // Compare Two HttpParameters based on their index
-        /**
-         * @param   other - The HttpParameter to be compared.
-         * @return  A negative integer, zero, or a positive integer as this parameter
-         *          is less than, equal to, or greater than the supplied object's index.
-         */
-        @Override
-        public int compareTo(HttpParameter other) {
-                return this.getIndex() - other.getIndex();
-        }
+//        // Compare Two HttpParameters based on their index
+//        /**
+//         * @param   other - The HttpParameter to be compared.
+//         * @return  A negative integer, zero, or a positive integer as this parameter
+//         *          is less than, equal to, or greater than the supplied object's index.
+//         */
+//        @Override
+//        public int compareTo(HttpParameter other) {
+//                return this.getIndex() - other.getIndex();
+//        }
 
         // Two HttpParameters are equal if their indices and types are equal
         @Override
@@ -66,7 +66,7 @@ public class HttpParameter implements Comparable<HttpParameter> {
                 HttpParameter c = (HttpParameter) o;
 
                 // Compare the data members and return accordingly
-                return this.getIndex() == c.getIndex()
+                return this.name == c.name
                         && this.getType() == c.getType();
         }
 }

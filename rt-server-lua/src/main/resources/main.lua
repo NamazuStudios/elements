@@ -55,10 +55,10 @@ local example_static_headers = {
 }
 
 local example_parameters = {
-    foo_number = {index=1, type="number"},
-    bar_number = {index=2, type="number"},
-    foo_string = {index=3, type="string"},
-    bar_string = {index=4, type="string"}
+    {name="foo_number", type="number"},
+    {name="bar_number", type="number"},
+    {name="foo_string", type="string"},
+    {name="bar_string", type="string"}
 }
 
 -- The security manifest

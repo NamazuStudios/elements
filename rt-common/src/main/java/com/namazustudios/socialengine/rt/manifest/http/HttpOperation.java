@@ -27,7 +27,7 @@ public class HttpOperation {
 
     private String method;
 
-    private Map<String, HttpParameter> parameters;
+    private List<HttpParameter> parameters;
 
     private List<String> authSchemes;
 
@@ -131,8 +131,8 @@ public class HttpOperation {
      *
      * @return a {@link Map<String, HttpParameter>} containing the parameter metadata
      */
-    public Map<String, HttpParameter> getParameters() {
-        return remapParameters(parameters);
+    public List<HttpParameter> getParameters() {
+        return parameters;
     }
 
     /**
@@ -140,7 +140,7 @@ public class HttpOperation {
      *
      * @param parameters a {@link Map<String, HttpParameter>} containing the parameter metadata
      */
-    public void setParameters(Map<String, HttpParameter> parameters) {
+    public void setParameters(List<HttpParameter> parameters) {
         this.parameters = parameters;
     }
 
@@ -236,7 +236,7 @@ public class HttpOperation {
      * Sorts the {@link HttpContent} parameters based off of its index, to keep parameter order consistent
      */
     public void sortParameters() {
-        parameters = remapParameters(parameters);
+        parameters = parameters;
     }
 
     @Override
@@ -271,19 +271,5 @@ public class HttpOperation {
         result = 31 * result + (getProducesContentByType() != null ? getProducesContentByType().hashCode() : 0);
         result = 31 * result + (getConsumesContentByType() != null ? getConsumesContentByType().hashCode() : 0);
         return result;
-    }
-
-    private Map<String, HttpParameter> remapParameters(Map<String, HttpParameter> unsortedParameters) {
-        List<Map.Entry<String, HttpParameter>> list =
-                new LinkedList<>(unsortedParameters.entrySet());
-
-        list.sort(Map.Entry.comparingByValue());
-
-        Map<String, HttpParameter> sortedParameters = new LinkedHashMap<>();
-        for (Map.Entry<String, HttpParameter> entry : list) {
-            sortedParameters.put(entry.getKey(), entry.getValue());
-        }
-
-        return sortedParameters;
     }
 }
