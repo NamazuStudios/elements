@@ -4,9 +4,9 @@ import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
+import com.namazustudios.socialengine.rt.manifest.http.HttpParameter;
 
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a single operation performed over an HTTP request.  This contains a
@@ -27,7 +27,7 @@ public class HttpOperation {
 
     private String method;
 
-    private Map<String, Type> parameters;
+    private List<HttpParameter> parameters;
 
     private List<String> authSchemes;
 
@@ -129,18 +129,18 @@ public class HttpOperation {
     /**
      * Gets the parameters this operation accepts by type.
      *
-     * @return a {@link Map<String, Type>} containing the parameter metadata
+     * @return a {@link Map<String, HttpParameter>} containing the parameter metadata
      */
-    public Map<String, Type> getParameters() {
+    public List<HttpParameter> getParameters() {
         return parameters;
     }
 
     /**
      * Sets the parameters this operation accepts by type.
      *
-     * @param parameters a {@link Map<String, Type>} containing the parameter metadata
+     * @param parameters a {@link Map<String, HttpParameter>} containing the parameter metadata
      */
-    public void setParameters(Map<String, Type> parameters) {
+    public void setParameters(List<HttpParameter> parameters) {
         this.parameters = parameters;
     }
 
@@ -232,6 +232,13 @@ public class HttpOperation {
             .orElseThrow(() -> new InternalException("No default Content Type Found for " + getName()));
     }
 
+    /**
+     * Sorts the {@link HttpContent} parameters based off of its index, to keep parameter order consistent
+     */
+    public void sortParameters() {
+        parameters = parameters;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -265,5 +272,4 @@ public class HttpOperation {
         result = 31 * result + (getConsumesContentByType() != null ? getConsumesContentByType().hashCode() : 0);
         return result;
     }
-
 }

@@ -36,6 +36,8 @@ public class HttpModule {
      * @return a map of operations by name.
      */
     public Map<String, HttpOperation> getOperationsByName() {
+        for (Map.Entry<String,HttpOperation> entry : operationsByName.entrySet())
+            entry.getValue().sortParameters();
         return operationsByName;
     }
 
