@@ -70,6 +70,17 @@ public interface ProfileDao {
             String search);
 
     /**
+     * Gets actives profiles from a list of profile id's
+     *
+     * @param profileIds the collection of profile id's to get
+     * @param offset the offset
+     * @param count the count
+     * @return a {@link Pagination} of {@link Profile} objects.
+     */
+    Pagination<Profile> getActiveProfiles(Iterable<String> profileIds, int offset,
+                                          int count);
+
+    /**
      * Gets the specific active profile with the id, or throws a {@link NotFoundException} if the
      * profile can't be found.
      *

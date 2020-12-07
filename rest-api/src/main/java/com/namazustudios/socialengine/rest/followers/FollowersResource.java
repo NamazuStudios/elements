@@ -1,0 +1,113 @@
+package com.namazustudios.socialengine.rest.followers;
+
+import com.namazustudios.socialengine.exception.InvalidParameterException;
+import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.follower.Follower;
+import com.namazustudios.socialengine.model.friend.Friend;
+import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.service.FriendService;
+import com.namazustudios.socialengine.util.ValidationHelper;
+import io.swagger.annotations.Api;
+import io.swagger.annotations.ApiOperation;
+import io.swagger.annotations.Authorization;
+
+import javax.inject.Inject;
+import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
+
+import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+
+@Path("follower")
+@Api(value = "Followers",
+        description = "Manages follower relationships among profiles.",
+        authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+public class FollowersResource {
+    private ValidationHelper validationHelper;
+
+    private FriendService friendService;
+
+    @GET
+    @Path("{profileId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Search Followers",
+            notes = "Searches all followers in the system and returning the metadata for all matches against the given " +
+                    "profile id.")
+    public Pagination<Profile> getFollowers(
+            @PathParam("profileId") final String profileId,
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count) {
+
+        if (offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value.");
+        }
+
+        if (count < 0) {
+            throw new InvalidParameterException("Count must have positive value.");
+        }
+
+        return null;
+
+    }
+
+    @GET
+    @Path("{profileId}/{followedId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Gets a Specific Follower Relationship",
+            notes = "Gets a specific profile using the ID of the profile.")
+    public Profile getFollower(@PathParam("profileId") final String profileId,
+                               @PathParam("followedId") final String followedId) {
+        return null;
+    }
+
+    @POST
+    @ApiOperation(value = "Creates a Follower relationship between two profiles.",
+            notes = "Supplying the follower object, this will store the information supplied " +
+                    "in the body of the request.")
+    public void createProfile(final Follower follower) {
+
+        getValidationHelper().validateModel(follower, ValidationGroups.Create.class);
+
+        final String followerId = nullToEmpty(follower.getId()).trim();
+
+        if (!followerId.isEmpty()) {
+            throw new BadRequestException("Profile ID must be blank.");
+        }
+
+        getFriendService();
+
+    }
+
+    @DELETE
+    @Path("{profileId}/{followedId}")
+    @ApiOperation(
+            value = "Deletes a Follower relationship")
+    public void deleteRegistration(
+            @PathParam("profileId") final String profileId,
+            @PathParam("followedId") final String followedId) {
+
+        getFriendService();
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public FriendService getFriendService() {
+        return friendService;
+    }
+
+    @Inject
+    public void setFriendService(FriendService friendService) {
+        this.friendService = friendService;
+    }
+
+}

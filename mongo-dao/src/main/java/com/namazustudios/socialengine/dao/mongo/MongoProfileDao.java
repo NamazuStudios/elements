@@ -180,6 +180,20 @@ public class MongoProfileDao implements ProfileDao {
 
     }
 
+    @Override
+    public Pagination<Profile> getActiveProfiles(Iterable<String> profileIds, int offset, int count) {
+
+        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
+
+        query.and(
+                query.criteria("active").equal(true),
+                query.criteria("objectId").in(profileIds)
+        );
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, Profile.class);
+
+    }
+
     private static String buildDateString(long timestamp) {
         return DateTools.dateToString(new Date(timestamp), DateTools.Resolution.MILLISECOND);
     }
