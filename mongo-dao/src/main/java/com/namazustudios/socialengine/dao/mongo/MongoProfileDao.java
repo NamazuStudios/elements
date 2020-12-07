@@ -181,7 +181,7 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Pagination<Profile> getActiveProfiles(Iterable<String> profileIds, int offset, int count) {
+    public Pagination<Profile> getActiveProfiles(Iterable<ObjectId> profileIds, int offset, int count) {
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 

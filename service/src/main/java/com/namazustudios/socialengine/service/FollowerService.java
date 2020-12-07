@@ -34,17 +34,32 @@ public interface FollowerService {
     /**
      * Gets a single instance of {@link Friend}.  Throws an exception if the supplied {@link Friend} is not found.
      *
-     * @param friendId the id, as obtained using {@link Friend#getId()}.
+     * @param follower the id, as obtained using {@link Friend#getId()}.
      *
      * @return the {@link Friend}, never null
      */
-    Friend getFriend(String friendId);
+    void createFollower(Follower follower);
 
     /**
-     * Deletes the supplied {@link Friend}, throwing an exception if the supplied id is not valid.
+     * Deletes the supplied {@link Follower}, throwing an exception if the supplied id is not valid.
      *
-     * @param friendId the id, as obtained using {@link Friend#getId()}.
+     * @param profileId the id of the user profile.
+     * @param profileToUnfollowId the id of the profile to unfollow
      */
-    void deleteFriend(String friendId);
+    void deleteFollower(String profileId, String profileToUnfollowId);
 
+    /**
+     * Redacts any private information from the {@link Profile} and returns either a new instance or the current
+     * instance modified.
+     *
+     * The default implementation simply sets the user to null and returns the supplied instance.  Other implementations
+     * such as those used for superuser access may redact information differently.
+     *
+     * @param profile the {@link Profile} from which to redact private information
+     * @return a {@link Profile} with the information redacted (may be the same instance provided
+     */
+    default Profile redactPrivateInformation(final Profile profile) {
+        profile.setUser(null);
+        return profile;
+    }
 }

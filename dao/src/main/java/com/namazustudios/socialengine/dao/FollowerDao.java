@@ -33,7 +33,7 @@ public interface FollowerDao {
      *
      * @param follower the object to insert into the db
      */
-    void setFollowerForProfile(Follower follower);
+    void createFollowerForProfile(Follower follower);
 
     /**
      * Deletes the single instance of {@link Follower} for the supplied profile id.  Throwing a

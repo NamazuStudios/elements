@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
+import org.bson.types.ObjectId;
 
 import java.util.Map;
 import java.util.Optional;
@@ -77,7 +78,7 @@ public interface ProfileDao {
      * @param count the count
      * @return a {@link Pagination} of {@link Profile} objects.
      */
-    Pagination<Profile> getActiveProfiles(Iterable<String> profileIds, int offset,
+    Pagination<Profile> getActiveProfiles(Iterable<ObjectId> profileIds, int offset,
                                           int count);
 
     /**

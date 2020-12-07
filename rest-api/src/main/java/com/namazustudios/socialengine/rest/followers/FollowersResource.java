@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.follower.Follower;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.service.FollowerService;
 import com.namazustudios.socialengine.service.FriendService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -27,7 +28,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 public class FollowersResource {
     private ValidationHelper validationHelper;
 
-    private FriendService friendService;
+    private FollowerService followerService;
 
     @GET
     @Path("{profileId}")
@@ -48,7 +49,7 @@ public class FollowersResource {
             throw new InvalidParameterException("Count must have positive value.");
         }
 
-        return null;
+        return getFollowerService().getFollowers(profileId, offset, count);
 
     }
 
@@ -56,18 +57,17 @@ public class FollowersResource {
     @Path("{profileId}/{followedId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
-            value = "Gets a Specific Follower Relationship",
-            notes = "Gets a specific profile using the ID of the profile.")
+            value = "Gets a specific profile using the ID of the profile and followed id.")
     public Profile getFollower(@PathParam("profileId") final String profileId,
                                @PathParam("followedId") final String followedId) {
-        return null;
+        return getFollowerService().getFollower(profileId, followedId);
     }
 
     @POST
     @ApiOperation(value = "Creates a Follower relationship between two profiles.",
             notes = "Supplying the follower object, this will store the information supplied " +
                     "in the body of the request.")
-    public void createProfile(final Follower follower) {
+    public void createFollower(final Follower follower) {
 
         getValidationHelper().validateModel(follower, ValidationGroups.Create.class);
 
@@ -77,19 +77,19 @@ public class FollowersResource {
             throw new BadRequestException("Profile ID must be blank.");
         }
 
-        getFriendService();
+        getFollowerService().createFollower(follower);
 
     }
 
     @DELETE
-    @Path("{profileId}/{followedId}")
+    @Path("{profileId}/{profileToUnfollowId}")
     @ApiOperation(
             value = "Deletes a Follower relationship")
-    public void deleteRegistration(
+    public void deleteFollower(
             @PathParam("profileId") final String profileId,
-            @PathParam("followedId") final String followedId) {
+            @PathParam("profileToUnfollowId") final String profileToUnfollowId) {
 
-        getFriendService();
+        getFollowerService().deleteFollower(profileId, profileToUnfollowId);
     }
 
     public ValidationHelper getValidationHelper() {
@@ -101,13 +101,13 @@ public class FollowersResource {
         this.validationHelper = validationHelper;
     }
 
-    public FriendService getFriendService() {
-        return friendService;
+    public FollowerService getFollowerService() {
+        return followerService;
     }
 
     @Inject
-    public void setFriendService(FriendService friendService) {
-        this.friendService = friendService;
+    public void setFollowerService(FollowerService followerService) {
+        this.followerService = followerService;
     }
 
 }

@@ -41,7 +41,9 @@ public class MongoFollowerDao implements FollowerDao {
 
         followerQuery.field("profileId").equal(profileId);
 
-        List<String> followerIds = followerQuery.asList().stream().map(MongoFollower::getFollowedId).collect(Collectors.toList());
+        List<ObjectId> followerIds = followerQuery.asList().stream().map(f -> {
+            return getMongoDBUtils().parseOrReturnNull(f.getFollowedId());
+        }).collect(Collectors.toList());
 
         return getMongoProfileDao().getActiveProfiles(followerIds, offset, count);
     }
@@ -65,9 +67,8 @@ public class MongoFollowerDao implements FollowerDao {
     }
 
     @Override
-    public void setFollowerForProfile(Follower follower) {
+    public void createFollowerForProfile(Follower follower) {
         final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
-        final ObjectId mongoFollowerId = new ObjectId(String.valueOf(UUID.randomUUID()));
 
         followerQuery.and(
                 followerQuery.criteria("profileId").equal(follower.getProfileId()),
@@ -75,7 +76,6 @@ public class MongoFollowerDao implements FollowerDao {
         );
 
         final UpdateOperations<MongoFollower> updateOperations = getDatastore().createUpdateOperations(MongoFollower.class);
-        updateOperations.set("objectId", mongoFollowerId);
         updateOperations.set("profileId", follower.getProfileId());
         updateOperations.set("followedId", follower.getFollowedId());
 
@@ -94,7 +94,7 @@ public class MongoFollowerDao implements FollowerDao {
         final WriteResult writeResult = getDatastore().delete(followerQuery);
 
         if (writeResult.getN() == 0) {
-            throw new FriendNotFoundException("Follower not found: " + profileToUnfollowId);
+            throw new NotFoundException("Follower not found: " + profileToUnfollowId);
         } else if (writeResult.getN() > 1) {
             throw new InternalException("Deleted more rows than expected.");
         }
