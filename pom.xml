@@ -73,7 +73,9 @@
         <module>rt-server-transact-unixfs</module>
         <module>rt-server-transact-unixfs-guice</module>
         <module>rt-server-transact-guice</module>
+        <module>rt-server-cluster-node-guice</module>
     </modules>
+
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
         <guice.version>4.2.3</guice.version>
