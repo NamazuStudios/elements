@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service.follower;
 
 import com.namazustudios.socialengine.dao.FollowerDao;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.follower.Follower;
+import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.FollowerService;
 
@@ -23,8 +23,8 @@ public class SuperUserFollowerService implements FollowerService {
     }
 
     @Override
-    public void createFollower(final Follower follower) {
-        getFollowerDao().createFollowerForProfile(follower);
+    public void createFollower(final String profileId, final CreateFollowerRequest createFollowerRequest) {
+        getFollowerDao().createFollowerForProfile(profileId, createFollowerRequest);
     }
 
     @Override

@@ -2,8 +2,7 @@ package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.follower.Follower;
-import com.namazustudios.socialengine.model.friend.Friend;
+import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 public interface FollowerDao {
@@ -29,14 +28,15 @@ public interface FollowerDao {
     Profile getFollowerForProfile(String profileId, String followedId);
 
     /**
-     * Creates a single instance of {@link Follower} for the supplied profile id and toFollow id.
+     * Creates a single instance of {@link CreateFollowerRequest} for the supplied profile id and toFollow id.
      *
-     * @param follower the object to insert into the db
+     * @param profileId
+     * @param createFollowerRequest the object to insert into the db
      */
-    void createFollowerForProfile(Follower follower);
+    void createFollowerForProfile(String profileId, CreateFollowerRequest createFollowerRequest);
 
     /**
-     * Deletes the single instance of {@link Follower} for the supplied profile id.  Throwing a
+     * Deletes the single instance of {@link CreateFollowerRequest} for the supplied profile id.  Throwing a
      * {@link NotFoundException} if the follower does not exist for the supplied profile id.
      *
      * @param profileId the id of the logged in profile

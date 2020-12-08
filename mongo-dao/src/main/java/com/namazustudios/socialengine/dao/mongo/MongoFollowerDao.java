@@ -1,28 +1,22 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.WriteResult;
-import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.FollowerDao;
 import com.namazustudios.socialengine.dao.mongo.model.*;
-import com.namazustudios.socialengine.exception.FriendNotFoundException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.follower.Follower;
+import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.util.ValidationHelper;
-import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.query.Query;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
-import java.util.List;
-import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 
@@ -38,24 +32,19 @@ public class MongoFollowerDao implements FollowerDao {
     @Override
     public Pagination<Profile> getFollowersForProfile(String profileId, int offset, int count) {
         final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
+        final ObjectId profileOid = getMongoDBUtils().parseOrReturnNull(profileId);
 
-        followerQuery.field("profileId").equal(profileId);
+        followerQuery.field("_id.profileId").equal(profileOid);
 
-        List<ObjectId> followerIds = followerQuery.asList().stream().map(f -> {
-            return getMongoDBUtils().parseOrReturnNull(f.getFollowedId());
-        }).collect(Collectors.toList());
-
-        return getMongoProfileDao().getActiveProfiles(followerIds, offset, count);
+        return getMongoDBUtils().paginationFromQuery(followerQuery, offset, count, f -> getDozerMapper().map(f.getFollowedProfile(), Profile.class));
     }
 
     @Override
     public Profile getFollowerForProfile(String profileId, String followedId) {
         final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
+        final MongoFollowerId id = new MongoFollowerId(profileId, followedId);
 
-        followerQuery.and(
-                followerQuery.criteria("profileId").equal(profileId),
-                followerQuery.criteria("followedId").equal(followedId)
-        );
+        followerQuery.field("_id").equal(id);
 
         MongoFollower follower = followerQuery.get();
 
@@ -63,21 +52,19 @@ public class MongoFollowerDao implements FollowerDao {
             throw new NotFoundException(format("No follower relationship exists with profile id %s, and followed id %s", profileId, followedId));
         }
 
-        return getMongoProfileDao().getActiveProfile(follower.getFollowedId());
+        return getDozerMapper().map(follower.getFollowedProfile(), Profile.class);
     }
 
     @Override
-    public void createFollowerForProfile(Follower follower) {
+    public void createFollowerForProfile(String profileId, CreateFollowerRequest createFollowerRequest) {
         final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
+        final MongoFollowerId id = new MongoFollowerId(profileId, createFollowerRequest.getFollowedId());
 
-        followerQuery.and(
-                followerQuery.criteria("profileId").equal(follower.getProfileId()),
-                followerQuery.criteria("followedId").equal(follower.getFollowedId())
-        );
+        followerQuery.field("_id").equal(id);
 
         final UpdateOperations<MongoFollower> updateOperations = getDatastore().createUpdateOperations(MongoFollower.class);
-        updateOperations.set("profileId", follower.getProfileId());
-        updateOperations.set("followedId", follower.getFollowedId());
+        updateOperations.set("_id", id);
+        updateOperations.set("followedProfile", getDatastore().get(MongoProfile.class, id.getFollowedId()));
 
         getDatastore().findAndModify(followerQuery, updateOperations, new FindAndModifyOptions().upsert(true));
     }
@@ -85,11 +72,9 @@ public class MongoFollowerDao implements FollowerDao {
     @Override
     public void deleteFollowerForProfile(String profileId, String profileToUnfollowId) {
         final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
+        final MongoFollowerId id = new MongoFollowerId(profileId, profileToUnfollowId);
 
-        followerQuery.and(
-                followerQuery.criteria("profileId").equal(profileId),
-                followerQuery.criteria("followedId").equal(profileToUnfollowId)
-        );
+        followerQuery.field("_id").equal(id);
 
         final WriteResult writeResult = getDatastore().delete(followerQuery);
 

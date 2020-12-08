@@ -3,11 +3,9 @@ package com.namazustudios.socialengine.rest.followers;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.follower.Follower;
-import com.namazustudios.socialengine.model.friend.Friend;
+import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.service.FollowerService;
-import com.namazustudios.socialengine.service.FriendService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -64,20 +62,15 @@ public class FollowersResource {
     }
 
     @POST
+    @Path("{profileId}")
     @ApiOperation(value = "Creates a Follower relationship between two profiles.",
             notes = "Supplying the follower object, this will store the information supplied " +
                     "in the body of the request.")
-    public void createFollower(final Follower follower) {
+    public void createFollower(@PathParam("profileId") final String profileId, final CreateFollowerRequest createFollowerRequest) {
 
-        getValidationHelper().validateModel(follower, ValidationGroups.Create.class);
+        getValidationHelper().validateModel(createFollowerRequest, ValidationGroups.Create.class);
 
-        final String followerId = nullToEmpty(follower.getId()).trim();
-
-        if (!followerId.isEmpty()) {
-            throw new BadRequestException("Profile ID must be blank.");
-        }
-
-        getFollowerService().createFollower(follower);
+        getFollowerService().createFollower(profileId, createFollowerRequest);
 
     }
 

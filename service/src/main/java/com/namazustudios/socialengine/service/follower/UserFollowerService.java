@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.FollowerDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.follower.Follower;
+import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.FollowerService;
@@ -31,9 +31,9 @@ public class UserFollowerService implements FollowerService {
     }
 
     @Override
-    public void createFollower(final Follower follower) {
-        checkUserAndProfile(follower.getProfileId());
-        getFollowerDao().createFollowerForProfile(follower);
+    public void createFollower(final String profileId, final CreateFollowerRequest createFollowerRequest) {
+        checkUserAndProfile(profileId);
+        getFollowerDao().createFollowerForProfile(profileId, createFollowerRequest);
     }
 
     @Override

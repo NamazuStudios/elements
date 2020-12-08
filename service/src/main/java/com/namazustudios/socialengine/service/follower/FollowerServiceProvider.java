@@ -9,7 +9,7 @@ import javax.inject.Provider;
 import static com.namazustudios.socialengine.service.Services.forbidden;
 
 /**
- * Created by patricktwohig on 6/27/17.
+ * Created by GarrettMcSpadden on 12/7/2020.
  */
 public class FollowerServiceProvider implements Provider<FollowerService> {
 

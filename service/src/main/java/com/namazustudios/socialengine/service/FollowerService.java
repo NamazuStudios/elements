@@ -1,14 +1,13 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.follower.Follower;
+import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.user.User;
 
 /**
- * Allows access to instances of {@link Follower}.  This is responsible for determining the current {@link Profile} as well
- * and ensuring that the associated {@link Follower} instances are properly filtered and represented.
+ * Allows access to instances of {@link CreateFollowerRequest}.  This is responsible for determining the current {@link Profile} as well
+ * and ensuring that the associated {@link CreateFollowerRequest} instances are properly filtered and represented.
  */
 public interface FollowerService {
 
@@ -32,16 +31,15 @@ public interface FollowerService {
     Profile getFollower(String profileId, String followedId);
 
     /**
-     * Gets a single instance of {@link Friend}.  Throws an exception if the supplied {@link Friend} is not found.
+     * Creates a follower link between two profiles
      *
-     * @param follower the id, as obtained using {@link Friend#getId()}.
-     *
-     * @return the {@link Friend}, never null
+     * @param profileId the id of the user profile
+     * @param createFollowerRequest the request body containing the the id of the profile to follow.
      */
-    void createFollower(Follower follower);
+    void createFollower(String profileId, CreateFollowerRequest createFollowerRequest);
 
     /**
-     * Deletes the supplied {@link Follower}, throwing an exception if the supplied id is not valid.
+     * Deletes the link between the supplied profile id's, throwing an exception if the supplied id is not valid.
      *
      * @param profileId the id of the user profile.
      * @param profileToUnfollowId the id of the profile to unfollow

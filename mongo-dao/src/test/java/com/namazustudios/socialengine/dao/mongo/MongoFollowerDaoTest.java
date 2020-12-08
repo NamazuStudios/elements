@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.follower.Follower;
+import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import org.testng.annotations.BeforeClass;
@@ -43,10 +43,9 @@ public class MongoFollowerDaoTest {
         makeTestUsers();
         makeTestProfiles();
 
-        final Follower follower = new Follower();
-        follower.setProfileId(testProfileA.getId());
-        follower.setFollowedId(testProfileB.getId());
-        getFollowerDao().createFollowerForProfile(follower);
+        final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
+        createFollowerRequest.setFollowedId(testProfileB.getId());
+        getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest);
     }
 
     @Test(groups = "first")
