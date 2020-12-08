@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.bson.types.ObjectId;
 
 import java.util.Map;
 import java.util.Optional;
@@ -69,17 +68,6 @@ public interface ProfileDao {
             int offset,
             int count,
             String search);
-
-    /**
-     * Gets actives profiles from a list of profile id's
-     *
-     * @param profileIds the collection of profile id's to get
-     * @param offset the offset
-     * @param count the count
-     * @return a {@link Pagination} of {@link Profile} objects.
-     */
-    Pagination<Profile> getActiveProfiles(Iterable<ObjectId> profileIds, int offset,
-                                          int count);
 
     /**
      * Gets the specific active profile with the id, or throws a {@link NotFoundException} if the
