@@ -6,10 +6,11 @@ import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
+import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQContextModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
+import com.namazustudios.socialengine.service.Unscoped;
 import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
@@ -27,7 +28,6 @@ import javax.inject.Inject;
 import javax.servlet.DispatcherType;
 import java.io.File;
 import java.util.EnumSet;
-import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -45,13 +45,13 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private Injector injector;
 
+    private Instance instance;
+
     private DeploymentManager deploymentManager;
 
     private ApplicationService applicationService;
 
     private GitLoader gitLoader;
-
-    private InstanceConnectionService connectionService;
 
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
@@ -109,7 +109,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     @Override
     protected void doStart() throws Exception {
-        getConnectionService().start();
+        getInstance().start();
 
         final App version = new App(getDeploymentManager(), this, VERSION_ORIGIN_ID);
         getDeploymentManager().addApp(version);
@@ -134,7 +134,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             .stream()
             .map(i -> i.getInstance(Context.class))
             .forEach(this::shutdown);
-        getConnectionService().stop();
+        getInstance().close();
     }
 
     private void shutdown(final Context context) {
@@ -159,7 +159,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     }
 
     @Inject
-    public void setApplicationService(ApplicationService applicationService) {
+    public void setApplicationService(@Unscoped ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
 
@@ -181,13 +181,13 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.gitLoader = gitLoader;
     }
 
-    public InstanceConnectionService getConnectionService() {
-        return connectionService;
+    public Instance getInstance() {
+        return instance;
     }
 
     @Inject
-    public void setConnectionService(InstanceConnectionService connectionService) {
-        this.connectionService = connectionService;
+    public void setInstance(Instance instance) {
+        this.instance = instance;
     }
 
 }

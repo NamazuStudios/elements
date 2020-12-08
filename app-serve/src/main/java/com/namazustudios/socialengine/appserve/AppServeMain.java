@@ -20,6 +20,7 @@ import com.namazustudios.socialengine.rt.PersistenceStrategy;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.guice.RandomInstanceIdModule;
+import com.namazustudios.socialengine.rt.remote.guice.SimpleInstanceModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
@@ -102,6 +103,7 @@ public class AppServeMain implements Runnable {
         return createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
+            new SimpleInstanceModule(),
             new MongoCoreModule(),
             new ServerModule(),
             new AppServeFilterModule(),
