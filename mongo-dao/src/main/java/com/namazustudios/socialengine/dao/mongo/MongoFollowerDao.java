@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.FollowerDao;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -57,16 +59,22 @@ public class MongoFollowerDao implements FollowerDao {
 
     @Override
     public void createFollowerForProfile(String profileId, CreateFollowerRequest createFollowerRequest) {
-        final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
+        Profile profile = getMongoProfileDao().getActiveProfile(profileId);
+        if(profile == null){
+            throw new ProfileNotFoundException(format("The profile with id %s was not found or does not exist.", profileId));
+        }
+        profile = getMongoProfileDao().getActiveProfile(createFollowerRequest.getFollowedId());
+        if(profile == null){
+            throw new ProfileNotFoundException(format("The profile with id %s was not found or does not exist.", createFollowerRequest.getFollowedId()));
+        }
+
+        final MongoFollower mongoFollower = new MongoFollower();
         final MongoFollowerId id = new MongoFollowerId(profileId, createFollowerRequest.getFollowedId());
 
-        followerQuery.field("_id").equal(id);
+        mongoFollower.setObjectId(id);
+        mongoFollower.setFollowedProfile(getDatastore().get(MongoProfile.class, id.getFollowedId()));
 
-        final UpdateOperations<MongoFollower> updateOperations = getDatastore().createUpdateOperations(MongoFollower.class);
-        updateOperations.set("_id", id);
-        updateOperations.set("followedProfile", getDatastore().get(MongoProfile.class, id.getFollowedId()));
-
-        getDatastore().findAndModify(followerQuery, updateOperations, new FindAndModifyOptions().upsert(true));
+        getDatastore().insert(mongoFollower);
     }
 
     @Override

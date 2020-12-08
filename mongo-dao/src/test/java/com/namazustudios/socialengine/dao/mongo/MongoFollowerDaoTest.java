@@ -1,12 +1,15 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
+import org.bson.types.ObjectId;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
@@ -42,35 +45,52 @@ public class MongoFollowerDaoTest {
         makeTestApplication();
         makeTestUsers();
         makeTestProfiles();
+    }
 
+    @Test()
+    public void createFollowerForProfile(){
         final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
         createFollowerRequest.setFollowedId(testProfileB.getId());
         getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest);
     }
 
-    @Test(groups = "first")
+    @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = DuplicateKeyException.class)
+    public void createFollowerForProfileDuplicate(){
+        final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
+        createFollowerRequest.setFollowedId(testProfileB.getId());
+        getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest);
+    }
+
+    @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = ProfileNotFoundException.class)
+    public void createFollowerForProfileFails(){
+        final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
+        createFollowerRequest.setFollowedId(new ObjectId().toString());
+        getFollowerDao().createFollowerForProfile(new ObjectId().toString(), createFollowerRequest);
+    }
+
+    @Test(dependsOnMethods = "createFollowerForProfile")
     public void testGetFollowers() {
         Pagination<Profile> followedProfiles = getFollowerDao().getFollowersForProfile(testProfileA.getId(), 0, 20);
         assertEquals(followedProfiles.iterator().next(), testProfileB);
     }
 
-    @Test(groups = "first")
+    @Test(dependsOnMethods = "createFollowerForProfile")
     public void testGetFollower() {
         Profile followedProfile = getFollowerDao().getFollowerForProfile(testProfileA.getId(), testProfileB.getId());
         assertEquals(followedProfile, testProfileB);
     }
 
-    @Test(dependsOnGroups = "first", expectedExceptions = NotFoundException.class)
+    @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = NotFoundException.class)
     public void testGetFollowerFails() {
         getFollowerDao().getFollowerForProfile(testProfileB.getId(), testProfileA.getId());
     }
 
-    @Test(dependsOnGroups = "first")
+    @Test(dependsOnMethods = {"testGetFollower", "testGetFollowers"})
     public void testDeleteFollower(){
         getFollowerDao().deleteFollowerForProfile(testProfileA.getId(), testProfileB.getId());
     }
 
-    @Test(dependsOnGroups = "first", expectedExceptions = NotFoundException.class)
+    @Test(dependsOnMethods = {"testGetFollower", "testGetFollowers"}, expectedExceptions = NotFoundException.class)
     public void testDeleteFollowerFails(){
         getFollowerDao().deleteFollowerForProfile(testProfileB.getId(), testProfileA.getId());
     }
