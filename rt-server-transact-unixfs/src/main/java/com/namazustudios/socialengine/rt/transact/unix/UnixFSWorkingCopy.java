@@ -59,13 +59,13 @@ class UnixFSWorkingCopy {
 
     private Modification load(final Path path) {
 
-        final ResourceId resourceId = unixFSPathIndex
+        final var resourceId = unixFSPathIndex
             .getRevisionMap(nodeId)
             .getValueAt(revision, path)
             .getValue()
             .orElse(null);
 
-        final Set<Path> paths = resourceId == null ? new HashSet<>(singleton(path)) : unixFSPathIndex
+        final var paths = resourceId == null ? new HashSet<>(singleton(path)) : unixFSPathIndex
             .getReverseRevisionMap(nodeId)
             .getValueAt(revision, resourceId)
             .getValue()

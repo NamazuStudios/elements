@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.appserve.testkit;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.appserve.guice.AppServeServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -10,8 +11,17 @@ import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.testkit.TestKit;
 import com.namazustudios.socialengine.rt.testkit.UnitTestModule;
+import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
+import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
+import com.namazustudios.socialengine.util.AppleDateFormat;
 import joptsimple.OptionSpec;
 import ru.vyarus.guice.validator.ValidationModule;
+
+import java.text.DateFormat;
+
+import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
+import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
+import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class AppServeTestKitMain {
 
@@ -46,9 +56,24 @@ public class AppServeTestKitMain {
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
-        testKitMain.addModule(new JaxRSClientModule())
-                   .addModule(new GuiceIoCResolverModule())
-                   .addModule(new ConfigurationModule(defaultConfigurationSupplier));
+        testKitMain.addModule(new GuiceIoCResolverModule())
+                   .addModule(new ConfigurationModule(defaultConfigurationSupplier))
+                   .addModule(new JacksonHttpClientModule()
+                       .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
+                       .withDefaultObjectMapperProvider(() -> {
+                           final ObjectMapper objectMapper = new ObjectMapper();
+                           objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                           return objectMapper;
+                       })
+                       .withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
+                           final ObjectMapper objectMapper = new ObjectMapper();
+                           final DateFormat dateFormat = new AppleDateFormat();
+                           objectMapper.setDateFormat(dateFormat);
+                           objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+                           objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                           return objectMapper;
+                       })
+                   );
 
         testKitMain.run(optionSet -> {
 

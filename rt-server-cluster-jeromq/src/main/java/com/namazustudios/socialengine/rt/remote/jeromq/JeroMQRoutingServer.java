@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
-import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.jeromq.JeroMQMonitorThread;
 import org.slf4j.Logger;
@@ -14,9 +13,6 @@ import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BooleanSupplier;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
@@ -56,10 +52,10 @@ public class JeroMQRoutingServer implements AutoCloseable {
         this.zContextShadow = shadow(zContext);
         this.poller = zContextShadow.createPoller(0);
 
-        final ZMQ.Socket main = zContextShadow.createSocket(ROUTER);
+        final var main = zContextShadow.createSocket(ROUTER);
         bindAddresses.forEach(main::bind);
 
-        final int frontend = poller.register(main, POLLIN | POLLERR);
+        final var frontend = poller.register(main, POLLIN | POLLERR);
         this.multiplex = new JeroMQMultiplexRouter(instanceId, zContextShadow, poller);
         this.demultiplex = new JeroMQDemultiplexRouter(instanceId, zContextShadow, poller, frontend);
         this.control = new JeroMQCommandServer(instanceId, poller, frontend, multiplex, demultiplex);

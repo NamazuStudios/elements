@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.jeromq;
 
 import com.google.common.base.Stopwatch;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMonitor;
@@ -27,7 +28,10 @@ public class JeroMQMonitorThread extends Thread implements AutoCloseable {
 
     private final ZMQ.Socket monitored;
 
-    public JeroMQMonitorThread(final String name, final Logger logger, final ZContext zContext, final ZMQ.Socket monitored) {
+    public JeroMQMonitorThread(final String name,
+                               final Logger logger,
+                               final ZContext zContext,
+                               final ZMQ.Socket monitored) {
         setName(name);
         setDaemon(true);
         this.logger = logger;

@@ -20,8 +20,8 @@ public class InstanceDiscoveryServiceModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        final Properties properties = configurationSupplier.get();
-        final String discoveryTypeString = properties.getProperty(INSTANCE_DISCOVERY_SERVICE);
+        final var properties = configurationSupplier.get();
+        final var discoveryTypeString = properties.getProperty(INSTANCE_DISCOVERY_SERVICE);
 
         if (discoveryTypeString == null) {
             addError("Instance discovery type not specified.");

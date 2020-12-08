@@ -27,6 +27,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.NO_SUCH_NODE_ROUTE;
@@ -34,6 +36,7 @@ import static java.lang.String.format;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
 
@@ -235,7 +238,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private void server() {
 
-            final List<String> binds = asList(getInternalBindAddress(), getBindAddress());
+            final var binds = Stream.of(getInternalBindAddress(), getBindAddress())
+                .filter(addr -> !addr.isBlank())
+                .collect(toUnmodifiableList());
 
             try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(), binds)) {
                 exchangeException(null);
