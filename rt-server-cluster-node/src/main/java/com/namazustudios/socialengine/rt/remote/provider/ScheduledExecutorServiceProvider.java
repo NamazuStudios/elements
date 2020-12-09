@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.provider;
 
-import com.namazustudios.socialengine.rt.remote.WorkerInstance;
+import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +22,8 @@ public class ScheduledExecutorServiceProvider implements Provider<ScheduledExecu
     public ScheduledExecutorService get() {
 
         final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(WorkerInstance.class);
-        final String name = format("%s.%s", WorkerInstance.class.getSimpleName(), " timer");
+        final Logger logger = LoggerFactory.getLogger(SimpleWorkerInstance.class);
+        final String name = format("%s.%s", SimpleWorkerInstance.class.getSimpleName(), " timer");
 
         return newScheduledThreadPool(getSchedulerPoolSizeProvider().get(),
                                       r -> newThread(r, name, threadCount, logger));

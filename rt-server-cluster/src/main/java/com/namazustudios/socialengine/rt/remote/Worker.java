@@ -18,7 +18,8 @@ public interface Worker {
 
     /**
      * Used with {@link javax.inject.Named} to name an instance of {@link java.util.concurrent.ScheduledExecutorService}
-     * which is a general purpose pool of threads used for performing various tasks within the system.
+     * which is a general purpose pool of threads used for performing various tasks within the system that require
+     * scheduling.
      */
     String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.scheduled.executor";
 

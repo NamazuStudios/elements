@@ -29,9 +29,9 @@ import static java.util.stream.Stream.of;
  * imposes the additional requirement of providing some form of {@link InstanceConnectionService} to route internal
  * requests.
  */
-public class WorkerInstance extends SimpleInstance implements Worker {
+public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
-    private static final Logger logger = LoggerFactory.getLogger(WorkerInstance.class);
+    private static final Logger logger = LoggerFactory.getLogger(SimpleWorkerInstance.class);
 
     private Node masterNode;
 
@@ -174,7 +174,7 @@ public class WorkerInstance extends SimpleInstance implements Worker {
                 binding.close();
                 return null;
             } catch (Exception ex) {
-                WorkerInstance.logger.error("Error closing binding {}.", binding, ex);
+                SimpleWorkerInstance.logger.error("Error closing binding {}.", binding, ex);
                 return ex;
             }
         }).filter(ex -> ex != null).forEach(exceptionConsumer::accept);

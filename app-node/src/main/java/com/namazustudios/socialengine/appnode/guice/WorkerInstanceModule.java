@@ -8,8 +8,8 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstanceModule;
 import com.namazustudios.socialengine.rt.remote.Worker;
-import com.namazustudios.socialengine.rt.remote.WorkerInstance;
 import com.namazustudios.socialengine.rt.remote.guice.NodeIdModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.slf4j.Logger;
@@ -32,10 +32,7 @@ public class WorkerInstanceModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        bind(WorkerInstance.class).asEagerSingleton();
-
-        bind(Worker.class).to(WorkerInstance.class);
-        bind(Instance.class).to(WorkerInstance.class);
+        install(new SimpleWorkerInstanceModule());
 
         bind(new TypeLiteral<Set<Node>>(){})
             .toProvider(nodeProvider())
@@ -48,17 +45,17 @@ public class WorkerInstanceModule extends PrivateModule {
 
     private Provider<Set<Node>> nodeProvider() {
 
-        final Provider<InstanceId> instanceIdProvider = getProvider(InstanceId.class);
-        final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
-        final Provider<Injector> injectorProvider = getProvider(Injector.class);
-        final Provider<GitLoader> gitLoaderProvider = getProvider(GitLoader.class);
-        final Provider<File> resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
+        final var instanceIdProvider = getProvider(InstanceId.class);
+        final var applicationDaoProvider = getProvider(ApplicationDao.class);
+        final var injectorProvider = getProvider(Injector.class);
+        final var gitLoaderProvider = getProvider(GitLoader.class);
+        final var resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
 
         return () -> {
 
-            final ApplicationDao applicationDao = applicationDaoProvider.get();
-            final Injector injector = injectorProvider.get();
-            final GitLoader gitLoader = gitLoaderProvider.get();
+            final var applicationDao = applicationDaoProvider.get();
+            final var injector = injectorProvider.get();
+            final var gitLoader = gitLoaderProvider.get();
 
             final Set<Node> nodeSet = applicationDao.getActiveApplications().getObjects().stream().map(application -> {
 

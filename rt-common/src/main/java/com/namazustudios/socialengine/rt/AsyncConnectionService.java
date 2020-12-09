@@ -36,8 +36,8 @@ public interface AsyncConnectionService<ContextT, SocketT> {
      * @param socketSupplier
      * @return
      */
-    AsyncConnectionPool<ContextT, SocketT>  allocatePool(String name,
-                                                         int minConnections, int maxConnections,
-                                                         Function<ContextT, SocketT> socketSupplier);
+    AsyncConnectionPool<ContextT, SocketT> allocatePool(String name,
+                                                        int minConnections, int maxConnections,
+                                                        Function<ContextT, SocketT> socketSupplier);
 
 }

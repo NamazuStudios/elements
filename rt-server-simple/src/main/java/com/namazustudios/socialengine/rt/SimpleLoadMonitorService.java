@@ -26,6 +26,10 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
 
     private static final TimeUnit SHUTDOWN_UNITS = MINUTES;
 
+    private static final double LOAD_AVERAGE_WEIGHT = 1.0;
+
+    private static final double MEMORY_USAGE_WEIGHT = 1.0;
+
     private final OperatingSystemMXBean osBean = getOperatingSystemMXBean();
 
     private final AtomicReference<LoadMonitorContext> context = new AtomicReference<>();
@@ -139,7 +143,23 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
         }
 
         public double getInstanceQuality() {
-            return (loadAverage + memoryUsage) / 2;
+            return -getWeightedAverage();
+        }
+
+        private double getWeightedAverage() {
+
+            // If the load average isn't available, then we must rely entirely on memory usage instead.
+            if (loadAverage < 0) return memoryUsage;
+
+            // Otherwise, we average the two values.
+            final var load = loadAverage * LOAD_AVERAGE_WEIGHT;
+            final var memory = memoryUsage * MEMORY_USAGE_WEIGHT;
+
+            if (Double.isNaN(load)) return memoryUsage;
+            if (Double.isNaN(memory)) return loadAverage;
+
+            return (load + memory) / 2;
+
         }
 
     }

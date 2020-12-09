@@ -1,14 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.annotation.Proxyable;
-import com.namazustudios.socialengine.rt.exception.BaseException;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.id.NodeId;
-import org.slf4j.Logger;
-
 import javax.inject.Named;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * Represents the connection the backend cluster of services.

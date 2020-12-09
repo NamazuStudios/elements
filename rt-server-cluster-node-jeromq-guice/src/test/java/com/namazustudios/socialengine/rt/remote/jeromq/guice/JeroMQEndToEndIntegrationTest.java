@@ -498,9 +498,9 @@ public class JeroMQEndToEndIntegrationTest {
 
             install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
 
-            bind(WorkerInstance.class).asEagerSingleton();
-            bind(Worker.class).to(WorkerInstance.class);
-            bind(Instance.class).annotatedWith(instanceNamedAnnotation).to(WorkerInstance.class);
+            bind(SimpleWorkerInstance.class).asEagerSingleton();
+            bind(Worker.class).to(SimpleWorkerInstance.class);
+            bind(Instance.class).annotatedWith(instanceNamedAnnotation).to(SimpleWorkerInstance.class);
             expose(Instance.class).annotatedWith(instanceNamedAnnotation);
 
         }

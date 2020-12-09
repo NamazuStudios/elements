@@ -27,13 +27,11 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.NO_SUCH_NODE_ROUTE;
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toUnmodifiableList;
@@ -196,7 +194,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public void start() {
 
-            onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(this::getOrCreateNewConnection);
+            onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(this::createNewConnectionIfAbsent);
             onUndisover = getInstanceDiscoveryService().subscribeToUndiscovery(this::disconnect);
             server = new Thread(this::server);
             server.setDaemon(true);
@@ -233,7 +231,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public void refresh() {
-            getInstanceDiscoveryService().getKnownHosts().forEach(this::getOrCreateNewConnection);
+            getInstanceDiscoveryService().getKnownHosts().forEach(this::createNewConnectionIfAbsent);
         }
 
         private void server() {
@@ -272,50 +270,48 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             try {
                 rLock.lock();
-                return activeConnections.values().stream().collect(toList());
+                return new ArrayList<>(activeConnections.values());
             } finally {
                 rLock.unlock();
             }
 
         }
 
-        public InstanceConnection getOrCreateNewConnection(final InstanceHostInfo instanceHostInfo) {
+        public void createNewConnectionIfAbsent(final InstanceHostInfo instanceHostInfo) {
 
             final Lock rLock = readWriteLock.readLock();
 
             try {
                 rLock.lock();
                 final JeroMQInstanceConnection connection = activeConnections.get(instanceHostInfo);
-                if (connection != null) return connection;
+                if (connection == null) createNewConnection(instanceHostInfo);
             } finally {
                 rLock.unlock();
             }
 
-            return createNewConnection(instanceHostInfo);
-
         }
 
-        private JeroMQInstanceConnection createNewConnection(final InstanceHostInfo instanceHostInfo) {
+        private void createNewConnection(final InstanceHostInfo instanceHostInfo) {
 
             final String instanceConnectAddress = instanceHostInfo.getConnectAddress();
 
-            try (final ControlClient client = new JeroMQControlClient(getzContext(), instanceConnectAddress)) {
+            try (final var rClient = new JeroMQControlClient(getzContext(), instanceConnectAddress);
+                 final var lClient = new JeroMQControlClient(getzContext(), getLocalControlAddress())) {
 
-                final InstanceStatus status = client.getInstanceStatus();
+                final InstanceStatus status = rClient.getInstanceStatus();
 
                 final InstanceId instanceId = status.getInstanceId();
                 final NodeId masterNodeId = forMasterNode(instanceId);
-                final String masterNodeConnectAddress = client.openRouteToNode(masterNodeId, instanceConnectAddress);
+                final String masterNodeConnectAddress = lClient.openRouteToNode(masterNodeId, instanceConnectAddress);
 
                 final Lock wLock = readWriteLock.writeLock();
 
                 try {
 
-                    JeroMQInstanceConnection connection;
-
                     wLock.lock();
-                    connection = activeConnections.get(instanceHostInfo);
-                    if (connection != null) return connection;
+
+                    var connection = activeConnections.get(instanceHostInfo);
+                    if (connection != null) return;
 
                     final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
                     remoteInvoker.start(masterNodeConnectAddress);
@@ -331,10 +327,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     activeConnections.put(instanceHostInfo, connection);
                     onConnect.publishAsync(connection);
 
-                    return connection;
-
                 } catch (Exception ex) {
-                    cleanup(client, instanceId);
+                    cleanup(rClient, instanceId);
                     throw ex;
                 } finally {
                     wLock.unlock();

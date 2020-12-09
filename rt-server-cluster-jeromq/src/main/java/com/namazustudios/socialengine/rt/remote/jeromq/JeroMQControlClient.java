@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.remote.InstanceStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
+import org.zeromq.ZMQ.Socket;
 
 import java.util.concurrent.TimeUnit;
 
@@ -38,9 +39,9 @@ public class JeroMQControlClient implements ControlClient {
 
     private final ZContext shadowContext;
 
-    private final ZMQ.Socket socket;
+    private final Socket socket;
 
-    private final String instanceConnectAdddress;
+    private final String instanceConnectAddress;
 
     public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress) {
@@ -61,12 +62,14 @@ public class JeroMQControlClient implements ControlClient {
         this.shadowContext = shadow(zContext);
         this.socket = shadowContext.createSocket(DEALER);
         this.socket.connect(instanceConnectAddress);
-        this.instanceConnectAdddress = instanceConnectAddress;
+        this.instanceConnectAddress = instanceConnectAddress;
         this.socket.setReceiveTimeOut((int) MILLISECONDS.convert(timeout, timeUnit));
     }
 
     @Override
     public InstanceStatus getInstanceStatus() {
+
+        logger.debug("Getting instance status.");
 
         final ZMsg request = new ZMsg();
         GET_INSTANCE_STATUS.pushCommand(request);
@@ -83,7 +86,6 @@ public class JeroMQControlClient implements ControlClient {
         logger.debug("Opening route to node {} at {}", nodeId, instanceInvokerAddress);
 
         final ZMsg request = new ZMsg();
-
         OPEN_ROUTE_TO_NODE.pushCommand(request);
         request.add(nodeId.asBytes());
         request.add(instanceInvokerAddress.getBytes(CHARSET));
@@ -104,6 +106,7 @@ public class JeroMQControlClient implements ControlClient {
         request.add(nodeId.asBytes());
         send(request);
         recv();
+
     }
 
     @Override
@@ -116,6 +119,7 @@ public class JeroMQControlClient implements ControlClient {
         request.add(instanceId.asBytes());
         send(request);
         recv();
+
     }
 
     @Override
@@ -131,7 +135,7 @@ public class JeroMQControlClient implements ControlClient {
 
         final ZMsg response = recv();
         final String nodeBindAddress = response.removeFirst().getString(CHARSET);
-        return new JeroMQInstanceBinding(shadowContext, nodeId, instanceConnectAdddress, nodeBindAddress);
+        return new JeroMQInstanceBinding(shadowContext, nodeId, instanceConnectAddress, nodeBindAddress);
 
     }
 
@@ -149,22 +153,44 @@ public class JeroMQControlClient implements ControlClient {
     }
 
     private void send(final ZMsg zMsg) {
+        send(zMsg, socket);
+    }
+
+    /**
+     * Sends the supplied {@link ZMsg} on the supplied {@link Socket}, adding header and delimiter
+     * information as necessary
+     *
+     * @param zMsg the {@link ZMsg} to send
+     * @param socket the {@link Socket} to use to send the request
+     */
+    public static void send(final ZMsg zMsg, final Socket socket) {
         zMsg.addFirst(EMPTY_DELIMITER);
         zMsg.send(socket);
     }
 
     private ZMsg recv() {
-        final ZMsg response = ZMsg.recvMsg(socket);
+        return recv(socket);
+    }
+
+    /**
+     * Receives a message from the supplied {@link Socket} instance.
+     *
+     * @param socket the socket on which to receive the incoming message.
+     *
+     * @return the {@link ZMsg} instance
+     */
+    public static ZMsg recv(final Socket socket) {
+        final var response = ZMsg.recvMsg(socket);
         return check(response);
     }
 
-    private ZMsg check(final ZMsg response) {
+    private static ZMsg check(final ZMsg response) {
 
         if (response == null) throw new JeroMQControlException(SOCKET_ERROR);
         if (response.isEmpty()) throw new JeroMQControlException(PROTOCOL_ERROR);
 
-        final ZFrame delimter = response.removeFirst();
-        if (delimter.getData().length != 0) throw new JeroMQControlException(PROTOCOL_ERROR);
+        final ZFrame delimiter = response.removeFirst();
+        if (delimiter.getData().length != 0) throw new JeroMQControlException(PROTOCOL_ERROR);
 
         JeroMQControlResponseCode code;
 
@@ -187,4 +213,5 @@ public class JeroMQControlClient implements ControlClient {
         socket.close();
         shadowContext.close();
     }
+
 }

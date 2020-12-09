@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Routing;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.remote.WorkerInstance;
+import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
 import com.namazustudios.socialengine.rt.routing.ListAggregateRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
 import org.slf4j.Logger;
@@ -135,7 +135,7 @@ public class SimpleIndexContext implements IndexContext {
     }
 
     @Inject
-    public void setExecutorService(@Named(WorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
+    public void setExecutorService(@Named(SimpleWorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
         this.executorService = executorService;
     }
 

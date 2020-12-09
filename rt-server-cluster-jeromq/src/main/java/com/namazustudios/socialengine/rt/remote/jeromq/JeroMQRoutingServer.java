@@ -12,6 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.function.BooleanSupplier;
 
@@ -26,7 +27,7 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQRoutingServer implements AutoCloseable {
 
-    public static final Charset CHARSET = Charset.forName("UTF-8");
+    public static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private final Logger logger;
 

@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
-import com.namazustudios.socialengine.rt.remote.WorkerInstance;
+import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
 import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -177,7 +177,7 @@ public class SimpleResourceContext implements ResourceContext {
     }
 
     @Inject
-    public void setExecutorService(@Named(WorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
+    public void setExecutorService(@Named(SimpleWorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
         this.executorService = executorService;
     }
 
