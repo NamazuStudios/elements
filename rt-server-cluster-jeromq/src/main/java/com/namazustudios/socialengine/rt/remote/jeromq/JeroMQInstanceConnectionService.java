@@ -4,14 +4,12 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.AsyncPublisher;
 import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
-import com.namazustudios.socialengine.rt.remote.AsyncControlClient.Request;
-import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
-import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
+import com.namazustudios.socialengine.rt.remote.AsyncControlClient.Request;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -20,7 +18,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.Exchanger;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Condition;
@@ -28,7 +28,6 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -38,7 +37,6 @@ import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.not;
-import static java.util.stream.Collectors.filtering;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
@@ -439,12 +437,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     remoteInvoker.start(masterNodeConnectAddress);
 
                     return new JeroMQInstanceConnection(
-                            instanceStatus.getInstanceId(),
-                            remoteInvoker,
-                            getzContext(),
-                            getInternalBindAddress(),
-                            nfo,
-                            this::disconnect
+                        instanceStatus.getInstanceId(),
+                        remoteInvoker,
+                        getzContext(),
+                        getInternalBindAddress(),
+                        nfo,
+                        this::disconnect
                     );
 
                 });
