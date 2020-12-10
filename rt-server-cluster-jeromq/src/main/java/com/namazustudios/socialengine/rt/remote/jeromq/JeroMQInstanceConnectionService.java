@@ -4,6 +4,7 @@ import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.AsyncPublisher;
 import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
+import com.namazustudios.socialengine.rt.remote.AsyncControlClient.Request;
 import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.Subscription;
@@ -18,27 +19,35 @@ import org.zeromq.ZContext;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.concurrent.Exchanger;
+import java.util.*;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.NO_SUCH_NODE_ROUTE;
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toList;
+import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.filtering;
 import static java.util.stream.Collectors.toUnmodifiableList;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
 
-    public static final String JEROMQ_CLUSTER_BIND_ADDRESS = "com.namazustudios.socialengine.rt.remote.jeromq.bind.addr";
+    public static final String JEROMQ_CLUSTER_BIND_ADDRESS =
+        "com.namazustudios.socialengine.rt.remote.jeromq.bind.addr";
+
+    private static final String JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL =
+            "com.namazustudios.socialengine.rt.remote.jeromq.connection.service.refresh.interval.sec";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
@@ -48,9 +57,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     private String bindAddress;
 
+    private long refreshIntervalInSeconds;
+
     private Provider<RemoteInvoker> remoteInvokerProvider;
 
     private InstanceDiscoveryService instanceDiscoveryService;
+
+    private AsyncControlClient.Factory asyncControlClientFactory;
 
     private final AtomicReference<InstanceConnectionContext> context = new AtomicReference<>();
 
@@ -95,7 +108,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     @Override
     public List<InstanceConnection> getActiveConnections() {
         final InstanceConnectionContext context = getContext();
-        return context.getActiveConnections();
+        return context.getActive();
     }
 
     @Override
@@ -159,6 +172,15 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         this.remoteInvokerProvider = remoteInvokerProvider;
     }
 
+    public long getRefreshIntervalInSeconds() {
+        return refreshIntervalInSeconds;
+    }
+
+    @Inject
+    public void setRefreshIntervalInSeconds(@Named(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL) long refreshIntervalInSeconds) {
+        this.refreshIntervalInSeconds = refreshIntervalInSeconds;
+    }
+
     public InstanceDiscoveryService getInstanceDiscoveryService() {
         return instanceDiscoveryService;
     }
@@ -168,34 +190,68 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         this.instanceDiscoveryService = instanceDiscoveryService;
     }
 
+    public AsyncControlClient.Factory getAsyncControlClientFactory() {
+        return asyncControlClientFactory;
+    }
+
+    @Inject
+    public void setAsyncControlClientFactory(AsyncControlClient.Factory asyncControlClientFactory) {
+        this.asyncControlClientFactory = asyncControlClientFactory;
+    }
+
     private class InstanceConnectionContext {
 
         private Thread server;
 
         private Subscription onDiscover;
 
-        private Subscription onUndisover;
+        private Subscription onUndiscover;
+
+        private AsyncControlClient localControlClient;
 
         private final AtomicBoolean running = new AtomicBoolean(true);
 
+        private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, r -> {
+            final Thread thread = new Thread(r);
+            thread.setDaemon(true);
+            thread.setName(JeroMQInstanceConnectionService.class.getSimpleName() + " refresher.");
+            return thread;
+        });
+
         private final Exchanger<Exception> exceptionExchanger = new Exchanger<>();
 
-        private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
+        private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
 
-        private final String internalBindAddress = format("inproc://control/%s", randomUUID());
+        private final Lock rLock = rwLock.readLock();
 
-        private final BiMap<InstanceHostInfo, JeroMQInstanceConnection> activeConnections = HashBiMap.create();
+        private final Lock wLock = rwLock.writeLock();
 
-        private final BiMap<JeroMQInstanceConnection, InstanceHostInfo> rActiveConnections = activeConnections.inverse();
+        private final Condition wCondition = wLock.newCondition();
 
-        private final AsyncPublisher<InstanceConnection> onConnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
+        private final String internalBindAddress = format("inproc://control/%s", instanceId);
 
-        private final AsyncPublisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(readWriteLock.writeLock());
+        private final Map<InstanceHostInfo, Request> pending = new HashMap<>();
+
+        private final BiMap<InstanceHostInfo, JeroMQInstanceConnection> active = HashBiMap.create();
+
+        private final BiMap<JeroMQInstanceConnection, InstanceHostInfo> rActiveConnections = active.inverse();
+
+        private final AsyncPublisher<InstanceConnection> onConnect = new ConcurrentLockedPublisher<>(rwLock.writeLock(), scheduler::submit);
+
+        private final AsyncPublisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(rwLock.writeLock(), scheduler::submit);
 
         public void start() {
 
+            localControlClient = getAsyncControlClientFactory()
+                .open(getInternalBindAddress())
+                .withDispatch(scheduler::submit);
+
             onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(this::createNewConnectionIfAbsent);
-            onUndisover = getInstanceDiscoveryService().subscribeToUndiscovery(this::disconnect);
+            onUndiscover = getInstanceDiscoveryService().subscribeToUndiscovery(this::disconnect);
+
+            // Since the event publish may mutate the connection and it is always done within the context of the
+            // writer lock, we should signal all waiters while the event pumps.
+
             server = new Thread(this::server);
             server.setDaemon(true);
             server.setName(JeroMQInstanceConnectionService.class.getSimpleName() + " server.");
@@ -211,14 +267,209 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 throw new InternalException(ex);
             }
 
-            getInstanceDiscoveryService().getKnownHosts().forEach(this::createNewConnection);
+            scheduler.scheduleWithFixedDelay(this::bgRefresh, 0, getRefreshIntervalInSeconds(), SECONDS);
+
+        }
+
+        private void ro(final Runnable op) {
+            try {
+                rLock.lock();
+                op.run();
+            } finally {
+                rLock.unlock();
+            }
+        }
+
+        private <T> T computeRO(final Supplier<T> op) {
+            try {
+                rLock.lock();
+                return op.get();
+            } finally {
+                rLock.unlock();
+            }
+        }
+
+        public void rw(final Runnable op) {
+            try {
+                wLock.lock();
+                wCondition.signalAll();
+                op.run();
+            } finally {
+                wLock.unlock();
+            }
+        }
+
+        public <T> T computeRW(final Supplier<T> op) {
+            try {
+                wLock.lock();
+                wCondition.signalAll();
+                return op.get();
+            } finally {
+                wLock.unlock();
+            }
+        }
+
+        private void bgRefresh() {
+            getInstanceDiscoveryService()
+                .getKnownHosts()
+                .forEach(this::createNewConnectionIfAbsent);
+        }
+
+        public void createNewConnectionIfAbsent(final InstanceHostInfo instanceHostInfo) {
+
+            final var create = computeRO(() ->
+                !pending.containsKey(instanceHostInfo) &&
+                !active.containsKey(instanceHostInfo)
+            );
+
+            if (create) createNewConnection(instanceHostInfo);
+
+        }
+
+        private void createNewConnection(final InstanceHostInfo instanceHostInfo) {
+            rw(() -> pending.compute(instanceHostInfo, (nfo, existing) -> {
+
+                // If an existing request exists, then we simply return it. No need to mutate the map
+                if (existing != null) return existing;
+
+                // If not, then we must create a client. THe client will be passed through the
+                // rest of the refresh process for this particular instance host information bit.
+
+                // Note, we delegate the scheduler pool to handle the actual request/response business so
+                // the server's core IO threads are needlessly busy with executions.
+
+                final var instanceConnectAddress = nfo.getConnectAddress();
+                final var rClient = getAsyncControlClientFactory()
+                    .open(instanceConnectAddress)
+                    .withDispatch(scheduler::execute);
+
+                // Now that we have an async client, we can interrogate the remote end to get the instance id of the
+                // node and formally establish the route to the node. This way, we know the node ID and can associate
+                // its IP/endpoint address.
+
+                return rClient.getInstanceStatus(response -> {
+
+                    final InstanceStatus status;
+
+                    try {
+                        // We first attempt to get the status from the socket.
+                        status = response.get();
+                    } catch (Exception ex) {
+                        // If that fails we log it, close the client, as well as use the write lock to both remove
+                        // the pending request. We also return here to bail out from processing further.
+                        logger.info("Failed to get instance status from {}. Closing.", instanceConnectAddress);
+                        rClient.close();
+                        rw(() -> pending.remove(nfo));
+                        return;
+                    }
+
+                    // We successfully got the status, therefore we must open the route to the master node based on
+                    // the instance status.
+
+                    openRouteToMasterNode(nfo, status, rClient);
+
+                });
+
+            }));
+
+        }
+
+        private void openRouteToMasterNode(final InstanceHostInfo instanceHostInfo,
+                                           final InstanceStatus instanceStatus,
+                                           final AsyncControlClient rClient) {
+
+            // We generate the appropriate ids based on the instance IDs that are returned from the status.
+
+            final var instanceId = instanceStatus.getInstanceId();
+            final var masterNodeId = forMasterNode(instanceId);
+            final var instanceConnectAddress = instanceHostInfo.getConnectAddress();
+
+            // Knowing the host information, we use the local control client to tell the local routing server to connect
+            // to the instance. This opens up the route to the node such that this instance may see it and other clients
+            // may connect to the master node to interrogate it for information on the hosted nodes.
+
+            final var request = localControlClient.openRouteToNode(masterNodeId, instanceConnectAddress, response -> {
+
+                final String masterNodeConnectAddress;
+
+                try {
+                    // We attempt to fetch the newly created connect address. This can be used to create the permanent
+                    // connection through this server.
+                    masterNodeConnectAddress = response.get();
+                } catch (Exception ex) {
+                    logger.warn("Failed to open route to master node {} -> {}", masterNodeId, instanceConnectAddress);
+                    rw(() -> pending.remove(instanceHostInfo));
+                    return;
+                } finally {
+                    // Regardless, the remote client we made to do the direct connection is no longer needed, so we
+                    // close it out. Future connections will be made via the internal routing server so this connection
+                    // is not really needed anymore.
+                    rClient.close();
+                }
+
+                // Finally, we take what was processed, and we add it to the internal collection pool.
+                addInstanceConnection(instanceHostInfo, instanceStatus, masterNodeConnectAddress);
+
+            });
+
+            // Replace the current request with the pending request.
+            rw(() -> pending.put(instanceHostInfo, request));
+
+        }
+
+        private void addInstanceConnection(final InstanceHostInfo instanceHostInfo,
+                                           final InstanceStatus instanceStatus,
+                                           final String masterNodeConnectAddress) {
+
+            // The following must both be done in the same lock because it should remove from pending and put into
+            // active at the same time.
+            final var connection = computeRW(() -> {
+
+                // Removes the pending connection by just removing it from the map.
+                pending.remove(instanceHostInfo);
+
+                // Finally this computes the new connection. Practically speaking this should not ever happen, but we
+                // add some checks to ensure that this is correctly processed.
+
+                return active.compute(instanceHostInfo, (nfo, existing) -> {
+
+                    if (existing != null) return existing;
+
+                    final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
+                    remoteInvoker.start(masterNodeConnectAddress);
+
+                    return new JeroMQInstanceConnection(
+                            instanceStatus.getInstanceId(),
+                            remoteInvoker,
+                            getzContext(),
+                            getInternalBindAddress(),
+                            nfo,
+                            this::disconnect
+                    );
+
+                });
+
+            });
+
+            // Finally, we publish the connection to all listeners who are interested in the update.
+            onConnect.publishAsync(connection, c -> wCondition.signalAll());
 
         }
 
         public void stop() {
 
+            scheduler.shutdown();
+
+            try {
+                scheduler.awaitTermination(1, MINUTES);
+            } catch (InterruptedException e) {
+                logger.error("Interrupted while shutting down.", e);
+            }
+
             onDiscover.unsubscribe();
-            onUndisover.unsubscribe();
+            onUndiscover.unsubscribe();
+            localControlClient.close();
+
             drain();
 
             try {
@@ -231,7 +482,41 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public void refresh() {
-            getInstanceDiscoveryService().getKnownHosts().forEach(this::createNewConnectionIfAbsent);
+            rw(() -> {
+
+                // Finds all unknown hosts and disconnects them.
+
+                final Collection<InstanceHostInfo> known = getInstanceDiscoveryService().getKnownHosts();
+
+                final Set<InstanceHostInfo> toRemove = new HashSet<>();
+                toRemove.addAll(active.keySet());
+                toRemove.addAll(pending.keySet());
+                toRemove.removeAll(known);
+                toRemove.forEach(nfo -> {
+
+                    final var request = pending.remove(nfo);
+                    final var connection = active.remove(nfo);
+
+                    if (request != null) request.cancel();
+
+                    localControlClient.closeRoutesViaInstance(
+                        connection.getInstanceId(),
+                        response -> logger.info("Closed routes via {}", instanceId));
+
+                });
+
+                known.stream()
+                     .filter(not(nfo -> pending.containsKey(nfo) || active.containsKey(nfo)))
+                     .forEach(this::createNewConnection);
+
+                try {
+                    while (!pending.isEmpty()) wCondition.await();
+                } catch (InterruptedException e) {
+                    logger.info("Interrupted refreshing.", e);
+                    return;
+                }
+
+            });
         }
 
         private void server() {
@@ -241,12 +526,14 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 .collect(toUnmodifiableList());
 
             try (final JeroMQRoutingServer server = new JeroMQRoutingServer(getInstanceId(), getzContext(), binds)) {
-                exchangeException(null);
-                server.run(() -> running.get());
+                final var incoming = exchangeException(null);
+                assert incoming == null;
+                server.run(running::get);
                 logger.info("Got signal to stop running.  Shutting down IO thread.");
             } catch (Exception ex) {
                 logger.error("Exception running the routing server.", ex);
-                exchangeException(ex);
+                final var incoming = exchangeException(ex);
+                assert incoming == null;
             }
 
         }
@@ -255,7 +542,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             try {
                 return exceptionExchanger.exchange(ex);
             } catch (InterruptedException e) {
-                logger.error("Interrupted exchaning exceptions to calling thread.", e);
+                logger.error("Interrupted exchanging exceptions to calling thread.", e);
                 throw new InternalException(e);
             }
         }
@@ -264,95 +551,22 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             return internalBindAddress;
         }
 
-        public List<InstanceConnection> getActiveConnections() {
-
-            final Lock rLock = readWriteLock.readLock();
+        public List<InstanceConnection> getActive() {
 
             try {
                 rLock.lock();
-                return new ArrayList<>(activeConnections.values());
+                return new ArrayList<>(active.values());
             } finally {
                 rLock.unlock();
             }
 
-        }
-
-        public void createNewConnectionIfAbsent(final InstanceHostInfo instanceHostInfo) {
-
-            final Lock rLock = readWriteLock.readLock();
-
-            try {
-                rLock.lock();
-                final JeroMQInstanceConnection connection = activeConnections.get(instanceHostInfo);
-                if (connection == null) createNewConnection(instanceHostInfo);
-            } finally {
-                rLock.unlock();
-            }
-
-        }
-
-        private void createNewConnection(final InstanceHostInfo instanceHostInfo) {
-
-            final String instanceConnectAddress = instanceHostInfo.getConnectAddress();
-
-            try (final var rClient = new JeroMQControlClient(getzContext(), instanceConnectAddress);
-                 final var lClient = new JeroMQControlClient(getzContext(), getLocalControlAddress())) {
-
-                final InstanceStatus status = rClient.getInstanceStatus();
-
-                final InstanceId instanceId = status.getInstanceId();
-                final NodeId masterNodeId = forMasterNode(instanceId);
-                final String masterNodeConnectAddress = lClient.openRouteToNode(masterNodeId, instanceConnectAddress);
-
-                final Lock wLock = readWriteLock.writeLock();
-
-                try {
-
-                    wLock.lock();
-
-                    var connection = activeConnections.get(instanceHostInfo);
-                    if (connection != null) return;
-
-                    final RemoteInvoker remoteInvoker = getRemoteInvokerProvider().get();
-                    remoteInvoker.start(masterNodeConnectAddress);
-
-                    connection = new JeroMQInstanceConnection(
-                            instanceId,
-                            remoteInvoker,
-                            getzContext(),
-                            getInternalBindAddress(),
-                            instanceHostInfo,
-                            this::disconnect);
-
-                    activeConnections.put(instanceHostInfo, connection);
-                    onConnect.publishAsync(connection);
-
-                } catch (Exception ex) {
-                    cleanup(rClient, instanceId);
-                    throw ex;
-                } finally {
-                    wLock.unlock();
-                }
-
-            }
-
-        }
-
-        private void cleanup(final ControlClient client, final InstanceId instanceId) {
-            try {
-                client.closeRoutesViaInstance(instanceId);
-            } catch (Exception ex) {
-                logger.error("Error cleaning up connection to instance {}", instanceId);
-            }
         }
 
         public void drain() {
-            final Lock wLock = readWriteLock.writeLock();
 
-            try {
-                wLock.lock();
+            rw(() -> {
 
-                final List<InstanceConnection> connectionList = new ArrayList<>(activeConnections.values());
+                final List<InstanceConnection> connectionList = new ArrayList<>(active.values());
 
                 connectionList.forEach(c -> {
                     try {
@@ -368,45 +582,87 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     }
                 });
 
-            } finally {
-                wLock.unlock();
-            }
+            });
 
         }
 
         public void disconnect(final InstanceHostInfo instanceHostInfo) {
-            final Lock wLock = readWriteLock.writeLock();
 
-            try {
-                wLock.lock();
+            final var connection = computeRW(() -> {
 
-                final JeroMQInstanceConnection connection = activeConnections.remove(instanceHostInfo);
-                if (connection == null) return;
-                connection.disconnect();
+                final var c = active.remove(instanceHostInfo);
+
+                pending.compute(instanceHostInfo, (nfo, existing) -> {
+
+                    // Cancels any pending request, this ensures that the pending request will just die in place and we
+                    // will create a new request that simply disconnects the routes through the instance.
+                    if (existing != null) existing.cancel();
+
+                    // Finally, if there was a connection associated with the host info, we must then use the local
+                    // client to remove the instance id from the table of routable nodes.
+
+                    return c == null ?
+                        null :
+                        localControlClient.closeRoutesViaInstance(
+                            c.getInstanceId(),
+                            response -> logger.info("Closed routes via {}", instanceId)
+                        );
+
+                });
+
+                return c;
+
+            });
+
+            if (connection == null) {
+                logger.info("Connection for host {} wasn't removed.", instanceHostInfo.getConnectAddress());
+            } else {
+
                 logger.info("Disconnected from instance {}", instanceHostInfo.getConnectAddress());
-                onDisconnect.publishAsync(connection, c -> connection.getRemoteInvoker().stop());
 
-            } finally {
-                wLock.unlock();
+                onDisconnect.publishAsync(connection, c -> {
+                    wCondition.signalAll();
+                    connection.getRemoteInvoker().stop();
+                });
+
             }
 
         }
 
         public void disconnect(final JeroMQInstanceConnection connection) {
 
-            final Lock wLock = readWriteLock.writeLock();
+            final var publish = computeRW(() -> {
 
-            try {
-                wLock.lock();
+                final var instanceHostInfo = rActiveConnections.remove(connection);
+                if (instanceHostInfo == null) return false;
 
-                final InstanceHostInfo address = rActiveConnections.remove(connection);
-                if (address == null) return;
+                pending.compute(instanceHostInfo, (nfo, existing) -> {
 
-                logger.info("Disconnected from instance {}", address);
-                onDisconnect.publishAsync(connection, c -> connection.getRemoteInvoker().stop());
+                    // Cancels any pending request, this ensures that the pending request will just die in place and we
+                    // will create a new request that simply disconnects the routes through the instance.
+                    if (existing != null) existing.cancel();
 
-            } finally {
-                wLock.unlock();
+                    // Finally, if there was a connection associated with the host info, we must then use the local
+                    // client to remove the instance id from the table of routable nodes.
+
+                    return connection == null ?
+                        null :
+                        localControlClient.closeRoutesViaInstance(
+                            connection.getInstanceId(),
+                            response -> logger.info("Closed routes via {}", instanceId)
+                        );
+
+                });
+
+                return true;
+
+            });
+
+            if (publish) {
+                onDisconnect.publishAsync(connection, c -> {
+                    wCondition.signalAll();
+                    connection.getRemoteInvoker().stop();
+                });
             }
 
         }

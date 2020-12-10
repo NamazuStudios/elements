@@ -200,13 +200,11 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
     @Override
     public void close() {
-
-        if (!context.remove(this)) {
+        if (context.remove(this)) {
+            doClose();
+        } else {
             logger.warn("Already removed from the parent AsyncConnectionService: {}", this);
         }
-
-        doClose();
-
     }
 
     public void doClose() {

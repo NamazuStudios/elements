@@ -3,9 +3,12 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 
+import java.lang.reflect.Proxy;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 public interface AsyncControlClient extends AutoCloseable {
 
@@ -15,7 +18,7 @@ public interface AsyncControlClient extends AutoCloseable {
      * @param responseConsumer the {@link Consumer<Response<InstanceStatus>>} to handle the request
      * @return the {@link Request} for the instance status
      */
-    Request getInstanceStatus(Consumer<Response<? extends InstanceStatus>> responseConsumer);
+    Request getInstanceStatus(ResponseConsumer<InstanceStatus> responseConsumer);
 
     /**
      * Issues the command to open up a route to the node.
@@ -25,7 +28,7 @@ public interface AsyncControlClient extends AutoCloseable {
      * @param responseConsumer the {@link Consumer<Response<String>>} to handle the request
      * @return the connect address for the node
      */
-    Request openRouteToNode(NodeId nodeId, String instanceInvokerAddress, Consumer<Response<String>> responseConsumer);
+    Request openRouteToNode(NodeId nodeId, String instanceInvokerAddress, ResponseConsumer<String> responseConsumer);
 
     /**
      * Close the route to the {@link NodeId}.  If the route is not known, then nothing happens.
@@ -33,7 +36,7 @@ public interface AsyncControlClient extends AutoCloseable {
      * @param nodeId the {@link NodeId}
      *
      */
-    Request closeRouteToNode(NodeId nodeId, Consumer<Response<Void>> responseConsumer);
+    Request closeRouteToNode(NodeId nodeId, ResponseConsumer<Void> responseConsumer);
 
     /**
      * Close the routes via the {@link InstanceId}.  If no routes are known, then nothing happens.
@@ -41,25 +44,83 @@ public interface AsyncControlClient extends AutoCloseable {
      * @param instanceId the {@link InstanceId}
      *
      */
-    Request closeRoutesViaInstance(InstanceId instanceId, Consumer<Response<Void>> responseConsumer);
+    Request closeRoutesViaInstance(InstanceId instanceId, ResponseConsumer<Void> responseConsumer);
 
     /**
-     * Opens an {@link InstanceConnectionService.InstanceBinding} provided the {@link NodeId} and returns the
-     * {@link InstanceConnectionService.InstanceBinding}.
+     * Opens an {@link InstanceBinding} provided the {@link NodeId} and returns the
+     * {@link InstanceBinding}.
      *
      * @param nodeId the {@link NodeId}
-     * @return the {@link InstanceConnectionService.InstanceBinding}
+     * @return the {@link InstanceBinding}
      */
-    Request openBinding(NodeId nodeId,
-                        Consumer<Response<? extends InstanceConnectionService.InstanceBinding>> responseConsumer);
+    Request openBinding(NodeId nodeId, ResponseConsumer<InstanceBinding> responseConsumer);
 
     /**
      * Issues the command to close a binding.  This will invalidate all
-     * {@link InstanceConnectionService.InstanceBinding}s to that {@link NodeId}.
+     * {@link InstanceBinding}s to that {@link NodeId}.
      *
      * @param nodeId
      */
-    Request closeBinding(NodeId nodeId, Consumer<Response<Void>> responseConsumer);
+    Request closeBinding(NodeId nodeId, ResponseConsumer<Void> responseConsumer);
+
+    default Request openBinding0(Consumer<Runnable> dispatch,
+                                 NodeId nodeId,
+                                 ResponseConsumer<InstanceBinding> responseConsumer) {
+        final ResponseConsumer<InstanceBinding> wrapped = r -> dispatch.accept(() -> responseConsumer.accept(r));
+        return openBinding(nodeId, wrapped);
+    }
+
+    /**
+     * Configures this {@link AsyncControlClient} to dispatch the response handling to the supplied
+     * {@link Consumer<Runnable>}. There are cases in which it may be desirable to dispatch the actual interactions
+     * with a background thread or process.
+     *
+     * For example the async callbacks to the underlying types may be using one of a few critical IO threads, it would
+     * be imperative to avoid blocking such threads. Therefore, the operations may dispatch to the supplied dispatcher.
+     *
+     * @param dispatch accepts a {@link Runnable} to run at now or a greater point in time.
+     * @return a wrapped {@link AsyncControlClient} which dispatches it's work to the supplied dispatch.
+     */
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    default AsyncControlClient withDispatch(final Consumer<Runnable> dispatch) {
+
+        final ClassLoader classLoader = getClass().getClassLoader();
+        final Class<?>[] interfaces = new Class<?>[]{AsyncControlClient.class};
+
+        return (AsyncControlClient) Proxy.newProxyInstance(classLoader, interfaces, (proxy, method, args) -> {
+
+            if (Request.class.isAssignableFrom(method.getReturnType())) {
+
+                final Function<Object, Object> remapper = arg -> {
+                    if (arg instanceof ResponseConsumer) {
+
+                        final ResponseConsumer original = (ResponseConsumer) arg;
+
+                        return (ResponseConsumer) response -> {
+                            try {
+                                final var result = response.get();
+                                dispatch.accept(() -> original.accept(() -> result));
+                            } catch (Exception ex) {
+                                ex.fillInStackTrace();
+                                dispatch.accept(() -> original.accept(() -> { throw ex; }));
+                            }
+                        };
+
+                    } else {
+                        return arg;
+                    }
+                };
+
+                final var remapped = Stream.of(args).map(remapper).toArray();
+                return method.invoke(this, remapped);
+
+            } else {
+                return method.invoke(this, args);
+            }
+
+        });
+
+    }
 
     /**
      * Closes this instance of {@link AsyncControlClient}. Any pending tasks will be failed with a callback to any
@@ -80,7 +141,7 @@ public interface AsyncControlClient extends AutoCloseable {
          * @param connectAddress the connect address
          * @return the {@link ControlClient}
          */
-        ControlClient open(final String connectAddress);
+        AsyncControlClient open(final String connectAddress);
 
     }
 
@@ -119,6 +180,23 @@ public interface AsyncControlClient extends AutoCloseable {
         default <U> Response<U> map(final Function<T, U> mapper) {
             return () -> mapper.apply(Response.this.get());
         }
+
+    }
+
+    /**
+     * Response
+     *
+     * @param <T>
+     */
+    @FunctionalInterface
+    interface ResponseConsumer<T> {
+
+        /**(
+         * Accepts the response.
+         *
+         * @param tResponse
+         */
+        void accept(Response<? extends T> tResponse);
 
     }
 

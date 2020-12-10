@@ -23,8 +23,8 @@ public class SimplePublisher<T> implements Publisher<T> {
 
     @Override
     public Subscription subscribe(final BiConsumer<Subscription, ? super T> consumer) {
-        final LinkedConsumer<? extends T> current = last = last.andThenTry(consumer);
-        return () -> current.remove();
+        final var current = last = last.andThenTry(consumer);
+        return current::remove;
     }
 
     @Override

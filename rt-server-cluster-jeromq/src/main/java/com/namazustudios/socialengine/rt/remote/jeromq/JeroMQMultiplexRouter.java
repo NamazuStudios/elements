@@ -5,7 +5,6 @@ import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;

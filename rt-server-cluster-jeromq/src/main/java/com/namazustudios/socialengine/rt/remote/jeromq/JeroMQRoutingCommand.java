@@ -8,7 +8,7 @@ public enum JeroMQRoutingCommand {
 
     /**
      * Requests that the message be routed to a destination.  This is a majority of messages used for invocations.  The
-     * mesage will be routed based on subsequent routing information.
+     * message will be routed based on subsequent routing information.
      */
     FORWARD,
 

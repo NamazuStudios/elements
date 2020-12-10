@@ -71,13 +71,7 @@ class JeroMQInstanceConnection implements InstanceConnectionService.InstanceConn
 
     @Override
     public void disconnect() {
-        try (final ControlClient client = new JeroMQControlClient(zContext, internalControlAddress)) {
-            client.closeRoutesViaInstance(instanceId);
-        } catch (Exception ex) {
-            logger.error("Caught exception issuing disconnect command for instance {}", instanceId, ex);
-        }finally {
-            onDisconnect.accept(this);
-        }
+        onDisconnect.accept(this);
     }
 
     /**
