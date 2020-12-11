@@ -16,10 +16,7 @@ import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
 import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
@@ -57,6 +54,7 @@ public class ApplicationNode {
             new JeroMQRemoteInvokerModule(),
             new JeroMQAsyncConnectionServiceModule(),
             new JeroMQInstanceConnectionServiceModule(),
+            new JeroMQControlClientModule(),
             new MongoCoreModule(),
             new SimpleRemoteInvokerRegistryModule(),
             new MongoDaoModule(),

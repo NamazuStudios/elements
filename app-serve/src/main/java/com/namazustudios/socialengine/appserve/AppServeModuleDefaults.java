@@ -14,6 +14,7 @@ import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVO
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
 import static java.lang.Runtime.getRuntime;
 
 public class AppServeModuleDefaults implements ModuleDefaults {
@@ -26,6 +27,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "");
+        properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");

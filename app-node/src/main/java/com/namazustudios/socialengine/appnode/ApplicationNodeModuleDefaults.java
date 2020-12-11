@@ -17,6 +17,7 @@ import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVO
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTable.UNIXFS_REVISION_TABLE_COUNT;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_COUNT;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_SIZE;
@@ -33,6 +34,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(STORAGE_BASE_DIRECTORY, "storage.xodus");
         properties.setProperty(INSTANCE_ID_FILE, "instance-id.txt");
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
+        properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_NODE_MIN_CONNECTIONS, "10");

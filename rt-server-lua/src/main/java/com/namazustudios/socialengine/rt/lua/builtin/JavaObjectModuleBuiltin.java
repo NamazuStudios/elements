@@ -182,8 +182,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
     private boolean parametersMatch(final LuaState luaState, final Method method) {
 
-        final int nargs = luaState.getTop();
-        final Class<?>[] parameterTypes = method.getParameterTypes();
+        final var parameterTypes = method.getParameterTypes();
 
         for (int i = 0; i < parameterTypes.length; ++i) {
             if (!luaState.isJavaObject(i + 1, parameterTypes[i])) {

@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static org.zeromq.SocketType.REQ;
@@ -186,6 +187,8 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
         final var pending = new AtomicBoolean(true);
 
         pool.acquireNextAvailableConnection(c -> {
+
+            c.setEvents(WRITE, ERROR, READ);
 
             c.onError(_c -> {
                 try {

@@ -129,9 +129,9 @@ public class LuaModule extends PrivateModule {
         final Set<Class<?>> enumClassSet = reflections.getTypesAnnotatedWith(ExposeEnum.class);
 
         enumClassSet.stream()
-                .filter(cls -> cls.getAnnotation(ExposeEnum.class) != null)
-                .collect(Collectors.toMap(cls -> cls.getAnnotation(ExposeEnum.class), identity()))
-                .forEach((exposeEnum, type) -> bindEnumModuleBuiltin(type).toModulesNamed(exposeEnum.modules()));
+            .filter(cls -> cls.getAnnotation(ExposeEnum.class) != null)
+            .collect(Collectors.toMap(cls -> cls.getAnnotation(ExposeEnum.class), identity()))
+            .forEach((exposeEnum, type) -> bindEnumModuleBuiltin(type).toModulesNamed(exposeEnum.modules()));
 
         return this;
 

@@ -10,6 +10,8 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.AsyncControlClient.Request;
+import com.namazustudios.socialengine.rt.util.ReadWriteGuard;
+import com.namazustudios.socialengine.rt.util.ReentrantReadWriteGuard;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -23,12 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
@@ -44,8 +41,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     public static final String JEROMQ_CLUSTER_BIND_ADDRESS =
         "com.namazustudios.socialengine.rt.remote.jeromq.bind.addr";
 
-    private static final String JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL =
-            "com.namazustudios.socialengine.rt.remote.jeromq.connection.service.refresh.interval.sec";
+    public static final String JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS =
+        "com.namazustudios.socialengine.rt.remote.jeromq.connection.service.refresh.interval.sec";
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
@@ -175,7 +172,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     }
 
     @Inject
-    public void setRefreshIntervalInSeconds(@Named(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL) long refreshIntervalInSeconds) {
+    public void setRefreshIntervalInSeconds(@Named(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS) long refreshIntervalInSeconds) {
         this.refreshIntervalInSeconds = refreshIntervalInSeconds;
     }
 
@@ -213,18 +210,13 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
             thread.setName(JeroMQInstanceConnectionService.class.getSimpleName() + " refresher.");
+            thread.setUncaughtExceptionHandler((t, ex) -> logger.error("Error in scheduler.", ex));
             return thread;
         });
 
         private final Exchanger<Exception> exceptionExchanger = new Exchanger<>();
 
-        private final ReadWriteLock rwLock = new ReentrantReadWriteLock();
-
-        private final Lock rLock = rwLock.readLock();
-
-        private final Lock wLock = rwLock.writeLock();
-
-        private final Condition wCondition = wLock.newCondition();
+        private ReadWriteGuard rwGuard = new ReentrantReadWriteGuard();
 
         private final String internalBindAddress = format("inproc://control/%s", instanceId);
 
@@ -234,9 +226,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private final BiMap<JeroMQInstanceConnection, InstanceHostInfo> rActiveConnections = active.inverse();
 
-        private final AsyncPublisher<InstanceConnection> onConnect = new ConcurrentLockedPublisher<>(rwLock.writeLock(), scheduler::submit);
+        private final AsyncPublisher<InstanceConnection> onConnect = new ConcurrentLockedPublisher<>(rwGuard.getWriteLock(), scheduler::submit);
 
-        private final AsyncPublisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(rwLock.writeLock(), scheduler::submit);
+        private final AsyncPublisher<InstanceConnection> onDisconnect = new ConcurrentLockedPublisher<>(rwGuard.getWriteLock(), scheduler::submit);
 
         public void start() {
 
@@ -269,63 +261,32 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         }
 
-        private void ro(final Runnable op) {
-            try {
-                rLock.lock();
-                op.run();
-            } finally {
-                rLock.unlock();
-            }
-        }
-
-        private <T> T computeRO(final Supplier<T> op) {
-            try {
-                rLock.lock();
-                return op.get();
-            } finally {
-                rLock.unlock();
-            }
-        }
-
-        public void rw(final Runnable op) {
-            try {
-                wLock.lock();
-                wCondition.signalAll();
-                op.run();
-            } finally {
-                wLock.unlock();
-            }
-        }
-
-        public <T> T computeRW(final Supplier<T> op) {
-            try {
-                wLock.lock();
-                wCondition.signalAll();
-                return op.get();
-            } finally {
-                wLock.unlock();
-            }
-        }
-
         private void bgRefresh() {
             getInstanceDiscoveryService()
                 .getKnownHosts()
+                .stream()
+                .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
                 .forEach(this::createNewConnectionIfAbsent);
         }
 
         public void createNewConnectionIfAbsent(final InstanceHostInfo instanceHostInfo) {
+            try {
 
-            final var create = computeRO(() ->
-                !pending.containsKey(instanceHostInfo) &&
-                !active.containsKey(instanceHostInfo)
-            );
+                final var create = rwGuard.computeRO(c ->
+                    !pending.containsKey(instanceHostInfo) &&
+                    !active.containsKey(instanceHostInfo)
+                );
 
-            if (create) createNewConnection(instanceHostInfo);
+                if (create) createNewConnection(instanceHostInfo);
 
+            } catch (Exception ex) {
+                logger.error("Caught exception creating host from address {}",
+                             instanceHostInfo.getConnectAddress(), ex);
+            }
         }
 
         private void createNewConnection(final InstanceHostInfo instanceHostInfo) {
-            rw(() -> pending.compute(instanceHostInfo, (nfo, existing) -> {
+            rwGuard.rw(condition -> pending.compute(instanceHostInfo, (nfo, existing) -> {
 
                 // If an existing request exists, then we simply return it. No need to mutate the map
                 if (existing != null) return existing;
@@ -357,7 +318,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                         // the pending request. We also return here to bail out from processing further.
                         logger.info("Failed to get instance status from {}. Closing.", instanceConnectAddress);
                         rClient.close();
-                        rw(() -> pending.remove(nfo));
+                        rwGuard.rw(_condition -> pending.remove(nfo));
                         return;
                     }
 
@@ -396,7 +357,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     masterNodeConnectAddress = response.get();
                 } catch (Exception ex) {
                     logger.warn("Failed to open route to master node {} -> {}", masterNodeId, instanceConnectAddress);
-                    rw(() -> pending.remove(instanceHostInfo));
+                    rwGuard.rw(condition -> pending.remove(instanceHostInfo));
                     return;
                 } finally {
                     // Regardless, the remote client we made to do the direct connection is no longer needed, so we
@@ -411,7 +372,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             });
 
             // Replace the current request with the pending request.
-            rw(() -> pending.put(instanceHostInfo, request));
+            rwGuard.rw(condition -> pending.put(instanceHostInfo, request));
 
         }
 
@@ -421,7 +382,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             // The following must both be done in the same lock because it should remove from pending and put into
             // active at the same time.
-            final var connection = computeRW(() -> {
+            final var connection = rwGuard.computeRW(condition -> {
 
                 // Removes the pending connection by just removing it from the map.
                 pending.remove(instanceHostInfo);
@@ -450,7 +411,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             });
 
             // Finally, we publish the connection to all listeners who are interested in the update.
-            onConnect.publishAsync(connection, c -> wCondition.signalAll());
+            onConnect.publishAsync(connection, c -> rwGuard.getCondition().signalAll());
 
         }
 
@@ -480,7 +441,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public void refresh() {
-            rw(() -> {
+            rwGuard.rw(condition -> {
 
                 // Finds all unknown hosts and disconnects them.
 
@@ -504,11 +465,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 });
 
                 known.stream()
+                     .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
                      .filter(not(nfo -> pending.containsKey(nfo) || active.containsKey(nfo)))
                      .forEach(this::createNewConnection);
 
                 try {
-                    while (!pending.isEmpty()) wCondition.await();
+                    while (!pending.isEmpty()) condition.await();
                 } catch (InterruptedException e) {
                     logger.info("Interrupted refreshing.", e);
                     return;
@@ -550,19 +512,12 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public List<InstanceConnection> getActive() {
-
-            try {
-                rLock.lock();
-                return new ArrayList<>(active.values());
-            } finally {
-                rLock.unlock();
-            }
-
+            return rwGuard.computeRO(c -> new ArrayList(active.values()));
         }
 
         public void drain() {
 
-            rw(() -> {
+            rwGuard.rw(condition -> {
 
                 final List<InstanceConnection> connectionList = new ArrayList<>(active.values());
 
@@ -586,7 +541,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public void disconnect(final InstanceHostInfo instanceHostInfo) {
 
-            final var connection = computeRW(() -> {
+            final var connection = rwGuard.computeRW(condition -> {
 
                 final var c = active.remove(instanceHostInfo);
 
@@ -619,7 +574,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 logger.info("Disconnected from instance {}", instanceHostInfo.getConnectAddress());
 
                 onDisconnect.publishAsync(connection, c -> {
-                    wCondition.signalAll();
+                    rwGuard.getCondition().signalAll();
                     connection.getRemoteInvoker().stop();
                 });
 
@@ -629,7 +584,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public void disconnect(final JeroMQInstanceConnection connection) {
 
-            final var publish = computeRW(() -> {
+            final var publish = rwGuard.computeRW(condition -> {
 
                 final var instanceHostInfo = rActiveConnections.remove(connection);
                 if (instanceHostInfo == null) return false;
@@ -658,7 +613,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             if (publish) {
                 onDisconnect.publishAsync(connection, c -> {
-                    wCondition.signalAll();
+                    rwGuard.getCondition().signalAll();
                     connection.getRemoteInvoker().stop();
                 });
             }

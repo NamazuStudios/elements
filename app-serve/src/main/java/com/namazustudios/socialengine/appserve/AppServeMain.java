@@ -22,10 +22,7 @@ import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceMo
 import com.namazustudios.socialengine.rt.remote.guice.RandomInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleInstanceModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
@@ -103,6 +100,7 @@ public class AppServeMain implements Runnable {
         return createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
+            new JeroMQControlClientModule(),
             new SimpleInstanceModule(),
             new MongoCoreModule(),
             new ServerModule(),
