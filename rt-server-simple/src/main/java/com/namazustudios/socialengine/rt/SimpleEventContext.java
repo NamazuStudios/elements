@@ -16,10 +16,10 @@ public class SimpleEventContext implements EventContext {
 
     @Override
     public void postAsync(String eventName, Attributes attributes, Object... args) {
-        getCallbackService().postAsync(eventName, attributes, args);
+        getEventService().postAsync(eventName, attributes, args);
     }
 
-    public EventService getCallbackService() {
+    public EventService getEventService() {
         return eventService;
     }
 
