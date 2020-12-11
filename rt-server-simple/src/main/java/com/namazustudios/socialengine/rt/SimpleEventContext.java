@@ -24,7 +24,7 @@ public class SimpleEventContext implements EventContext {
     }
 
     @Inject
-    public void setCallbackService(EventService eventService) {
+    public void setEventService(EventService eventService) {
         this.eventService = eventService;
     }
 }
