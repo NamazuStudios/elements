@@ -33,6 +33,7 @@ public class LuaResourceLinkingAdvancedTest {
                 .withHandlerTimeout(3, MINUTES))
             .withNodeModule(new XodusEnvironmentModule()
                 .withTempEnvironments())
+            .withNodeModule(new JavaEventModule())
             .withDefaultHttpClient()
         .start();
 

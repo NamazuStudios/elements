@@ -59,4 +59,11 @@ public interface Context {
      */
     TaskContext getTaskContext();
 
+    /**
+     * Gets the {@link EventContext}.
+     *
+     * @return the {@link EventContext}
+     */
+    EventContext getEventContext();
+
 }

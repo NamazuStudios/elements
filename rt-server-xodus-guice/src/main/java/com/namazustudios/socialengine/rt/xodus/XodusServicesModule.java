@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.PrivateModule;
-import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.provider.CPUCountThreadPoolProvider;
 import com.namazustudios.socialengine.rt.provider.ScheduledExecutorServiceProvider;
 
-import java.util.Deque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -65,12 +63,17 @@ public class XodusServicesModule extends PrivateModule {
             .to(SimpleTaskService.class)
             .asEagerSingleton();
 
+        bind(EventService.class)
+            .to(SimpleEventService.class)
+            .asEagerSingleton();
+
         expose(Scheduler.class);
         expose(TaskService.class);
         expose(ResourceService.class);
         expose(SingleUseHandlerService.class);
         expose(RetainedHandlerService.class);
         expose(PersistenceStrategy.class);
+        expose(EventService.class);
 
     }
 

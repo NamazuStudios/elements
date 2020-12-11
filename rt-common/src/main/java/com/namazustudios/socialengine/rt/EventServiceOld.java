@@ -18,7 +18,8 @@ import java.util.function.Consumer;
  *
  * Created by patricktwohig on 3/31/16.
  */
-public interface EventService {
+@Deprecated
+public interface EventServiceOld {
 
     /**
      * Posts an event. The return value of the {@link EventHeader#getPath()} will be used
@@ -42,7 +43,7 @@ public interface EventService {
     Iterable<? extends EventReceiver<?>> getEventReceivers(Path path, String name);
 
     /**
-     * Observes the event at the given path and name.  This {@link EventService} is responsible
+     * Observes the event at the given path and name.  This {@link EventServiceOld} is responsible
      * for managing the observations and owning the instances of {@link EventReceiver} provided.
      *
      * Registering an instance of {@link EventReceiver} more than once is not defined behavior

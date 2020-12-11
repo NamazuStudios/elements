@@ -25,6 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.EventContext.EVENT_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static java.util.UUID.randomUUID;
@@ -272,13 +273,14 @@ public class TestCorePersistence {
 
             install(new LuaModule());
             install(new SimpleContextModule());
+            install(new JavaEventModule());
 
             bind(Client.class).toInstance(mock(Client.class));
             bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
             bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
             bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
             bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
-
+            bind(Long.class).annotatedWith(named(EVENT_TIMEOUT_MSEC)).toInstance(90l);
         }
 
     }

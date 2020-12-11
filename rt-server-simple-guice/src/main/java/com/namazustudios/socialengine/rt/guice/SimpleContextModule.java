@@ -45,6 +45,7 @@ public class SimpleContextModule extends PrivateModule {
         install(new SimpleSchedulerContextModule());
         install(new SimpleHandlerContextModule());
         install(new SimpleTaskContextModule());
+        install(new SimpleEventContextModule());
 
         expose(PersistenceStrategy.class);
 

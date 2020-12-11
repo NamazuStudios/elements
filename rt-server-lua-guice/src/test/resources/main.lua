@@ -19,7 +19,7 @@ local pagination = require "namazu.pagination"
 
 -- A simple example model which contains primitives
 
-local example_model = require "example.model"
+local example_model = require "test.examples.model"
 
 local manifest = {}
 manifest.model = {}
@@ -51,7 +51,7 @@ local example_headers = {
 }
 
 local example_static_headers = {
-    ["Access-Control-Allow-Origin"] = "http://example.com"
+    ["Access-Control-Allow-Origin"] = "http://test.examples.com"
 }
 
 local example_parameters = {
@@ -99,7 +99,7 @@ manifest.http = {
     -- as it would be passed to require.  In this case it will load example/hello_world.lua for this particular module
     -- when in the process of servicing the request
 
-    ["example.hello_world"] = {
+    ["test.examples.hello_world"] = {
 
 
         -- The operations contained in the module.  This maps the request/respons metadata to various
@@ -334,8 +334,8 @@ manifest.http = {
 
 }
 
-manifest.startup = { 
-    ["example.startup"] = {
+manifest.startup = {
+    ["test.examples.startup"] = {
         operations = {
             run_once = {
                 method = "run_once"
@@ -348,9 +348,15 @@ manifest.startup = {
 }
 
 manifest.event = {
-    ["example.event"] = {
-        {module = "example.event", method = "hello_event"},
-        {module = "example.event", method = "hello_event_again"}
+    ["hello.event"] = {
+        {module = "test.examples.event", method = "hello_event"},
+        {module = "test.examples.event", method = "hello_event_again"}
+    },
+    ["who"] = {
+        {module = "test.examples.event", method = "who"}
+    },
+    ["who.with.count"] = {
+        {module = "test.examples.event", method = "who_with_count"}
     }
 }
 

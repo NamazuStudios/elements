@@ -34,6 +34,8 @@ public class SimpleContext implements Context {
 
     private TaskContext taskContext;
 
+    private EventContext eventContext;
+
     private AssetLoader assetLoader;
 
     private ManifestLoader manifestLoader;
@@ -213,6 +215,16 @@ public class SimpleContext implements Context {
     @Inject
     public void setManifestLoader(ManifestLoader manifestLoader) {
         this.manifestLoader = manifestLoader;
+    }
+
+    @Override
+    public EventContext getEventContext() {
+        return eventContext;
+    }
+
+    @Inject
+    public void setEventContext(EventContext eventContext) {
+        this.eventContext = eventContext;
     }
 
 }

@@ -31,6 +31,7 @@ public class HttpClientIntegrationTest {
             .withHandlerTimeout(3, MINUTES))
         .withNodeModule(new XodusEnvironmentModule()
             .withTempEnvironments())
+        .withNodeModule(new JavaEventModule())
         .start();
 
     private final Node node = getEmbeddedTestService().getNode();
