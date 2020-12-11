@@ -7,12 +7,15 @@ import com.namazustudios.socialengine.rt.SimpleHandlerContext;
 import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.EventContext.EVENT_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class SimpleHandlerContextModule extends AbstractModule {
 
     private Runnable bindTimeout = () -> {};
+
+    private Runnable bindEventTimeout = () -> {};
 
     /**
      * Specifies the {@link HandlerContext} timeout.
@@ -24,12 +27,16 @@ public class SimpleHandlerContextModule extends AbstractModule {
         bindTimeout = () -> bind(Long.class)
             .annotatedWith(named(HANDLER_TIMEOUT_MSEC))
             .toInstance(MILLISECONDS.convert(duration, sourceUnits));
+        bindEventTimeout = () -> bind(Long.class)
+                .annotatedWith(named(EVENT_TIMEOUT_MSEC))
+                .toInstance(MILLISECONDS.convert(duration, sourceUnits));
         return this;
     }
 
     @Override
     protected void configure() {
         bindTimeout.run();
+        bindEventTimeout.run();
         bind(SimpleHandlerContext.class).asEagerSingleton();
         bind(HandlerContext.class).to(SimpleHandlerContext.class);
     }

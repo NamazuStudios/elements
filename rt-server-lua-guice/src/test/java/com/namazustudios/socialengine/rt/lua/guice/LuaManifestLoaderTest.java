@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.manifest.event.EventManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
@@ -56,6 +57,12 @@ public class LuaManifestLoaderTest {
     public void testLoadStartupManifest() {
         final StartupManifest startupManifest = getManifestLoader().getStartupManifest();
         assertNotNull(startupManifest);
+    }
+
+    @Test(dependsOnMethods = "testClose")
+    public void testLoadEventManifest() {
+        final EventManifest eventManifest = getManifestLoader().getEventManifest();
+        assertNotNull(eventManifest);
     }
 
     public ManifestLoader getManifestLoader() {

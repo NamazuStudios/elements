@@ -26,6 +26,8 @@ public class ApplicationNodeContext implements Context {
 
     private TaskContext taskContext;
 
+    private EventContext eventContext;
+
     private AssetLoader assetLoader;
 
     @Override
@@ -125,4 +127,9 @@ public class ApplicationNodeContext implements Context {
         this.taskContext = taskContext;
     }
 
+    @Override
+    public EventContext getEventContext() { return eventContext; }
+
+    @Inject
+    public void setEventContext(EventContext eventContext) { this.eventContext = eventContext; }
 }

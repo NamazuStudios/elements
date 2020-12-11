@@ -11,16 +11,17 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * The simple implementation of {@link EventService} which uses an in-memory mapping and a read-write
+ * The simple implementation of {@link EventServiceOld} which uses an in-memory mapping and a read-write
  * locking strategy to ensure concurrency control.
  *
  * When dispatching events and finding instances of {@link EventReceiver}
  *
  * Created by patricktwohig on 4/1/16.
  */
-public class SimpleEventService implements EventService {
+@Deprecated
+public class SimpleEventServiceOld implements EventServiceOld {
 
-    private static final Logger LOG = LoggerFactory.getLogger(SimpleEventService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SimpleEventServiceOld.class);
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 

@@ -17,7 +17,7 @@ public abstract class AbstractSession implements Session {
 
     private static final String DISCONNECT_OBSERVERS_KEY = AbstractSession.class + "IDLE_OBSERVERS_KEY";
 
-    private EventService eventService;
+    private EventServiceOld eventService;
 
     private Observation createObservation(final String named, final Class<?> type, final Path path) {
 
@@ -110,12 +110,12 @@ public abstract class AbstractSession implements Session {
 
     }
 
-    public EventService getEventService() {
+    public EventServiceOld getEventService() {
         return eventService;
     }
 
     @Inject
-    public void setEventService(EventService eventService) {
+    public void setEventService(EventServiceOld eventService) {
         this.eventService = eventService;
     }
 

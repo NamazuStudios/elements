@@ -347,4 +347,11 @@ manifest.startup = {
     }
 }
 
+manifest.event = {
+    ["example.event"] = {
+        {module = "example.event", method = "hello_event"},
+        {module = "example.event", method = "hello_event_again"}
+    }
+}
+
 return manifest

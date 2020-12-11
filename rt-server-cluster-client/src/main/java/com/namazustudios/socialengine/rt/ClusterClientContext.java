@@ -18,6 +18,8 @@ public class ClusterClientContext implements Context {
 
     private TaskContext taskContext;
 
+    private EventContext eventContext;
+
     @Override
     public void start() {
         getRemoteInvoker().start();
@@ -87,4 +89,13 @@ public class ClusterClientContext implements Context {
         this.taskContext = taskContext;
     }
 
+    @Override
+    public EventContext getEventContext() {
+        return eventContext;
+    }
+
+    @Inject
+    public void setEventContext(EventContext eventContext) {
+        this.eventContext = eventContext;
+    }
 }

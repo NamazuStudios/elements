@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.builtin.*;
+import com.namazustudios.socialengine.rt.manifest.event.EventManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
@@ -40,6 +41,8 @@ public class LuaManifestLoader implements ManifestLoader {
 
     public static final String STARTUP_TABLE = "startup";
 
+    public static final String EVENT_TABLE = "event";
+
     private static final Logger logger = LoggerFactory.getLogger(LuaManifestLoader.class);
 
     private static final Logger scriptLogger = LoggerFactory.getLogger(MAIN_MANIFEST);
@@ -53,6 +56,8 @@ public class LuaManifestLoader implements ManifestLoader {
     private SecurityManifest securityManifest;
 
     private StartupManifest startupManifest;
+
+    private EventManifest eventManifest;
 
     private AssetLoader assetLoader;
 
@@ -113,6 +118,16 @@ public class LuaManifestLoader implements ManifestLoader {
     public StartupManifest getStartupManifest() {
         loadAndRunIfNecessary();
         return startupManifest;
+    }
+
+    private void setEventManifest(EventManifest eventManifest) {
+        this.eventManifest = eventManifest;
+    }
+
+    @Override
+    public EventManifest getEventManifest() {
+        loadAndRunIfNecessary();
+        return eventManifest;
     }
 
     @Override
@@ -193,6 +208,13 @@ public class LuaManifestLoader implements ManifestLoader {
                         scriptLogger.debug("Loaded Startup Manifest");
                     }
                     this.setStartupManifest(startupManifest);
+
+                    luaState.getField(1, EVENT_TABLE);
+                    EventManifest eventManifest = luaState.toJavaObject(-1, EventManifest.class);
+                    if (eventManifest != null) {
+                        scriptLogger.debug("Loaded Event Manifest");
+                    }
+                    this.setEventManifest(eventManifest);
                 }
 
                 scriptLogger.debug("Finished Executing Script: {}", MAIN_MANIFEST);

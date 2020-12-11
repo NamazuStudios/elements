@@ -50,6 +50,7 @@ public class SimpleServicesModule extends PrivateModule {
         bind(RetainedHandlerService.class).to(SimpleRetainedHandlerService.class).asEagerSingleton();
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
         bind(TaskService.class).to(SimpleTaskService.class);
+        bind(EventService.class).to(SimpleEventService.class);
         bind(PersistenceStrategy.class).toInstance(PersistenceStrategy.getNullPersistence());
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
@@ -72,6 +73,7 @@ public class SimpleServicesModule extends PrivateModule {
         expose(SingleUseHandlerService.class);
         expose(PersistenceStrategy.class);
         expose(TaskService.class);
+        expose(EventService.class);
 
     }
 

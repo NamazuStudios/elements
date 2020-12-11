@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.manifest.event.EventManifest;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
@@ -48,6 +49,13 @@ public interface ManifestLoader extends AutoCloseable {
      * @return the {@link StartupManifest}
      */
     StartupManifest getStartupManifest();
+
+    /**
+     * Gets the {@link EventManifest}, if available.
+     *
+     * @return the {@link EventManifest}
+     */
+    EventManifest getEventManifest();
 
     /**
      * Loads and runs the lua script, populating the child manifests. If the load procedure has already occurred,

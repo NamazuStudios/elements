@@ -10,6 +10,7 @@ import static com.namazustudios.socialengine.appnode.Constants.*;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.BIND_ADDR;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQConnectionDemultiplexer.CONTROL_BIND_ADDR;
 import static com.namazustudios.socialengine.rt.Constants.*;
+import static com.namazustudios.socialengine.rt.EventContext.EVENT_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.HandlerContext.*;
 
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
@@ -25,6 +26,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(CONTROL_REQUEST_TIMEOUT, "1000");
         properties.setProperty(SCHEDULER_THREADS, Integer.toString(Runtime.getRuntime().availableProcessors()) + 1);
         properties.setProperty(HANDLER_TIMEOUT_MSEC, "180000");
+        properties.setProperty(EVENT_TIMEOUT_MSEC, "180000");
         properties.setProperty(STORAGE_BASE_DIRECTORY, "storage.xodus");
         return properties;
     }
