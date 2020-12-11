@@ -8,4 +8,8 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 public interface TestJavaEvent {
 
     void helloWorldEvent();
+
+    void who(String who);
+
+    void whoWithCount(String who, String count);
 }

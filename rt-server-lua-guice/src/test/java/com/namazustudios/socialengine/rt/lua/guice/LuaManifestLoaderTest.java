@@ -89,6 +89,7 @@ public class LuaManifestLoaderTest {
                     enableManifestLoaderFeature();
                 }
             });
+            install(new JavaEventModule());
 
         }
 

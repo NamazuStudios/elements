@@ -29,6 +29,7 @@ public class TestYielding {
             .withHandlerTimeout(3, MINUTES))
         .withNodeModule(new XodusEnvironmentModule()
             .withTempEnvironments())
+        .withNodeModule(new JavaEventModule())
         .start();
 
     private final Context context = embeddedTestService.getContext();

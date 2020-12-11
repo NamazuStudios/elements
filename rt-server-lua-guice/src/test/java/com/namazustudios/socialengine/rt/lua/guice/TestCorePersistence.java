@@ -273,6 +273,7 @@ public class TestCorePersistence {
 
             install(new LuaModule());
             install(new SimpleContextModule());
+            install(new JavaEventModule());
 
             bind(Client.class).toInstance(mock(Client.class));
             bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();

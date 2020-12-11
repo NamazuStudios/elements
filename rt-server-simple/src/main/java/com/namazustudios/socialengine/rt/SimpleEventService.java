@@ -42,34 +42,33 @@ public class SimpleEventService implements EventService {
         } else if (eventManifest.getModulesByEventName() == null) {
             logger.info("No event modules specified in manifest.  Skipping.");
             return;
+        } else if(!eventManifest.getModulesByEventName().containsKey(eventName)){
+            logger.info("No event modules matching name {} specified in manifest.  Skipping.", eventName);
+            return;
         }
 
-        for (final Map.Entry<String, List<EventOperation>> entry : eventManifest.getModulesByEventName().entrySet()) {
+        final List<EventOperation> eventOperations = eventManifest.getModulesByEventName().get(eventName);
 
-            final List<EventOperation> eventOperations = entry.getValue();
+        if (eventOperations == null) {
+            logger.debug("Event module '{}' specifies no operation.  Skipping.", eventName);
+        }
 
-            if (eventOperations == null) {
-                logger.debug("Event module '{}' specifies no operation.  Skipping.", entry.getKey());
-                continue;
-            }
+        for (final EventOperation operation : eventOperations) {
 
-            for (final EventOperation operation : eventOperations) {
+            final String method = operation.getMethod();
+            final String module = operation.getModule();
+            logger.debug("Executing event operation {}: {}.{}", eventName, module, method);
 
-                final String method = operation.getMethod();
-                final String module = operation.getModule();
-                logger.debug("Executing event operation {}: {}.{}", eventName, module, method);
+            final Consumer<Throwable> failure = ex -> {
+                logger.error("Event exception caught for module: {}, method: {}.", module, method, ex);
+            };
 
-                final Consumer<Throwable> failure = ex -> {
-                    logger.error("Event exception caught for module: {}, method: {}.", module, method, ex);
-                };
+            final Consumer<Object> success = result -> {
+                logger.debug("Event operation '{}: {}.{}': Success.", eventName, module, method);
+            };
 
-                final Consumer<Object> success = result -> {
-                    logger.debug("Event operation '{}: {}.{}': Success.", eventName, module, method);
-                };
+            getRetainedHandlerService().perform(success, failure, getTimeout(), MILLISECONDS, module, attributes, method, args);
 
-                getRetainedHandlerService().perform(success, failure, getTimeout(), MILLISECONDS, module, attributes, method, args);
-
-            }
         }
     }
 
