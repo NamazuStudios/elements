@@ -1,11 +1,17 @@
 package com.namazustudios.socialengine.service.profile;
 
+import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.EventContext;
+import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.service.ProfileService;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
+import java.io.Serializable;
 import java.util.function.Supplier;
 
 /**
@@ -18,7 +24,11 @@ public class SuperUserProfileService implements ProfileService {
 
     private ProfileDao profileDao;
 
+    private ContextFactory contextFactory;
+
     private Supplier<Profile> currentProfileSupplier;
+
+    private Provider<Attributes> attributesProvider;
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -60,6 +70,17 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Override
+    public Profile createProfile(Profile profile, String module) {
+        final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
+        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);
+        final Attributes attributes = new SimpleAttributes.Builder()
+                .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
+                .build();
+        eventContext.postAsync(module, attributes, createdProfile, profile.getEventDefinition().getArgs());
+        return createdProfile;
+    }
+
+    @Override
     public void deleteProfile(String profileId) {
         getProfileDao().softDeleteProfile(profileId);
     }
@@ -73,6 +94,15 @@ public class SuperUserProfileService implements ProfileService {
         this.profileDao = profileDao;
     }
 
+    public ContextFactory getContextFactory() {
+        return contextFactory;
+    }
+
+    @Inject
+    public void setContextFactory(ContextFactory contextFactory) {
+        this.contextFactory = contextFactory;
+    }
+
     public Supplier<Profile> getCurrentProfileSupplier() {
         return currentProfileSupplier;
     }
@@ -80,6 +110,15 @@ public class SuperUserProfileService implements ProfileService {
     @Inject
     public void setCurrentProfileSupplier(Supplier<Profile> currentProfileSupplier) {
         this.currentProfileSupplier = currentProfileSupplier;
+    }
+
+    public Provider<Attributes> getAttributesProvider() {
+        return attributesProvider;
+    }
+
+    @Inject
+    public void setAttributesProvider(Provider<Attributes> attributesProvider) {
+        this.attributesProvider = attributesProvider;
     }
 
 }
