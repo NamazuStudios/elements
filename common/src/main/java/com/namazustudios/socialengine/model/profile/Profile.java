@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.profile;
 
-import com.namazustudios.socialengine.model.application.EventDefinition;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
@@ -57,9 +56,6 @@ public class Profile implements Serializable {
     @ApiModelProperty("The last time this profile has been logged in by the user.")
     private long lastLogin;
 
-    @ApiModelProperty("The event module to invoke on creation.")
-    private EventDefinition eventDefinition;
-
     public String getId() {
         return id;
     }
@@ -114,14 +110,6 @@ public class Profile implements Serializable {
 
     public void setLastLogin(long lastLogin) {
         this.lastLogin = lastLogin;
-    }
-
-    public EventDefinition getEventDefinition() {
-        return eventDefinition;
-    }
-
-    public void setEventDefinition(EventDefinition eventDefinition) {
-        this.eventDefinition = eventDefinition;
     }
 
     @Override

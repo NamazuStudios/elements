@@ -21,6 +21,8 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.rt.EventContext.PROFILE_CREATED_EVENT;
+
 /**
  * Created by patricktwohig on 6/29/17.
  */
@@ -101,7 +103,7 @@ public class UserProfileService implements ProfileService {
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
-        eventContext.postAsync(module, attributes, createdProfile, profile.getEventDefinition().getArgs());
+        eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
         return createdProfile;
     }
 
