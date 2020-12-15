@@ -13,11 +13,6 @@ public interface EventContext {
     String EVENT_TIMEOUT_MSEC = "com.namazustudios.socialengine.rt.handler.timeout.event";
 
     /**
-     * The timeout for the {@link EventContext} in milliseconds.
-     */
-    String PROFILE_CREATED_EVENT = "profileCreated";
-
-    /**
      * Starts this {@link EventContext}.
      */
     default void start() {}

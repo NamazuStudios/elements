@@ -18,10 +18,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.Objects;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
-
-import static com.namazustudios.socialengine.rt.EventContext.PROFILE_CREATED_EVENT;
 
 /**
  * Created by patricktwohig on 6/29/17.
@@ -39,6 +36,8 @@ public class UserProfileService implements ProfileService {
     private Supplier<Profile> currentProfileSupplier;
 
     private Provider<Attributes> attributesProvider;
+
+    private static final String PROFILE_CREATED_EVENT = "profileCreated";
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
