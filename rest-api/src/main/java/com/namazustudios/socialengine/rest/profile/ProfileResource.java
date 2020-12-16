@@ -141,7 +141,7 @@ public class ProfileResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Creates a User",
+    @ApiOperation(value = "Creates a Profile",
             notes = "Supplying the user object, this will update the user with the new information supplied " +
                     "in the body of the request. Optionally, the user's password may be provided. " +
                     "This will fire an event, " + PROFILE_CREATED_EVENT + ", from the event manifest.")
