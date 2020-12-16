@@ -14,6 +14,8 @@ import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
+
 /**
  * Provides full access to the {@link Profile} and related types.  Should be
  * used in conjunction with users SUPERUSER level access.
@@ -66,17 +68,12 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile createProfile(Profile profile) {
-        return getProfileDao().createOrReactivateProfile(profile, profile.getMetadata());
-    }
-
-    @Override
-    public Profile createProfile(Profile profile, String module) {
         final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
         final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
-        eventContext.postAsync(module, attributes, createdProfile, profile.getEventDefinition().getArgs());
+        eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
         return createdProfile;
     }
 

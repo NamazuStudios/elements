@@ -37,7 +37,7 @@ public class UserProfileService implements ProfileService {
 
     private Provider<Attributes> attributesProvider;
 
-    private static final String PROFILE_CREATED_EVENT = "profileCreated";
+    public static final String PROFILE_CREATED_EVENT = "com.namazustudios.elements.service.profile.created";
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -90,12 +90,6 @@ public class UserProfileService implements ProfileService {
 
     @Override
     public Profile createProfile(Profile profile) {
-        checkUserAndApplication(profile);
-        return getProfileDao().createOrReactivateProfile(profile);
-    }
-
-    @Override
-    public Profile createProfile(Profile profile, String module) {
         checkUserAndApplication(profile);
         final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
         final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);

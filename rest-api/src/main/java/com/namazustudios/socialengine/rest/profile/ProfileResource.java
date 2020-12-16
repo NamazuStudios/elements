@@ -142,7 +142,8 @@ public class ProfileResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a User",
             notes = "Supplying the user object, this will update the user with the new information supplied " +
-                    "in the body of the request. Optionally, the user's password may be provided.")
+                    "in the body of the request. Optionally, the user's password may be provided. " +
+                    "This will fire an event, com.namazustudios.elements.service.profile.created, from the event manifest.")
     public Profile createProfile(final Profile profile) {
 
         getValidationHelper().validateModel(profile, Create.class);
@@ -152,11 +153,7 @@ public class ProfileResource {
         if (!profileId.isEmpty()) {
             throw new BadRequestException("Profile ID must be blank.");
         }
-
-        if(profile.getEventDefinition() == null) {
-            return getProfileService().createProfile(profile);
-        }
-        return getProfileService().createProfile(profile, profile.getEventDefinition().getModule());
+        return getProfileService().createProfile(profile);
     }
 
     @DELETE

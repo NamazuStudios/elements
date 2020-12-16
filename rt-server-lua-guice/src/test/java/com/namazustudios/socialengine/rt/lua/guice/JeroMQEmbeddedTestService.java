@@ -21,7 +21,7 @@ import static org.zeromq.ZContext.shadow;
  */
 public class JeroMQEmbeddedTestService implements AutoCloseable {
 
-    private static final String INTERNAL_NODE_ADDRESS = "inproc://integration-test";
+    private static String INTERNAL_NODE_ADDRESS = "inproc://integration-test";
 
     private Node node;
 
@@ -45,6 +45,11 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     public JeroMQEmbeddedTestService withDefaultHttpClient() {
         return withNodeModule(binder -> binder.bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton());
+    }
+
+    public JeroMQEmbeddedTestService withNodeAddress(final String nodeAddress) {
+        INTERNAL_NODE_ADDRESS = nodeAddress;
+        return this;
     }
 
     public JeroMQEmbeddedTestService start() {

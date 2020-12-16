@@ -90,16 +90,6 @@ public interface ProfileService {
     Profile createProfile(Profile profile);
 
     /**
-     * Creates a new profile, with a specified event module to call.  The ID of the profile, as specified by {@link Profile#getId()},
-     * should be null and will be assigned.
-     *
-     * @param profile the {@link Profile} to create
-     * @param module the name of the event manifest module to call
-     * @return the {@link Profile} as it was created by the service.
-     */
-    Profile createProfile(Profile profile, String module);
-
-    /**
      * Deletes the {@link Profile} with the suppolied profile ID.
      *
      * @param profileId the profile ID.
