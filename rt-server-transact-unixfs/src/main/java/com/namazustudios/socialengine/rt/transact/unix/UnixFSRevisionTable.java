@@ -379,7 +379,6 @@ public class UnixFSRevisionTable {
                 }
 
                 move(temporaryCopy, revisionTableFilePath, ATOMIC_MOVE, REPLACE_EXISTING);
-                delete(temporaryCopy);
 
             }
 

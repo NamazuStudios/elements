@@ -60,10 +60,20 @@ public class JeroMQControlClient implements ControlClient {
                                final String instanceConnectAddress,
                                final long timeout, final TimeUnit timeUnit) {
         this.shadowContext = shadow(zContext);
-        this.socket = shadowContext.createSocket(DEALER);
+        this.socket = open(shadowContext);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAddress = instanceConnectAddress;
         this.socket.setReceiveTimeOut((int) MILLISECONDS.convert(timeout, timeUnit));
+    }
+
+    /**
+     * Opens and configures the {@link Socket} type used to connect to the remote {@link JeroMQCommandServer}.
+     *
+     * @param zContext the context which to use when creating the socket
+     * @return the {@link Socket} type
+     */
+    public static Socket open(final ZContext zContext) {
+        return zContext.createSocket(DEALER);
     }
 
     @Override

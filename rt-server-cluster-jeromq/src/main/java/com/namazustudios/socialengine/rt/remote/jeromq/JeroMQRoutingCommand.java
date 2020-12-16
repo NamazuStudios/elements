@@ -85,7 +85,8 @@ public enum JeroMQRoutingCommand {
         final ZFrame frame = zMsg.removeFirst();
         final byte[] data = frame.getData();
 
-        if (data.length != Integer.BYTES) throw new IllegalArgumentException("Invalid byte array size: " + data);
+        if (data.length != Integer.BYTES)
+            throw new IllegalArgumentException("Invalid byte array size: " + data);
 
         try {
 

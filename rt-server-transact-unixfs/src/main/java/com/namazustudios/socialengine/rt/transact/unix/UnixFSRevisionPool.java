@@ -54,8 +54,6 @@ public class UnixFSRevisionPool implements Revision.Factory {
      */
     public static final int VERSION_MINOR_CURRENT = VERSION_MINOR_0;
 
-    private int poolSize;
-
     private UnixFSUtils utils;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
@@ -200,28 +198,28 @@ public class UnixFSRevisionPool implements Revision.Factory {
 
         private MappedByteBuffer createNewRevisionPoolFile(final Path revisionPoolPath) throws IOException {
 
-            final MappedByteBuffer mappedByteBuffer;
+            try (final var fileChannel = FileChannel.open(revisionPoolPath, READ, WRITE, CREATE)) {
 
-            try (final FileChannel fileChannel = FileChannel.open(revisionPoolPath, READ, WRITE, CREATE)) {
-                final ByteBuffer buffer = ByteBuffer.allocate(revisionPoolData.size());
+                final var buffer = ByteBuffer.allocate(revisionPoolData.size());
+                while (buffer.hasRemaining()) buffer.put((byte)0);
 
-                // Writes the initial values to the file and flushes the buffer to disk.
-
-                revisionPoolData.setByteBuffer(buffer, 0);
-                revisionPoolData.magic.set(POOL_FILE_MAGIC);
-                revisionPoolData.major.set(VERSION_MAJOR_CURRENT);
-                revisionPoolData.major.set(VERSION_MINOR_CURRENT);
-                revisionPoolData.max.set(poolSize);
-                fileChannel.write(buffer);
-                fileChannel.force(false);
+                buffer.rewind();
+                while (buffer.hasRemaining()) fileChannel.write(buffer);
 
                 // Remaps the revision pool data to read from the mapped buffer.
-                mappedByteBuffer = fileChannel.map(READ_WRITE, 0, revisionPoolData.size());
+                final var mappedByteBuffer = fileChannel.map(READ_WRITE, 0, revisionPoolData.size());
                 revisionPoolData.setByteBuffer(mappedByteBuffer, 0);
 
-            }
+                // Writes the initial values to the file and flushes the buffer to disk.
+                revisionPoolData.magic.set(POOL_FILE_MAGIC);
+                revisionPoolData.major.set(VERSION_MAJOR_CURRENT);
+                revisionPoolData.minor.set(VERSION_MINOR_CURRENT);
 
-            return mappedByteBuffer;
+                // Forces the write to disk
+                mappedByteBuffer.force();
+                return mappedByteBuffer;
+
+            }
 
         }
 

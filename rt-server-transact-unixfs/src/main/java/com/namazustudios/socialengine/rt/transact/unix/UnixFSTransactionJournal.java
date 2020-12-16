@@ -312,7 +312,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                 "journal",
                 "temp");
 
-            copy(temporaryCopy, temporaryCopy, REPLACE_EXISTING);
+            copy(journalPath, temporaryCopy, REPLACE_EXISTING);
 
             try (final FileChannel channel = open(temporaryCopy, READ, WRITE)) {
 
@@ -458,7 +458,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
                 for (int entry = 0; entry < getTxnBufferCount(); ++entry) {
                     fillEntry.rewind();
-                    channel.write(fillEntry);
+                    while(fillEntry.hasRemaining()) channel.write(fillEntry);
                 }
 
                 if (channel.size() != (headerSize + totalEntrySize)) {

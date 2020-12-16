@@ -51,7 +51,7 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
         this.instanceConnectAddress = instanceConnectAddress;
 
         pool = service.allocatePool(POOL_NAME, minConnections, maxConnections, zContext -> {
-            final var socket = zContext.createSocket(REQ);
+            final var socket = JeroMQControlClient.open(zContext);
             socket.connect(instanceConnectAddress);
             return socket;
         });
