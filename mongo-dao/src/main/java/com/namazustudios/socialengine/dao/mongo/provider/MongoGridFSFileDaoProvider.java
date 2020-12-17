@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 import com.mongodb.MongoClient;
 import com.mongodb.gridfs.GridFS;
 import com.namazustudios.socialengine.dao.mongo.MongoGridFSFileDao;
-import com.namazustudios.socialengine.util.ShutdownHooks;
 
 import javax.inject.Inject;
 import javax.inject.Named;

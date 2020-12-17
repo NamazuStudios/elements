@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
-import com.namazustudios.socialengine.util.ShutdownHooks;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import com.namazustudios.socialengine.dao.ManifestDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.ManifestLoader;

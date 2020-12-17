@@ -17,10 +17,7 @@ import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
@@ -95,6 +92,7 @@ public class RestAPIModule extends AbstractModule {
         install(new JeroMQAsyncConnectionServiceModule());
         install(new JeroMQInstanceConnectionServiceModule());
         install(new JeroMQRemoteInvokerModule());
+        install(new JeroMQControlClientModule());
         install(new FSTPayloadReaderWriterModule());
         install(new JacksonHttpClientModule()
             .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)

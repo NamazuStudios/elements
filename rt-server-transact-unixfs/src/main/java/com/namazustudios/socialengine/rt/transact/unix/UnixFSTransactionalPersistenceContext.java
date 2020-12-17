@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -9,7 +10,9 @@ import javax.inject.Inject;
 
 public class UnixFSTransactionalPersistenceContext implements TransactionalPersistenceContext {
 
-    private final Logger logger = LoggerFactory.getLogger(UnixFSTransactionalPersistenceContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionalPersistenceContext.class);
+
+    private static final ShutdownHooks shutdownHooks = new ShutdownHooks(UnixFSTransactionalPersistenceContext.class);
 
     private UnixFSUtils unixFSUtils;
 
@@ -22,6 +25,19 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
     private UnixFSRevisionPool revisionPool;
 
     private UnixFSRevisionDataStore revisionDataStore;
+
+    public UnixFSTransactionalPersistenceContext() {
+        shutdownHooks.add(this, () -> {
+            try {
+                stop();
+            } catch (IllegalStateException ex) {
+                // This is expected because under normal conditions this should be
+                // shut down properly. This is just a failsafe to aid in debugging
+                // and protect as much data integrity as absolutely possible.
+                logger.trace("Not running. Ignoring exception.", ex);
+            }
+        });
+    }
 
     @Override
     public void start() {

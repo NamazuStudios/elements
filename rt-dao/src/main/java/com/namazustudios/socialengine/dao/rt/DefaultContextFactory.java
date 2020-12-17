@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.rt;
 
 import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.util.ShutdownHooks;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 
 import javax.inject.Inject;
 import java.util.Map;

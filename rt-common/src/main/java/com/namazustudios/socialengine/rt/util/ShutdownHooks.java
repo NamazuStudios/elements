@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.util;
+package com.namazustudios.socialengine.rt.util;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,11 +42,11 @@ public class ShutdownHooks {
                     previous.perform();
                 } catch (Exception ex) {
                     logger.error("Caught cleanup exception.", ex);
+                } finally {
+                    logger.info("Cleaning up {}", context);
+                    next.perform();
+                    logger.info("Cleaned up {}", context);
                 }
-
-                logger.info("Cleaning up {}", context);
-                next.perform();
-                logger.info("Cleaned up {}", context);
 
             };
         }

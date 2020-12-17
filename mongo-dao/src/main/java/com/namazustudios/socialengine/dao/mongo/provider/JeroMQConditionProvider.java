@@ -6,14 +6,13 @@ import com.namazustudios.elements.fts.concurrent.jeromq.JeroMQBindStrategy;
 import com.namazustudios.elements.fts.concurrent.jeromq.JeroMQCondition;
 import com.namazustudios.elements.fts.concurrent.jeromq.JeroMQConditionBuilder;
 import com.namazustudios.elements.fts.concurrent.jeromq.StaticJeroMQBindStrategy;
-import com.namazustudios.socialengine.util.ShutdownHooks;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.zeromq.ZContext;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-import java.util.EnumMap;
 import java.util.List;
 import java.util.stream.Collectors;
 

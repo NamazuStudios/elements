@@ -11,6 +11,7 @@ import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVO
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
 
 public class RestJettyModuleDefaults implements ModuleDefaults {
 
@@ -25,6 +26,7 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
+        properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         return properties;
     }
 
