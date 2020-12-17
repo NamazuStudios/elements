@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rest;
 import com.google.inject.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.ApplicationDao;
-import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.guice.RestAPIModule;
 import de.flapdoodle.embed.mongo.MongodExecutable;
@@ -56,33 +55,14 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
         }
 
         try {
-            final RedisServer redisServer = new RedisServer(TEST_REDIS_PORT);
-            getRuntime().addShutdownHook(new Thread(redisServer::stop));
-            redisServer.start();
-            bind(RedisServer.class).toInstance(redisServer);
+            configureRedisServer();
         } catch (Exception e) {
             addError(e);
             return;
         }
 
-        final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
-
-        bind(Application.class).annotatedWith(named(CONTEXT_APPLICATION)).toProvider(() -> {
-            final Application application = new Application();
-            application.setName("CXTTAPP");
-            application.setDescription("Context Test Application");
-            return applicationDaoProvider.get().createOrUpdateInactiveApplication(application);
-        }).in(SINGLETON);
-
-        final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-        install(new RestAPIModule(() -> {
-            final Properties properties = defaultConfigurationSupplier.get();
-            properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
-            properties.put(MONGO_DB_URLS, format("mongo://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
-            return properties;
-        }));
+        configureApplicationDao();
+        configureRestAPIModule(new DefaultConfigurationSupplier());
 
         bind(RestAPIMain.class).asEagerSingleton();
         bind(EmbeddedRestApi.class).asEagerSingleton();
@@ -99,6 +79,33 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
         final MongodStarter starter = getDefaultInstance();
         return starter.prepare(config);
 
+    }
+
+    private void configureRestAPIModule(DefaultConfigurationSupplier defaultConfigurationSupplier){
+        install(new RestAPIModule(() -> {
+            final Properties properties = defaultConfigurationSupplier.get();
+            properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
+            properties.put(MONGO_DB_URLS, format("mongo://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
+            return properties;
+        }));
+    }
+
+    private void configureApplicationDao(){
+        final Provider<ApplicationDao> applicationDaoProvider = getProvider(ApplicationDao.class);
+
+        bind(Application.class).annotatedWith(named(CONTEXT_APPLICATION)).toProvider(() -> {
+            final Application application = new Application();
+            application.setName("CXTTAPP");
+            application.setDescription("Context Test Application");
+            return applicationDaoProvider.get().createOrUpdateInactiveApplication(application);
+        }).in(SINGLETON);
+    }
+
+    private void configureRedisServer() throws IOException {
+        final RedisServer redisServer = new RedisServer(TEST_REDIS_PORT);
+        getRuntime().addShutdownHook(new Thread(redisServer::stop));
+        redisServer.start();
+        bind(RedisServer.class).toInstance(redisServer);
     }
 
 }

@@ -22,6 +22,7 @@ import java.util.Objects;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
 
 /**
  * Created by patricktwohig on 6/27/17.
@@ -140,9 +141,10 @@ public class ProfileResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Creates a User",
+    @ApiOperation(value = "Creates a Profile",
             notes = "Supplying the user object, this will update the user with the new information supplied " +
-                    "in the body of the request.  Optionally, the user's password may be provided.")
+                    "in the body of the request. Optionally, the user's password may be provided. " +
+                    "This will fire an event, " + PROFILE_CREATED_EVENT + ", from the event manifest.")
     public Profile createProfile(final Profile profile) {
 
         getValidationHelper().validateModel(profile, Create.class);
@@ -152,9 +154,7 @@ public class ProfileResource {
         if (!profileId.isEmpty()) {
             throw new BadRequestException("Profile ID must be blank.");
         }
-
         return getProfileService().createProfile(profile);
-
     }
 
     @DELETE

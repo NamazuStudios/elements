@@ -23,6 +23,7 @@ public interface EventContext {
     default void stop() {}
 
     @RemotelyInvokable
+    @Dispatch(Dispatch.Type.ASYNCHRONOUS)
     void postAsync(@Serialize String eventName,
                    @Serialize Attributes attributes,
                    @Serialize Object... args);

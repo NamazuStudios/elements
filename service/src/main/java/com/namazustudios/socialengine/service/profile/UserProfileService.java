@@ -1,16 +1,22 @@
 package com.namazustudios.socialengine.service.profile;
 
 
+import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.EventContext;
+import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
+import java.io.Serializable;
 import java.util.Objects;
 import java.util.function.Supplier;
 
@@ -25,7 +31,13 @@ public class UserProfileService implements ProfileService {
 
     private ProfileDao profileDao;
 
+    private ContextFactory contextFactory;
+
     private Supplier<Profile> currentProfileSupplier;
+
+    private Provider<Attributes> attributesProvider;
+
+    public static final String PROFILE_CREATED_EVENT = "com.namazustudios.elements.service.profile.created";
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -79,15 +91,19 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile createProfile(Profile profile) {
         checkUserAndApplication(profile);
-        return getProfileDao().createOrReactivateProfile(profile);
+        final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
+        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);
+        final Attributes attributes = new SimpleAttributes.Builder()
+                .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
+                .build();
+        eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
+        return createdProfile;
     }
 
     private void checkUserAndApplication(final Profile requestedProfile) {
-
         if (!Objects.equals(getUser(), requestedProfile.getUser())) {
             throw new InvalidDataException("Profile user must match current user.");
         }
-
     }
 
     @Override
@@ -128,6 +144,15 @@ public class UserProfileService implements ProfileService {
         this.profileDao = profileDao;
     }
 
+    public ContextFactory getContextFactory() {
+        return contextFactory;
+    }
+
+    @Inject
+    public void setContextFactory(ContextFactory contextFactory) {
+        this.contextFactory = contextFactory;
+    }
+
     public Supplier<Profile> getCurrentProfileSupplier() {
         return currentProfileSupplier;
     }
@@ -137,4 +162,12 @@ public class UserProfileService implements ProfileService {
         this.currentProfileSupplier = currentProfileSupplier;
     }
 
+    public Provider<Attributes> getAttributesProvider() {
+        return attributesProvider;
+    }
+
+    @Inject
+    public void setAttributesProvider(Provider<Attributes> attributesProvider) {
+        this.attributesProvider = attributesProvider;
+    }
 }

@@ -18,13 +18,23 @@ import static java.util.concurrent.Executors.newCachedThreadPool;
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
 
+    private static final Integer DEFAULT_TIMEOUT = 60;
+    private static final Integer DEFAULT_MIN_CONNECTIONS = 5;
+    private static final Integer DEFAULT_MAX_CONNECTIONS = 250;
+
     private Runnable bindConnectAddressAction = () -> {};
 
-    private Runnable bindTimeoutAction = () -> {};
+    private Runnable bindTimeoutAction = () -> bind(Integer.class)
+            .annotatedWith(named(ConnectionPool.TIMEOUT))
+            .toInstance(DEFAULT_TIMEOUT);;
 
-    private Runnable bindMinConnectionsAction = () -> {};
+    private Runnable bindMinConnectionsAction = () -> bind(Integer.class)
+            .annotatedWith(named(ConnectionPool.MIN_CONNECTIONS))
+            .toInstance(DEFAULT_MIN_CONNECTIONS);;
 
-    private Runnable bindMaxConnectionsAction = () -> {};
+    private Runnable bindMaxConnectionsAction = () -> bind(Integer.class)
+            .annotatedWith(named(ConnectionPool.MAX_CONNECTIONS))
+            .toInstance(DEFAULT_MAX_CONNECTIONS);;
 
     private Runnable bindExecutorServiceAction = () -> {};
 
