@@ -2,7 +2,6 @@
   <configuration default="false" name="AppServeMain" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appserve.AppServeMain" />
     <module name="app-serve" />
-    <option name="VM_PARAMETERS" value="-Dcom.namazustudios.socialengine.http.tunnel.port=8081 -Dcom.namazustudios.socialengine.git.storage.directory=$USER_HOME$/socialengine-repos -Dcom.namazustudios.socialengine.rt.is_local_environment=true -Dcom.namazustudios.socialengine.rt.static_instance_connect_addresses=localhost:28883,localhosts:28884 -Dcom.namazustudios.socialengine.rt.static_instance_control_addresses=localhost:20883,localhost:20884 -Dcom.namazustudios.socialengine.rt.current_instance_control_port=20883" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.namazustudios.socialengine.appserve.*" />

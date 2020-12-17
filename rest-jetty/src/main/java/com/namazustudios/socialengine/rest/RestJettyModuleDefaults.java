@@ -24,7 +24,7 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
-        properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
+        properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         return properties;

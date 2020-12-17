@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.appserve;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.appserve.guice.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
