@@ -3,7 +3,9 @@ package com.namazustudios.socialengine.service.profile;
 import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.EventContext;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
@@ -62,14 +64,14 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(Profile profile) {
-        return getProfileDao().updateActiveProfile(profile, profile.getMetadata());
+    public Profile updateProfile(UpdateProfileRequest profileRequest) {
+        return getProfileDao().updateActiveProfile(profileRequest);
     }
 
     @Override
-    public Profile createProfile(Profile profile) {
-        final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
-        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);
+    public Profile createProfile(CreateProfileRequest profileRequest) {
+        final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
+        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profileRequest);
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();

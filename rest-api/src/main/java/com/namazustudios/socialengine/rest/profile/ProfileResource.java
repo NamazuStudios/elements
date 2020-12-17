@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rest.profile;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
@@ -122,39 +124,33 @@ public class ProfileResource {
     @Path("{profileId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a Profile",
-            notes = "Suppplying a profile Object will attempt to update the profile.  The call " +
+            notes = "Supplying an update request will attempt to update the profile.  The call " +
                     "will return the profile as it was written to the database.")
-    public Profile updateProfile(final Profile profile, @PathParam("profileId") String profileId) {
+    public Profile updateProfile(final UpdateProfileRequest profileRequest, @PathParam("profileId") String profileId) {
 
-        getValidationHelper().validateModel(profile, Update.class);
+        getValidationHelper().validateModel(profileRequest, Update.class);
         profileId = Strings.nullToEmpty(profileId).trim();
 
         if (Strings.isNullOrEmpty(profileId)) {
             throw new NotFoundException("Profile not found.");
-        } else if (!(Objects.equals(profile.getId(), profileId))) {
+        } else if (!(Objects.equals(profileRequest.getProfileId(), profileId))) {
             throw new InvalidDataException("Profile id does not match path.");
         }
 
-        return getProfileService().updateProfile(profile);
+        return getProfileService().updateProfile(profileRequest);
 
     }
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a Profile",
-            notes = "Supplying the user object, this will update the user with the new information supplied " +
-                    "in the body of the request. Optionally, the user's password may be provided. " +
-                    "This will fire an event, " + PROFILE_CREATED_EVENT + ", from the event manifest.")
-    public Profile createProfile(final Profile profile) {
+            notes = "Supplying the create profile request, this will update the profile with the new information supplied " +
+                    "in the body of the request. This will fire an event, " + PROFILE_CREATED_EVENT + ", from the event manifest.")
+    public Profile createProfile(final CreateProfileRequest profileRequest) {
 
-        getValidationHelper().validateModel(profile, Create.class);
+        getValidationHelper().validateModel(profileRequest, Create.class);
 
-        final String profileId = nullToEmpty(profile.getId()).trim();
-
-        if (!profileId.isEmpty()) {
-            throw new BadRequestException("Profile ID must be blank.");
-        }
-        return getProfileService().createProfile(profile);
+        return getProfileService().createProfile(profileRequest);
     }
 
     @DELETE

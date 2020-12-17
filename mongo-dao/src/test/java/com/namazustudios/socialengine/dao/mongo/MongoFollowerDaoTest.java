@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import org.bson.types.ObjectId;
@@ -118,20 +119,20 @@ public class MongoFollowerDaoTest {
     }
 
     private void makeTestProfiles(){
-        testProfileA = new Profile();
-        testProfileA.setDisplayName("testyA");
-        testProfileA.setImageUrl("testyA/image.png");
-        testProfileA.setUser(testUserA);
-        testProfileA.setApplication(testApplication);
+        final CreateProfileRequest createProfileRequest = new CreateProfileRequest();
+        createProfileRequest.setDisplayName("testyA");
+        createProfileRequest.setImageUrl("testyA/image.png");
+        createProfileRequest.setUserId(testUserA.getId());
+        createProfileRequest.setApplicationId(testApplication.getId());
 
-        testProfileB = new Profile();
-        testProfileB.setDisplayName("testyB");
-        testProfileB.setImageUrl("testyB/image.png");
-        testProfileB.setUser(testUserB);
-        testProfileB.setApplication(testApplication);
+        final CreateProfileRequest createProfileRequest1 = new CreateProfileRequest();
+        createProfileRequest1.setDisplayName("testyB");
+        createProfileRequest1.setImageUrl("testyB/image.png");
+        createProfileRequest1.setUserId(testUserB.getId());
+        createProfileRequest1.setApplicationId(testApplication.getId());
 
-        testProfileA = getProfileDao().createOrReactivateProfile(testProfileA);
-        testProfileB = getProfileDao().createOrReactivateProfile(testProfileB);
+        testProfileA = getProfileDao().createOrReactivateProfile(createProfileRequest);
+        testProfileB = getProfileDao().createOrReactivateProfile(createProfileRequest1);
     }
 
     public UserDao getUserDao() {

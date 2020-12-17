@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -36,12 +37,12 @@ public class MatchingMockObjects {
     }
 
     public Profile makeMockProfile(final User user, final Application application) {
-        final Profile profile =  new Profile();
-        profile.setUser(user);
-        profile.setApplication(application);
-        profile.setDisplayName(format("display-name-%s", user.getName()));
-        profile.setImageUrl(format("http://example.com/%s.png", user.getName()));
-        return getProfileDao().createOrReactivateProfile(profile);
+        final CreateProfileRequest createProfileRequest =  new CreateProfileRequest();
+        createProfileRequest.setUserId(user.getId());
+        createProfileRequest.setApplicationId(application.getId());
+        createProfileRequest.setDisplayName(format("display-name-%s", user.getName()));
+        createProfileRequest.setImageUrl(format("http://example.com/%s.png", user.getName()));
+        return getProfileDao().createOrReactivateProfile(createProfileRequest);
     }
 
     public UserDao getUserDao() {

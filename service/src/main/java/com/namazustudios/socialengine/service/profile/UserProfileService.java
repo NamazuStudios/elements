@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -83,16 +85,16 @@ public class UserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(Profile profile) {
-        checkUserAndApplication(profile);
-        return getProfileDao().updateActiveProfile(profile);
+    public Profile updateProfile(UpdateProfileRequest profileRequest) {
+        checkUserAndProfile(profileRequest.getProfileId());
+        return getProfileDao().updateActiveProfile(profileRequest);
     }
 
     @Override
-    public Profile createProfile(Profile profile) {
-        checkUserAndApplication(profile);
-        final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
-        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);
+    public Profile createProfile(CreateProfileRequest profileRequest) {
+        checkUserAndProfile(profileRequest.getUserId());
+        final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
+        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profileRequest);
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
@@ -100,9 +102,9 @@ public class UserProfileService implements ProfileService {
         return createdProfile;
     }
 
-    private void checkUserAndApplication(final Profile requestedProfile) {
-        if (!Objects.equals(getUser(), requestedProfile.getUser())) {
-            throw new InvalidDataException("Profile user must match current user.");
+    private void checkUserAndProfile(final String profileId) {
+        if (!Objects.equals(getUser().getId(), profileId)) {
+            throw new InvalidDataException("Profile userId must match current userId.");
         }
     }
 

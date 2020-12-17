@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -74,11 +75,11 @@ class ClientContext {
     }
 
     public ClientContext createProfile(final String display) {
-        final Profile profile = new Profile();
-        profile.setUser(user);
-        profile.setDisplayName(display);
-        profile.setApplication(application);
-        profiles.add(profileDao.createOrReactivateProfile(profile));
+        final CreateProfileRequest createProfileRequest = new CreateProfileRequest();
+        createProfileRequest.setUserId(user.getId());
+        createProfileRequest.setDisplayName(display);
+        createProfileRequest.setApplicationId(application.getId());
+        profiles.add(profileDao.createOrReactivateProfile(createProfileRequest));
         return this;
     }
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
@@ -124,11 +125,11 @@ public class CreateUserAndProfileTest {
 
     @Test(dependsOnMethods = "testUserLogin")
     public void createProfileExpectingFailureNoAuth() {
-        final Profile toCreate = new Profile();
+        final CreateProfileRequest toCreate = new CreateProfileRequest();
 
-        toCreate.setUser(user);
+        toCreate.setUserId(user.getId());
         toCreate.setDisplayName("Paddy O' Furniture");
-        toCreate.setApplication(clientContext.getApplication());
+        toCreate.setApplicationId(clientContext.getApplication().getId());
 
         final Response response = client
             .target("http://localhost:8081/api/rest/profile")
@@ -142,11 +143,11 @@ public class CreateUserAndProfileTest {
     @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
     public void createForUserHappy(final String authHeader) {
 
-        final Profile toCreate = new Profile();
+        final CreateProfileRequest toCreate = new CreateProfileRequest();
 
-        toCreate.setUser(user);
+        toCreate.setUserId(user.getId());
         toCreate.setDisplayName("Paddy O' Furniture");
-        toCreate.setApplication(clientContext.getApplication());
+        toCreate.setApplicationId(clientContext.getApplication().getId());
 
         final Response response = client
             .target("http://localhost:8081/api/rest/profile")
@@ -165,13 +166,13 @@ public class CreateUserAndProfileTest {
     @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
     public void createForBogusUser(final String authHeader) {
 
-        final Profile toCreate = new Profile();
+        final CreateProfileRequest toCreate = new CreateProfileRequest();
 
         // We want to test that the system will reject the bogus user
 
-        toCreate.setUser(clientContext.getUser());
+        toCreate.setUserId(clientContext.getUser() == null ? "bogusId" : clientContext.getUser().getId());
         toCreate.setDisplayName("Paddy O' Furniture");
-        toCreate.setApplication(clientContext.getApplication());
+        toCreate.setApplicationId(clientContext.getApplication().getId());
 
         final Response response = client
                 .target("http://localhost:8081/api/rest/profile")

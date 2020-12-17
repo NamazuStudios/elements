@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.auth;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -87,11 +88,11 @@ public class SuperUserMockSessionService implements MockSessionService {
     }
 
     private Profile generateProfile(final User user, final Application application) {
-        final Profile profile = new Profile();
-        profile.setUser(user);
-        profile.setApplication(application);
-        profile.setDisplayName(getDisplayNameGenerator().generate());
-        return getProfileDao().createOrReactivateProfile(profile);
+        final CreateProfileRequest createProfileRequest = new CreateProfileRequest();
+        createProfileRequest.setUserId(user.getId());
+        createProfileRequest.setApplicationId(application.getId());
+        createProfileRequest.setDisplayName(getDisplayNameGenerator().generate());
+        return getProfileDao().createOrReactivateProfile(createProfileRequest);
     }
 
     public SessionDao getSessionDao() {

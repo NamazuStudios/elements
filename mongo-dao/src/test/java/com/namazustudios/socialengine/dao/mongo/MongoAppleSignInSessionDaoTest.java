@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.applesignin.TokenResponse;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;
@@ -61,12 +62,12 @@ public class MongoAppleSignInSessionDaoTest {
     }
 
     private Profile buildTestProfile() {
-        final Profile profile =  new Profile();
-        profile.setUser(testUser);
-        profile.setApplication(testApplication);
-        profile.setDisplayName(format("display-name-%s", testUser.getName()));
-        profile.setImageUrl(format("http://example.com/%s.png", testUser.getName()));
-        return getProfileDao().createOrReactivateProfile(profile);
+        final CreateProfileRequest createProfileRequest =  new CreateProfileRequest();
+        createProfileRequest.setUserId(testUser.getId());
+        createProfileRequest.setApplicationId(testApplication.getId());
+        createProfileRequest.setDisplayName(format("display-name-%s", testUser.getName()));
+        createProfileRequest.setImageUrl(format("http://example.com/%s.png", testUser.getName()));
+        return getProfileDao().createOrReactivateProfile(createProfileRequest);
     }
 
     @Test

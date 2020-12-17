@@ -12,7 +12,9 @@ import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import org.apache.lucene.document.DateTools;
 import org.apache.lucene.index.Term;
@@ -234,11 +236,11 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile updateActiveProfile(final Profile profile) {
+    public Profile updateActiveProfile(final UpdateProfileRequest profileRequest) {
 
-        getValidationHelper().validateModel(profile, Update.class);
+        getValidationHelper().validateModel(profileRequest, Update.class);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileRequest.getProfileId());
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
@@ -249,8 +251,8 @@ public class MongoProfileDao implements ProfileDao {
         final UpdateOperations<MongoProfile> updateOperations;
 
         updateOperations = getDatastore().createUpdateOperations(MongoProfile.class);
-        updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
-        updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
+        updateOperations.set("imageUrl", nullToEmpty(profileRequest.getImageUrl()).trim());
+        updateOperations.set("displayName", nullToEmpty(profileRequest.getDisplayName()).trim());
 
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
 
@@ -263,7 +265,7 @@ public class MongoProfileDao implements ProfileDao {
         });
 
         if (mongoProfile == null) {
-            throw new NotFoundException("application not found: " + profile.getId());
+            throw new NotFoundException("profile not found: " + profileRequest.getProfileId());
         }
 
         getObjectIndex().index(mongoProfile);
@@ -272,11 +274,11 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile updateActiveProfile(final Profile profile, final Map<String, Object> metadata) {
+    public Profile updateActiveProfile(final UpdateProfileRequest profileRequest, final Map<String, Object> metadata) {
 
-        getValidationHelper().validateModel(profile, Update.class);
+        getValidationHelper().validateModel(profileRequest, Update.class);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileRequest.getProfileId());
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
@@ -287,8 +289,8 @@ public class MongoProfileDao implements ProfileDao {
         final UpdateOperations<MongoProfile> updateOperations;
 
         updateOperations = getDatastore().createUpdateOperations(MongoProfile.class);
-        updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
-        updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
+        updateOperations.set("imageUrl", nullToEmpty(profileRequest.getImageUrl()).trim());
+        updateOperations.set("displayName", nullToEmpty(profileRequest.getDisplayName()).trim());
 
         if (metadata == null) {
             updateOperations.unset("metadata");
@@ -307,7 +309,7 @@ public class MongoProfileDao implements ProfileDao {
         });
 
         if (mongoProfile == null) {
-            throw new NotFoundException("application not found: " + profile.getId());
+            throw new NotFoundException("application not found: " + profileRequest.getProfileId());
         }
 
         getObjectIndex().index(mongoProfile);
@@ -365,14 +367,14 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile createOrReactivateProfile(final Profile profile) {
+    public Profile createOrReactivateProfile(final CreateProfileRequest profileRequest) {
 
-        getValidationHelper().validateModel(profile, Insert.class);
+        getValidationHelper().validateModel(profileRequest, Insert.class);
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
-        final MongoUser user = getMongoUserFromProfile(profile);
-        final MongoApplication application = getMongoApplicationFromProfile(profile);
+        final MongoUser user = getMongoUserFromProfileRequest(profileRequest);
+        final MongoApplication application = getMongoApplicationFromProfileRequest(profileRequest);
 
         query.and(
             query.criteria("active").equal(false),
@@ -386,16 +388,10 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.set("user", user);
         updateOperations.set("active", true);
         updateOperations.set("application", application);
-        updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
-        updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
+        updateOperations.set("imageUrl", nullToEmpty(profileRequest.getImageUrl()).trim());
+        updateOperations.set("displayName", nullToEmpty(profileRequest.getDisplayName()).trim());
         final Date nowDate = new Date();
         updateOperations.set("lastLogin", nowDate);
-        
-        if (profile.getMetadata() == null) {
-            updateOperations.unset("metadata");
-        } else {
-            updateOperations.set("metadata", profile.getMetadata());
-        }
 
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
 
@@ -408,7 +404,7 @@ public class MongoProfileDao implements ProfileDao {
         });
 
         if (mongoProfile == null) {
-            throw new NotFoundException("application not found: " + profile.getId());
+            throw new NotFoundException("profile not found or created in database");
         }
 
         getObjectIndex().index(mongoProfile);
@@ -417,14 +413,14 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile createOrReactivateProfile(final Profile profile, final Map<String, Object> metadata) {
+    public Profile createOrReactivateProfile(final CreateProfileRequest profileRequest, final Map<String, Object> metadata) {
 
-        getValidationHelper().validateModel(profile, Insert.class);
+        getValidationHelper().validateModel(profileRequest, Insert.class);
 
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
-        final MongoUser user = getMongoUserFromProfile(profile);
-        final MongoApplication application = getMongoApplicationFromProfile(profile);
+        final MongoUser user = getMongoUserFromProfileRequest(profileRequest);
+        final MongoApplication application = getMongoApplicationFromProfileRequest(profileRequest);
 
         query.and(
                 query.criteria("user").equal(user),
@@ -437,8 +433,8 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.set("user", user);
         updateOperations.set("active", true);
         updateOperations.set("application", application);
-        updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
-        updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
+        updateOperations.set("imageUrl", nullToEmpty(profileRequest.getImageUrl()).trim());
+        updateOperations.set("displayName", nullToEmpty(profileRequest.getDisplayName()).trim());
         final Date nowDate = new Date();
         updateOperations.set("lastLogin", nowDate);
 
@@ -510,8 +506,16 @@ public class MongoProfileDao implements ProfileDao {
         return getMongoUserDao().getActiveMongoUser(profile.getUser().getId());
     }
 
+    private MongoUser getMongoUserFromProfileRequest(final CreateProfileRequest profileRequest) {
+        return getMongoUserDao().getActiveMongoUser(profileRequest.getUserId());
+    }
+
     private MongoApplication getMongoApplicationFromProfile(final Profile profile) {
         return getMongoApplicationDao().getActiveMongoApplication(profile.getApplication().getId());
+    }
+
+    private MongoApplication getMongoApplicationFromProfileRequest(final CreateProfileRequest profileRequest) {
+        return getMongoApplicationDao().getActiveMongoApplication(profileRequest.getApplicationId());
     }
 
     @Override

@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -79,23 +81,23 @@ public interface ProfileDao {
 
     /**
      * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
-     * profile can't be found.  The {@link Profile#getId()} is used to key the profile being updated.
+     * profile can't be found.  The {@link UpdateProfileRequest#getProfileId()} is used to key the profile being updated.
      *
      * Note that this does not update the profile metadata, as specified by {@link Profile#getMetadata()}, updates to
-     * metadata are required {@see {@link #updateActiveProfile(Profile, Map)}}
+     * metadata are required {@see {@link #updateActiveProfile(UpdateProfileRequest, Map)}}
      *
      * @return the {@link Profile} as it was written into the database
      */
-    Profile updateActiveProfile(Profile profile);
+    Profile updateActiveProfile(UpdateProfileRequest profileRequest);
 
     /**
      * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
-     * profile can't be found.  The {@link Profile#getId()} is used to key the profile being updated.
+     * profile can't be found.  The {@link UpdateProfileRequest#getProfileId()} is used to key the profile being updated.
      *
      * @param metadata the profile metadata
      * @return the {@link Profile} as it was written into the database
      */
-    Profile updateActiveProfile(Profile profile, Map<String, Object> metadata);
+    Profile updateActiveProfile(UpdateProfileRequest profileRequest, Map<String, Object> metadata);
 
     /**
      * Updates metadata for the specified {@link Profile}, ignoring changes to all other fields.
@@ -122,11 +124,11 @@ public interface ProfileDao {
      * and updates will be keyed using the {@link User} and {@link Application}.
      *
      * Note that this does not set the profile metadata, as specified by {@link Profile#getMetadata()}, if creation with
-     * metadata are required {@see {@link #createOrReactivateProfile(Profile, Map)}}
+     * metadata are required {@see {@link #createOrReactivateProfile(CreateProfileRequest, Map)}}
      *
      * @return the {@link Profile} as it was written into the database
      */
-    Profile createOrReactivateProfile(Profile profile);
+    Profile createOrReactivateProfile(CreateProfileRequest profileRequest);
 
     /**
      * Creates or reactivates an inactive profile.  If the profile is active then this throws a
@@ -138,11 +140,11 @@ public interface ProfileDao {
      * @return the {@link Profile} as it was written into the database
      *
      */
-    Profile createOrReactivateProfile(Profile profile,  Map<String, Object> metadata);
+    Profile createOrReactivateProfile(CreateProfileRequest profileRequest,  Map<String, Object> metadata);
 
     /**
      * Creates, reactivates, or refreshes a {@link Profile}.  This is similar to
-     * {@link #createOrReactivateProfile(Profile)} except that it will upsert the {@link Profile}.
+     * {@link #createOrReactivateProfile(CreateProfileRequest)} except that it will upsert the {@link Profile}.
      *
      * If the profile is already active, then this will perform minimal updates of the profile as it is supplied.
      * Specifically, it will not update the display name, application, and user field. It will only update the image

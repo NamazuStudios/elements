@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 
-@ApiModel(description = "Represents a player's Follower.  This includes the Id's of both the logged in profile, and the followed profile")
+@ApiModel(description = "Represents a request to follow a player Follower.")
 public class CreateFollowerRequest {
 
     @ApiModelProperty("The profile id which to follow.")
