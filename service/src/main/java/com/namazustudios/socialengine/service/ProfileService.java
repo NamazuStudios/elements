@@ -74,13 +74,14 @@ public interface ProfileService {
     Profile getCurrentProfile();
 
     /**
-     * Updates the supplied {@link UpdateProfileRequest#getProfileId()}.  The {@link Profile#getId()} method is
+     * Updates the supplied {@link Profile}.  The profile id is
      * used to key the {@link Profile}.
      *
+     * @param profileId the profile id of the {@link Profile} to update
      * @param profileRequest the {@link UpdateProfileRequest} with the information to update
      * @return the {@link Profile} as it was changed by the service.
      */
-    Profile updateProfile(UpdateProfileRequest profileRequest);
+    Profile updateProfile(String profileId, UpdateProfileRequest profileRequest);
 
     /**
      * Creates a new profile.  The ID of the profile, as specified by {@link Profile#getId()},

@@ -80,24 +80,36 @@ public interface ProfileDao {
     Profile getActiveProfile(String profileId);
 
     /**
-     * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
-     * profile can't be found.  The {@link UpdateProfileRequest#getProfileId()} is used to key the profile being updated.
+     * Gets the specific user for the active profile with the id, or throws a {@link NotFoundException} if the
+     * profile can't be found.
      *
-     * Note that this does not update the profile metadata, as specified by {@link Profile#getMetadata()}, updates to
-     * metadata are required {@see {@link #updateActiveProfile(UpdateProfileRequest, Map)}}
-     *
-     * @return the {@link Profile} as it was written into the database
+     * @return the {@link User#getId()} that is tied to the profile id
      */
-    Profile updateActiveProfile(UpdateProfileRequest profileRequest);
+    String getUserIdForProfile(String profileId);
 
     /**
      * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
-     * profile can't be found.  The {@link UpdateProfileRequest#getProfileId()} is used to key the profile being updated.
+     * profile can't be found.  The profile id is used to key the profile being updated.
      *
+     * Note that this does not update the profile metadata, as specified by {@link Profile#getMetadata()}, updates to
+     * metadata are required {@see {@link #updateActiveProfile(String, UpdateProfileRequest, Map)}}
+     *
+     * @param profileId the profile id
+     * @param profileRequest the update request with the new information for the profile
+     * @return the {@link Profile} as it was written into the database
+     */
+    Profile updateActiveProfile(String profileId, UpdateProfileRequest profileRequest);
+
+    /**
+     * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
+     * profile can't be found.  The profile id is used to key the profile being updated.
+     *
+     * @param profileId the profile id
+     * @param profileRequest the update request with the new information for the profile
      * @param metadata the profile metadata
      * @return the {@link Profile} as it was written into the database
      */
-    Profile updateActiveProfile(UpdateProfileRequest profileRequest, Map<String, Object> metadata);
+    Profile updateActiveProfile(String profileId, UpdateProfileRequest profileRequest, Map<String, Object> metadata);
 
     /**
      * Updates metadata for the specified {@link Profile}, ignoring changes to all other fields.

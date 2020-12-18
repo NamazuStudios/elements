@@ -85,14 +85,14 @@ public class UserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(UpdateProfileRequest profileRequest) {
-        checkUserAndProfile(profileRequest.getProfileId());
-        return getProfileDao().updateActiveProfile(profileRequest);
+    public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
+        checkUserAgainstProfileId(profileId);
+        return getProfileDao().updateActiveProfile(profileId, profileRequest);
     }
 
     @Override
     public Profile createProfile(CreateProfileRequest profileRequest) {
-        checkUserAndProfile(profileRequest.getUserId());
+        checkUserAgainstUserId(profileRequest.getUserId());
         final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
         final Profile createdProfile = getProfileDao().createOrReactivateProfile(profileRequest);
         final Attributes attributes = new SimpleAttributes.Builder()
@@ -102,8 +102,14 @@ public class UserProfileService implements ProfileService {
         return createdProfile;
     }
 
-    private void checkUserAndProfile(final String profileId) {
-        if (!Objects.equals(getUser().getId(), profileId)) {
+    private void checkUserAgainstUserId(final String userId) {
+        if (!Objects.equals(getUser().getId(), userId)) {
+            throw new InvalidDataException("Profile userId must match current userId.");
+        }
+    }
+
+    private void checkUserAgainstProfileId(final String profileId) {
+        if (!Objects.equals(getUser().getId(), !Objects.equals(getUser().getId(), getProfileDao().getUserIdForProfile(profileId)))) {
             throw new InvalidDataException("Profile userId must match current userId.");
         }
     }

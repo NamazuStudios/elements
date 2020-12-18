@@ -64,8 +64,8 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(UpdateProfileRequest profileRequest) {
-        return getProfileDao().updateActiveProfile(profileRequest);
+    public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
+        return getProfileDao().updateActiveProfile(profileId, profileRequest);
     }
 
     @Override

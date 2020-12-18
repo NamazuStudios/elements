@@ -193,6 +193,12 @@ public class MongoProfileDao implements ProfileDao {
 
     }
 
+    @Override
+    public String getUserIdForProfile(String profileId){
+        final MongoProfile mongoProfile = getActiveMongoProfile(profileId);
+        return getBeanMapper().map(mongoProfile, Profile.class).getUser().getId();
+    }
+
     public MongoProfile getActiveMongoProfile(final Profile profile) {
         return getActiveMongoProfile(profile.getId());
     }
@@ -236,11 +242,11 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile updateActiveProfile(final UpdateProfileRequest profileRequest) {
+    public Profile updateActiveProfile(final String profileId, final UpdateProfileRequest profileRequest) {
 
         getValidationHelper().validateModel(profileRequest, Update.class);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileRequest.getProfileId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
@@ -265,7 +271,7 @@ public class MongoProfileDao implements ProfileDao {
         });
 
         if (mongoProfile == null) {
-            throw new NotFoundException("profile not found: " + profileRequest.getProfileId());
+            throw new NotFoundException("profile not found: " + profileId);
         }
 
         getObjectIndex().index(mongoProfile);
@@ -274,11 +280,11 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile updateActiveProfile(final UpdateProfileRequest profileRequest, final Map<String, Object> metadata) {
+    public Profile updateActiveProfile(final String profileId, final UpdateProfileRequest profileRequest, final Map<String, Object> metadata) {
 
         getValidationHelper().validateModel(profileRequest, Update.class);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileRequest.getProfileId());
+        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
@@ -309,7 +315,7 @@ public class MongoProfileDao implements ProfileDao {
         });
 
         if (mongoProfile == null) {
-            throw new NotFoundException("application not found: " + profileRequest.getProfileId());
+            throw new NotFoundException("application not found: " + profileId);
         }
 
         getObjectIndex().index(mongoProfile);

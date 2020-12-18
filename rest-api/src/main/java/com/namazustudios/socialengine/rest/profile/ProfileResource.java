@@ -126,18 +126,16 @@ public class ProfileResource {
     @ApiOperation(value = "Updates a Profile",
             notes = "Supplying an update request will attempt to update the profile.  The call " +
                     "will return the profile as it was written to the database.")
-    public Profile updateProfile(final UpdateProfileRequest profileRequest, @PathParam("profileId") String profileId) {
+    public Profile updateProfile(@PathParam("profileId") String profileId, final UpdateProfileRequest profileRequest) {
 
         getValidationHelper().validateModel(profileRequest, Update.class);
         profileId = Strings.nullToEmpty(profileId).trim();
 
         if (Strings.isNullOrEmpty(profileId)) {
             throw new NotFoundException("Profile not found.");
-        } else if (!(Objects.equals(profileRequest.getProfileId(), profileId))) {
-            throw new InvalidDataException("Profile id does not match path.");
         }
 
-        return getProfileService().updateProfile(profileRequest);
+        return getProfileService().updateProfile(profileId, profileRequest);
 
     }
 
