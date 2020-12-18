@@ -75,11 +75,11 @@ class ClientContext {
     }
 
     public ClientContext createProfile(final String display) {
-        final CreateProfileRequest createProfileRequest = new CreateProfileRequest();
-        createProfileRequest.setUserId(user.getId());
-        createProfileRequest.setDisplayName(display);
-        createProfileRequest.setApplicationId(application.getId());
-        profiles.add(profileDao.createOrReactivateProfile(createProfileRequest));
+        final Profile profile = new Profile();
+        profile.setUser(user);
+        profile.setDisplayName(display);
+        profile.setApplication(application);
+        profiles.add(profileDao.createOrReactivateProfile(profile));
         return this;
     }
 

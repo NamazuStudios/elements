@@ -119,20 +119,20 @@ public class MongoFollowerDaoTest {
     }
 
     private void makeTestProfiles(){
-        final CreateProfileRequest createProfileRequest = new CreateProfileRequest();
-        createProfileRequest.setDisplayName("testyA");
-        createProfileRequest.setImageUrl("testyA/image.png");
-        createProfileRequest.setUserId(testUserA.getId());
-        createProfileRequest.setApplicationId(testApplication.getId());
+        testProfileA = new Profile();
+        testProfileA.setDisplayName("testyA");
+        testProfileA.setImageUrl("testyA/image.png");
+        testProfileA.setUser(testUserA);
+        testProfileA.setApplication(testApplication);
 
-        final CreateProfileRequest createProfileRequest1 = new CreateProfileRequest();
-        createProfileRequest1.setDisplayName("testyB");
-        createProfileRequest1.setImageUrl("testyB/image.png");
-        createProfileRequest1.setUserId(testUserB.getId());
-        createProfileRequest1.setApplicationId(testApplication.getId());
+        testProfileB = new Profile();
+        testProfileB.setDisplayName("testyB");
+        testProfileB.setImageUrl("testyB/image.png");
+        testProfileB.setUser(testUserB);
+        testProfileB.setApplication(testApplication);
 
-        testProfileA = getProfileDao().createOrReactivateProfile(createProfileRequest);
-        testProfileB = getProfileDao().createOrReactivateProfile(createProfileRequest1);
+        testProfileA = getProfileDao().createOrReactivateProfile(testProfileA);
+        testProfileB = getProfileDao().createOrReactivateProfile(testProfileB);
     }
 
     public UserDao getUserDao() {

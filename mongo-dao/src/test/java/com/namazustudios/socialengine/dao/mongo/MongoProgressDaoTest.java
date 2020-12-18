@@ -90,12 +90,12 @@ public class MongoProgressDaoTest  {
     }
 
     private Profile buildTestProfile() {
-        final CreateProfileRequest createProfileRequest =  new CreateProfileRequest();
-        createProfileRequest.setUserId(testUser.getId());
-        createProfileRequest.setApplicationId(testApplication.getId());
-        createProfileRequest.setDisplayName(format("display-name-%s", testUser.getName()));
-        createProfileRequest.setImageUrl(format("http://example.com/%s.png", testUser.getName()));
-        return getProfileDao().createOrReactivateProfile(createProfileRequest);
+        final Profile profile =  new Profile();
+        profile.setUser(testUser);
+        profile.setApplication(testApplication);
+        profile.setDisplayName(format("display-name-%s", testUser.getName()));
+        profile.setImageUrl(format("http://example.com/%s.png", testUser.getName()));
+        return getProfileDao().createOrReactivateProfile(profile);
     }
 
     private Item buildFiniteTestItem() {

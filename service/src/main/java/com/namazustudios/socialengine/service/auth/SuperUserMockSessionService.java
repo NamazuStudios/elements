@@ -88,11 +88,11 @@ public class SuperUserMockSessionService implements MockSessionService {
     }
 
     private Profile generateProfile(final User user, final Application application) {
-        final CreateProfileRequest createProfileRequest = new CreateProfileRequest();
-        createProfileRequest.setUserId(user.getId());
-        createProfileRequest.setApplicationId(application.getId());
-        createProfileRequest.setDisplayName(getDisplayNameGenerator().generate());
-        return getProfileDao().createOrReactivateProfile(createProfileRequest);
+        final Profile profile = new Profile();
+        profile.setUser(user);
+        profile.setApplication(application);
+        profile.setDisplayName(getDisplayNameGenerator().generate());
+        return getProfileDao().createOrReactivateProfile(profile);
     }
 
     public SessionDao getSessionDao() {

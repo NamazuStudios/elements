@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.service.profile;
 
 
+import com.google.common.base.Strings;
+import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
@@ -32,6 +34,8 @@ public class UserProfileService implements ProfileService {
     private UserService userService;
 
     private ProfileDao profileDao;
+
+    private ApplicationDao applicationDao;
 
     private ContextFactory contextFactory;
 
@@ -86,15 +90,27 @@ public class UserProfileService implements ProfileService {
 
     @Override
     public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
-        checkUserAgainstProfileId(profileId);
-        return getProfileDao().updateActiveProfile(profileId, profileRequest);
+        checkUserAndProfile(getProfileDao().getActiveProfile(profileId).getUser().getId());
+        return getProfileDao().updateActiveProfile(profileWithUpdates(profileId, profileRequest));
+    }
+
+    private Profile profileWithUpdates(String profileId, UpdateProfileRequest profileRequest) {
+        final Profile updates = new Profile();
+        updates.setId(profileId);
+        if(!Strings.isNullOrEmpty(profileRequest.getDisplayName())){
+            updates.setDisplayName(profileRequest.getDisplayName());
+        }
+        if(!Strings.isNullOrEmpty(profileRequest.getImageUrl())){
+            updates.setImageUrl(profileRequest.getImageUrl());
+        }
+        return updates;
     }
 
     @Override
     public Profile createProfile(CreateProfileRequest profileRequest) {
-        checkUserAgainstUserId(profileRequest.getUserId());
+        checkUserAndProfile(profileRequest.getUserId());
         final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
-        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profileRequest);
+        final Profile createdProfile = getProfileDao().createOrReactivateProfile(createNewProfile(profileRequest));
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
@@ -102,16 +118,19 @@ public class UserProfileService implements ProfileService {
         return createdProfile;
     }
 
-    private void checkUserAgainstUserId(final String userId) {
-        if (!Objects.equals(getUser().getId(), userId)) {
+    private void checkUserAndProfile(final String id) {
+        if (!Objects.equals(getUser().getId(), id)) {
             throw new InvalidDataException("Profile userId must match current userId.");
         }
     }
 
-    private void checkUserAgainstProfileId(final String profileId) {
-        if (!Objects.equals(getUser().getId(), !Objects.equals(getUser().getId(), getProfileDao().getUserIdForProfile(profileId)))) {
-            throw new InvalidDataException("Profile userId must match current userId.");
-        }
+    private Profile createNewProfile(CreateProfileRequest profileRequest) {
+        final Profile newProfile = new Profile();
+        newProfile.setUser(getUserService().getUser(profileRequest.getUserId()));
+        newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
+        newProfile.setImageUrl(profileRequest.getImageUrl());
+        newProfile.setDisplayName(profileRequest.getDisplayName());
+        return newProfile;
     }
 
     @Override
@@ -150,6 +169,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
+    }
+
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
+    }
+
+    @Inject
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
     }
 
     public ContextFactory getContextFactory() {

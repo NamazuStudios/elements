@@ -37,12 +37,12 @@ public class MatchingMockObjects {
     }
 
     public Profile makeMockProfile(final User user, final Application application) {
-        final CreateProfileRequest createProfileRequest =  new CreateProfileRequest();
-        createProfileRequest.setUserId(user.getId());
-        createProfileRequest.setApplicationId(application.getId());
-        createProfileRequest.setDisplayName(format("display-name-%s", user.getName()));
-        createProfileRequest.setImageUrl(format("http://example.com/%s.png", user.getName()));
-        return getProfileDao().createOrReactivateProfile(createProfileRequest);
+        final Profile profile =  new Profile();
+        profile.setUser(user);
+        profile.setApplication(application);
+        profile.setDisplayName(format("display-name-%s", user.getName()));
+        profile.setImageUrl(format("http://example.com/%s.png", user.getName()));
+        return getProfileDao().createOrReactivateProfile(profile);
     }
 
     public UserDao getUserDao() {
