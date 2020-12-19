@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.service.guice;
 
+import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -66,6 +68,20 @@ public class ServicesModule extends PrivateModule {
     private final Scope scope;
 
     private final Class<? extends Provider<Attributes>> attributesProvider;
+
+    private static final Scope DISABLED = new Scope() {
+
+        @Override
+        public <T> com.google.inject.Provider<T> scope(Key<T> key, com.google.inject.Provider<T> unscoped) {
+            throw new NotImplementedException();
+        }
+
+        @Override
+        public String toString() {
+            return "DISABLED";
+        }
+
+    };
 
     /**
      * Configures all services to use the following {@link Scope} and {@link Attributes} {@link Provider<Attributes>}

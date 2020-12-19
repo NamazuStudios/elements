@@ -22,6 +22,7 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTabl
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_COUNT;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_SIZE;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.UNIXFS_STORAGE_ROOT_DIRECTORY;
+import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
 
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
 
@@ -45,6 +46,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(UNIXFS_TRANSACTION_BUFFER_SIZE, "4096");
         properties.setProperty(UNIXFS_TRANSACTION_BUFFER_COUNT, "8192");
         properties.setProperty(UNIXFS_STORAGE_ROOT_DIRECTORY, "storage.unixfs");
+        properties.setProperty(SCHEDULER_ENVIRONMENT_PATH, "storage.xodus.scheduler");
         return properties;
     }
 

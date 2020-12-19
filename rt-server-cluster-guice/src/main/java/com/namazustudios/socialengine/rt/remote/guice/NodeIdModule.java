@@ -14,7 +14,11 @@ public class NodeIdModule extends PrivateModule {
 
     private final Provider<NodeId> nodeIdProvider;
 
-    public NodeIdModule(Provider<NodeId> nodeIdProvider) {
+    public NodeIdModule(final NodeId nodeId) {
+        this(() -> nodeId);
+    }
+
+    public NodeIdModule(final Provider<NodeId> nodeIdProvider) {
         this.nodeIdProvider = nodeIdProvider;
     }
 
@@ -26,7 +30,7 @@ public class NodeIdModule extends PrivateModule {
 
     /**
      * Supplies a {@link NodeId} for a master node using {@link ApplicationId#forUniqueName(String)} and further
-     * constructing the using{@link NodeId#NodeId(InstanceId, ApplicationId)}
+     * constructing the using{@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
      *
      * @param instanceIdProvider the {@link Provider<InstanceId>}
      * @return the {@link NodeIdModule}
@@ -37,7 +41,7 @@ public class NodeIdModule extends PrivateModule {
 
     /**
      * Supplies a {@link NodeId} for a node using {@link ApplicationId#forUniqueName(String)} and further constructing
-     * the {@link NodeId} using{@link NodeId#NodeId(InstanceId, ApplicationId)}
+     * the {@link NodeId} using{@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
      *
      * @param instanceIdProvider the {@link Provider<InstanceId>}
      */
@@ -47,7 +51,8 @@ public class NodeIdModule extends PrivateModule {
     }
 
     /**
-     * Supplies a {@link NodeId} for a master node using using{@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
+     * Supplies a {@link NodeId} for a master node using using
+     * {@link NodeId#forInstanceAndApplication(InstanceId, ApplicationId)}
      *
      * @param instanceIdProvider the {@link Provider<InstanceId>}
      */

@@ -221,7 +221,9 @@ public class LuaResource implements Resource {
                 luaState.pushJavaObject(object);
             }
 
-            luaState.call(params.length, 1);
+            try (var c = CurrentAttributes.getInstance().enter(getAttributes())) {
+                luaState.call(params.length, 1);
+            }
 
             if (luaState.isNil(-1)) {
                 throw new ModuleNotFoundException("got nil module for " + moduleName);
@@ -316,7 +318,9 @@ public class LuaResource implements Resource {
 
             });
 
-            luaState.call(0, 1);
+            try (var c = CurrentAttributes.getInstance().enter(getAttributes())) {
+                luaState.call(0, 1);
+            }
 
             final List<String> taskIds = luaState.toJavaObject(-1, List.class);
             luaState.pop(1);
@@ -370,7 +374,11 @@ public class LuaResource implements Resource {
 
                 luaState.getGlobal(REQUIRE);
                 luaState.pushString(CoroutineBuiltin.MODULE_NAME);
-                luaState.call(1, 1);
+
+                try (var c = CurrentAttributes.getInstance().enter(getAttributes())) {
+                    luaState.call(1, 1);
+                }
+
                 luaState.getField(-1, CoroutineBuiltin.START);
                 luaState.remove(-2);
 
@@ -386,7 +394,9 @@ public class LuaResource implements Resource {
                 luaState.newThread();
                 for (Object param : params) luaState.pushJavaObject(param);
 
-                luaState.call(params.length + 1, 3);
+                try (var c = CurrentAttributes.getInstance().enter(attributes)) {
+                    luaState.call(params.length + 1, 3);
+                }
 
                 final TaskId taskId = new TaskId(luaState.checkString(1));            // task id
                 final int status = luaState.checkInteger(2);                          // thread status

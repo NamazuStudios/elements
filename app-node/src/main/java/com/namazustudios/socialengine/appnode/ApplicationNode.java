@@ -19,9 +19,11 @@ import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistr
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
 import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
 import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
+import com.namazustudios.socialengine.service.guice.ServicesModule;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.slf4j.Logger;
@@ -65,9 +67,10 @@ public class ApplicationNode {
             new FirebaseAppFactoryModule(),
             new GuiceStandardNotificationFactoryModule(),
             new VersionModule(),
-            new ServicesModule(),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
             new UnixFSTransactionalPersistenceContextModule().withChecksumAlgorithm(ADLER_32),
+            new XodusEnvironmentModule().withSchedulerEnvironment(),
+            new ServicesModule(),
             new JacksonHttpClientModule()
                 .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
                 .withDefaultObjectMapperProvider(() -> {

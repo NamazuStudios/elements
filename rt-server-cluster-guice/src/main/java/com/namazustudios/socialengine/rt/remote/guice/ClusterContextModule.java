@@ -19,8 +19,6 @@ public class ClusterContextModule extends PrivateModule {
         expose(Context.class)
             .annotatedWith(named(REMOTE));
 
-        install(new GuiceIoCResolverModule());
-
         bind(RemoteInvocationDispatcher.class)
             .to(SimpleRemoteInvocationDispatcher.class);
 

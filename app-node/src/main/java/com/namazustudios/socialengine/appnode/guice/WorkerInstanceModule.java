@@ -4,24 +4,23 @@ import com.google.inject.*;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstanceModule;
 import com.namazustudios.socialengine.rt.remote.Worker;
-import com.namazustudios.socialengine.rt.remote.guice.NodeIdModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
-import static com.namazustudios.socialengine.rt.remote.guice.NodeIdModule.forApplicationUniqueName;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
@@ -49,13 +48,12 @@ public class WorkerInstanceModule extends PrivateModule {
         final var applicationDaoProvider = getProvider(ApplicationDao.class);
         final var injectorProvider = getProvider(Injector.class);
         final var gitLoaderProvider = getProvider(GitLoader.class);
-        final var resourcesStorageBaseDirectoryProvider = getProvider(Key.get(File.class, named(STORAGE_BASE_DIRECTORY)));
 
         return () -> {
 
-            final var applicationDao = applicationDaoProvider.get();
             final var injector = injectorProvider.get();
             final var gitLoader = gitLoaderProvider.get();
+            final var applicationDao = applicationDaoProvider.get();
 
             final Set<Node> nodeSet = applicationDao.getActiveApplications().getObjects().stream().map(application -> {
 
@@ -68,28 +66,19 @@ public class WorkerInstanceModule extends PrivateModule {
                         return null;
                     }
 
-                    final NodeIdModule nodeIdModule = forApplicationUniqueName(instanceIdProvider, application.getId());
+                    final var appId = ApplicationId.forUniqueName(application.getId());
+                    final var nodeId = NodeId.forInstanceAndApplication(instanceIdProvider.get(), appId);
+                    final var appModule = new LuaApplicationModule(nodeId, application, codeDirectory);
 
-                    final JeroMQNodeModule nodeModule = new JeroMQNodeModule()
-                        .withNodeName(application.getName());
-
-                    final File storageDirectory = getStorageDirectoryForApplication(resourcesStorageBaseDirectoryProvider, application);
-                    final ApplicationModule applicationModule = new ApplicationModule(application, codeDirectory, storageDirectory);
-                    final Injector nodeInjector = injector.createChildInjector(applicationModule, nodeModule, nodeIdModule);
-
+                    final var nodeInjector = injector.createChildInjector(appModule);
                     return nodeInjector.getInstance(Node.class);
 
-                }).filter(node -> node != null).collect(toCollection(LinkedHashSet::new));
+                }).filter(Objects::nonNull).collect(toCollection(LinkedHashSet::new));
 
             return unmodifiableSet(nodeSet);
 
         };
 
-    }
-
-    private File getStorageDirectoryForApplication(final Provider<File> resourcesStorageBaseDirectoryProvider,
-                                                   final Application application) {
-        return new File(resourcesStorageBaseDirectoryProvider.get(), application.getId());
     }
 
 }

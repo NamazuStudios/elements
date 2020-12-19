@@ -30,8 +30,6 @@ public class JeroMQNodeModule extends PrivateModule {
 
     private Runnable bindMaxConnectionsAction = () -> {};
 
-    private Runnable bindTimeoutAction = () -> {};
-
     private Function<AnnotatedBindingBuilder<Node>, LinkedBindingBuilder<Node>> bindNodeAction = a -> a;
 
     private Runnable exposeNodeAction = () -> expose(Node.class);
@@ -109,8 +107,8 @@ public class JeroMQNodeModule extends PrivateModule {
      */
     public JeroMQNodeModule withMaximumConnections(int maximumConnections) {
         bindMaxConnectionsAction = () -> bind(Integer.class)
-                .annotatedWith(named(JEROMQ_NODE_MAX_CONNECTIONS))
-                .toInstance(maximumConnections);
+            .annotatedWith(named(JEROMQ_NODE_MAX_CONNECTIONS))
+            .toInstance(maximumConnections);
         return this;
     }
 
@@ -124,6 +122,16 @@ public class JeroMQNodeModule extends PrivateModule {
         bindNodeAction = a -> a.annotatedWith(annotation);
         exposeNodeAction = () -> expose(Node.class).annotatedWith(annotation);
         return this;
+    }
+
+    /**
+     * Specifies the annotation as a {@link @Name} annotated node.
+     *
+     * @param name the name
+     * @return this instance
+     */
+    public JeroMQNodeModule withAnnotation(final String name) {
+        return withAnnotation(named(name));
     }
 
     /**
@@ -146,7 +154,6 @@ public class JeroMQNodeModule extends PrivateModule {
 
         bindNodeIdAction.run();
         bindNodeNameAction.run();
-        bindTimeoutAction.run();
         bindMinConnectionsAction.run();
         bindMaxConnectionsAction.run();
 

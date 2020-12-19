@@ -59,6 +59,8 @@ public class SimpleContextModule extends PrivateModule {
         bindHandlerContext.run();
         bindTaskContext.run();
 
+        // Binding to SimpleContext to multiple interfaces
+
         bind(SimpleContext.class).asEagerSingleton();
         bind(NodeLifecycle.class).to(SimpleContext.class);
         bind(Context.class).annotatedWith(named(LOCAL)).to(SimpleContext.class);
