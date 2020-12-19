@@ -236,7 +236,7 @@ public class HttpOperation {
      * Sorts the {@link HttpContent} parameters based off of its index, to keep parameter order consistent
      */
     public void sortParameters() {
-        parameters = parameters;
+        parameters = remapParameters(parameters);
     }
 
     @Override
