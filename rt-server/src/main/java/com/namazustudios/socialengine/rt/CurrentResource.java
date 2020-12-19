@@ -4,16 +4,16 @@ package com.namazustudios.socialengine.rt;
  * Houses a {@link ReentrantThreadLocal<Attributes>} to represent the currently available
  * {@link ReentrantThreadLocal<Attributes>}
  */
-public class CurrentAttributes {
+public class CurrentResource {
 
-    private static final ReentrantThreadLocal<Attributes> instance = new ReentrantThreadLocal<>();
+    private static final ReentrantThreadLocal<Resource> instance = new ReentrantThreadLocal<>();
 
     /**
      * Gets the shared instance.
      *
      * @return the {@link ReentrantThreadLocal<Attributes>} instance.
      */
-    public static ReentrantThreadLocal<Attributes> getInstance() {
+    public static ReentrantThreadLocal<Resource> getInstance() {
         return instance;
     }
 

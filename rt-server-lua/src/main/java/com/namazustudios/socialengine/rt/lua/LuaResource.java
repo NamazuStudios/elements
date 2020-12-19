@@ -58,7 +58,7 @@ public class LuaResource implements Resource {
 
     private ResourceId resourceId;
 
-    private Attributes attributes = Attributes.emptyAttributes();
+    private MutableAttributes attributes = new SimpleAttributes();
 
     private final Context localContext;
 
@@ -184,12 +184,12 @@ public class LuaResource implements Resource {
     }
 
     @Override
-    public Attributes getAttributes() {
+    public MutableAttributes getAttributes() {
         return attributes;
     }
 
     public void setAttributes(Attributes attributes) {
-        this.attributes = attributes;
+        this.attributes = new SimpleAttributes.Builder().from(attributes).build();
     }
 
     /**
@@ -221,7 +221,7 @@ public class LuaResource implements Resource {
                 luaState.pushJavaObject(object);
             }
 
-            try (var c = CurrentAttributes.getInstance().enter(getAttributes())) {
+            try (var c = CurrentResource.getInstance().enter(this)) {
                 luaState.call(params.length, 1);
             }
 
@@ -276,7 +276,7 @@ public class LuaResource implements Resource {
     public void deserialize(final InputStream is) throws IOException {
         getErisPersistence().deserialize(is, sh -> {
             final var original = resourceId;
-            attributes = sh.getAttributes();
+            attributes = new SimpleAttributes.Builder().from(sh.getAttributes()).build();
             resourceId = sh.getResourceId();
             lock = resourceLockService.getLock(resourceId);
             resourceLockService.delete(original);
@@ -318,7 +318,7 @@ public class LuaResource implements Resource {
 
             });
 
-            try (var c = CurrentAttributes.getInstance().enter(getAttributes())) {
+            try (var c = CurrentResource.getInstance().enter(this)) {
                 luaState.call(0, 1);
             }
 
@@ -375,7 +375,7 @@ public class LuaResource implements Resource {
                 luaState.getGlobal(REQUIRE);
                 luaState.pushString(CoroutineBuiltin.MODULE_NAME);
 
-                try (var c = CurrentAttributes.getInstance().enter(getAttributes())) {
+                try (var c = CurrentResource.getInstance().enter(this)) {
                     luaState.call(1, 1);
                 }
 
@@ -394,7 +394,7 @@ public class LuaResource implements Resource {
                 luaState.newThread();
                 for (Object param : params) luaState.pushJavaObject(param);
 
-                try (var c = CurrentAttributes.getInstance().enter(attributes)) {
+                try (var c = CurrentResource.getInstance().enter(this)) {
                     luaState.call(params.length + 1, 3);
                 }
 
@@ -437,13 +437,20 @@ public class LuaResource implements Resource {
 
             luaState.getGlobal(REQUIRE);
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);
-            luaState.call(1, 1);
+
+            try (var c = CurrentResource.getInstance().enter(this)) {
+                luaState.call(1, 1);
+            }
+
             luaState.getField(-1, CoroutineBuiltin.RESUME);
             luaState.remove(1);
 
             luaState.pushString(taskId.asString());
             for (final Object result : results) luaState.pushJavaObject(result);
-            luaState.call(results.length + 1, 3);
+
+            try (var c = CurrentResource.getInstance().enter(this)) {
+                luaState.call(results.length + 1, 3);
+            }
 
             if (luaState.isNil(1)) {
                 throw new NoSuchTaskException(taskId);

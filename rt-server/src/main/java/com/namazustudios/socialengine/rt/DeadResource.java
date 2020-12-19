@@ -1,11 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.DeadResourceException;
-import com.namazustudios.socialengine.rt.exception.ResourceDestroyedException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.Set;
@@ -32,7 +30,7 @@ public class DeadResource implements Resource {
     }
 
     @Override
-    public Attributes getAttributes() {
+    public MutableAttributes getAttributes() {
         throw new DeadResourceException("resource is closed");
     }
 

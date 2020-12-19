@@ -4,8 +4,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaException;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.AssetLoader;
-import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.CurrentAttributes;
+import com.namazustudios.socialengine.rt.CurrentResource;
 import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.exception.BadManifestException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -165,7 +164,7 @@ public class LuaManifestLoader implements ManifestLoader {
                 luaState.load(inputStream, MAIN_MANIFEST, "bt");
                 scriptLogger.debug("Loaded Script: {}", MAIN_MANIFEST);
 
-                try (var c = CurrentAttributes.getInstance().enter(emptyAttributes());) {
+                try (var c = CurrentResource.getInstance().enter(null)) {
                     luaState.call(0, LuaState.MULTRET);
                 }
 

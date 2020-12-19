@@ -35,7 +35,7 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
-    public Attributes getAttributes() {
+    public MutableAttributes getAttributes() {
         return getDelegate().getAttributes();
     }
 

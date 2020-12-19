@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.rt.exception.ResourceDestroyedException;
 import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
 import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
 
-import java.io.FilterOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -53,7 +52,7 @@ public interface Resource extends AutoCloseable {
      *
      * @return this instance's {@link Attributes}
      */
-    Attributes getAttributes();
+    MutableAttributes getAttributes();
 
     /**
      * Returns an instance of {@link MethodDispatcher}, which is used to invoke methods against this {@link Resource}.

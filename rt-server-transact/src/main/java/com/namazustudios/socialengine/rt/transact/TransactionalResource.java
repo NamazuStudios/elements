@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.transact;
 
-import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.DeadResource;
-import com.namazustudios.socialengine.rt.MethodDispatcher;
-import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
@@ -172,7 +169,7 @@ public class TransactionalResource implements Resource {
     }
 
     @Override
-    public Attributes getAttributes() {
+    public MutableAttributes getAttributes() {
         return getDelegate().getAttributes();
     }
 

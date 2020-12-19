@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.CurrentResource;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.exception.ResourcePersistenceException;
@@ -107,7 +108,7 @@ public class ErisPersistence {
      * Implementation for {@link Resource#serialize(OutputStream)}
      */
     public void serialize(final OutputStream os) throws IOException {
-        try {
+        try (var c = CurrentResource.getInstance().enter(luaResource)) {
             final LuaState luaState = luaStateSupplier.get();
             luaState.pushJavaFunction(l -> doSerialize(l, os));
             luaState.call(0, 0);
@@ -125,8 +126,9 @@ public class ErisPersistence {
         final byte[] jObjectBytes;
         final byte[] lObjectBytes;
 
-        try (final ByteArrayOutputStream jObjectBos = new ByteArrayOutputStream();
-             final ByteArrayOutputStream lObjectBos = new ByteArrayOutputStream()) {
+        try (var c = CurrentResource.getInstance().enter(luaResource);
+             var jObjectBos = new ByteArrayOutputStream();
+             var lObjectBos = new ByteArrayOutputStream()) {
 
             final ResourceId resourceId = luaResource.getId();
             final Attributes attributes = luaResource.getAttributes();
@@ -232,7 +234,7 @@ public class ErisPersistence {
      * Implementation for {@link Resource#deserialize(InputStream)}
      */
     public void deserialize(final InputStream is, final Consumer<SerialHeader> serialHeaderConsumer) throws IOException {
-        try {
+        try (var c = CurrentResource.getInstance().enter(luaResource)) {
             final LuaState luaState = luaStateSupplier.get();
             luaState.pushJavaFunction(l -> doDeserialize(l, is, serialHeaderConsumer));
             luaState.call(0, 0);
@@ -356,7 +358,6 @@ public class ErisPersistence {
     private void applySpecialPersistence(final LuaState luaState, final JavaFunction persist) {
 
         final int mtIndex;
-        final int permsIndex;
 
         luaState.getField(REGISTRYINDEX, JNLUA_OBJECT);
         mtIndex = luaState.absIndex(-1);
@@ -391,7 +392,9 @@ public class ErisPersistence {
         // stack as well as the compiled chunk.  The compiled chunk returns the actual spio function which encapsulates
         // the persist/unpersist methods.  Which will be replaced throught he permanent object table.
 
-        luaState.call(2, 1);
+        try (var c = CurrentResource.getInstance().enter(luaResource)) {
+            luaState.call(2, 1);
+        }
 
         // Sets it to the result of the above function.
         luaState.setTable(mtIndex);
@@ -466,7 +469,10 @@ public class ErisPersistence {
         });
         luaState.pushValue(absObjectIndex);
         luaState.pushValue(absPlaceholderIndex);
-        luaState.call(2, 0);
+
+        try (var c = CurrentResource.getInstance().enter(luaResource)) {
+            luaState.call(2, 0);
+        }
 
         luaState.pushJavaFunction(l -> {
             l.getField(REGISTRYINDEX, INVERSE_PERMANENT_OBJECT_TABLE);
@@ -476,7 +482,10 @@ public class ErisPersistence {
         });
         luaState.pushValue(absPlaceholderIndex);
         luaState.pushValue(absObjectIndex);
-        luaState.call(2, 0);
+
+        try (var c = CurrentResource.getInstance().enter(luaResource)) {
+            luaState.call(2, 0);
+        }
 
     }
 
@@ -571,7 +580,7 @@ public class ErisPersistence {
 
     private class SerialObjectTable implements JavaFunction {
 
-        private SerialHeader serialHeader = new SerialHeader();
+        private SerialHeader serialHeader;
 
         private Map<Object, Integer> objectIndexMap = new IdentityHashMap<>();
 
@@ -631,7 +640,11 @@ public class ErisPersistence {
 
                 luaState.pushJavaFunction(custom.persist);
                 luaState.pushValue(1);
-                luaState.call(1, 1);
+
+                try (var c = CurrentResource.getInstance().enter(luaResource)) {
+                    luaState.call(1, 1);
+                }
+
                 luaState.setField(2, PERSIST_METADATA);
 
             }
@@ -740,7 +753,10 @@ public class ErisPersistence {
 
                 luaState.pushJavaFunction(unpersist);
                 luaState.pushValue(2);
-                luaState.call(1, 1);
+
+                try (var c = CurrentResource.getInstance().enter(luaResource)) {
+                    luaState.call(1, 1);
+                }
 
             } else {
                 throw new ResourcePersistenceException("Unknown persistence type: " + luaState.toString(-1));

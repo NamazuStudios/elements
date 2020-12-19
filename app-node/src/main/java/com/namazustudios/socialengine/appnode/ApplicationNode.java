@@ -10,7 +10,9 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.ResourceAttributesProvider;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
@@ -20,10 +22,7 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
-import com.namazustudios.socialengine.service.guice.GuiceStandardNotificationFactoryModule;
-import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
-import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
-import com.namazustudios.socialengine.service.guice.ServicesModule;
+import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.slf4j.Logger;
@@ -66,11 +65,13 @@ public class ApplicationNode {
             new WorkerInstanceModule(),
             new FirebaseAppFactoryModule(),
             new GuiceStandardNotificationFactoryModule(),
-            new VersionModule(),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
             new UnixFSTransactionalPersistenceContextModule().withChecksumAlgorithm(ADLER_32),
             new XodusEnvironmentModule().withSchedulerEnvironment(),
-            new ServicesModule(),
+            new AppNodeServicesModule(),
+            new AppleIapReceiptInvokerModule(),
+            new GameOnInvokerModule(),
+            new RedissonServicesModule(ResourceScope.getInstance()),
             new JacksonHttpClientModule()
                 .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
                 .withDefaultObjectMapperProvider(() -> {

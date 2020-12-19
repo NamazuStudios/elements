@@ -69,20 +69,6 @@ public class ServicesModule extends PrivateModule {
 
     private final Class<? extends Provider<Attributes>> attributesProvider;
 
-    private static final Scope DISABLED = new Scope() {
-
-        @Override
-        public <T> com.google.inject.Provider<T> scope(Key<T> key, com.google.inject.Provider<T> unscoped) {
-            throw new NotImplementedException();
-        }
-
-        @Override
-        public String toString() {
-            return "DISABLED";
-        }
-
-    };
-
     /**
      * Configures all services to use the following {@link Scope} and {@link Attributes} {@link Provider<Attributes>}
      * type, which is used to match the {@link Attributes} to the associated {@link Scope}.

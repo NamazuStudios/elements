@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.lua.builtin.coroutine;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
+import com.namazustudios.socialengine.rt.CurrentResource;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
@@ -155,7 +156,7 @@ public class CoroutineBuiltin implements Builtin {
                 final int returned;
                 final TaskId existingRunningTaskId = this.runningTaskId;
 
-                try {
+                try (var c = CurrentResource.getInstance().enter(getLuaResource())) {
                     runningTaskId = taskId;
                     returned = luaState.resume(1, luaState.getTop() - 1);
                 } finally {
