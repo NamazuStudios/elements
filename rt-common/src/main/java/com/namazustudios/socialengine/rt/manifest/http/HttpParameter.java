@@ -2,25 +2,25 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
-public class HttpParameter {
+public class HttpParameter implements Comparable<HttpParameter> {
 
-        private String name;
+        private int index;
 
         private Type type;
 
         /**
-         * The type of the parameter.
+         * The index of the parameter
          *
-         * @return the String representing the name of the parameter
+         * @return the {@link Integer} representing the index of the parameter
          */
-        public String getName() { return name; }
+        public int getIndex() { return index; }
 
         /**
-         * Sets the name of the parameter
+         * Sets the index of the parameter
          *
-         * @param name of the parameter
+         * @param index the index of the parameter
          */
-        public void setName(String name) { this.name = name; }
+        public void setIndex(int index) { this.index = index; }
 
         /**
          * The type of the parameter.
@@ -35,6 +35,17 @@ public class HttpParameter {
          * @param type the {@link Type} of the parameter
          */
         public void setType(Type type) { this.type = type; }
+
+        // Compare Two HttpParameters based on their index
+        /**
+         * @param   other - The HttpParameter to be compared.
+         * @return  A negative integer, zero, or a positive integer as this parameter
+         *          is less than, equal to, or greater than the supplied object's index.
+         */
+        @Override
+        public int compareTo(HttpParameter other) {
+                return this.getIndex() - other.getIndex();
+        }
 
         // Two HttpParameters are equal if their indices and types are equal
         @Override
@@ -55,7 +66,7 @@ public class HttpParameter {
                 HttpParameter c = (HttpParameter) o;
 
                 // Compare the data members and return accordingly
-                return this.name == c.name
+                return this.getIndex() == c.getIndex()
                         && this.getType() == c.getType();
         }
 }
