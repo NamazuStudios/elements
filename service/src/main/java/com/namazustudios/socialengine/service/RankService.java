@@ -5,10 +5,16 @@ import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Queries and combines instances of {@link Leaderboard} and {@link Score} to calculate player rank.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.rank"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.rank", annotation = Unscoped.class)
+})
 public interface RankService {
 
     /**

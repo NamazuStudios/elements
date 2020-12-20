@@ -3,10 +3,16 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Creates and manages instances of {@link Score}.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.score"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.score", annotation = Unscoped.class)
+})
 public interface ScoreService {
 
     /**

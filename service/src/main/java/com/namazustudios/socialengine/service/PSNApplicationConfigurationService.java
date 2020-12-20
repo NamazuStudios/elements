@@ -2,10 +2,16 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.PSNApplicationConfiguration;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Created by patricktwohig on 5/24/17.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.application.configuration.psn"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.application.configuration.psn", annotation = Unscoped.class)
+})
 public interface PSNApplicationConfigurationService {
 
     /**

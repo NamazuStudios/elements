@@ -5,12 +5,18 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.Objects;
 
 /**
  * Created by patricktwohig on 3/19/15.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.user"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.user", annotation = Unscoped.class)
+})
 public interface UserService {
 
     String CURRENT_USER_ALIAS = "me";
