@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.testkit;
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,6 +26,15 @@ public class UnitTestModule extends AbstractModule {
     }
 
     public <T> void mock(final Class<T> type) {
+        // TODO Effectively, mocking is disabled for now.  We will have to address this in a better way later.
+        if (!type.isEnum() && types.add(type)) {
+            final T mock = unimplemented(type);
+            logger.info("Adding unimplemented mock for {}", type.getName());
+            bindings.add(() -> bind(type).toInstance(mock));
+        }
+    }
+
+    public <T> void mock(ExposedModuleDefinition def, final Class<T> type) {
         // TODO Effectively, mocking is disabled for now.  We will have to address this in a better way later.
         if (!type.isEnum() && types.add(type)) {
             final T mock = unimplemented(type);

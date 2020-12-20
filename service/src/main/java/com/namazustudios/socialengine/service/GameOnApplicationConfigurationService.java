@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 
@@ -11,8 +12,11 @@ import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
  * Manages instances of {@link GameOnApplicationConfiguration}.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.application.configuration.gameon"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.application.configuration.gameon", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration.gameon"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.application.configuration.gameon",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface GameOnApplicationConfigurationService {
 

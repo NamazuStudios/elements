@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
@@ -11,8 +12,11 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * and ensuring that the associated {@link Friend} instances are properly filtered and represented.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.friend"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.friend", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.friend"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.friend",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface FriendService {
 

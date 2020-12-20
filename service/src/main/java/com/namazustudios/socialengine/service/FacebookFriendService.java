@@ -4,14 +4,18 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.model.friend.FacebookFriend;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Provides access to {@link FacebookFriend} instances.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.facebook.friend"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.facebook.friend", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.facebook.friend"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.facebook.friend",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface FacebookFriendService {
 

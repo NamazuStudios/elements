@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
@@ -11,8 +12,11 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * within the database.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.application.configuration.firebase"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.application.configuration.firebase", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration.firebase"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.application.configuration.firebase",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface FirebaseApplicationConfigurationService {
 

@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
@@ -12,8 +13,11 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Created by patricktwohig on 6/27/17.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.profile"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.profile", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.profile"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.profile",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface ProfileService {
 

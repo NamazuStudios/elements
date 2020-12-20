@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
@@ -12,8 +13,11 @@ import java.util.Set;
  * Allows for accessing of the various {@link Item}s in the database.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.item"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.item", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.item"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.item",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface ItemService {
 

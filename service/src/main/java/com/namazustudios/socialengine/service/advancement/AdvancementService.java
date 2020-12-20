@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
@@ -16,7 +17,10 @@ import com.namazustudios.socialengine.service.Unscoped;
  */
 @Expose(value = {
 
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.advancement", annotation = Unscoped.class),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.advancement",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    ),
 
     @ExposedModuleDefinition(
         value = "namazu.elements.service.advancement",

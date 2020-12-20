@@ -4,14 +4,18 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.IosApplicationConfiguration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Created by patricktwohig on 5/24/17.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.application.configuration.ios"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.application.configuration.ios", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration.ios"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.application.configuration.ios",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface IosApplicationConfigurationService {
 

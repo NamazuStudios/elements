@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
@@ -11,8 +12,11 @@ import java.util.List;
  * with the GameOn APIs as well as performs any filtering necessary to determine which instances to show to the client.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.gameon.tournament"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.gameon.tournament", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.tournament"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.gameon.tournament",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface GameOnTournamentService {
 

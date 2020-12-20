@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.annotation;
 
 import java.lang.annotation.*;
-import java.util.function.Supplier;
 
 /**
  * Defines an exposed module. Used within the {@link Expose} annotation.
@@ -18,13 +17,6 @@ public @interface ExposedModuleDefinition {
     String value();
 
     /**
-     * The binding annotation to use when exposing the module.
-     *
-     * @return the binding annotation
-     */
-    Class<? extends Annotation> annotation() default Undefined.class;
-
-    /**
      * Indicates that importing this particular module is deprecated.
      *
      * @return true if deprecated, false otherwise
@@ -32,10 +24,10 @@ public @interface ExposedModuleDefinition {
     DeprecationDefinition deprecated() default @DeprecationDefinition("");
 
     /**
-     * Annotation type which indicates that no annotation type is defined.
+     * Specifies the binding {@link Annotation} for the module.
+     *
+     * @return the {@link ExposedBindingAnnotation}
      */
-    @Target(ElementType.TYPE)
-    @Retention(RetentionPolicy.RUNTIME)
-    @interface Undefined {}
+    ExposedBindingAnnotation annotation() default @ExposedBindingAnnotation();
 
 }

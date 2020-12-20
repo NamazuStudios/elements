@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.Objects;
@@ -14,8 +15,11 @@ import java.util.Objects;
  * Created by patricktwohig on 3/19/15.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.user"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.user", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.user"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.user",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface UserService {
 
@@ -102,7 +106,7 @@ public interface UserService {
      * Updates a user, preserving the user's password.
      *
      * @param userId  the user ID to update
-     * @param user the user to update
+     * @param userUpdateRequest the user to update
      * @return the User, as it was updated
      */
     User updateUser(String userId, UserUpdateRequest userUpdateRequest);

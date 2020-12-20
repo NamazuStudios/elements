@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEn
 import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEnterResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
@@ -12,8 +13,11 @@ import java.util.List;
  * Used to manage the GameOn Matches.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.gameon.player.tournament"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.gameon.player.tournament", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.player.tournament"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.gameon.player.tournament",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface GameOnPlayerTournamentService {
 

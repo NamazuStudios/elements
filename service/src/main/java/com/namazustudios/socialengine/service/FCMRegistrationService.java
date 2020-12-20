@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
@@ -9,8 +10,11 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * with the Firebase Notification Service.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.firebase.registration"),
-    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.firebase.registration", annotation = Unscoped.class)
+    @ExposedModuleDefinition(value = "namazu.elements.service.firebase.registration"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.firebase.registration",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface FCMRegistrationService {
 
