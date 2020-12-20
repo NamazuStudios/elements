@@ -11,10 +11,20 @@ import java.lang.annotation.*;
 public @interface Expose {
 
     /**
+     * The value of this {@link Expose} annotation. This lists out the modules to expose to the underlying services
+     * which may need to make use of them.
+     *
+     * @return the value
+     */
+    ExposedModuleDefinition[] value() default {};
+
+    /**
      * The name of the lua module which will map to the object.
+     *
+     * @deprecated The {@link #value()} field provides a better definition.
      *
      * @return the module name
      */
-    String[] modules();
+    @Deprecated String[] modules() default {};
 
 }

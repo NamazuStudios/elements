@@ -2,12 +2,18 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.friend.FacebookFriend;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.function.Supplier;
 
 /**
  * Provides access to a cache for operations related to {@link FacebookFriend} instances.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.facebook.friend"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.facebook.friend", annotation = Unscoped.class)
+})
 public interface FacebookFriendCache {
 
     /**
@@ -20,6 +26,8 @@ public interface FacebookFriendCache {
      * @param loader the {@link Supplier<Iterable<FacebookFriend>>} which will load all values into the cache.
      * @return a {@link Pagination} with the results
      */
-    Pagination<FacebookFriend> getUninvitedFriends(String userId, int offset, int count, Supplier<Iterable<FacebookFriend>> loader);
+    Pagination<FacebookFriend> getUninvitedFriends(String userId,
+                                                   int offset, int count,
+                                                   Supplier<Iterable<FacebookFriend>> loader);
 
 }

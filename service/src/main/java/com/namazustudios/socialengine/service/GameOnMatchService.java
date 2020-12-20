@@ -3,10 +3,16 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchRequest;
 import com.namazustudios.socialengine.model.gameon.game.GameOnEnterMatchResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Used to manage the GameOn Matches.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.gameon.match"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.gameon.match", annotation = Unscoped.class)
+})
 public interface GameOnMatchService {
 
     /**

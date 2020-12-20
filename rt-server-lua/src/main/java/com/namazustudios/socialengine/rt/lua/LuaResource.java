@@ -497,6 +497,11 @@ public class LuaResource implements Resource {
         resume(taskId, ResumeReason.SCHEDULER.toString(), elapsedTime);
     }
 
+    @Override
+    public Logger getLogger() {
+        return logger;
+    }
+
     /**
      * Gets the remote {@link Context} associated with this {@link LuaResource}.
      *

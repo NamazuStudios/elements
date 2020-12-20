@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.exception.DeadResourceException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -15,6 +17,8 @@ import java.util.Set;
  * closed.  It could also be used as a failsafe detect errors when a managed {@link Resource} has been closed.
  */
 public class DeadResource implements Resource {
+
+    private static final Logger logger = LoggerFactory.getLogger(DeadResource.class);
 
     private static DeadResource instance = new DeadResource();
 
@@ -57,6 +61,11 @@ public class DeadResource implements Resource {
     @Override
     public Set<TaskId> getTasks() {
         throw new DeadResourceException("resource is closed");
+    }
+
+    @Override
+    public Logger getLogger() {
+        return logger;
     }
 
     @Override

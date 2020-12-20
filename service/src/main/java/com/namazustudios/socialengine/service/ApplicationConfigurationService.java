@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.ProductBundle;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
 
@@ -12,6 +14,10 @@ import java.util.List;
  *
  * Created by patricktwohig on 7/13/15.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.application.configuration"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.application.configuration", annotation = Unscoped.class)
+})
 public interface ApplicationConfigurationService {
 
     /**

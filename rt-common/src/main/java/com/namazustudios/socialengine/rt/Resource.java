@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.exception.ResourceDestroyedException;
 import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
 import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -201,5 +202,12 @@ public interface Resource extends AutoCloseable {
      * and the contents of this deserialized back into this one.
      */
     void unload();
+
+    /**
+     * Gets the {@link Logger} used by this {@link Resource}.
+     *
+     * @return the logger
+     */
+    Logger getLogger();
 
 }

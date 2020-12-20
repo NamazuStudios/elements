@@ -234,6 +234,11 @@ public class TransactionalResource implements Resource {
     }
 
     @Override
+    public Logger getLogger() {
+        return getDelegate().getLogger();
+    }
+
+    @Override
     public void close() {
         getDelegate().close();
     }

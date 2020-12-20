@@ -3,10 +3,16 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Created by patricktwohig on 5/24/17.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.application.configuration.googleplay"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.application.configuration.googleplay", annotation = Unscoped.class)
+})
 public interface GooglePlayApplicationConfigurationService {
 
     /**

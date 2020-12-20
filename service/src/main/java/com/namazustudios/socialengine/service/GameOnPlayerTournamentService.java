@@ -3,9 +3,18 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEnterRequest;
 import com.namazustudios.socialengine.model.gameon.game.GameOnPlayerTournamentEnterResponse;
 import com.namazustudios.socialengine.model.gameon.game.*;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
 
+/**
+ * Used to manage the GameOn Matches.
+ */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.gameon.player.tournament"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.gameon.player.tournament", annotation = Unscoped.class)
+})
 public interface GameOnPlayerTournamentService {
 
     /**

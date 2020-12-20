@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -104,6 +105,11 @@ public class SimpleDelegateResource implements Resource {
         return "SimpleDelegateResource{" +
                 "delegate=" + delegate +
                 '}';
+    }
+
+    @Override
+    public Logger getLogger() {
+        return getDelegate().getLogger();
     }
 
     @Override

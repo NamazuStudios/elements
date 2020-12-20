@@ -6,14 +6,28 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.mission.Step;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.service.Unscoped;
 
 /**
  * Provides logic to advance a {@link Profile} through a {@link Mission}.
  */
-@Expose(modules = {
-    "namazu.elements.service.advancement",
-    "namazu.socialengine.service.advancement",
+@Expose(value = {
+
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.advancement", annotation = Unscoped.class),
+
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.advancement",
+        deprecated = @DeprecationDefinition("Use namazu.elements.service.unscoped.advancement")
+    ),
+
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.service.advancement",
+        deprecated = @DeprecationDefinition("Use namazu.elements.service.unscoped.advancement")
+    )
+
 })
 public interface AdvancementService {
 

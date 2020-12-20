@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Used to authorize requests users using Facebook OAuth access tokens.  This acts as the connection
@@ -8,6 +10,10 @@ import com.namazustudios.socialengine.model.session.FacebookSessionCreation;
  *
  * Created by patricktwohig on 6/22/17.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.scoped.facebook.auth"),
+    @ExposedModuleDefinition(value = "namazu.elements.service.unscoped.facebook.auth", annotation = Unscoped.class)
+})
 public interface FacebookAuthService {
 
     /**
