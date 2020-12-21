@@ -1,0 +1,25 @@
+package com.namazustudios.socialengine.cdnserve.guice;
+
+import com.google.inject.AbstractModule;
+import com.google.inject.multibindings.Multibinder;
+import com.google.inject.servlet.ServletScopes;
+import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.security.UserAuthenticationMethod;
+import com.namazustudios.socialengine.security.UserProvider;
+import com.namazustudios.socialengine.servlet.security.HttpRequestAttributeAuthenticationMethod;
+
+/**
+ * Created by garrettmcspadden on 12/21/20.
+ */
+public class GitSecurityModule extends AbstractModule {
+    @Override
+    protected void configure() {
+
+        bind(User.class).toProvider(UserProvider.class).in(ServletScopes.REQUEST);
+
+        final Multibinder<UserAuthenticationMethod> userAuthenticationMethodMultibinder;
+        userAuthenticationMethodMultibinder = Multibinder.newSetBinder(binder(), UserAuthenticationMethod.class);
+        userAuthenticationMethodMultibinder.addBinding().to(HttpRequestAttributeAuthenticationMethod.class);
+
+    }
+}

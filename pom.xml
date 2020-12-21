@@ -70,6 +70,7 @@
         <module>rest-api-test</module>
         <module>rest-jetty</module>
         <module>code-serve-jetty</module>
+        <module>cdn-serve</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

@@ -1,0 +1,29 @@
+package com.namazustudios.socialengine.cdnserve.resolver;
+
+import com.namazustudios.socialengine.model.application.Application;
+import org.eclipse.jgit.lib.Repository;
+
+import java.util.function.Consumer;
+
+/**
+ * Created by garrettmcspadden on 12/21/20.
+ */
+@FunctionalInterface
+public interface ApplicationRepositoryResolver {
+
+    /**
+     * Gets the {@link Repository} for the supplied {@link Application}.  This simply returns
+     * the instance of {@link Repository}.  It safe ot assume this method will be called after
+     * the necessary security checks, therefore any security checking in this method would
+     * be redundant.
+     *
+     * If no {@link Repository} exists, this must create the repository.
+     *
+     * @param application the {@link Application}
+     * @param onCreate
+     * @return the {@link Repository}, never null
+     *
+     */
+    Repository resolve(Application application, Consumer<Repository> onCreate) throws Exception;
+
+}
