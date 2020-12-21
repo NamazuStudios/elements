@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.appserve.provider;
+package com.namazustudios.socialengine.jetty;
 
 import com.namazustudios.socialengine.Constants;
 import org.eclipse.jetty.deploy.AppProvider;
