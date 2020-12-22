@@ -33,12 +33,15 @@ public class UnitTestModule extends AbstractModule {
     protected void configure() {
 
         final MockModule mockModule = new MockModule();
+
         mockModule.mock(Client.class);
         mockModule.mock(NotificationBuilder.class);
         mockModule.bind(spyApplication, Application.class);
 
         bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService
-            .withWorkerModule(new LuaModule().visitDiscoveredExtension((m, c) -> mockModule.mock(c)))
+            .withWorkerModule(new LuaModule()
+                .visitDiscoveredModule((m, c) -> mockModule.mock(c))
+                .visitDiscoveredExtension((m, c) -> mockModule.mock(c)))
             .withWorkerModule(mockModule)
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .start());

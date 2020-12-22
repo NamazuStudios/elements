@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.jnlua.Converter;
@@ -8,6 +9,8 @@ import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation.Undefined;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
@@ -164,7 +167,7 @@ public class LuaModule extends PrivateModule {
      * @param visitor the {@link BiConsumer} used to receive the visited class.
      * @return this instance
      *
-     * @deprecated use {@link #visitDiscoveredModule(BiConsumer<ExposedModuleDefinition, Class<?>)} instead
+     * @deprecated this is for supporting legacy code only
      *
      */
     public LuaModule visitDiscoveredExtension(final BiConsumer<String, Class<?>> visitor) {
@@ -181,11 +184,11 @@ public class LuaModule extends PrivateModule {
      */
     public <T> ModuleBinding bindModuleBuiltin(final Class<T> cls) {
 
-        final Provider<?> provider = getProvider(cls);
-
         return new ModuleBinding() {
             @Override
             public LuaModule toModulesNamed(final String[] moduleNames) {
+
+                final var provider = getProvider(cls);
 
                 for (final var moduleName : moduleNames) {
                     legacyVisitors.accept(moduleName, cls);
@@ -201,8 +204,19 @@ public class LuaModule extends PrivateModule {
 
                 for (final var definition : moduleDefinitions) {
                     final String moduleName = definition.value();
+
+                    final Provider<?> provider;
+
+                    if (Undefined.class.equals(definition.annotation().value())) {
+                        provider = getProvider(cls);
+                    } else {
+                        final var annotation = ExposedBindingAnnotation.Util.resolve(cls, definition.annotation());
+                        provider = getProvider(Key.get(cls, annotation));
+                    }
+
                     visitors.accept(definition, cls);
                     builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+
                 }
 
                 return LuaModule.this;

@@ -9,7 +9,7 @@ import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
- * Represents a session authorized by Facebook.  This includes the associated {@link User}, {@link Profile}, and
+ * Represents a session authorized by Elements.  This includes the associated {@link User}, {@link Profile}, and
  * {@link Application}.  This has no ID, as the ID is sensitive information.  The only time a key for the
  * {@link Session} is provided is through a the {@link SessionCreation#getSessionSecret()}.  The actual ID of the
  * session is hashed in the database and should only be kept on the client.

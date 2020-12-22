@@ -89,10 +89,11 @@ public class AppServeTestKitMain {
             } else {
 
                 final UnitTestModule unitTestModule = new UnitTestModule();
-                testKitMain.addModule(new LuaModule()
-                                .visitDiscoveredModule((e, c) -> unitTestModule.mock(c))
-                                .visitDiscoveredExtension((s, c) -> unitTestModule.mock(c)))
-                           .addModule(unitTestModule);
+                testKitMain
+                    .addModule(new LuaModule()
+                        .visitDiscoveredModule((e, c) -> unitTestModule.mock(c))
+                        .visitDiscoveredExtension((s, c) -> unitTestModule.mock(c)))
+                    .addModule(unitTestModule);
 
             }
 

@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt.annotation;
 
+import com.namazustudios.socialengine.rt.exception.InternalException;
+
 import java.lang.annotation.*;
+import java.lang.reflect.InvocationTargetException;
 
 /**
  * Defines an exposed module. Used within the {@link Expose} annotation.
@@ -21,7 +24,7 @@ public @interface ExposedModuleDefinition {
      *
      * @return true if deprecated, false otherwise
      */
-    DeprecationDefinition deprecated() default @DeprecationDefinition("");
+    DeprecationDefinition deprecated() default @DeprecationDefinition();
 
     /**
      * Specifies the binding {@link Annotation} for the module.

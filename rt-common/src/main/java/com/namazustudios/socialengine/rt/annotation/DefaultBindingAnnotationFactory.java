@@ -4,8 +4,6 @@ import java.lang.annotation.*;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -38,7 +36,7 @@ public class DefaultBindingAnnotationFactory implements ExposedBindingAnnotation
     }
 
     @Override
-    public Annotation construct(final ExposedBindingAnnotation definition) {
+    public Annotation construct(final Class<?> cls, final ExposedBindingAnnotation definition) {
 
         try {
 

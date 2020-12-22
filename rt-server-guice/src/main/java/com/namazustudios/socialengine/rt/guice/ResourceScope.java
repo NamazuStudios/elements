@@ -5,13 +5,15 @@ import com.namazustudios.socialengine.rt.Resource;
 
 public class ResourceScope {
 
+    private ResourceScope() {}
+
     private static final ReentrantThreadLocalScope<Resource> instance;
 
     static {
-        instance = new ReentrantThreadLocalScope<Resource>(
+        instance = new ReentrantThreadLocalScope<>(
             Resource.class,
             CurrentResource.getInstance(),
-            resource -> resource.getAttributes()
+            Resource::getAttributes
         );
     }
 

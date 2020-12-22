@@ -18,6 +18,6 @@ public @interface DeprecationDefinition {
      *
      * @return the deprecation message
      */
-    String value();
+    String value() default "";
 
 }
