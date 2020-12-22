@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.cdnserve.resolver;
 
+import com.namazustudios.socialengine.codeserve.ApplicationRepositoryResolver;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
@@ -27,13 +28,13 @@ public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServle
 
     private static final Logger logger = LoggerFactory.getLogger(CdnServeRepositoryResolver.class);
 
+    private GitLoader gitLoader;
+
     private Provider<User> userProvider;
 
     private ApplicationService applicationService;
 
     private ApplicationRepositoryResolver applicationRepositoryResolver;
-
-    private GitLoader gitLoader;
 
     @Override
     public Repository open(HttpServletRequest req, String name) throws

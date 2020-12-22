@@ -2,9 +2,9 @@ package com.namazustudios.socialengine.cdnserve.guice;
 
 import com.google.inject.TypeLiteral;
 import com.google.inject.servlet.ServletModule;
-import com.namazustudios.socialengine.cdnserve.BasicAuthFilter;
 import com.namazustudios.socialengine.cdnserve.resolver.CdnServeRepositoryResolver;
-import com.namazustudios.socialengine.cdnserve.GitServletProvider;
+import com.namazustudios.socialengine.codeserve.GitServletProvider;
+import com.namazustudios.socialengine.servlet.security.HttpServletBasicAuthFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jgit.http.server.GitServlet;
 import org.eclipse.jgit.transport.resolver.RepositoryResolver;
@@ -23,7 +23,7 @@ public class GitServletModule extends ServletModule {
     protected void configureServlets() {
 
         bind(VersionServlet.class).asEagerSingleton();
-        bind(BasicAuthFilter.class).asEagerSingleton();
+        bind(HttpServletBasicAuthFilter.class).asEagerSingleton();
         bind(GitServlet.class).toProvider(GitServletProvider.class).asEagerSingleton();
 
         bind(new TypeLiteral<RepositoryResolver<HttpServletRequest>>(){}).to(CdnServeRepositoryResolver.class);
@@ -37,7 +37,7 @@ public class GitServletModule extends ServletModule {
         });
 
         serve("/git/*").with(GitServlet.class);
-        filter("/git/*").through(BasicAuthFilter.class);
+        filter("/git/*").through(HttpServletBasicAuthFilter.class);
 
     }
 }

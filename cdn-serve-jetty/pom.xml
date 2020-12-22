@@ -1,7 +1,5 @@
 <?xml version="1.0"?>
-<project xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"
-         xmlns="http://maven.apache.org/POM/4.0.0"
-         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 
     <modelVersion>4.0.0</modelVersion>
 
@@ -11,11 +9,22 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <artifactId>cdn-serve</artifactId>
+    <groupId>com.namazustudios.socialengine</groupId>
+    <artifactId>cdn-serve-jetty</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>cdn-serve</name>
+    <name>cdn-serve-jetty</name>
 
     <dependencies>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>cdn-serve</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>cdn-serve-api</artifactId>
+            <version>${project.version}</version>
+        </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>common</artifactId>
@@ -35,11 +44,6 @@
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>${javax.inject.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>code-serve</artifactId>
-            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.servlet</groupId>

@@ -71,6 +71,8 @@
         <module>rest-jetty</module>
         <module>code-serve-jetty</module>
         <module>cdn-serve</module>
+        <module>cdn-serve-api</module>
+        <module>cdn-serve-jetty</module>
         <module>jetty-util</module>
     </modules>
     <properties>

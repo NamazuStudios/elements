@@ -16,7 +16,7 @@ public class CdnServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(GIT_STORAGE_DIRECTORY, "repositories/cdn");
+        properties.put(GIT_STORAGE_DIRECTORY, "cdn.repositories");
         return properties;
     }
 

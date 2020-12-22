@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.cdnserve.guice;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.cdnserve.resolver.ApplicationRepositoryResolver;
-import com.namazustudios.socialengine.cdnserve.resolver.FileSystemApplicationRepositoryResolver;
+import com.namazustudios.socialengine.codeserve.ApplicationRepositoryResolver;
+import com.namazustudios.socialengine.codeserve.FileSystemApplicationRepositoryResolver;
 
 /**
  * Created by garrettmcspadden on 12/21/20.

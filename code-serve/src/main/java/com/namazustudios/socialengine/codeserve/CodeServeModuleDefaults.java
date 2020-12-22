@@ -16,7 +16,7 @@ public class CodeServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(GIT_STORAGE_DIRECTORY, "repositories");
+        properties.put(GIT_STORAGE_DIRECTORY, "code.repositories");
         return properties;
     }
 
