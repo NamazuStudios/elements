@@ -10,7 +10,7 @@ import java.util.Optional;
  */
 public class ReentrantThreadLocal<T> {
 
-    private final ThreadLocal<StackContext> current;
+    private final ThreadLocal<StackScope> current;
 
     /**
      * Creates a new {@link ReentrantThreadLocal<T>}
@@ -33,8 +33,8 @@ public class ReentrantThreadLocal<T> {
      * @return the current value as an {@link Optional<T>}.
      */
     public Optional<T> getCurrentOptional() {
-        final Context<T> context = current.get();
-        return Optional.ofNullable(context).map(Context::get);
+        final Scope<T> scope = current.get();
+        return Optional.ofNullable(scope).map(Scope::get);
     }
 
     /**
@@ -49,14 +49,14 @@ public class ReentrantThreadLocal<T> {
      * Enters scope with the supplied value of T.
      *
      * @param t the value of t
-     * @return a {@link Context<T>} which will hold the value until it is closed, reverting it to the previous value.
+     * @return a {@link Scope <T>} which will hold the value until it is closed, reverting it to the previous value.
      */
-    public Context<T> enter(final T t) {
+    public Scope<T> enter(final T t) {
 
         final var existing = current.get();
 
         if (existing == null) {
-            final StackContext context = new StackContext(t);
+            final StackScope context = new StackScope(t);
             current.set(context);
             return context;
         } else {
@@ -65,7 +65,7 @@ public class ReentrantThreadLocal<T> {
 
     }
 
-    public interface Context<U> extends AutoCloseable {
+    public interface Scope<U> extends AutoCloseable {
 
         U get();
 
@@ -74,15 +74,15 @@ public class ReentrantThreadLocal<T> {
 
     }
 
-    private class StackContext implements Context<T> {
+    private class StackScope implements Scope<T> {
 
         private final T t;
 
-        private StackContext next;
+        private StackScope next;
 
-        private StackContext prev;
+        private StackScope prev;
 
-        public StackContext(final T t) {
+        public StackScope(final T t) {
             this.t = t;
         }
 
@@ -91,8 +91,8 @@ public class ReentrantThreadLocal<T> {
             return t;
         }
 
-        public StackContext push(final T t) {
-            final StackContext context = new StackContext(t);
+        public StackScope push(final T t) {
+            final StackScope context = new StackScope(t);
             context.prev = this;
             current.set(next = context);
             return context;

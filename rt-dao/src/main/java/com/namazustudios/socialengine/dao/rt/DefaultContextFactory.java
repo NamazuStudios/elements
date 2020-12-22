@@ -21,7 +21,7 @@ public class DefaultContextFactory implements ContextFactory {
     public Context getContextForApplication(final String applicationId) {
         return cache.computeIfAbsent(applicationId, k -> {
             final Context context = getApplicationContextSupplier().apply(k);
-            shutdownHooks.add(context, () -> context.shutdown());
+            shutdownHooks.add(context, context::shutdown);
             return context;
         });
     }
