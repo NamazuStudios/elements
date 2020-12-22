@@ -4,7 +4,7 @@
     <module name="app-serve" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.namazustudios.socialengine.appserve.*" />
+        <option name="PATTERN" value="com.namazustudios.socialengine.rt.security.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

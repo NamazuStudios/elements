@@ -3,13 +3,16 @@ package com.namazustudios.socialengine.appnode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.appnode.guice.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.ResourceAttributesProvider;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
@@ -44,10 +47,15 @@ public class ApplicationNode {
     private final Injector injector;
 
     public ApplicationNode(final DefaultConfigurationSupplier defaultConfigurationSupplier) {
+
+        final var facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier();
+
         this.injector = Guice.createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new FSTPayloadReaderWriterModule(),
+            new AppNodeSecurityModule(),
+            new FacebookBuiltinPermissionsModule(facebookBuiltinPermissionsSupplier),
             new PersistentInstanceIdModule(),
             new ZContextModule(),
             new MasterNodeModule(),

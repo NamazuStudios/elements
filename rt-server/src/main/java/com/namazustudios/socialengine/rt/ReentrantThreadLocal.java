@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.Optional;
+
 /**
  * Backed by a {@link ThreadLocal<T>}, this allows for the creation of a thread-local scope which can be entered and
  * exited multiple times, provided that the underlying calls are balanced.
@@ -10,20 +12,45 @@ public class ReentrantThreadLocal<T> {
 
     private final ThreadLocal<StackContext> current;
 
+    /**
+     * Creates a new {@link ReentrantThreadLocal<T>}
+     */
     public ReentrantThreadLocal() {
         current = new ThreadLocal<>();
     }
 
+    /**
+     * Gets the current value throwing an instance of {@link IllegalStateException} if there is not a current value.
+     * @return the current value.
+     */
     public T getCurrent() {
-        final Context<T> context = current.get();
-        if (context == null) throw new IllegalStateException("Not in scope.");
-        return context.get();
+        return getCurrentOptional().orElseThrow(() -> new IllegalStateException("Not in scope."));
     }
 
+    /**
+     * Returns the current value as an {@link Optional<T>}.
+     *
+     * @return the current value as an {@link Optional<T>}.
+     */
+    public Optional<T> getCurrentOptional() {
+        final Context<T> context = current.get();
+        return Optional.ofNullable(context).map(Context::get);
+    }
+
+    /**
+     * Ensures that the current value is empty, throwing an instance of {@link IllegalStateException} if the
+     * object is not in scope.
+     */
     public void ensureEmpty() {
         if (current.get() != null) throw new IllegalStateException("Currently in scope. Expecting empty scope.");
     }
 
+    /**
+     * Enters scope with the supplied value of T.
+     *
+     * @param t the value of t
+     * @return a {@link Context<T>} which will hold the value until it is closed, reverting it to the previous value.
+     */
     public Context<T> enter(final T t) {
 
         final var existing = current.get();

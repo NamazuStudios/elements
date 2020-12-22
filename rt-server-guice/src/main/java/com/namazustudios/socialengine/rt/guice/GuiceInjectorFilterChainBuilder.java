@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.rt.CurrentRequest;
+import com.namazustudios.socialengine.rt.ReentrantThreadLocal;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Filter;
@@ -70,13 +72,13 @@ public class GuiceInjectorFilterChainBuilder implements Filter.Chain.Builder {
                          final Request request,
                          final Consumer<Response> responseReceiver) {
 
-            RequestScope.getInstance().ensureEmpty();
+            CurrentRequest.getInstance().ensureEmpty();
 
             if (request == null) throw new IllegalArgumentException();
             if (session == null) throw new IllegalArgumentException();
             if (responseReceiver == null) throw new IllegalStateException();
 
-            try (final RequestScope.Context outer = RequestScope.getInstance().enter(request)) {
+            try (var outer = CurrentRequest.getInstance().enter(request)) {
 
                 final Stream<Filter> configured = configuredFilterListProvider.get().stream();
                 final Stream<Filter> additional = filterSupplierList.stream().map(s -> s.get());
@@ -85,7 +87,7 @@ public class GuiceInjectorFilterChainBuilder implements Filter.Chain.Builder {
                     .collect(Collectors.toList());
 
                 final Consumer<Response> scopedResponseConsumer = response -> {
-                    try (final RequestScope.Context inner = RequestScope.getInstance().enter(request)) {
+                    try (var inner = CurrentRequest.getInstance().enter(request)) {
                         responseReceiver.accept(response);
                     }
                 };
@@ -100,7 +102,7 @@ public class GuiceInjectorFilterChainBuilder implements Filter.Chain.Builder {
 
             // We should also make sure that after the call, the scope is empty and all intermediate states have
             // been cleared.
-            RequestScope.getInstance().ensureEmpty();
+            CurrentRequest.getInstance().ensureEmpty();
 
         }
 
@@ -119,7 +121,7 @@ public class GuiceInjectorFilterChainBuilder implements Filter.Chain.Builder {
                            final Session session,
                            final Request request,
                            final Consumer<Response> responseReceiver) {
-            try (final RequestScope.Context context = RequestScope.getInstance().enter(request)) {
+            try (var context = CurrentRequest.getInstance().enter(request)) {
                 delegate.filter(next, session, request, responseReceiver);
             }
         }

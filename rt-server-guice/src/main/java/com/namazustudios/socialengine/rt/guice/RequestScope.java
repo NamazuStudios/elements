@@ -29,4 +29,31 @@ public class RequestScope {
         return CurrentRequest.getInstance().enter(request);
     }
 
+    /**
+     * Ensures the scope is empty.
+     */
+    public void ensureEmpty() {
+        CurrentRequest.getInstance().ensureEmpty();
+    }
+
+    /**
+     * Makes the {@link Request} {@link Inject}able.
+     *
+     * @param binder the {@link Binder} to use
+     */
+    public static void bind(final Binder binder) {
+        binder.bind(Request.class).toInstance(getInstance().getProxy());
+    }
+
+    /**
+     * Makes the {@link Request} {@link Inject}able as well as uses {@link PrivateBinder#expose(Key)} to ensure it is
+     * available to the whole {@link Injector}.
+     *
+     * @param binder the {@link Binder} to use
+     */
+    public static void bind(final PrivateBinder binder) {
+        bind((Binder)binder);
+        binder.expose(Request.class);
+    }
+
 }

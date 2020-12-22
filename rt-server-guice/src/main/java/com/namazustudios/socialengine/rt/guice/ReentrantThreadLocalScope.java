@@ -43,6 +43,10 @@ public class ReentrantThreadLocalScope<ScopedT> implements Scope {
 
     }
 
+    public ScopedT getProxy() {
+        return proxy;
+    }
+
     @Override
     public <T> Provider<T> scope(final Key<T> key, final Provider<T> unscoped) {
         return current.equals(key) ? () -> (T) proxy : resolve(key, unscoped);
