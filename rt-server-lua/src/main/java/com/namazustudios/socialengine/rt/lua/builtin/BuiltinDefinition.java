@@ -19,9 +19,7 @@ public interface BuiltinDefinition {
      *
      * @return true if deprecated, false otherwise
      */
-    default boolean isDeprecated() {
-        return !getDeprecationWarning().isBlank();
-    }
+    boolean isDeprecated();
 
     /**
      * Gets the deprecation warning.
@@ -51,6 +49,7 @@ public interface BuiltinDefinition {
 
     static BuiltinDefinition fromDefinition(final ExposedModuleDefinition definition) {
         return new BuiltinDefinition() {
+
             @Override
             public String getModuleName() {
                 return definition.value();
@@ -60,6 +59,12 @@ public interface BuiltinDefinition {
             public String getDeprecationWarning() {
                 return definition.deprecated().value();
             }
+
+            @Override
+            public boolean isDeprecated() {
+                return definition.deprecated().deprecated();
+            }
+
         };
     }
 

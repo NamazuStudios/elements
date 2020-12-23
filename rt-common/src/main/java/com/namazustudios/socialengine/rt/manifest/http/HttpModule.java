@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt.manifest.http;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
  * Created by patricktwohig on 8/15/17.
  */
-public class HttpModule {
+public class HttpModule implements Serializable {
 
     private String module;
 

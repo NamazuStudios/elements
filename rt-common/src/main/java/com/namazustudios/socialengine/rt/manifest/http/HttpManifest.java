@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
@@ -9,7 +10,7 @@ import java.util.Map;
  *
  * Created by patricktwohig on 8/9/17.
  */
-public class HttpManifest {
+public class HttpManifest implements Serializable {
 
     private Map<String, HttpModule> modulesByName;
 

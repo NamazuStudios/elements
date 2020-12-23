@@ -37,7 +37,7 @@ public class SimpleContext implements Context, NodeLifecycle {
 
     private AssetLoader assetLoader;
 
-    private ManifestLoader manifestLoader;
+    private ManifestContext manifestContext;
 
     private Thread hook = new Thread(this::shutdown);
 
@@ -46,17 +46,17 @@ public class SimpleContext implements Context, NodeLifecycle {
     @Override
     public void start() {
         getRuntime().addShutdownHook(hook);
+        getManifestContext().start();
         getTaskContext().start();
         getResourceContext().start();
         getSchedulerContext().start();
         getIndexContext().start();
         getHandlerContext().start();
-        getManifestLoader().loadAndRunIfNecessary();
     }
 
     private void runStartupManifest() {
 
-        final StartupManifest startupManifest = getManifestLoader().getStartupManifest();
+        final StartupManifest startupManifest = getManifestContext().getStartupManifest();
 
         if (startupManifest == null) {
             logger.info("No startup Resources to run.  Skipping.");
@@ -116,7 +116,7 @@ public class SimpleContext implements Context, NodeLifecycle {
         // Then stops all services
         getResourceLoader().close();
         getAssetLoader().close();
-        getManifestLoader().close();
+        getManifestContext().stop();
 
     }
 
@@ -216,13 +216,13 @@ public class SimpleContext implements Context, NodeLifecycle {
         this.assetLoader = assetLoader;
     }
 
-    public ManifestLoader getManifestLoader() {
-        return manifestLoader;
+    public ManifestContext getManifestContext() {
+        return manifestContext;
     }
 
     @Inject
-    public void setManifestLoader(ManifestLoader manifestLoader) {
-        this.manifestLoader = manifestLoader;
+    public void setManifestContext(ManifestContext manifestContext) {
+        this.manifestContext = manifestContext;
     }
 
 }

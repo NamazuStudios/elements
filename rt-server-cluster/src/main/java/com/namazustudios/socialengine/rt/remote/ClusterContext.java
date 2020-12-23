@@ -20,6 +20,8 @@ public class ClusterContext implements Context {
 
     private TaskContext taskContext;
 
+    private ManifestContext manifestContext;
+
     @Override
     public void start() {}
 
@@ -74,6 +76,16 @@ public class ClusterContext implements Context {
     @Inject
     public void setTaskContext(@Named(REMOTE) TaskContext taskContext) {
         this.taskContext = taskContext;
+    }
+
+    @Override
+    public ManifestContext getManifestContext() {
+        return manifestContext;
+    }
+
+    @Inject
+    public void setManifestContext(@Named(REMOTE) ManifestContext manifestContext) {
+        this.manifestContext = manifestContext;
     }
 
 }

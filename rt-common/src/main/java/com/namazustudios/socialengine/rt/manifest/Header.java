@@ -2,10 +2,12 @@ package com.namazustudios.socialengine.rt.manifest;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
+import java.io.Serializable;
+
 /**
  * Stores metadat for a specific HTTP request,
  */
-public class Header {
+public class Header implements Serializable {
 
     private String name;
 

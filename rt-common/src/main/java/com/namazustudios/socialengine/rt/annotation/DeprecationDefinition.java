@@ -14,10 +14,17 @@ public @interface DeprecationDefinition {
 
     /**
      * Indicates that the module is deprecated. Supplying a value will be relayed as the deprecation reason to the code
-     * which uses the deprecated module. If this string is blank, the value is not deprecated.
+     * which uses the deprecated module. The warning should appear in logs when attempting to use the module.
      *
      * @return the deprecation message
      */
-    String value() default "";
+    String value() default "<deprecated>";
+
+    /**
+     * Flag to indicate explicit deprecation. It should rarely be necessary to explicitly set this flag.
+     *
+     * @return true if deprecated, false otherwise
+     */
+    boolean deprecated() default true;
 
 }

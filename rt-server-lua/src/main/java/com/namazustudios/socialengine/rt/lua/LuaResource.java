@@ -204,8 +204,8 @@ public class LuaResource implements Resource {
      */
     public void loadModule(final AssetLoader assetLoader, final String moduleName, final Object ... params) {
 
-        final LuaState luaState = getLuaState();
-        final Path modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
+        final var luaState = getLuaState();
+        final var modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
         try (var mon = lock.lock();
              var is = assetLoader.open(modulePath);
@@ -344,7 +344,7 @@ public class LuaResource implements Resource {
         try(var mon = lock.lock()) {
 
             getTasks().forEach(taskId -> {
-                final ResourceDestroyedException resourceDestroyedException = new ResourceDestroyedException(getId());
+                final var resourceDestroyedException = new ResourceDestroyedException(getId());
                 getLocalContext().getTaskContext().finishWithError(taskId, resourceDestroyedException);
             });
 
@@ -398,8 +398,8 @@ public class LuaResource implements Resource {
                     luaState.call(params.length + 1, 3);
                 }
 
-                final TaskId taskId = new TaskId(luaState.checkString(1));            // task id
-                final int status = luaState.checkInteger(2);                          // thread status
+                final var taskId = new TaskId(luaState.checkString(1));            // task id
+                final var status = luaState.checkInteger(2);                          // thread status
 
                 if (status == YIELD) {
                     getLocalContext().getTaskContext().register(taskId, consumer, throwableConsumer);
@@ -446,7 +446,7 @@ public class LuaResource implements Resource {
             luaState.remove(1);
 
             luaState.pushString(taskId.asString());
-            for (final Object result : results) luaState.pushJavaObject(result);
+            for (final var result : results) luaState.pushJavaObject(result);
 
             try (var c = CurrentResource.getInstance().enter(this)) {
                 luaState.call(results.length + 1, 3);
@@ -456,8 +456,8 @@ public class LuaResource implements Resource {
                 throw new NoSuchTaskException(taskId);
             }
 
-            final String taskIdString = luaState.checkString(1);                        // task id
-            final int status = luaState.checkInteger(2);                                // thread status
+            final var taskIdString = luaState.checkString(1);                        // task id
+            final var status = luaState.checkInteger(2);                                // thread status
 
             if (!taskId.asString().equals(taskIdString)) {
                 getScriptLog().error("Mismatched task id {} != {}", taskId, taskIdString);

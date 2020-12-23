@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.match;
 
-import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.Matchmaker;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.application.Application;
@@ -27,7 +26,7 @@ public class StandardMatchServiceUtils implements MatchServiceUtils {
 
     private TopicService topicService;
 
-    private ContextFactory contextFactory;
+    private Context.Factory factory;
 
     private Provider<Attributes> attributesProvider;
 
@@ -52,7 +51,7 @@ public class StandardMatchServiceUtils implements MatchServiceUtils {
                             final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
 
         final Application application = matchmakingApplicationConfiguration.getParent();
-        final Context context = getContextFactory().getContextForApplication(application.getId());
+        final Context context = getFactory().getContextForApplication(application.getId());
 
         final CallbackDefinition success = matchmakingApplicationConfiguration.getSuccess();
         final String module = success.getModule();
@@ -115,13 +114,13 @@ public class StandardMatchServiceUtils implements MatchServiceUtils {
         this.topicService = topicService;
     }
 
-    public ContextFactory getContextFactory() {
-        return contextFactory;
+    public Context.Factory getFactory() {
+        return factory;
     }
 
     @Inject
-    public void setContextFactory(ContextFactory contextFactory) {
-        this.contextFactory = contextFactory;
+    public void setFactory(Context.Factory factory) {
+        this.factory = factory;
     }
 
     public Provider<Attributes> getAttributesProvider() {

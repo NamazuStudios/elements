@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,7 @@ import java.util.Map;
  *
  * Created by patricktwohig on 8/9/17.
  */
-public class HttpOperation {
+public class HttpOperation implements Serializable {
 
     private String name;
 

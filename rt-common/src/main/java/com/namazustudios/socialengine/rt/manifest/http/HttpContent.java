@@ -4,13 +4,14 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.manifest.Header;
 
+import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by patricktwohig on 8/15/17.
  */
-public class HttpContent {
+public class HttpContent implements Serializable {
 
     private String type;
 

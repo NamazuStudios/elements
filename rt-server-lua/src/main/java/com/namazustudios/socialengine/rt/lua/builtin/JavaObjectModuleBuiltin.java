@@ -95,7 +95,10 @@ public class JavaObjectModuleBuiltin implements Builtin {
                     final var current = CurrentResource.getInstance().getCurrent();
                     logger = current.getLogger();
                 } catch (IllegalStateException ex) {
+                    // This shouldn't happen but if it does happen, we can continue on but it's an indicator that
+                    // something else is wrong in the code.
                     logger = JavaObjectModuleBuiltin.logger;
+                    logger.warn("No current resource.", ex);
                 }
 
                 logger.warn("{} is deprecated: {}",

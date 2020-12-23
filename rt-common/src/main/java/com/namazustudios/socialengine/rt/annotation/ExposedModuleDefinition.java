@@ -24,7 +24,7 @@ public @interface ExposedModuleDefinition {
      *
      * @return true if deprecated, false otherwise
      */
-    DeprecationDefinition deprecated() default @DeprecationDefinition();
+    DeprecationDefinition deprecated() default @DeprecationDefinition(deprecated = false);
 
     /**
      * Specifies the binding {@link Annotation} for the module.

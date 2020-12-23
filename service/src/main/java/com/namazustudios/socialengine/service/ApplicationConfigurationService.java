@@ -16,7 +16,7 @@ import java.util.List;
  * Created by patricktwohig on 7/13/15.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration"),
+    @ExposedModuleDefinition("namazu.elements.service.application.configuration"),
     @ExposedModuleDefinition(
         value = "namazu.elements.service.unscoped.application.configuration",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
@@ -37,7 +37,7 @@ public interface ApplicationConfigurationService {
                                                                 final int offset, final int count);
 
     /**
-     * Gets the applications registered in the databse given the offset and count.
+     * Gets the applications registered in the database given the offset and count.
      *
      * @param applicationNameOrId the {@link Application} name or id
      * @param offset the offset
@@ -51,6 +51,6 @@ public interface ApplicationConfigurationService {
                                                                 final String search);
 
     ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
-                                                 final List<ProductBundle> productBundles);
+                                                  final List<ProductBundle> productBundles);
 
 }

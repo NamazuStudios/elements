@@ -22,6 +22,8 @@ public class SimpleContextModule extends PrivateModule {
 
     private Runnable bindTaskContext = () -> {};
 
+    private Runnable bindManifestContext = () -> {};
+
     /**
      * Specifies the default contexts and services.
      *
@@ -33,6 +35,7 @@ public class SimpleContextModule extends PrivateModule {
         bindSchedulerContext = () -> install(new SimpleSchedulerContextModule());
         bindHandlerContext = () -> install(new SimpleHandlerContextModule().withDefaultTimeout());
         bindTaskContext = () -> install(new SimpleTaskContextModule());
+        bindManifestContext = () -> install(new SimpleManifestContextModule());
         return this;
     }
 
@@ -58,6 +61,7 @@ public class SimpleContextModule extends PrivateModule {
         bindSchedulerContext.run();
         bindHandlerContext.run();
         bindTaskContext.run();
+        bindManifestContext.run();
 
         // Binding to SimpleContext to multiple interfaces
 

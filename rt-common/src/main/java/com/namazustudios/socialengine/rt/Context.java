@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+
 import javax.inject.Named;
 
 /**
@@ -64,5 +66,48 @@ public interface Context {
      * @return the {@link TaskContext}
      */
     TaskContext getTaskContext();
+
+    /**
+     * Gets the {@link ManifestContext} which provides metadata to about the application to the rest of the application.
+     *
+     * @return the {@link ManifestContext}
+     */
+    ManifestContext getManifestContext();
+
+    /**
+     * Builds a {@link Context} which can communicate with a specific application.
+     */
+    interface Factory {
+
+        /**
+         * Returns the {@link Context} given the application's unique name.
+         * @param applicationUniqueName
+         * @return
+         */
+        default Context getContextForApplicationUniqueId(final String applicationUniqueName) {
+            final var applicationId = ApplicationId.forUniqueName(applicationUniqueName);
+            return getContextForApplication(applicationId);
+        }
+
+        /**
+         * Gets the {@link Context} for the supplied string representing the {@link ApplicationId}
+         *
+         * @param applicationIdString the string representing the application
+         * @return the {@link Context}
+         */
+        default Context getContextForApplication(final String applicationIdString) {
+            final var applicationId = new ApplicationId(applicationIdString);
+            return getContextForApplication(applicationId);
+        }
+
+        /**
+         * Gets a {@link Context} which can communicate with the remote application.
+         *
+         * @param applicationId the {@link ApplicationId} of the remote application
+         * @return the {@link Context}
+         */
+        Context getContextForApplication(ApplicationId applicationId);
+
+    }
 
 }
