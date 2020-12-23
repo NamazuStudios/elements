@@ -1,9 +1,11 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import java.io.Serializable;
+
 /**
  * Created by patricktwohig on 8/16/17.
  */
-public class Property {
+public class Property implements Serializable {
 
     private String name;
 

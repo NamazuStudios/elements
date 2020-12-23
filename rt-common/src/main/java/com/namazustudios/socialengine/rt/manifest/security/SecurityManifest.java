@@ -1,8 +1,9 @@
 package com.namazustudios.socialengine.rt.manifest.security;
 
+import java.io.Serializable;
 import java.util.Map;
 
-public class SecurityManifest {
+public class SecurityManifest implements Serializable {
 
     private Map<String, AuthScheme.Header> headerAuthSchemesByName;
 

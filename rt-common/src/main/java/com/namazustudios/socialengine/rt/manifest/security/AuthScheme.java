@@ -3,10 +3,12 @@ package com.namazustudios.socialengine.rt.manifest.security;
 import com.namazustudios.socialengine.rt.manifest.Header;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 
+import java.io.Serializable;
+
 /**
  * Base class for the various auth schemes.
  */
-public abstract class AuthScheme<SpecT> {
+public abstract class AuthScheme<SpecT> implements Serializable {
 
     private String name;
 
