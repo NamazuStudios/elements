@@ -1,11 +1,17 @@
 package com.namazustudios.socialengine.cdnserve.resolver;
 
+import com.google.common.io.ByteStreams;
 import com.namazustudios.socialengine.codeserve.ApplicationRepositoryResolver;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.rt.Bootstrapper;
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.service.ApplicationService;
+import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.transport.ServiceMayNotContinueException;
@@ -18,6 +24,13 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 
@@ -70,6 +83,7 @@ public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServle
         try {
             logger.info("Resolving content repository for application {}", application.getId());
             return getApplicationRepositoryResolver().resolve(application, r -> {
+                getGitLoader().performInGit(application, (g, f) -> doInit(user, g));
                 logger.info("Created content repository for application {} ({})", application.getName(), application.getId());
             });
         } catch (RepositoryNotFoundException   |
@@ -82,6 +96,47 @@ public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServle
             throw new ServiceMayNotContinueException(e);
         }
 
+    }
+
+    private void doInit(final User user, final Git git) {
+        checkMainBranch(git);
+        commit(user, git);
+        push(git);
+    }
+
+    private void checkMainBranch(final Git git) {
+        try {
+
+            final String branch = git.getRepository().getBranch();
+
+            if (GitLoader.DEFAULT_MAIN_BRANCH.equals(branch)) {
+                logger.info("Using git branch {}", branch);
+            } else {
+                throw new InternalException("Invalid branch checked out: " + branch);
+            }
+
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        }
+    }
+
+    private void commit(final User user, final Git git) {
+        try {
+            git.commit()
+                    .setMessage("Initial Commit")
+                    .setCommitter(user.getName(), user.getEmail())
+                    .call();
+        } catch (GitAPIException ex) {
+            throw new InternalException(ex);
+        }
+    }
+
+    private void push(final Git git) {
+        try {
+            git.push().call();
+        } catch (GitAPIException ex) {
+            throw new InternalException(ex);
+        }
     }
 
     public Provider<User> getUserProvider() {

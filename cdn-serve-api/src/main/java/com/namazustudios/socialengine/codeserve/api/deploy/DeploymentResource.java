@@ -1,40 +1,62 @@
 package com.namazustudios.socialengine.codeserve.api.deploy;
 
+import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;
+import io.swagger.annotations.ApiOperation;
 
+import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 
 @Path("deployment/{applicationId}")
 public class DeploymentResource {
 
-    @POST
-    public Deployment createNewDeployment(final CreateDeploymentRequest createDeploymentRequest) {
-        return null;
-    }
+    private DeploymentService deploymentService;
 
     @GET
+    @Produces(MediaType.APPLICATION_JSON)
     public Pagination<Deployment> getDeployments(final @PathParam("applicationId") String applicationId) {
-        return null;
+        return getDeploymentService().getDeployments(applicationId, 0, 0);
     }
 
     @GET
     @Path("{deploymentId}")
+    @Produces(MediaType.APPLICATION_JSON)
     public Deployment getDeployment(final @PathParam("applicationId") String applicationId,
-                                    final @PathParam("deploymentId") String id) {
-        return null;
+                                    final @PathParam("deploymentId") String deploymentId) {
+        return getDeploymentService().getDeployment(applicationId, deploymentId);
     }
 
     @GET
     @Path("current")
-    public Pagination<Deployment> getCurrentDeployment(final @PathParam("applicationId") String applicationId) {
-        return null;
+    @Produces(MediaType.APPLICATION_JSON)
+    public Deployment getCurrentDeployment(final @PathParam("applicationId") String applicationId) {
+        return getDeploymentService().getCurrentDeployment(applicationId);
+    }
+
+    @POST
+    @ApiOperation(value = "Create Deployment",
+            notes = "This will create a new deployment. Which will search the git repo for the matching revision" +
+                    "and clone all content to the static endpoint for delivery.")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Deployment createNewDeployment(final @PathParam("applicationId") String applicationId,
+                                          CreateDeploymentRequest createDeploymentRequest) {
+        return getDeploymentService().createDeployment(applicationId, createDeploymentRequest);
     }
 
     @DELETE
     @Path("{deploymentId}")
     public void deleteDeployment(final @PathParam("applicationId") String applicationId,
-                                 final @PathParam("deploymentId") String id) {
-
+                                 final @PathParam("deploymentId") String deploymentId) {
+        getDeploymentService().deleteDeployment(applicationId, deploymentId);
     }
 
+    private DeploymentService getDeploymentService() {
+        return deploymentService;
+    }
+
+    @Inject
+    private void setDeploymentService(DeploymentService deploymentService) {
+        this.deploymentService = deploymentService;
+    }
 }

@@ -3,13 +3,16 @@ package com.namazustudios.socialengine.cdnserve;
 import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
-import com.namazustudios.socialengine.cdnserve.guice.CdnServeModule;
+import com.namazustudios.socialengine.cdnserve.guice.GitServletModule;
+import com.namazustudios.socialengine.cdnserve.guice.ServerModule;
+import com.namazustudios.socialengine.codeserve.CodeServeModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 import org.eclipse.jetty.server.Connector;
+import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.HandlerCollection;
@@ -20,6 +23,7 @@ import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 
 import javax.servlet.DispatcherType;
+import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -34,47 +38,7 @@ public class CdnServeMain implements Callable<Void>, Runnable {
 
     private static final Logger logger = getLogger(CdnServeMain.class);
 
-    private static final OptionParser optionParser = new OptionParser();
-
-    public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
-
-    public static final int DEFAULT_PORT = 8083;
-
-    public static final Stage DEFAULT_STAGE = DEVELOPMENT;
-
-    public static final String DEFAULT_API_CONTEXT = "/cdn-serve";
-
-    private static final OptionSpec<String> bindOptionSpec = optionParser
-            .accepts("bind", "The bind address.")
-            .withOptionalArg()
-            .ofType(String.class)
-            .defaultsTo(DEFAULT_BIND_ADDRESS);
-
-    private static final OptionSpec<Integer> portOptionSpec = optionParser
-            .accepts("port", "The TCP Port upon which to bind.")
-            .withOptionalArg()
-            .ofType(Integer.class)
-            .defaultsTo(DEFAULT_PORT);
-
-    private static final OptionSpec<String> apiContextOptionsSpec = optionParser
-            .accepts("api-context", "The context upon which to run the api.")
-            .withOptionalArg()
-            .ofType(String.class)
-            .defaultsTo(DEFAULT_API_CONTEXT);
-
-    private static final OptionSpec<Stage> stageOptionSpec = optionParser
-            .accepts("stage", "Is this running in development or production?")
-            .withOptionalArg()
-            .ofType(Stage.class)
-            .defaultsTo(DEFAULT_STAGE);
-
-    private static final OptionSpec<Void> helpOptionSpec = optionParser
-            .accepts("help", "Displays the help message.")
-            .forHelp();
-
-    private final Injector injector;
-
-    private final Server server = new Server();
+    private Server server = new Server();
 
     /**
      * Args style constructor.
@@ -83,57 +47,10 @@ public class CdnServeMain implements Callable<Void>, Runnable {
      * @throws ProgramArgumentException if there was a problem parsing the command line arguments
      */
     public CdnServeMain(final String[] args) throws ProgramArgumentException {
-
-        int port;
-        String bind;
-        String apiContext;
-        Stage stage;
-
-        try {
-
-            final OptionSet options = optionParser.parse(args);
-
-            if (options.hasArgument(helpOptionSpec)) {
-                throw new HelpRequestedException();
-            }
-
-            bind = options.valueOf(bindOptionSpec);
-            port = options.valueOf(portOptionSpec);
-            apiContext = options.valueOf(apiContextOptionsSpec);
-            apiContext = apiContext.startsWith("/") ? apiContext : "/" + apiContext;
-
-            stage = options.valueOf(stageOptionSpec);
-
-        } catch (OptionException ex) {
-            throw new ProgramArgumentException(ex);
-        }
-
         final DefaultConfigurationSupplier defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-        injector = createInjector(stage, new CdnServeModule(defaultConfigurationSupplier));
-
-        final ServerConnector connector = new ServerConnector(server);
-        connector.setHost(bind);
-        connector.setPort(port);
-
-        final HandlerCollection handlerCollection = new HandlerCollection();
-
-        final ServletContextHandler servletHandler = new ServletContextHandler(SESSIONS);
-        servletHandler.setContextPath(apiContext);
-
-        final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
-        servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
-
-        final Map<String, String> defaultInitParameters = new HashMap<>();
-        defaultInitParameters.put("dirAllowed", "false");
-
-        final ServletHolder defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
-        defaultServletHolder.setInitParameters(defaultInitParameters);
-
-        handlerCollection.addHandler(servletHandler);
-
-        server.setHandler(handlerCollection);
-        server.setConnectors(new Connector[]{connector});
-
+        server = createInjector(new CodeServeModule(defaultConfigurationSupplier)
+                .withModule(new ServerModule())
+        ).getInstance(Server.class);
     }
 
     /**
@@ -180,10 +97,6 @@ public class CdnServeMain implements Callable<Void>, Runnable {
 
         public ProgramArgumentException() {}
 
-        public ProgramArgumentException(final OptionException ex) {
-            super(ex.getMessage(), ex);
-        }
-
     }
 
     /**
@@ -197,7 +110,6 @@ public class CdnServeMain implements Callable<Void>, Runnable {
             main.run();
         } catch (final ProgramArgumentException ex) {
             logger.debug("Bad program arguments.", ex);
-            optionParser.printHelpOn(System.out);
         }
     }
 

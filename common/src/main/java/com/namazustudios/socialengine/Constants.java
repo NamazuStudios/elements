@@ -106,6 +106,11 @@ public interface Constants {
     String GENERATED_PASSWORD_LENGTH = "com.namazustudios.socialengine.mock.generated.password.length";
 
     /**
+     * Used to specify the file path for static content.
+     */
+    String CDN_FILE_DIRECTORY = "com.namazustudios.socialengine.cdn.storage.directory";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {
