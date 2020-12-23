@@ -7,8 +7,6 @@ import com.namazustudios.socialengine.cdnserve.guice.CdnGuiceResourceConfig;
 import com.namazustudios.socialengine.cdnserve.guice.CdnJerseyModule;
 import com.namazustudios.socialengine.cdnserve.guice.GitServletModule;
 import com.namazustudios.socialengine.codeserve.GitSecurityModule;
-import com.namazustudios.socialengine.codeserve.api.deploy.DeploymentResource;
-import com.namazustudios.socialengine.rest.guice.GuiceResourceConfig;
 import com.namazustudios.socialengine.servlet.security.HttpServletBasicAuthFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
@@ -21,35 +19,24 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jgit.http.server.GitServlet;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.DispatcherType;
 
-import java.io.File;
 import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.file.*;
-import java.util.EnumSet;
 
 import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
 
 public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
-    public static final String GIT_CONTEXT = "git";
+    public static final String GIT_CONTEXT = "/cdn/git";
 
-    public static final String MANAGE_CONTEXT = "manage";
+    public static final String MANAGE_CONTEXT = "/cdn/manage";
 
-    public static final String CDN_ORIGIN_CONTEXT = "cdn";
-
-    private static final String baseApiContext = "/cdn";
-
-    private static final String staticApiContext = baseApiContext + "/static";
+    public static final String STATIC_ORIGIN_CONTEXT = "/cdn/static";
 
     private String contentDirectory;
 
@@ -88,7 +75,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         final HttpServletBasicAuthFilter authFilter = injector.getInstance(HttpServletBasicAuthFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(baseApiContext);
+        servletContextHandler.setContextPath(format("/%s/%s"));
         servletContextHandler.addFilter(new FilterHolder(authFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addServlet(new ServletHolder(versionServlet), "/version");
@@ -97,42 +84,41 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private ContextHandler createManageContext(final App app) {
+
         if (!MANAGE_CONTEXT.equals(app.getOriginId())) {
             throw new IllegalArgumentException("App must have origin ID: " + MANAGE_CONTEXT);
         }
 
-        final Injector injector = getInjector().createChildInjector(new CdnJerseyModule("cdn") {
-            @Override
-            protected void configureResoures() {
-                enableAllResources();
-            }
-        });
+        final Injector injector = getInjector().createChildInjector(new CdnJerseyModule());
         final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(baseApiContext);
-        ServletHolder servletHandler = servletContextHandler.addServlet(ServletContainer.class, "/*");
-        servletHandler.setInitParameter(
-                "jersey.config.server.provider.classnames",
-                DeploymentResource.class.getCanonicalName());
+        servletContextHandler.setContextPath(MANAGE_CONTEXT);
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.setAttribute(CdnGuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME, injector);
+
         return servletContextHandler;
+
     }
 
     private ContextHandler createCdnContext(final App app) throws IOException {
-        if (!CDN_ORIGIN_CONTEXT.equals(app.getOriginId())) {
-            throw new IllegalArgumentException("App must have origin ID: " + CDN_ORIGIN_CONTEXT);
-        }
-        ServletContextHandler ctx = new ServletContextHandler();
-        ctx.setContextPath(staticApiContext);
 
-        DefaultServlet defaultServlet = new DefaultServlet();
+        if (!STATIC_ORIGIN_CONTEXT.equals(app.getOriginId())) {
+            throw new IllegalArgumentException("App must have origin ID: " + STATIC_ORIGIN_CONTEXT);
+        }
+
+        // TODO Fetch all deployments from the database and make a separate hosting endpoint for each one.
+
+        final ServletContextHandler ctx = new ServletContextHandler();
+        ctx.setContextPath(format("/%s/%s", STATIC_ORIGIN_CONTEXT, app.getOriginId()));
+
+        final DefaultServlet defaultServlet = new DefaultServlet();
         ServletHolder holderPwd = new ServletHolder("default", defaultServlet);
         holderPwd.setInitParameter("resourceBase", getContentDirectory());
-
         ctx.addServlet(holderPwd, "/*");
+
         return ctx;
+
     }
 
     @Override
@@ -153,7 +139,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private void startCdnApp() {
-        final App app = new App(getDeploymentManager(), this, CDN_ORIGIN_CONTEXT);
+        final App app = new App(getDeploymentManager(), this, STATIC_ORIGIN_CONTEXT);
         getDeploymentManager().addApp(app);
     }
 

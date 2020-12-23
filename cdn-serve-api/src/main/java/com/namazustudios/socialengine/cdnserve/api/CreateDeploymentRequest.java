@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.codeserve.api.deploy;
+package com.namazustudios.socialengine.cdnserve.api;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

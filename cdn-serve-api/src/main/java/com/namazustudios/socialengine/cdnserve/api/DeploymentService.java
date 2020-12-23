@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.codeserve.api.deploy;
+package com.namazustudios.socialengine.cdnserve.api;
 
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;

@@ -1,22 +1,19 @@
 package com.namazustudios.socialengine.cdnserve;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.codeserve.api.deploy.CreateDeploymentRequest;
+import com.namazustudios.socialengine.cdnserve.api.CreateDeploymentRequest;
 import com.namazustudios.socialengine.dao.DeploymentDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.Deployment;
-import com.namazustudios.socialengine.codeserve.api.deploy.DeploymentService;
+import com.namazustudios.socialengine.cdnserve.api.DeploymentService;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
-import org.eclipse.jgit.treewalk.TreeWalk;
 
 import javax.inject.Inject;
 import javax.inject.Named;
