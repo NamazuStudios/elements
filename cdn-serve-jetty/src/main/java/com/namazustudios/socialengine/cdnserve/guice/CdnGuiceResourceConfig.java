@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.cdnserve.guice;
 
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.rest.guice.GuiceResourceConfig;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -18,7 +17,7 @@ import javax.servlet.ServletContext;
 
 public class CdnGuiceResourceConfig extends ResourceConfig {
 
-    private static final Logger logger = LoggerFactory.getLogger(GuiceResourceConfig.class);
+    private static final Logger logger = LoggerFactory.getLogger(CdnGuiceResourceConfig.class);
 
     public static final String INJECTOR_ATTRIBUTE_NAME = CdnGuiceResourceConfig.class.getName() + ".Injector";
 

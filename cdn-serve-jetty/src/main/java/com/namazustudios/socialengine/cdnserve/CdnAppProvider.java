@@ -3,10 +3,12 @@ package com.namazustudios.socialengine.cdnserve;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.cdnserve.guice.CdnGuiceResourceConfig;
 import com.namazustudios.socialengine.cdnserve.guice.CdnJerseyModule;
 import com.namazustudios.socialengine.cdnserve.guice.GitServletModule;
 import com.namazustudios.socialengine.codeserve.GitSecurityModule;
 import com.namazustudios.socialengine.codeserve.api.deploy.DeploymentResource;
+import com.namazustudios.socialengine.rest.guice.GuiceResourceConfig;
 import com.namazustudios.socialengine.servlet.security.HttpServletBasicAuthFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
@@ -19,12 +21,19 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jgit.http.server.GitServlet;
+import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.DispatcherType;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.*;
 import java.util.EnumSet;
 
 import static java.lang.String.format;
@@ -107,10 +116,11 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
                 "jersey.config.server.provider.classnames",
                 DeploymentResource.class.getCanonicalName());
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
+        servletContextHandler.setAttribute(CdnGuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME, injector);
         return servletContextHandler;
     }
 
-    private ContextHandler createCdnContext(final App app) {
+    private ContextHandler createCdnContext(final App app) throws IOException {
         if (!CDN_ORIGIN_CONTEXT.equals(app.getOriginId())) {
             throw new IllegalArgumentException("App must have origin ID: " + CDN_ORIGIN_CONTEXT);
         }

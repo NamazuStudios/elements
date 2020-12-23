@@ -26,6 +26,7 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 public class JettyDeploymentService implements DeploymentService {
 
@@ -62,7 +63,7 @@ public class JettyDeploymentService implements DeploymentService {
         final Deployment newDeployment = getDeploymentDao().createDeployment(applicationId, deployment);
 
         try {
-            copyRepositoryContentsForRevision(applicationId, newDeployment.getRevision());
+            copyRepositoryContentsForRevision(applicationId, newDeployment);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -70,15 +71,15 @@ public class JettyDeploymentService implements DeploymentService {
         return newDeployment;
     }
 
-    private void copyRepositoryContentsForRevision(String applicationId, String revision) throws IOException {
+    private void copyRepositoryContentsForRevision(String applicationId, Deployment newDeployment) throws IOException {
         File gitFile = getGitLoader().getCodeDirectory(getApplicationService().getApplication(applicationId));
         Repository repo = new FileRepositoryBuilder().findGitDir(gitFile).build();
         Path tempPath = Files.createTempDirectory("static");
         OutputStream outputStream = Files.newOutputStream(tempPath);
         RevWalk walk = new RevWalk(repo);
-        RevCommit commit = walk.parseCommit(ObjectId.fromString(revision));
+        RevCommit commit = walk.parseCommit(ObjectId.fromString(newDeployment.getRevision()));
         commit.copyRawTo(outputStream);
-        Files.move(tempPath, Paths.get(getContentDirectory()));
+        Files.move(tempPath, Paths.get(getContentDirectory() + String.format("/%s", newDeployment.getVersion())), StandardCopyOption.REPLACE_EXISTING);
     }
 
     @Override
