@@ -67,15 +67,14 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
             throw new IllegalArgumentException("App must have origin ID: " + GIT_CONTEXT);
         }
 
-        final Injector injector = getInjector().createChildInjector(new GitServletModule());
-        injector.injectMembers(new GitSecurityModule());
+        final Injector injector = getInjector().createChildInjector(new GitServletModule(), new GitSecurityModule());
         final VersionServlet versionServlet = injector.getInstance(VersionServlet.class);
         final GitServlet gitServlet = injector.getInstance(GitServlet.class);
         final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
         final HttpServletBasicAuthFilter authFilter = injector.getInstance(HttpServletBasicAuthFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(format("/%s/%s"));
+        servletContextHandler.setContextPath(GIT_CONTEXT);
         servletContextHandler.addFilter(new FilterHolder(authFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addServlet(new ServletHolder(versionServlet), "/version");
@@ -110,7 +109,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         // TODO Fetch all deployments from the database and make a separate hosting endpoint for each one.
 
         final ServletContextHandler ctx = new ServletContextHandler();
-        ctx.setContextPath(format("/%s/%s", STATIC_ORIGIN_CONTEXT, app.getOriginId()));
+        ctx.setContextPath(STATIC_ORIGIN_CONTEXT);
 
         final DefaultServlet defaultServlet = new DefaultServlet();
         ServletHolder holderPwd = new ServletHolder("default", defaultServlet);
