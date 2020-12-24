@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.cdnserve.guice;
 
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.rest.VersionResource;
+import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
+import com.namazustudios.socialengine.rest.support.ISODateParamConverter;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
@@ -24,10 +27,13 @@ public class CdnGuiceResourceConfig extends ResourceConfig {
     @Inject
     public CdnGuiceResourceConfig(final ServiceLocator serviceLocator, final ServletContext context) {
 
+        register(VersionResource.class);
         register(SwaggerSerializers.class);
         register(EnhancedApiListingResource.class);
+        register(ISODateParamConverter.class);
+        register(DefaultExceptionMapper.class);
 
-        packages(true, "com.namazustudios.socialengine.cdnserve.api.deploy");
+        packages(true, "com.namazustudios.socialengine.cdnserve.api");
 
         if (!tryConfigureJackson() || !tryConfigureMoxy()) {
             logger.warn("Neither Jackson nor Moxy could be configured.  Using default media support.");

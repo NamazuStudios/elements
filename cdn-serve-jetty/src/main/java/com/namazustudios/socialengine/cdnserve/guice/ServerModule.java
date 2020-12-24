@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.cdnserve.guice;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.cdnserve.CdnAppProvider;
 import com.namazustudios.socialengine.cdnserve.JettyDeploymentService;
-import com.namazustudios.socialengine.codeserve.api.deploy.DeploymentService;
+import com.namazustudios.socialengine.cdnserve.api.DeploymentService;
 import com.namazustudios.socialengine.jetty.ServerProvider;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.server.Server;
