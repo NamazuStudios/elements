@@ -19,9 +19,6 @@ public class ClusterContextModule extends PrivateModule {
         expose(Context.class)
             .annotatedWith(named(REMOTE));
 
-        bind(RemoteInvocationDispatcher.class)
-            .to(SimpleRemoteInvocationDispatcher.class);
-
         bind(Context.class)
             .annotatedWith(named(REMOTE))
             .to(ClusterContext.class)

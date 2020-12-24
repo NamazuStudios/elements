@@ -17,19 +17,8 @@ public class RequestScope {
         instance = new ReentrantThreadLocalScope<>(Request.class, CurrentRequest.getInstance(), Request::getAttributes);
     }
 
-    public static ReentrantThreadLocalScope<Request> getInstance() {
+    public static Scope getInstance() {
         return instance;
-    }
-
-    public static ReentrantThreadLocal.Scope<Request> enter(final Request request) {
-        return CurrentRequest.getInstance().enter(request);
-    }
-
-    /**
-     * Ensures the scope is empty.
-     */
-    public void ensureEmpty() {
-        CurrentRequest.getInstance().ensureEmpty();
     }
 
     /**
@@ -38,7 +27,7 @@ public class RequestScope {
      * @param binder the {@link Binder} to use
      */
     public static void bind(final Binder binder) {
-        binder.bind(Request.class).toInstance(getInstance().getProxy());
+        binder.bind(Request.class).toInstance(instance.getProxy());
     }
 
     /**

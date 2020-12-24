@@ -13,11 +13,7 @@ import java.util.List;
  * Used to manage the GameOn Matches.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.player.tournament"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.gameon.player.tournament",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.player.tournament")
 })
 public interface GameOnPlayerTournamentService {
 

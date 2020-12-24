@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rt.guice;
 
+import com.google.common.io.Files;
 import com.google.inject.Key;
 import com.google.inject.Provider;
 import com.google.inject.Scope;
+import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.MutableAttributes;
 import com.namazustudios.socialengine.rt.ReentrantThreadLocal;
 
@@ -13,6 +15,13 @@ import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.lang.String.format;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
+/**
+ * A generic Guice {@link Scope} which can be used to track an instance of an object using a
+ * {@link ReentrantThreadLocal<ScopedT>}. THis manages a proxy and stores the actual scoped objects in an instance of
+ * {@link Attributes} for the actual scoped objects.
+ *
+ * @param <ScopedT>
+ */
 public class ReentrantThreadLocalScope<ScopedT> implements Scope {
 
     private final ScopedT proxy;
@@ -40,7 +49,7 @@ public class ReentrantThreadLocalScope<ScopedT> implements Scope {
                 final var actual = instance.getCurrent();
                 return method.invoke(actual, args);
             }));
-
+        
     }
 
     public ScopedT getProxy() {

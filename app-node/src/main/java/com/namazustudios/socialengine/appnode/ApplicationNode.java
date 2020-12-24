@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.appnode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.annotation.FacebookPermission;
-import com.namazustudios.socialengine.appnode.guice.*;
+import com.namazustudios.socialengine.appnode.guice.AppNodeSecurityModule;
+import com.namazustudios.socialengine.appnode.guice.AppNodeServicesModule;
+import com.namazustudios.socialengine.appnode.guice.MasterNodeModule;
+import com.namazustudios.socialengine.appnode.guice.WorkerInstanceModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -13,11 +15,11 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import com.namazustudios.socialengine.rt.ResourceAttributesProvider;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
@@ -51,6 +53,7 @@ public class ApplicationNode {
         final var facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier();
 
         this.injector = Guice.createInjector(
+            new ClusterContextFactoryModule(),
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new FSTPayloadReaderWriterModule(),
@@ -77,9 +80,9 @@ public class ApplicationNode {
             new UnixFSTransactionalPersistenceContextModule().withChecksumAlgorithm(ADLER_32),
             new XodusEnvironmentModule().withSchedulerEnvironment(),
             new AppNodeServicesModule(),
+            new RedissonServicesModule(ResourceScope.getInstance()),
             new AppleIapReceiptInvokerModule(),
             new GameOnInvokerModule(),
-            new RedissonServicesModule(ResourceScope.getInstance()),
             new JacksonHttpClientModule()
                 .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
                 .withDefaultObjectMapperProvider(() -> {

@@ -11,11 +11,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Manages instances of {@link GameOnRegistration}.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.registration"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.gameon.registration",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.registration")
 })
 public interface GameOnRegistrationService {
 

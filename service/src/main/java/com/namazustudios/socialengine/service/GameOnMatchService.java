@@ -11,11 +11,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Used to manage the GameOn Matches.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.match"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.gameon.match",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.match")
 })
 public interface GameOnMatchService {
 

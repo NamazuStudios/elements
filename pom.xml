@@ -96,7 +96,7 @@
         <testng.version>6.13.1</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>3.0.0-M5</surefire.version>
-        <jackson.version>2.8.8</jackson.version>
+        <jackson.version>2.12.0</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.12</reflections.version>
         <swagger.version>1.5.13</swagger.version>

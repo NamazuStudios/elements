@@ -12,11 +12,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * and ensuring that the associated {@link Friend} instances are properly filtered and represented.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.friend"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.friend",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.friend")
 })
 public interface FriendService {
 

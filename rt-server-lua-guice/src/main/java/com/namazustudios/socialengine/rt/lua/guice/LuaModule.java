@@ -211,6 +211,7 @@ public class LuaModule extends PrivateModule {
                         provider = getProvider(cls);
                     } else {
                         final var annotation = ExposedBindingAnnotation.Util.resolve(cls, definition.annotation());
+                        annotation.toString();
                         provider = getProvider(Key.get(cls, annotation));
                     }
 

@@ -429,6 +429,7 @@ public class ServicesModule extends PrivateModule {
         expose(GooglePlayIapReceiptService.class);
         expose(AdvancementService.class);
         expose(AppleSignInAuthService.class);
+        expose(NameService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -459,6 +460,7 @@ public class ServicesModule extends PrivateModule {
         expose(SessionService.class).annotatedWith(Unscoped.class);
         expose(AdvancementService.class).annotatedWith(Unscoped.class);
         expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
+        expose(NameService.class).annotatedWith(Unscoped.class);
 
     }
 

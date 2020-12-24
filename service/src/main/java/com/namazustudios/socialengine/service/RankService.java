@@ -13,11 +13,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Queries and combines instances of {@link Leaderboard} and {@link Score} to calculate player rank.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.rank"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.rank",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.rank")
 })
 public interface RankService {
 

@@ -9,11 +9,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Provides interaction with GameOn for prizes from the User/Player perspective.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.prize"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.gameon.prize",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.prize")
 })
 public interface GameOnGamePrizeService {
 

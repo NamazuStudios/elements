@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.appnode.provider;
+package com.namazustudios.socialengine.security;
 
 import com.namazustudios.socialengine.exception.security.SessionNotFoundException;
 import com.namazustudios.socialengine.model.session.Session;
@@ -7,7 +7,7 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.Optional;
 
-public class ResourceSessionProvider implements Provider<Session> {
+public class SessionProvider implements Provider<Session> {
 
     private Provider<Optional<Session>> optionalSessionProvider;
 

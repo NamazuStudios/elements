@@ -10,11 +10,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Created by patricktwohig on 5/24/17.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration.psn"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.application.configuration.psn",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration.psn")
 })
 public interface PSNApplicationConfigurationService {
 

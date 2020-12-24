@@ -10,11 +10,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.session"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.gameon.session",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.session")
 })
 public interface GameOnSessionService {
 

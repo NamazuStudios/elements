@@ -11,13 +11,6 @@ import java.util.function.Supplier;
 /**
  * Provides access to a cache for operations related to {@link FacebookFriend} instances.
  */
-@Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.facebook.friend"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.facebook.friend",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
-})
 public interface FacebookFriendCache {
 
     /**

@@ -5,7 +5,9 @@ import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.remote.AsyncControlClient;
+import com.namazustudios.socialengine.rt.remote.AsyncControlClientProvider;
 import com.namazustudios.socialengine.rt.remote.ControlClient;
+import com.namazustudios.socialengine.rt.remote.ControlClientProvider;
 import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQAsyncControlClient;
 import com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlClient;
 import org.zeromq.ZContext;
@@ -22,6 +24,12 @@ public class JeroMQControlClientModule extends PrivateModule {
         final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
         final var asp = getProvider(key);
         bind(AsyncControlClient.Factory.class).toInstance(ca -> new JeroMQAsyncControlClient(asp.get(), ca));
+
+        bind(ControlClient.class).toProvider(ControlClientProvider.class);
+        bind(AsyncControlClient.class).toProvider(AsyncControlClientProvider.class);
+
+        expose(ControlClient.class);
+        expose(AsyncControlClient.class);
 
         expose(ControlClient.Factory.class);
         expose(AsyncControlClient.Factory.class);

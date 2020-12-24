@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.appnode.provider;
+package com.namazustudios.socialengine.appnode.security;
 
 import com.namazustudios.socialengine.exception.profile.UnidentifiedProfileException;
 import com.namazustudios.socialengine.model.profile.Profile;

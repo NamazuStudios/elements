@@ -1,8 +1,15 @@
 package com.namazustudios.socialengine.rt.guice;
 
+import com.google.inject.*;
+import com.namazustudios.socialengine.rt.CurrentRequest;
 import com.namazustudios.socialengine.rt.CurrentResource;
+import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Resource;
 
+/**
+ * A Guice {@link Scope} which tracks the current {@link Resource}. It relies on {@link CurrentResource} as the source
+ * of the current {@link Resource}.
+ */
 public class ResourceScope {
 
     private ResourceScope() {}
@@ -17,8 +24,33 @@ public class ResourceScope {
         );
     }
 
-    public static ReentrantThreadLocalScope<Resource> getInstance() {
+    /**
+     * Gets the static instance of the {@link Scope}
+     *
+     * @return the {@link Scope}
+     */
+    public static Scope getInstance() {
         return instance;
+    }
+
+    /**
+     * Makes the {@link Resource} {@link Inject}able.
+     *
+     * @param binder the {@link Binder} to use
+     */
+    public static void bind(final Binder binder) {
+        binder.bind(Resource.class).toInstance(instance.getProxy());
+    }
+
+    /**
+     * Makes the {@link Resource} {@link Inject}able as well as uses {@link PrivateBinder#expose(Key)} to ensure it is
+     * available to the whole {@link Injector}.
+     *
+     * @param binder the {@link Binder} to use
+     */
+    public static void bind(final PrivateBinder binder) {
+        bind((Binder)binder);
+        binder.expose(Resource.class);
     }
 
 }

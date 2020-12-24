@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 
 import javax.inject.Inject;
+import javax.inject.Provider;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;

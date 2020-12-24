@@ -55,7 +55,9 @@ public class WorkerInstanceModule extends PrivateModule {
             final var gitLoader = gitLoaderProvider.get();
             final var applicationDao = applicationDaoProvider.get();
 
-            final Set<Node> nodeSet = applicationDao.getActiveApplications().getObjects().stream().map(application -> {
+            final var applications = applicationDao.getActiveApplications().getObjects();
+
+            final Set<Node> nodeSet = applications.stream().map(application -> {
 
                     final File codeDirectory;
 

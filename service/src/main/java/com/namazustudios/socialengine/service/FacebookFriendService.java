@@ -11,11 +11,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Provides access to {@link FacebookFriend} instances.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.facebook.friend"),
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.unscoped.facebook.friend",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )
+    @ExposedModuleDefinition(value = "namazu.elements.service.facebook.friend")
 })
 public interface FacebookFriendService {
 

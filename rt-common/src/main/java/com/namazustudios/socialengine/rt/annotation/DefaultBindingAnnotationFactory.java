@@ -44,10 +44,10 @@ public class DefaultBindingAnnotationFactory implements ExposedBindingAnnotation
             final var methods = new HashSet<>(asList(type.getMethods()));
             if (!METHODS.equals(methods)) throw new IllegalArgumentException("Valid for basic annotations only.");
 
-            final var toString = type.getMethod("toString");
-            final var annotationType = type.getMethod("annotationType");
-            final var equals = type.getMethod("equals", Object.class);
-            final var hashCode = type.getMethod("hashCode");
+            final var toString = Object.class.getMethod("toString");
+            final var annotationType = Annotation.class.getMethod("annotationType");
+            final var equals = Object.class.getMethod("equals", Object.class);
+            final var hashCode = Object.class.getMethod("hashCode");
 
             final InvocationHandler ih = (proxy, method, args) -> {
                 if (method.equals(toString)) {

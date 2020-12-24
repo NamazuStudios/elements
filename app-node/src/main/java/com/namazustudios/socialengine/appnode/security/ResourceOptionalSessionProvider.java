@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.appnode.provider;
+package com.namazustudios.socialengine.appnode.security;
 
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.rt.Resource;

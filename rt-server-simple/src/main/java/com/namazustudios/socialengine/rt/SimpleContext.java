@@ -155,6 +155,11 @@ public class SimpleContext implements Context, NodeLifecycle {
         return taskContext;
     }
 
+    @Override
+    public ManifestContext getManifestContext() {
+        return manifestContext;
+    }
+
     @Inject
     public void setResourceContext(@Named(LOCAL) ResourceContext resourceContext) {
         this.resourceContext = resourceContext;
@@ -178,6 +183,11 @@ public class SimpleContext implements Context, NodeLifecycle {
     @Inject
     public void setTaskContext(@Named(LOCAL) TaskContext taskContext) {
         this.taskContext = taskContext;
+    }
+
+    @Inject
+    public void setManifestContext(@Named(LOCAL) ManifestContext manifestContext) {
+        this.manifestContext = manifestContext;
     }
 
     public Scheduler getScheduler() {
@@ -214,15 +224,6 @@ public class SimpleContext implements Context, NodeLifecycle {
     @Inject
     public void setAssetLoader(AssetLoader assetLoader) {
         this.assetLoader = assetLoader;
-    }
-
-    public ManifestContext getManifestContext() {
-        return manifestContext;
-    }
-
-    @Inject
-    public void setManifestContext(ManifestContext manifestContext) {
-        this.manifestContext = manifestContext;
     }
 
 }

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.Injector;
 import com.namazustudios.socialengine.rt.CurrentRequest;
-import com.namazustudios.socialengine.rt.ReentrantThreadLocal;
 import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.handler.Filter;

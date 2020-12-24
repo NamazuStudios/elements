@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.appnode.guice;
 
+import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.appnode.provider.ResourceProfileIdentificationMethod;
-import com.namazustudios.socialengine.appnode.provider.ResourceSessionProvider;
-import com.namazustudios.socialengine.appnode.provider.ResourceUserAuthenticationMethod;
+import com.namazustudios.socialengine.appnode.security.ResourceOptionalSessionProvider;
+import com.namazustudios.socialengine.appnode.security.ResourceProfileIdentificationMethod;
+import com.namazustudios.socialengine.security.SessionProvider;
+import com.namazustudios.socialengine.appnode.security.ResourceUserAuthenticationMethod;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
@@ -31,13 +33,21 @@ public class AppNodeSecurityModule extends PrivateModule {
         profileIdentificationMethodMultibinder.addBinding().to(SessionProfileIdentificationMethod.class);
         profileIdentificationMethodMultibinder.addBinding().to(ResourceProfileIdentificationMethod.class);
 
-        bind(Session.class).toProvider(ResourceSessionProvider.class);
+        bind(Session.class).toProvider(SessionProvider.class);
         bind(User.class).toProvider(UserProvider.class).in(RequestScope.getInstance());
         bind(new TypeLiteral<Supplier<Profile>>(){}).toProvider(ProfileSupplierProvider.class);
 
+
+        var optionalSessionKey = Key.get(new TypeLiteral<Optional<Session>>(){});
+
+        bind(Session.class).toProvider(SessionProvider.class);
+        bind(optionalSessionKey).toProvider(ResourceOptionalSessionProvider.class);
+
+        expose(optionalSessionKey);
+
         expose(User.class);
         expose(Session.class);
-        expose(new TypeLiteral<Optional<Session>>(){});
+        expose(optionalSessionKey);
         expose(new TypeLiteral<Supplier<Profile>>(){});
 
     }
