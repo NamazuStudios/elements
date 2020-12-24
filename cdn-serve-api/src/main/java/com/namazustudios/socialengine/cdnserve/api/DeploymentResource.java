@@ -16,7 +16,7 @@ public class DeploymentResource {
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     public Pagination<Deployment> getDeployments(final @PathParam("applicationId") String applicationId) {
-        return getDeploymentService().getDeployments(applicationId, 0, 0);
+        return getDeploymentService().getDeployments(applicationId, 0, 100);
     }
 
     @GET
@@ -36,12 +36,13 @@ public class DeploymentResource {
 
     @POST
     @ApiOperation(value = "Create Deployment",
-            notes = "This will create a new deployment. Which will search the git repo for the matching revision" +
+            notes = "This will create a new deployment if one does not exist, or update an existing deployment if a matching version exists." +
+                    " This will search the git repo for the matching revision" +
                     "and clone all content to the static endpoint for delivery.")
     @Produces(MediaType.APPLICATION_JSON)
     public Deployment createNewDeployment(final @PathParam("applicationId") String applicationId,
                                           CreateDeploymentRequest createDeploymentRequest) {
-        return getDeploymentService().createDeployment(applicationId, createDeploymentRequest);
+        return getDeploymentService().createOrUpdateDeployment(applicationId, createDeploymentRequest);
     }
 
     @DELETE

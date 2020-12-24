@@ -108,7 +108,17 @@ public interface Constants {
     /**
      * Used to specify the file path for static content.
      */
-    String CDN_FILE_DIRECTORY = "com.namazustudios.socialengine.cdn.storage.directory";
+    String CDN_FILE_DIRECTORY = "com.namazustudios.socialengine.exception.cdnserve.storage.directory";
+
+    /**
+     * Used to specify the endpoint file path for cloning static content.
+     */
+    String CDN_CLONE_ENDPOINT = "com.namazustudios.socialengine.exception.cdnserve.endpoint.clone";
+
+    /**
+     * Used to specify the endpoint for serving static content.
+     */
+    String CDN_SERVE_ENDPOINT = "com.namazustudios.socialengine.exception.cdnserve.endpoint.serve";
 
     /**
      * Defines some useful regex patterns.

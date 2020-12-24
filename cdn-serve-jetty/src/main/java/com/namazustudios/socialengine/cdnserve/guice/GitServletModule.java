@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.cdnserve.guice;
 import com.google.inject.TypeLiteral;
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.cdnserve.resolver.CdnServeRepositoryResolver;
-import com.namazustudios.socialengine.codeserve.CodeServeRepositoryResolver;
 import com.namazustudios.socialengine.codeserve.GitServletProvider;
 import com.namazustudios.socialengine.servlet.security.HttpServletBasicAuthFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;

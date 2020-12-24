@@ -1,14 +1,11 @@
 package com.namazustudios.socialengine.cdnserve.resolver;
 
-import com.google.common.io.ByteStreams;
 import com.namazustudios.socialengine.codeserve.ApplicationRepositoryResolver;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.rt.Bootstrapper;
-import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -26,11 +23,6 @@ import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 

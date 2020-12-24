@@ -19,6 +19,8 @@ public class CdnServeModuleDefaults implements ModuleDefaults {
         properties.put(GIT_STORAGE_DIRECTORY, "repositories");
         properties.put(HTTP_TUNNEL_PORT, "8083");
         properties.put(CDN_FILE_DIRECTORY, "/Users/garrettmcspadden/Desktop/testing");
+        properties.put(CDN_CLONE_ENDPOINT, "clone");
+        properties.put(CDN_SERVE_ENDPOINT, "serve");
         return properties;
     }
 

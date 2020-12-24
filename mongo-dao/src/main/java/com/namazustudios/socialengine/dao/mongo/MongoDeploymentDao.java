@@ -15,9 +15,11 @@ import org.dozer.Mapper;
 import org.mongodb.morphia.AdvancedDatastore;
 import org.mongodb.morphia.FindAndModifyOptions;
 import org.mongodb.morphia.query.Query;
+import org.mongodb.morphia.query.Sort;
 import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
+import java.util.Date;
 
 public class MongoDeploymentDao implements DeploymentDao {
 
@@ -38,6 +40,13 @@ public class MongoDeploymentDao implements DeploymentDao {
         final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
         query.criteria("application").equal(application);
+
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, Deployment.class));
+    }
+
+    @Override
+    public Pagination<Deployment> getAllDeployments(final int offset, final int count) {
+        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, Deployment.class));
     }
@@ -67,30 +76,32 @@ public class MongoDeploymentDao implements DeploymentDao {
         }
         final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
-        //TODO Query to get the last inserted document for the MongoDeployment collection.
+        query.criteria("application").equal(application);
+
+        query.order(Sort.descending("createdAt"));
 
         return getBeanMapper().map(query.get(), Deployment.class);
     }
 
     @Override
-    public Deployment createDeployment(String applicationId, Deployment deployment) {
-        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(applicationId);
+    public Deployment createOrUpdateDeployment(Deployment deployment) {
+        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(deployment.getApplication().getId());
         if(application == null){
-            throw new ApplicationNotFoundException("Application not found with Id: " + applicationId);
+            throw new ApplicationNotFoundException("Application not found with Id: " + deployment.getApplication().getId());
         }
+
         final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
-        query.and(
-                query.criteria("version").equal(deployment.getVersion()),
-                query.criteria("application").equal(application)
-        );
+        query.criteria("version").equal(deployment.getVersion());
 
         final UpdateOperations<MongoDeployment> updateOperations;
 
         updateOperations = getDatastore().createUpdateOperations(MongoDeployment.class);
         updateOperations.set("version", deployment.getVersion());
-        updateOperations.set("commitHash", deployment.getRevision());
+        updateOperations.set("revision", deployment.getRevision());
         updateOperations.set("application", application);
+        final Date nowDate = new Date();
+        updateOperations.set("createdAt", nowDate);
 
         final MongoDeployment mongoDeployment = getDatastore().findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true).returnNew(true));
 

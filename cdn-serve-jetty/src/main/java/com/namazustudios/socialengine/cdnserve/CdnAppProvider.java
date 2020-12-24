@@ -3,10 +3,14 @@ package com.namazustudios.socialengine.cdnserve;
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.cdnserve.guice.CdnGuiceResourceConfig;
 import com.namazustudios.socialengine.cdnserve.guice.CdnJerseyModule;
 import com.namazustudios.socialengine.cdnserve.guice.GitServletModule;
+import com.namazustudios.socialengine.cdnserve.api.DeploymentService;
+import com.namazustudios.socialengine.cdnserve.guice.CdnGuiceResourceConfig;
 import com.namazustudios.socialengine.codeserve.GitSecurityModule;
+import com.namazustudios.socialengine.model.Deployment;
+import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.servlet.security.HttpServletBasicAuthFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
@@ -19,16 +23,17 @@ import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import org.eclipse.jgit.http.server.GitServlet;
-import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.DispatcherType;
 
 import java.io.IOException;
+import java.util.LinkedHashSet;
 
 import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
+import static java.util.stream.Collectors.toCollection;
 
 public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
@@ -40,9 +45,13 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private String contentDirectory;
 
+    private String serveEndpoint;
+
     private Injector injector;
 
     private DeploymentManager deploymentManager;
+
+    private DeploymentService deploymentService;
 
     public DeploymentManager getDeploymentManager() {
         return deploymentManager;
@@ -102,18 +111,12 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private ContextHandler createCdnContext(final App app) throws IOException {
 
-        if (!STATIC_ORIGIN_CONTEXT.equals(app.getOriginId())) {
-            throw new IllegalArgumentException("App must have origin ID: " + STATIC_ORIGIN_CONTEXT);
-        }
-
-        // TODO Fetch all deployments from the database and make a separate hosting endpoint for each one.
-
         final ServletContextHandler ctx = new ServletContextHandler();
-        ctx.setContextPath(STATIC_ORIGIN_CONTEXT);
+        ctx.setContextPath(format("%s/%s/%s", STATIC_ORIGIN_CONTEXT, app.getOriginId(), getServeEndpoint()));
 
         final DefaultServlet defaultServlet = new DefaultServlet();
         ServletHolder holderPwd = new ServletHolder("default", defaultServlet);
-        holderPwd.setInitParameter("resourceBase", getContentDirectory());
+        holderPwd.setInitParameter("resourceBase", format("%s/%s/%s", getContentDirectory(), app.getOriginId(), getServeEndpoint()));
         ctx.addServlet(holderPwd, "/*");
 
         return ctx;
@@ -124,7 +127,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     protected void doStart() throws Exception {
         startGitApp();
         startManageApp();
-        startCdnApp();
+        startCdnApps();
     }
 
     private void startGitApp() {
@@ -137,9 +140,13 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         getDeploymentManager().addApp(app);
     }
 
-    private void startCdnApp() {
-        final App app = new App(getDeploymentManager(), this, STATIC_ORIGIN_CONTEXT);
-        getDeploymentManager().addApp(app);
+    private void startCdnApps() {
+        Pagination<Deployment> deployments = getDeploymentService().getAllDeployments(0, 100);
+        LinkedHashSet<Application> apps = deployments.getObjects().stream().map(Deployment::getApplication).collect(toCollection(LinkedHashSet::new));
+        for(Application a : apps){
+            final App app = new App(getDeploymentManager(), this, a.getName());
+            getDeploymentManager().addApp(app);
+        }
     }
 
     @Override
@@ -161,7 +168,25 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     @Inject
-    private String setContentDirectory(@Named(Constants.CDN_FILE_DIRECTORY)String contentDirectory) {
-        return this.contentDirectory = contentDirectory;
+    private void setContentDirectory(@Named(Constants.CDN_FILE_DIRECTORY)String contentDirectory) {
+        this.contentDirectory = contentDirectory;
+    }
+
+    private String getServeEndpoint() {
+        return serveEndpoint;
+    }
+
+    @Inject
+    private void setServeEndpoint(@Named(Constants.CDN_SERVE_ENDPOINT)String serveEndpoint) {
+        this.serveEndpoint = serveEndpoint;
+    }
+
+    public DeploymentService getDeploymentService() {
+        return deploymentService;
+    }
+
+    @Inject
+    public void setDeploymentService(DeploymentService deploymentService) {
+        this.deploymentService = deploymentService;
     }
 }
