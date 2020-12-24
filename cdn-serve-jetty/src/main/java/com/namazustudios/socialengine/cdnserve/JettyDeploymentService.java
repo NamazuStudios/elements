@@ -7,9 +7,11 @@ import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.codeserve.api.deploy.DeploymentService;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jgit.lib.ObjectId;
+import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -27,6 +29,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.UUID;
+
+import static java.lang.String.format;
 
 public class JettyDeploymentService implements DeploymentService {
 
@@ -72,14 +77,36 @@ public class JettyDeploymentService implements DeploymentService {
     }
 
     private void copyRepositoryContentsForRevision(String applicationId, Deployment newDeployment) throws IOException {
-        File gitFile = getGitLoader().getCodeDirectory(getApplicationService().getApplication(applicationId));
+        Application app = applicationService.getApplication(applicationId);
+        File gitFile = gitLoader.getCodeDirectory(app);
         Repository repo = new FileRepositoryBuilder().findGitDir(gitFile).build();
-        Path tempPath = Files.createTempDirectory("static");
-        OutputStream outputStream = Files.newOutputStream(tempPath);
+        Path directory = Files.createDirectories(Paths.get(format("%s/%s/clone/%s", getContentDirectory(), app.getName(), UUID.randomUUID())));
         RevWalk walk = new RevWalk(repo);
         RevCommit commit = walk.parseCommit(ObjectId.fromString(newDeployment.getRevision()));
-        commit.copyRawTo(outputStream);
-        Files.move(tempPath, Paths.get(getContentDirectory() + String.format("/%s", newDeployment.getVersion())), StandardCopyOption.REPLACE_EXISTING);
+        RevTree tree = commit.getTree();
+
+        try (TreeWalk treeWalk = new TreeWalk(repo)) {
+            treeWalk.addTree(tree);
+            treeWalk.setRecursive(true);
+            // Walk the file tree and copy all files
+            while(treeWalk.next()){
+                Path file = Files.createFile(Paths.get(format("%s/%s", directory, treeWalk.getNameString())));
+                ObjectId objectId = treeWalk.getObjectId(0);
+                ObjectLoader loader = repo.open(objectId);
+                Files.write(file, loader.getBytes());
+            }
+            walk.dispose();
+        }
+        createSymbolicLink(app, newDeployment, directory);
+    }
+
+    public void createSymbolicLink(Application app, Deployment newDeployment, Path pathToLink) throws IOException {
+        Path directory = Files.createDirectories(Paths.get(format("%s/%s/serve", getContentDirectory(), app.getName())));
+        Path link = Paths.get(format("%s/%s", directory, newDeployment.getVersion()));
+        if (Files.exists(link)) {
+            Files.delete(link);
+        }
+        Files.createSymbolicLink(link, pathToLink);
     }
 
     @Override

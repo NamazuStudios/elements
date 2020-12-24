@@ -15,8 +15,8 @@ public class Deployment implements Serializable {
     protected String id;
 
     @NotNull
-    @ApiModelProperty("The version. This should match the project version which will help keep content in line with the project")
-    protected Integer version;
+    @ApiModelProperty("The deployment version. Allows for overriding versions with new content.")
+    protected String version;
 
     @NotNull
     @ApiModelProperty("The revision that this deployment points to.")
@@ -34,11 +34,11 @@ public class Deployment implements Serializable {
         this.id = id;
     }
 
-    public Integer getVersion() {
+    public String getVersion() {
         return version;
     }
 
-    public void setVersion(Integer version) {
+    public void setVersion(String version) {
         this.version = version;
     }
 

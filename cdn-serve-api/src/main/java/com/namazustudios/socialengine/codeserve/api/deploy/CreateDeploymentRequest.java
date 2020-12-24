@@ -10,17 +10,17 @@ public class CreateDeploymentRequest {
 
     @NotNull
     @ApiModelProperty
-    protected Integer version;
+    protected String version;
 
     @NotNull
     @ApiModelProperty
     protected String revision;
 
-    public Integer getVersion() {
+    public String getVersion() {
         return version;
     }
 
-    public void setVersion(Integer version) {
+    public void setVersion(String version) {
         this.version = version;
     }
 
