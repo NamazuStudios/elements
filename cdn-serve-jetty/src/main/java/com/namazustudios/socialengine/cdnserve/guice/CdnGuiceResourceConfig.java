@@ -33,7 +33,7 @@ public class CdnGuiceResourceConfig extends ResourceConfig {
         register(ISODateParamConverter.class);
         register(DefaultExceptionMapper.class);
 
-        packages(true, "com.namazustudios.socialengine.exception.cdnserve.api");
+        packages(true, "com.namazustudios.socialengine.cdnserve.api");
 
         if (!tryConfigureJackson() || !tryConfigureMoxy()) {
             logger.warn("Neither Jackson nor Moxy could be configured.  Using default media support.");

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.cdnserve;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.cdnserve.api.CreateDeploymentRequest;
+import com.namazustudios.socialengine.cdnserve.api.UpdateDeploymentRequest;
 import com.namazustudios.socialengine.dao.DeploymentDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.application.ApplicationNotFoundException;
@@ -74,37 +75,71 @@ public class JettyDeploymentService implements DeploymentService {
     }
 
     @Override
-    public Deployment createOrUpdateDeployment(String applicationId, CreateDeploymentRequest deploymentRequest) {
+    public Deployment updateDeployment(String applicationId, String version, UpdateDeploymentRequest deploymentRequest) {
         final Application app = getApplicationService().getApplication(applicationId);
         if(app == null){
             throw new ApplicationNotFoundException("Application not found with Id: " + applicationId);
         }
-        final Deployment newDeployment = new Deployment();
-        newDeployment.setVersion(deploymentRequest.getVersion());
-        newDeployment.setRevision(deploymentRequest.getRevision());
-        newDeployment.setApplication(app);
+        final Deployment deployment = new Deployment();
+        deployment.setVersion(version);
+        deployment.setRevision(deploymentRequest.getRevision());
+        deployment.setApplication(app);
+
+        final Deployment updatedDeployment = getDeploymentDao().updateDeployment(applicationId, deployment);
 
         try {
-            deleteSymbolicLink(newDeployment);
+            deleteSymbolicLink(updatedDeployment);
         } catch (IOException e) {
             try {
-                throw new SymbolicLinkIOException("Failed to delete previous symbolic link for version " + newDeployment.getVersion(), e);
+                getDeploymentDao().deleteDeployment(applicationId, updatedDeployment.getId());
+                throw new SymbolicLinkIOException("Failed to delete previous symbolic link for version " + updatedDeployment.getVersion(), e);
             } catch (SymbolicLinkIOException symbolicLinkIOException) {
                 logger.info(symbolicLinkIOException.getMessage());
+                return null;
             }
         }
+
+        try {
+            copyRepositoryContentsForRevision(updatedDeployment);
+        } catch (IOException e) {
+            try {
+                getDeploymentDao().deleteDeployment(applicationId, updatedDeployment.getId());
+                throw new GitCloneIOException("Failed to clone files for revision " + updatedDeployment.getRevision(), e);
+            } catch (GitCloneIOException gitCloneIOException) {
+                logger.info(gitCloneIOException.getMessage());
+                return null;
+            }
+        }
+
+        return updatedDeployment;
+    }
+
+    @Override
+    public Deployment createDeployment(String applicationId, CreateDeploymentRequest deploymentRequest) {
+        final Application app = getApplicationService().getApplication(applicationId);
+        if(app == null){
+            throw new ApplicationNotFoundException("Application not found with Id: " + applicationId);
+        }
+        final Deployment deployment = new Deployment();
+        deployment.setVersion(deploymentRequest.getVersion());
+        deployment.setRevision(deploymentRequest.getRevision());
+        deployment.setApplication(app);
+
+        final Deployment newDeployment = getDeploymentDao().createDeployment(deployment);
 
         try {
             copyRepositoryContentsForRevision(newDeployment);
         } catch (IOException e) {
             try {
-                throw new GitCloneIOException("Failed to clone files for revision " + newDeployment.getRevision(), e);
+                getDeploymentDao().deleteDeployment(applicationId, newDeployment.getId());
+                throw new GitCloneIOException("Failed to clone files for revision " + deployment.getRevision(), e);
             } catch (GitCloneIOException gitCloneIOException) {
                 logger.info(gitCloneIOException.getMessage());
+                return null;
             }
         }
 
-        return getDeploymentDao().createOrUpdateDeployment(newDeployment);
+        return newDeployment;
     }
 
 

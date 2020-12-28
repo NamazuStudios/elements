@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicati
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.application.ApplicationNotFoundException;
+import com.namazustudios.socialengine.exception.cdnserve.DeploymentNotFoundException;
+import com.namazustudios.socialengine.exception.cdnserve.DuplicateDeploymentException;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
@@ -84,7 +86,37 @@ public class MongoDeploymentDao implements DeploymentDao {
     }
 
     @Override
-    public Deployment createOrUpdateDeployment(Deployment deployment) {
+    public Deployment updateDeployment(String applicationId, Deployment deployment) {
+        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(deployment.getApplication().getId());
+        if(application == null){
+            throw new ApplicationNotFoundException("Application not found with Id: " + deployment.getApplication().getId());
+        }
+
+        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
+
+        query.and(
+                query.criteria("version").equal(deployment.getVersion()),
+                query.criteria("application").equal(application)
+        );
+
+        if(query.get() == null){
+            throw new DeploymentNotFoundException(String.format("Deployment version: %s, for application: %s, not found", deployment.getVersion(), application.getName()));
+        }
+
+        final UpdateOperations<MongoDeployment> updateOperations;
+
+        updateOperations = getDatastore().createUpdateOperations(MongoDeployment.class);
+        updateOperations.set("revision", deployment.getRevision());
+        final Date nowDate = new Date();
+        updateOperations.set("createdAt", nowDate);
+
+        final MongoDeployment mongoDeployment = getDatastore().findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true).returnNew(true));
+
+        return getBeanMapper().map(mongoDeployment, Deployment.class);
+    }
+
+    @Override
+    public Deployment createDeployment(Deployment deployment) {
         final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(deployment.getApplication().getId());
         if(application == null){
             throw new ApplicationNotFoundException("Application not found with Id: " + deployment.getApplication().getId());
@@ -93,6 +125,10 @@ public class MongoDeploymentDao implements DeploymentDao {
         final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
         query.criteria("version").equal(deployment.getVersion());
+
+        if(query.get().getVersion().equals(deployment.getVersion())) {
+            throw new DuplicateDeploymentException(String.format("Deployment version: %s, already exists, suggest changing version or updating existing version", deployment.getVersion()));
+        }
 
         final UpdateOperations<MongoDeployment> updateOperations;
 

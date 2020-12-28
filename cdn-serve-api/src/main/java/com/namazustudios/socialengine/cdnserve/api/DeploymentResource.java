@@ -34,15 +34,28 @@ public class DeploymentResource {
         return getDeploymentService().getCurrentDeployment(applicationId);
     }
 
+    @PUT
+    @Path("{version}")
+    @ApiOperation(value = "Update Deployment by version",
+            notes = "This will update the revision for a specific deployment version" +
+                    " This will search the git repo for the matching revision" +
+                    "and clone all content to the static endpoint for delivery.")
+    @Produces(MediaType.APPLICATION_JSON)
+    public Deployment updateDeployment(final @PathParam("applicationId") String applicationId,
+                                          final @PathParam("version") String version,
+                                          UpdateDeploymentRequest updateDeploymentRequest) {
+        return getDeploymentService().updateDeployment(applicationId, version, updateDeploymentRequest);
+    }
+
     @POST
     @ApiOperation(value = "Create Deployment",
-            notes = "This will create a new deployment if one does not exist, or update an existing deployment if a matching version exists." +
+            notes = "This will create a new deployment if one does not exist. It will throw an error if the requested version already exists" +
                     " This will search the git repo for the matching revision" +
                     "and clone all content to the static endpoint for delivery.")
     @Produces(MediaType.APPLICATION_JSON)
     public Deployment createNewDeployment(final @PathParam("applicationId") String applicationId,
                                           CreateDeploymentRequest createDeploymentRequest) {
-        return getDeploymentService().createOrUpdateDeployment(applicationId, createDeploymentRequest);
+        return getDeploymentService().createDeployment(applicationId, createDeploymentRequest);
     }
 
     @DELETE

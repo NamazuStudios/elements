@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.cdnserve.api;
 
-import com.namazustudios.socialengine.exception.cdnserve.GitCloneIOException;
-import com.namazustudios.socialengine.exception.cdnserve.SymbolicLinkIOException;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;
 
@@ -15,7 +13,9 @@ public interface DeploymentService {
 
     Deployment getCurrentDeployment(final String applicationId);
 
-    Deployment createOrUpdateDeployment(final String applicationId, final CreateDeploymentRequest deploymentRequest) throws SymbolicLinkIOException, GitCloneIOException;
+    Deployment updateDeployment(final String applicationId, String version, final UpdateDeploymentRequest deploymentRequest);
 
-    void deleteDeployment(final String applicationId, final String deploymentId) throws SymbolicLinkIOException;
+    Deployment createDeployment(final String applicationId, final CreateDeploymentRequest deploymentRequest);
+
+    void deleteDeployment(final String applicationId, final String deploymentId);
 }

@@ -13,7 +13,9 @@ public interface DeploymentDao {
 
     Deployment getCurrentDeployment(final String applicationId);
 
-    Deployment createOrUpdateDeployment(final Deployment deployment);
+    Deployment updateDeployment(String applicationId, final Deployment deployment);
+
+    Deployment createDeployment(final Deployment deployment);
 
     void deleteDeployment(final String applicationId, final String deploymentId);
 }

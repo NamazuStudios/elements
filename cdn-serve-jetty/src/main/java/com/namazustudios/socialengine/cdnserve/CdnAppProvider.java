@@ -87,7 +87,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         servletContextHandler.addFilter(new FilterHolder(authFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addServlet(new ServletHolder(versionServlet), "/version");
-        servletContextHandler.addServlet(new ServletHolder(gitServlet), format("/%s/*", GIT_CONTEXT));
+        servletContextHandler.addServlet(new ServletHolder(gitServlet), "/*");
         return servletContextHandler;
     }
 
