@@ -64,12 +64,7 @@
         </dependency>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-dao</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rt-dao-guice</artifactId>
+            <artifactId>rt-server-git</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>
@@ -143,6 +138,11 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
+            <groupId>com.spotify</groupId>
+            <artifactId>dns</artifactId>
+            <version>${spotify.dns.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-server-cluster-node-jeromq</artifactId>
             <version>${project.version}</version>
@@ -190,6 +190,16 @@
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-server-xodus-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-git</artifactId>
+            <version>${project.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-git-guice</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

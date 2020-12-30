@@ -10,13 +10,11 @@ import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
+import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
-
+import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
@@ -36,6 +34,7 @@ import static com.namazustudios.socialengine.annotation.ClientSerializationStrat
  * Created by patricktwohig on 3/19/15.
  */
 @WebListener
+@Deprecated(forRemoval = true)
 public class GuiceMain extends GuiceServletContextListener {
 
     private Injector injector;
@@ -98,9 +97,8 @@ public class GuiceMain extends GuiceServletContextListener {
             new MongoCoreModule(),
             new MongoDaoModule(),
             new MongoSearchModule(),
-            new RTFilesystemGitLoaderModule(),
-            new RTDaoModule(),
-            new RTGitApplicationModule(),
+            new FilesystemGitLoaderModule(),
+            new ClusterContextFactoryModule(),
             new ValidationModule(),
             new GameOnInvokerModule(),
             new AppleIapReceiptInvokerModule(),

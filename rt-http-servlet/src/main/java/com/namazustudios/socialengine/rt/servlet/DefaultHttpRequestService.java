@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.servlet;
 
-import com.namazustudios.socialengine.rt.ManifestLoader;
+import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.PayloadReader;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.UnacceptableContentException;
@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.AsyncContext;
 import javax.servlet.http.HttpServletRequest;
 import java.io.IOException;
@@ -16,16 +17,18 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
+
 public class DefaultHttpRequestService implements HttpRequestService {
 
-    private ManifestLoader manifestLoader;
+    private Context context;
 
-    private Map<String, PayloadReader> paylaodReadersByContentType;
+    private Map<String, PayloadReader> payloadReadersByContentType;
 
     @Override
     public HttpRequest getRequest(HttpServletRequest req) {
 
-        final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
+        final HttpManifest httpManifest = getContext().getManifestContext().getHttpManifest();
 
         final Supplier<HttpServletRequest> httpServletRequestSupplier;
         httpServletRequestSupplier = () -> req;
@@ -40,7 +43,7 @@ public class DefaultHttpRequestService implements HttpRequestService {
     @Override
     public HttpRequest getAsyncRequest(final AsyncContext asyncContext) {
 
-        final HttpManifest httpManifest = getManifestLoader().getHttpManifest();
+        final HttpManifest httpManifest = getContext().getManifestContext().getHttpManifest();
 
         final Supplier<HttpServletRequest> httpServletRequestSupplier;
         httpServletRequestSupplier = () -> (HttpServletRequest)asyncContext.getRequest();
@@ -57,7 +60,7 @@ public class DefaultHttpRequestService implements HttpRequestService {
         final String contentType = httpContent.getType();
         final Class<?> payloadClass = httpContent.getPayloadType();
 
-        final PayloadReader payloadReader = getPaylaodReadersByContentType().get(contentType);
+        final PayloadReader payloadReader = getPayloadReadersByContentType().get(contentType);
 
         if (payloadReader == null) {
             throw new UnacceptableContentException("no reader configured for " + contentType);
@@ -71,22 +74,22 @@ public class DefaultHttpRequestService implements HttpRequestService {
 
     }
 
-    public ManifestLoader getManifestLoader() {
-        return manifestLoader;
+    public Context getContext() {
+        return context;
     }
 
     @Inject
-    public void setManifestLoader(ManifestLoader manifestLoader) {
-        this.manifestLoader = manifestLoader;
+    public void setContext(@Named(REMOTE) Context context) {
+        this.context = context;
     }
 
-    public Map<String, PayloadReader> getPaylaodReadersByContentType() {
-        return paylaodReadersByContentType;
+    public Map<String, PayloadReader> getPayloadReadersByContentType() {
+        return payloadReadersByContentType;
     }
 
     @Inject
-    public void setPaylaodReadersByContentType(Map<String, PayloadReader> paylaodReadersByContentType) {
-        this.paylaodReadersByContentType = paylaodReadersByContentType;
+    public void setPayloadReadersByContentType(Map<String, PayloadReader> payloadReadersByContentType) {
+        this.payloadReadersByContentType = payloadReadersByContentType;
     }
 
 }

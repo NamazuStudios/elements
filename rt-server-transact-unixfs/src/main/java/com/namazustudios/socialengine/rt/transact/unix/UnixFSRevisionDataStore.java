@@ -59,7 +59,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
         final List<Slice<JournalRecoveryExecution>> executionList = getTransactionJournal()
             .validPrograms()
             .filter(s -> s.getValue().isValid())
-            .map(s -> s.map(p -> p.interpreter()))
+            .map(s -> s.map(UnixFSTransactionProgram::interpreter))
             .map(s -> s.map(JournalRecoveryExecution::new))
             .collect(toList());
 

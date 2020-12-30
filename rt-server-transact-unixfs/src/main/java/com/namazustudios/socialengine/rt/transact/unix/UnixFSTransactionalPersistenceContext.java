@@ -49,8 +49,8 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
             getRevisionPool().start();
             getRevisionTable().start();
             getTransactionJournal().start();
-            getRevisionDataStore().start();
             getGarbageCollector().start();
+            getRevisionDataStore().start();
         } catch (IllegalStateException ex) {
             logger.error("Inconsistent state.", ex);
             throw ex;

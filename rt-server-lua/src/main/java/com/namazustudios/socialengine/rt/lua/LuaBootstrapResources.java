@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua;
 
 import com.google.common.collect.ImmutableMap;
-import com.namazustudios.socialengine.rt.Bootstrapper;
+import com.namazustudios.socialengine.rt.ApplicationBootstrapper;
 import com.namazustudios.socialengine.rt.Path;
 
 import java.io.InputStream;
@@ -11,7 +11,7 @@ import java.util.function.Supplier;
 /**
  * Created by patricktwohig on 8/22/17.
  */
-public class LuaBootstrapper implements Bootstrapper {
+public class LuaBootstrapResources implements ApplicationBootstrapper.BootstrapResources {
 
     private final Map<Path, Supplier<InputStream>> BOOTSTRAP_RESOURCES;
 

@@ -12,10 +12,10 @@ import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
@@ -72,7 +72,7 @@ public class ApplicationNode {
             new MongoDaoModule(),
             new ValidationModule(),
             new MongoSearchModule(),
-            new RTFilesystemGitLoaderModule(),
+            new FilesystemGitLoaderModule(),
             new WorkerInstanceModule(),
             new FirebaseAppFactoryModule(),
             new GuiceStandardNotificationFactoryModule(),

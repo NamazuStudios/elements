@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.appnode.guice;
 
-import com.google.inject.*;
+import com.google.inject.Injector;
+import com.google.inject.PrivateModule;
+import com.google.inject.Provider;
+import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.dao.ApplicationDao;
-import com.namazustudios.socialengine.dao.rt.GitLoader;
-import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.rt.exception.ApplicationCodeNotFoundException;
+import com.namazustudios.socialengine.rt.git.GitLoader;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -15,12 +18,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
+import static com.namazustudios.socialengine.rt.git.FilesystemGitLoader.getLegacyDirectory;
+import static java.nio.file.Files.createSymbolicLink;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
@@ -60,15 +64,15 @@ public class WorkerInstanceModule extends PrivateModule {
             final Set<Node> nodeSet = applications.stream().map(application -> {
 
                     final File codeDirectory;
+                    final var appId = ApplicationId.forUniqueName(application.getId());
 
                     try {
-                        codeDirectory = gitLoader.getCodeDirectory(application);
-                    } catch (NotFoundException nfe) {
+                        codeDirectory = gitLoader.getCodeDirectory(appId, dir -> gitLoader.getLegacyCodeDirectory(application.getId()));
+                    } catch (ApplicationCodeNotFoundException nfe) {
                         logger.info("Application code not found.  Skipping application {}", application.getName());
                         return null;
                     }
 
-                    final var appId = ApplicationId.forUniqueName(application.getId());
                     final var nodeId = NodeId.forInstanceAndApplication(instanceIdProvider.get(), appId);
                     final var appModule = new LuaApplicationModule(nodeId, application, codeDirectory);
 

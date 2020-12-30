@@ -3,16 +3,12 @@ package com.namazustudios.socialengine.service;
 import org.redisson.Redisson;
 import org.redisson.api.RedissonClient;
 import org.redisson.config.Config;
-import org.redisson.config.ElasticacheServersConfig;
-import org.redisson.config.ReadMode;
-import org.redisson.config.ReplicatedServersConfig;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
 import static org.redisson.config.ReadMode.MASTER;
-import static org.redisson.config.ReadMode.MASTER_SLAVE;
 
 /**
  * Created by patricktwohig on 7/28/17.

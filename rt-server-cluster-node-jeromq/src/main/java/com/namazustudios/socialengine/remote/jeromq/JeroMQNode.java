@@ -77,7 +77,7 @@ public class JeroMQNode implements Node {
 
         final NodeContext c = new NodeContext();
 
-        c.logger.info("Begging startup.");
+        c.logger.info("Beginning startup.");
 
         if (!context.compareAndSet(null, c)) {
             throw new IllegalStateException("Already started.");

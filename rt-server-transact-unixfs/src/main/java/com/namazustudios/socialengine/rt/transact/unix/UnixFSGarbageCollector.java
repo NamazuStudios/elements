@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
@@ -92,7 +93,7 @@ public class UnixFSGarbageCollector {
      * running the collector will ignore the hint.
      */
     public void hintImmediateAsync() {
-        getContext().hintImmediateAsync();
+        getOptionalContext().ifPresent(Context::hintImmediateAsync);
     }
 
     /**
@@ -108,6 +109,10 @@ public class UnixFSGarbageCollector {
         final Context context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
         return context;
+    }
+
+    private Optional<Context> getOptionalContext() {
+        return Optional.ofNullable(context.get());
     }
 
     public UnixFSUtils getUtils() {

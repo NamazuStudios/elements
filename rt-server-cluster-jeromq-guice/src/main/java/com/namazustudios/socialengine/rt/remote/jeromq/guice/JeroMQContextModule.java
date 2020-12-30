@@ -1,17 +1,13 @@
 package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 
 import com.google.inject.PrivateModule;
-import com.google.inject.Provider;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.remote.RoutingStrategy;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextModule;
 import org.zeromq.ZContext;
 
-import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-
-import static com.namazustudios.socialengine.rt.id.ApplicationId.forUniqueName;
+import static com.google.inject.name.Names.named;
 
 /**
  * Combines {@link JeroMQRemoteInvokerModule} with the {@link ClusterContextModule} to make a complete client
@@ -25,10 +21,15 @@ public class JeroMQContextModule extends PrivateModule {
 
     @Override
     protected void configure() {
-        expose(Context.class);
+
         contextBindAction.run();
         bindApplicationUuid.run();
+
         install(new ClusterContextModule());
+
+        expose(ApplicationId.class);
+        expose(Context.class).annotatedWith(named(Context.REMOTE));
+
     }
 
     /**
@@ -50,7 +51,7 @@ public class JeroMQContextModule extends PrivateModule {
      * @return this instance
      */
     public JeroMQContextModule withApplicationUniqueName(final String applicationUniqueName) {
-        final ApplicationId applicationId = forUniqueName(applicationUniqueName);
+        final var applicationId = ApplicationId.forUniqueName(applicationUniqueName);
         return withApplicationId(applicationId);
     }
 
@@ -62,8 +63,7 @@ public class JeroMQContextModule extends PrivateModule {
      * @return this instance
      */
     private JeroMQContextModule withApplicationId(final ApplicationId applicationId) {
-        bindApplicationUuid = () -> bind(ApplicationId.class)
-            .toInstance(applicationId);
+        bindApplicationUuid = () -> bind(ApplicationId.class).toInstance(applicationId);
         return this;
     }
 

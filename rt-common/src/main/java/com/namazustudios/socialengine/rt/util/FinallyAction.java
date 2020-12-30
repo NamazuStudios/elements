@@ -10,8 +10,9 @@ import org.slf4j.LoggerFactory;
 @FunctionalInterface
 public interface FinallyAction extends Runnable, AutoCloseable {
 
-    FinallyAction BEGIN = () -> {};
-
+    /**
+     * The default {@link Logger} used by {@link FinallyAction} instances.
+     */
     Logger logger = LoggerFactory.getLogger(FinallyAction.class);
 
     /**
@@ -20,7 +21,7 @@ public interface FinallyAction extends Runnable, AutoCloseable {
      * @return
      */
     static FinallyAction begin() {
-        return BEGIN;
+        return () -> {};
     }
 
     /**
@@ -29,13 +30,17 @@ public interface FinallyAction extends Runnable, AutoCloseable {
      * @return
      */
     static FinallyAction begin(final Logger logger) {
+
+        final var l = logger;
+
         return new FinallyAction() {
             @Override
             public void run() {}
 
             @Override
-            public Logger getLogger() { return logger; }
+            public Logger getLogger() { return l; }
         };
+
     }
 
     /**
