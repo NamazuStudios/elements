@@ -17,8 +17,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.git.FilesystemGitLoader.getBareStorageDirectory;
-import static com.namazustudios.socialengine.rt.git.FilesystemGitLoader.getLegacyDirectory;
+import static com.namazustudios.socialengine.rt.git.FilesystemGitLoader.*;
 import static java.nio.file.Files.createSymbolicLink;
 
 /**
@@ -73,7 +72,7 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
     }
 
     @Inject
-    public void setGitStorageDirectory(@Named(Constants.GIT_STORAGE_DIRECTORY) File gitStorageDirectory) {
+    public void setGitStorageDirectory(@Named(GIT_STORAGE_DIRECTORY) File gitStorageDirectory) {
         this.gitStorageDirectory = gitStorageDirectory;
     }
 

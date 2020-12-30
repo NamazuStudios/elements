@@ -21,7 +21,7 @@
 //        bind(BootstrapDao.class).to(GitBootstrapDao.class);
 //
 //        // Right now there is only one bootstrapper, the Lua bootstrapper.  For the sake of simplicity
-//        // we just return the isntance as requested, but this could be expanded to more langauges or
+//        // we just return the instance as requested, but this could be expanded to more languages or
 //        // frameworks in the future.
 //
 //        bind(new TypeLiteral<Function<Application, Bootstrapper>>(){}).toInstance(a -> new LuaBootstrapper());
