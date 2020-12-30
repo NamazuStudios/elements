@@ -56,8 +56,6 @@
         <module>rt-server-lua-guice</module>
         <module>rt-server-lua-stress-tests</module>
         <module>rt-client</module>
-        <module>rt-dao</module>
-        <module>rt-dao-guice</module>
         <module>rt-http-servlet</module>
         <module>rt-fst</module>
         <module>rt-fst-guice</module>
