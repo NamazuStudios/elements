@@ -6,12 +6,15 @@ import java.util.Properties;
 
 import static com.namazustudios.socialengine.rest.RestAPIMain.*;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
+import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
+import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
+import static java.lang.Runtime.getRuntime;
 
 public class RestJettyModuleDefaults implements ModuleDefaults {
 
@@ -27,6 +30,8 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
+        properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
+        properties.setProperty(MAX_SOCKETS, "500000");
         return properties;
     }
 

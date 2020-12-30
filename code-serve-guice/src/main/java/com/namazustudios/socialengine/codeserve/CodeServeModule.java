@@ -38,4 +38,5 @@ public class CodeServeModule extends AbstractModule {
         install(new GitApplicationBootstrapperModule());
         install(new ClusterContextFactoryModule());
     }
+
 }

@@ -52,9 +52,9 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(UNIXFS_TRANSACTION_BUFFER_COUNT, "8192");
         properties.setProperty(UNIXFS_STORAGE_ROOT_DIRECTORY, "storage.unixfs");
         properties.setProperty(SCHEDULER_ENVIRONMENT_PATH, "storage.xodus.scheduler");
+        properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(GIT_STORAGE_DIRECTORY, "repositories");
-        properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         return properties;
     }
 

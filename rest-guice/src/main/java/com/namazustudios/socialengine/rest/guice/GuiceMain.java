@@ -12,7 +12,6 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.service.guice.*;
@@ -97,7 +96,6 @@ public class GuiceMain extends GuiceServletContextListener {
             new MongoCoreModule(),
             new MongoDaoModule(),
             new MongoSearchModule(),
-            new FilesystemGitLoaderModule(),
             new ClusterContextFactoryModule(),
             new ValidationModule(),
             new GameOnInvokerModule(),

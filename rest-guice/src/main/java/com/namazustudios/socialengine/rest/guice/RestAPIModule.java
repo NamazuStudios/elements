@@ -12,7 +12,6 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
-import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
@@ -81,7 +80,6 @@ public class RestAPIModule extends AbstractModule {
         install(new MongoCoreModule());
         install(new MongoDaoModule());
         install(new MongoSearchModule());
-        install(new FilesystemGitLoaderModule());
         install(new ZContextModule());
         install(new ClusterContextFactoryModule());
         install(new ValidationModule());
