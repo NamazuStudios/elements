@@ -67,8 +67,8 @@ public class ReentrantThreadLocalScope<ScopedT> implements Scope {
             final var attributes = resolver.apply(scoped);
             return (T) attributes.getAttributeOptional(key.toString()).orElseGet(() -> {
                 final var object = unscoped.get();
-                if (!isCircularProxy(object)) attributes.setAttribute(key.toString(), unscoped);
-                return unscoped;
+                if (!isCircularProxy(object)) attributes.setAttribute(key.toString(), object);
+                return object;
             });
         };
     }

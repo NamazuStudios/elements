@@ -103,7 +103,7 @@ public class JeroMQRemoteInvocation {
 
         try {
 
-            logger.info("Received message {}", this);
+            logger.debug("Received message {}", this);
 
             final ZMsg msg = recv(connection);
             handleResponse(msg);
@@ -258,7 +258,7 @@ public class JeroMQRemoteInvocation {
 
     private void handleResult(final ZMsg msg, final ResponseHeader responseHeader) {
 
-        logger.info("Got invocation result.");
+        logger.debug("Got invocation result.");
 
         final InvocationResult invocationResult;
 
@@ -270,7 +270,7 @@ public class JeroMQRemoteInvocation {
         }
 
         final int part = responseHeader.part.get();
-        logger.info("{} Processing InvocationResult {} for part {}", this, invocationResult, part);
+        logger.debug("{} Processing InvocationResult {} for part {}", this, invocationResult, part);
 
         if (part == 0) {
             syncCompleted = true;
@@ -290,12 +290,12 @@ public class JeroMQRemoteInvocation {
     private void handleError(final ZMsg msg,
                              final ResponseHeader responseHeader) {
 
-        logger.info("Got invocation error.");
+        logger.debug("Got invocation error.");
 
         final int part = responseHeader.part.get();
         final InvocationError invocationError = extractInvocationError(msg);
 
-        logger.info("Processing InvocationError {} for part {}", invocationError, part);
+        logger.debug("Processing InvocationError {} for part {}", invocationError, part);
 
         if (part == 0) {
 

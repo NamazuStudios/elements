@@ -23,12 +23,12 @@ public class RequestHeaderProfileIdentificationMethod implements ProfileIdentifi
         final String profileId = getRequest()
             .getHeader()
             .getHeader(PROFILE_ID)
-            .map(o -> o.toString())
-            .orElseThrow(() -> new UnidentifiedProfileException());
+            .map(Object::toString)
+            .orElseThrow(UnidentifiedProfileException::new);
 
         return getProfileOverrideService()
             .findOverrideProfile(profileId)
-            .orElseThrow(() -> new UnidentifiedProfileException());
+            .orElseThrow(UnidentifiedProfileException::new);
 
     }
 

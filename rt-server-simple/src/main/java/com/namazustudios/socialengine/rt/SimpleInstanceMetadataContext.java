@@ -38,14 +38,14 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
     @Override
     public Set<NodeId> getNodeIds() {
         final Set<NodeId> nodeIdSet = getWorker().getActiveNodeIds();
-        logger.info("Returning active node IDs for instance {} - {}", getInstanceId(),nodeIdSet);
+        logger.debug("Returning active node IDs for instance {} - {}", getInstanceId(),nodeIdSet);
         return nodeIdSet;
     }
 
     @Override
     public double getInstanceQuality() {
         final double load = getLoadMonitorService().getInstanceQuality();
-        logger.info("Reporting instance load {} - {}", getInstanceId(), load);
+        logger.debug("Reporting instance load {} - {}", getInstanceId(), load);
         return load;
     }
 

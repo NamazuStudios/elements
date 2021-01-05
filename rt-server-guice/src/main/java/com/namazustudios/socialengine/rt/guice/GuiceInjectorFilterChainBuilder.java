@@ -80,7 +80,7 @@ public class GuiceInjectorFilterChainBuilder implements Filter.Chain.Builder {
             try (var outer = CurrentRequest.getInstance().enter(request)) {
 
                 final Stream<Filter> configured = configuredFilterListProvider.get().stream();
-                final Stream<Filter> additional = filterSupplierList.stream().map(s -> s.get());
+                final Stream<Filter> additional = filterSupplierList.stream().map(Supplier::get);
                 final List<Filter> filters = Stream.concat(configured, additional)
                     .map(ScopeFilterWrapper::new)
                     .collect(Collectors.toList());
