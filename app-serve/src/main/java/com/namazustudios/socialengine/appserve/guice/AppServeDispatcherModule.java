@@ -9,10 +9,6 @@ import com.namazustudios.socialengine.rt.http.HttpRequest;
 import com.namazustudios.socialengine.rt.http.RequestScopedHttpSessionDispatcher;
 import com.namazustudios.socialengine.rt.jackson.guice.MultiContentTypeJacksonPayloadReaderModule;
 import com.namazustudios.socialengine.rt.jackson.guice.MultiContentTypeJacksonPayloadWriterModule;
-import com.namazustudios.socialengine.rt.remote.ContextLocalInvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.RemoteInvocationDispatcher;
-import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvocationDispatcher;
 import com.namazustudios.socialengine.rt.servlet.*;
 
 public class AppServeDispatcherModule extends PrivateModule {

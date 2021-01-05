@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.servlet;
 import com.google.common.collect.ImmutableMap;
 import com.namazustudios.socialengine.rt.NamedHeaders;
 import com.namazustudios.socialengine.rt.PayloadWriter;
+import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.ResponseCode;
 import com.namazustudios.socialengine.rt.http.HttpResponse;
 import com.namazustudios.socialengine.rt.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.Map;
@@ -20,6 +22,8 @@ import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 
 public class DefaultHttpResponseService implements HttpResponseService {
+
+    private static final String DEFAULT_CONTENT_TYPE = "application/json";
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultHttpResponseService.class);
 
@@ -53,6 +57,48 @@ public class DefaultHttpResponseService implements HttpResponseService {
         }
     }
 
+    @Override
+    public void write(final HttpServletRequest httpServletRequest,
+                      final Response toWrite,
+                      final HttpServletResponse destination) {
+        try {
+            doWrite(httpServletRequest, toWrite, destination);
+        } catch (Exception ex) {
+            logAndSendInternalServerError(destination, ex);
+        }
+    }
+
+    private void doWrite(final HttpServletRequest httpServletRequest,
+                         final Response toWrite,
+                         final HttpServletResponse destination) throws IOException {
+
+        final var payload = toWrite.getPayload();
+        final var contentType = httpServletRequest.getContentType();
+
+        var payloadWriter = getWritersByContentType().get(contentType);
+
+        if (payloadWriter == null) {
+            payloadWriter = getWritersByContentType().get(DEFAULT_CONTENT_TYPE);
+        }
+
+        if (destination.getHeaders(CONTENT_TYPE).isEmpty()) {
+            // We only set this if nobody had previously set the Content-Type header.  The response itself can, if it
+            // so desires, modify the Content-Type (even if it doesn't make any sense).  In most cases the client code
+            // will not want to set this, so we should set this here in the container.
+            destination.setHeader(CONTENT_TYPE, contentType);
+        }
+
+        setStatusCode(toWrite, destination, payload);
+
+        if (payload != null) {
+            if (payloadWriter == null) {
+
+            }
+
+            payloadWriter.write(payload, destination.getOutputStream());
+        }
+
+    }
     private void doWrite(final HttpResponse toWrite,
                          final HttpServletResponse destination) throws ServletException, IOException {
 
@@ -85,10 +131,16 @@ public class DefaultHttpResponseService implements HttpResponseService {
             destination.setHeader(CONTENT_TYPE, responseContent.getType());
         }
 
-        setStatusCode(toWrite, destination, payload);
+        if (payloadWriter == null) {
+            destination.setStatus(HttpServletResponse.SC_NOT_ACCEPTABLE);
+        } else {
 
-        if (payload != null) {
-            payloadWriter.write(payload, destination.getOutputStream());
+            setStatusCode(toWrite, destination, payload);
+
+            if (payload != null) {
+                payloadWriter.write(payload, destination.getOutputStream());
+            }
+
         }
 
     }
@@ -123,7 +175,7 @@ public class DefaultHttpResponseService implements HttpResponseService {
 
     }
 
-    private void setStatusCode(final HttpResponse toWrite,
+    private void setStatusCode(final Response toWrite,
                                final HttpServletResponse destination,
                                final Object payload) throws IOException {
 
