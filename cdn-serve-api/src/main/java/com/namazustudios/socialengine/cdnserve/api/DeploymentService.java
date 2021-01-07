@@ -7,8 +7,6 @@ public interface DeploymentService {
 
     Pagination<Deployment> getDeployments(final String applicationId, final int offset, final int count);
 
-    Pagination<Deployment> getAllDeployments(final int offset, final int count);
-
     Deployment getDeployment(final String applicationId, final String deploymentId);
 
     Deployment getCurrentDeployment(final String applicationId);

@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.codeserve.GitSecurityModule;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.servlet.security.HttpServletBasicAuthFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
@@ -51,7 +52,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private DeploymentManager deploymentManager;
 
-    private DeploymentService deploymentService;
+    private ApplicationService applicationService;
 
     public DeploymentManager getDeploymentManager() {
         return deploymentManager;
@@ -141,9 +142,8 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private void startCdnApps() {
-        Pagination<Deployment> deployments = getDeploymentService().getAllDeployments(0, 100);
-        LinkedHashSet<Application> apps = deployments.getObjects().stream().map(Deployment::getApplication).collect(toCollection(LinkedHashSet::new));
-        for(Application a : apps){
+        Pagination<Application> applications = getApplicationService().getApplications();
+        for(Application a : applications){
             final App app = new App(getDeploymentManager(), this, a.getName());
             getDeploymentManager().addApp(app);
         }
@@ -181,12 +181,12 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         this.serveEndpoint = serveEndpoint;
     }
 
-    public DeploymentService getDeploymentService() {
-        return deploymentService;
+    public ApplicationService getApplicationService() {
+        return applicationService;
     }
 
     @Inject
-    public void setDeploymentService(DeploymentService deploymentService) {
-        this.deploymentService = deploymentService;
+    public void setApplicationService(ApplicationService applicationService) {
+        this.applicationService = applicationService;
     }
 }

@@ -126,7 +126,8 @@ public class MongoDeploymentDao implements DeploymentDao {
 
         query.criteria("version").equal(deployment.getVersion());
 
-        if(query.get().getVersion().equals(deployment.getVersion())) {
+        MongoDeployment res = query.get();
+        if(res != null && res.getVersion().equals(deployment.getVersion())) {
             throw new DuplicateDeploymentException(String.format("Deployment version: %s, already exists, suggest changing version or updating existing version", deployment.getVersion()));
         }
 

@@ -60,11 +60,6 @@ public class JettyDeploymentService implements DeploymentService {
     }
 
     @Override
-    public Pagination<Deployment> getAllDeployments(final int offset, final int count){
-        return getDeploymentDao().getAllDeployments(offset, count);
-    }
-
-    @Override
     public Deployment getDeployment(String applicationId, String deploymentId) {
         return getDeploymentDao().getDeployment(applicationId, deploymentId);
     }
