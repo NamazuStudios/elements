@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -149,17 +150,34 @@ public class JettyDeploymentService implements DeploymentService {
 
         try (TreeWalk treeWalk = new TreeWalk(repo)) {
             treeWalk.addTree(tree);
-            treeWalk.setRecursive(true);
+            treeWalk.setRecursive(false);
             // Walk the file tree and copy all files
-            while(treeWalk.next()){
+            while(treeWalk.next()) {
+                copyAndCheckForSubTree(repo, treeWalk, directory);
+            }
+            walk.dispose();
+        }
+        createSymbolicLink(newDeployment, directory);
+    }
+
+    private void copyAndCheckForSubTree(Repository repo, TreeWalk treeWalk, Path directory) throws IOException {
+            if (treeWalk.isSubtree()) {
+                logger.info("INFO dir: " + treeWalk.getPathString());
+                String treeWalkPath = treeWalk.getPathString();
+                if(treeWalkPath.contains("/")){
+                    treeWalkPath = treeWalkPath.substring(treeWalkPath.lastIndexOf('/') + 1).trim();
+                }
+                Path subDirectory = Files.createDirectories(Paths.get(directory.toString() + "/" + treeWalkPath));
+                treeWalk.enterSubtree();
+                while(treeWalk.next()) {
+                    copyAndCheckForSubTree(repo, treeWalk, subDirectory);
+                }
+            } else {
                 Path file = Files.createFile(Paths.get(format("%s/%s", directory, treeWalk.getNameString())));
                 ObjectId objectId = treeWalk.getObjectId(0);
                 ObjectLoader loader = repo.open(objectId);
                 Files.write(file, loader.getBytes());
             }
-            walk.dispose();
-        }
-        createSymbolicLink(newDeployment, directory);
     }
 
     private void createSymbolicLink(Deployment newDeployment, Path pathToLink) throws IOException {
@@ -170,7 +188,8 @@ public class JettyDeploymentService implements DeploymentService {
             Files.delete(link);
             Files.delete(symLinkedPath);
         }
-        Files.createSymbolicLink(link, pathToLink);
+        String absolutePathToLink = FileSystems.getDefault().getPath(pathToLink.toString()).normalize().toAbsolutePath().toString();
+        Files.createSymbolicLink(link, Paths.get(absolutePathToLink));
     }
 
     @Override
