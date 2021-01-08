@@ -42,7 +42,7 @@ public class JeroMQAsyncConnectionServiceTest {
 
     private Thread mockServer;
 
-    private List<AsyncConnectionPool> managedPoolList;
+    private List<AsyncConnectionPool<ZContext, ZMQ.Socket>> managedPoolList;
 
     private final Set<String> sent = newKeySet();
 

@@ -162,11 +162,6 @@
             <artifactId>reflections</artifactId>
             <version>${reflections.version}</version>
         </dependency>
-<!--        <dependency>-->
-<!--            <groupId>com.namazustudios.socialengine</groupId>-->
-<!--            <artifactId>common-lua</artifactId>-->
-<!--            <version>${project.version}</version>-->
-<!--        </dependency>-->
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-jeromq-guice</artifactId>
@@ -186,6 +181,16 @@
             <groupId>org.glassfish.jersey.media</groupId>
             <artifactId>jersey-media-json-jackson</artifactId>
             <version>${jersey.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.module</groupId>
+                    <artifactId>jackson-module-jaxb-annotations</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

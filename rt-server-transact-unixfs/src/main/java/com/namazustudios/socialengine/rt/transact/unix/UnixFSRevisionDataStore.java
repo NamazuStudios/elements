@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTableEntry.State.*;
+import static java.nio.file.Files.deleteIfExists;
 import static java.util.Comparator.comparing;
 import static java.util.stream.Collectors.toList;
 import static org.slf4j.LoggerFactory.getLogger;
@@ -196,7 +197,7 @@ public class UnixFSRevisionDataStore implements RevisionDataStore {
             public void unlinkFile(final UnixFSTransactionProgram program,
                                    final UnixFSTransactionCommand command,
                                    final Path fsPath) {
-                getUtils().doOperationV(() -> Files.deleteIfExists(fsPath), FatalException::new);
+                getUtils().doOperationV(() -> deleteIfExists(fsPath), FatalException::new);
             }
 
             @Override

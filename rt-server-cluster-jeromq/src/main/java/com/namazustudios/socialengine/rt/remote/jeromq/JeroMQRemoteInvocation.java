@@ -65,7 +65,8 @@ public class JeroMQRemoteInvocation {
 
     public JeroMQRemoteInvocation(final AsyncConnection<ZContext, ZMQ.Socket> connection,
                                   final Invocation invocation,
-                                  final PayloadReader payloadReader, final PayloadWriter payloadWriter,
+                                  final PayloadReader payloadReader,
+                                  final PayloadWriter payloadWriter,
                                   final Map<String, String > mdcContext,
                                   final Consumer<Object> syncResultConsumer,
                                   final Consumer<Throwable> syncErrorConsumer,
@@ -105,7 +106,7 @@ public class JeroMQRemoteInvocation {
 
             logger.debug("Received message {}", this);
 
-            final ZMsg msg = recv(connection);
+            final var msg = recv(connection);
             handleResponse(msg);
 
             if (asyncCompleted && syncCompleted) {
@@ -198,8 +199,6 @@ public class JeroMQRemoteInvocation {
         try (final ByteArrayInputStream bis = new ByteArrayInputStream(exceptionFrame.getData());
              final ObjectInputStream ois = new ObjectInputStream(bis)) {
             return (RuntimeException)ois.readObject();
-        } catch (IOException ex) {
-            return new InternalException(message, ex);
         } catch (Exception ex) {
             return new InternalException(message, ex);
         }

@@ -43,7 +43,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
     private int maxConnections;
 
-    private final AtomicReference<AsyncConnectionPool> pool = new AtomicReference<>();
+    private final AtomicReference<AsyncConnectionPool<ZContext, ZMQ.Socket>> pool = new AtomicReference<>();
 
     @Override
     public void start(final String connectAddress, final long timeout, final TimeUnit timeoutTimeUnit) {
@@ -77,7 +77,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         logger.info("Stopping connection to {}", connectAddress);
         connectAddress = null;
 
-        final AsyncConnectionPool pool = this.pool.getAndSet(null);
+        final var pool = this.pool.getAndSet(null);
         if (pool == null) throw new IllegalStateException("Not running.");
         pool.close();
 
@@ -118,8 +118,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final Map<String, String > mdcContext = MDC.getCopyOfContextMap();
-        final CompletableFuture<Object> completableFuture = new CompletableFuture<>();
+        final var mdcContext = MDC.getCopyOfContextMap();
+        final var completableFuture = new CompletableFuture<>();
 
         getPool().acquireNextAvailableConnection(connection -> {
 
@@ -129,8 +129,8 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 getPayloadReader(),
                 getPayloadWriter(),
                 mdcContext,
-                o -> completableFuture.complete(o),
-                ex -> completableFuture.completeExceptionally(ex),
+                completableFuture::complete,
+                completableFuture::completeExceptionally,
                 asyncInvocationResultConsumerList,
                 asyncInvocationErrorConsumer
             );
@@ -144,7 +144,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     }
 
     private AsyncConnectionPool<ZContext, ZMQ.Socket> getPool() {
-        final AsyncConnectionPool pool = this.pool.get();
+        final var pool = this.pool.get();
         if (pool == null) throw new IllegalStateException("Not currently running.");
         return pool;
     }

@@ -12,6 +12,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -189,7 +190,18 @@ public class UnixFSPathIndex implements PathIndex {
             createDirectories(pathDirectory);
 
             logger.trace("Creating symlink {} -> {}", pathSymlink, pathSymlinkTarget);
-            createSymbolicLink(pathSymlink, pathSymlinkTarget);
+
+            try {
+                createSymbolicLink(pathSymlink, pathSymlinkTarget);
+            } catch (FileAlreadyExistsException ex) {
+
+                // If it already exists, then we need to ensure that the target is indeed the expected target.
+
+                if (!isSymbolicLink(pathSymlink) || !isSameFile(readSymbolicLink(pathSymlink), pathSymlinkTarget)) {
+                    throw ex;
+                }
+
+            }
 
             logger.trace("Created symlink {} -> {}", pathSymlink, pathSymlinkTarget);
 
@@ -228,16 +240,13 @@ public class UnixFSPathIndex implements PathIndex {
                               final ResourceId resourceId,
                               final com.namazustudios.socialengine.rt.Path rtPath) {
 
-        final UnixFSReversePathMapping reversePathMapping;
-        reversePathMapping = UnixFSReversePathMapping.fromRTPath(getUtils(), nodeId, rtPath);
-
-        final Path reverseDirectory = getCreateOrCopyReverseDirectory(reversePathMapping, revision, resourceId);
-
-        final Path link = reversePathMapping.resolvePath(reverseDirectory, rtPath);
+        final var reversePathMapping = UnixFSReversePathMapping.fromRTPath(getUtils(), nodeId, rtPath);
+        final var reverseDirectory = getCreateOrCopyReverseDirectory(reversePathMapping, revision, resourceId);
+        final var link = reversePathMapping.resolvePath(reverseDirectory, rtPath);
 
         getUtils().doOperationV(() -> {
-            delete(link);
-            if (!Files.list(reverseDirectory).findAny().isPresent()) delete(reverseDirectory);
+            deleteIfExists(link);
+            if (Files.list(reverseDirectory).findAny().isEmpty()) deleteIfExists(reverseDirectory);
         }, FatalException::new);
 
     }

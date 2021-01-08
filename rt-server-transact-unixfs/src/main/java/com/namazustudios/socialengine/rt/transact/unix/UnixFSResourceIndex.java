@@ -14,9 +14,11 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.*;
+import static java.lang.String.format;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
@@ -87,13 +89,13 @@ public class UnixFSResourceIndex implements ResourceIndex {
      */
     public void removeResource(final Revision<?> revision, final ResourceId resourceId) {
 
-        final UnixFSResourceIdMapping resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
+        final var resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
-        final Path resourceIdDirectory = getUtils()
+        final var resourceIdDirectory = getUtils()
             .findLatestForRevision(resourceIdMapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK)
             .getValue()
             .map(p -> resourceIdMapping.getResourceIdDirectory())
-            .orElseThrow(() -> new ResourceNotFoundException());
+            .orElseThrow(ResourceNotFoundException::new);
 
         getUtils().tombstone(resourceIdDirectory, revision, REVISION_HARD_LINK);
 
@@ -106,9 +108,9 @@ public class UnixFSResourceIndex implements ResourceIndex {
      * @param resourceId
      */
     public void removeResourceReverseMappings(final Revision<?> revision, final ResourceId resourceId) {
-        final NodeId nodeId = resourceId.getNodeId();
-        final UnixFSReversePathMapping reversePathMapping = UnixFSReversePathMapping.fromNodeId(utils, nodeId);
-        final Path reverseDirectory = reversePathMapping.resolveReverseDirectory(resourceId);
+        final var nodeId = resourceId.getNodeId();
+        final var reversePathMapping = UnixFSReversePathMapping.fromNodeId(utils, nodeId);
+        final var reverseDirectory = reversePathMapping.resolveReverseDirectory(resourceId);
         getUtils().tombstone(reverseDirectory, revision, DIRECTORY);
     }
 
@@ -119,8 +121,16 @@ public class UnixFSResourceIndex implements ResourceIndex {
         final var absolute = getUtils().getStorageRoot().resolve(fsPath);
 
         utils.doOperationV(() -> {
-            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
-            createLink(revisionPath, absolute);
+
+            final var revisionPath = mapping.resolveRevisionFilePath(revision);
+
+            if (exists(revisionPath)) {
+                final var msg = format("%s does not match %s", revisionPath, fsPath);
+                if (!isSameFile(revisionPath, fsPath)) throw new FatalException(msg);
+            } else {
+                createLink(revisionPath, absolute);
+            }
+
         }, FatalException::new);
 
     }
@@ -137,7 +147,6 @@ public class UnixFSResourceIndex implements ResourceIndex {
         final UnixFSResourceIdMapping mapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
         utils.doOperationV(() -> {
-            checkResourceIdDoesNotExist(mapping, revision);
             createDirectories(mapping.getResourceIdDirectory());
             getUtils().markNull(mapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK);
         }, FatalException::new);
@@ -157,25 +166,18 @@ public class UnixFSResourceIndex implements ResourceIndex {
         final var absolute = getUtils().getStorageRoot().resolve(fsPath);
 
         getUtils().doOperationV(() -> {
-            final Path revisionPath = mapping.resolveRevisionFilePath(revision);
-            checkResourceIdDoesNotExist(mapping, revision);
+
+            final var revisionPath = mapping.resolveRevisionFilePath(revision);
             createDirectories(mapping.getResourceIdDirectory());
-            createLink(revisionPath, absolute);
-        }, FatalException::new);
 
-    }
-
-    private void checkResourceIdDoesNotExist(final UnixFSResourceIdMapping mapping, final Revision<?> revision) {
-
-        if (!exists(mapping.getResourceIdDirectory(), NOFOLLOW_LINKS)) return;
-
-        final Revision<Path> latest = mapping.findLatestRevision(revision);
-
-        latest.getValue().ifPresent(value -> {
-            if (utils.isTombstone(value)) {
-                logger.error("Revision {} already exists at {}.", revision, value);
+            if (exists(revisionPath)) {
+                final var msg = format("%s does not match %s", revisionPath, fsPath);
+                if (!isSameFile(revisionPath, fsPath)) throw new FatalException(msg);
+            } else {
+                createLink(revisionPath, absolute);
             }
-        });
+
+        }, FatalException::new);
 
     }
 

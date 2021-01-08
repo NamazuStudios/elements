@@ -479,9 +479,20 @@ public class UnixFSUtils {
      * @param revision the {@link Revision<?>} at which to apply the tombstone.
      */
     public void tombstone(final Path directory, final Revision<?> revision, final LinkType linkType) {
-        if (!isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
-        final Path destination = directory.resolve(revision.getUniqueIdentifier() + linkType.getExtension());
-        doOperationV(() -> createLink(destination, tombstone), FatalException::new);
+
+        if (!isDirectory(directory, NOFOLLOW_LINKS))
+            throw new IllegalArgumentException(directory + " is not a directory.");
+
+        final var destination = directory.resolve(revision.getUniqueIdentifier() + linkType.getExtension());
+
+        doOperationV(() -> {
+            try {
+                createLink(destination, tombstone);
+            } catch (FileAlreadyExistsException ex) {
+                if (!isTombstone(destination)) throw ex;
+            }
+        }, FatalException::new);
+
     }
 
     /**
@@ -489,13 +500,21 @@ public class UnixFSUtils {
      * the revision. It is possible to later check that this revision is a tombstone by using
      * {@link #isNull(Path)}.
      *
+     * If the revision is already null, then this has no side effect.
+     *
      * @param directory the {@link Path} to the directory.
      * @param revision the {@link Revision<?>} at which to apply the tombstone.
      */
     public void markNull(final Path directory, final Revision<?> revision, final LinkType linkType) {
         if (!isDirectory(directory, NOFOLLOW_LINKS)) throw new IllegalArgumentException(directory + " is not a directory.");
         final Path destination = directory.resolve(revision.getUniqueIdentifier() + linkType.getExtension());
-        doOperationV(() -> createLink(destination, nullmarker), FatalException::new);
+        doOperationV(() -> {
+            try {
+                createLink(destination, nullmarker);
+            } catch (FileAlreadyExistsException ex) {
+                if (!isNull(destination)) throw ex;
+            }
+        }, FatalException::new);
     }
 
     /**

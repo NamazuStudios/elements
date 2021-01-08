@@ -5,16 +5,12 @@ import com.namazustudios.socialengine.rt.lua.guice.rest._t;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
-import org.eclipse.jetty.util.component.LifeCycle;
 import org.glassfish.jersey.jackson.JacksonFeature;
 import org.glassfish.jersey.server.ServerProperties;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.concurrent.CountDownLatch;
-
-import static java.lang.Thread.sleep;
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
 
 public class JettyEmbeddedRESTService {
