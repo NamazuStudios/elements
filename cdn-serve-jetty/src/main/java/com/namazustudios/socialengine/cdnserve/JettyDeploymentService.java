@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.cdnserve.api.CreateDeploymentRequest;
 import com.namazustudios.socialengine.cdnserve.api.UpdateDeploymentRequest;
 import com.namazustudios.socialengine.dao.DeploymentDao;
 import com.namazustudios.socialengine.dao.rt.GitLoader;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.application.ApplicationNotFoundException;
 import com.namazustudios.socialengine.exception.cdnserve.GitCloneIOException;
 import com.namazustudios.socialengine.exception.cdnserve.SymbolicLinkIOException;
@@ -14,10 +15,12 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.DeploymentManager;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
@@ -29,10 +32,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import java.io.InputStream;
+import java.nio.file.*;
 import java.util.UUID;
 
 import static java.lang.String.format;
@@ -95,17 +96,7 @@ public class JettyDeploymentService implements DeploymentService {
             }
         }
 
-        try {
-            copyRepositoryContentsForRevision(updatedDeployment);
-        } catch (IOException e) {
-            try {
-                getDeploymentDao().deleteDeployment(applicationId, updatedDeployment.getId());
-                throw new GitCloneIOException("Failed to clone files for revision " + updatedDeployment.getRevision(), e);
-            } catch (GitCloneIOException gitCloneIOException) {
-                logger.info(gitCloneIOException.getMessage());
-                return null;
-            }
-        }
+        copyRepositoryContentsForRevision(updatedDeployment);
 
         return updatedDeployment;
     }
@@ -123,41 +114,45 @@ public class JettyDeploymentService implements DeploymentService {
 
         final Deployment newDeployment = getDeploymentDao().createDeployment(deployment);
 
-        try {
-            copyRepositoryContentsForRevision(newDeployment);
-        } catch (IOException e) {
-            try {
-                getDeploymentDao().deleteDeployment(applicationId, newDeployment.getId());
-                throw new GitCloneIOException("Failed to clone files for revision " + deployment.getRevision(), e);
-            } catch (GitCloneIOException gitCloneIOException) {
-                logger.info(gitCloneIOException.getMessage());
-                return null;
-            }
-        }
+        copyRepositoryContentsForRevision(newDeployment);
 
         return newDeployment;
     }
 
 
 
-    private void copyRepositoryContentsForRevision(Deployment newDeployment) throws IOException {
-        File gitFile = getGitLoader().getCodeDirectory(newDeployment.getApplication());
-        Repository repo = new FileRepositoryBuilder().findGitDir(gitFile).build();
-        Path directory = Files.createDirectories(Paths.get(format("%s/%s/%s/%s", getContentDirectory(), newDeployment.getApplication().getName(), getCloneEndpoint(), UUID.randomUUID())));
-        RevWalk walk = new RevWalk(repo);
-        RevCommit commit = walk.parseCommit(ObjectId.fromString(newDeployment.getRevision()));
-        RevTree tree = commit.getTree();
-
-        try (TreeWalk treeWalk = new TreeWalk(repo)) {
-            treeWalk.addTree(tree);
-            treeWalk.setRecursive(false);
-            // Walk the file tree and copy all files
-            while(treeWalk.next()) {
-                copyAndCheckForSubTree(repo, treeWalk, directory);
+    private void copyRepositoryContentsForRevision(Deployment newDeployment) {
+        getGitLoader().performInGit(newDeployment.getApplication(), (git, r) -> {
+            try {
+                git.pull().call();
+            } catch (GitAPIException e) {
+                throw new InternalException(e);
             }
-            walk.dispose();
-        }
-        createSymbolicLink(newDeployment, directory);
+            try {
+                Repository repo = git.getRepository();
+                Path directory = Files.createDirectories(Paths.get(format("%s/%s/%s/%s", getContentDirectory(), newDeployment.getApplication().getName(), getCloneEndpoint(), UUID.randomUUID())));
+
+                try (TreeWalk treeWalk = new TreeWalk(repo); RevWalk walk = new RevWalk(repo)) {
+                    RevCommit commit = walk.parseCommit(ObjectId.fromString(newDeployment.getRevision()));
+                    RevTree tree = commit.getTree();
+                    treeWalk.addTree(tree);
+                    treeWalk.setRecursive(false);
+                    // Walk the file tree and copy all files
+                    while (treeWalk.next()) {
+                        copyAndCheckForSubTree(repo, treeWalk, directory);
+                    }
+                    walk.dispose();
+                }
+                createSymbolicLink(newDeployment, directory);
+            }catch (IOException ex){
+                try {
+                    getDeploymentDao().deleteDeployment(newDeployment.getApplication().getId(), newDeployment.getId());
+                    throw new GitCloneIOException("Failed to clone files for revision " + newDeployment.getRevision(), ex);
+                } catch (GitCloneIOException gitCloneIOException) {
+                    logger.info(gitCloneIOException.getMessage());
+                }
+            }
+        });
     }
 
     private void copyAndCheckForSubTree(Repository repo, TreeWalk treeWalk, Path directory) throws IOException {
@@ -173,10 +168,11 @@ public class JettyDeploymentService implements DeploymentService {
                     copyAndCheckForSubTree(repo, treeWalk, subDirectory);
                 }
             } else {
-                Path file = Files.createFile(Paths.get(format("%s/%s", directory, treeWalk.getNameString())));
                 ObjectId objectId = treeWalk.getObjectId(0);
                 ObjectLoader loader = repo.open(objectId);
-                Files.write(file, loader.getBytes());
+                try (InputStream is = loader.openStream()){
+                    Files.copy(is, Paths.get(format("%s/%s", directory, treeWalk.getNameString())));
+                }
             }
     }
 
