@@ -23,6 +23,7 @@ import java.util.stream.Stream;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.*;
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
+import static java.nio.file.Files.createSymbolicLink;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.util.stream.Collectors.toSet;
 
@@ -178,34 +179,18 @@ public class UnixFSPathIndex implements PathIndex {
 
         }
 
+        final Path pathDirectory = pathMapping.getPathDirectory();
+        final Path resourceIdDirectory = resourceIdMapping.getResourceIdDirectory();
+
+        final Path pathSymlink = getUtils().resolveSymlinkPath(pathDirectory, revision);
+        final Path pathSymlinkTarget = pathDirectory.relativize(resourceIdDirectory);
+
         getUtils().doOperationV(() -> {
-
-            final Path pathDirectory = pathMapping.getPathDirectory();
-            final Path resourceIdDirectory = resourceIdMapping.getResourceIdDirectory();
-
-            final Path pathSymlink = getUtils().resolveSymlinkPath(pathDirectory, revision);
-            final Path pathSymlinkTarget = pathDirectory.relativize(resourceIdDirectory);
-
             logger.trace("Creating directory {}", pathDirectory);
             createDirectories(pathDirectory);
-
-            logger.trace("Creating symlink {} -> {}", pathSymlink, pathSymlinkTarget);
-
-            try {
-                createSymbolicLink(pathSymlink, pathSymlinkTarget);
-            } catch (FileAlreadyExistsException ex) {
-
-                // If it already exists, then we need to ensure that the target is indeed the expected target.
-
-                if (!isSymbolicLink(pathSymlink) || !isSameFile(readSymbolicLink(pathSymlink), pathSymlinkTarget)) {
-                    throw ex;
-                }
-
-            }
-
-            logger.trace("Created symlink {} -> {}", pathSymlink, pathSymlinkTarget);
-
         }, FatalException::new);
+
+        createSymbolicLink(pathSymlink, pathSymlinkTarget);
 
     }
 
@@ -223,8 +208,26 @@ public class UnixFSPathIndex implements PathIndex {
 
         final Path link = reversePathMapping.resolvePath(reverseDirectory, rtPath);
         final Path target = reverseDirectory.relativize(pathMapping.getPathDirectory());
-        getUtils().doOperationV(() -> createSymbolicLink(link, target), FatalException::new);
+        createSymbolicLink(link, target);
 
+    }
+
+    private void createSymbolicLink(final Path link, final Path target) {
+        getUtils().doOperationV(() -> {
+            try {
+                logger.trace("Creating symlink {} -> {}", link, target);
+                Files.createSymbolicLink(link, target);
+                logger.trace("Created symlink {} -> {}", link, target);
+            } catch (FileAlreadyExistsException ex) {
+
+                // If it already exists, then we need to ensure that the target is indeed the expected target.
+
+                if (!isSymbolicLink(link) || !isSameFile(readSymbolicLink(link), target)) {
+                    throw ex;
+                }
+
+            }
+        }, FatalException::new);
     }
 
     public void unlink(final Revision<?> revision,

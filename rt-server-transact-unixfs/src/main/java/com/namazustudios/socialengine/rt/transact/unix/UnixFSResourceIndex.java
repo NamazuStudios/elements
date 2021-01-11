@@ -126,7 +126,7 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
             if (exists(revisionPath)) {
                 final var msg = format("%s does not match %s", revisionPath, fsPath);
-                if (!isSameFile(revisionPath, fsPath)) throw new FatalException(msg);
+                if (exists(fsPath) && !isSameFile(revisionPath, fsPath) ) throw new FatalException(msg);
             } else {
                 createLink(revisionPath, absolute);
             }

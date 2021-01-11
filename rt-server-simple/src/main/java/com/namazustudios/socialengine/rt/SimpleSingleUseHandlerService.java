@@ -69,10 +69,11 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                           long timeoutDelay, TimeUnit timeoutUnit,
                           final String module, final Attributes attributes,
                           final String method, final Object... args) {
-        final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
-        final Resource resource = acquire(path, module, attributes);
-        final ResourceId resourceId = resource.getId();
-        final RunnableFuture<Void> destroy = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
+
+        final var path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
+        final var resource = acquire(path, module, attributes);
+        final var resourceId = resource.getId();
+        final var destroy = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
         try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
 
@@ -81,7 +82,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
             final Consumer<Throwable> _failure = t -> {
                 try {
 
-                    final String _args = stream(args)
+                    final var _args = stream(args)
                         .map(a -> a == null ? "null" : a.toString())
                         .collect(Collectors.joining(","));
 

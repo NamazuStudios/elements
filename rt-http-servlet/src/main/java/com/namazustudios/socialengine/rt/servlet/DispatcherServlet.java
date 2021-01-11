@@ -115,7 +115,6 @@ public class DispatcherServlet extends HttpServlet {
 
     private void mapRequestAndPerformAsync(final HttpServletRequest httpServletRequest,
                                            final HttpServletResponse httpServletResponse) {
-
         getExceptionMapperResolver().performExceptionSafe(
             r -> assembleAndWrite(httpServletRequest, r, httpServletResponse),
             () -> {

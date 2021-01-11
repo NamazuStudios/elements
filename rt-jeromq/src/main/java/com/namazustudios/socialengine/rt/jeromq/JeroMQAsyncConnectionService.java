@@ -39,7 +39,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
     @Override
     public void start() {
 
-        final SimpleAsyncConnectionServiceContext context = new SimpleAsyncConnectionServiceContext();
+        final var context = new SimpleAsyncConnectionServiceContext();
 
         if (this.context.compareAndSet(null, context)) {
             context.start();
@@ -175,7 +175,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
         public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group() {
             return new AsyncConnectionGroup.Builder<>() {
 
-                private List<Function<JeroMQAsyncThreadContext, AsyncConnection<ZContext, ZMQ.Socket>>> connectionSupplierList = new ArrayList<>();
+                private final List<Function<JeroMQAsyncThreadContext, AsyncConnection<ZContext, ZMQ.Socket>>> connectionSupplierList = new ArrayList<>();
 
                 @Override
                 public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket>
@@ -218,7 +218,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
         }
 
-        public AsyncConnectionPool allocatePool(
+        public AsyncConnectionPool<ZContext, ZMQ.Socket> allocatePool(
                 final String name,
                 final int minConnections, final int maxConnextions,
                 final Function<ZContext, ZMQ.Socket> socketSupplier) {

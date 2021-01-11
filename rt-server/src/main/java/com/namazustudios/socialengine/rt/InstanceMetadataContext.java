@@ -27,15 +27,6 @@ public interface InstanceMetadataContext {
     default void stop() {}
 
     /**
-     * Returns the {@link NodeId} for the instance context.  As the instance metadata context runs in a node, the
-     * instance will have a {@link NodeId} where the instance and the node share the same ID.
-     *
-     * @return the {@link NodeId}
-     */
-    @RemotelyInvokable
-    InstanceId getInstanceId();
-
-    /**
      * Gets all {@link NodeId}s housed within the instance.
      *
      * @return the {@link Set<NodeId>} of all running and active nodes on the instance

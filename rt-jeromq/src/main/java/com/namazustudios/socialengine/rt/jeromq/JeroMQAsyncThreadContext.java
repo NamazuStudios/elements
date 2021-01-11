@@ -124,7 +124,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
     private void pollManagedConnections() {
         final int size = poller.getNext();
         for (int index = connectionIndexStart; index < size; ++index) {
-            final ThreadContextPollItem item = (ThreadContextPollItem) poller.getItem(index);
+            final var item = (ThreadContextPollItem) poller.getItem(index);
             if (item != null) item.poll();
         }
     }

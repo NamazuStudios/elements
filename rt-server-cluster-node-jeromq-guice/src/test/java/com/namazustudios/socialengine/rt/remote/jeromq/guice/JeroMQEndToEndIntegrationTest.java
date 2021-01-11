@@ -461,11 +461,6 @@ public class JeroMQEndToEndIntegrationTest {
             final InstanceMetadataContext mock = mock(InstanceMetadataContext.class);
             bind(InstanceMetadataContext.class).toInstance(mock);
 
-            when(mock.getInstanceId()).thenAnswer(i -> {
-                logger.info("Reporting Instance ID for {}", instanceId);
-                return instanceId;
-            });
-
             when(mock.getNodeIds()).thenAnswer(i -> {
                 logger.info("Reporting NodeID {} for instance {}", nodeId, instanceId);
                 return singleton(nodeId);

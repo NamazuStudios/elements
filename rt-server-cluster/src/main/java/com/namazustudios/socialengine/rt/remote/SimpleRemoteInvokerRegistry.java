@@ -221,7 +221,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private void refresh() {
 
-            final CountDownLatch latch = new CountDownLatch(1);
+            final var latch = new CountDownLatch(1);
             scheduledExecutorService.submit(() -> doRefresh(latch));
 
             try {

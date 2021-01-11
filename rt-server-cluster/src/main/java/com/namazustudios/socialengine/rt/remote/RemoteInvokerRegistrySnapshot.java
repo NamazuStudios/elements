@@ -95,7 +95,7 @@ class RemoteInvokerRegistrySnapshot {
 
 
                 final Runnable purge;
-                final Lock lock = readWriteLock.writeLock();
+                final var lock = readWriteLock.writeLock();
 
                 try {
                     lock.lock();

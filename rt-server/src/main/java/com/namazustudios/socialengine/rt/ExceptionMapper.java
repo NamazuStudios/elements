@@ -72,10 +72,10 @@ public interface ExceptionMapper<ExceptionT extends Throwable> {
          * @param runnable the operation to perform
          */
         default void performExceptionSafe(final Consumer<Response> responseConsumer,
-                                                        final ProtectedOperation runnable) {
+                                          final ProtectedOperation runnable) {
             try {
                 runnable.perform();
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 getExceptionMapper(ex).map(ex, responseConsumer);
             }
         }

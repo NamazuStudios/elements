@@ -95,7 +95,7 @@ public class UnixFSUtils {
 
     @Inject
     public UnixFSUtils(@Named(UNIXFS_STORAGE_ROOT_DIRECTORY) final Path storageRoot) {
-        this.storageRoot = storageRoot;
+        this.storageRoot = storageRoot.toAbsolutePath();
         this.lockFilePath = storageRoot.resolve(LOCK_FILE_NAME);
         this.revisionTablePath = storageRoot.resolve(HEAD_FILE_NAME).toAbsolutePath().normalize();
         this.revisionPoolPath = storageRoot.resolve(REVISION_POOL_FILE_NAME).toAbsolutePath().normalize();

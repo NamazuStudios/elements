@@ -202,12 +202,10 @@ public class FilesystemGitLoader implements GitLoader {
             final String prefix = format("%s.%s-", applicationId, GIT_SUFFIX);
             codeDirectory = createTempDirectory(prefix).toFile().getAbsoluteFile();
 
-            hooks.add(codeDirectory, () -> {
-                Files.walk(codeDirectory.toPath())
-                     .sorted(Comparator.reverseOrder())
-                     .map(java.nio.file.Path::toFile)
-                     .forEach(File::delete);
-            });
+            hooks.add(codeDirectory, () -> Files.walk(codeDirectory.toPath())
+                 .sorted(Comparator.reverseOrder())
+                 .map(java.nio.file.Path::toFile)
+                 .forEach(File::delete));
 
         } catch (IOException ex) {
             throw new InternalException(ex);
