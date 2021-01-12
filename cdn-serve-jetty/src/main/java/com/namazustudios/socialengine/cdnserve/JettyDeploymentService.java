@@ -157,21 +157,17 @@ public class JettyDeploymentService implements DeploymentService {
 
     private void copyAndCheckForSubTree(Repository repo, TreeWalk treeWalk, Path directory) throws IOException {
             if (treeWalk.isSubtree()) {
-                logger.info("INFO dir: " + treeWalk.getPathString());
                 String treeWalkPath = treeWalk.getPathString();
-                if(treeWalkPath.contains("/")){
-                    treeWalkPath = treeWalkPath.substring(treeWalkPath.lastIndexOf('/') + 1).trim();
-                }
-                Path subDirectory = Files.createDirectories(Paths.get(directory.toString() + "/" + treeWalkPath));
+                Files.createDirectories(Paths.get(directory.toString() + "/" + treeWalkPath));
                 treeWalk.enterSubtree();
                 while(treeWalk.next()) {
-                    copyAndCheckForSubTree(repo, treeWalk, subDirectory);
+                    copyAndCheckForSubTree(repo, treeWalk, directory);
                 }
             } else {
                 ObjectId objectId = treeWalk.getObjectId(0);
                 ObjectLoader loader = repo.open(objectId);
                 try (InputStream is = loader.openStream()){
-                    Files.copy(is, Paths.get(format("%s/%s", directory, treeWalk.getNameString())));
+                    Files.copy(is, Paths.get(format("%s/%s", directory, treeWalk.getPathString())));
                 }
             }
     }
