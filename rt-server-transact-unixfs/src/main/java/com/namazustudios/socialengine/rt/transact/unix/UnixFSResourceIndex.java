@@ -91,13 +91,11 @@ public class UnixFSResourceIndex implements ResourceIndex {
 
         final var resourceIdMapping = UnixFSResourceIdMapping.fromResourceId(utils, resourceId);
 
-        final var resourceIdDirectory = getUtils()
+        getUtils()
             .findLatestForRevision(resourceIdMapping.getResourceIdDirectory(), revision, REVISION_HARD_LINK)
             .getValue()
             .map(p -> resourceIdMapping.getResourceIdDirectory())
-            .orElseThrow(ResourceNotFoundException::new);
-
-        getUtils().tombstone(resourceIdDirectory, revision, REVISION_HARD_LINK);
+            .ifPresent(rid -> getUtils().tombstone(rid, revision, REVISION_HARD_LINK));
 
     }
 

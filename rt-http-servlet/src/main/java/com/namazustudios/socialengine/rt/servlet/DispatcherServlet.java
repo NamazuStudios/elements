@@ -126,7 +126,7 @@ public class DispatcherServlet extends HttpServlet {
                 final var httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
                 final var responseConsumer = getConsumer(asyncContext, httpRequest, httpServletResponse);
 
-                performAsync(httpRequest, session, responseConsumer);
+                getSessionRequestDispatcher().dispatch(session, httpRequest, responseConsumer);
 
             }
         );
@@ -179,17 +179,6 @@ public class DispatcherServlet extends HttpServlet {
             }
         };
 
-    }
-
-    private void performAsync(final HttpRequest httpRequest,
-                              final Session session,
-                              final Consumer<Response> responseConsumer) {
-        try {
-            getSessionRequestDispatcher().dispatch(session, httpRequest, responseConsumer);
-        } catch (Exception ex) {
-            logger.info("Mapping exception for {} {}", httpRequest.getVerb(), httpRequest.getHeader().getPath());
-            getExceptionMapperResolver().getExceptionMapper(ex).map(ex, responseConsumer);
-        }
     }
 
     private void assembleAndWrite(final HttpServletRequest httpServletRequest,

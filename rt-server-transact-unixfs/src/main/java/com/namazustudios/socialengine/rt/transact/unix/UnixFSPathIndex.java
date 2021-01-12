@@ -270,6 +270,7 @@ public class UnixFSPathIndex implements PathIndex {
             if (Revision.ZERO.compareTo(latest) == 0) {
                 // No revision exists at all and we need to make sure that the directory exists
                 currentLinkDirectory = reversePathMapping.resolveDirectory(revision, resourceId);
+                if (getUtils().isTombstone(currentLinkDirectory)) delete(currentLinkDirectory);
                 createDirectories(currentLinkDirectory);
             } else if (latest.compareTo(revision) < 0) {
 

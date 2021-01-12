@@ -70,14 +70,13 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                           final String module, final Attributes attributes,
                           final String method, final Object... args) {
 
+        final var sent = new AtomicBoolean();
         final var path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
         final var resource = acquire(path, module, attributes);
         final var resourceId = resource.getId();
         final var destroy = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
         try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
-
-            final AtomicBoolean sent = new AtomicBoolean();
 
             final Consumer<Throwable> _failure = t -> {
                 try {
@@ -112,7 +111,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                 .dispatch(_success, _failure);
 
         } finally {
-            getResourceService().tryRelease(resource);
+            if (!sent.get()) getResourceService().tryRelease(resource);
         }
 
     }

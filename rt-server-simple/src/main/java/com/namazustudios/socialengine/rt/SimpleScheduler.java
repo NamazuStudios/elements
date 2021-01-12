@@ -278,12 +278,6 @@ public class SimpleScheduler implements Scheduler {
             final Future<?> delegate = delegateFutureSupplier.apply(this);
 
             @Override
-            public void run() {
-                cancel(false);
-                super.run();
-            }
-
-            @Override
             public void done() {
                 if (isCancelled()) delegate.cancel(false);
             }
