@@ -23,7 +23,7 @@ public class StatusCheck {
         final var injector = Guice.createInjector(new ZContextModule(), new JeroMQControlClientModule());
         final var controlClientFactory = injector.getInstance(ControlClient.Factory.class);
 
-        try (final ControlClient client = controlClientFactory.open(connectAddress)) {
+        try (final var client = controlClientFactory.open(connectAddress)) {
             final InstanceStatus instanceStatus = client.getInstanceStatus();
             final StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append("Instance status: ").append(instanceStatus.getInstanceId().asString()).append('\n');

@@ -4,16 +4,14 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.remote.ControlClient;
-import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
+import com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService;
+import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceConnection;
-import com.namazustudios.socialengine.rt.remote.InstanceStatus;
-import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Guice;
@@ -38,6 +36,7 @@ import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplicat
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.unmodifiableList;
@@ -68,6 +67,8 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
     private InstanceConnectionService firstInstanceConnectionService;
 
     private InstanceConnectionService secondInstanceConnectionService;
+
+    private AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService;
 
     private final List<ApplicationId> mockApplicationIds = unmodifiableList(asList(
         randomApplicationId(), randomApplicationId(), randomApplicationId(), randomApplicationId()
@@ -100,6 +101,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
         });
 
+        getAsyncConnectionService().start();
         getFirstInstanceConnectionService().start();
         getSecondInstanceConnectionService().start();
 
@@ -155,10 +157,10 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
         final String controlAddress = instanceConnectionService.getLocalControlAddress();
 
-        try (ControlClient client = new JeroMQControlClient(getzContext(), controlAddress)) {
+        try (var client = new JeroMQControlClient(getzContext(), controlAddress)) {
 
-            final InstanceStatus instanceStatus = client.getInstanceStatus();
-            final Set<NodeId> instanceStatusSet = new HashSet<>(instanceStatus.getNodeIds());
+            final var instanceStatus = client.getInstanceStatus();
+            final var instanceStatusSet = new HashSet<>(instanceStatus.getNodeIds());
 
             final Set<NodeId> mockNodeIdSet = mockApplicationIds
                 .stream()
@@ -246,6 +248,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
     public void testStop() {
         getFirstInstanceConnectionService().stop();
         getSecondInstanceConnectionService().stop();
+        getAsyncConnectionService().stop();
     }
 
     @Test(dependsOnMethods = "testStop", expectedExceptions = IllegalStateException.class)
@@ -303,6 +306,15 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
         this.secondInstanceConnectionService = secondInstanceConnectionService;
     }
 
+    public AsyncConnectionService<ZContext, ZMQ.Socket> getAsyncConnectionService() {
+        return asyncConnectionService;
+    }
+
+    @Inject
+    public void setAsyncConnectionService(AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService) {
+        this.asyncConnectionService = asyncConnectionService;
+    }
+
     public static class Module extends AbstractModule {
         @Override
         protected void configure() {
@@ -322,6 +334,13 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
                     expose(Key.get(InstanceConnectionService.class, named(BIND_URL_FIRST)));
 
+                    final var zContextProvider = getProvider(ZContext.class);
+                    bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get(), ca));
+
+                    final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
+                    final var asp = getProvider(key);
+                    bind(AsyncControlClient.Factory.class).toInstance(ca -> new JeroMQAsyncControlClient(asp.get(), ca));
+
                     bind(InstanceConnectionService.class)
                         .annotatedWith(named(BIND_URL_FIRST))
                         .to(JeroMQInstanceConnectionService.class)
@@ -330,6 +349,10 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                     bind(String.class)
                         .annotatedWith(named(JEROMQ_CLUSTER_BIND_ADDRESS))
                         .toInstance(BIND_URL_FIRST);
+
+                    bind(long.class)
+                        .annotatedWith(named(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS))
+                        .toInstance(30l);
 
                     bind(InstanceId.class).toInstance(randomInstanceId());
 
@@ -342,6 +365,13 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
 
                     expose(Key.get(InstanceConnectionService.class, named(BIND_URL_SECOND)));
 
+                    final var zContextProvider = getProvider(ZContext.class);
+                    bind(ControlClient.Factory.class).toInstance(ca -> new JeroMQControlClient(zContextProvider.get(), ca));
+
+                    final var key = Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
+                    final var asp = getProvider(key);
+                    bind(AsyncControlClient.Factory.class).toInstance(ca -> new JeroMQAsyncControlClient(asp.get(), ca));
+
                     bind(InstanceConnectionService.class)
                         .annotatedWith(named(BIND_URL_SECOND))
                         .to(JeroMQInstanceConnectionService.class)
@@ -351,7 +381,27 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
                         .annotatedWith(named(JEROMQ_CLUSTER_BIND_ADDRESS))
                         .toInstance(BIND_URL_SECOND);
 
+                    bind(long.class)
+                        .annotatedWith(named(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS))
+                        .toInstance(30l);
+
                     bind(InstanceId.class).toInstance(randomInstanceId());
+
+                }
+            });
+
+            install(new PrivateModule() {
+                @Override
+                protected void configure() {
+
+                    requireBinding(ZContext.class);
+
+                    bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
+                    bind(new TypeLiteral<AsyncConnectionService<?, ?>>(){}).to(JeroMQAsyncConnectionService.class);
+                    bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){}).to(JeroMQAsyncConnectionService.class);
+
+                    expose(new TypeLiteral<AsyncConnectionService<?, ?>>(){});
+                    expose(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
 
                 }
             });
