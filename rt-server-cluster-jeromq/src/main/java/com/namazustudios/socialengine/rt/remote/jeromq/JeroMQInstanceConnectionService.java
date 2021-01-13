@@ -425,11 +425,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 logger.error("Interrupted while shutting down.", e);
             }
 
+            drain();
+
             onDiscover.unsubscribe();
             onUndiscover.unsubscribe();
             localControlClient.close();
-
-            drain();
 
             try {
                 if (!running.compareAndSet(true, false)) logger.warn("Expected running state of true.  Got false.");
@@ -519,7 +519,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             rwGuard.rw(condition -> {
 
-                final List<InstanceConnection> connectionList = new ArrayList<>(active.values());
+                final var connectionList = new ArrayList<>(active.values());
 
                 connectionList.forEach(c -> {
                     try {

@@ -104,7 +104,7 @@ public class JeroMQEndToEndIntegrationTest {
     @AfterClass
     public void shutdown() {
         client.close();
-        workers.forEach(i -> i.close());
+        workers.forEach(Instance::close);
         workers.clear();
     }
 
@@ -146,11 +146,12 @@ public class JeroMQEndToEndIntegrationTest {
 
     @Test(dependsOnMethods = "startWorkers")
     void refreshPeers() throws Exception {
-        workers.forEach(w -> w.refreshConnections());
+//        Thread.sleep(2500);
+        workers.forEach(Instance::refreshConnections);
     }
 
-    @Test(dependsOnMethods = "startWorkers")
-    public void startClient() {
+    @Test(dependsOnMethods = "refreshPeers")
+    public void startClient() throws Exception {
         client.start();
         client.refreshConnections();
     }
@@ -437,7 +438,11 @@ public class JeroMQEndToEndIntegrationTest {
                 .withDefaultNodeName());
 
             install(new GuiceIoCResolverModule());
-            install(new JeroMQInstanceConnectionServiceModule().withBindAddress(this.instanceBindAddress));
+            install(new JeroMQControlClientModule());
+            install(new JeroMQInstanceConnectionServiceModule()
+                .withBindAddress(this.instanceBindAddress)
+                .withDefaultRefreshInterval());
+
             install(new StaticInstanceDiscoveryServiceModule().withInstanceAddresses(
                 concat(of(instanceBindAddress), instanceIdList
                     .stream()
@@ -534,7 +539,11 @@ public class JeroMQEndToEndIntegrationTest {
             install(new GuiceIoCResolverModule());
             install(new FSTPayloadReaderWriterModule());
             install(new JeroMQRemoteInvokerModule());
-            install(new JeroMQInstanceConnectionServiceModule().withBindAddress(this.instanceBindAddress));
+            install(new JeroMQControlClientModule());
+            install(new JeroMQInstanceConnectionServiceModule()
+                .withBindAddress(this.instanceBindAddress)
+                .withDefaultRefreshInterval());
+
             install(new StaticInstanceDiscoveryServiceModule().withInstanceAddresses(
                 concat(of(instanceBindAddress), instanceIdList
                         .stream()

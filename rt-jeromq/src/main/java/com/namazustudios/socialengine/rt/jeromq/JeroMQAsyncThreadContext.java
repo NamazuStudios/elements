@@ -11,6 +11,7 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Pipe;
 import java.util.concurrent.Semaphore;
@@ -89,7 +90,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
             lock.lock();
             while(output.remaining() > 0) pipe.sink().write(output);
         } catch (IOException ex) {
-            throw new InternalException(ex);
+            throw new UncheckedIOException(ex);
         } finally {
             lock.unlock();
         }

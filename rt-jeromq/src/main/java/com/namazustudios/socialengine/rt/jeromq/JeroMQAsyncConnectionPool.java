@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
+import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.Subscription;
@@ -9,6 +10,9 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.channels.AsynchronousCloseException;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,6 +22,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.google.common.collect.Streams.concat;
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.THREAD_POOL_SIZE;
 import static java.lang.Math.*;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
@@ -195,7 +200,8 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     }
 
     private void checkOpen() {
-        if (!open) throw new IllegalStateException("Not open.");
+        if (!open)
+            throw new IllegalStateException("Not open.");
     }
 
     @Override
@@ -210,22 +216,35 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     public void doClose() {
 
         try {
+
             lock.lock();
-            checkOpen();
-            open = false;
-            condition.signalAll();
-            while (available.size() < connections.size()) condition.await();
-        } catch (InterruptedException e) {
-            logger.error("Could not acquire all remaining connections.", e);
+
+            if (open) {
+                open = false;
+                condition.signalAll();
+            }
+
+            concat(available.stream(), connections.stream()).forEach(c -> c.signal(z -> {
+
+                    c.getOnClose().clear();
+
+                    try {
+                        c.close();
+                    } catch (UncheckedIOException ex) {
+                        if (ex.getCause() instanceof AsynchronousCloseException) {
+                            logger.debug("Socket already closed. Nothing to do.", ex);
+                        } else {
+                            throw ex;
+                        }
+                    }
+
+                }
+            ));
+
         } finally {
             lock.unlock();
         }
 
-        connections.stream().forEach(c -> c.signal(z -> {
-                c.getOnClose().clear();
-                c.close();
-            }
-        ));
 
     }
 
