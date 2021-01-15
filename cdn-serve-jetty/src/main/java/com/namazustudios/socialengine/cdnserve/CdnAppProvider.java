@@ -4,15 +4,15 @@ import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.cdnserve.guice.CdnJerseyModule;
+import com.namazustudios.socialengine.cdnserve.guice.CdnServeSecurityModule;
 import com.namazustudios.socialengine.cdnserve.guice.GitServletModule;
-import com.namazustudios.socialengine.cdnserve.api.DeploymentService;
 import com.namazustudios.socialengine.cdnserve.guice.CdnGuiceResourceConfig;
 import com.namazustudios.socialengine.codeserve.GitSecurityModule;
-import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.servlet.security.HttpServletBasicAuthFilter;
+import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -30,11 +30,9 @@ import javax.inject.Named;
 import javax.servlet.DispatcherType;
 
 import java.io.IOException;
-import java.util.LinkedHashSet;
 
 import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
-import static java.util.stream.Collectors.toCollection;
 
 public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
@@ -98,11 +96,13 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
             throw new IllegalArgumentException("App must have origin ID: " + MANAGE_CONTEXT);
         }
 
-        final Injector injector = getInjector().createChildInjector(new CdnJerseyModule());
+        final Injector injector = getInjector().createChildInjector(new CdnJerseyModule(), new CdnServeSecurityModule());
         final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
+        final SessionIdAuthenticationFilter authFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(MANAGE_CONTEXT);
+        servletContextHandler.addFilter(new FilterHolder(authFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.setAttribute(CdnGuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME, injector);
 
