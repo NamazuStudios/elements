@@ -36,8 +36,8 @@ public class SharedAsyncConnectionService<ContextT, SocketT> implements AsyncCon
     }
 
     @Override
-    public AsyncConnectionGroup.Builder<ContextT, SocketT> group() {
-        return delegate.group();
+    public AsyncConnectionGroup.Builder<ContextT, SocketT> group(final String name) {
+        return delegate.group(name);
     }
 
     @Override

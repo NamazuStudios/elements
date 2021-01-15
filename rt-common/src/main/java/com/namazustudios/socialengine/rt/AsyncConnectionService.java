@@ -20,12 +20,35 @@ public interface AsyncConnectionService<ContextT, SocketT> {
     void stop();
 
     /**
+     * Creates an anonymous group.
+     *
+     * @return the {@link AsyncConnectionGroup.Builder<ContextT, SocketT>}
+     */
+    default AsyncConnectionGroup.Builder<ContextT, SocketT> group() {
+        return group("<anonymous>");
+    }
+
+    /**
      * Returns a {@link AsyncConnectionGroup.Builder} which can be used to build an instance of
      * {@link AsyncConnectionGroup} for managing closely related {@link AsyncConnection} instances.
      *
+     * @param name the name of the pool (used for logging and debugging)
      * @return the {@link AsyncConnectionGroup.Builder}
      */
-    AsyncConnectionGroup.Builder<ContextT, SocketT> group();
+    AsyncConnectionGroup.Builder<ContextT, SocketT> group(String name);
+
+    /**
+     * Allocates an instance of {@link AsyncConnectionPool}.
+     *
+     * @param minConnections
+     * @param maxConnections
+     * @param socketSupplier
+     * @return
+     */
+    default AsyncConnectionPool<ContextT, SocketT> allocatePool(final int minConnections, final int maxConnections,
+                                                                final Function<ContextT, SocketT> socketSupplier) {
+        return allocatePool("<anonymous>", minConnections, maxConnections, socketSupplier);
+    }
 
     /**
      * Allocates an instance of {@link AsyncConnectionPool}.
@@ -36,8 +59,7 @@ public interface AsyncConnectionService<ContextT, SocketT> {
      * @param socketSupplier
      * @return
      */
-    AsyncConnectionPool<ContextT, SocketT> allocatePool(String name,
-                                                        int minConnections, int maxConnections,
+    AsyncConnectionPool<ContextT, SocketT> allocatePool(String name, int minConnections, int maxConnections,
                                                         Function<ContextT, SocketT> socketSupplier);
 
 }

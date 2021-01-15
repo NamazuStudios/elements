@@ -48,7 +48,7 @@ import static org.testng.Assert.*;
 
 public class JeroMQEndToEndIntegrationTest {
 
-    private static final int TEST_NODE_COUNT = 3;
+    private static final int TEST_NODE_COUNT = 10;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQEndToEndIntegrationTest.class);
 
@@ -109,49 +109,17 @@ public class JeroMQEndToEndIntegrationTest {
     }
 
     @Test
-    public void startWorkers() throws Exception {
-
-        final ExecutorService executor = newCachedThreadPool(r -> {
-
-            final Thread thread = new Thread(() -> {
-                try {
-                    r.run();
-                } finally {
-                    logger.info("Terminated.");
-                }
-            });
-
-            thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t, e) -> logger.error("Caught exception.", e));
-            thread.setName(JeroMQEndToEndIntegrationTest.class.getSimpleName() + " startup.");
-
-            return thread;
-
-        });
-
-        try {
-
-            final CompletionService<Void> completionService = new ExecutorCompletionService<>(executor);
-            final Set<Future<Void>> futureSet = new HashSet<>();
-
-            workers.forEach(w -> futureSet.add(completionService.submit(() -> w.start(), null)));
-            while (!futureSet.isEmpty()) futureSet.remove(completionService.take());
-
-        } finally {
-            executor.shutdown();
-            executor.awaitTermination(1, MINUTES);
-        }
-
+    public void startWorkers() {
+        workers.forEach(Instance::start);
     }
 
     @Test(dependsOnMethods = "startWorkers")
-    void refreshPeers() throws Exception {
-//        Thread.sleep(2500);
+    void refreshPeers() {
         workers.forEach(Instance::refreshConnections);
     }
 
     @Test(dependsOnMethods = "refreshPeers")
-    public void startClient() throws Exception {
+    public void startClient() {
         client.start();
         client.refreshConnections();
     }

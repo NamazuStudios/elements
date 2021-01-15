@@ -29,7 +29,7 @@ public class JeroMQControlException extends RuntimeException {
     }
 
     private static String message(final JeroMQControlResponseCode code, final ZMsg response) {
-        final String message = response.isEmpty() ? "unknown" : response.removeFirst().getString(CHARSET);
+        final var message = response.isEmpty() ? "unknown" : response.removeFirst().getString(CHARSET);
         return format("%s - %s", code, message);
     }
 

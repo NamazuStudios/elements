@@ -17,7 +17,7 @@ public class JeroMQUnroutableNodeException extends JeroMQControlException {
     }
 
     public JeroMQUnroutableNodeException(final ZMsg response) {
-        super(NO_SUCH_NODE_ROUTE);
+        super(NO_SUCH_NODE_ROUTE, response);
         nodeId = parseNodeId(response);
     }
 

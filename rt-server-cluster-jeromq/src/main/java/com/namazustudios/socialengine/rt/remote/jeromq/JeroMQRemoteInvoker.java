@@ -24,6 +24,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.zeromq.SocketType.DEALER;
 
@@ -58,11 +59,12 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         final AsyncConnectionPool<ZContext, ZMQ.Socket> pool = getAsyncConnectionService().allocatePool(
             name, getMinConnections(), getMaxConnections(),
             zContext -> {
-            final ZMQ.Socket socket = zContext.createSocket(DEALER);
-            socket.connect(connectAddress);
-            socket.setReceiveTimeOut((int)timeoutMillis);
-            return socket;
-        });
+                final ZMQ.Socket socket = zContext.createSocket(DEALER);
+                socket.connect(connectAddress);
+                socket.setReceiveTimeOut((int)timeoutMillis);
+                return socket;
+            }
+        );
 
         if (!this.pool.compareAndSet(null, pool)) {
             pool.close();
@@ -118,10 +120,19 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
+        final var ref = new AtomicReference<>();
+
         final var mdcContext = MDC.getCopyOfContextMap();
-        final var completableFuture = new CompletableFuture<>();
+        final var completableFuture = new CompletableFuture<>() {
+            @Override
+            public String toString() {
+                return format("%s", ref.get());
+            }
+        };
 
         getPool().acquireNextAvailableConnection(connection -> {
+
+            ref.set(connection);
 
             final JeroMQRemoteInvocation jeroMQInvocation = new JeroMQRemoteInvocation(
                 connection,

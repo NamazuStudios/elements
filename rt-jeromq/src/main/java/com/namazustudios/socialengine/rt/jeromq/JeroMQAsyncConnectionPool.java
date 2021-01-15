@@ -80,7 +80,7 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
             final int toAdd = max((min - connections.size()) / THREAD_POOL_SIZE, 0);
 
             while (open && connections.size() < min && connections.size() < max && (added++ < toAdd)) {
-                final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
+                final var connection = context.allocateNewConnection(name, socketSupplier);
                 doAddConnection(connection);
             }
 
@@ -136,9 +136,8 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
             context.doInThread(() -> {
 
-
                 boolean close = true;
-                final JeroMQAsyncConnection connection = context.allocateNewConnection(socketSupplier);
+                final var connection = context.allocateNewConnection(name, socketSupplier);
 
                 try {
 
@@ -200,8 +199,7 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     }
 
     private void checkOpen() {
-        if (!open)
-            throw new IllegalStateException("Not open.");
+        if (!open) throw new IllegalStateException("Not open.");
     }
 
     @Override

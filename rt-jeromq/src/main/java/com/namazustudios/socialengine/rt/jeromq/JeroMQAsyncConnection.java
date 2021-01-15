@@ -11,7 +11,11 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
+import static java.lang.Thread.currentThread;
+
 class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
+
+    private final Thread thread = currentThread();
 
     private final ZContext zContext;
 
@@ -50,9 +54,9 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
     @Override
     public void setEvents(final Event ... events) {
 
-        int flags = 0;
+        var flags = 0;
 
-        for (final Event event : events) {
+        for (final var event : events) {
             switch (event) {
                 case READ:  flags |= ZMQ.Poller.POLLIN; break;
                 case WRITE: flags |= ZMQ.Poller.POLLOUT; break;
@@ -113,6 +117,11 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
     public void close() {
         socket().close();
         getOnClose().publish(this);
+    }
+
+    @Override
+    public String toString() {
+        return "JeroMQAsyncConnection{" + thread.getName() + "}";
     }
 
     public Publisher<JeroMQAsyncConnection> getOnClose() {

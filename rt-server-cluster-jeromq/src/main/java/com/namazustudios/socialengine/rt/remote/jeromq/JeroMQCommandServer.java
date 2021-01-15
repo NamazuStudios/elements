@@ -99,21 +99,21 @@ public class JeroMQCommandServer {
             response.send(socket);
 
         } catch (JeroMQUnroutableNodeException ex) {
-            final ZMsg response = exceptionError(logger, ex.getCode(), ex);
+            final var response = exceptionError(logger, ex.getCode(), ex);
             response.addLast(ex.getNodeId().asBytes());
             pushIdentity(response, identity);
             response.send(socket);
         } catch (JeroMQUnroutableInstanceException ex) {
-            final ZMsg response = exceptionError(logger, ex.getCode(), ex);
+            final var response = exceptionError(logger, ex.getCode(), ex);
             response.addLast(ex.getInstanceId().asBytes());
             pushIdentity(response, identity);
             response.send(socket);
         } catch (JeroMQControlException ex) {
-            final ZMsg response = exceptionError(logger, ex.getCode(), ex);
+            final var response = exceptionError(logger, ex.getCode(), ex);
             pushIdentity(response, identity);
             response.send(socket);
         } catch (Exception ex) {
-            final ZMsg response = exceptionError(logger, ex);
+            final var response = exceptionError(logger, ex);
             pushIdentity(response, identity);
             response.send(socket);
         }

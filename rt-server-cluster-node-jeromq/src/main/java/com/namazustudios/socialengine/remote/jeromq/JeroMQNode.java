@@ -300,7 +300,7 @@ public class JeroMQNode implements Node {
                     return socket;
                 });
 
-            getAsyncConnectionService().group()
+            getAsyncConnectionService().group(format("%s %s", JeroMQNode.class.getSimpleName(), name))
                 .connection(z -> {
                     final Socket socket = z.createSocket(ROUTER);
                     socket.bind(instanceBinding.getBindAddress());

@@ -108,10 +108,6 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             }
         }).filter(s -> s != null).collect(toList());
 
-        // Performs a refresh of all connections to ensure that the underlying registries are all ready to go
-        // by the time the rest of the system is started up.
-        refreshConnections();
-
         startupList.stream().map(s -> {
             try {
                 logger.debug("Executing post-start operations for node {}.", s.getNodeId());

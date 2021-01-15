@@ -13,9 +13,13 @@ import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
+import static java.lang.Thread.currentThread;
+
 public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext, ZMQ.Socket> {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnectionGroup.class);
+
+    private final Thread thread = currentThread();
 
     private final List<AsyncConnection<ZContext, ZMQ.Socket>> connectionList;
 
@@ -66,6 +70,11 @@ public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext
             logger.error("Interrupted shutting down group {}.", this, ex);
         }
 
+    }
+
+    @Override
+    public String toString() {
+        return "JeroMQAsyncConnectionGroup{" + thread.getName() + '}';
     }
 
     @Override

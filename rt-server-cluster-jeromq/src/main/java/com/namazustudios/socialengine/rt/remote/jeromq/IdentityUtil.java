@@ -66,13 +66,8 @@ public class IdentityUtil {
      * @param identity a {@link ZMsg} containing all identity frames
      */
     public static void pushIdentity(final ZMsg msg, final ZMsg identity) {
-
         msg.push(EMPTY_DELIMITER);
-
-        while (!identity.isEmpty()) {
-            msg.addFirst(identity.removeLast());
-        }
-
+        while (!identity.isEmpty()) msg.addFirst(identity.removeLast());
     }
 
 }

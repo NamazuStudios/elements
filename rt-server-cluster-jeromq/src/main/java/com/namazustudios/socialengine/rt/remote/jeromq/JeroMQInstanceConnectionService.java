@@ -445,9 +445,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
                 // Finds all unknown hosts and disconnects them.
 
-                final Collection<InstanceHostInfo> known = getInstanceDiscoveryService().getKnownHosts();
+                final var toRemove = new HashSet<>();
+                final var known = getInstanceDiscoveryService().getKnownHosts();
 
-                final Set<InstanceHostInfo> toRemove = new HashSet<>();
                 toRemove.addAll(active.keySet());
                 toRemove.addAll(pending.keySet());
                 toRemove.removeAll(known);
