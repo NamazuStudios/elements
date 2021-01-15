@@ -20,7 +20,7 @@ public enum JeroMQRoutingCommand {
 
     /**
      * Opens a route to a node by specifying the {@link NodeId} and instance connect address.  If a route is already
-     * opened then this simply returns the node.
+     * opened then this simply returns the already established connection string.
      */
     OPEN_ROUTE_TO_NODE,
 

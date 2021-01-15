@@ -3,15 +3,15 @@ package com.namazustudios.socialengine.rt;
 import java.util.function.Consumer;
 
 /**
- * Represents an asynchornous type of {@link Connection}.  Note that instances of
+ * Represents an asynchornous type of {@link Connection}.  Unless otherwise indicated, instances of
  * {@link AsyncConnection<ContextT, SocketT>} aren't thread-safe.  Therefore you must ensure that all manipulation of
  * the {@link AsyncConnection<ContextT, SocketT>} instance is performed within a callback from the subscribed events.
  */
 public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT, SocketT> {
 
     /**
-     * Sends a signal to this {@link AsyncConnection}.  The signal will run on the {@link AsyncConnection}'s thread
-     * and can be used to safely manipulate the {@link AsyncConnection} from an outside thread.
+     * Sends a signal to this {@link AsyncConnection}. The signal will run on the {@link AsyncConnection}'s thread and
+     * can be used to safely manipulate the {@link AsyncConnection} from an outside thread.
      *
      * This is the only method that may be called from any thread.
      *

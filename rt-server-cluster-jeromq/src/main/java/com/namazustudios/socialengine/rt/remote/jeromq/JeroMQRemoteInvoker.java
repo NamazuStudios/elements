@@ -95,7 +95,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
         getPool().acquireNextAvailableConnection(connection -> {
 
-            final JeroMQRemoteInvocation jeroMQInvocation = new JeroMQRemoteInvocation(
+            final var jeroMQInvocation = new JeroMQRemoteInvocation(
                 connection,
                 invocation,
                 getPayloadReader(),
@@ -126,7 +126,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
         final var completableFuture = new CompletableFuture<>() {
             @Override
             public String toString() {
-                return format("%s", ref.get());
+                return format("%s<Object> {%s}", CompletableFuture.class.getSimpleName(), ref.get());
             }
         };
 
@@ -134,7 +134,7 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
 
             ref.set(connection);
 
-            final JeroMQRemoteInvocation jeroMQInvocation = new JeroMQRemoteInvocation(
+            final var jeroMQInvocation = new JeroMQRemoteInvocation(
                 connection,
                 invocation,
                 getPayloadReader(),

@@ -62,9 +62,14 @@ public class JeroMQDemultiplexRouter {
         final int index = poller.register(socket, POLLIN | POLLERR);
         final String localConnectAddress = getLocalConnectAddress(nodeId);
         socket.connect(localConnectAddress);
-        backends.put(nodeId, index);
+
+        if (backends.put(nodeId, index) != null) {
+            logger.error("Attempting to duplicate binding for node {}", nodeId);
+            throw new JeroMQControlException(DUPLICATE_NODE_BINDING);
+        }
 
         return localConnectAddress;
+
     }
 
     public void closeBindingForNode(final NodeId nodeId) {

@@ -46,7 +46,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
     private final Lock lock = new ReentrantLock();
 
-    private final ByteBuffer incoming = ByteBuffer.allocate(Integer.BYTES);
+    private final ByteBuffer commandIndexBuffer = ByteBuffer.allocate(Integer.BYTES);
 
     private final Rollover next = new Rollover(COMMAND_QUEUE_MAX);
 
@@ -82,7 +82,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
         final var output = ByteBuffer.allocate(Integer.BYTES);
 
         if (!commands.compareAndSet(index, null, command)) {
-            logger.info("Buffer overflow at index {}.", index);
+            logger.error("Buffer overflow at index {}.", index);
             throw new IllegalStateException("Buffer overflow: " + index);
         }
 
@@ -106,30 +106,34 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
     }
 
     private void pollCommands() {
+        if (poller.pollin(commandIndex)) {
+            try {
+                while (pipe.source().read(commandIndexBuffer) > 0) {
+                    if (commandIndexBuffer.remaining() == 0) {
 
-//        if (!poller.pollin(commandIndex)) return;
-        incoming.position(0).limit(Integer.BYTES);
+                        commandIndexBuffer.flip();
+                        final var idx = commandIndexBuffer.getInt();
+                        process(idx);
 
-        try {
-            while (pipe.source().read(incoming) > 0) {
-                if (incoming.remaining() == 0) {
-                    incoming.flip();
-                    process(incoming.getInt());
-                    incoming.flip();
+                        commandIndexBuffer.flip();
+
+                    }
                 }
+            } catch (IOException ex) {
+                throw new InternalException(ex);
             }
-        } catch (IOException ex) {
-            throw new InternalException(ex);
         }
-
     }
 
     private void pollManagedConnections() {
-        final int size = poller.getNext();
+
+        final int size = poller.getSize();
+
         for (int index = connectionIndexStart; index < size; ++index) {
             final var item = (ThreadContextPollItem) poller.getItem(index);
             if (item != null) item.poll();
         }
+
     }
 
     private void process(final int index) {
@@ -138,7 +142,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
         try {
             if (command == null) {
-                logger.error("Unable to process command at index {}", command);
+                logger.error("Unable to process command at index {}. Command is null.", index);
             } else {
                 command.run();
             }
@@ -191,9 +195,11 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
                 flagChangeHandler,
                 (conn, consumer) -> doInThread(() -> consumer.accept(conn))) {
 
+            private final String toString = format("%s (%s)", super.toString(), name);
+
             @Override
             public String toString() {
-                return format("%s (%s)", super.toString(), name);
+                return toString;
             }
 
         };

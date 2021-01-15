@@ -115,7 +115,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
                 final String name = JeroMQAsyncConnectionService.class.getSimpleName() + " " + threadCount.getAndIncrement();
                 final Thread thread = new Thread(() -> runIOThread(latch, i));
                 thread.setDaemon(true);
-                thread.setUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception in thread {}", e));
+                thread.setUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception in thread {}", t, e));
                 thread.setName(name);
                 thread.start();
                 return thread;
@@ -208,9 +208,11 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
                                 connectionList,
                                 (g, c) -> context.doInThread(() -> c.accept(g))) {
 
+                            final String toString = format("%s - %s", super.toString(), name);
+
                             @Override
                             public String toString() {
-                                return format("%s - %s", super.toString(), name);
+                                return toString;
                             }
 
                         };

@@ -132,7 +132,7 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
         if (acquire) {
 
-            final JeroMQAsyncThreadContext context = this.context.getThreadContextRoundRobin().getNext();
+            final var context = this.context.getThreadContextRoundRobin().getNext();
 
             context.doInThread(() -> {
 
@@ -161,7 +161,7 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
 
     private void doAddConnection(final JeroMQAsyncConnection connection) {
 
-        condition.signal();
+        condition.signalAll();
         connections.add(connection);
         available.offer(connection);
 

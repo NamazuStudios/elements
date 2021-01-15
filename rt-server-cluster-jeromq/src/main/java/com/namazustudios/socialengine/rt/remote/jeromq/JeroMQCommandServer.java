@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
@@ -15,7 +14,6 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushI
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_COMMAND;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.*;
-import static java.lang.String.format;
 
 public class JeroMQCommandServer {
 
@@ -45,15 +43,15 @@ public class JeroMQCommandServer {
 
     public void poll() {
         if (!poller.pollin(frontend)) return;
-        final ZMQ.Socket socket = poller.getSocket(frontend);
-        final ZMsg zMsg = ZMsg.recvMsg(socket);
+        final var socket = poller.getSocket(frontend);
+        final var zMsg = ZMsg.recvMsg(socket);
         handle(socket, zMsg);
     }
 
     private void handle(final ZMQ.Socket socket, final ZMsg zMsg) {
 
         final JeroMQRoutingCommand command;
-        final ZMsg identity = popIdentity(zMsg);
+        final var identity = popIdentity(zMsg);
 
         try {
             command = JeroMQRoutingCommand.stripCommand(zMsg);
@@ -121,9 +119,9 @@ public class JeroMQCommandServer {
     }
 
     private ZMsg processOpenBindingForNode(final ZMsg zMsg) {
-        final ZMsg response = new ZMsg();
-        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
-        final String instanceBindAddress = demultiplex.openBinding(nodeId);
+        final var response = new ZMsg();
+        final var nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
+        final var instanceBindAddress = demultiplex.openBinding(nodeId);
         logger.info("Opened binding for node {} via {}", nodeId, instanceBindAddress);
         OK.pushResponseCode(response);
         response.addLast(instanceBindAddress.getBytes(CHARSET));
@@ -131,10 +129,10 @@ public class JeroMQCommandServer {
     }
 
     private ZMsg processCloseBindingForNode(final ZMsg zMsg) {
-        final ZMsg response = new ZMsg();
-        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
+        final var response = new ZMsg();
+        final var nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
         demultiplex.closeBindingForNode(nodeId);
-        logger.info("Closed binding for node {}");
+        logger.info("Closed binding for node {}", nodeId);
         OK.pushResponseCode(response);
         return response;
     }
@@ -151,10 +149,10 @@ public class JeroMQCommandServer {
     }
 
     private ZMsg processOpenRouteToNode(final ZMsg zMsg) {
-        final ZMsg response = new ZMsg();
-        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
-        final String instanceInvokerAddress = zMsg.removeFirst().getString(CHARSET);
-        final String instanceRouteAddress = multiplex.openRouteToNode(nodeId, instanceInvokerAddress);
+        final var response = new ZMsg();
+        final var nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
+        final var instanceInvokerAddress = zMsg.removeFirst().getString(CHARSET);
+        final var instanceRouteAddress = multiplex.openRouteToNode(nodeId, instanceInvokerAddress);
         logger.info("Opened route to {} via {} -> {}", nodeId, instanceRouteAddress, instanceInvokerAddress);
         OK.pushResponseCode(response);
         response.addLast(instanceRouteAddress.getBytes(CHARSET));
@@ -162,8 +160,8 @@ public class JeroMQCommandServer {
     }
 
     private ZMsg processCloseRouteToNode(final ZMsg zMsg) {
-        final ZMsg response = new ZMsg();
-        final NodeId nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
+        final var response = new ZMsg();
+        final var nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
         multiplex.closeRouteToNode(nodeId);
         logger.info("Closed route to {}.", nodeId);
         OK.pushResponseCode(response);

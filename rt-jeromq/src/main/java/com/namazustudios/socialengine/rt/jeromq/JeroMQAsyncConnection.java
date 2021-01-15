@@ -15,7 +15,13 @@ import static java.lang.Thread.currentThread;
 
 class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
+    private static final boolean CHECK_THREAD = true;
+
     private final Thread thread = currentThread();
+
+    private final Runnable threadChecker = CHECK_THREAD ? () -> {
+        if (!currentThread().equals(thread)) throw new IllegalStateException("Wrong thread.");
+    } : () -> {};
 
     private final ZContext zContext;
 
@@ -121,7 +127,7 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     @Override
     public String toString() {
-        return "JeroMQAsyncConnection{" + thread.getName() + "}";
+        return "JeroMQAsyncConnection{thread: '" + thread.getName() + "'}";
     }
 
     public Publisher<JeroMQAsyncConnection> getOnClose() {

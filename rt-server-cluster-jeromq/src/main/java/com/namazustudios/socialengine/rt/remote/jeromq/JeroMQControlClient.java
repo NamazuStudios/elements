@@ -54,7 +54,7 @@ public class JeroMQControlClient implements ControlClient {
      * closes it later.
      *
      * @param zContext the {@link ZContext} used to communicate
-     * @param instanceConnectAddress
+     * @param instanceConnectAddress 
      */
     public JeroMQControlClient(final ZContext zContext,
                                final String instanceConnectAddress,

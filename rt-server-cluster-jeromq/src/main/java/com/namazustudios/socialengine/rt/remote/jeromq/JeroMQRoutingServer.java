@@ -24,6 +24,7 @@ import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
+import static zmq.ZError.EAGAIN;
 
 public class JeroMQRoutingServer implements AutoCloseable {
 
@@ -79,6 +80,14 @@ public class JeroMQRoutingServer implements AutoCloseable {
                 demultiplex.poll();
             } catch (Exception ex) {
                 logger.error("Caught exception in routing server.", ex);
+            }
+
+            final var size = poller.getSize();
+
+            for (var index = 0; index < size; ++index) {
+                final var item = poller.getItem(index);
+                final var err = item.getSocket().errno();
+                if (err != 0 && err != EAGAIN) logger.error("Socket got errno: {}", err);
             }
 
         }

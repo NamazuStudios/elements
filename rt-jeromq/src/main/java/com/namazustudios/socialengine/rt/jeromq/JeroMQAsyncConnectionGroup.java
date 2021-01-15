@@ -23,11 +23,11 @@ public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext
 
     private final List<AsyncConnection<ZContext, ZMQ.Socket>> connectionList;
 
-    private final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler;
+    private final BiConsumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler;
 
     public JeroMQAsyncConnectionGroup(
             final List<AsyncConnection<ZContext, ZMQ.Socket>> connectionList,
-            final BiConsumer<AsyncConnectionGroup, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler) {
+            final BiConsumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>, Consumer<AsyncConnectionGroup<ZContext, ZMQ.Socket>>> signalHandler) {
         this.connectionList = connectionList;
         this.signalHandler = signalHandler;
         connectionList.forEach(c -> c.onClose(c0 -> connectionList.remove(c)));
@@ -39,7 +39,7 @@ public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext
     }
 
     @Override
-    public AsyncConnection get(final int index) {
+    public AsyncConnection<ZContext, ZMQ.Socket> get(final int index) {
         return connectionList.get(index);
     }
 
