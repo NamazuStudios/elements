@@ -86,6 +86,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
             for (var index = 0; index < size; ++index) {
                 final var item = poller.getItem(index);
+                if (item == null) continue;
                 final var err = item.getSocket().errno();
                 if (err != 0 && err != EAGAIN) logger.error("Socket got errno: {}", err);
             }
