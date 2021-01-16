@@ -32,6 +32,7 @@ public class TestWorkerNodeModule extends PrivateModule {
     protected void configure() {
 
         expose(Node.class);
+        expose(RemoteInvocationDispatcher.class);
 
         workerModules.forEach(this::install);
 

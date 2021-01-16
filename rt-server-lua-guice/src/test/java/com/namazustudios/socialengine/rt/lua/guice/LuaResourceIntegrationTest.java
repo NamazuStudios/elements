@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
@@ -20,7 +19,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.*;
 
 /**

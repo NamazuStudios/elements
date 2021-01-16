@@ -347,8 +347,6 @@ public class JeroMQEndToEndIntegrationTest {
         @Override
         protected void configure() {
 
-            bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
-
             bind(new TypeLiteral<AsyncConnectionService<?, ?>>(){}).toInstance(asyncConnectionService);
             bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){}).toInstance(asyncConnectionService);
 

@@ -5,18 +5,17 @@ import com.google.inject.*;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService;
-import com.namazustudios.socialengine.rt.remote.Instance;
-import com.namazustudios.socialengine.rt.remote.Node;
-import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
-import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry;
+import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextModule;
 import com.namazustudios.socialengine.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQControlClientModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
@@ -119,6 +118,8 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                     .withMinimumConnections(MINIMUM_CONNECTIONS)
                     .withMaximumConnections(MAXIMUM_CONNECTIONS));
 
+                install(new JeroMQControlClientModule());
+
             }
         };
 
@@ -145,7 +146,9 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 install(new TestWorkerInstanceModule());
                 install(new TestMasterNodeModule(workerInstanceId));
                 install(new TestWorkerNodeModule(workerInstanceId, applicationId, allWorkerModules));
-                install(new JeroMQInstanceConnectionServiceModule().withBindAddress(workerBindAddress));
+                install(new JeroMQInstanceConnectionServiceModule()
+                    .withBindAddress(workerBindAddress)
+                    .withDefaultRefreshInterval());
                 install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
                 install(new SimpleTransactionalResourceServicePersistenceModule());
                 install(new UnixFSTransactionalPersistenceContextModule().withTestingDefaults());
@@ -161,13 +164,21 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 bind(ApplicationId.class).toInstance(applicationId);
                 bind(NodeId.class).toInstance(forInstanceAndApplication(clientInstanceId, applicationId));
 
+                bind(RemoteInvocationDispatcher.class)
+                    .to(SimpleRemoteInvocationDispatcher.class)
+                    .asEagerSingleton();
+
                 install(commonModule);
                 clientModules.forEach(this::install);
 
+                install(new GuiceIoCResolverModule());
                 install(new ClusterContextModule());
                 install(new FSTPayloadReaderWriterModule());
                 install(new TestClientInstanceModule());
-                install(new JeroMQInstanceConnectionServiceModule().withBindAddress(clientBindAddress));
+                install(new JeroMQInstanceConnectionServiceModule()
+                    .withBindAddress(clientBindAddress)
+                    .withDefaultRefreshInterval()
+                );
 
             }
         };
@@ -195,8 +206,8 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             logger.error("Exception starting test client instance.", ex);
         }
 
-        getClient().refreshConnections();
         getWorker().refreshConnections();
+        getClient().refreshConnections();
 
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
 
