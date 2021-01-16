@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
 import java.util.function.Consumer;
+import java.util.function.Function;
 
 /**
  * Represents an asynchornous type of {@link Connection}.  Unless otherwise indicated, instances of
@@ -13,11 +16,56 @@ public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT,
      * Sends a signal to this {@link AsyncConnection}. The signal will run on the {@link AsyncConnection}'s thread and
      * can be used to safely manipulate the {@link AsyncConnection} from an outside thread.
      *
-     * This is the only method that may be called from any thread.
+     * This method, and other "signal" methods, may be invoked from any thread.
      *
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection>} to receive the event
      */
     void signal(Consumer<AsyncConnection<ContextT, SocketT>> asyncConnectionConsumer);
+
+    /**
+     * Computes a value on the connection's IO Thread. This will return a {@link CompletionStage<T>} which may be used
+     * to retrieve the value.
+     *
+     * @param asyncConnectionConsumer the consumer.
+     * @param <T> the type to compute
+     * @return the {@link CompletionStage<T>}
+     */
+    default <T> CompletionStage<T> signalAndComputeCompletion(
+            final Function<AsyncConnection<ContextT, SocketT>, T> asyncConnectionConsumer) {
+
+        final var future = new CompletableFuture<T>();
+
+        try {
+            signal(connection -> {
+                try {
+                    final var t = asyncConnectionConsumer.apply(connection);
+                    future.complete(t);
+                } catch (Exception ex) {
+                    future.completeExceptionally(ex);
+                }
+            });
+        } catch (Exception ex) {
+            future.completeExceptionally(ex);
+        }
+
+        return future;
+
+    }
+
+    /**
+     * Computes a value on the connection's IO Thread. This will return a {@link CompletionStage<Void>} which may be
+     * used to block until the IO thread completes the supplied task.
+     *
+     * @param asyncConnectionConsumer the consumer to execute the task
+     * @return the {@link CompletionStage<Void>}
+     */
+    default CompletionStage<Void> signalAndComputeCompletionV(
+            final Consumer<AsyncConnection<ContextT, SocketT>> asyncConnectionConsumer) {
+        return signalAndComputeCompletion(c -> {
+            asyncConnectionConsumer.accept(c);
+            return null;
+        });
+    }
 
     /**
      * Returns this {@link AsyncConnection<ContextT, SocketT>}.  This hints to the underlying

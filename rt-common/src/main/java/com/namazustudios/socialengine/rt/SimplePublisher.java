@@ -10,8 +10,6 @@ import static java.lang.System.identityHashCode;
 
 public class SimplePublisher<T> implements Publisher<T> {
 
-    private static final Logger logger = LoggerFactory.getLogger(SimplePublisher.class);
-
     private final LinkedConsumer<T> first = new LinkedConsumer<T>() {
         @Override
         public String toString() {
@@ -20,6 +18,16 @@ public class SimplePublisher<T> implements Publisher<T> {
     };
 
     private LinkedConsumer<T> last = first;
+
+    private final Logger logger;
+
+    public SimplePublisher() {
+        this(null);
+    }
+
+    public SimplePublisher(final Logger logger) {
+        this.logger = logger == null ? LoggerFactory.getLogger(SimplePublisher.class) : logger;
+    }
 
     @Override
     public Subscription subscribe(final BiConsumer<Subscription, ? super T> consumer) {

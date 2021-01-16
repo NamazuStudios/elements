@@ -10,6 +10,8 @@ import org.zeromq.ZMQ;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
@@ -46,18 +48,23 @@ public class JeroMQAsyncConnectionGroup implements AsyncConnectionGroup<ZContext
     @Override
     public void close() {
 
-        final CountDownLatch latch = new CountDownLatch(1);
+        final var count = new AtomicInteger();
+        final var latch = new CountDownLatch(1);
 
         signal(g -> {
 
             final List<AsyncConnection<ZContext, ZMQ.Socket>> copy = new ArrayList<>(connectionList);
 
             copy.forEach(c -> {
+
+                count.incrementAndGet();
+
                 try {
                     c.close();
                 } catch (Exception ex) {
-                    logger.error("Caught exception closing {}", c);
+                    logger.error("Caught exception closing {}", c, ex);
                 }
+
             });
 
             latch.countDown();

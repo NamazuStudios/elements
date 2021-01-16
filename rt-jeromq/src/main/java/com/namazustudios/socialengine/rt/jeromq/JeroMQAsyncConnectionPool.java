@@ -1,21 +1,22 @@
 package com.namazustudios.socialengine.rt.jeromq;
 
-import com.google.common.collect.Streams;
 import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.AsyncConnectionPool;
+import com.namazustudios.socialengine.rt.Connection;
 import com.namazustudios.socialengine.rt.Subscription;
-import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.exception.MultiException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
-import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.nio.channels.AsynchronousCloseException;
-import java.util.*;
-import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -24,8 +25,8 @@ import java.util.function.Function;
 
 import static com.google.common.collect.Streams.concat;
 import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.THREAD_POOL_SIZE;
-import static java.lang.Math.*;
-import static java.util.concurrent.ConcurrentHashMap.newKeySet;
+import static java.lang.Math.max;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Socket> {
@@ -96,12 +97,12 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
     public void acquireNextAvailableConnection(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumer) {
 
         JeroMQAsyncConnection connection;
-
         requestConnection();
 
         try {
 
             lock.lock();
+            checkOpen();
 
             while ((connection = available.poll()) == null) {
                 checkOpen();
@@ -125,7 +126,7 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         try {
             lock.lock();
             checkOpen();
-            acquire = connections.size() < max;
+            acquire = available.isEmpty() && connections.size() < max;
         } finally {
             lock.unlock();
         }
@@ -211,38 +212,53 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
         }
     }
 
-    public void doClose() {
+    /**
+     * Implementation detail. Do not call directly.
+     */
+    void doClose() {
+
+        final List<JeroMQAsyncConnection> toClose;
 
         try {
-
             lock.lock();
-
-            if (open) {
-                open = false;
-                condition.signalAll();
-            }
-
-            concat(available.stream(), connections.stream()).forEach(c -> c.signal(z -> {
-
-                    c.getOnClose().clear();
-
-                    try {
-                        c.close();
-                    } catch (UncheckedIOException ex) {
-                        if (ex.getCause() instanceof AsynchronousCloseException) {
-                            logger.debug("Socket already closed. Nothing to do.", ex);
-                        } else {
-                            throw ex;
-                        }
-                    }
-
-                }
-            ));
-
+            condition.signalAll();
+            toClose = open ? emptyList() : concat(available.stream(), connections.stream()).collect(toList());
         } finally {
+            open = false;
             lock.unlock();
         }
 
+        final var causes = new ArrayList<Exception>();
+        final var initial = new CompletableFuture<Void>();
+
+        var completion = toClose.stream().map(connection -> {
+            try {
+                return connection.signalAndComputeCompletionV(Connection::close);
+            } catch (UncheckedIOException ex) {
+                final var future = new CompletableFuture<>();
+                future.completeExceptionally(ex.getCause());
+                logger.error("Caught IO Exception closing connection pool.", ex);
+                causes.add(ex.getCause());
+                return future;
+            } catch (Exception ex) {
+                final var future = new CompletableFuture<>();
+                future.completeExceptionally(ex.getCause());
+                logger.error("Caught Exception closing connection pool.", ex);
+                causes.add(ex);
+                return future;
+            }
+        }).reduce(initial, (a, b) -> a.thenCombineAsync(b, (o, o2) -> null));
+
+        try {
+            initial.complete(null);
+            completion.toCompletableFuture().get();
+        } catch (InterruptedException ex) {
+            logger.info("Interrupted while closing.", ex);
+        } catch (ExecutionException ex) {
+            causes.add(ex);
+        }
+
+        if (!causes.isEmpty()) throw new MultiException(causes);
 
     }
 

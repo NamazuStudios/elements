@@ -240,7 +240,6 @@ public class JeroMQMultiplexRouter {
 
         if (index == null) {
             logger.error("No socket for index {} {}", index, objectId);
-            throw new JeroMQControlException(NO_SUCH_NODE_ROUTE);
         } else {
             logger.info("Closing socket for sockets[{}] for {}", index, objectId);
         }

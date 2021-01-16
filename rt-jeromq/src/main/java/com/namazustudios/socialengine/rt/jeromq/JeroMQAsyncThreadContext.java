@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.Rollover;
 import com.namazustudios.socialengine.rt.SimplePublisher;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnection.FlagChangeHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -130,7 +129,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
         final int size = poller.getSize();
 
         for (int index = connectionIndexStart; index < size; ++index) {
-            final var item = (ThreadContextPollItem) poller.getItem(index);
+            final var item = (JeroMQThreadContextPollItem) poller.getItem(index);
             if (item != null) item.poll();
         }
 
@@ -138,7 +137,7 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
     private void process(final int index) {
 
-        final Runnable command = commands.getAndSet(index, null);
+        final var command = commands.getAndSet(index, null);
 
         try {
             if (command == null) {
@@ -177,25 +176,9 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
         final var socket = socketSupplier.apply(zContext);
 
-        final FlagChangeHandler flagChangeHandler = (conn, flags) -> onPostLoop.subscribe((subscription, v) ->  {
+        return new JeroMQAsyncConnection(zContext, poller, socket, this) {
 
-            poller.unregister(socket);
-
-            if (flags != 0) {
-                final var item = new ThreadContextPollItem(conn, flags);
-                poller.register(item);
-            }
-
-            subscription.unsubscribe();
-
-        });
-
-        final var connection = new JeroMQAsyncConnection(
-                zContext, socket,
-                flagChangeHandler,
-                (conn, consumer) -> doInThread(() -> consumer.accept(conn))) {
-
-            private final String toString = format("%s (%s)", super.toString(), name);
+            private final String toString = format("%s {%s}", super.toString(), name);
 
             @Override
             public String toString() {
@@ -204,35 +187,10 @@ class JeroMQAsyncThreadContext implements AutoCloseable {
 
         };
 
-        connection.onClose(c -> onPostLoop.subscribe((subscriber, v) -> {
-            poller.unregister(socket);
-            socket.close();
-            subscriber.unsubscribe();
-        }));
-
-        return connection;
-
     }
 
     public Subscription onPostLoop(final BiConsumer<Subscription, Void> consumer) {
         return onPostLoop.subscribe(consumer);
-    }
-
-    private static class ThreadContextPollItem extends ZMQ.PollItem {
-
-        private final JeroMQAsyncConnection connection;
-
-        public ThreadContextPollItem(final JeroMQAsyncConnection connection, int ops) {
-            super(connection.socket(), ops);
-            this.connection = connection;
-        }
-
-        public void poll() {
-            if (isError()) connection.getOnError().publish(connection);
-            if (isReadable()) connection.getOnRead().publish(connection);
-            if (isWritable()) connection.getOnWrite().publish(connection);
-        }
-
     }
 
 }

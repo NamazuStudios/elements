@@ -104,7 +104,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
         private SimpleAsyncConnectionServiceContext() {}
 
-        public void start() {
+        private void start() {
 
             final AtomicInteger threadCount = new AtomicInteger();
 
@@ -129,7 +129,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
         }
 
-        public void stop() {
+        private void stop() {
 
             running.set(false);
             simpleManagedPoolList.forEach(JeroMQAsyncConnectionPool::doClose);
@@ -172,7 +172,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
             }
         }
 
-        public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group(final String name) {
+        private AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group(final String name) {
             return new AsyncConnectionGroup.Builder<>() {
 
                 private final List<Function<JeroMQAsyncThreadContext, AsyncConnection<ZContext, ZMQ.Socket>>> connectionSupplierList = new ArrayList<>();
@@ -227,7 +227,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
         }
 
-        public AsyncConnectionPool<ZContext, ZMQ.Socket> allocatePool(
+        private AsyncConnectionPool<ZContext, ZMQ.Socket> allocatePool(
                 final String name, final int minConnections, final int maxConnections,
                 final Function<ZContext, ZMQ.Socket> socketSupplier) {
             final JeroMQAsyncConnectionPool pool = new JeroMQAsyncConnectionPool(
@@ -238,11 +238,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
             return pool;
         }
 
-        public boolean isRunning() {
-            return running.get();
-        }
-
-        public RoundRobin<JeroMQAsyncThreadContext> getThreadContextRoundRobin() {
+        RoundRobin<JeroMQAsyncThreadContext> getThreadContextRoundRobin() {
             return threadContextRoundRobin;
         }
 

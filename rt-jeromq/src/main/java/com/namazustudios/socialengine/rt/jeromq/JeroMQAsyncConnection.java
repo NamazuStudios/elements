@@ -4,32 +4,28 @@ import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.Publisher;
 import com.namazustudios.socialengine.rt.SimplePublisher;
 import com.namazustudios.socialengine.rt.Subscription;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.IntConsumer;
 
 import static java.lang.Thread.currentThread;
 
 class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
-    private static final boolean CHECK_THREAD = true;
+    private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnection.class);
 
-    private final Thread thread = currentThread();
-
-    private final Runnable threadChecker = CHECK_THREAD ? () -> {
-        if (!currentThread().equals(thread)) throw new IllegalStateException("Wrong thread.");
-    } : () -> {};
+    private final String toString;
 
     private final ZContext zContext;
 
+    private final ZMQ.Poller poller;
+
     private final ZMQ.Socket socket;
 
-    private final FlagChangeHandler flagChangeHandler;
-
-    private final BiConsumer<JeroMQAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler;
+    private final JeroMQAsyncThreadContext asyncThreadContext;
 
     private final Publisher<JeroMQAsyncConnection> onClose = new SimplePublisher<>();
 
@@ -43,18 +39,14 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     public JeroMQAsyncConnection(
             final ZContext zContext,
+            final ZMQ.Poller poller,
             final ZMQ.Socket socket,
-            final FlagChangeHandler flagChangeHandler,
-            final BiConsumer<JeroMQAsyncConnection, Consumer<AsyncConnection<ZContext, ZMQ.Socket>>> signalHandler) {
-        this.flagChangeHandler = flagChangeHandler;
+            final JeroMQAsyncThreadContext asyncThreadContext) {
         this.zContext = zContext;
+        this.poller = poller;
         this.socket = socket;
-        this.signalHandler = signalHandler;
-    }
-
-    @Override
-    public void clearEvents() {
-        flagChangeHandler.onFlagChange(this, 0);
+        this.asyncThreadContext = asyncThreadContext;
+        this.toString = "JeroMQAsyncConnection{thread: '" + currentThread().getName() + "'}";
     }
 
     @Override
@@ -70,7 +62,12 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
             }
         }
 
-        flagChangeHandler.onFlagChange(this, flags);
+        poller.unregister(socket);
+
+        if (flags != 0) {
+            final var item = new JeroMQThreadContextPollItem(this, flags);
+            poller.register(item);
+        }
 
     }
 
@@ -101,7 +98,7 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     @Override
     public void signal(final Consumer<AsyncConnection<ZContext, ZMQ.Socket>> asyncConnectionConsumerConsumer) {
-        signalHandler.accept(this, asyncConnectionConsumerConsumer);
+        asyncThreadContext.doInThread(() -> asyncConnectionConsumerConsumer.accept(this));
     }
 
     @Override
@@ -121,13 +118,26 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     @Override
     public void close() {
-        socket().close();
-        getOnClose().publish(this);
+
+        onClose.publish(this);
+
+        try {
+            poller.unregister(socket);
+        } catch (Exception ex) {
+            logger.error("Caught exception unregistering socket.", ex);
+        }
+
+        try {
+            socket.close();
+        } catch (Exception ex) {
+            logger.error("Caught exception closing socket.", ex);
+        }
+
     }
 
     @Override
     public String toString() {
-        return "JeroMQAsyncConnection{thread: '" + thread.getName() + "'}";
+        return toString;
     }
 
     public Publisher<JeroMQAsyncConnection> getOnClose() {
@@ -148,13 +158,6 @@ class JeroMQAsyncConnection implements AsyncConnection<ZContext, ZMQ.Socket> {
 
     public Publisher<JeroMQAsyncConnection> getOnRecycle() {
         return onRecycle;
-    }
-
-    @FunctionalInterface
-    interface FlagChangeHandler {
-
-        void onFlagChange(JeroMQAsyncConnection connection, int flags);
-
     }
 
 }
