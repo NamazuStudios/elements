@@ -1,16 +1,20 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Created by patricktwohig on 5/25/17.
  */
-@Expose(modules = {
-    "namazu.elements.dao.googleplay",
-    "namazu.socialengine.dao.googleplay"
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.googleplay"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.googleplay",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.googleplay instead"))
 })
 public interface GooglePlayApplicationConfigurationDao {
 

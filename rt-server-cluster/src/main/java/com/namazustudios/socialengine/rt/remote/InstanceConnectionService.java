@@ -137,6 +137,7 @@ public interface InstanceConnectionService {
         /**
          * Closes the binding.
          */
+        @Override
         void close();
 
     }

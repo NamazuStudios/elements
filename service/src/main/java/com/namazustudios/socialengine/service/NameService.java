@@ -13,6 +13,7 @@ import static java.lang.String.format;
  * Generates names based on the system configuration.
  */
 @Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.name"),
     @ExposedModuleDefinition(
         value = "namazu.elements.service.unscoped.name",
         annotation = @ExposedBindingAnnotation(Unscoped.class))

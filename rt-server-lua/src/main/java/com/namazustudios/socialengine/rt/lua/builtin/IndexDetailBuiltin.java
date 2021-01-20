@@ -92,9 +92,9 @@ public class IndexDetailBuiltin implements Builtin {
                     .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                    .getRemoteContext()
-                    .getIndexContext()
-                    .linkAsync(resourceId, path, success, failure);
+                .getRemoteContext()
+                .getIndexContext()
+                .linkAsync(resourceId, path, success, failure);
 
             return 0;
 

@@ -20,6 +20,7 @@ import java.util.function.Function;
 
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
+import static java.lang.Thread.currentThread;
 import static java.lang.Thread.interrupted;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.IntStream.range;
@@ -155,7 +156,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
                 while (running.get()) {
 
-                    if (poller.poll(POLL_INTERVAL) < 0 || interrupted()) {
+                    if (poller.poll(POLL_INTERVAL) < 0 || currentThread().isInterrupted()) {
                         logger.info("Got interrupt signal.");
                         break;
                     }

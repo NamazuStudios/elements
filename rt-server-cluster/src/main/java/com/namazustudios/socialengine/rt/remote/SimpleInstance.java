@@ -117,6 +117,7 @@ public class SimpleInstance implements Instance {
         }
 
         postClose(exceptionList::add);
+
         if (!exceptionList.isEmpty())
             throw new MultiException(exceptionList);
 

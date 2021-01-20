@@ -72,7 +72,6 @@ public class MongoDaoModule extends PrivateModule {
         bind(GooglePlayIapReceiptDao.class).to(MongoGooglePlayIapReceiptDao.class);
         bind(AppleSignInUserDao.class).to(MongoAppleSignInUserDao.class);
         bind(AppleSignInSessionDao.class).to(MongoAppleSignInSessionDao.class);
-        bind(ManifestDao.class).to(DefaultManifestDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoAdvancedDatastoreProvider.class)
@@ -107,7 +106,6 @@ public class MongoDaoModule extends PrivateModule {
         expose(FirebaseApplicationConfigurationDao.class);
         expose(GameOnApplicationConfigurationDao.class);
         expose(MatchDao.class);
-        expose(ManifestDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);
         expose(LeaderboardDao.class);

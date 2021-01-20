@@ -35,8 +35,6 @@ import java.util.List;
 import static com.google.inject.Key.get;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
-import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
-import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static java.lang.String.format;
 import static org.zeromq.ZContext.shadow;
@@ -82,9 +80,10 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     public JeroMQEmbeddedTestService start() {
 
-        final var clientInstanceId = randomInstanceId();
-        final var workerInstanceId = randomInstanceId();
-        final var applicationId = randomApplicationId();
+        final var prefix = JeroMQEmbeddedTestService.class.getSimpleName();
+        final var clientInstanceId = InstanceId.forUniqueName(format("%s.client", prefix));
+        final var workerInstanceId = InstanceId.forUniqueName(format("%s.worker", prefix));
+        final var applicationId = ApplicationId.forUniqueName(format("%s.application", prefix));
 
         final var clientBindAddress = format("inproc://integration-test-client/%s", clientInstanceId.asString());
         final var workerBindAddress = format("inproc://integration-test-worker/%s", workerInstanceId.asString());

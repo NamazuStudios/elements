@@ -55,7 +55,7 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
             logger.error("Inconsistent state.", ex);
             throw ex;
         } catch (Exception ex) {
-            stop();
+            doStop(false);
             logger.error("Failed to start.", ex);
             throw new InternalException(ex);
         }
@@ -64,20 +64,32 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
 
     @Override
     public void stop() {
+        doStop(true);
+    }
+
+    private void doStop(final boolean clean) {
         try {
-            tryRun(getGarbageCollector()::stop);
-            tryRun(getRevisionDataStore()::stop);
-            tryRun(getTransactionJournal()::stop);
-            tryRun(getRevisionTable()::stop);
-            tryRun(getRevisionPool()::stop);
+            tryRun(getGarbageCollector()::stop, clean);
+            tryRun(getRevisionDataStore()::stop, clean);
+            tryRun(getTransactionJournal()::stop, clean);
+            tryRun(getRevisionTable()::stop, clean);
+            tryRun(getRevisionPool()::stop, clean);
         } finally {
             getUnixFSUtils().unlockStorageRoot();
         }
     }
 
-    private void tryRun(final Runnable action) {
+    private void tryRun(final Runnable action, final boolean clean) {
         try {
             action.run();
+        } catch (IllegalStateException ex) {
+            if (clean) {
+                logger.error("Caught exception stopping service.", ex);
+            } else {
+                // With an unclean startup, it's expected that we may get some IllegalStateExceptions due to the fact
+                // that the services have not started up completely. It's simpler to log this as a trace message just
+                logger.trace("Caught exception stopping service.", ex);
+            }
         } catch (Exception ex) {
             logger.error("Caught exception stopping service.", ex);
         }

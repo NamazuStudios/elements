@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.id;
 import com.namazustudios.socialengine.rt.exception.InvalidApplicationIdException;
 
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
@@ -14,8 +13,6 @@ import static java.util.UUID.randomUUID;
  * Uniquely identifies an application.
  */
 public class ApplicationId implements Serializable {
-
-    public static final Charset CHARSET = Charset.forName("UTF-8");
 
     final V1CompoundId v1CompoundId;
 
@@ -146,8 +143,8 @@ public class ApplicationId implements Serializable {
      * @return the newly created {@link ApplicationId}
      */
     public static ApplicationId forUniqueName(final String uniqueApplicationName) {
-        final byte[] bytes = uniqueApplicationName.getBytes(CHARSET);
-        final UUID applicationUuid = nameUUIDFromBytes(bytes);
+        final var bytes = uniqueApplicationName.getBytes(V1CompoundId.CHARSET);
+        final var applicationUuid = nameUUIDFromBytes(bytes);
         return new ApplicationId(applicationUuid);
     }
 

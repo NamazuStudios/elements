@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
 import java.util.HashSet;
@@ -450,7 +451,13 @@ public class UnixFSUtils {
      * @return true if the path represents a tombstone, false otherwise
      */
     public boolean isNull(final Path fsPath) {
-        return doOperation(() -> exists(fsPath, NOFOLLOW_LINKS) && isSameFile(nullmarker, fsPath), FatalException::new);
+        return doOperation(() -> {
+            try {
+                return isSameFile(nullmarker, fsPath);
+            } catch (NoSuchFileException ex) {
+                return false;
+            }
+        }, FatalException::new);
     }
 
     /**
@@ -460,7 +467,13 @@ public class UnixFSUtils {
      * @return true if the path represents a tombstone, false otherwise
      */
     public boolean isTombstone(final Path fsPath) {
-        return doOperation(() -> exists(fsPath, NOFOLLOW_LINKS) && isSameFile(tombstone, fsPath), FatalException::new);
+        return doOperation(() -> {
+            try {
+                return isSameFile(tombstone, fsPath);
+            } catch (NoSuchFileException ex) {
+                return false;
+            }
+        }, FatalException::new);
     }
 
     /**

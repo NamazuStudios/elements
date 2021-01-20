@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
@@ -7,13 +8,16 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Created by patricktwohig on 7/20/17.
  */
-@Expose(modules = {
-    "namazu.elements.dao.match",
-    "namazu.socialengine.dao.match"
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.match"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.match",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.match instead"))
 })
 public interface MatchDao {
 

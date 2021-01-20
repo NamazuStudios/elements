@@ -4,13 +4,17 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
-import java.util.Set;
 
-@Expose(modules = {"namazu.elements.dao.item",
-    "namazu.socialengine.dao.item"})
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.item"),
+    @ExposedModuleDefinition(value = "namazu.socialengine.dao.item",
+                             deprecated = @DeprecationDefinition("Use namazu.elements.dao.item instead"))
+})
 public interface ItemDao {
 
     /**

@@ -16,6 +16,7 @@ import javax.inject.Provider;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -141,6 +142,8 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private Subscription disconnect;
 
+        private ScheduledFuture<?> refreshScheduledFuture;
+
         private ScheduledExecutorService scheduledExecutorService;
 
         private final CountDownLatch latch = new CountDownLatch(1);
@@ -157,7 +160,8 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                 return thread;
             });
 
-            scheduledExecutorService.scheduleAtFixedRate(this::doRefresh, 0, REFRESH_RATE, REFRESH_UNITS);
+            refreshScheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this::doRefresh, 0, REFRESH_RATE, REFRESH_UNITS);
+
             connect = getInstanceConnectionService().subscribeToConnect(this::add);
             disconnect = getInstanceConnectionService().subscribeToDisconnect(this::remove);
 
@@ -173,6 +177,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
             connect.unsubscribe();
             disconnect.unsubscribe();
+            refreshScheduledFuture.cancel(true);
             scheduledExecutorService.shutdown();
 
             try {
@@ -239,8 +244,8 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         private void doRefresh(final CountDownLatch latch) {
             try {
 
-                final RefreshBuilder builder = snapshot.refresh();
-                final List<InstanceConnection> connections = getInstanceConnectionService().getActiveConnections();
+                final var builder = snapshot.refresh();
+                final var connections = getInstanceConnectionService().getActiveConnections();
 
                 for (final InstanceConnection connection : connections) {
                     add(builder, connection);

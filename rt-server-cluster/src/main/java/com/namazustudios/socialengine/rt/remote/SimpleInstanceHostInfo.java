@@ -6,7 +6,7 @@ public class SimpleInstanceHostInfo implements InstanceHostInfo {
 
     private final String connectAddress;
 
-    public SimpleInstanceHostInfo(String connectAddress) {
+    public SimpleInstanceHostInfo(final String connectAddress) {
         this.connectAddress = connectAddress;
     }
 

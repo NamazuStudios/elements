@@ -3,14 +3,18 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.exception.LeaderboardNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Provides CRUD operations for Leaderboard instances in the database.
  */
-@Expose(modules = {
-        "namazu.elements.dao.leaderboard",
-        "namazu.socialengine.dao.leaderboard",
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.leaderboard"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.leaderboard",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.leaderboard instead"))
 })
 public interface LeaderboardDao {
 

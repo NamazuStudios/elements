@@ -4,14 +4,18 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Provides access to {@link Rank} instances stored in the database, correlating and filtering data as necessary.
  */
-@Expose(modules = {
-        "namazu.elements.dao.rank",
-        "namazu.socialengine.dao.rank",
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.rank"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.rank",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.rank instead"))
 })
 public interface RankDao {
 

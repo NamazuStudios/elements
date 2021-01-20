@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.rt.util.Hex;
 import java.io.Serializable;
 import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -30,6 +32,8 @@ class V1CompoundId implements Serializable {
     public static final byte PREFIX_BYTE = 1;
 
     public static final String  ID_SEPARATOR = ":";
+
+    public static final Charset CHARSET = StandardCharsets.UTF_8;
 
     private static final Field[] FIELDS = Field.values();
 

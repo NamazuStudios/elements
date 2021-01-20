@@ -5,7 +5,9 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
 
@@ -15,9 +17,11 @@ import static java.util.Collections.emptyList;
  * Manipulates the instances of {@link RewardIssuance}, including the operations to ensure tha the rewards are properly
  * inserted into the database and credited to a user's inventory in an atomic way.
  */
-@Expose(modules = {
-        "namazu.elements.dao.rewardissuance",
-        "namazu.socialengine.dao.rewardissuance",
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.rewardissuance"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.rewardissuance",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.rewardissuance instead"))
 })
 public interface RewardIssuanceDao {
 

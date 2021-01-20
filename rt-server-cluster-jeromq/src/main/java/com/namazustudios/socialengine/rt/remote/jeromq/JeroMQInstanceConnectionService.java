@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.concurrent.Exchanger;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -35,6 +36,8 @@ import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.toUnmodifiableList;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.Stream.of;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
 
@@ -204,6 +207,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private AsyncControlClient localControlClient;
 
+        private ScheduledFuture<?> refreshScheduledFuture;
+
         private final AtomicBoolean running = new AtomicBoolean(true);
 
         private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1, r -> {
@@ -257,7 +262,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 throw new InternalException(ex);
             }
 
-            scheduler.scheduleWithFixedDelay(this::bgRefresh, 0, getRefreshIntervalInSeconds(), SECONDS);
+            refreshScheduledFuture = scheduler.scheduleWithFixedDelay(
+                this::bgRefresh,
+                0,
+                getRefreshIntervalInSeconds(),
+                SECONDS);
 
         }
 
@@ -417,22 +426,23 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public void stop() {
 
-            scheduler.shutdown();
+            onDiscover.unsubscribe();
+            onUndiscover.unsubscribe();
+            refreshScheduledFuture.cancel(true);
+            drain();
+
+            localControlClient.close();
 
             try {
+                scheduler.shutdown();
                 scheduler.awaitTermination(1, MINUTES);
             } catch (InterruptedException e) {
                 logger.error("Interrupted while shutting down.", e);
             }
 
-            drain();
-
-            onDiscover.unsubscribe();
-            onUndiscover.unsubscribe();
-            localControlClient.close();
-
             try {
-                if (!running.compareAndSet(true, false)) logger.warn("Expected running state of true.  Got false.");
+                running.set(false);
+                server.interrupt();
                 server.join();
             } catch (InterruptedException e) {
                 throw new InternalException(e);
@@ -464,7 +474,9 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
                 });
 
-                known.stream()
+                final var local = new SimpleInstanceHostInfo(getInternalBindAddress());
+
+                concat(of(local), known.stream())
                      .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
                      .filter(not(nfo -> pending.containsKey(nfo) || active.containsKey(nfo)))
                      .forEach(this::createNewConnection);
@@ -481,7 +493,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         private void server() {
 
-            final var binds = Stream.of(getInternalBindAddress(), getBindAddress())
+            final var binds = of(getInternalBindAddress(), getBindAddress())
                 .filter(addr -> !addr.isBlank())
                 .collect(toUnmodifiableList());
 
@@ -512,28 +524,20 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         }
 
         public List<InstanceConnection> getActive() {
-            return rwGuard.computeRO(c -> new ArrayList(active.values()));
+            return rwGuard.computeRO(c -> new ArrayList<>(active.values()));
         }
 
         public void drain() {
 
             rwGuard.rw(condition -> {
 
-                final var connectionList = new ArrayList<>(active.values());
+                pending.values().forEach(Request::cancel);
+                pending.clear();
 
-                connectionList.forEach(c -> {
-                    try {
-                        c.disconnect();
-                    } catch (JeroMQControlException ex) {
-                        if (NO_SUCH_NODE_ROUTE.equals(ex.getCode())) {
-                            logger.info("Route already closed for connection {}", c, ex);
-                        } else {
-                            logger.error("Could not drain connection {}", c, ex);
-                        }
-                    } catch (Exception ex) {
-                        logger.error("Could not drain connection {}", c, ex);
-                    }
-                });
+                active.values().forEach(onDisconnect::publishAsync);
+                active.clear();
+
+                condition.signalAll();
 
             });
 
@@ -630,8 +634,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         public InstanceBinding openBinding(final NodeId nodeId) {
             try (final ControlClient client = new JeroMQControlClient(getzContext(), getInternalBindAddress())) {
-               final InstanceBinding instanceBinding = client.openBinding(nodeId);
-               return instanceBinding;
+                return client.openBinding(nodeId);
             }
         }
 

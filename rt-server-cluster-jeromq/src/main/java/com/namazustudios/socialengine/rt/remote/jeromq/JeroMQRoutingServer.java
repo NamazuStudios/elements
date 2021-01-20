@@ -19,6 +19,7 @@ import java.util.function.BooleanSupplier;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_ERROR;
 import static java.lang.String.format;
+import static java.lang.Thread.currentThread;
 import static java.lang.Thread.interrupted;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
@@ -69,7 +70,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
     public void run(final BooleanSupplier running) {
         while (running.getAsBoolean()) {
 
-            if (poller.poll(POLL_TIMEOUT_MILLISECONDS) < 0 || interrupted()) {
+            if (poller.poll(POLL_TIMEOUT_MILLISECONDS) < 0 || currentThread().isInterrupted()) {
                 logger.info("Poller signaled interruption.  Exiting.");
                 break;
             }

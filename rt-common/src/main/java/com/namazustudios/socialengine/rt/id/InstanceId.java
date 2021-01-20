@@ -7,6 +7,7 @@ import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Builder;
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
+import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
 public class InstanceId implements Serializable {
@@ -44,6 +45,17 @@ public class InstanceId implements Serializable {
         try {
             v1CompoundId = new Builder()
                     .with(byteRepresentation)
+                    .only(INSTANCE)
+                .build();
+        } catch (IllegalArgumentException ex) {
+            throw new InvalidInstanceIdException(ex);
+        }
+    }
+
+    public InstanceId(final UUID instanceUuid) {
+        try {
+            v1CompoundId = new Builder()
+                    .with(INSTANCE, instanceUuid)
                     .only(INSTANCE)
                 .build();
         } catch (IllegalArgumentException ex) {
@@ -112,6 +124,19 @@ public class InstanceId implements Serializable {
     public static InstanceId randomInstanceId() {
         // Here to protect against implicit bindings in DI Containers.
         return new InstanceId();
+    }
+
+    /**
+     * Creates a new {@link InstanceId} from the given unique instance name.  The unique instance name may be
+     * any string uniquely representing the instance (such as database primary key, DNS hostname) or similar.
+     *
+     * @param uniqueInstanceName the unique instance name
+     * @return the newly created {@link InstanceId}
+     */
+    public static InstanceId forUniqueName(final String uniqueInstanceName) {
+        final var bytes = uniqueInstanceName.getBytes(V1CompoundId.CHARSET);
+        final var applicationUuid = nameUUIDFromBytes(bytes);
+        return new InstanceId(applicationUuid);
     }
 
 }

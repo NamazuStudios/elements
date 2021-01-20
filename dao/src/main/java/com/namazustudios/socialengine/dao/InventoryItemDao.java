@@ -5,16 +5,20 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Created by davidjbrooks on 11/11/18.
  */
-@Expose(modules = {
-    "namazu.elements.dao.inventoryitem",
-    "namazu.socialengine.dao.inventoryitem",
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.inventoryitem"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.inventoryitem",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.inventoryitem instead"))
 })
 public interface InventoryItemDao {
 

@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * This is the UserDao which is used to update users in the database.  Since users
@@ -15,9 +17,11 @@ import com.namazustudios.socialengine.model.Pagination;
  *
  * Created by patricktwohig on 3/26/15.
  */
-@Expose(modules = {
-    "namazu.elements.dao.user",
-    "namazu.socialengine.dao.user"
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.user"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.user",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.user instead"))
 })
 public interface UserDao {
 

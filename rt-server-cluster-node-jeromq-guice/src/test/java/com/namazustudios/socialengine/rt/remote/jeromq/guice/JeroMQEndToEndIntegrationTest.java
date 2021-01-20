@@ -48,7 +48,7 @@ import static org.testng.Assert.*;
 
 public class JeroMQEndToEndIntegrationTest {
 
-    private static final int TEST_NODE_COUNT = 10;
+    private static final int TEST_NODE_COUNT = 4;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQEndToEndIntegrationTest.class);
 

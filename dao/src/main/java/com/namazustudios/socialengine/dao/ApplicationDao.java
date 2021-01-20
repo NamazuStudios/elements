@@ -1,16 +1,20 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Created by patricktwohig on 7/10/15.
  */
-@Expose(modules = {
-    "namazu.elements.dao.application",
-    "namazu.socialengine.dao.application"
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.application"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.application",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.application instead"))
 })
 public interface ApplicationDao {
 

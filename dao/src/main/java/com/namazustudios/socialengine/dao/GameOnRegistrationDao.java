@@ -4,9 +4,11 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
-@Expose(modules = "namazu.elements.dao.gameon.registration")
+@Expose(@ExposedModuleDefinition("namazu.elements.dao.gameon.registration"))
 public interface GameOnRegistrationDao {
 
     /**

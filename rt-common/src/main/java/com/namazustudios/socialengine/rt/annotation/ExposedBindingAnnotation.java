@@ -45,10 +45,12 @@ public @interface ExposedBindingAnnotation {
     class Util {
 
         /**
-         * Looks up the {@link BindingAnnotationFactory} and exposes it to the
+         * Looks up the {@link BindingAnnotationFactory}, instantiates it, and then applies it to the supplied
+         * {@link Class<?>}. This returns a binding annotation which can be automatically integrated into an IoC
+         * container.
          *
-         * @param annotation
-         * @return
+         * @param annotation the {@link ExposedBindingAnnotation} annotation
+         * @return the {@link Annotation} which matches the
          */
         public static Annotation resolve(final Class<?> cls, final ExposedBindingAnnotation annotation) {
             try {
