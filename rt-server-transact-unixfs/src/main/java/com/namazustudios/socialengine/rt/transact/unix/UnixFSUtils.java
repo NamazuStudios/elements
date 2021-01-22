@@ -11,14 +11,12 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.*;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Random;
-import java.util.Set;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -27,7 +25,10 @@ import static com.namazustudios.socialengine.rt.transact.Revision.zero;
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
+import static java.util.Collections.emptySet;
 import static java.util.Comparator.naturalOrder;
+import static java.util.stream.Stream.concat;
+import static java.util.stream.StreamSupport.stream;
 
 /**
  * A collection of useful utility routines when accessing the filesystem.
@@ -138,8 +139,7 @@ public class UnixFSUtils {
         if (exists && !isDirectory) throw new IllegalArgumentException(directory + " must be a directory.");
         else if (!exists) return revision.withOptionalValue(Optional.empty());
 
-        return doOperation(() -> Files
-            .list(directory)
+        return doOperation(() -> list(directory)
             .filter(p -> isSpecial(p) || linkType.matches(p)))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
@@ -168,8 +168,7 @@ public class UnixFSUtils {
         if (exists && !isDirectory) throw new IllegalArgumentException(directory + " must be a directory.");
         else if (!exists) return Stream.empty();
 
-        return doOperation(() -> Files
-            .list(directory)
+        return doOperation(() -> list(directory)
             .filter(p -> isSpecial(p) || linkType.matches(p))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision)));
@@ -196,8 +195,7 @@ public class UnixFSUtils {
         if (exists && !isDirectory) throw new IllegalArgumentException(directory + " must be a directory.");
         else if (!exists) return revision.withOptionalValue(Optional.empty());
 
-        return doOperation(() -> Files
-            .list(directory)
+        return doOperation(() -> list(directory)
             .filter(p -> isSpecial(p) || linkType.matches(p)))
             .map(path -> getRevisionFactory().create(linkType.stripExtensionToFilename(path)).withValue(path))
             .filter(r -> r.isBeforeOrSame(revision))
@@ -695,6 +693,122 @@ public class UnixFSUtils {
          */
         public boolean matches(final Path path) {
             return typePredicate.test(path) && path.toString().endsWith(extension);
+        }
+
+    }
+
+    /**
+     * Safely lists the contents of the supplied directory. If the list process encounters a missing file, for example
+     * if it had been deleted by the garbage collector, then the stream will simply skip that file. This ensures that
+     * it will be possible to work only with live fields when iterating the contents of a directory.
+     *
+     * Internally this uses a spliterator and lazily fetches as needed.
+     *
+     * Otherwise this must behave in a manner identical to {@link Files#list(Path)}
+     *
+     * @param directory the directory to list
+     * @return a {@link Stream<Path>}
+     */
+    public Stream<Path> list(final Path directory) {
+        final var spliterator = new FileWalkSpliterator(directory, 1);
+        return stream(spliterator, false);
+    }
+
+    /**
+     * Safely lists the contents of the supplied directory as well as its children. If the walk process encounters a
+     * missing file, for example if it had been deleted by the garbage collector, then the stream will simply skip that
+     * file. This ensures that it will be possible to work only with live fields when iterating the contents of a
+     * directory.
+     *
+     * Internally this uses a spliterator and lazily fetches as needed.
+     *
+     * Otherwise this must behave in a manner identical to {@link Files#walk(Path, FileVisitOption...)}
+     *
+     * @param directory the directory to list
+     * @return a {@link Stream<Path>}
+     */
+    public Stream<Path> walk(final Path directory) {
+        final var spliterator = new FileWalkSpliterator(directory, Integer.MAX_VALUE);
+        return concat(Stream.of(directory), stream(spliterator, false));
+    }
+
+    private class FileWalkSpliterator extends Spliterators.AbstractSpliterator<Path> {
+
+        private final int max;
+
+        private final Path root;
+
+        private final Queue<Path> pending = new LinkedList<>();
+
+        private final Queue<Path> directories = new LinkedList<>();
+
+        private final FileVisitor<Path> visitor = new FileVisitor<>() {
+
+            @Override
+            public FileVisitResult preVisitDirectory(final Path dir, final BasicFileAttributes attrs) {
+                final var depth = dir.getNameCount() - root.getNameCount();
+                return depth >= max ? FileVisitResult.TERMINATE : FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) {
+                if (attrs.isDirectory()) directories.add(file);
+                pending.add(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult visitFileFailed(final Path file, final IOException exc) {
+                if (exc instanceof NoSuchFileException) {
+                    logger.debug("Failed to visit file. Ignoring.", exc);
+                    return FileVisitResult.CONTINUE;
+                } else if (exc != null) {
+                    throw new FatalException(exc);
+                } else {
+                    return FileVisitResult.CONTINUE;
+                }
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) {
+                if (exc instanceof NoSuchFileException) {
+                    logger.debug("Failed to visit file. Ignoring.", exc);
+                    return FileVisitResult.CONTINUE;
+                } else if (exc != null) {
+                    throw new FatalException(exc);
+                } else {
+                    return FileVisitResult.CONTINUE;
+                }
+            }
+
+        };
+
+        public FileWalkSpliterator(final Path directory, final int maxDepth) {
+            super(0, DISTINCT | IMMUTABLE);
+            if (maxDepth < 0) throw new IllegalArgumentException("Must have depth of 0 or more.");
+            this.max = maxDepth;
+            this.root = directory;
+            this.directories.add(directory);
+        }
+
+        @Override
+        public boolean tryAdvance(final Consumer<? super Path> action) {
+            var result = pending.poll();
+            if (result == null) result = doList();
+            if (result != null) action.accept(result);
+            return result != null;
+        }
+
+        private Path doList() {
+
+            final var directory = directories.poll();
+            if (directory == null) return null;
+
+            return doOperation(() -> {
+                walkFileTree(directory, emptySet(), 1, visitor);
+                return pending.poll();
+            }, FatalException::new);
+
         }
 
     }

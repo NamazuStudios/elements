@@ -88,7 +88,6 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         bind(RestAPIMain.class).asEagerSingleton();
         bind(EmbeddedRestApi.class).asEagerSingleton();
-        bind(InstanceConnectionService.class).toInstance(mock(InstanceConnectionService.class));
 
     }
 

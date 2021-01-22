@@ -25,6 +25,7 @@ import java.util.stream.Stream;
 import static com.namazustudios.socialengine.rt.transact.TransactionalResource.getTombstone;
 import static java.lang.Thread.sleep;
 import static java.util.Spliterator.*;
+import static java.util.Spliterators.spliterator;
 import static java.util.stream.Collectors.toList;
 
 public class TransactionalResourceService implements ResourceService {
@@ -163,9 +164,9 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public Spliterator<Listing> list(final Path path) {
         return computeRO(txn -> {
-            final Path normalized = normalize(path);
-            final List<Listing> listings = txn.list(normalized).collect(toList());
-            return Spliterators.spliterator(listings, SUBSIZED | CONCURRENT | NONNULL);
+            final var normalized = normalize(path);
+            final var listings = txn.list(normalized).collect(toList());
+            return spliterator(listings, SUBSIZED | CONCURRENT | NONNULL);
         });
     }
 
@@ -321,6 +322,9 @@ public class TransactionalResourceService implements ResourceService {
     private <T> T computeRO(final Function<ReadOnlyTransaction, T> operation) {
         try (final ReadOnlyTransaction txn = getPersistence().openRO(getNodeId())) {
             return operation.apply(txn);
+        } catch (Exception ex) {
+            logger.error("Caught exception.", ex);
+            throw ex;
         }
     }
 
@@ -336,6 +340,9 @@ public class TransactionalResourceService implements ResourceService {
             } catch (TransactionConflictException ex) {
                 randomWait(i);
                 continue;
+            } catch (Exception ex) {
+                logger.error("Caught exception.", ex);
+                throw ex;
             }
         }
 
@@ -355,7 +362,9 @@ public class TransactionalResourceService implements ResourceService {
                 return;
             } catch (TransactionConflictException ex) {
                 randomWait(i);
-                continue;
+            } catch (Exception ex) {
+                logger.error("Caught exception.", ex);
+                throw ex;
             }
         }
 
@@ -372,7 +381,9 @@ public class TransactionalResourceService implements ResourceService {
                 return;
             } catch (TransactionConflictException ex) {
                 randomWait(i);
-                continue;
+            } catch (Exception ex) {
+                logger.error("Caught exception.", ex);
+                throw ex;
             }
         }
 
@@ -389,7 +400,9 @@ public class TransactionalResourceService implements ResourceService {
                 return value;
             } catch (TransactionConflictException ex) {
                 randomWait(i);
-                continue;
+            } catch (Exception ex) {
+                logger.error("Caught exception.", ex);
+                throw ex;
             }
         }
 
@@ -403,14 +416,16 @@ public class TransactionalResourceService implements ResourceService {
 
         for (int i = 0; i < RETRY_COUNT; ++i) {
 
-        try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId());
-             final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
+            try (final ReadWriteTransaction txn = getPersistence().openRW(getNodeId());
+                 final AcquiresCacheMutator acm = new AcquiresCacheMutator(context, txn)) {
                 final T value = operation.apply(acm, txn);
                 txn.commit();
                 return value;
             } catch (TransactionConflictException ex) {
                 randomWait(i);
-                continue;
+            } catch (Exception ex) {
+                logger.error("Caught exception.", ex);
+                throw ex;
             }
         }
 

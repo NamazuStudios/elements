@@ -15,15 +15,14 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.*;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.DIRECTORY;
+import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.REVISION_SYMBOLIC_LINK;
 import static java.lang.String.format;
 import static java.nio.file.Files.*;
-import static java.nio.file.Files.createSymbolicLink;
 import static java.nio.file.LinkOption.NOFOLLOW_LINKS;
 import static java.util.stream.Collectors.toSet;
 
@@ -82,7 +81,7 @@ public class UnixFSPathIndex implements PathIndex {
             final UnixFSPathMapping mapping,
             final NodeId nodeId,
             final Revision<?> revision) throws IOException {
-        return Files
+        return getUtils()
             .walk(mapping.getPathDirectory())
             .filter(p -> isDirectory(p, NOFOLLOW_LINKS))
             .map(directory -> loadRevisionListing(nodeId, revision, directory))
@@ -249,7 +248,7 @@ public class UnixFSPathIndex implements PathIndex {
 
         getUtils().doOperationV(() -> {
             deleteIfExists(link);
-            if (Files.list(reverseDirectory).findAny().isEmpty()) deleteIfExists(reverseDirectory);
+            if (getUtils().list(reverseDirectory).findAny().isEmpty()) deleteIfExists(reverseDirectory);
         }, FatalException::new);
 
     }
@@ -283,7 +282,7 @@ public class UnixFSPathIndex implements PathIndex {
                 final Path olderRevisionDirectory = currentLinkDirectory.resolveSibling(latest.getValue().get());
                 logger.trace("Copying over older directory {} -> {}", olderRevisionDirectory, currentLinkDirectory);
 
-                Files.list(olderRevisionDirectory).forEach(source -> getUtils().doOperationV(() -> {
+                getUtils().list(olderRevisionDirectory).forEach(source -> getUtils().doOperationV(() -> {
                     final Path target = readSymbolicLink(source);
                     final Path link = currentLinkDirectory.resolve(source.getFileName());
                     createSymbolicLink(link, target);
@@ -387,7 +386,7 @@ public class UnixFSPathIndex implements PathIndex {
 
             final var value = getUtils()
                 .findLatestForRevision(reverseDirectory, revision, DIRECTORY)
-                .map(directory -> getUtils().doOperation(() -> Files.list(directory)))
+                .map(directory -> getUtils().doOperation(() -> getUtils().list(directory)))
                 .map(symlinkStream -> symlinkStream
                     .filter(path -> getUtils().doOperation(() -> isSymbolicLink(path)))
                     .map(symlink -> UnixFSPathMapping.fromFullyQualifiedSymlinkPath(utils, symlink))

@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.LinkType.*;
-import static java.nio.file.Files.*;
+import static java.nio.file.Files.deleteIfExists;
 import static java.util.Collections.reverseOrder;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -160,7 +160,7 @@ public class UnixFSGarbageCollectionCycle {
             final Path directory = pathMapping.getPathDirectory();
 
             try {
-                if (!list(directory).findAny().isPresent() && pessimisticLocking.tryLock(pathMapping.getPath())) {
+                if (utils.list(directory).findAny().isPresent() && pessimisticLocking.tryLock(pathMapping.getPath())) {
                     // If the lock fails, it's because a transaction is writing the directory. In that case,
                     // if the directory is ever fully emptied it will be picked up in subsequent collection
                     // cycles.
@@ -214,7 +214,7 @@ public class UnixFSGarbageCollectionCycle {
             logger.trace("Deleting file {} @ revision {}", path, revision);
             if (!deleteIfExists(path)) logger.trace("{} does not exist.", path);
 
-            if (!list(directory).findAny().isPresent() && pessimisticLocking.tryLock(resourceId)) {
+            if (utils.list(directory).findAny().isPresent() && pessimisticLocking.tryLock(resourceId)) {
                 // There really shouldn't be any contention for the most part. It's not a realistic use case
                 // to create and subsequently destroy a resource as they are intended to be one-time-use.
                 // However, that wouldn't stop bad code from attempting to do that so we must treat this
@@ -264,14 +264,10 @@ public class UnixFSGarbageCollectionCycle {
 
             if (utils.isTombstone(directory)) return Stream.of(() -> deleteIfExists(directory));
 
-            try {
-                return walk(directory).sorted(Comparator.reverseOrder()).map(item -> () -> {
-                    logger.trace("Deleting reverse mapping link {}", item);
-                    deleteIfExists(item);
-                });
-            } catch (IOException ex) {
-                throw new UncheckedIOException(ex);
-            }
+            return utils.walk(directory).sorted(Comparator.reverseOrder()).map(item -> () -> {
+                logger.trace("Deleting reverse mapping link {}", item);
+                deleteIfExists(item);
+            });
 
         }
 
