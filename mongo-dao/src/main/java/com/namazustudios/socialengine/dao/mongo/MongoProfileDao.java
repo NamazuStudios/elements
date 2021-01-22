@@ -7,12 +7,14 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.exception.BadQueryException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.experimental.filters.Filters;
@@ -31,6 +33,7 @@ import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.util.*;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -166,30 +169,36 @@ public class MongoProfileDao implements ProfileDao {
             final int count,
             final String search) {
 
-        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+        final String trimmedSearch = nullToEmpty(search).trim();
 
-        try {
-            booleanQueryBuilder.add(new DocValuesFieldExistsQuery("active"), BooleanClause.Occur.FILTER);
-            final Term activeTerm = new Term("active", "true");
-            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-
-            if (search != null && search.length() > 0) {
-                booleanQueryBuilder.add(
-                        getStandardQueryParser().parse(search, "name"),
-                        BooleanClause.Occur.FILTER
-                );
-            }
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
+        if (trimmedSearch.isEmpty()) {
+            throw new InvalidDataException("search must be specified.");
         }
 
-        return getMongoDBUtils().paginationFromSearch(
-                MongoProfile.class,
-                booleanQueryBuilder.build(),
-                offset,
-                count,
-                this::transform);
+        final Query<MongoProfile> profileQuery = getDatastore().find(MongoProfile.class);
+        final Query<MongoUser> userQuery = getDatastore().find(MongoUser.class);
 
+        userQuery.filter(
+                Filters.eq("active", true),
+                Filters.or(
+                        Filters.regex("name").pattern(Pattern.compile(trimmedSearch)),
+                        Filters.regex("email").pattern(Pattern.compile(trimmedSearch))
+                )
+        );
+
+        profileQuery.filter(
+                Filters.eq("active", true),
+                Filters.or(
+                        Filters.regex("displayName").pattern(Pattern.compile(trimmedSearch)),
+                        Filters.in("user", userQuery.iterator().toList())
+                )
+        );
+
+        return paginationFromQuery(profileQuery, offset, count);
+    }
+
+    private Pagination<Profile> paginationFromQuery(final Query<MongoProfile> query, final int offset, final int count) {
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, u -> getBeanMapper().map(u, Profile.class), new FindOptions());
     }
 
     private static String buildDateString(long timestamp) {

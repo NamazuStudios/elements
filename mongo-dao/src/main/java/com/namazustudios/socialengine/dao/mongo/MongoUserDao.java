@@ -37,6 +37,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
 
@@ -141,20 +142,23 @@ public class MongoUserDao implements UserDao {
     @Override
     public Pagination<User> getActiveUsers(int offset, int count, String queryString) {
 
-        final BooleanQuery.Builder booleanQueryBuilder = new BooleanQuery.Builder();
+        final String trimmedQueryString = nullToEmpty(queryString).trim();
 
-        try {
-
-            final Term activeTerm = new Term("active", "true");
-
-            booleanQueryBuilder.add(new TermQuery(activeTerm), BooleanClause.Occur.FILTER);
-            booleanQueryBuilder.add(getStandardQueryParser().parse(queryString, "name"), BooleanClause.Occur.FILTER);
-
-        } catch (QueryNodeException ex) {
-            throw new BadQueryException(ex);
+        if (trimmedQueryString.isEmpty()) {
+            throw new InvalidDataException("queryString must be specified.");
         }
 
-        return getMongoDBUtils().paginationFromSearch(MongoUser.class, booleanQueryBuilder.build(), offset, count, u -> getDozerMapper().map(u, User.class));
+        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+
+        query.filter(
+                Filters.eq("active", true),
+                Filters.or(
+                        Filters.regex("name").pattern(Pattern.compile(queryString)),
+                        Filters.regex("email").pattern(Pattern.compile(queryString))
+                )
+        );
+
+        return paginationFromQuery(query, offset, count);
 
     }
 
@@ -215,6 +219,7 @@ public class MongoUserDao implements UserDao {
         try {
             getDatastore().save(mongoUser);
             getObjectIndex().index(mongoUser);
+            
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
@@ -264,6 +269,7 @@ public class MongoUserDao implements UserDao {
 
         try {
             getObjectIndex().index(mongoUser);
+            
             return getDozerMapper().map(mongoUser, User.class);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
@@ -314,7 +320,6 @@ public class MongoUserDao implements UserDao {
 
         try {
             getObjectIndex().index(mongoUser);
-
             return getDozerMapper().map(mongoUser, User.class);
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
@@ -356,6 +361,7 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.first();
         getObjectIndex().index(mongoUser);
+        
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -397,6 +403,7 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.first();
         getObjectIndex().index(mongoUser);
+        
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -434,6 +441,7 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.first();
         getObjectIndex().index(mongoUser);
+        
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -473,6 +481,7 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.first();
         getObjectIndex().index(mongoUser);
+        
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -505,6 +514,7 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.first();
         getObjectIndex().index(mongoUser);
+        
 
         if (mongoUser == null) {
             throw new NotFoundException("User with userid does not exist:" + userId);
