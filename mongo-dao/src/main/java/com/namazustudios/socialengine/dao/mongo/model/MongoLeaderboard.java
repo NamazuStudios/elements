@@ -5,7 +5,7 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.*;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
 import java.util.Date;
@@ -27,7 +27,7 @@ import static java.lang.System.currentTimeMillis;
         @SearchableField(name = "timeStrategyType",  path = "/timeStrategyType"),
         @SearchableField(name = "scoreStrategyType",  path = "/scoreStrategyType"),
     })
-@Entity(value = "leaderboard", noClassnameStored = true)
+@Entity(value = "leaderboard", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "name"), options = @IndexOptions(unique = true))
 })

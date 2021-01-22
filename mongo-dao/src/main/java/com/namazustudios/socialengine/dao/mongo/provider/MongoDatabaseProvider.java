@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoDatabase;
 
 import javax.inject.Inject;
@@ -12,19 +12,17 @@ import javax.inject.Provider;
  */
 public class MongoDatabaseProvider implements Provider<MongoDatabase> {
 
-    public static final String DATABASE_NAME = "com.namazustudios.socialengine.mongo.database.name";
-
     @Inject
     private Provider<MongoClient> mongoClientProvider;
 
     @Inject
-    @Named(DATABASE_NAME)
+    @Named(MongoDatastoreProvider.DATABASE_NAME)
     private String databaseName;
 
     @Override
     public MongoDatabase get() {
-        final MongoClient mongoClient = mongoClientProvider.get();
-        return mongoClient.getDatabase(databaseName);
+        final var client = mongoClientProvider.get();
+        return client.getDatabase(databaseName);
     }
 
 }

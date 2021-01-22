@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.socialengine.dao.FriendDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
@@ -14,6 +15,8 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -22,8 +25,8 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 
@@ -34,7 +37,7 @@ import static java.util.stream.Collectors.toList;
 
 public class MongoFriendDao implements FriendDao {
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -54,20 +57,20 @@ public class MongoFriendDao implements FriendDao {
     public Pagination<Friend> getFriendsForUser(final User user, final int offset, final int count) {
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user.getId());
-        final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
+        final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
 
-        query.and(
-            query.or(
-                query.criteria("_id.lesser").equal(mongoUser.getObjectId()),
-                query.criteria("_id.greater").equal(mongoUser.getObjectId())
-            ),
-            query.or(
-                query.criteria("lesserAccepted").equal(true),
-                query.criteria("greaterAccepted").equal(true)
-            )
-        );
+        query.filter(Filters.and(
+                Filters.or(
+                        Filters.eq("_id.lesser", mongoUser.getObjectId()),
+                        Filters.eq("_id.greater", mongoUser.getObjectId())
+                ),
+                Filters.or(
+                        Filters.eq("lesserAccepted", true),
+                        Filters.eq("greaterAccepted", true)
+                )
+        ));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, f -> transform(mongoUser, f));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, f -> transform(mongoUser, f), new FindOptions());
 
     }
 
@@ -97,37 +100,33 @@ public class MongoFriendDao implements FriendDao {
         final MongoFriendshipId mongoFriendshipId;
         mongoFriendshipId = MongoFriendshipId.parseOrThrow(friendId, ex -> new FriendNotFoundException(ex));
 
-        final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
+        final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
 
-        query.and(
-            query.criteria("_id").equal(mongoFriendshipId),
-            query.or(
-                query.criteria("lesserAccepted").equal(true),
-                query.criteria("greaterAccepted").equal(true)
-            )
-        );
+        query.filter(Filters.and(Filters.eq("_id", mongoFriendshipId),
+                Filters.or(Filters.eq("lesserAccepted", true),
+                        Filters.eq("greaterAccepted", true))));
 
-        final MongoFriendship mongoFriendship = getDatastore().get(MongoFriendship.class, mongoFriendshipId);
+        final MongoFriendship mongoFriendship = query.first();
         return transform(mongoUser, mongoFriendship);
 
     }
 
     public List<MongoFriendship> getAllMongoFriendshipsForUser(final MongoUser mongoUser) {
 
-        final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
+        final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
 
-        query.and(
-            query.or(
-                query.criteria("_id.lesser").equal(mongoUser.getObjectId()),
-                query.criteria("_id.greater").equal(mongoUser.getObjectId())
-            ),
-            query.or(
-                query.criteria("lesserAccepted").equal(true),
-                query.criteria("greaterAccepted").equal(true)
-            )
-        );
+        query.filter(Filters.and(
+                Filters.or(
+                        Filters.eq("_id.lesser", mongoUser.getObjectId()),
+                        Filters.eq("_id.greater", mongoUser.getObjectId())
+                        ),
+                Filters.or(
+                        Filters.eq("lesserAccepted", true),
+                        Filters.eq("greaterAccepted", true)
+                )
+        ));
 
-        return query.asList();
+        return query.iterator().toList();
 
     }
 
@@ -141,7 +140,7 @@ public class MongoFriendDao implements FriendDao {
         mongoFriendshipId = MongoFriendshipId.parseOrThrow(friendId, ex ->
             new FriendNotFoundException("Friend not found: " + friendId, ex));
 
-        final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
+        final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
 
         final String property;
 
@@ -153,16 +152,16 @@ public class MongoFriendDao implements FriendDao {
             throw new FriendNotFoundException("Friend not found: " + friendId);
         }
 
-        query.and(
-            query.criteria("_id").equal(mongoFriendshipId),
-            query.criteria(property).equal(true)
-        );
+        query.filter(Filters.and(
+                Filters.eq("_id", mongoFriendshipId),
+                Filters.eq(property, true)
+        ));
 
-        final WriteResult writeResult = getDatastore().delete(query);
+        final DeleteResult deleteResult = query.delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new FriendNotFoundException("Friend not found: " + friendId);
-        } else if (writeResult.getN() > 1) {
+        } else if (deleteResult.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
         }
 
@@ -185,8 +184,8 @@ public class MongoFriendDao implements FriendDao {
             friend.setFriendship(NONE);
         }
 
-        final MongoUser lesser = getDatastore().get(MongoUser.class, lesserObjectId);
-        final MongoUser greater = getDatastore().get(MongoUser.class, greaterObjectId);
+        final MongoUser lesser = getDatastore().find(MongoUser.class).filter("_id.lesser", lesserObjectId).first();
+        final MongoUser greater = getDatastore().find(MongoUser.class).filter("_id.greater", greaterObjectId).first();
         final MongoUser friendUser = lesser.equals(mongoUser) ? greater : lesser;
 
         friend.setUser(getDozerMapper().map(friendUser, User.class));
@@ -199,12 +198,12 @@ public class MongoFriendDao implements FriendDao {
 
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

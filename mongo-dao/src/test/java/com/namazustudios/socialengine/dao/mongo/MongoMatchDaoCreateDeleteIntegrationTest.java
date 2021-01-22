@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.mongodb.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import org.testng.annotations.*;
 
 import javax.inject.Inject;
@@ -21,7 +21,7 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
 
     private EmbeddedMongo embeddedMongo;
 
-    private AdvancedDatastore advancedDatastore;
+    private Datastore Datastore;
 
     private MatchingMockObjects matchingMockObjects;
 
@@ -74,13 +74,13 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
         this.embeddedMongo = embeddedMongo;
     }
 
-    public AdvancedDatastore getAdvancedDatastore() {
-        return advancedDatastore;
+    public Datastore getDatastore() {
+        return Datastore;
     }
 
     @Inject
-    public void setAdvancedDatastore(AdvancedDatastore advancedDatastore) {
-        this.advancedDatastore = advancedDatastore;
+    public void setDatastore(Datastore Datastore) {
+        this.Datastore = Datastore;
     }
 
     public MatchingMockObjects getMatchingMockObjects() {

@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoGameOnApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.util.List;

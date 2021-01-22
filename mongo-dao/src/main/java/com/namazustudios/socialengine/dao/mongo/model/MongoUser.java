@@ -5,7 +5,7 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.model.user.User;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -27,7 +27,7 @@ import java.util.Objects;
     @SearchableField(name = "facebookId", path = "/facebookId"),
     @SearchableField(name = "appleSignInId", path = "/appleSignInId")
 })
-@Entity(value = "user", noClassnameStored = true)
+@Entity(value = "user", useDiscriminator = false)
 public class MongoUser {
 
     @Id

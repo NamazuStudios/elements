@@ -1,14 +1,14 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import org.mongodb.morphia.annotations.*;
-import org.mongodb.morphia.utils.IndexType;
+import dev.morphia.annotations.*;
+import dev.morphia.utils.IndexType;
 
 import java.sql.Timestamp;
 
 /**
  * Created by patricktwohig on 6/28/17.
  */
-@Entity(value = "score", noClassnameStored = true)
+@Entity(value = "score", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field("profile")),
     @Index(fields = @Field("leaderboard")),

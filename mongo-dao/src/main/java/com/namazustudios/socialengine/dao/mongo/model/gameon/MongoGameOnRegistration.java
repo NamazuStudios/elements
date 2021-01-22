@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 @SearchableIdentity(@SearchableField(
     name = "id",
@@ -24,7 +24,7 @@ import org.mongodb.morphia.annotations.*;
         @SearchableField(name = "userEmail",   path = "/user/email"),
         @SearchableField(name = "displayName", path = "/profile/displayName")
     })
-@Entity(value = "game_on_registration", noClassnameStored = true)
+@Entity(value = "game_on_registration")
 public class MongoGameOnRegistration {
 
     @Id

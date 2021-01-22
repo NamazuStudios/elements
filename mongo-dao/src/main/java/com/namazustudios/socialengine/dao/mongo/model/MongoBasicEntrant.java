@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.Date;
 import java.util.Map;
@@ -9,7 +9,7 @@ import java.util.Map;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity(value = "entrant", noClassnameStored = true)
+@Entity(value = "entrant", useDiscriminator = false)
 public class MongoBasicEntrant {
 
     @Id

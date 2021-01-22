@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 @SearchableIdentity(@SearchableField(
         name = "id",
@@ -18,7 +18,7 @@ import org.mongodb.morphia.annotations.*;
     @Index(fields = @Field("lesserAccepted")),
     @Index(fields = @Field("greaterAccepted"))
 })
-@Entity(value = "friendship", noClassnameStored = true)
+@Entity(value = "friendship", useDiscriminator = false)
 public class MongoFriendship {
 
     @Id

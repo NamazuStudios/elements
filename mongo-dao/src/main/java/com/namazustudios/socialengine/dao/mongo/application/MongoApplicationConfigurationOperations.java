@@ -1,22 +1,23 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
+import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplicationConfiguration;
-import com.namazustudios.socialengine.dao.mongo.model.application.MongoFirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
-import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -33,7 +34,7 @@ public class MongoApplicationConfigurationOperations {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoApplicationDao mongoApplicationDao;
 
@@ -60,34 +61,35 @@ public class MongoApplicationConfigurationOperations {
         getValidationHelper().validateModel(applicationConfiguration, ValidationGroups.Create.class);
 
         final Query<MongoApplicationConfigurationT> query;
-        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
+        query = getDatastore().find(mongoApplicationConfigurationClass);
 
         final String uniqueIdentifier = applicationConfiguration.getUniqueIdentifier();
         if (uniqueIdentifier == null) throw new IllegalArgumentException("uniqueIdentifier must be specified.");
 
-        query.and(
-            query.criteria("active").equal(false),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria("category").equal(applicationConfiguration.getCategory()),
-            query.criteria("uniqueIdentifier").equal(uniqueIdentifier)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", false),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq("category", applicationConfiguration.getCategory()),
+                Filters.eq("uniqueIdentifier", uniqueIdentifier)
+        ));
 
-        final UpdateOperations<MongoApplicationConfigurationT> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(mongoApplicationConfigurationClass);
-
-        updateOperations.set("uniqueIdentifier", uniqueIdentifier);
-        updateOperations.set("active", true);
-        updateOperations.set("category", applicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-        processUpdateOperations.accept(updateOperations);
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(true);
+        final UpdateResult updateResult = query.update(UpdateOperators.set("uniqueIdentifier", uniqueIdentifier),
+                UpdateOperators.set("active", true),
+                UpdateOperators.set("category", applicationConfiguration.getCategory()),
+                UpdateOperators.set("parent", mongoApplication)
+                ).execute(new UpdateOptions().upsert(true));
 
         final MongoApplicationConfigurationT mongoApplicationConfiguration;
         mongoApplicationConfiguration = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+            .perform(ds -> {
+                if(updateResult.getUpsertedId() != null){
+                    final Query<MongoApplicationConfigurationT> qry = ds.find(mongoApplicationConfigurationClass);
+                    return qry.filter(Filters.eq("_id", updateResult.getUpsertedId())).first();
+                }
+                else{
+                    return query.first();
+                }
+            });
 
         getObjectIndex().index(mongoApplicationConfiguration);
         return getBeanMapper().map(mongoApplicationConfiguration, applicationConfigurationClass);
@@ -107,21 +109,21 @@ public class MongoApplicationConfigurationOperations {
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final Query<MongoApplicationConfigurationT> query;
-        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
+        query = getDatastore().find(mongoApplicationConfigurationClass);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(category)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq("category", category)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final MongoApplicationConfigurationT mongoApplicationConfiguration = query.get();
+        final MongoApplicationConfigurationT mongoApplicationConfiguration = query.first();
 
         if (mongoApplicationConfiguration == null) {
             throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found for " + applicationNameOrId);
@@ -140,15 +142,15 @@ public class MongoApplicationConfigurationOperations {
             final String applicationNameOrId) {
 
         final MongoApplication parent = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-        final Query<MongoApplicationConfigurationT> query = getDatastore().createQuery(mongoApplicationConfigurationClass);
+        final Query<MongoApplicationConfigurationT> query = getDatastore().find(mongoApplicationConfigurationClass);
 
-        query.and(
-            query.criteria("parent").equal(parent),
-            query.criteria("category").equal(category)
-        );
+        query.filter(Filters.and(
+                Filters.eq("parent", parent),
+                Filters.eq("category", category)
+        ));
 
         return query
-            .asList().stream()
+            .iterator().toList().stream()
             .map(fac -> getBeanMapper().map(fac, applicationConfigurationClass))
             .collect(Collectors.toList());
 
@@ -173,37 +175,30 @@ public class MongoApplicationConfigurationOperations {
         getValidationHelper().validateModel(applicationConfiguration, ValidationGroups.Update.class);
 
         final Query<MongoApplicationConfigurationT> query;
-        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
+        query = getDatastore().find(mongoApplicationConfigurationClass);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(applicationConfiguration.getCategory())
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq("category", applicationConfiguration.getCategory())
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
-
-        final UpdateOperations<MongoApplicationConfigurationT> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(mongoApplicationConfigurationClass);
 
         final String uniqueIdentifier = applicationConfiguration.getUniqueIdentifier();
         if (uniqueIdentifier == null) throw new IllegalArgumentException("uniqueIdentifier must be specified.");
 
-        updateOperations.set("uniqueIdentifier", uniqueIdentifier);
-        updateOperations.set("category", applicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-        processUpdateOperations.accept(updateOperations);
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
+        query.update(UpdateOperators.set("uniqueIdentifier", uniqueIdentifier),
+                UpdateOperators.set("category", applicationConfiguration.getCategory()),
+                UpdateOperators.set("parent", mongoApplication)
+                ).execute(new UpdateOptions().upsert(false));
 
         final MongoApplicationConfigurationT mongoApplicationConfiguration;
-        mongoApplicationConfiguration = getMongoDBUtils().perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+        mongoApplicationConfiguration = getMongoDBUtils().perform(ds -> query.first());
 
         if (mongoApplicationConfiguration == null) {
             throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found for " + applicationNameOrId);
@@ -225,33 +220,37 @@ public class MongoApplicationConfigurationOperations {
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final Query<MongoApplicationConfigurationT> query;
-        query = getDatastore().createQuery(mongoApplicationConfigurationClass);
+        query = getDatastore().find(mongoApplicationConfigurationClass);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(category)
-        );
+        query.filter(Filters.and(
+           Filters.eq("active", true),
+           Filters.eq("parent", mongoApplication),
+           Filters.eq("category", category)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final UpdateOperations<MongoApplicationConfigurationT> updateOperations;
-
-        updateOperations = getDatastore().createUpdateOperations(mongoApplicationConfigurationClass);
-        updateOperations.set("active", false);
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
+        query.update(UpdateOperators.set("active", false)).execute(new UpdateOptions().upsert(false));
 
         final MongoApplicationConfigurationT mongoApplicationConfiguration;
 
         mongoApplicationConfiguration = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+            .perform(ds -> {
+                final Query<MongoApplicationConfigurationT> qry;
+                qry = getDatastore().find(mongoApplicationConfigurationClass);
+
+                try {
+                    qry.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+                } catch (IllegalArgumentException ex) {
+                    qry.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
+                }
+
+                return qry.first();
+            });
 
         if (mongoApplicationConfiguration == null) {
             throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found for " + applicationNameOrId);
@@ -270,12 +269,12 @@ public class MongoApplicationConfigurationOperations {
         this.objectIndex = objectIndex;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

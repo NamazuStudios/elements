@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.MongoCommandException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
+import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
@@ -16,14 +18,15 @@ import com.namazustudios.socialengine.exception.security.SessionExpiredException
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.UpdateOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+import dev.morphia.Datastore;
+import dev.morphia.FindAndModifyOptions;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,7 +48,7 @@ public class MongoSessionDao implements SessionDao {
 
     private MongoDBUtils mongoDBUtils;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoUserDao mongoUserDao;
 
@@ -71,10 +74,11 @@ public class MongoSessionDao implements SessionDao {
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
         final Timestamp now = new Timestamp(currentTimeMillis());
-        final Query<MongoSession> query = getDatastore().createQuery(MongoSession.class);
-        query.and(query.criteria("_id").equal(sessionId));
+        final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        final MongoSession mongoSession = query.get();
+        query.filter(Filters.and(Filters.eq("_id", sessionId)));
+
+        final MongoSession mongoSession = query.first();
 
         if (mongoSession == null) {
             throw new NoSessionException("Session not valid.");
@@ -104,23 +108,20 @@ public class MongoSessionDao implements SessionDao {
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
         final Timestamp now = new Timestamp(currentTimeMillis());
-        final Query<MongoSession> query = getDatastore().createQuery(MongoSession.class);
+        final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.and(
-            query.criteria("_id").equal(sessionId),
-            query.criteria("expiry").greaterThan(now)
-        );
+        query.filter(Filters.and(
+                Filters.eq("_id", sessionId)),
+                Filters.gte("expiry", now)
+                );
 
-        final UpdateOperations<MongoSession> updates = getDatastore().createUpdateOperations(MongoSession.class);
-        updates.set("expiry", new Timestamp(expiry));
-        getDatastore().update(query, updates);
+        final UpdateResult updateResult = query.update(UpdateOperators.set("expiry", new Timestamp(expiry)))
+                .execute(new UpdateOptions().upsert(false));;
 
-        final UpdateResults updateResults;
-        updateResults = getDatastore().update(query, updates, new UpdateOptions().multi(false).upsert(false));
+        final MongoSession mongoSession = getDatastore().find(MongoSession.class)
+                .filter(Filters.eq("_id", sessionId)).first();
 
-        final MongoSession mongoSession = getDatastore().get(MongoSession.class, sessionId);
-
-        if (updateResults.getUpdatedCount() == 0) {
+        if (updateResult.getModifiedCount() == 0) {
 
             if (mongoSession == null) {
                 throw new NoSessionException("Session not valid.");
@@ -167,22 +168,14 @@ public class MongoSessionDao implements SessionDao {
 
     private boolean updateProfileLastLogin(String profileId) {
         try {
-            final UpdateOperations<MongoProfile> updateOperations =
-                    getDatastore().createUpdateOperations(MongoProfile.class);
+            final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
+            query.filter(Filters.eq("_id", new ObjectId(profileId)));
 
             final Date nowDate = new Date();
-            updateOperations.set("lastLogin", nowDate);
-
-            final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
-            query.field("_id").equal(new ObjectId(profileId));
+            query.update(UpdateOperators.set("lastLogin", nowDate)).execute(new UpdateOptions().upsert(false));
 
             final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-
-                final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                        .upsert(false)
-                        .returnNew(true);
-
-                return ds.findAndModify(query, updateOperations, findAndModifyOptions);
+                return query.first();
             });
 
             if (mongoProfile == null) {
@@ -216,17 +209,17 @@ public class MongoSessionDao implements SessionDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
-        final Query<MongoSession> query = getDatastore().createQuery(MongoSession.class);
+        final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.field("_id").equal(sessionId)
-             .field("user").equal(mongoUser);
+        query.filter(Filters.eq("_id", sessionId))
+             .filter(Filters.eq("user", mongoUser));
 
-        final WriteResult wr = getDatastore().delete(query);
+        final DeleteResult dr = query.delete();
 
-        if (wr.getN() == 0) {
+        if (dr.getDeletedCount() == 0) {
             throw new NotFoundException("Session Not Found.");
-        } else if (wr.getN() > 1) {
-            logger.error("Deleted more than one session: {}", wr.getN());
+        } else if (dr.getDeletedCount() > 1) {
+            logger.error("Deleted more than one session: {}", dr.getDeletedCount());
         }
 
     }
@@ -235,11 +228,10 @@ public class MongoSessionDao implements SessionDao {
     public void deleteAllSessionsForUser(final String userId) {
 
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
-        final Query<MongoSession> query = getDatastore().createQuery(MongoSession.class);
+        final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.field("user").equal(mongoUser);
-        getDatastore().delete(query);
-
+        query.filter(Filters.eq("user", mongoUser));
+        query.delete();
     }
 
     public void validate(final Session session) {
@@ -273,12 +265,12 @@ public class MongoSessionDao implements SessionDao {
         this.mongoDBUtils = mongoDBUtils;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

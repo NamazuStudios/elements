@@ -299,7 +299,6 @@ public class MongoRewardIssuanceDaoTest {
         }
 
         final InventoryItem inventoryItem  = getRewardIssuanceDao().redeem(rewardIssuance);
-        assertEquals(inventoryItem.getUser(), testUser);
 
         assertEquals(inventoryItem.getId(), id);
         assertEquals(inventoryItem.getUser(), testUser);
@@ -340,7 +339,6 @@ public class MongoRewardIssuanceDaoTest {
 
 
         final InventoryItem inventoryItem  = getRewardIssuanceDao().redeem(rewardIssuance);
-        assertEquals(inventoryItem.getUser(), testUser);
 
         assertEquals(inventoryItem.getId(), id);
         assertEquals(inventoryItem.getUser(), testUser);

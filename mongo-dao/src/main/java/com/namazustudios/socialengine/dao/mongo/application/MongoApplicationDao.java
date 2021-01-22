@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.dao.mongo.application;
 import com.google.common.base.Function;
 import com.google.common.base.Strings;
 import com.mongodb.MongoCommandException;
+import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.exception.application.ApplicationNotFoundException;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
@@ -12,6 +14,10 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -19,9 +25,9 @@ import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -45,30 +51,41 @@ public class MongoApplicationDao implements ApplicationDao {
     private MongoDBUtils mongoDBUtils;
 
     @Inject
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     @Override
     public Application createOrUpdateInactiveApplication(final Application application) {
 
         validate(application);
 
-        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+        final Query<MongoApplication> query = datastore.find(MongoApplication.class);
 
-        query.and(
-                query.criteria("name").equal(application.getName()),
-                query.criteria("active").equal(false)
-        );
+        query.filter(Filters.and(
+                Filters.eq("name", application.getName()),
+                Filters.eq("active", false)
+        ));
 
         final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
 
-        updateOperations.set("name", application.getName().trim());
-        updateOperations.set("description", Strings.nullToEmpty(application.getDescription()).trim());
-        updateOperations.set("active", true);
+        final UpdateResult updateResult = query.update(UpdateOperators.set("name", application.getName().trim()),
+                UpdateOperators.set("description", Strings.nullToEmpty(application.getDescription()).trim()),
+                UpdateOperators.set("active", true)
+                ).execute(new UpdateOptions().upsert(true));
 
         final MongoApplication mongoApplication;
 
         try {
-            mongoApplication = datastore.findAndModify(query, updateOperations, false, true);
+            if(updateResult.getUpsertedId() != null){
+                mongoApplication = datastore.find(MongoApplication.class)
+                        .filter(Filters.eq("_id", updateResult.getUpsertedId())).first();
+            }
+            else{
+                mongoApplication = datastore.find(MongoApplication.class)
+                        .filter(Filters.and(
+                                Filters.eq("name", application.getName()),
+                                Filters.eq("active", true)
+                        )).first();
+            }
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -85,10 +102,10 @@ public class MongoApplicationDao implements ApplicationDao {
     @Override
     public Pagination<Application> getActiveApplications() {
 
-        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
-        query.filter("active = ", true);
+        final Query<MongoApplication> query = datastore.find(MongoApplication.class);
+        query.filter(Filters.eq("active", true));
 
-        final List<Application> applicationList = query.asList()
+        final List<Application> applicationList = query.iterator().toList()
             .stream()
             .map(this::transform)
             .collect(Collectors.toList());
@@ -105,10 +122,10 @@ public class MongoApplicationDao implements ApplicationDao {
     @Override
     public Pagination<Application> getActiveApplications(int offset, int count) {
 
-        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
-        query.filter("active = ", true);
+        final Query<MongoApplication> query = datastore.find(MongoApplication.class);
+        query.filter(Filters.eq("active", true));
 
-        return mongoDBUtils.paginationFromQuery(query, offset, count, input -> transform(input));
+        return mongoDBUtils.paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
 
     }
 
@@ -134,17 +151,17 @@ public class MongoApplicationDao implements ApplicationDao {
     @Override
     public Application getActiveApplication(String nameOrId) {
 
-        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+        final Query<MongoApplication> query = datastore.find(MongoApplication.class);
 
-        query.filter("active =", true);
+        query.filter(Filters.eq("active", true));
 
         try {
-            query.filter("_id", new ObjectId(nameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(nameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("name =", nameOrId);
+            query.filter(Filters.eq("name", nameOrId));
         }
 
-        final MongoApplication mongoApplication = query.get();
+        final MongoApplication mongoApplication = query.first();
 
         if (mongoApplication == null) {
             throw new ApplicationNotFoundException("Application " + nameOrId + " not found.");
@@ -159,26 +176,25 @@ public class MongoApplicationDao implements ApplicationDao {
 
         validate(application);
 
-        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
+        final Query<MongoApplication> query = datastore.find(MongoApplication.class);
 
-        query.filter("active =", true);
+        query.filter(Filters.eq("active", true));
 
         try {
-            query.filter("_id", new ObjectId(nameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(nameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("name =", nameOrId);
+            query.filter(Filters.eq("name", nameOrId));
         }
 
-        final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
-
-        updateOperations.set("name", application.getName().trim());
-        updateOperations.set("description", Strings.nullToEmpty(application.getDescription()).trim());
-        updateOperations.set("active", true);
+        query.update(UpdateOperators.set("name", application.getName().trim()),
+                UpdateOperators.set("description", Strings.nullToEmpty(application.getDescription()).trim()),
+                UpdateOperators.set("active", true)
+                ).execute(new UpdateOptions().upsert(false));
 
         final MongoApplication mongoApplication;
 
         try {
-            mongoApplication = datastore.findAndModify(query, updateOperations, false, false);
+            mongoApplication = query.first();
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -199,23 +215,38 @@ public class MongoApplicationDao implements ApplicationDao {
     @Override
     public void softDeleteApplication(String nameOrId) {
 
-        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
-
-        query.filter("active =", true);
+        final Query<MongoApplication> query = datastore.find(MongoApplication.class);
 
         try {
-            query.filter("_id", new ObjectId(nameOrId));
+            query.filter(Filters.and(
+                    Filters.eq("_id", new ObjectId(nameOrId)),
+                    Filters.eq("active", true)
+            ));
         } catch (IllegalArgumentException ex) {
-            query.filter("name =", nameOrId);
+            query.filter(Filters.and(
+                    Filters.eq("name", nameOrId),
+                    Filters.eq("active", true)
+            ));
         }
 
-        final UpdateOperations<MongoApplication> updateOperations = datastore.createUpdateOperations(MongoApplication.class);
-        updateOperations.set("active", false);
+        query.update(UpdateOperators.set("active", false)).execute(new UpdateOptions().upsert(false));
 
         final MongoApplication mongoApplication;
 
         try {
-            mongoApplication = datastore.findAndModify(query, updateOperations, false, false);
+            final Query<MongoApplication> qry = datastore.find(MongoApplication.class);
+            try {
+                qry.filter(Filters.and(
+                        Filters.eq("_id", new ObjectId(nameOrId)),
+                        Filters.eq("active", false)
+                ));
+            } catch (IllegalArgumentException ex) {
+                qry.filter(Filters.and(
+                        Filters.eq("name", nameOrId),
+                        Filters.eq("active", false)
+                ));
+            }
+            mongoApplication = qry.first();
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
                 throw new DuplicateException(ex);
@@ -234,17 +265,21 @@ public class MongoApplicationDao implements ApplicationDao {
 
     public MongoApplication findActiveMongoApplication(final String mongoApplicationNameOrId) {
 
-        final Query<MongoApplication> query = datastore.createQuery(MongoApplication.class);
-
-        query.field("active").equal(true);
+        final Query<MongoApplication> query = datastore.find(MongoApplication.class);
 
         if (ObjectId.isValid(mongoApplicationNameOrId)) {
-            query.field("_id").equal(new ObjectId(mongoApplicationNameOrId));
+            query.filter(Filters.and(
+                    Filters.eq("_id", new ObjectId(mongoApplicationNameOrId)),
+                    Filters.eq("active", true)
+            ));
         } else {
-            query.field("name").equal(mongoApplicationNameOrId);
+            query.filter(Filters.and(
+                    Filters.eq("name", mongoApplicationNameOrId),
+                    Filters.eq("active", true)
+            ));
         }
 
-        return query.get();
+        return query.first();
 
     }
 

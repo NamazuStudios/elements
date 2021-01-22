@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.MongoException;
+import com.mongodb.client.gridfs.GridFSBucket;
 import com.mongodb.gridfs.GridFS;
 import com.mongodb.gridfs.GridFSDBFile;
 import com.mongodb.gridfs.GridFSInputFile;
@@ -18,45 +19,35 @@ import java.io.OutputStream;
  */
 public class MongoGridFSFileDao implements FileDao {
 
-    private GridFS gridFS;
+    private GridFSBucket gridFSBucket;
 
     @Override
     public InputStream readFile(String path) {
-
-        final GridFSDBFile gridFSDBFile;
-
         try {
-            gridFSDBFile = getGridFS().findOne(path);
+            return getGridFSBucket().openDownloadStream(path);
         } catch (MongoException ex) {
             throw new NotFoundException(ex);
         }
-
-        return gridFSDBFile.getInputStream();
 
     }
 
     @Override
     public OutputStream writeFile(String path) {
-
-        final GridFSInputFile gridFSDBFile;
-
         try {
-            gridFSDBFile = getGridFS().createFile(path);
+            return getGridFSBucket().openUploadStream(path);
         } catch (MongoException ex) {
             throw new NotFoundException(ex);
         }
 
-        return gridFSDBFile.getOutputStream();
-
     }
 
-    public GridFS getGridFS() {
-        return gridFS;
+    public GridFSBucket getGridFSBucket() {
+        return gridFSBucket;
     }
 
     @Inject
-    public void setGridFS(final GridFS gridFS) {
-        this.gridFS = gridFS;
+    public void setGridFSBucket(final GridFSBucket gridFSBucket) {
+        this.gridFSBucket = gridFSBucket;
     }
 
 }

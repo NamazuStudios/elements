@@ -17,7 +17,8 @@
     <name>mongo-dao</name>
 
     <properties>
-        <morphia.version>1.3.2</morphia.version>
+        <morphia.version>2.1.0</morphia.version>
+        <mongo.driver.version>3.12.7</mongo.driver.version>
     </properties>
 
     <dependencies>
@@ -52,13 +53,8 @@
             <version>${javax.inject.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.mongodb</groupId>
-            <artifactId>mongodb-driver</artifactId>
-            <version>${mongo.java.driver.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mongodb.morphia</groupId>
-            <artifactId>morphia</artifactId>
+            <groupId>dev.morphia.morphia</groupId>
+            <artifactId>morphia-core</artifactId>
             <version>${morphia.version}</version>
         </dependency>
         <dependency>
@@ -96,6 +92,11 @@
             <groupId>com.github.dozermapper</groupId>
             <artifactId>dozer-core</artifactId>
             <version>${dozer.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>javax.servlet-api</artifactId>
+            <version>${javax.servlet.api.version}</version>
         </dependency>
         <dependency>
             <groupId>org.testng</groupId>

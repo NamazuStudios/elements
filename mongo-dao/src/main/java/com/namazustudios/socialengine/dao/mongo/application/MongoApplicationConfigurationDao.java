@@ -9,6 +9,10 @@ import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.*;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -17,10 +21,10 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.FindAndModifyOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -38,7 +42,7 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
     private MongoDBUtils mongoDBUtils;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoApplicationDao mongoApplicationDao;
 
@@ -89,13 +93,13 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
         final Class MongoType = getMongoApplicationConfigurationClass(configurationCategory);
 
-        final Query<MongoApplicationConfiguration> query =
-                getDatastore().createQuery(MongoType);
-        query.field("parent").equal(parent);
-        query.field("category").equal(configurationCategory);
+        final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoType);
+
+        query.filter(Filters.eq("parent", parent));
+        query.filter(Filters.eq("category", configurationCategory));
 
         List<T> applicationConfigurations = query
-            .asList().stream()
+            .iterator().toList().stream()
             .map(mac -> getBeanMapper().map(mac, type))
             .collect(Collectors.toList());
 
@@ -109,15 +113,14 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         final MongoApplication mongoApplication;
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Query<MongoApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoApplicationConfiguration.class);
+        final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication)
-        );
+        query.filter(Filters.and(
+           Filters.eq("active", true),
+           Filters.eq("parent", mongoApplication)
+        ));
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class), new FindOptions());
 
     }
 
@@ -153,11 +156,9 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(applicationConfigurationId);
 
         final Query<MongoApplicationConfiguration> query =
-                getDatastore().createQuery(MongoApplicationConfiguration.class);
-        query.field("_id").equal(objectId);
+                getDatastore().find(MongoApplicationConfiguration.class);
 
-        final UpdateOperations<MongoApplicationConfiguration> operations =
-                getDatastore().createUpdateOperations(MongoApplicationConfiguration.class);
+        query.filter(Filters.eq("_id", objectId));
 
         // make sure to convert any item name strings to item id strings
         for (ProductBundle productBundle : productBundles) {
@@ -176,14 +177,9 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
                 .map(pb -> getDozerMapper().map(pb, MongoProductBundle.class))
                 .collect(Collectors.toList());
 
-        operations.set("productBundles", mongoProductBundles);
-
-        final FindAndModifyOptions options = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
-
-        final MongoApplicationConfiguration resultMongoApplicationConfiguration =
-                getDatastore().findAndModify(query, operations, options);
+        query.update(UpdateOperators.set("productBundles", mongoProductBundles))
+                .execute(new UpdateOptions().upsert(false));
+        final MongoApplicationConfiguration resultMongoApplicationConfiguration = query.first();
 
         if (resultMongoApplicationConfiguration == null) {
             throw new NotFoundException("Application Configuration with id: " + applicationConfigurationId + "not found.");
@@ -210,12 +206,12 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         this.mongoDBUtils = mongoDBUtils;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

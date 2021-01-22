@@ -6,20 +6,21 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.util.ShutdownHooks;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
-import de.flapdoodle.embed.mongo.config.IMongodConfig;
-import de.flapdoodle.embed.mongo.config.MongodConfigBuilder;
+import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
-import org.mongodb.morphia.AdvancedDatastore;
+import dev.morphia.Datastore;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.io.IOException;
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_DB_URLS;
+import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static com.namazustudios.socialengine.dao.mongo.provider.MongoLockFactoryProvider.LOCK_TIMEOUT;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
 import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
@@ -31,6 +32,8 @@ public class IntegrationTestModule extends AbstractModule {
 
     private static final String TEST_BIND_IP = "localhost";
 
+    private static final ShutdownHooks hooks = new ShutdownHooks(IntegrationTestModule.class);
+
     @Override
     protected void configure() {
 
@@ -38,6 +41,7 @@ public class IntegrationTestModule extends AbstractModule {
             final MongodExecutable executable = mongodExecutable();
             bind(MongodExecutable.class).toInstance(executable);
             bind(MongodProcess.class).toInstance(executable.start());
+            hooks.add(this, executable::stop);
         } catch (IOException e) {
             addError(e);
             return;
@@ -49,7 +53,7 @@ public class IntegrationTestModule extends AbstractModule {
         install(new ConfigurationModule(() -> {
             final Properties properties = defaultConfigurationSupplier.get();
             properties.put(LOCK_TIMEOUT, format("%d", 120000));
-            properties.put(MONGO_DB_URLS, format("mongo://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
             return properties;
         }));
 
@@ -57,7 +61,7 @@ public class IntegrationTestModule extends AbstractModule {
             @Override
             protected void configure() {
                 super.configure();
-                expose(AdvancedDatastore.class);
+                expose(Datastore.class);
             }
         });
 
@@ -69,7 +73,7 @@ public class IntegrationTestModule extends AbstractModule {
 
     public MongodExecutable mongodExecutable() throws IOException {
 
-        final IMongodConfig config = new MongodConfigBuilder()
+        final MongodConfig config = MongodConfig.builder()
             .version(Version.V3_4_5)
             .net(new Net(TEST_BIND_IP, TEST_MONGO_PORT, localhostIsIPv6()))
             .build();

@@ -5,10 +5,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import org.testng.ITestContext;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
 
@@ -34,7 +31,6 @@ public class MongoAppleIapReceiptDaoTest {
         testUser.setEmail("testy.mctesterson.5@example.com");
         testUser.setLevel(USER);
 
-        testUser = getUserDao().createOrReactivateUser(testUser);
         testUser = getUserDao().createOrReactivateUser(testUser);
     }
 

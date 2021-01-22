@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;

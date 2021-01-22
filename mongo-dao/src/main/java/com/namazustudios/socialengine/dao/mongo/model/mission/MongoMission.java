@@ -6,7 +6,7 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ import java.util.Set;
         @SearchableField(name = "displayName",  path = "/displayName"),
         @SearchableField(name = "description",  path = "/description")
 })
-@Entity(value = "mission", noClassnameStored = true)
+@Entity(value = "mission", useDiscriminator = false)
 public class MongoMission {
 
     @Id
@@ -45,16 +45,12 @@ public class MongoMission {
     @Property
     private String description;
 
-    @Embedded
     private List<String> tags;
 
-    @Embedded
     private List<MongoStep> steps;
 
-    @Embedded
     private MongoStep finalRepeatStep;
 
-    @Embedded
     private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {

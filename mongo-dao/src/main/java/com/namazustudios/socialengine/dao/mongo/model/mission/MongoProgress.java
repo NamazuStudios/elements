@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -27,7 +27,7 @@ import static java.util.stream.Collectors.toList;
         extractor = ObjectIdExtractor.class,
         processors = MongoProgressIdProcessor.class))
 @SearchableDocument()
-@Entity(value = "progress", noClassnameStored = true)
+@Entity(value = "progress", useDiscriminator = false)
 public class MongoProgress {
 
     @Id
@@ -41,7 +41,6 @@ public class MongoProgress {
     @Reference
     private MongoProfile profile;
 
-    @Embedded
     private MongoProgressMissionInfo mission;
 
     @Property

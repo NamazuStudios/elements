@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.AppleIapReceiptDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoAppleIapReceipt;
@@ -13,9 +14,13 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.DeleteOptions;
+import dev.morphia.InsertOneOptions;
+import dev.morphia.query.FindOptions;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.Datastore;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +37,7 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -44,13 +49,13 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
     @Override
     public Pagination<AppleIapReceipt> getAppleIapReceipts(User user, int offset, int count) {
-        final Query<MongoAppleIapReceipt> query = getDatastore().createQuery(MongoAppleIapReceipt.class);
+        final Query<MongoAppleIapReceipt> query = getDatastore().find(MongoAppleIapReceipt.class);
 
-        query.field("user").equal(getDozerMapper().map(user, MongoUser.class));
+        query.filter(Filters.eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
                 query, offset, count,
-                mongoAppleIapReceipt -> getDozerMapper().map(mongoAppleIapReceipt, AppleIapReceipt.class));
+                mongoAppleIapReceipt -> getDozerMapper().map(mongoAppleIapReceipt, AppleIapReceipt.class), new FindOptions());
     }
 
     @Override
@@ -59,11 +64,11 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
             throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionId);
         }
 
-        final Query<MongoAppleIapReceipt> receiptQuery = getDatastore().createQuery(MongoAppleIapReceipt.class);
+        final Query<MongoAppleIapReceipt> receiptQuery = getDatastore().find(MongoAppleIapReceipt.class);
 
-        receiptQuery.criteria("_id").equal(originalTransactionId);
+        receiptQuery.filter(Filters.eq("_id", originalTransactionId));
 
-        final MongoAppleIapReceipt mongoAppleIapReceipt = receiptQuery.get();
+        final MongoAppleIapReceipt mongoAppleIapReceipt = receiptQuery.first();
 
         if(null == mongoAppleIapReceipt) {
             throw new NotFoundException("Unable to find apple iap receipt with an id of " + originalTransactionId);
@@ -95,25 +100,33 @@ public class MongoAppleIapReceiptDao implements AppleIapReceiptDao {
 
         getObjectIndex().index(mongoAppleIapReceipt);
 
-        return getDozerMapper().map(getDatastore().get(mongoAppleIapReceipt), AppleIapReceipt.class);
+        final Query<MongoAppleIapReceipt> receiptQuery = getDatastore().find(MongoAppleIapReceipt.class);
+
+        receiptQuery.filter(Filters.eq("_id", appleIapReceipt.getOriginalTransactionId()));
+
+        return getDozerMapper().map(receiptQuery.first(), AppleIapReceipt.class);
     }
 
     @Override
     public void deleteAppleIapReceipt(final String originalTransactionId) {
 
-        final WriteResult writeResult = getDatastore().delete(MongoAppleIapReceipt.class, originalTransactionId);
+        final Query<MongoAppleIapReceipt> receiptQuery = getDatastore().find(MongoAppleIapReceipt.class);
 
-        if (writeResult.getN() == 0) {
+        receiptQuery.filter(Filters.eq("_id", originalTransactionId));
+        
+        final DeleteResult deleteResult = getDatastore().delete(receiptQuery.first());
+
+        if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Apple IAP Receipt not found: " + originalTransactionId);
         }
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

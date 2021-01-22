@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
+import com.google.inject.internal.cglib.core.$CollectionUtils;
+import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoProductBundle;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -10,12 +12,15 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.FindAndModifyOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
@@ -31,7 +36,7 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoApplicationDao mongoApplicationDao;
 
@@ -52,44 +57,75 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
         validate(googlePlayApplicationConfiguration);
 
         final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        query = getDatastore().find(MongoGooglePlayApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(false),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY),
-            query.criteria("uniqueIdentifier").equal(googlePlayApplicationConfiguration.getApplicationId())
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", false),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq( "category", ANDROID_GOOGLE_PLAY),
+                Filters.eq("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId())
+        ));
 
-        final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
-
-        updateOperations.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set("active", true);
-        updateOperations.set( "category", googlePlayApplicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-
+        List<MongoProductBundle> mongoProductBundles = null;
         if (googlePlayApplicationConfiguration.getProductBundles() != null &&
                 googlePlayApplicationConfiguration.getProductBundles().size() > 0) {
-            final List<MongoProductBundle> mongoProductBundles = googlePlayApplicationConfiguration
+            mongoProductBundles = googlePlayApplicationConfiguration
                     .getProductBundles()
                     .stream()
                     .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
                     .collect(Collectors.toList());
-            updateOperations.set("productBundles", mongoProductBundles);
         }
 
-        if (googlePlayApplicationConfiguration.getJsonKey() != null) {
-            updateOperations.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey());
+        UpdateResult updateResult;
+        if (googlePlayApplicationConfiguration.getJsonKey() != null && mongoProductBundles != null) {
+            updateResult = query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                UpdateOperators.set("active", true),
+                UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                UpdateOperators.set("parent", mongoApplication),
+                UpdateOperators.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey()),
+                UpdateOperators.set("productBundles", mongoProductBundles)
+            ).execute(new UpdateOptions().upsert(true));
         }
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(true);
+        else if(googlePlayApplicationConfiguration.getJsonKey() != null){
+            updateResult = query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set("active", true),
+                    UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey())
+            ).execute(new UpdateOptions().upsert(true));
+        }
+        else if(mongoProductBundles != null){
+            updateResult = query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set("active", true),
+                    UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("productBundles", mongoProductBundles)
+            ).execute(new UpdateOptions().upsert(true));
+        }
+        else{
+            updateResult = query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set("active", true),
+                    UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication)
+            ).execute(new UpdateOptions().upsert(true));
+        }
 
         final MongoGooglePlayApplicationConfiguration mongoGooglePlayApplicationProfile;
         mongoGooglePlayApplicationProfile = getMongoDBUtils()
-            .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+            .perform(ds -> {
+                if(updateResult.getUpsertedId() != null){
+                    return ds.find(MongoGooglePlayApplicationConfiguration.class)
+                            .filter(Filters.eq("_id", updateResult.getUpsertedId())).first();
+                } else {
+                    return ds.find(MongoGooglePlayApplicationConfiguration.class)
+                            .filter(Filters.and(
+                                    Filters.eq("active", true),
+                                    Filters.eq("parent", mongoApplication),
+                                    Filters.eq( "category", ANDROID_GOOGLE_PLAY),
+                                    Filters.eq("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId())
+                            )).first();
+                }
+            });
 
         getObjectIndex().index(mongoGooglePlayApplicationProfile);
         return getBeanMapper().map(mongoGooglePlayApplicationProfile, GooglePlayApplicationConfiguration.class);
@@ -105,21 +141,21 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        query = getDatastore().find(MongoGooglePlayApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq( "category", ANDROID_GOOGLE_PLAY)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final MongoGooglePlayApplicationConfiguration mongoIosApplicationProfile = query.get();
+        final MongoGooglePlayApplicationConfiguration mongoIosApplicationProfile = query.first();
 
         if (mongoIosApplicationProfile == null) {
             throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
@@ -140,54 +176,64 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
         validate(googlePlayApplicationConfiguration);
 
         final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        query = getDatastore().find(MongoGooglePlayApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq( "category" ,ANDROID_GOOGLE_PLAY)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
+            query.filter(Filters.eq("_id = ", new ObjectId(applicationProfileNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier = ", applicationProfileNameOrId));
         }
 
-        final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
-
-        updateOperations.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim());
-        updateOperations.set( "category", googlePlayApplicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-
+        List<MongoProductBundle> mongoProductBundles = null;
         if (googlePlayApplicationConfiguration.getProductBundles() != null &&
                 googlePlayApplicationConfiguration.getProductBundles().size() > 0) {
-            final List<MongoProductBundle> mongoProductBundles = googlePlayApplicationConfiguration
+            mongoProductBundles = googlePlayApplicationConfiguration
                     .getProductBundles()
                     .stream()
                     .map(pb -> getBeanMapper().map(pb, MongoProductBundle.class))
                     .collect(Collectors.toList());
-            updateOperations.set("productBundles", mongoProductBundles);
-        }
-        else {
-            updateOperations.unset("productBundles");
         }
 
-        if (googlePlayApplicationConfiguration.getJsonKey() != null) {
-            updateOperations.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey());
+        if (googlePlayApplicationConfiguration.getJsonKey() != null && mongoProductBundles != null) {
+            query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey()),
+                    UpdateOperators.set("productBundles", mongoProductBundles)
+            ).execute(new UpdateOptions().upsert(false));
         }
-        else {
-            updateOperations.unset("jsonKey");
+        else if(googlePlayApplicationConfiguration.getJsonKey() != null){
+            query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("jsonKey", googlePlayApplicationConfiguration.getJsonKey()),
+                    UpdateOperators.unset("productBundles")
+            ).execute(new UpdateOptions().upsert(false));
         }
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
+        else if(mongoProductBundles != null){
+            query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication),
+                    UpdateOperators.set("productBundles", mongoProductBundles),
+                    UpdateOperators.unset("jsonKey")
+            ).execute(new UpdateOptions().upsert(false));
+        }
+        else{
+            query.update(UpdateOperators.set("uniqueIdentifier", googlePlayApplicationConfiguration.getApplicationId().trim()),
+                    UpdateOperators.set( "category", googlePlayApplicationConfiguration.getCategory()),
+                    UpdateOperators.set("parent", mongoApplication)
+            ).execute(new UpdateOptions().upsert(false));
+        }
 
         final MongoGooglePlayApplicationConfiguration mongoGooglePlayApplicationProfile;
         mongoGooglePlayApplicationProfile = getMongoDBUtils()
-                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+                .perform(ds -> query.first());
 
         if (mongoGooglePlayApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
@@ -207,33 +253,44 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
         mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
         final Query<MongoGooglePlayApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoGooglePlayApplicationConfiguration.class);
+        query = getDatastore().find(MongoGooglePlayApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(true),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria( "category").equal(ANDROID_GOOGLE_PLAY)
-        );
+        query.filter(Filters.and(
+                Filters.eq("active", true),
+                Filters.eq("parent", mongoApplication),
+                Filters.eq( "category", ANDROID_GOOGLE_PLAY)
+        ));
 
         try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
+            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final UpdateOperations<MongoGooglePlayApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoGooglePlayApplicationConfiguration.class);
-
-        updateOperations.set("active", false);
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(false);
+        query.update(UpdateOperators.set("active", false)).execute(new UpdateOptions().upsert(false));
 
         final MongoGooglePlayApplicationConfiguration mongoGooglePlayApplicationProfile;
 
         mongoGooglePlayApplicationProfile = getMongoDBUtils()
-                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+                .perform(ds -> {
+                    final Query<MongoGooglePlayApplicationConfiguration> qry = ds.find(MongoGooglePlayApplicationConfiguration.class);
+                    try {
+                        qry.filter(Filters.and(
+                                Filters.eq("active", true),
+                                Filters.eq("parent", mongoApplication),
+                                Filters.eq( "category", ANDROID_GOOGLE_PLAY),
+                                Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId))
+                        ));
+                    } catch (IllegalArgumentException ex) {
+                        qry.filter(Filters.and(
+                                Filters.eq("active", true),
+                                Filters.eq("parent", mongoApplication),
+                                Filters.eq( "category", ANDROID_GOOGLE_PLAY),
+                                Filters.eq("_id", applicationConfigurationNameOrId)
+                        ));
+                    }
+                    return qry.first();
+                });
 
         if (mongoGooglePlayApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + mongoGooglePlayApplicationProfile.getObjectId());
@@ -269,12 +326,12 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
         this.objectIndex = objectIndex;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

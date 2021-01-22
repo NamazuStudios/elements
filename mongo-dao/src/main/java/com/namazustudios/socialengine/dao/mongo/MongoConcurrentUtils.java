@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateResults;
+import dev.morphia.Datastore;
+import dev.morphia.Datastore;
+import dev.morphia.Key;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -38,7 +37,7 @@ public class MongoConcurrentUtils {
     public static final String FALLOFF_TIME_MAX_MS = "com.namazustudios.socialengine.mongo.optimistic.falloff.time.max.msec";
 
     @Inject
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     @Inject
     @Named(OPTIMISTIC_RETRY_COUNT)
@@ -92,7 +91,7 @@ public class MongoConcurrentUtils {
 
     /**
      * A basic a atomic operation.  The operation is supplied with a
-     * {@link org.mongodb.morphia.Datastore} instance which is used to handel the atomic
+     * {@link dev.morphia.Datastore} instance which is used to handel the atomic
      * operation.
      *
      * @param <ReturnT> the operation
@@ -105,7 +104,7 @@ public class MongoConcurrentUtils {
          * @param datastore the datastore
          * @return the return type
          */
-        ReturnT attempt(final AdvancedDatastore datastore) throws ContentionException;
+        ReturnT attempt(final Datastore datastore) throws ContentionException;
 
     }
 
