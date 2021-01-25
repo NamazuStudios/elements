@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.appserve.provider;
+package com.namazustudios.socialengine.jetty;
 
 import com.namazustudios.socialengine.Constants;
 import org.eclipse.jetty.deploy.AppProvider;
@@ -11,6 +11,8 @@ import org.eclipse.jetty.server.handler.RequestLogHandler;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import java.net.InetSocketAddress;
+import java.net.URI;
 
 public class ServerProvider implements Provider<Server> {
 
@@ -24,6 +26,7 @@ public class ServerProvider implements Provider<Server> {
     public Server get() {
 
         final int port = getServerPortProvider().get();
+
         final Server server = new Server(port);
         final AppProvider dispatcherAppProvider = getAppProviderProvider().get();
         final DeploymentManager deploymentManager = getDeploymentManagerProvider().get();
@@ -38,7 +41,6 @@ public class ServerProvider implements Provider<Server> {
         deploymentManager.addAppProvider(dispatcherAppProvider);
         server.addBean(deploymentManager);
         server.setHandler(mainHandler);
-
         return server;
     }
 

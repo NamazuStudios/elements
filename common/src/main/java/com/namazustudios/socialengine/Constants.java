@@ -106,6 +106,21 @@ public interface Constants {
     String GENERATED_PASSWORD_LENGTH = "com.namazustudios.socialengine.mock.generated.password.length";
 
     /**
+     * Used to specify the file path for static content.
+     */
+    String CDN_FILE_DIRECTORY = "com.namazustudios.socialengine.cdnserve.storage.directory";
+
+    /**
+     * Used to specify the endpoint file path for cloning static content.
+     */
+    String CDN_CLONE_ENDPOINT = "com.namazustudios.socialengine.cdnserve.endpoint.clone";
+
+    /**
+     * Used to specify the endpoint for serving static content.
+     */
+    String CDN_SERVE_ENDPOINT = "com.namazustudios.socialengine.cdnserve.endpoint.serve";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

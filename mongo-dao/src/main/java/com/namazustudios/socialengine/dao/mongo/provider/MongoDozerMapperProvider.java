@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.*;
+import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
@@ -157,6 +158,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(ProductBundle.class, MongoProductBundle.class)
                 .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
+            mapping(Deployment.class, MongoDeployment.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
             }
         };
 

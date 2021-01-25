@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.appserve.guice;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.appserve.DispatcherAppProvider;
-import com.namazustudios.socialengine.appserve.provider.ServerProvider;
+import com.namazustudios.socialengine.jetty.ServerProvider;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.server.Server;
 
