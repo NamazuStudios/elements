@@ -6,8 +6,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.util.ShutdownHooks;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -38,7 +37,7 @@ public class IntegrationTestModule extends AbstractModule {
     protected void configure() {
 
         try {
-            final MongodExecutable executable = mongodExecutable();
+            final var executable = mongodExecutable();
             bind(MongodExecutable.class).toInstance(executable);
             bind(MongodProcess.class).toInstance(executable.start());
             hooks.add(this, executable::stop);

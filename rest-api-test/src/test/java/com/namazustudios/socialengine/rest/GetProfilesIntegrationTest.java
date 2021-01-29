@@ -50,6 +50,7 @@ public class GetProfilesIntegrationTest {
             .createUser("GetProfileIntegrationTest0")
             .createProfiles(5)
             .createSession();
+
         client1 = clientContextProvider.get()
             .createUser("GetProfileIntegrationTest1")
             .createProfiles(5)

@@ -60,33 +60,41 @@ public class MongoUserSearchTest {
     }
 
     private List<User> buildTestUsers() {
-        final List<User> users = new java.util.ArrayList<>(emptyList());
+
+        final var users = new java.util.ArrayList<User>(emptyList());
+
         for(int i = 0; i < TEST_USER_COUNT; i++){
             final User testUser = new User();
-            testUser.setName(format("testy.mctesterson.%d", i));
-            testUser.setEmail(format("testy.mctesterson.%d@example.com", i));
+            testUser.setName(format("testysearch.mctesterson.%d", i));
+            testUser.setEmail(format("testysearch.mctesterson.%d@example.com", i));
             testUser.setLevel(USER);
             users.add(getUserDao().createOrReactivateUser(testUser));
         }
+
         return users;
+
     }
 
     private List<Profile> buildTestProfiles() {
-        final List<Profile> profiles = new java.util.ArrayList<>(emptyList());
+
+        final var profiles = new java.util.ArrayList<Profile>(emptyList());
+
         for(int i = 0; i< TEST_USER_COUNT; i++){
-            final Profile profile =  new Profile();
+            final var profile =  new Profile();
             profile.setUser(testUsers.get(i));
             profile.setApplication(testApplication);
-            profile.setDisplayName(format("display-name-%s", testUsers.get(i).getName()));
+            profile.setDisplayName(format("testysearch.display-name-%s", testUsers.get(i).getName()));
             profile.setImageUrl(format("http://example.com/%s.png", testUsers.get(i).getName()));
             profiles.add(getProfileDao().createOrReactivateProfile(profile));
         }
+
         return profiles;
+
     }
 
     @Test
     public void testUserSearch() {
-        var users = getUserDao().getActiveUsers(0, 0, "test");
+        var users = getUserDao().getActiveUsers(0, 0, "testysearch");
         assertEquals(users.getTotal(), TEST_USER_COUNT);
 
         for(int i = 0; i < TEST_USER_COUNT; i++){
@@ -97,13 +105,15 @@ public class MongoUserSearchTest {
 
     @Test
     public void testProfileSearch() {
-        var profiles = getProfileDao().getActiveProfiles(0, 0, "display");
+
+        var profiles = getProfileDao().getActiveProfiles(0, 0, "testysearch.display");
         assertEquals(profiles.getTotal(), TEST_USER_COUNT);
 
         for(int i = 0; i < TEST_USER_COUNT; i++){
             profiles = getProfileDao().getActiveProfiles(0, 0, format("%d@", i));
             assertEquals(profiles.getTotal(), 1);
         }
+
     }
 
     public UserDao getUserDao() {
@@ -141,4 +151,5 @@ public class MongoUserSearchTest {
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
     }
+
 }

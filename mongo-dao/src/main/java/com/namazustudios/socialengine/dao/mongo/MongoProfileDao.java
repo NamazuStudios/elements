@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.exception.BadQueryException;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
@@ -380,12 +381,14 @@ public class MongoProfileDao implements ProfileDao {
                 Filters.eq("application", application)
         ));
 
-        query.update(UpdateOperators.set("user", user),
+        final var update = query
+            .update(
+                UpdateOperators.set("user", user),
                 UpdateOperators.set("active", true),
                 UpdateOperators.set("application", application),
                 UpdateOperators.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
                 UpdateOperators.set("displayName", nullToEmpty(profile.getDisplayName()).trim())
-                ).execute(new UpdateOptions().upsert(true));
+            ).execute(new UpdateOptions().upsert(true));
 
         if (profile.getMetadata() == null) {
             query.update(UpdateOperators.unset("metadata"))

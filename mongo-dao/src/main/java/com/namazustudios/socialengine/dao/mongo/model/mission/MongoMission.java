@@ -5,12 +5,11 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
+import org.bson.types.ObjectId;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Mongo DTO for a mission.
