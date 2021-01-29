@@ -138,7 +138,7 @@ public class MongoFacebookUserDao implements FacebookUserDao {
         insertMap = getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
         // We only reactivate the existing user, all other fields are left untouched if the user exists.
         query.update(UpdateOperators.set("active", true),
-                UpdateOperators.setOnInsert(insertMap)).execute(new UpdateOptions().upsert(true));
+        UpdateOperators.setOnInsert(insertMap)).execute(new UpdateOptions().upsert(true));
 
         final MongoUser mongoUser;
 

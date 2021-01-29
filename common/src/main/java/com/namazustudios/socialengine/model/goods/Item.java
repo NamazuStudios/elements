@@ -23,7 +23,7 @@ public class Item implements Serializable, Taggable {
     private String id;
 
     @NotNull(groups = {Create.class, Insert.class, Update.class})
-    @Pattern(regexp = Constants.Regexp.WORD_ONLY)
+    @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
     private String name;
 
     private List<String> tags;

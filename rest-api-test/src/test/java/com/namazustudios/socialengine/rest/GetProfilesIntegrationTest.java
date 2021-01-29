@@ -105,7 +105,7 @@ public class GetProfilesIntegrationTest {
                 .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
-                .get();
+            .get();
 
         final Set<String> profileIds = clientContext.getProfiles().stream().map(p -> p.getId()).collect(toSet());
 

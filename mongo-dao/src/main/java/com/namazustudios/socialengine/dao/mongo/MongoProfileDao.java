@@ -6,8 +6,6 @@ import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
-import com.namazustudios.socialengine.exception.BadQueryException;
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
@@ -15,22 +13,16 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.UpdateOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
-import org.apache.lucene.document.DateTools;
-import org.apache.lucene.index.Term;
-import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.search.*;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
-import dev.morphia.query.*;
-import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -38,6 +30,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 /**
  *
@@ -70,8 +65,8 @@ public class MongoProfileDao implements ProfileDao {
         if (!ObjectId.isValid(profileId)) throw new ProfileNotFoundException();
 
         query.filter(Filters.and(
-                Filters.eq("_id", new ObjectId(profileId)),
-                Filters.eq("active", true)
+                eq("_id", new ObjectId(profileId)),
+                eq("active", true)
                 ));
 
         final MongoProfile mongoProfile = query.first();
@@ -87,9 +82,9 @@ public class MongoProfileDao implements ProfileDao {
 
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
-        query.filter(Filters.eq("_id", objectId));
-        query.filter(Filters.eq("active", true));
-        query.filter(Filters.eq("user", mongoUser));
+        query.filter(eq("_id", objectId));
+        query.filter(eq("active", true));
+        query.filter(eq("user", mongoUser));
 
         final MongoProfile mongoProfile = query.first();
         return mongoProfile == null ? Optional.empty() : Optional.of(transform(mongoProfile));
@@ -104,7 +99,7 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
         query.filter(Filters.and(
-                Filters.eq("active", true)
+                eq("active", true)
         ));
 
         if (lowerBoundTimestamp != null && upperBoundTimestamp != null && lowerBoundTimestamp > upperBoundTimestamp) {
@@ -148,7 +143,7 @@ public class MongoProfileDao implements ProfileDao {
             mongoApplication = getMongoApplicationDao().findActiveMongoApplication(applicationNameOrId);
             if (mongoApplication == null) return new Pagination<>();
             query.filter(Filters.and(
-                    Filters.eq("application", mongoApplication)
+                    eq("application", mongoApplication)
             ));
         }
 
@@ -156,7 +151,7 @@ public class MongoProfileDao implements ProfileDao {
             final MongoUser mongoUser = getMongoUserDao().findActiveMongoUser(userId);
             if (mongoUser == null) return new Pagination<>();
             query.filter(Filters.and(
-                    Filters.eq("user", mongoUser)
+                    eq("user", mongoUser)
             ));
         }
 
@@ -180,7 +175,7 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoUser> userQuery = getDatastore().find(MongoUser.class);
 
         userQuery.filter(
-                Filters.eq("active", true),
+                eq("active", true),
                 Filters.or(
                         Filters.regex("name").pattern(Pattern.compile(trimmedSearch)),
                         Filters.regex("email").pattern(Pattern.compile(trimmedSearch))
@@ -188,7 +183,7 @@ public class MongoProfileDao implements ProfileDao {
         );
 
         profileQuery.filter(
-                Filters.eq("active", true),
+                eq("active", true),
                 Filters.or(
                         Filters.regex("displayName").pattern(Pattern.compile(trimmedSearch)),
                         Filters.in("user", userQuery.iterator().toList())
@@ -202,15 +197,10 @@ public class MongoProfileDao implements ProfileDao {
         return getMongoDBUtils().paginationFromQuery(query, offset, count, u -> getBeanMapper().map(u, Profile.class), new FindOptions());
     }
 
-    private static String buildDateString(long timestamp) {
-        return DateTools.dateToString(new Date(timestamp), DateTools.Resolution.MILLISECOND);
-    }
-
     @Override
     public Profile getActiveProfile(String profileId) {
         final MongoProfile mongoProfile = getActiveMongoProfile(profileId);
         return getBeanMapper().map(mongoProfile, Profile.class);
-
     }
 
     public MongoProfile getActiveMongoProfile(final Profile profile) {
@@ -223,8 +213,8 @@ public class MongoProfileDao implements ProfileDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
 
         query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("_id", objectId)
+                eq("active", true),
+                eq("_id", objectId)
         ));
 
         final MongoProfile mongoProfile = query.first();
@@ -241,8 +231,8 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
         query.filter(Filters.and(
-                Filters.eq("user", user),
-                Filters.eq("active", true)
+                eq("user", user),
+                eq("active", true)
         ));
 
         return query.iterator().toList().stream();
@@ -264,17 +254,18 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
         query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("_id", objectId)
+                eq("active", true),
+                eq("_id", objectId)
         ));
 
-        query.update(UpdateOperators.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-                UpdateOperators.set("displayName", nullToEmpty(profile.getDisplayName()).trim()))
-                .execute(new UpdateOptions().upsert(false));
+        query.update(
+            set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
+            set("displayName", nullToEmpty(profile.getDisplayName()).trim())
+        ).execute(new UpdateOptions().upsert(false));
 
-        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-            return ds.find(MongoProfile.class).filter(Filters.eq("_id", objectId)).first();
-        });
+        final var mongoProfile = getMongoDBUtils()
+            .perform(ds -> ds.find(MongoProfile.class)
+            .filter(eq("_id", objectId)).first());
 
         if (mongoProfile == null) {
             throw new NotFoundException("application not found: " + profile.getId());
@@ -294,24 +285,25 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
         query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("_id", objectId)
+            eq("active", true),
+            eq("_id", objectId)
         ));
 
-        query.update(UpdateOperators.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-                UpdateOperators.set("displayName", nullToEmpty(profile.getDisplayName()).trim())
-                ).execute(new UpdateOptions().upsert(false));
+        query.update(
+            set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
+            set("displayName", nullToEmpty(profile.getDisplayName()).trim())
+        ).execute(new UpdateOptions().upsert(false));
 
         if (metadata == null) {
-            query.update(UpdateOperators.unset("metadata"))
-                    .execute(new UpdateOptions().upsert(false));
+            query.update(unset("metadata"))
+                 .execute(new UpdateOptions().upsert(false));
         } else {
-            query.update(UpdateOperators.set("metadata", metadata))
-                    .execute(new UpdateOptions().upsert(false));
+            query.update(set("metadata", metadata))
+                 .execute(new UpdateOptions().upsert(false));
         }
 
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-            return ds.find(MongoProfile.class).filter(Filters.eq("_id", objectId)).first();
+            return ds.find(MongoProfile.class).filter(eq("_id", objectId)).first();
         });
 
         if (mongoProfile == null) {
@@ -340,70 +332,24 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
         query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("_id", objectId)
+            eq("active", true),
+            eq("_id", objectId)
         ));
 
         if (metadata == null) {
-            query.update(UpdateOperators.unset("metadata"))
-                    .execute(new UpdateOptions().upsert(false));
+            query.update(unset("metadata"))
+                 .execute(new UpdateOptions().upsert(false));
         } else {
-            query.update(UpdateOperators.set("metadata", metadata))
-                    .execute(new UpdateOptions().upsert(false));
+            query.update(set("metadata", metadata))
+                 .execute(new UpdateOptions().upsert(false));
         }
 
-        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-            return ds.find(MongoProfile.class).filter(Filters.eq("_id", objectId)).first();
-        });
+        final MongoProfile mongoProfile = getMongoDBUtils()
+            .perform(ds -> ds.find(MongoProfile.class)
+            .filter(eq("_id", objectId)).first());
 
         if (mongoProfile == null) {
             throw new NotFoundException("application not found: " + objectId);
-        }
-
-        getObjectIndex().index(mongoProfile);
-        return transform(mongoProfile);
-
-    }
-
-    @Override
-    public Profile createOrReactivateProfile(final Profile profile) {
-
-        getValidationHelper().validateModel(profile, Insert.class);
-
-        final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
-
-        final MongoUser user = getMongoUserFromProfile(profile);
-        final MongoApplication application = getMongoApplicationFromProfile(profile);
-
-        query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("user", user),
-                Filters.eq("application", application)
-        ));
-
-        final var update = query
-            .update(
-                UpdateOperators.set("user", user),
-                UpdateOperators.set("active", true),
-                UpdateOperators.set("application", application),
-                UpdateOperators.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-                UpdateOperators.set("displayName", nullToEmpty(profile.getDisplayName()).trim())
-            ).execute(new UpdateOptions().upsert(true));
-
-        if (profile.getMetadata() == null) {
-            query.update(UpdateOperators.unset("metadata"))
-                    .execute(new UpdateOptions().upsert(true));
-        } else {
-            query.update(UpdateOperators.set("metadata", profile.getMetadata()))
-                    .execute(new UpdateOptions().upsert(true));
-        }
-
-        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-            return query.first();
-        });
-
-        if (mongoProfile == null) {
-            throw new NotFoundException("application not found: " + profile.getId());
         }
 
         getObjectIndex().index(mongoProfile);
@@ -422,28 +368,32 @@ public class MongoProfileDao implements ProfileDao {
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.filter(Filters.and(
-                Filters.eq("user", user),
-                Filters.eq("application", application)
+            eq("user", user),
+            eq("active", false),
+            eq("application", application)
         ));
 
-        query.update(UpdateOperators.set("user", user),
-                UpdateOperators.set("active", true),
-                UpdateOperators.set("application", application),
-                UpdateOperators.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-                UpdateOperators.set("displayName", nullToEmpty(profile.getDisplayName()).trim())
-        ).execute(new UpdateOptions().upsert(true));
+        final var builder = new UpdateBuilder().with(
+            set("user", user),
+            set("active", true),
+            set("application", application),
+            set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
+            set("displayName", nullToEmpty(profile.getDisplayName()).trim())
+        );
 
         if (metadata == null) {
-            query.update(UpdateOperators.unset("metadata"))
-                    .execute(new UpdateOptions().upsert(true));
+            builder.with(unset("metadata"));
         } else {
-            query.update(UpdateOperators.set("metadata", metadata))
-                    .execute(new UpdateOptions().upsert(true));
+            builder.with(set("metadata", profile.getMetadata()));
         }
 
-        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-            return query.first();
-        });
+        builder.execute(query, new UpdateOptions().upsert(true));
+
+        final var mongoProfile = getMongoDBUtils().perform(ds -> query.first());
+
+        if (mongoProfile == null) {
+            throw new ProfileNotFoundException("profile not found: " + profile.getId());
+        }
 
         getObjectIndex().index(mongoProfile);
         return transform(mongoProfile);
@@ -461,8 +411,8 @@ public class MongoProfileDao implements ProfileDao {
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.filter(Filters.and(
-                Filters.eq("user", user),
-                Filters.eq("application", application)
+            eq("user", user),
+            eq("application", application)
         ));
 
 
@@ -474,8 +424,8 @@ public class MongoProfileDao implements ProfileDao {
         insertMap.put("application", application);
         insertMap.put("displayName", nullToEmpty(profile.getDisplayName()).trim());
 
-        query.update(UpdateOperators.set("active", true),
-                UpdateOperators.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
+        query.update(set("active", true),
+                set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
                 UpdateOperators.setOnInsert(insertMap)
         ).execute(new UpdateOptions().upsert(true));
 
@@ -503,15 +453,13 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
         query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("_id", objectId)
+                eq("active", true),
+                eq("_id", objectId)
         ));
 
-        query.update(UpdateOperators.set("active", false)).execute(new UpdateOptions().upsert(false));
+        query.update(set("active", false)).execute(new UpdateOptions().upsert(false));
 
-        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-            return query.first();
-        });
+        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> query.first());
 
         if (mongoProfile == null) {
             throw new NotFoundException("application not found: " + profileId);

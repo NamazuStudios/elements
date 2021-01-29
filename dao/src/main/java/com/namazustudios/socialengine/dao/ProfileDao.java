@@ -155,7 +155,9 @@ public interface ProfileDao {
      * @param profile the user
      * @return the {@link Profile}, as written to the database
      */
-    Profile createOrRefreshProfile(final Profile profile);
+    default Profile createOrRefreshProfile(final Profile profile) {
+        return createOrReactivateProfile(profile, profile.getMetadata());
+    }
 
     /**
      * Deletes a profile by marking it as inactive.  Data is otherwise retained in the database.

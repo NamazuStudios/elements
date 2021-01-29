@@ -110,16 +110,21 @@ public interface Constants {
      */
     interface Regexp {
 
+        //language=JSRegexp
         /**
-         * Non-blank string.
+         * A string containing no white spaces.
          */
         String NO_WHITE_SPACE = "^\\S+$";
 
+        //language=JSRegexp
         /**
          * Alpha-numeric only.  Allows underscore, but does not allow the word to start with an underscore.
          */
-        String WORD_ONLY = "[^_]\\w+";
+        String WHOLE_WORD_ONLY = "[^_]\\w+";
 
+        //language=JSRegexp
+
+        //language=JSRegexp
         /**
          * A very simple validator
          */

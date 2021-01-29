@@ -20,7 +20,7 @@ import static com.google.common.base.Strings.nullToEmpty;
  */
 public interface Topic<T> {
 
-    Pattern VALID_NAME_PATTERN = Pattern.compile(Constants.Regexp.WORD_ONLY);
+    Pattern VALID_NAME_PATTERN = Pattern.compile(Constants.Regexp.WHOLE_WORD_ONLY);
 
     /**
      * Listens for incoming messages on this {@link Topic}.
