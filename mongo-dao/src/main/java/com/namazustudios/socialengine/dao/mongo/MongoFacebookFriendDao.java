@@ -60,13 +60,14 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
             mongoFriendshipId = new MongoFriendshipId(mongoUser.getObjectId(), friend.getObjectId());
 
             final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
-            final UpdateResult r = query.filter(Filters.eq("_id", mongoFriendshipId))
-                    .update(UpdateOperators.set("_id", mongoFriendshipId),
-                            UpdateOperators.set("lesserAccepted", true),
-                            UpdateOperators.set("greaterAccepted", true))
-                    .execute();
-            logger.debug("Updated {}.", r.getModifiedCount());
 
+            final UpdateResult r = query.filter(Filters.eq("_id", mongoFriendshipId))
+                .update(UpdateOperators.set("_id", mongoFriendshipId),
+                        UpdateOperators.set("lesserAccepted", true),
+                        UpdateOperators.set("greaterAccepted", true))
+                .execute();
+
+            logger.debug("Updated {}.", r.getModifiedCount());
             getObjectIndex().index(query.first());
 
         }

@@ -17,6 +17,8 @@ import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.Map;
 
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+
 /**
  * Created by patricktwohig on 6/25/17.
  */
@@ -55,9 +57,9 @@ public class MongoPasswordUtils {
         digest.update(salt);
         digest.update(passwordBytes);
 
-        return query.modify(UpdateOperators.set("salt", salt),
-                UpdateOperators.set("passwordHash", digest.digest()),
-                UpdateOperators.set("hashAlgorithm", digest.getAlgorithm())
+        return query.modify(set("salt", salt),
+                set("passwordHash", digest.digest()),
+                set("hashAlgorithm", digest.getAlgorithm())
         ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
     }
 
@@ -65,11 +67,11 @@ public class MongoPasswordUtils {
      * Scrambles both the salt and the password.  This effectively wipes out the account's
      * password making it inaccessible.
      *
-     * @param query the query
+     * @param builder the {@link ModifyBuilder}
      */
-    public MongoUser scramblePassword(final Query<MongoUser> query) {
+    public ModifyBuilder scramblePassword(final ModifyBuilder builder) {
 
-        final SecureRandom secureRandom = new SecureRandom();
+        final var secureRandom = new SecureRandom();
 
         byte[] tmp;
 
@@ -81,10 +83,41 @@ public class MongoPasswordUtils {
 
         final MessageDigest digest = getMessageDigestProvider().get();
 
-        return query.modify(UpdateOperators.set("salt", tmp),
-                UpdateOperators.set("passwordHash", tmp),
-                UpdateOperators.set("hashAlgorithm", digest.getAlgorithm())
-        ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+        return builder.with(
+            set("salt", tmp),
+            set("passwordHash", tmp),
+            set("hashAlgorithm", digest.getAlgorithm())
+        );
+
+    }
+
+
+    /**
+     * Scrambles both the salt and the password.  This effectively wipes out the account's
+     * password making it inaccessible.
+     *
+     * @param builder the {@link UpdateBuilder}
+     */
+    public UpdateBuilder scramblePassword(final UpdateBuilder builder) {
+
+        final var secureRandom = new SecureRandom();
+
+        byte[] tmp;
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+
+        tmp = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(tmp);
+
+        final MessageDigest digest = getMessageDigestProvider().get();
+
+        return builder.with(
+            set("salt", tmp),
+            set("passwordHash", tmp),
+            set("hashAlgorithm", digest.getAlgorithm())
+        );
+
     }
 
     /**

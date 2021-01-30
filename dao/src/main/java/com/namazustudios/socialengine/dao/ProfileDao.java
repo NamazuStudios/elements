@@ -130,7 +130,9 @@ public interface ProfileDao {
      *
      * @return the {@link Profile} as it was written into the database
      */
-    Profile createOrReactivateProfile(Profile profile);
+    default Profile createOrReactivateProfile(Profile profile) {
+        return createOrReactivateProfile(profile, profile.getMetadata());
+    }
 
     /**
      * Creates or reactivates an inactive profile.  If the profile is active then this throws a
@@ -155,9 +157,7 @@ public interface ProfileDao {
      * @param profile the user
      * @return the {@link Profile}, as written to the database
      */
-    default Profile createOrRefreshProfile(final Profile profile) {
-        return createOrReactivateProfile(profile, profile.getMetadata());
-    }
+    Profile createOrRefreshProfile(final Profile profile);
 
     /**
      * Deletes a profile by marking it as inactive.  Data is otherwise retained in the database.

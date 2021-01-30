@@ -23,6 +23,8 @@ import dev.morphia.query.UpdateOperations;
 import javax.inject.Inject;
 import java.util.stream.Stream;
 
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+
 public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
     private Mapper mapper;
@@ -66,9 +68,10 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
         final Query<MongoFCMRegistration> query = getDatastore().find(MongoFCMRegistration.class);
         query.filter(Filters.and(Filters.eq("_id", registrationId)));
 
-        final UpdateResult updateResults = query.update(UpdateOperators.set("profile", mongoProfile),
-                UpdateOperators.set("registrationToken", fcmRegistration.getRegistrationToken()))
-                .execute();
+        final UpdateResult updateResults = query.update(
+            set("profile", mongoProfile),
+            set("registrationToken", fcmRegistration.getRegistrationToken())
+        ).execute();
 
         if (updateResults.getModifiedCount() == 0) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistration.getId());

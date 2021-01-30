@@ -40,6 +40,11 @@ import java.util.Arrays;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.and;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 /**
  * MongoDB implementation of {@link UserDao}.
@@ -89,9 +94,9 @@ public class MongoUserDao implements UserDao {
 
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
-        query.filter(Filters.and(
-                Filters.eq("_id", mongoUserId)),
-                Filters.eq("active", true)
+        query.filter(and(
+                eq("_id", mongoUserId)),
+                eq("active", true)
         );
 
         final MongoUser mongoUser = query.first();
@@ -115,11 +120,11 @@ public class MongoUserDao implements UserDao {
 
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
-        query.filter(Filters.eq("active", true));
+        query.filter(eq("active", true));
 
         query.filter(Filters.or(
-                Filters.eq("name", trimmedUserNameOrEmail),
-                Filters.eq("email", trimmedUserNameOrEmail)
+                eq("name", trimmedUserNameOrEmail),
+                eq("email", trimmedUserNameOrEmail)
         ));
 
         final MongoUser mongoUser = query.first();
@@ -135,7 +140,7 @@ public class MongoUserDao implements UserDao {
     @Override
     public Pagination<User> getActiveUsers(final int offset, final int count) {
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-        query.filter(Filters.eq("active", true));
+        query.filter(eq("active", true));
         return paginationFromQuery(query, offset, count);
     }
 
@@ -151,7 +156,7 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         query.filter(
-                Filters.eq("active", true),
+                eq("active", true),
                 Filters.or(
                         Filters.regex("name").pattern(Pattern.compile(queryString)),
                         Filters.regex("email").pattern(Pattern.compile(queryString))
@@ -235,34 +240,34 @@ public class MongoUserDao implements UserDao {
         Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         query.filter(Filters.or(
-                Filters.eq("name", user.getName()),
-                Filters.eq("email", user.getEmail())
-        )).filter(Filters.and(
-                Filters.eq("active", false)
+                eq("name", user.getName()),
+                eq("email", user.getEmail())
+        )).filter(and(
+                eq("active", false)
         ));
 
         if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
-                    UpdateOperators.set("active", true),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("facebookId", user.getFacebookId()),
+                    set("active", true),
+                    set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute(new UpdateOptions().upsert(true));
         } else {
-            query.update(UpdateOperators.set("active", true),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("active", true),
+                    set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute(new UpdateOptions().upsert(true));
         }
 
         query = getDatastore().find(MongoUser.class);
 
         query.filter(Filters.or(
-                Filters.eq("name", user.getName()),
-                Filters.eq("email", user.getEmail())
-        )).filter(Filters.and(
-                Filters.eq("active", true)
+                eq("name", user.getName()),
+                eq("email", user.getEmail())
+        )).filter(and(
+                eq("active", true)
         ));
 
         final MongoUser mongoUser = getMongoPasswordUtils().addPasswordToQuery(query, password);
@@ -288,37 +293,33 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         query.filter(Filters.or(
-                Filters.eq("name", user.getName()),
-                Filters.eq("email", user.getEmail())
-        )).filter(Filters.and(
-                Filters.eq("active", false)
+            eq("name", user.getName()),
+            eq("email", user.getEmail())
+        )).filter(and(
+            eq("active", false)
         ));
 
-        if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
-                    UpdateOperators.set("active", true),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
-            ).execute(new UpdateOptions().upsert(true));
+        final var builder = new ModifyBuilder()
+            .with(
+                set("active", true),
+                set("name", user.getName()),
+                set("email", user.getEmail()),
+                set("level", user.getLevel())
+            )
+            .with(getMongoPasswordUtils()::scramblePassword);
+
+        if (user.getFacebookId() == null) {
+            builder.with(unset("facebookId"));
         } else {
-            query.update(UpdateOperators.set("active", true),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
-            ).execute(new UpdateOptions().upsert(true));
+            builder.with(set("facebookId", user.getFacebookId()));
         }
 
-        query.filter(Filters.or(
-                Filters.eq("name", user.getName()),
-                Filters.eq("email", user.getEmail())
-        )).filter(Filters.and(
-                Filters.eq("active", true)
-        ));
-
-        final MongoUser mongoUser = getMongoPasswordUtils().scramblePassword(query);
+        final var opts = new ModifyOptions()
+            .upsert(true)
+            .returnDocument(AFTER);
 
         try {
+            final var mongoUser = builder.execute(query, opts);
             getObjectIndex().index(mongoUser);
             return getDozerMapper().map(mongoUser, User.class);
         } catch (MongoCommandException ex) {
@@ -328,6 +329,7 @@ public class MongoUserDao implements UserDao {
                 throw new InternalException(ex);
             }
         }
+
     }
 
     @Override
@@ -338,24 +340,24 @@ public class MongoUserDao implements UserDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
-        query.filter(Filters.and(
-                Filters.eq("_id", objectId),
-                Filters.eq("name", user.getName()),
-                Filters.eq("email", user.getEmail())
+        query.filter(and(
+                eq("_id", objectId),
+                eq("name", user.getName()),
+                eq("email", user.getEmail())
         ));
 
         if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
-                    UpdateOperators.set("active", user.isActive()),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("facebookId", user.getFacebookId()),
+                    set("active", user.isActive()),
+                    set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute(new UpdateOptions().upsert(false));
         } else {
-            query.update(UpdateOperators.set("active", user.isActive()),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("active", user.isActive()),
+                    set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute(new UpdateOptions().upsert(false));
         }
 
@@ -378,24 +380,24 @@ public class MongoUserDao implements UserDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
-        query.filter(Filters.and(
-                Filters.eq("_id", objectId),
-                Filters.eq("name", user.getName()),
-                Filters.eq("email", user.getEmail())
+        query.filter(and(
+                eq("_id", objectId),
+                eq("name", user.getName()),
+                eq("email", user.getEmail())
         ));
 
         if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
-                    UpdateOperators.set("active", user.isActive()),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("facebookId", user.getFacebookId()),
+                    set("active", user.isActive()),
+                    set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute(new UpdateOptions().upsert(false));
         } else {
-            query.update(UpdateOperators.set("active", user.isActive()),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("active", user.isActive()),
+                    set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute(new UpdateOptions().upsert(false));
         }
 
@@ -421,27 +423,30 @@ public class MongoUserDao implements UserDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
-        query.filter(Filters.and(
-                Filters.eq("_id", objectId),
-                Filters.eq("active", true)
-        ));
+        query.filter(
+            and(
+                eq("_id", objectId),
+                eq("active", true)
+            )
+        );
 
         if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(
+                set("facebookId", user.getFacebookId()),
+                set("name", user.getName()),
+                set("email", user.getEmail()),
+                set("level", user.getLevel())
             ).execute();
         } else {
-            query.update(UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(
+                set("name", user.getName()),
+                set("email", user.getEmail()),
+                set("level", user.getLevel())
             ).execute();
         }
 
-        final MongoUser mongoUser = query.first();
+        final var mongoUser = query.first();
         getObjectIndex().index(mongoUser);
-        
 
         if (mongoUser == null) {
             throw new NotFoundException("User with email/username does not exist: " +  user.getEmail() + "/" + user.getName());
@@ -459,21 +464,21 @@ public class MongoUserDao implements UserDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
-        query.filter(Filters.and(
-                Filters.eq("_id", objectId),
-                Filters.eq("active", true)
+        query.filter(and(
+                eq("_id", objectId),
+                eq("active", true)
         ));
 
         if (user.getFacebookId() != null) {
-            query.update(UpdateOperators.set("facebookId", user.getFacebookId()),
-                    UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("facebookId", user.getFacebookId()),
+                    set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute();
         } else {
-            query.update(UpdateOperators.set("name", user.getName()),
-                    UpdateOperators.set("email", user.getEmail()),
-                    UpdateOperators.set("level", user.getLevel())
+            query.update(set("name", user.getName()),
+                    set("email", user.getEmail()),
+                    set("level", user.getLevel())
             ).execute();
         }
 
@@ -498,23 +503,17 @@ public class MongoUserDao implements UserDao {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(userId);
 
-        query.filter(Filters.and(
-                Filters.eq("_id", objectId),
-                Filters.eq("active", true)
+        query.filter(and(
+            eq("_id", objectId),
+            eq("active", true)
         ));
 
-        query.update(UpdateOperators.set("active", false)).execute();
+        final var mongoUser = new ModifyBuilder()
+                .with(set("active", false))
+                .with(getMongoPasswordUtils()::scramblePassword)
+            .execute(query, new ModifyOptions().returnDocument(AFTER));
 
-        query.filter(Filters.and(
-                Filters.eq("_id", objectId),
-                Filters.eq("active", false)
-        ));
-
-        getMongoPasswordUtils().scramblePassword(query);
-
-        final MongoUser mongoUser = query.first();
         getObjectIndex().index(mongoUser);
-        
 
         if (mongoUser == null) {
             throw new NotFoundException("User with userid does not exist:" + userId);
@@ -541,17 +540,17 @@ public class MongoUserDao implements UserDao {
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
 
         if (ObjectId.isValid(userNameOrEmail)) {
-            query.filter(Filters.eq("_id", new ObjectId(userNameOrEmail)));
-            query.filter(Filters.eq("active", true));
+            query.filter(eq("_id", new ObjectId(userNameOrEmail)));
+            query.filter(eq("active", true));
         } else {
             query.filter(Filters.or(
-                    Filters.and(
-                            Filters.eq("name", userNameOrEmail),
-                            Filters.eq("active", true)
+                    and(
+                            eq("name", userNameOrEmail),
+                            eq("active", true)
                     ),
-                    Filters.and(
-                            Filters.eq("email", userNameOrEmail),
-                            Filters.eq("active", true)
+                    and(
+                            eq("email", userNameOrEmail),
+                            eq("active", true)
                     )
             ));
         }
