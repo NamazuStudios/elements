@@ -39,6 +39,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import static com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.lang.Integer.max;
 import static java.util.UUID.randomUUID;
 
@@ -86,9 +87,9 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     @Override
     public InventoryItem getInventoryItemByItemNameOrId(final User user, final String itemNameOrId, int priority) {
 
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
-        final MongoInventoryItemId objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(user);
+        final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
+        final var objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
 
         final MongoInventoryItem item = getDatastore().find(MongoInventoryItem.class)
                 .filter(Filters.eq("_id", objectId)).first();
@@ -131,8 +132,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         normalize(inventoryItem);
 
-        final MongoItem mongoItem = getMongoItemDao().getMongoItem(inventoryItem.getItem());
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(inventoryItem.getUser());
+        final var mongoItem = getMongoItemDao().getMongoItem(inventoryItem.getItem());
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(inventoryItem.getUser());
 
         final MongoInventoryItem mongoInventoryItem = getDozerMapper().map(inventoryItem, MongoInventoryItem.class);
 
@@ -163,14 +164,17 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         getValidationHelper().validateModel(inventoryItem, Update.class);
 
-        final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
+        final var query = getDatastore().find(MongoInventoryItem.class);
 
-        final MongoInventoryItemId objectId = parseOrThrowNotFoundException(inventoryItem.getId());
-
+        final var objectId = parseOrThrowNotFoundException(inventoryItem.getId());
         query.filter(Filters.eq("_id", objectId));
 
-        final MongoInventoryItem mongoInventoryItem = query.modify(UpdateOperators.set("version", randomUUID().toString()),
-                UpdateOperators.set("quantity", inventoryItem.getQuantity())).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+        final var mongoInventoryItem = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("version", randomUUID().toString()),
+                set("quantity", inventoryItem.getQuantity())
+            ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+        );
 
         if (mongoInventoryItem == null) {
             throw new NotFoundException("Inventory item with id of " + inventoryItem.getId() + " does not exist");
@@ -190,25 +194,33 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         if (quantity < 0) throw new IllegalArgumentException("invalid quantity: " + quantity);
 
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
-        final MongoInventoryItemId objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(user);
+        final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
+        final var objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
 
-        final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
+        final var query = getDatastore().find(MongoInventoryItem.class);
 
         query.filter(Filters.eq("_id", objectId));
 
         final MongoInventoryItem mongoInventoryItem = query.first();
 
+        final var builder = new ModifyBuilder()
+            .with(set("version", randomUUID().toString()));
+
         if (mongoInventoryItem == null) {
-            query.update(UpdateOperators.set("user", mongoUser),
-                    UpdateOperators.set("item", mongoItem))
-                    .execute(new UpdateOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED));
+            builder.with(set("user", mongoUser))
+                   .with(set("item", mongoItem));
         }
 
-        final MongoInventoryItem resultMongoInventoryItem = query.modify(UpdateOperators.set("quantity", quantity),
-                UpdateOperators.set("version", randomUUID().toString()))
-                .execute(new ModifyOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED).returnDocument(ReturnDocument.AFTER));
+        final var opts = new ModifyOptions()
+            .upsert(true)
+            .writeConcern(WriteConcern.ACKNOWLEDGED)
+            .returnDocument(ReturnDocument.AFTER);
+
+        final var resultMongoInventoryItem = builder.with(
+                set("quantity", quantity),
+                set("version", randomUUID().toString()))
+            .execute(query, opts);
 
         return getDozerMapper().map(resultMongoInventoryItem, InventoryItem.class);
 
@@ -228,8 +240,9 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final MongoInventoryItem mongoInventoryItem;
 
         try {
-            mongoInventoryItem = getMongoConcurrentUtils()
-                .performOptimistic(ads -> doAdjustQuantityForItem(objectId, quantityDelta));
+            mongoInventoryItem = getMongoConcurrentUtils().performOptimistic(
+                ads -> doAdjustQuantityForItem(objectId, quantityDelta)
+            );
         } catch (MongoConcurrentUtils.ConflictException ex) {
             throw new TooBusyException(ex);
         }
@@ -240,13 +253,14 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     private MongoInventoryItem doAdjustQuantityForItem(final MongoInventoryItemId objectId, final int quantityDelta) throws ContentionException {
-        final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
 
+        final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
         query.filter(Filters.eq("_id", objectId));
 
         final MongoInventoryItem mongoInventoryItem = query.first();
-
         query.filter(Filters.eq("version", mongoInventoryItem == null ? randomUUID().toString() : mongoInventoryItem.getVersion()));
+
+        final var builder = new ModifyBuilder();
 
         final int base;
 
@@ -256,9 +270,11 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(objectId.getUserObjectId());
 
             base = 0;
-            query.update(UpdateOperators.set("user", mongoUser),
-                    UpdateOperators.set("item", mongoItem))
-                    .execute(new UpdateOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED));
+
+            builder.with(
+                set("user", mongoUser),
+                set("item", mongoItem)
+            );
 
         } else {
             base = mongoInventoryItem.getQuantity();
@@ -266,9 +282,15 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final int quantity = max(0, base + quantityDelta);
 
-        final MongoInventoryItem item = query.modify(UpdateOperators.set("quantity", quantity),
-                UpdateOperators.set("version", randomUUID().toString()))
-                .execute(new ModifyOptions().upsert(true).writeConcern(WriteConcern.ACKNOWLEDGED).returnDocument(ReturnDocument.AFTER));;
+        final var opts = new ModifyOptions()
+            .upsert(true)
+            .writeConcern(WriteConcern.ACKNOWLEDGED)
+            .returnDocument(ReturnDocument.AFTER);
+
+        final var item = builder.with(
+            set("quantity", quantity),
+            set("version", randomUUID().toString())
+        ).execute(query, opts);
 
         if (item == null) {
             throw new ContentionException();

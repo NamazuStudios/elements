@@ -17,6 +17,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
@@ -37,6 +38,10 @@ import java.util.List;
 import java.util.Set;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -102,9 +107,9 @@ public class MongoMissionDao implements MissionDao {
         final Query<MongoMission> query = getDatastore().find(MongoMission.class);
 
         if (ObjectId.isValid(missionNameOrId)) {
-            query.filter(Filters.eq("_id", new ObjectId(missionNameOrId)));
+            query.filter(eq("_id", new ObjectId(missionNameOrId)));
         } else {
-            query.filter(Filters.eq("name", missionNameOrId));
+            query.filter(eq("name", missionNameOrId));
         }
 
         final MongoMission mission = query.first();
@@ -119,6 +124,7 @@ public class MongoMissionDao implements MissionDao {
 
     @Override
     public Mission updateMission(final Mission mission) {
+
         getValidationHelper().validateModel(mission, Update.class);
         normalize(mission);
 
@@ -126,57 +132,52 @@ public class MongoMissionDao implements MissionDao {
             throw new InvalidDataException("At least one of Steps or finalRepeatStep must be provided.");
         }
 
-        final MongoMission mongoMission = checkMission(mission);
+        final var mongoMission = checkMission(mission);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
-        final Query<MongoMission> query = getDatastore().find(MongoMission.class);
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(mission.getId());
 
-        query.filter(Filters.eq("_id", objectId));
+        final var query = getDatastore()
+            .find(MongoMission.class)
+            .filter(eq("_id", objectId));
 
-        query.update(UpdateOperators.set("name", mongoMission.getName()),
-                UpdateOperators.set("displayName", mongoMission.getDisplayName()),
-                UpdateOperators.set("description", mongoMission.getDescription())
-        ).execute(new UpdateOptions().upsert(false));
+        final var builder = new ModifyBuilder();
+
+        builder.with(
+            set("name", mongoMission.getName()),
+            set("displayName", mongoMission.getDisplayName()),
+            set("description", mongoMission.getDescription())
+        );
 
         mission.validateTags();
 
         if (mission.getTags() != null) {
-            query.update(UpdateOperators.set("tags", mongoMission.getTags()))
-                    .execute(new UpdateOptions().upsert(false));
-        }
-        else {
-            query.update(UpdateOperators.unset("tags"))
-                .execute(new UpdateOptions().upsert(false));
+            builder.with(set("tags", mongoMission.getTags()));
+        } else {
+            builder.with(unset("tags"));
         }
 
         if (mission.getSteps() != null) {
-            query.update(UpdateOperators.set("steps", mongoMission.getSteps()))
-                    .execute(new UpdateOptions().upsert(false));
-        }
-        else {
-            query.update(UpdateOperators.unset("steps"))
-                    .execute(new UpdateOptions().upsert(false));
+            builder.with(set("steps", mongoMission.getSteps()));
+        } else {
+            builder.with(unset("steps"));
         }
 
         if (mission.getFinalRepeatStep() != null) {
-            query.update(UpdateOperators.set("finalRepeatStep", mongoMission.getFinalRepeatStep()))
-                    .execute(new UpdateOptions().upsert(false));
-        }
-        else {
-            query.update(UpdateOperators.unset("finalRepeatStep"))
-                    .execute(new UpdateOptions().upsert(false));
+            builder.with(set("finalRepeatStep", mongoMission.getFinalRepeatStep()));
+        } else {
+            builder.with(unset("finalRepeatStep"));
         }
 
         if (mission.getMetadata() != null) {
-            query.update(UpdateOperators.set("metadata", mongoMission.getMetadata()))
-                    .execute(new UpdateOptions().upsert(false));
-        }
-        else {
-            query.update(UpdateOperators.unset("metadata"))
-                    .execute(new UpdateOptions().upsert(false));
+            builder.with(set("metadata", mongoMission.getMetadata()));
+        } else {
+            builder.with(unset("metadata"));
         }
 
-        final MongoMission updatedMongoItem = query.first();
+        final var updatedMongoItem = getMongoDBUtils().perform(ds ->
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
         if (updatedMongoItem == null) {
             throw new NotFoundException("Mission with id or name of " + mission.getId() + " does not exist");
         }
@@ -184,6 +185,7 @@ public class MongoMissionDao implements MissionDao {
         getObjectIndex().index(updatedMongoItem);
 
         return getDozerMapper().map(updatedMongoItem, Mission.class);
+
     }
 
     @Override
@@ -208,7 +210,7 @@ public class MongoMissionDao implements MissionDao {
         getObjectIndex().index(mongoMission);
 
         final Query<MongoMission> query = getDatastore().find(MongoMission.class);
-        query.filter(Filters.eq("_id", mongoMission.getObjectId()));
+        query.filter(eq("_id", mongoMission.getObjectId()));
 
         return getDozerMapper().map(query.first(), Mission.class);
 
@@ -268,7 +270,7 @@ public class MongoMissionDao implements MissionDao {
         final ObjectId id = getMongoDBUtils().parseOrThrowNotFoundException(missionId);
 
         final Query<MongoMission> query = getDatastore().find(MongoMission.class);
-        query.filter(Filters.eq("_id", id));
+        query.filter(eq("_id", id));
 
         final DeleteResult deleteResult = query.delete();
 

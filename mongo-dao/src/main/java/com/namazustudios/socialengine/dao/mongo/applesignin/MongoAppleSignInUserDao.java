@@ -32,6 +32,8 @@ import java.util.Map;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.morphia.query.experimental.filters.Filters.*;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
@@ -63,14 +65,14 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
             insertMap.put("_id", new ObjectId());
         } else {
             final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
-            query.filter(Filters.eq("_id", objectId));
+            query.filter(eq("_id", objectId));
         }
 
-        query.filter(Filters.or(
-                Filters.eq("appleSignInId", user.getAppleSignInId()),
-                Filters.and(
-                    Filters.exists("appleSignInId").not(),
-                    Filters.eq("email", user.getEmail())
+        query.filter(or(
+                eq("appleSignInId", user.getAppleSignInId()),
+                and(
+                    exists("appleSignInId").not(),
+                    eq("email", user.getEmail())
                 )
         ));
 
@@ -82,7 +84,7 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
         insertMap = getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
 
-        query.update(UpdateOperators.set("active", true),
+        query.update(set("active", true),
                 UpdateOperators.setOnInsert(insertMap)
                 ).execute(new UpdateOptions().upsert(true));
 
@@ -116,28 +118,19 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
 
-        query.filter(Filters.eq("_id", objectId));
-        query.filter(Filters.eq("active", true));
+        query.filter(eq("_id", objectId));
+        query.filter(eq("active", true));
 
-        query.filter(Filters.or(
-                Filters.exists("appleSignInId").not(),
-                Filters.eq("appleSignInId", user.getAppleSignInId())
-        ));
+        query.filter(or(
+                exists("appleSignInId").not(),
+                eq("appleSignInId", user.getAppleSignInId())
+            )
+        );
 
-
-
-        final MongoUser mongoUser;
-
-        try {
-            mongoUser = query.modify(UpdateOperators.set("appleSignInId", user.getAppleSignInId()))
-                    .execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
-        } catch (MongoException ex) {
-            if (ex.getCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
+        final var mongoUser = getMongoDBUtils().perform(ds ->
+            query.modify(set("appleSignInId", user.getAppleSignInId()))
+                 .execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+        );
 
         getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);

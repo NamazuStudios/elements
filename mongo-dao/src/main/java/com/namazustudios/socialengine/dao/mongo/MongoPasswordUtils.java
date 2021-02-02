@@ -33,12 +33,13 @@ public class MongoPasswordUtils {
     private Provider<MessageDigest> messageDigestProvider;
 
     /**
-     * Generates salt and password hash according to the configuration.
+     * Generates salt and password hash according to the configuration and adds the required update operations to the
+     * supplied {@link ModifyBuilder} instance.
      *
-     * @param query the query to mutate
+     * @param builder the {@link ModifyBuilder} to mutate
      * @param password the password
      */
-    public MongoUser addPasswordToQuery(final Query<MongoUser> query, final String password) {
+    public ModifyBuilder addPasswordToBuilder(final ModifyBuilder builder, final String password) {
 
         final byte[] passwordBytes;
 
@@ -57,10 +58,12 @@ public class MongoPasswordUtils {
         digest.update(salt);
         digest.update(passwordBytes);
 
-        return query.modify(set("salt", salt),
-                set("passwordHash", digest.digest()),
-                set("hashAlgorithm", digest.getAlgorithm())
-        ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
+        return builder.with(
+            set("salt", salt),
+            set("passwordHash", digest.digest()),
+            set("hashAlgorithm", digest.getAlgorithm())
+        );
+
     }
 
     /**
@@ -70,35 +73,6 @@ public class MongoPasswordUtils {
      * @param builder the {@link ModifyBuilder}
      */
     public ModifyBuilder scramblePassword(final ModifyBuilder builder) {
-
-        final var secureRandom = new SecureRandom();
-
-        byte[] tmp;
-
-        tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
-
-        tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
-
-        final MessageDigest digest = getMessageDigestProvider().get();
-
-        return builder.with(
-            set("salt", tmp),
-            set("passwordHash", tmp),
-            set("hashAlgorithm", digest.getAlgorithm())
-        );
-
-    }
-
-
-    /**
-     * Scrambles both the salt and the password.  This effectively wipes out the account's
-     * password making it inaccessible.
-     *
-     * @param builder the {@link UpdateBuilder}
-     */
-    public UpdateBuilder scramblePassword(final UpdateBuilder builder) {
 
         final var secureRandom = new SecureRandom();
 

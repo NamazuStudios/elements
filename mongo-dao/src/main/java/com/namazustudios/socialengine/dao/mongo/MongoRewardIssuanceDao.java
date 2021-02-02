@@ -300,19 +300,23 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     }
 
     private RewardIssuance markAsRedeemed(final RewardIssuance rewardIssuance) {
+
         if (NON_PERSISTENT.equals(rewardIssuance.getType())) {
             delete(rewardIssuance.getId());
             return null;
         }
 
-        final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(rewardIssuance.getId());
-        final Query<MongoRewardIssuance> query = getDatastore().find(MongoRewardIssuance.class);
+        final var mongoRewardIssuanceId = parseOrThrowNotFoundException(rewardIssuance.getId());
+        final var query = getDatastore().find(MongoRewardIssuance.class);
         query.filter(Filters.eq("_id", mongoRewardIssuanceId));
 
-        final MongoRewardIssuance mongoRewardIssuance = query.modify(UpdateOperators.set("state", REDEEMED))
-                .execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER));
+        final var mongoRewardIssuance = getMongoDBUtils().perform(ds ->
+            query.modify(UpdateOperators.set("state", REDEEMED))
+                 .execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+        );
 
         return getDozerMapper().map(mongoRewardIssuance, RewardIssuance.class);
+
     }
 
 

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoCommandException;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.LeaderboardDao;
@@ -10,11 +11,15 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
+
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType.*;
 import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.ScoreStrategyType.*;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
@@ -158,7 +163,7 @@ public class MongoLeaderboardDao implements LeaderboardDao {
 
         getValidationHelper().validateModel(leaderboard, ValidationGroups.Update.class);
 
-        final Query<MongoLeaderboard> query = datastore.find(MongoLeaderboard.class);
+        final var query = datastore.find(MongoLeaderboard.class);
 
         try {
             query.filter(Filters.eq("_id", new ObjectId(leaderboardNameOrId)));
@@ -166,25 +171,17 @@ public class MongoLeaderboardDao implements LeaderboardDao {
             query.filter(Filters.eq("_id", leaderboardNameOrId));
         }
 
-        query.update(UpdateOperators.set("name", leaderboard.getName()),
-                UpdateOperators.set("title", leaderboard.getTitle()),
-                UpdateOperators.set("scoreUnits", leaderboard.getScoreUnits())
-                ).execute(new UpdateOptions().upsert(false));
         // for now, do not allow updating of firstEpochTimestamp or epochInterval
 
-        final MongoLeaderboard mongoLeaderboard;
+        final var mongoLeaderboard = getMongoDBUtils().perform(ds->
+            query.modify(
+                set("name", leaderboard.getName()),
+                set("title", leaderboard.getTitle()),
+                set("scoreUnits", leaderboard.getScoreUnits())
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
 
-        try {
-            mongoLeaderboard = query.first();
-        } catch (MongoCommandException ex) {
-            if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
-
-        if (leaderboardNameOrId == null) {
+        if (mongoLeaderboard == null) {
             throw new LeaderboardNotFoundException("Leaderboard not found: " + leaderboardNameOrId);
         }
 

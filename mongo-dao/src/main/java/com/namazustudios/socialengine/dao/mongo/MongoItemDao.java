@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoItemDao implements ItemDao {
@@ -161,12 +162,15 @@ public class MongoItemDao implements ItemDao {
             throw new NotFoundException("Item with id or name of " + item.getId() + " does not exist");
         }
 
-        final MongoItem updatedMongoItem = query.modify(UpdateOperators.set("name", item.getName()),
-                UpdateOperators.set("displayName", item.getDisplayName()),
-                UpdateOperators.set("metadata", item.getMetadata()),
-                UpdateOperators.set("tags", item.getTags()),
-                UpdateOperators.set("description", item.getDescription())
-        ).execute(new ModifyOptions().returnDocument(ReturnDocument.AFTER));
+        final MongoItem updatedMongoItem = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("name", item.getName()),
+                set("displayName", item.getDisplayName()),
+                set("metadata", item.getMetadata()),
+                set("tags", item.getTags()),
+                set("description", item.getDescription())
+            ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+        );
 
         getObjectIndex().index(updatedMongoItem);
 

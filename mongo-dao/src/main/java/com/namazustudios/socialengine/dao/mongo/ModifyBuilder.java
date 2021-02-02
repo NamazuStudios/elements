@@ -15,6 +15,7 @@ import java.util.function.Function;
 import static java.util.Arrays.asList;
 
 public class ModifyBuilder {
+
     private final List<UpdateOperator> updates = new ArrayList<>();
 
     /**
