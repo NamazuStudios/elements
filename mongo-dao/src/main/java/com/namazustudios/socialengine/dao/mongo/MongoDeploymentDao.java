@@ -124,7 +124,10 @@ public class MongoDeploymentDao implements DeploymentDao {
 
         final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
-        query.criteria("version").equal(deployment.getVersion());
+        query.and(
+                query.criteria("version").equal(deployment.getVersion()),
+                query.criteria("application").equal(application)
+        );
 
         MongoDeployment res = query.get();
         if(res != null && res.getVersion().equals(deployment.getVersion())) {
