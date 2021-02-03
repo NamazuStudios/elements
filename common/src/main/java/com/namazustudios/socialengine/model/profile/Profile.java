@@ -28,7 +28,7 @@ public class Profile implements Serializable {
     /**
      * Alpha-numeric only.  Allows underscore, but does not allow the word to start with an underscore.
      */
-    public static final String PROFILE_DISPLAY_NAME_REGEX = "[^_^\\s][A-Za-z0-9 '_.]+$";
+    public static final String PROFILE_DISPLAY_NAME_REGEX = "[^ '\\-_.][A-Za-z0-9 '\\-_.]+$";
 
     /**
      * Used as the key for the profile attribute where appropriate.  This is equivalent

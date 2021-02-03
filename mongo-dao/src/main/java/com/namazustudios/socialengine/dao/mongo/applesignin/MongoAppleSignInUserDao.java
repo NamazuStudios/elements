@@ -32,6 +32,7 @@ import java.util.Map;
 
 import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
@@ -88,7 +89,7 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
             query.modify(
                 set("active", true),
                 setOnInsert(insertMap)
-            ).execute(new ModifyOptions().upsert(true))
+            ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
         getObjectIndex().index(mongoUser);
@@ -120,7 +121,7 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
         final var mongoUser = getMongoDBUtils().perform(ds ->
             query.modify(set("appleSignInId", user.getAppleSignInId()))
-                 .execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
+                 .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
         getObjectIndex().index(mongoUser);

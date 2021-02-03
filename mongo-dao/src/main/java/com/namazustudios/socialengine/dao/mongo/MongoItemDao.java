@@ -148,7 +148,7 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Item updateItem(Item item) {
+    public Item updateItem(final Item item) {
 
         validate(item);
         normalize(item);
@@ -166,6 +166,10 @@ public class MongoItemDao implements ItemDao {
                 set("description", item.getDescription())
             ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
         );
+
+        if (updatedMongoItem == null) {
+            throw new ItemNotFoundException("Item with ID not found: " + item.getId());
+        }
 
         getObjectIndex().index(updatedMongoItem);
         return getDozerMapper().map(updatedMongoItem, Item.class);
