@@ -1,32 +1,27 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.MongoCommandException;
-import com.mongodb.WriteResult;
 import com.mongodb.client.result.DeleteResult;
-import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSession;
 import com.namazustudios.socialengine.dao.mongo.model.MongoSessionSecret;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.exception.*;
-
+import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.security.BadSessionSecretException;
 import com.namazustudios.socialengine.exception.security.NoSessionException;
 import com.namazustudios.socialengine.exception.security.SessionExpiredException;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
-import org.bson.types.ObjectId;
-import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
+import org.bson.types.ObjectId;
+import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,9 +30,11 @@ import javax.inject.Named;
 import javax.inject.Provider;
 import java.security.MessageDigest;
 import java.sql.Timestamp;
-import java.util.Date;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.namazustudios.socialengine.dao.mongo.model.MongoSession.Type.STANDARD_ELEMENTS;
+import static dev.morphia.query.experimental.filters.Filters.*;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.lang.System.currentTimeMillis;
 
 public class MongoSessionDao implements SessionDao {
@@ -76,7 +73,7 @@ public class MongoSessionDao implements SessionDao {
         final Timestamp now = new Timestamp(currentTimeMillis());
         final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.filter(Filters.and(Filters.eq("_id", sessionId)));
+        query.filter(and(eq("_id", sessionId)));
 
         final MongoSession mongoSession = query.first();
 
@@ -103,38 +100,34 @@ public class MongoSessionDao implements SessionDao {
             throw new BadSessionSecretException(ex, "Bad Session Secret");
         }
 
-        final MessageDigest messageDigest = getMessageDigestProvider().get();
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
-        final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
+        final var md = getMessageDigestProvider().get();
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
+        final var sessionId = mongoSessionSecret.getSecretDigestEncoded(md, mongoUser.getPasswordHash());
 
-        final Timestamp now = new Timestamp(currentTimeMillis());
-        final Query<MongoSession> query = getDatastore().find(MongoSession.class);
+        final var now = new Timestamp(currentTimeMillis());
 
-        query.filter(Filters.and(
-                Filters.eq("_id", sessionId)),
-                Filters.gte("expiry", now)
-                );
+        final var query = getDatastore().find(MongoSession.class).filter(
+            and(
+                gte("expiry", now),
+                eq("_id", sessionId)
+            )
+        );
 
-        final UpdateResult updateResult = query.update(UpdateOperators.set("expiry", new Timestamp(expiry)))
-                .execute(new UpdateOptions().upsert(false));;
+        final var opts = new ModifyOptions().upsert(false).returnDocument(AFTER);
 
-        final MongoSession mongoSession = getDatastore().find(MongoSession.class)
-                .filter(Filters.eq("_id", sessionId)).first();
+        final var mongoSession = query.modify(
+            set("expiry", new Timestamp(expiry))
+        ).execute(opts);
 
-        if (updateResult.getModifiedCount() == 0) {
+        if (mongoSession == null) {
+            throw new NoSessionException("Session not valid.");
+        } else if (mongoSession.getExpiry() != null && mongoSession.getExpiry().before(now)) {
+            throw new SessionExpiredException("Session expired.");
+        }
 
-            if (mongoSession == null) {
-                throw new NoSessionException("Session not valid.");
-            } else if (mongoSession.getExpiry() != null && mongoSession.getExpiry().before(now)) {
-                throw new SessionExpiredException("Session expired.");
-            }
-
-        } else {
-
-            if (mongoSession.getProfile() != null) {
-                updateProfileLastLogin(mongoSession.getProfile().getObjectId().toString());
-            }
-
+        if (mongoSession.getProfile() != null) {
+            final var profileId = mongoSession.getProfile().getObjectId();
+            updateProfileLastLogin(profileId, now);
         }
 
         return getMapper().map(mongoSession, Session.class);
@@ -146,47 +139,47 @@ public class MongoSessionDao implements SessionDao {
 
         validate(session);
 
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(session.getUser());
-        final MongoSessionSecret mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(session.getUser());
+        final var mongoSessionSecret = new MongoSessionSecret(mongoUser.getObjectId());
 
-        final MessageDigest messageDigest = getMessageDigestProvider().get();
-        final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
+        final var messageDigest = getMessageDigestProvider().get();
+        final var sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
-        final MongoSession mongoSession = getMapper().map(session, MongoSession.class);
+        final var mongoSession = getMapper().map(session, MongoSession.class);
         mongoSession.setType(STANDARD_ELEMENTS);
         mongoSession.setSessionId(sessionId);
-
         getDatastore().save(mongoSession);
-        if (session.getProfile() != null) updateProfileLastLogin(session.getProfile().getId());
+
+        if (session.getProfile() != null) {
+            final var profileId = mongoSession.getProfile().getObjectId();
+            updateProfileLastLogin(profileId, mongoSession.getExpiry());
+        }
 
         final SessionCreation sessionCreation = new SessionCreation();
         sessionCreation.setSessionSecret(mongoSessionSecret.getSessionSecret());
         sessionCreation.setSession(getMapper().map(mongoSession, Session.class));
+
         return sessionCreation;
 
     }
 
-    private boolean updateProfileLastLogin(String profileId) {
+    private boolean updateProfileLastLogin(final ObjectId profileId, final Timestamp timestamp) {
         try {
-            final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
-            query.filter(Filters.eq("_id", new ObjectId(profileId)));
 
-            final Date nowDate = new Date();
-            query.update(UpdateOperators.set("lastLogin", nowDate)).execute(new UpdateOptions().upsert(false));
+            final var query = getDatastore().find(MongoProfile.class);
 
-            final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-                return query.first();
-            });
+            final var result = query.filter(eq("_id", profileId))
+                 .update(set("lastLogin", timestamp))
+                 .execute(new UpdateOptions().upsert(false));
 
-            if (mongoProfile == null) {
+            if (result.getModifiedCount() == 0) {
                 logger.error("Failed to save lastLogin to profile (no record matching id)");
                 return false;
-            }
-            else {
+            } else {
                 return true;
             }
-        }
-        catch (MongoCommandException ex) {
+
+        } catch (MongoCommandException ex) {
             logger.error("Failed to save lastLogin to profile: {}", ex.toString());
             return false;
         }
@@ -211,8 +204,8 @@ public class MongoSessionDao implements SessionDao {
 
         final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.filter(Filters.eq("_id", sessionId))
-             .filter(Filters.eq("user", mongoUser));
+        query.filter(eq("_id", sessionId))
+             .filter(eq("user", mongoUser));
 
         final DeleteResult dr = query.delete();
 
@@ -230,7 +223,7 @@ public class MongoSessionDao implements SessionDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
         final Query<MongoSession> query = getDatastore().find(MongoSession.class);
 
-        query.filter(Filters.eq("user", mongoUser));
+        query.filter(eq("user", mongoUser));
         query.delete();
     }
 

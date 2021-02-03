@@ -186,6 +186,12 @@ public class MongoRewardIssuanceId {
                 '}';
     }
 
+    /**
+     * Attempts to parse the supplied {@link String} as a {@link MongoRewardIssuanceId}.
+     *
+     * @param id the id to parse
+     * @return the parsed {@link MongoRewardIssuanceId}
+     */
     public static MongoRewardIssuanceId parseOrThrowNotFoundException(final String id) {
         try {
             return new MongoRewardIssuanceId(id);
@@ -193,4 +199,5 @@ public class MongoRewardIssuanceId {
             throw new NotFoundException(ex);
         }
     }
+
 }

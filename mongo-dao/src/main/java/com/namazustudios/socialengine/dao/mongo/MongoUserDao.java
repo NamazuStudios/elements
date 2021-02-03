@@ -11,7 +11,6 @@ import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -236,7 +235,7 @@ public class MongoUserDao implements UserDao {
                 eq("active", false)
             ));
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         if (user.getFacebookId() != null) {
             builder.with(
@@ -280,7 +279,7 @@ public class MongoUserDao implements UserDao {
             eq("active", false)
         ));
 
-        final var builder = new ModifyBuilder()
+        final var builder = new UpdateBuilder()
             .with(
                 set("active", true),
                 set("name", user.getName()),
@@ -319,7 +318,7 @@ public class MongoUserDao implements UserDao {
             eq("email", user.getEmail())
         ));
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         if (user.getFacebookId() != null) {
             builder.with(set("facebookId", user.getFacebookId()),
@@ -362,7 +361,7 @@ public class MongoUserDao implements UserDao {
             eq("email", user.getEmail())
         ));
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         if (user.getFacebookId() != null) {
             builder.with(
@@ -412,7 +411,7 @@ public class MongoUserDao implements UserDao {
             )
         );
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         if (user.getFacebookId() != null) {
             builder.with(
@@ -456,7 +455,7 @@ public class MongoUserDao implements UserDao {
             )
         );
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         if (user.getFacebookId() != null) {
             builder.with(
@@ -501,7 +500,7 @@ public class MongoUserDao implements UserDao {
             eq("active", true)
         ));
 
-        final var mongoUser = getMongoDBUtils().perform(ds -> new ModifyBuilder()
+        final var mongoUser = getMongoDBUtils().perform(ds -> new UpdateBuilder()
                 .with(set("active", false))
                 .with(getMongoPasswordUtils()::scramblePassword)
             .execute(query, new ModifyOptions().returnDocument(AFTER))

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.DuplicateKeyException;
 import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.ReturnDocument;
@@ -23,10 +22,8 @@ import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
@@ -204,7 +201,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final MongoInventoryItem mongoInventoryItem = query.first();
 
-        final var builder = new ModifyBuilder()
+        final var builder = new UpdateBuilder()
             .with(set("version", randomUUID().toString()));
 
         if (mongoInventoryItem == null) {
@@ -260,7 +257,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final MongoInventoryItem mongoInventoryItem = query.first();
         query.filter(Filters.eq("version", mongoInventoryItem == null ? randomUUID().toString() : mongoInventoryItem.getVersion()));
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         final int base;
 

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
@@ -17,7 +16,6 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
@@ -260,7 +258,7 @@ public class MongoProfileDao implements ProfileDao {
             eq("active", true)
         ));
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         final var mongoProfile = getMongoDBUtils().perform(ds ->
             builder.with(
@@ -286,7 +284,7 @@ public class MongoProfileDao implements ProfileDao {
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
         final var query = getDatastore().find(MongoProfile.class);
 
-        final ModifyBuilder builder = new ModifyBuilder();
+        final UpdateBuilder builder = new UpdateBuilder();
 
         query.filter(and(
             eq("active", true),
@@ -338,7 +336,7 @@ public class MongoProfileDao implements ProfileDao {
             eq("_id", objectId)
         ));
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         if (metadata == null) {
             builder.with(unset("metadata"));
@@ -374,7 +372,7 @@ public class MongoProfileDao implements ProfileDao {
             eq("application", application)
         ));
 
-        final var builder = new ModifyBuilder().with(
+        final var builder = new UpdateBuilder().with(
             set("user", user),
             set("active", true),
             set("application", application),
@@ -424,7 +422,7 @@ public class MongoProfileDao implements ProfileDao {
         insertMap.put("application", application);
         insertMap.put("displayName", nullToEmpty(profile.getDisplayName()).trim());
 
-        final var builder = new ModifyBuilder();
+        final var builder = new UpdateBuilder();
 
         final var mongoProfile = getMongoDBUtils().perform(ds ->
             builder.with(
@@ -458,7 +456,7 @@ public class MongoProfileDao implements ProfileDao {
             eq("_id", objectId)
         ));
 
-        final var builder = new ModifyBuilder().with(set("active", false));
+        final var builder = new UpdateBuilder().with(set("active", false));
 
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds ->
             builder.execute(query, new ModifyOptions().upsert(false))

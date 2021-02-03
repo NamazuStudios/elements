@@ -14,6 +14,7 @@ import java.util.Objects;
 
 @Entity(value = "progress_pending_award", useDiscriminator = false)
 public class MongoRewardIssuance {
+
     @Id
     private MongoRewardIssuanceId objectId;
 
@@ -39,8 +40,10 @@ public class MongoRewardIssuance {
     @Property
     private String source;
 
+    @Property
     private Map<String, Object> metadata;
 
+    @Property
     private List<String> tags;
 
     @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

@@ -1,29 +1,29 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
-import com.mongodb.client.result.UpdateResult;
-import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
-import com.namazustudios.socialengine.model.application.ConfigurationCategory;
-import com.namazustudios.socialengine.util.ValidationHelper;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.FacebookApplicationConfigurationDao;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoFacebookApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
+import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
+import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FACEBOOK;
+import static dev.morphia.query.experimental.filters.Filters.and;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 /**
  * Created by patricktwohig on 6/15/17.
@@ -47,44 +47,27 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
             final String applicationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-
         validate(facebookApplicationConfiguration);
 
-        final Query<MongoFacebookApplicationConfiguration> query;
-        query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
+        final var query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        query.filter(Filters.and(
-            Filters.eq("active", false),
-            Filters.eq("parent", mongoApplication),
-            Filters.eq("category", FACEBOOK),
-            Filters.eq("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId())
-        ));
+        query.filter(
+            and(
+                eq("active", false),
+                eq("parent", mongoApplication),
+                eq("category", FACEBOOK),
+                eq("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId())
+            )
+        );
 
-        final UpdateResult updateResult = query.update(UpdateOperators.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim()),
-            UpdateOperators.set("active", true),
-            UpdateOperators.set("category", facebookApplicationConfiguration.getCategory()),
-            UpdateOperators.set("parent", mongoApplication),
-            UpdateOperators.set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim())
-        ).execute(new UpdateOptions().upsert(true));
-
-        final MongoFacebookApplicationConfiguration mongoFacebookApplicationProfile;
-        mongoFacebookApplicationProfile = getMongoDBUtils()
-                .perform(ds -> {
-                    if(updateResult.getUpsertedId() != null) {
-                        return ds.find(MongoFacebookApplicationConfiguration.class)
-                                .filter(Filters.eq("_id", updateResult.getUpsertedId())).first();
-                    } else {
-                        return ds.find(MongoFacebookApplicationConfiguration.class)
-                                .filter(Filters.and(
-                                        Filters.eq("active", true),
-                                        Filters.eq("parent", mongoApplication),
-                                        Filters.eq("category", FACEBOOK),
-                                        Filters.eq("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId())
-                                )).first();
-                    }
-                });
+        final var mongoFacebookApplicationProfile = query.modify(
+            set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim()),
+            set("active", true),
+            set("category", facebookApplicationConfiguration.getCategory()),
+            set("parent", mongoApplication),
+            set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim())
+        ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER));
 
         getObjectIndex().index(mongoFacebookApplicationProfile);
         return getBeanMapper().map(mongoFacebookApplicationProfile, FacebookApplicationConfiguration.class);
@@ -92,21 +75,21 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
     }
 
     @Override
-    public FacebookApplicationConfiguration getApplicationConfiguration(
-            final String applicationConfigurationNameOrId) {
+    public FacebookApplicationConfiguration getApplicationConfiguration(final String applicationConfigurationNameOrId) {
 
-        final Query<MongoFacebookApplicationConfiguration> query;
-        query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
+        final var query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
 
-        query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("category", FACEBOOK)
-        ));
+        query.filter(
+            and(
+                eq("active", true),
+                eq("category", FACEBOOK)
+            )
+        );
 
-        try {
-            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
-        } catch (IllegalArgumentException ex) {
-            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
         final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration = query.first();
@@ -124,25 +107,24 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
 
-        final Query<MongoFacebookApplicationConfiguration> query;
-        query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
+        query.filter(
+            and(
+               eq("active", true),
+               eq("parent", mongoApplication),
+               eq("category", FACEBOOK)
+            )
+        );
 
-        query.filter(Filters.and(
-           Filters.eq("active", true),
-           Filters.eq("parent", mongoApplication),
-           Filters.eq("category", FACEBOOK)
-        ));
-
-        try {
-            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
-        } catch (IllegalArgumentException ex) {
-            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration = query.first();
+        final var mongoFacebookApplicationConfiguration = query.first();
 
         if (mongoFacebookApplicationConfiguration == null) {
             throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
@@ -155,47 +137,37 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
     @Override
     public FacebookApplicationConfiguration updateApplicationConfiguration(
             final String applicationNameOrId,
-            final String applicationProfileNameOrId,
+            final String applicationConfigurationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         validate(facebookApplicationConfiguration);
 
-        final Query<MongoFacebookApplicationConfiguration> query;
-        query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
+        final var query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
 
-        query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("parent", mongoApplication),
-                Filters.eq("category", FACEBOOK)
-        ));
+        query.filter(
+            and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq("category", FACEBOOK)
+            )
+        );
 
-        try {
-            query.filter(Filters.eq("_id", new ObjectId(applicationProfileNameOrId)));
-        } catch (IllegalArgumentException ex) {
-            query.filter(Filters.eq("uniqueIdentifier", applicationProfileNameOrId));
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        query.update(UpdateOperators.set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim()),
-        UpdateOperators.set("category", facebookApplicationConfiguration.getCategory()),
-        UpdateOperators.set("parent", mongoApplication),
-        UpdateOperators.set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim())
-        ).execute(new UpdateOptions().upsert(false));
-
-        final MongoFacebookApplicationConfiguration mongoFacebookApplicationConfiguration;
-        mongoFacebookApplicationConfiguration = getMongoDBUtils()
-                .perform(ds -> ds.find(MongoFacebookApplicationConfiguration.class)
-                        .filter(Filters.and(
-                                Filters.eq("active", true),
-                                Filters.eq("parent", mongoApplication),
-                                Filters.eq("category", FACEBOOK),
-                                Filters.eq("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim())
-                        )).first()
-                );
+        final var mongoFacebookApplicationConfiguration = query.modify(
+            set("uniqueIdentifier", facebookApplicationConfiguration.getApplicationId().trim()),
+            set("category", facebookApplicationConfiguration.getCategory()),
+            set("parent", mongoApplication),
+            set("applicationSecret", facebookApplicationConfiguration.getApplicationSecret().trim())
+        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (mongoFacebookApplicationConfiguration == null) {
-            throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
+            throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
         getObjectIndex().index(mongoFacebookApplicationConfiguration);
@@ -214,33 +186,25 @@ public class MongoFacebookApplicationConfigurationDao implements FacebookApplica
         final Query<MongoFacebookApplicationConfiguration> query;
         query = getDatastore().find(MongoFacebookApplicationConfiguration.class);
 
-        query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("parent", mongoApplication),
-                Filters.eq("category", FACEBOOK)
-        ));
+        query.filter(
+            and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq("category", FACEBOOK)
+            )
+        );
 
-        try {
-            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
-        } catch (IllegalArgumentException ex) {
-            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        query.update(UpdateOperators.set("active", false)).execute(new UpdateOptions().upsert(false));
-
-        final MongoFacebookApplicationConfiguration mongoFacebookApplicationProfile;
-
-        mongoFacebookApplicationProfile = getMongoDBUtils()
-                .perform(ds -> {
-                    try {
-                        return ds.find(MongoFacebookApplicationConfiguration.class)
-                                .filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId))).first();
-                    } catch (IllegalArgumentException ex) {
-                        return ds.find(MongoFacebookApplicationConfiguration.class)
-                                .filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId)).first();
-                    }
-
-                });
+        final var mongoFacebookApplicationProfile = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("active", false)
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
 
         if (mongoFacebookApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + mongoFacebookApplicationProfile.getObjectId());

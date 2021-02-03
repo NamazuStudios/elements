@@ -34,6 +34,7 @@ import static com.google.common.base.Strings.emptyToNull;
 import static com.google.common.base.Strings.nullToEmpty;
 import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
 
 public class MongoAppleSignInUserDao implements AppleSignInUserDao {
 
@@ -54,12 +55,12 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
     private MongoUserDao mongoUserDao;
 
     @Override
-    public User createReactivateOrUpdateUser(User user) {
+    public User createReactivateOrUpdateUser(final User user) {
 
         validate(user);
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-        Map<String, Object> insertMap = new HashMap<>(Collections.emptyMap());
+        final var query = getDatastore().find(MongoUser.class);
+        final var insertMap = new HashMap<String, Object>();
 
         if (user.getId() == null) {
             insertMap.put("_id", new ObjectId());
@@ -69,11 +70,11 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
         }
 
         query.filter(or(
-                eq("appleSignInId", user.getAppleSignInId()),
-                and(
-                    exists("appleSignInId").not(),
-                    eq("email", user.getEmail())
-                )
+            eq("appleSignInId", user.getAppleSignInId()),
+            and(
+                exists("appleSignInId").not(),
+                eq("email", user.getEmail())
+            )
         ));
 
         // We only reactivate the existing user, all other fields are left untouched if the user exists.
@@ -81,24 +82,14 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
         insertMap.put("name", user.getName());
         insertMap.put("level", user.getLevel());
         insertMap.put("appleSignInId", user.getAppleSignInId());
+        getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
 
-        insertMap = getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
-
-        query.update(set("active", true),
-                UpdateOperators.setOnInsert(insertMap)
-                ).execute(new UpdateOptions().upsert(true));
-
-        final MongoUser mongoUser;
-
-        try {
-            mongoUser = query.first();
-        } catch (MongoException ex) {
-            if (ex.getCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
+        final var mongoUser = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("active", true),
+                setOnInsert(insertMap)
+            ).execute(new ModifyOptions().upsert(true))
+        );
 
         getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);

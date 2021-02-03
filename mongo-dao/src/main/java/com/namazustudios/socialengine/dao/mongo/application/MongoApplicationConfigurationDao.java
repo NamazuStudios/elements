@@ -8,28 +8,29 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.BadQueryException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.application.*;
-import dev.morphia.UpdateOptions;
+import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.model.application.ConfigurationCategory;
+import com.namazustudios.socialengine.model.application.ProductBundle;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.apache.lucene.search.BooleanClause;
 import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 /**
  * Created by patricktwohig on 7/13/15.
@@ -95,8 +96,8 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
 
         final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoType);
 
-        query.filter(Filters.eq("parent", parent));
-        query.filter(Filters.eq("category", configurationCategory));
+        query.filter(eq("parent", parent));
+        query.filter(eq("category", configurationCategory));
 
         List<T> applicationConfigurations = query
             .iterator().toList().stream()
@@ -116,8 +117,8 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
         final Query<MongoApplicationConfiguration> query = getDatastore().find(MongoApplicationConfiguration.class);
 
         query.filter(Filters.and(
-           Filters.eq("active", true),
-           Filters.eq("parent", mongoApplication)
+           eq("active", true),
+           eq("parent", mongoApplication)
         ));
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, ApplicationConfiguration.class), new FindOptions());
@@ -153,16 +154,14 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
     @Override
     public ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
                                                  final List<ProductBundle> productBundles) {
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(applicationConfigurationId);
 
-        final Query<MongoApplicationConfiguration> query =
-                getDatastore().find(MongoApplicationConfiguration.class);
-
-        query.filter(Filters.eq("_id", objectId));
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(applicationConfigurationId);
+        final var query = getDatastore().find(MongoApplicationConfiguration.class);
+        query.filter(eq("_id", objectId));
 
         // make sure to convert any item name strings to item id strings
-        for (ProductBundle productBundle : productBundles) {
-            for (ProductBundleReward productBundleReward : productBundle.getProductBundleRewards()) {
+        for (final var productBundle : productBundles) {
+            for (final var productBundleReward : productBundle.getProductBundleRewards()) {
                 final String itemNameOrId = productBundleReward.getItemId();
                 final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
                 if (mongoItem == null) {
@@ -172,20 +171,21 @@ public class MongoApplicationConfigurationDao implements ApplicationConfiguratio
             }
         }
 
-        final List<MongoProductBundle> mongoProductBundles = productBundles
-                .stream()
-                .map(pb -> getDozerMapper().map(pb, MongoProductBundle.class))
-                .collect(Collectors.toList());
+        final var mongoProductBundles = productBundles
+            .stream()
+            .map(pb -> getDozerMapper().map(pb, MongoProductBundle.class))
+            .collect(Collectors.toList());
 
-        query.update(UpdateOperators.set("productBundles", mongoProductBundles))
-                .execute(new UpdateOptions().upsert(false));
-        final MongoApplicationConfiguration resultMongoApplicationConfiguration = query.first();
+        final var resultMongoApplicationConfiguration = query
+             .modify(set("productBundles", mongoProductBundles))
+             .execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (resultMongoApplicationConfiguration == null) {
             throw new NotFoundException("Application Configuration with id: " + applicationConfigurationId + "not found.");
         }
 
         return getDozerMapper().map(resultMongoApplicationConfiguration, ApplicationConfiguration.class);
+
     }
 
     public StandardQueryParser getStandardQueryParser() {

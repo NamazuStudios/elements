@@ -1,13 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.InternalException;
-import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -34,12 +29,12 @@ public class MongoPasswordUtils {
 
     /**
      * Generates salt and password hash according to the configuration and adds the required update operations to the
-     * supplied {@link ModifyBuilder} instance.
+     * supplied {@link UpdateBuilder} instance.
      *
-     * @param builder the {@link ModifyBuilder} to mutate
+     * @param builder the {@link UpdateBuilder} to mutate
      * @param password the password
      */
-    public ModifyBuilder addPasswordToBuilder(final ModifyBuilder builder, final String password) {
+    public UpdateBuilder addPasswordToBuilder(final UpdateBuilder builder, final String password) {
 
         final byte[] passwordBytes;
 
@@ -70,9 +65,9 @@ public class MongoPasswordUtils {
      * Scrambles both the salt and the password.  This effectively wipes out the account's
      * password making it inaccessible.
      *
-     * @param builder the {@link ModifyBuilder}
+     * @param builder the {@link UpdateBuilder}
      */
-    public ModifyBuilder scramblePassword(final ModifyBuilder builder) {
+    public UpdateBuilder scramblePassword(final UpdateBuilder builder) {
 
         final var secureRandom = new SecureRandom();
 

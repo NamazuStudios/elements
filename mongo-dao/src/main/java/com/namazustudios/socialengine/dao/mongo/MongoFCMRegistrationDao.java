@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.WriteResult;
+import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.mongodb.client.result.UpdateResult;
 import com.namazustudios.socialengine.dao.FCMRegistrationDao;
@@ -11,6 +12,7 @@ import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.bson.types.ObjectId;
@@ -23,6 +25,8 @@ import dev.morphia.query.UpdateOperations;
 import javax.inject.Inject;
 import java.util.stream.Stream;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoFCMRegistrationDao implements FCMRegistrationDao {
@@ -62,23 +66,20 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
         validate(fcmRegistration);
 
-        final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistration.getId());
-        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(fcmRegistration.getProfile());
+        final var registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistration.getId());
+        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(fcmRegistration.getProfile());
 
-        final Query<MongoFCMRegistration> query = getDatastore().find(MongoFCMRegistration.class);
-        query.filter(Filters.and(Filters.eq("_id", registrationId)));
+        final var query = getDatastore().find(MongoFCMRegistration.class);
+        query.filter(Filters.and(eq("_id", registrationId)));
 
-        final UpdateResult updateResults = query.update(
+        final var mongoFCMRegistration = query.modify(
             set("profile", mongoProfile),
             set("registrationToken", fcmRegistration.getRegistrationToken())
-        ).execute();
+        ).execute(new ModifyOptions().returnDocument(AFTER));
 
-        if (updateResults.getModifiedCount() == 0) {
+        if (mongoFCMRegistration == null) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistration.getId());
         }
-
-        final MongoFCMRegistration mongoFCMRegistration;
-        mongoFCMRegistration = getDatastore().find(MongoFCMRegistration.class).filter(Filters.eq("_id", registrationId)).first();
 
         return getMapper().map(mongoFCMRegistration, FCMRegistration.class);
 
@@ -88,7 +89,7 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
     public void deleteRegistration(final String fcmRegistrationId) {
 
         final ObjectId registrationId = getMongoDBUtils().parseOrThrowNotFoundException(fcmRegistrationId);
-        final DeleteResult deleteResult = getDatastore().find(MongoFCMRegistration.class).filter(Filters.eq("_id", registrationId)).delete();
+        final DeleteResult deleteResult = getDatastore().find(MongoFCMRegistration.class).filter(eq("_id", registrationId)).delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("FCM Registration not found: " + fcmRegistrationId);
@@ -103,7 +104,7 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
 
         final Query<MongoFCMRegistration> query = getDatastore().find(MongoFCMRegistration.class);
-        query.filter(Filters.and(Filters.eq("_id", registrationId), Filters.eq("profile", mongoProfile)));
+        query.filter(Filters.and(eq("_id", registrationId), eq("profile", mongoProfile)));
 
         final DeleteResult deleteResult = query.delete();
 

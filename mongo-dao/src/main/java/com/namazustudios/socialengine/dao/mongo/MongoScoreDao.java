@@ -1,33 +1,25 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.MongoCommandException;
-import com.mongodb.MongoException;
 import com.namazustudios.socialengine.dao.ScoreDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoLeaderboard;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScore;
 import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.LeaderboardNotFoundException;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
-import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType.*;
 import com.namazustudios.socialengine.model.leaderboard.Score;
-import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import dev.morphia.UpdateOptions;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
-import org.dozer.Mapper;
 import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
+import dev.morphia.ModifyOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
-import java.util.Date;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static com.namazustudios.socialengine.model.leaderboard.Leaderboard.TimeStrategyType.EPOCHAL;
+import static dev.morphia.query.experimental.updates.UpdateOperators.*;
 import static java.lang.System.currentTimeMillis;
 
 public class MongoScoreDao implements ScoreDao {
@@ -42,75 +34,75 @@ public class MongoScoreDao implements ScoreDao {
 
     private Mapper beanMapper;
 
+    private MongoDBUtils mongoDBUtils;
+
     @Override
     public Score createOrUpdateScore(final String leaderboardNameOrId, final Score score) {
 
         getValidationHelper().validateModel(score, ValidationGroups.Create.class);
 
-        final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
-        final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
-        final long leaderboardEpoch = mongoLeaderboard.getCurrentEpoch();
+        final var mongoProfile = getMongoProfileDao().getActiveMongoProfile(score.getProfile());
+        final var mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
+        final var leaderboardEpoch = mongoLeaderboard.getCurrentEpoch();
 
         // If the leaderboard is epochal, but the current time is less than the first epoch time...
         if (mongoLeaderboard.getTimeStrategyType() == EPOCHAL && !mongoLeaderboard.hasStarted()) {
             throw new LeaderboardNotFoundException("Leaderboard has not started its first epoch yet.");
         }
 
-        final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpoch);
+        final var mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpoch);
 
-        final MongoScore originalMongoScore = getDatastore().find(MongoScore.class)
-                .filter(Filters.eq("_id", mongoScoreId)).first();
-
-        final double originalPointValue;
-
-        if (originalMongoScore != null) {
-            originalPointValue = originalMongoScore.getPointValue();
-        }
-        else {
-            originalPointValue = 0;
-        }
-
-        final double newPointValue;
-
-        switch (mongoLeaderboard.getScoreStrategyType()) {
-            case OVERWRITE_IF_GREATER:
-                newPointValue = Math.max(originalPointValue, score.getPointValue());
-                break;
-            case ACCUMULATE:
-                newPointValue = originalPointValue + score.getPointValue();
-                break;
-            default:
-                throw new IllegalStateException("Invalid score strategy type.");
-        }
-
-
-        final Query<MongoScore> query = getDatastore().find(MongoScore.class);
-
+        final var query = getDatastore().find(MongoScore.class);
         query.filter(Filters.eq("_id", mongoScoreId));
+
+        final var builder = new UpdateBuilder();
 
         // Set the timestamp to be "now" on create as well as update since an update essentially resets an existing
         // record
-        final Date nowDate = new Date();
-        query.update(UpdateOperators.set("_id", mongoScoreId),
-                UpdateOperators.set("profile", mongoProfile),
-                UpdateOperators.set("leaderboard", mongoLeaderboard),
-                UpdateOperators.set("pointValue", newPointValue),
-                UpdateOperators.set("leaderboardEpoch", leaderboardEpoch),
-                UpdateOperators.set("creationTimestamp", nowDate)
-                ).execute(new UpdateOptions().upsert(true));
+        final var now = new Timestamp(currentTimeMillis());
+
+        builder.with(
+            set("_id", mongoScoreId),
+            set("profile", mongoProfile),
+            set("leaderboard", mongoLeaderboard),
+            set("leaderboardEpoch", leaderboardEpoch),
+            set("creationTimestamp", now)
+        );
+
+        switch (mongoLeaderboard.getScoreStrategyType()) {
+            case ACCUMULATE:
+                builder.with(inc("pointValue", score.getPointValue()));
+                break;
+            case OVERWRITE_IF_GREATER:
+                builder.with(max("pointValue", score.getPointValue()));
+                break;
+            default:
+                throw new InternalException("Unexpected type: " + mongoLeaderboard.getScoreStrategyType());
+        }
 
         try {
-            final MongoScore mongoScore = query.first();
-            return getBeanMapper().map(mongoScore, Score.class);
+
+            final var result = builder.execute(query, new ModifyOptions()
+                .upsert(true)
+                .returnDocument(AFTER)
+            );
+
+            return getBeanMapper().map(result, Score.class);
+
         } catch (MongoCommandException ex) {
 
             // We only get a duplicate exception if the score is less than the provided score.  In which case we simply
             // return the existing score.  All other outcomes will either update or create the score.
 
             if (ex.getErrorCode() == 11000) {
-                final MongoScore mongoScore = getDatastore().find(MongoScore.class)
-                        .filter(Filters.eq("_id", mongoScoreId)).first();
-                return getBeanMapper().map(mongoScore, Score.class);
+
+                final var result = getDatastore()
+                        .find(MongoScore.class)
+                        .filter(Filters.eq("_id", mongoScoreId))
+                    .first();
+
+                return getBeanMapper().map(result, Score.class);
+
             } else {
                 throw new InternalException(ex);
             }
@@ -162,6 +154,15 @@ public class MongoScoreDao implements ScoreDao {
     @Inject
     public void setBeanMapper(Mapper beanMapper) {
         this.beanMapper = beanMapper;
+    }
+
+    public MongoDBUtils getMongoDBUtils() {
+        return mongoDBUtils;
+    }
+
+    @Inject
+    public void setMongoDBUtils(MongoDBUtils mongoDBUtils) {
+        this.mongoDBUtils = mongoDBUtils;
     }
 
 }

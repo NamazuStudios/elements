@@ -1,25 +1,23 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.client.model.ReturnDocument;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.FacebookFriendDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.user.User;
 import dev.morphia.Datastore;
-import dev.morphia.UpdateOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
-import com.mongodb.client.result.UpdateResult;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperator;
-import dev.morphia.query.experimental.updates.UpdateOperators;
+import dev.morphia.ModifyOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoFacebookFriendDao implements FacebookFriendDao {
 
@@ -59,16 +57,16 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
             final MongoFriendshipId mongoFriendshipId;
             mongoFriendshipId = new MongoFriendshipId(mongoUser.getObjectId(), friend.getObjectId());
 
-            final Query<MongoFriendship> query = getDatastore().find(MongoFriendship.class);
+            final var query = getDatastore().find(MongoFriendship.class);
 
-            final UpdateResult r = query.filter(Filters.eq("_id", mongoFriendshipId))
-                .update(UpdateOperators.set("_id", mongoFriendshipId),
-                        UpdateOperators.set("lesserAccepted", true),
-                        UpdateOperators.set("greaterAccepted", true))
-                .execute();
+            final var mongoFriendship = query
+                .filter(eq("_id", mongoFriendshipId))
+                .modify(set("_id", mongoFriendshipId),
+                        set("lesserAccepted", true),
+                        set("greaterAccepted", true))
+                .execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
 
-            logger.debug("Updated {}.", r.getModifiedCount());
-            getObjectIndex().index(query.first());
+            getObjectIndex().index(mongoFriendship);
 
         }
     }
