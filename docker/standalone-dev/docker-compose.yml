@@ -87,6 +87,24 @@ services:
     volumes:
       - script-repos:/opt/socialengine/script-repos
 
+  cdn-serve:
+    build:
+      context: ./cdn-serve
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "8084:8084"
+    volumes:
+      - cdn-repos:/opt/socialengine/cdn-repos
+
   app-serve:
     build:
       context: ./app-serve
@@ -128,3 +146,4 @@ networks:
 
 volumes:
   script-repos:
+  cdn-repos:

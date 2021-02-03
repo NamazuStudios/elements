@@ -31,7 +31,7 @@ public final class VersionResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
             value = "Show Server Version Information",
-            notes = "Returns information about the current server version.  This should alwasy return the" +
+            notes = "Returns information about the current server version.  This should always return the" +
                     "version metadata.  This information is only known in packaged releases.")
     public Version getVersion() {
         return getVersionService().getVersion();

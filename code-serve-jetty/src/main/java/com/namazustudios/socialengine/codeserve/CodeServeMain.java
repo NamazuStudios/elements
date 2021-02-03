@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.dao.rt.guice.RTGitBootstrapModule;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -109,7 +110,7 @@ public class CodeServeMain implements Callable<Void>, Runnable {
         }
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-        injector = createInjector(stage, new CodeServeModule(defaultConfigurationSupplier));
+        injector = createInjector(stage, new CodeServeModule(defaultConfigurationSupplier).withModule(new RTGitBootstrapModule()).withModule(new GitServletModule()).withModule(new GitSecurityModule()));
 
         final ServerConnector connector = new ServerConnector(server);
         connector.setHost(bind);
