@@ -1,15 +1,16 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.GameOnApplicationConfigurationDao;
+import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoGameOnApplicationConfiguration;
-import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.util.List;
 
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.AMAZON_GAME_ON;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoGameOnApplicationConfigurationDao implements GameOnApplicationConfigurationDao {
 
@@ -89,16 +90,18 @@ public class MongoGameOnApplicationConfigurationDao implements GameOnApplication
         gameOnApplicationConfiguration.setUniqueIdentifier(gameOnApplicationConfiguration.getGameId());
     }
 
-    protected void update(final UpdateOperations<MongoGameOnApplicationConfiguration> operations,
+    protected void update(final UpdateBuilder builder,
                           final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
 
-        operations.set("publicApiKey", gameOnApplicationConfiguration.getPublicApiKey());
-        operations.set("adminApiKey", gameOnApplicationConfiguration.getAdminApiKey());
+        builder.with(
+            set("publicApiKey", gameOnApplicationConfiguration.getPublicApiKey()),
+            set("adminApiKey", gameOnApplicationConfiguration.getAdminApiKey())
+        );
 
         if (gameOnApplicationConfiguration.getPublicKey() == null) {
-            operations.unset("publicKey");
+            builder.with(unset("publicKey"));
         } else {
-            operations.set("publicKey", gameOnApplicationConfiguration.getPublicKey());
+            builder.with(set("publicKey", gameOnApplicationConfiguration.getPublicKey()));
         }
 
     }
