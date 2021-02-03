@@ -263,8 +263,6 @@ public class MongoGooglePlayApplicationConfigurationDao implements GooglePlayApp
             query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        query.update(set("active", false)).execute(new UpdateOptions().upsert(false));
-
         final var mongoGooglePlayApplicationProfile = getMongoDBUtils().perform(ds ->
             query.modify(
                 set("active", false)

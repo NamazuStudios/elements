@@ -1,29 +1,29 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
-import com.mongodb.client.result.UpdateResult;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MatchmakingApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
-import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.MongoCallbackDefinition;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoMatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.MatchmakingApplicationConfiguration;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.UpdateOptions;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
+import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.FindAndModifyOptions;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.application.ConfigurationCategory.*;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static com.namazustudios.socialengine.model.application.ConfigurationCategory.MATCHMAKING;
+import static dev.morphia.query.experimental.filters.Filters.and;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingApplicationConfigurationDao {
 
@@ -44,49 +44,33 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
             final String applicationNameOrId,
             final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-
         validate(matchmakingApplicationConfiguration);
 
-        final Query<MongoMatchmakingApplicationConfiguration> query;
-        query = getDatastore().find(MongoMatchmakingApplicationConfiguration.class);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var query = getDatastore().find(MongoMatchmakingApplicationConfiguration.class);
 
-        query.filter(Filters.and(
-                Filters.eq("active", false),
-                Filters.eq("parent", mongoApplication),
-                Filters.eq("category", MATCHMAKING),
-                Filters.eq("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme())
-        ));
+        query.filter(
+            and(
+                eq("active", false),
+                eq("parent", mongoApplication),
+                eq("category", MATCHMAKING),
+                eq("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme())
+            )
+        );
 
-        UpdateResult updateResult = query.update(UpdateOperators.set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim()),
-        UpdateOperators.set("category", MATCHMAKING),
-        UpdateOperators.set("active", true),
-        UpdateOperators.set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class)),
-        UpdateOperators.set("parent", mongoApplication),
-        UpdateOperators.set("algorithm", matchmakingApplicationConfiguration.getAlgorithm())
-        ).execute(new UpdateOptions().upsert(true));
+        final var mongoMatchmakingApplicationConfiguration = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim()),
+                set("category", MATCHMAKING),
+                set("active", true),
+                set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class)),
+                set("parent", mongoApplication),
+                set("algorithm", matchmakingApplicationConfiguration.getAlgorithm())
+            ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
 
-        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile;
-
-        mongoMatchmakingApplicationProfile = getMongoDBUtils()
-            .perform(ds -> {
-                if(updateResult.getUpsertedId() != null) {
-                    return ds.find(MongoMatchmakingApplicationConfiguration.class)
-                            .filter(Filters.eq("_id", updateResult.getUpsertedId())).first();
-                } else {
-                    return ds.find(MongoMatchmakingApplicationConfiguration.class)
-                            .filter(Filters.and(
-                                    Filters.eq("active", true),
-                                    Filters.eq("parent", mongoApplication),
-                                    Filters.eq("category", MATCHMAKING),
-                                    Filters.eq("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme())
-                            )).first();
-                }
-            });
-
-        getObjectIndex().index(mongoMatchmakingApplicationProfile);
-        return getBeanMapper().map(mongoMatchmakingApplicationProfile, MatchmakingApplicationConfiguration.class);
+        getObjectIndex().index(mongoMatchmakingApplicationConfiguration);
+        return getBeanMapper().map(mongoMatchmakingApplicationConfiguration, MatchmakingApplicationConfiguration.class);
 
     }
 
@@ -101,16 +85,16 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
         final Query<MongoMatchmakingApplicationConfiguration> query;
         query = getDatastore().find(MongoMatchmakingApplicationConfiguration.class);
 
-        query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("parent", mongoApplication),
-                Filters.eq("category", MATCHMAKING)
+        query.filter(and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq("category", MATCHMAKING)
         ));
 
         try {
-            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter(Filters.eq("uniqueIdentifier = ", applicationConfigurationNameOrId));
+            query.filter(eq("uniqueIdentifier = ", applicationConfigurationNameOrId));
         }
 
         final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile = query.first();
@@ -129,56 +113,34 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
             final String applicationProfileNameOrId,
             final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         validate(matchmakingApplicationConfiguration);
 
-        final Query<MongoMatchmakingApplicationConfiguration> query;
-        query = getDatastore().find(MongoMatchmakingApplicationConfiguration.class);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var query = getDatastore().find(MongoMatchmakingApplicationConfiguration.class);
 
-        query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("parent", mongoApplication),
-                Filters.eq("category", MATCHMAKING)
-        ));
+        query.filter(
+            and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq("category", MATCHMAKING)
+            )
+        );
 
         try {
-            query.filter(Filters.eq("_id", new ObjectId(applicationProfileNameOrId)));
+            query.filter(eq("_id", new ObjectId(applicationProfileNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter(Filters.eq("uniqueIdentifier", applicationProfileNameOrId));
+            query.filter(eq("uniqueIdentifier", applicationProfileNameOrId));
         }
 
-        final UpdateOperations<MongoMatchmakingApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoMatchmakingApplicationConfiguration.class);
-
-        query.update(UpdateOperators.set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim()),
-                UpdateOperators.set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class)),
-                UpdateOperators.set("parent", mongoApplication),
-                UpdateOperators.set("category", MATCHMAKING),
-                UpdateOperators.set("algorithm", matchmakingApplicationConfiguration.getAlgorithm())
-        ).execute(new UpdateOptions().upsert(false));
-
-        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationConfiguration;
-        mongoMatchmakingApplicationConfiguration = getMongoDBUtils()
-                .perform(ds -> {
-                    try {
-                        return ds.find(MongoMatchmakingApplicationConfiguration.class)
-                                .filter(Filters.and(
-                                        Filters.eq("active", true),
-                                        Filters.eq("parent", mongoApplication),
-                                        Filters.eq("category", MATCHMAKING),
-                                        Filters.eq("_id", new ObjectId(applicationProfileNameOrId))
-                                )).first();
-                    } catch (IllegalArgumentException ex) {
-                        return ds.find(MongoMatchmakingApplicationConfiguration.class)
-                                .filter(Filters.and(
-                                        Filters.eq("active", true),
-                                        Filters.eq("parent", mongoApplication),
-                                        Filters.eq("category", MATCHMAKING),
-                                        Filters.eq("uniqueIdentifier", applicationProfileNameOrId)
-                                )).first();
-                    }
-                });
+        final var mongoMatchmakingApplicationConfiguration = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("uniqueIdentifier", matchmakingApplicationConfiguration.getScheme().trim()),
+                set("success", getBeanMapper().map(matchmakingApplicationConfiguration.getSuccess(), MongoCallbackDefinition.class)),
+                set("parent", mongoApplication),
+                set("category", MATCHMAKING),
+                set("algorithm", matchmakingApplicationConfiguration.getAlgorithm())
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
 
         if (mongoMatchmakingApplicationConfiguration == null) {
             throw new NotFoundException("configuration with ID not found: " + applicationProfileNameOrId);
@@ -194,54 +156,34 @@ public class MongoMatchmakingApplicationConfigurationDao implements MatchmakingA
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var query = getDatastore().find(MongoMatchmakingApplicationConfiguration.class);
 
-        final Query<MongoMatchmakingApplicationConfiguration> query;
-        query = getDatastore().find(MongoMatchmakingApplicationConfiguration.class);
-
-        query.filter(Filters.and(
-                Filters.eq("active", true),
-                Filters.eq("parent", mongoApplication),
-                Filters.eq("category", MATCHMAKING)
-        ));
+        query.filter(
+            and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq("category", MATCHMAKING)
+            )
+        );
 
         try {
-            query.filter(Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
         } catch (IllegalArgumentException ex) {
-            query.filter(Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId));
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        query.update(UpdateOperators.set("active", false)).execute(new UpdateOptions().upsert(false));
+        final var mongoMatchmakingApplicationConfiguration = getMongoDBUtils().perform( ds ->
+            query.modify(
+                set("active", false)
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
 
-        final MongoMatchmakingApplicationConfiguration mongoMatchmakingApplicationProfile;
-
-        mongoMatchmakingApplicationProfile = getMongoDBUtils()
-                .perform(ds -> {
-                    try {
-                        return ds.find(MongoMatchmakingApplicationConfiguration.class)
-                                .filter(Filters.and(
-                                        Filters.eq("active", false),
-                                        Filters.eq("parent", mongoApplication),
-                                        Filters.eq("category", MATCHMAKING),
-                                        Filters.eq("_id", new ObjectId(applicationConfigurationNameOrId)))
-                                ).first();
-                    } catch (IllegalArgumentException ex) {
-                        return ds.find(MongoMatchmakingApplicationConfiguration.class)
-                                .filter(Filters.and(
-                                        Filters.eq("active", false),
-                                        Filters.eq("parent", mongoApplication),
-                                        Filters.eq("category", MATCHMAKING),
-                                        Filters.eq("uniqueIdentifier", applicationConfigurationNameOrId))
-                                ).first();
-                    }
-                });
-
-        if (mongoMatchmakingApplicationProfile == null) {
+        if (mongoMatchmakingApplicationConfiguration == null) {
             throw new NotFoundException("configuration with ID not found: " + applicationConfigurationNameOrId);
         }
 
-        getObjectIndex().index(mongoMatchmakingApplicationProfile);
+        getObjectIndex().index(mongoMatchmakingApplicationConfiguration);
 
     }
 

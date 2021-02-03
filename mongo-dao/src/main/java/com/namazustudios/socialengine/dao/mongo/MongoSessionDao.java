@@ -168,7 +168,8 @@ public class MongoSessionDao implements SessionDao {
 
             final var query = getDatastore().find(MongoProfile.class);
 
-            final var result = query.filter(eq("_id", profileId))
+            final var result = query
+                 .filter(eq("_id", profileId))
                  .update(set("lastLogin", timestamp))
                  .execute(new UpdateOptions().upsert(false));
 

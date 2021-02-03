@@ -29,6 +29,7 @@ import javax.inject.Inject;
 import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -68,7 +69,7 @@ public class MongoItemDao implements ItemDao {
     public MongoItem getMongoItem(final ObjectId objectId) {
 
         final MongoItem mongoItem = getDatastore().find(MongoItem.class)
-                .filter(Filters.eq("_id", objectId)).first();
+                .filter(eq("_id", objectId)).first();
 
         if(null == mongoItem) {
             throw new NotFoundException("Unable to find item with an id of " + objectId);
@@ -87,9 +88,9 @@ public class MongoItemDao implements ItemDao {
         final Query<MongoItem> itemQuery = getDatastore().find(MongoItem.class);
 
         if (ObjectId.isValid(itemNameOrId)) {
-            itemQuery.filter(Filters.eq("_id", new ObjectId(itemNameOrId)));
+            itemQuery.filter(eq("_id", new ObjectId(itemNameOrId)));
         } else {
-            itemQuery.filter(Filters.eq("name", itemNameOrId));
+            itemQuery.filter(eq("name", itemNameOrId));
         }
 
         final MongoItem mongoItem = itemQuery.first();
@@ -109,10 +110,10 @@ public class MongoItemDao implements ItemDao {
         final String identifier;
 
         if (mongoItem.getObjectId() != null) {
-            query.filter(Filters.eq("_id", mongoItem.getObjectId()));
+            query.filter(eq("_id", mongoItem.getObjectId()));
             identifier = mongoItem.getObjectId().toHexString();
         } else if (mongoItem.getName() != null) {
-            query.filter(Filters.eq("name", mongoItem.getName()));
+            query.filter(eq("name", mongoItem.getName()));
             identifier = mongoItem.getName();
         } else {
             throw new InvalidDataException("Must specify Item name or id");
@@ -148,21 +149,15 @@ public class MongoItemDao implements ItemDao {
 
     @Override
     public Item updateItem(Item item) {
+
         validate(item);
         normalize(item);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
+        final var query = getDatastore().find(MongoItem.class);
+        query.filter(eq("_id", objectId));
 
-        final Query<MongoItem> query = getDatastore().find(MongoItem.class);
-        query.filter(Filters.eq("_id", objectId));
-
-        final MongoItem mongoItem = query.first();
-
-        if (mongoItem == null) {
-            throw new NotFoundException("Item with id or name of " + item.getId() + " does not exist");
-        }
-
-        final MongoItem updatedMongoItem = getMongoDBUtils().perform(ds ->
+        final var updatedMongoItem = getMongoDBUtils().perform(ds ->
             query.modify(
                 set("name", item.getName()),
                 set("displayName", item.getDisplayName()),
@@ -173,8 +168,8 @@ public class MongoItemDao implements ItemDao {
         );
 
         getObjectIndex().index(updatedMongoItem);
-
         return getDozerMapper().map(updatedMongoItem, Item.class);
+
     }
 
     @Override
@@ -192,7 +187,7 @@ public class MongoItemDao implements ItemDao {
         getObjectIndex().index(mongoItem);
 
         final Query<MongoItem> query = getDatastore().find(MongoItem.class);
-        query.filter(Filters.eq("_id", mongoItem.getObjectId()));
+        query.filter(eq("_id", mongoItem.getObjectId()));
 
         return getDozerMapper().map(query.first(), Item.class);
     }

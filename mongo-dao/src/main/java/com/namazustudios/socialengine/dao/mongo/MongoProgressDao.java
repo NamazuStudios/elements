@@ -315,8 +315,8 @@ public class MongoProgressDao implements ProgressDao {
     private MongoProgress debitActions(final Query<MongoProgress> query,
                                        final int actionsPerformed) {
         return query.modify(
-                set("version", randomUUID().toString()),
-                dec("remaining", actionsPerformed)
+            set("version", randomUUID().toString()),
+            dec("remaining", actionsPerformed)
         ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
     }
 
