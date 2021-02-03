@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.applesignin.TokenResponse;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;

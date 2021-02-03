@@ -1,13 +1,18 @@
 package com.namazustudios.socialengine.service.profile;
 
+import com.google.common.base.Strings;
+import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.EventContext;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.service.ProfileService;
+import com.namazustudios.socialengine.service.UserService;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -24,7 +29,11 @@ import static com.namazustudios.socialengine.service.profile.UserProfileService.
  */
 public class SuperUserProfileService implements ProfileService {
 
+    private UserService userService;
+
     private ProfileDao profileDao;
+
+    private ApplicationDao applicationDao;
 
     private ContextFactory contextFactory;
 
@@ -62,19 +71,40 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(Profile profile) {
-        return getProfileDao().updateActiveProfile(profile, profile.getMetadata());
+    public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
+        return getProfileDao().updateActiveProfile(profileWithUpdates(profileId, profileRequest));
+    }
+
+    public Profile profileWithUpdates(String profileId, UpdateProfileRequest profileRequest) {
+        final Profile updates = new Profile();
+        updates.setId(profileId);
+        if(!Strings.isNullOrEmpty(profileRequest.getDisplayName())){
+            updates.setDisplayName(profileRequest.getDisplayName());
+        }
+        if(!Strings.isNullOrEmpty(profileRequest.getImageUrl())){
+            updates.setImageUrl(profileRequest.getImageUrl());
+        }
+        return updates;
     }
 
     @Override
-    public Profile createProfile(Profile profile) {
-        final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
-        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);
+    public Profile createProfile(CreateProfileRequest profileRequest) {
+        final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
+        final Profile createdProfile = getProfileDao().createOrReactivateProfile(createProfile(profileRequest));
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
         eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
         return createdProfile;
+    }
+
+    private Profile createNewProfile(CreateProfileRequest profileRequest) {
+        final Profile newProfile = new Profile();
+        newProfile.setUser(getUserService().getUser(profileRequest.getUserId()));
+        newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
+        newProfile.setImageUrl(profileRequest.getImageUrl());
+        newProfile.setDisplayName(profileRequest.getDisplayName());
+        return newProfile;
     }
 
     @Override
@@ -86,6 +116,15 @@ public class SuperUserProfileService implements ProfileService {
         return profileDao;
     }
 
+    public UserService getUserService() {
+        return userService;
+    }
+
+    @Inject
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
     @Inject
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
@@ -93,6 +132,15 @@ public class SuperUserProfileService implements ProfileService {
 
     public ContextFactory getContextFactory() {
         return contextFactory;
+    }
+
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
+    }
+
+    @Inject
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
     }
 
     @Inject

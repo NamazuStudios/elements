@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import org.bson.types.ObjectId;

@@ -15,8 +15,8 @@ import java.util.Optional;
  * Created by patricktwohig on 6/28/17.
  */
 @Expose(modules = {
-    "namazu.elements.dao.profile",
-    "namazu.socialengine.dao.profile",
+        "namazu.elements.dao.profile",
+        "namazu.socialengine.dao.profile",
 })
 public interface ProfileDao {
 

@@ -65,8 +65,8 @@ public class MongoProfileDao implements ProfileDao {
         if (!ObjectId.isValid(profileId)) throw new ProfileNotFoundException();
 
         query.and(
-            query.criteria("_id").equal(new ObjectId(profileId)),
-            query.criteria("active").equal(true)
+                query.criteria("_id").equal(new ObjectId(profileId)),
+                query.criteria("active").equal(true)
         );
 
         final MongoProfile mongoProfile = query.get();
@@ -201,8 +201,8 @@ public class MongoProfileDao implements ProfileDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
 
         query.and(
-            query.criteria("active").equal(true),
-            query.criteria("_id").equal(objectId)
+                query.criteria("active").equal(true),
+                query.criteria("_id").equal(objectId)
         );
 
         final MongoProfile mongoProfile = query.get();
@@ -219,8 +219,8 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
-            query.criteria("user").equal(user),
-            query.criteria("active").equal(true)
+                query.criteria("user").equal(user),
+                query.criteria("active").equal(true)
         );
 
         return query.asList().stream();
@@ -242,8 +242,8 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
-            query.criteria("active").equal(true),
-            query.criteria("_id").equal(objectId)
+                query.criteria("active").equal(true),
+                query.criteria("_id").equal(objectId)
         );
 
         final UpdateOperations<MongoProfile> updateOperations;
@@ -255,8 +255,8 @@ public class MongoProfileDao implements ProfileDao {
         final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
 
             final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .upsert(false)
-                .returnNew(true);
+                    .upsert(false)
+                    .returnNew(true);
 
             return ds.findAndModify(query, updateOperations, findAndModifyOptions);
 
@@ -375,9 +375,9 @@ public class MongoProfileDao implements ProfileDao {
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.and(
-            query.criteria("active").equal(false),
-            query.criteria("user").equal(user),
-            query.criteria("application").equal(application)
+                query.criteria("active").equal(false),
+                query.criteria("user").equal(user),
+                query.criteria("application").equal(application)
         );
 
         final UpdateOperations<MongoProfile> updateOperations;
@@ -390,7 +390,7 @@ public class MongoProfileDao implements ProfileDao {
         updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
         final Date nowDate = new Date();
         updateOperations.set("lastLogin", nowDate);
-        
+
         if (profile.getMetadata() == null) {
             updateOperations.unset("metadata");
         } else {
@@ -474,8 +474,8 @@ public class MongoProfileDao implements ProfileDao {
         final MongoApplication application = getMongoApplicationFromProfile(profile);
 
         query.and(
-            query.criteria("user").equal(user),
-            query.criteria("application").equal(application)
+                query.criteria("user").equal(user),
+                query.criteria("application").equal(application)
         );
 
         final UpdateOperations<MongoProfile> updateOperations;
@@ -521,8 +521,8 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
 
         query.and(
-            query.criteria("active").equal(true),
-            query.criteria("_id").equal(objectId)
+                query.criteria("active").equal(true),
+                query.criteria("_id").equal(objectId)
         );
 
         final UpdateOperations<MongoProfile> updateOperations = datastore.createUpdateOperations(MongoProfile.class);

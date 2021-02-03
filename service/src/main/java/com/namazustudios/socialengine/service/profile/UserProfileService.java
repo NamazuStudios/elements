@@ -1,11 +1,15 @@
 package com.namazustudios.socialengine.service.profile;
 
 
+import com.google.common.base.Strings;
+import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -30,6 +34,8 @@ public class UserProfileService implements ProfileService {
     private UserService userService;
 
     private ProfileDao profileDao;
+
+    private ApplicationDao applicationDao;
 
     private ContextFactory contextFactory;
 
@@ -83,16 +89,28 @@ public class UserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(Profile profile) {
-        checkUserAndApplication(profile);
-        return getProfileDao().updateActiveProfile(profile);
+    public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
+        checkUserAndProfile(getProfileDao().getActiveProfile(profileId).getUser().getId());
+        return getProfileDao().updateActiveProfile(profileWithUpdates(profileId, profileRequest));
+    }
+
+    private Profile profileWithUpdates(String profileId, UpdateProfileRequest profileRequest) {
+        final Profile updates = new Profile();
+        updates.setId(profileId);
+        if(!Strings.isNullOrEmpty(profileRequest.getDisplayName())){
+            updates.setDisplayName(profileRequest.getDisplayName());
+        }
+        if(!Strings.isNullOrEmpty(profileRequest.getImageUrl())){
+            updates.setImageUrl(profileRequest.getImageUrl());
+        }
+        return updates;
     }
 
     @Override
-    public Profile createProfile(Profile profile) {
-        checkUserAndApplication(profile);
-        final EventContext eventContext = getContextFactory().getContextForApplication(profile.getApplication().getId()).getEventContext();
-        final Profile createdProfile = getProfileDao().createOrReactivateProfile(profile);
+    public Profile createProfile(CreateProfileRequest profileRequest) {
+        checkUserAndProfile(profileRequest.getUserId());
+        final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
+        final Profile createdProfile = getProfileDao().createOrReactivateProfile(createNewProfile(profileRequest));
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
@@ -100,10 +118,19 @@ public class UserProfileService implements ProfileService {
         return createdProfile;
     }
 
-    private void checkUserAndApplication(final Profile requestedProfile) {
-        if (!Objects.equals(getUser(), requestedProfile.getUser())) {
-            throw new InvalidDataException("Profile user must match current user.");
+    private void checkUserAndProfile(final String id) {
+        if (!Objects.equals(getUser().getId(), id)) {
+            throw new InvalidDataException("Profile userId must match current userId.");
         }
+    }
+
+    private Profile createNewProfile(CreateProfileRequest profileRequest) {
+        final Profile newProfile = new Profile();
+        newProfile.setUser(getUserService().getUser(profileRequest.getUserId()));
+        newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
+        newProfile.setImageUrl(profileRequest.getImageUrl());
+        newProfile.setDisplayName(profileRequest.getDisplayName());
+        return newProfile;
     }
 
     @Override
@@ -142,6 +169,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
+    }
+
+    public ApplicationDao getApplicationDao() {
+        return applicationDao;
+    }
+
+    @Inject
+    public void setApplicationDao(ApplicationDao applicationDao) {
+        this.applicationDao = applicationDao;
     }
 
     public ContextFactory getContextFactory() {

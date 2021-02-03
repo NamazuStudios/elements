@@ -19,7 +19,9 @@ public class ContextInvocationDispatcher extends AbstractInvocationDispatcher {
             return getContext().getSchedulerContext();
         } else if (HandlerContext.class.equals(type)) {
             return getContext().getHandlerContext();
-        } else {
+        } else if (EventContext.class.equals(type)) {
+            return getContext().getEventContext();
+        }else {
             throw new InternalException("No dispatch-mapping for type: " + type);
         }
     }
