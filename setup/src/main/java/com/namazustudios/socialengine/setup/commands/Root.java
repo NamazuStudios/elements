@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.setup.commands;
 
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.setup.NoSuchCommandException;
 import com.namazustudios.socialengine.setup.SetupCommand;
 import com.namazustudios.socialengine.setup.SetupCommands;
 
@@ -29,15 +30,16 @@ public class Root implements SetupCommand {
         } else {
             try {
                 commandType = SetupCommands.getCommandForName(args[0]);
-            } catch (IllegalArgumentException ex) {
+                args = Arrays.copyOfRange(args, 1, args.length);
+            } catch (NoSuchCommandException ex) {
                 stdout.printf("Unknown command: %s\n", args[0]);
                 commandType = SetupCommands.HELP.commandType;
+                args = Arrays.copyOfRange(args, 1, args.length);
             }
         }
 
         try (var cmd = injector.getInstance(commandType)) {
-            final String[] subArgs = Arrays.copyOfRange(args, 1, args.length);
-            cmd.run(subArgs);
+            cmd.run(args);
         }
 
     }

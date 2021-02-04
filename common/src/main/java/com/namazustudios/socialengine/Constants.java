@@ -33,14 +33,45 @@ public interface Constants {
     String SHORT_LINK_BASE = "com.namazustudios.socialengine.short.link.base";
 
     /**
+     * The ELEMENTS_HOME environment variable.
+     */
+    String ELEMENTS_HOME = "ELEMENTS_HOME";
+
+    /**
+     * The default elements configuration directory.
+     */
+    String ELEMENTS_HOME_DEFAULT = "/opt/elements";
+
+    /**
+     * The ELEMENTS_HOME environment variable.
+     */
+    String CONFIGURATION_DIRECTORY = "conf";
+
+    /**
      * The system property which defines the configuration file path
      */
-    String PROPERTIES_FILE = "com.namazustudios.socialengine.configuration.properties";
+    String PROPERTIES_FILE = "com.namazustudios.elements.configuration.properties";
 
     /**
      * The default property file to configure the server.
      */
-    String DEFAULT_PROPERTIES_FILE = "socialengine-configuration.properties";
+    String DEFAULT_PROPERTIES_FILE = "elements-configuration.properties";
+
+    /**
+     * The system property which defines the configuration file path
+     *
+     * @deprecated Use the file specified in {@link #PROPERTIES_FILE}
+     */
+    @Deprecated
+    String PROPERTIES_FILE_OLD = "com.namazustudios.socialengine.configuration.properties";
+
+    /**
+     * The (deprecated) default property file to configure the server
+     *
+     * @deprecated Use the file specified in {@link #DEFAULT_PROPERTIES_FILE}
+     */
+    @Deprecated
+    String DEFAULT_PROPERTIES_FILE_OLD = "socialengine-configuration.properties";
 
     /**
      * The web API prefix.  This is the location from which all API requests are served relative to

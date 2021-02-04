@@ -56,7 +56,7 @@ public enum SetupCommands {
             .filter(c -> c.commandName.equals(name))
             .map(c -> c.commandType)
             .findFirst()
-            .orElseThrow(() -> new IllegalArgumentException("Unknown command: " + name));
+            .orElseThrow(() -> new NoSuchCommandException("Unknown command: " + name));
     }
 
     public static Stream<SetupCommands> streamShellCommands() {

@@ -139,6 +139,7 @@ public class SetupShell implements SetupCommand, SecureReader {
         final var version = versionService.getVersion();
 
         terminal.writer().println("Namazu Elements™ ©(2015 - 2021)");
+        terminal.writer().println("Setup and Administration Terminal");
         terminal.writer().printf("Version: %s\n", version.getVersion());
         terminal.writer().printf("Revision: %s\n", version.getRevision());
         terminal.writer().printf("Timestamp: %s\n", version.getTimestamp());
@@ -162,7 +163,7 @@ public class SetupShell implements SetupCommand, SecureReader {
 
     private void processCommand() throws Exception {
 
-        final var line = reader.readLine("%{Namazu Elements™ $ %}");
+        final var line = reader.readLine("%{Setup $ %}");
         final var args = Stream.of(line.split("\\s+")).map(String::trim).toArray(String[]::new);
 
         if (args.length > 0 && SetupCommands.SHELL.commandName.equals(args[0])) {

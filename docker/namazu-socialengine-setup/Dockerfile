@@ -1,15 +1,8 @@
-FROM openjdk:8
-
 ARG SETUP_JAR
 
-RUN useradd elements &&
-    mkdir -p "/opt/elements/bin" &&
-    mkdir -p "/opt/elements/conf" &&
-    mkdir -p "/opt/elements/script-repos" &&
-    mkdir -p "/opt/elements/script-storage" &&
-    chown -R elements:elements "/opt/elements"
+FROM namazu-socialengine-base:latest
+COPY --chown=elements:elements $SETUP_JAR $ENTRYPOINT_JAR
 
-USER elements:elements
+# When running as command, this drops you into a shell to service the isntance
 
-RUN mkdir -p "/opt/socialengine"
-COPY $SETUP_JAR /opt/elements/bin/main.jar
+CMD ["java", "-jar", "$ENTRYPOINT_JAR", "shell"]

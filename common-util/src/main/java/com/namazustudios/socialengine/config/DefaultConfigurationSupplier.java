@@ -5,14 +5,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.Constants.DEFAULT_PROPERTIES_FILE;
-import static com.namazustudios.socialengine.Constants.PROPERTIES_FILE;
+import static com.namazustudios.socialengine.Constants.*;
 import static java.lang.String.format;
 import static java.lang.System.getProperties;
+import static java.lang.System.getenv;
 
 /**
  * Implements the default configuration scheme.  In addition to providing a set of {@link Properties}
@@ -43,27 +46,97 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
      * default properties file.  If no such file exists, this will use the value of {@link System#getProperties()} as
      * the application configuration.
      *
+     * The order of properties loading is as follows, meaning that items farther down in the list overwrite the ones
+     * above it.
+     *
+     * <pre>
+     * <ul>
+     *     <li>All Environment variables</li>
+     *     <li>All JVM System Properties</li>
+     *     <li>All values from the file $ELEMENTS_HOME/conf/elements-configuration.properties</li>
+     *     <li>One of the following:
+     *         <ul>
+     *             <li>ENV com.namazustudios.socialengine.configuration.properties</li>
+     *             <li>-D com.namazustudios.socialengine.configuration.properties</li>
+     *             <li>The file in the current working directory "socialengine-configuration.properties"</li>
+     *         </ul>
+     *     </li>
+     *     <li>
+     *         <ul>
+     *             <li>ENV com.namazustudios.elements.configuration.properties</li>
+     *             <li>-D com.namazustudios.elements.configuration.properties</li>
+     *             <li>The file in the current working directory "elements-configuration.properties"</li>
+     *         </ul>
+     *     </li>
+     * </ul>
+     * </pre>
+     *
      * @return the {@link Properties} used to configure the application.
      */
     public static Properties loadProperties() {
-        final File propertiesFile = new File(getProperties().getProperty(PROPERTIES_FILE, DEFAULT_PROPERTIES_FILE));
 
-        final Properties properties = new Properties();
+        // The priority of the following is really important.
 
-        try (final InputStream is = new FileInputStream(propertiesFile)) {
-            final Properties loadedProperties = new Properties();
-            loadedProperties.load(is);
-            properties.putAll(loadedProperties);
-            logger.info("Loaded properties from file: {}", propertiesFile.getAbsolutePath());
-        } catch (FileNotFoundException ex) {
-            properties.putAll(getProperties());
-            logger.info("Could not find {}.  Using system properties.", propertiesFile.getAbsolutePath());
-        } catch (IOException ex) {
-            properties.putAll(getProperties());
-            logger.warn("Could not load properties from {}.  Using system properties.", propertiesFile.getAbsolutePath(), ex);
+        final var env = getenv();
+        final var properties = new Properties();
+
+        properties.putAll(env);
+        properties.putAll(getProperties());
+
+        final var home = env.getOrDefault(ELEMENTS_HOME, ELEMENTS_HOME_DEFAULT);
+
+        return loadProperties(
+            properties,
+
+            // ELEMENTS_HOME/config/elements-configuration.properties
+            Paths.get(home, CONFIGURATION_DIRECTORY, DEFAULT_PROPERTIES_FILE),
+
+            // Loads the old-style configuration file
+            Paths.get(properties.getProperty(PROPERTIES_FILE_OLD, DEFAULT_PROPERTIES_FILE_OLD)),
+
+            // Loads the new-style configuration file
+            Paths.get(properties.getProperty(PROPERTIES_FILE, DEFAULT_PROPERTIES_FILE))
+
+        );
+
+    }
+
+    /**
+     * Loads and accumulates multiple {@link Paths} containing the contents {@link Properties}.
+     *
+     * @param properties the initial {@link Properties}
+     * @param paths all paths to load
+     * @return the {@link Properties} loaded from each path
+     */
+    public static Properties loadProperties(final Properties properties, final Path... paths) {
+
+        final var result = new Properties();
+        result.putAll(properties);
+
+        for (var path : paths) {
+            final var loaded = load(path.toFile());
+            result.putAll(loaded);
         }
 
-        return properties;
+        return result;
+
+    }
+
+    private static Properties load(final File propertiesFile) {
+
+        final Properties loaded = new Properties();
+
+        try (final var is = new FileInputStream(propertiesFile)) {
+            loaded.load(is);
+            logger.info("Loaded properties from file: {}", propertiesFile.getAbsolutePath());
+        } catch (FileNotFoundException ex) {
+            logger.info("Could not find {}. Skipping.", propertiesFile.getAbsolutePath());
+        } catch (IOException ex) {
+            logger.warn("Could not load properties from {}. Skipping.", propertiesFile.getAbsolutePath(), ex);
+        }
+
+        return loaded;
+
     }
 
     /**
