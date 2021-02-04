@@ -8,7 +8,6 @@ dependency-reduced-pom.xml
 buildNumber.properties
 *.iml
 test-repositories
-storage.xodus
 node_modules
 .DS_Store
 
@@ -32,8 +31,8 @@ node_modules
 
 # Files typically created by running the local applicatio in the IDE
 
-/storage.unixfs
-/storage.xodus
+/storage.unixfs/*
+/storage.xodus.scheduler/*
 /instance-id.txt
 /verbose.log
 /repositories/*

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.setup.commands;
 
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.user.User;
@@ -10,7 +10,7 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 5/8/15.
  */
-public class UpdateUser extends AbstractUserCommand {
+public class UpdateUser extends AbstractUserSetupCommand {
 
     @Inject
     private UserDao userDao;

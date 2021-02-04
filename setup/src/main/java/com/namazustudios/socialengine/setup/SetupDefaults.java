@@ -1,5 +1,6 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.setup;
 
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;

@@ -75,6 +75,7 @@
         <module>common-lua</module>
         <module>web-ui-angular</module>
         <module>rest-api-test</module>
+        <module>setup-sshd</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

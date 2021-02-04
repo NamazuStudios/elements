@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.setup.commands;
 
 import com.namazustudios.socialengine.dao.UserDao;
 import joptsimple.OptionSet;
@@ -8,7 +8,7 @@ import javax.inject.Inject;
 /**
  * Created by patricktwohig on 4/8/15.
  */
-public class AddUser extends AbstractUserCommand {
+public class AddUser extends AbstractUserSetupCommand {
 
     @Inject
     private UserDao userDao;

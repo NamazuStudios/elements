@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import org.w3c.dom.Attr;
+
+import javax.inject.Provider;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -133,6 +136,18 @@ public interface Attributes {
      */
     static boolean equals(final Attributes a, final Attributes b) {
         return a.asMap().equals(b.asMap());
+    }
+
+    /**
+     * A {@link Provider<Attributes>} which simply returns the result of {@link #emptyAttributes()}.
+     */
+    class EmptyAttributesProvider implements Provider<Attributes> {
+
+        @Override
+        public Attributes get() {
+            return emptyAttributes();
+        }
+
     }
 
 }

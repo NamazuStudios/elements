@@ -1,11 +1,16 @@
-FROM openjdk:8
+FROM openjdk:11.0-jdk
 
 ARG APP_SERVE_JAR
 
 USER root:root
-RUN useradd socialengine
-RUN mkdir -p "/opt/socialengine/script-repos"
-RUN chown -R socialengine:socialengine /opt/socialengine
 
-COPY $APP_SERVE_JAR /opt/socialengine/app-serve.jar
-USER socialengine:socialengine
+RUN useradd elements &&
+    mkdir -p "/opt/elements/bin" &&
+    mkdir -p "/opt/elements/conf" &&
+    mkdir -p "/opt/elements/script-repos" &&
+    mkdir -p "/opt/elements/script-storage" &&
+    chown -R elements:elements "/opt/elements"
+
+USER elements:elements
+
+COPY $APP_SERVE_JAR /opt/elements/bin/main.jar

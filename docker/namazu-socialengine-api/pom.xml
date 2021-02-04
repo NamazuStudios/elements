@@ -19,7 +19,7 @@
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>rest-war</artifactId>
+            <artifactId>rest-jetty</artifactId>
             <version>${project.version}</version>
             <type>war</type>
         </dependency>
@@ -64,7 +64,7 @@
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>REST_WAR=target/lib/rest-war-${project.version}.war</argument>
+                        <argument>REST_JETTY_JAR=target/lib/rest-jetty-${project.version}-jar-with-dependencies.jar</argument>
                         <argument>--tag</argument>
                         <argument>${project.artifactId}:latest</argument>
                         <argument>--tag</argument>

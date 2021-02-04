@@ -1,6 +1,9 @@
-package com.namazustudios.socialengine;
+package com.namazustudios.socialengine.setup.commands;
 
 import com.google.common.base.Strings;
+import com.namazustudios.socialengine.setup.ConsoleException;
+import com.namazustudios.socialengine.setup.SecureReader;
+import com.namazustudios.socialengine.setup.SetupCommand;
 import com.namazustudios.socialengine.exception.ValidationFailureException;
 import com.namazustudios.socialengine.model.user.User;
 import joptsimple.OptionException;
@@ -9,7 +12,10 @@ import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.validation.ConstraintViolation;
+
+import java.io.PrintWriter;
 
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
@@ -17,10 +23,14 @@ import static java.util.stream.Collectors.joining;
 /**
  * Created by patricktwohig on 5/8/15.
  */
-public abstract class AbstractUserCommand implements Command {
+public abstract class AbstractUserSetupCommand implements SetupCommand {
 
     @Inject
-    private Setup setup;
+    @Named(STDOUT)
+    private PrintWriter stdout;
+
+    @Inject
+    private SecureReader secureReader;
 
     private final OptionParser optionParser = new OptionParser();
 
@@ -38,7 +48,7 @@ public abstract class AbstractUserCommand implements Command {
 
     private String password;
 
-    public AbstractUserCommand() {
+    public AbstractUserSetupCommand() {
 
         usernameOptionSpec = getOptionParser().accepts("user", "The user's login/username.  (ex. bobsmith)")
                 .withRequiredArg()
@@ -106,23 +116,23 @@ public abstract class AbstractUserCommand implements Command {
             optionSet = optionParser.parse(args);
             user = readOptions(optionSet);
         } catch (OptionException ex) {
-            optionParser.printHelpOn(System.err);
+            optionParser.printHelpOn(stdout);
             return;
-        } catch (Setup.ConsoleException ex) {
-            System.err.printf("\nFailed to Read Input: %s\n\n", ex.getMessage());
-            optionParser.printHelpOn(System.err);
+        } catch (ConsoleException ex) {
+            stdout.printf("\nFailed to Read Input: %s\n\n", ex.getMessage());
+            optionParser.printHelpOn(stdout);
             return;
         }
 
         try {
             writeUserToDatabase(optionSet);
         } catch (ValidationFailureException ex) {
-            System.err.println("Encountered validation failures.");
+            stdout.println("Encountered validation failures.");
             for (final ConstraintViolation<?> failure : ex.getConstraintViolations()) {
-                System.err.println(failure.getPropertyPath() + " - " + failure.getMessage());
+                stdout.println(failure.getPropertyPath() + " - " + failure.getMessage());
             }
         } catch (Exception ex) {
-            optionParser.printHelpOn(System.err);
+            optionParser.printHelpOn(stdout);
             throw ex;
         }
 
@@ -150,7 +160,7 @@ public abstract class AbstractUserCommand implements Command {
 
         if (Strings.isNullOrEmpty(password)) {
             final String prompt = String.format("Please enter password for user %s: ", user.getEmail());
-            password = setup.reads(prompt);
+            password = secureReader.reads(prompt);
         }
 
         return user;

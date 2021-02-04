@@ -1,10 +1,16 @@
-FROM jetty:9.4.26-jre8
+FROM openjdk:11.0-jdk
 
-ARG CODE_SERVE_WAR
+ARG CODE_SERVE_JAR
 
 USER root:root
-RUN mkdir -p "/opt/socialengine/script-repos"
-RUN chown -R jetty:jetty /opt/socialengine/script-repos
 
-USER jetty:jetty
-COPY $CODE_SERVE_WAR /var/lib/jetty/webapps/code-serve.war
+RUN useradd elements &&
+    mkdir -p "/opt/elements/bin" &&
+    mkdir -p "/opt/elements/conf" &&
+    mkdir -p "/opt/elements/script-repos" &&
+    mkdir -p "/opt/elements/script-storage" &&
+    chown -R elements:elements "/opt/elements"
+
+USER elements:elements
+
+COPY $CODE_SERVE_JAR /opt/elements/bin/main.jar
