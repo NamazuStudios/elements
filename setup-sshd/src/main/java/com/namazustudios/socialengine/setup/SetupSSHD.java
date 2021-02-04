@@ -15,6 +15,12 @@ public class SetupSSHD {
 
     public static final String SSH_HOST = "com.namazustudios.socialengine.setup.sshd.host";
 
+    public static final String HOST_KEY = "com.namazustudios.socialengine.setup.sshd.host.key";
+
+    public static final String HOST_CERTIFICATE = "com.namazustudios.socialengine.setup.sshd.host.certificate";
+
+    public static final String AUTHORIZED_KEYS = "com.namazustudios.socialengine.setup.sshd.authorized_keys";
+
     private static final Logger logger = LoggerFactory.getLogger(SetupSSHD.class);
 
     private final SshServer sshServer;

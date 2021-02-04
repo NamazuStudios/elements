@@ -18,28 +18,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.concurrent.Exchanger;
+import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionStage;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
-import static org.apache.commons.lang3.ArrayUtils.toArray;
 import static org.jline.reader.LineReader.Option.*;
 
 public class SetupShell implements SetupCommand, SecureReader {
 
     private static final Logger logger = LoggerFactory.getLogger(SetupShell.class);
 
+    private Thread thread;
+
     private final Terminal terminal;
 
     private final LineReader reader;
-
-    private final Thread thread = new Thread(this::run);
-
-    private final Exchanger<Exception> exceptionExchanger = new Exchanger<>();
 
     @Inject
     private Root root;
@@ -49,11 +50,8 @@ public class SetupShell implements SetupCommand, SecureReader {
     private VersionService versionService;
 
     @Inject
-    public SetupShell() throws IOException {
-        this(System.in, System.out);
-    }
-
-    public SetupShell(final InputStream stdin, final OutputStream stdout) throws IOException {
+    public SetupShell(@Named(STDIN) final InputStream stdin,
+                      @Named(STDOUT) final OutputStream stdout) throws IOException {
 
         final var attributes = new Attributes();
 
@@ -81,13 +79,41 @@ public class SetupShell implements SetupCommand, SecureReader {
 
     }
 
-    @Override
-    public void run(final String[] args) throws Exception {
+    public CompletionStage<Integer> start() {
+
+        if (thread != null) throw new IllegalStateException();
+
+        final var future = new CompletableFuture<Integer>();
+
+        thread = new Thread(() -> {
+            run(future);
+            future.complete(0);
+        });
 
         thread.start();
 
-        final var result = exceptionExchanger.exchange(null);
-        if (result != null) throw result;
+        return future.handleAsync((status, exception) -> {
+
+            if (exception instanceof CancellationException) {
+                thread.interrupt();
+            }
+
+            return status;
+
+        });
+
+    }
+
+    @Override
+    public void run(final String[] args) throws Exception {
+
+        final var future = start().toCompletableFuture();
+
+        try {
+            future.get();
+        } catch (ExecutionException ex) {
+            throw (Exception) ex.getCause();
+        }
 
     }
 
@@ -98,39 +124,39 @@ public class SetupShell implements SetupCommand, SecureReader {
     }
 
     public void close() throws Exception {
-        thread.interrupt();
-        thread.join();
+
+        if (thread != null) {
+            thread.interrupt();
+            thread.join();
+        }
+
+        thread = null;
+
     }
 
-    private void run() {
+    private void run(final CompletableFuture<Integer> completableFuture) {
 
-        try {
+        final var version = versionService.getVersion();
 
-            final var version = versionService.getVersion();
+        terminal.writer().println("Namazu Elements™ ©(2015 - 2021)");
+        terminal.writer().printf("Version: %s\n", version.getVersion());
+        terminal.writer().printf("Revision: %s\n", version.getRevision());
+        terminal.writer().printf("Timestamp: %s\n", version.getTimestamp());
 
-            terminal.writer().println("Namazu Elements™ ©(2015 - 2021)");
-            terminal.writer().printf("Version: %s\n", version.getVersion());
-            terminal.writer().printf("Revision: %s\n", version.getRevision());
-            terminal.writer().printf("Timestamp: %s\n", version.getTimestamp());
-
-            while(!interrupted()) {
-                try {
-                    processCommand();
-                } catch (EndOfFileException ex) {
-                    logger.debug("Got EOF", ex);
-                    exceptionExchanger.exchange(null);
-                    return;
-                } catch (Exception ex) {
-                    exceptionExchanger.exchange(ex);
-                    return;
-                }
+        while(!interrupted()) {
+            try {
+                processCommand();
+            } catch (EndOfFileException ex) {
+                logger.debug("Got EOF", ex);
+                completableFuture.complete(0);
+                return;
+            } catch (Exception ex) {
+                completableFuture.complete(-1);
+                return;
             }
-
-            exceptionExchanger.exchange(null);
-
-        } catch (InterruptedException ex) {
-            logger.error("Interrupted exchanging exception", ex);
         }
+
+        completableFuture.complete(0);
 
     }
 

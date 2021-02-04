@@ -36,4 +36,5 @@ node_modules
 /instance-id.txt
 /verbose.log
 /repositories/*
+/host_key
 

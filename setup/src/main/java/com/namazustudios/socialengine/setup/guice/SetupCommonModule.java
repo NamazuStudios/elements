@@ -8,10 +8,13 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
+import com.namazustudios.socialengine.service.BuildPropertiesVersionService;
+import com.namazustudios.socialengine.service.Unscoped;
+import com.namazustudios.socialengine.service.VersionService;
 import com.namazustudios.socialengine.setup.Setup;
 import ru.vyarus.guice.validator.ValidationModule;
 
-public class SetupCommonModule extends AbstractModule {
+public class  SetupCommonModule extends AbstractModule {
 
     @Override
     protected void configure() {
@@ -28,6 +31,10 @@ public class SetupCommonModule extends AbstractModule {
         install(new MongoDaoModule());
         install(new MongoSearchModule());
         install(new ValidationModule());
+
+        // Build properties.
+        bind(VersionService.class).to(BuildPropertiesVersionService.class).asEagerSingleton();
+        bind(VersionService.class).annotatedWith(Unscoped.class).to(BuildPropertiesVersionService.class);
 
     }
 

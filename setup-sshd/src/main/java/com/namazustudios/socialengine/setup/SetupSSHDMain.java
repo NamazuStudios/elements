@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.setup;
 
 import com.google.inject.Guice;
+import com.namazustudios.socialengine.setup.guice.SshServerModule;
+import com.namazustudios.socialengine.setup.guice.SetupCommonModule;
 
 import java.io.IOException;
 
@@ -9,8 +11,14 @@ public class SetupSSHDMain {
     private final SetupSSHD setup;
 
     public SetupSSHDMain(final String[] args) {
-        final var injector = Guice.createInjector();
+
+        final var injector = Guice.createInjector(
+            new SshServerModule(),
+            new SetupCommonModule()
+        );
+
         setup = injector.getInstance(SetupSSHD.class);
+
     }
 
     public void start() throws IOException {
@@ -28,7 +36,6 @@ public class SetupSSHDMain {
     public static void main(final String[] args) throws Exception {
         final var instance = new SetupSSHDMain(args);
         try {
-            instance.start();
             instance.run();
         } finally {
             instance.stop();
