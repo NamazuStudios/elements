@@ -2,8 +2,17 @@ FROM openjdk:11.0-jdk
 
 ENV DOCKERIZE_VERSION v0.6.1
 
+# Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
-ENV ENTRYPOINT_JAR "$ELEMENTS_HOME/bin/main.jar"
+
+# Sub Directories
+ENV ELEMENTS_BIN "$ELEMENTS_HOME/bin"
+ENV ELEMENTS_CONF "$ELEMENTS_HOME/conf"
+ENV ELEMENTS_SCRIPT_REPOS "$ELEMENTS_HOME/script-repos"
+ENV ELEMENTS_SCRIPT_STORAGE "$ELEMENTS_HOME/script-storage"
+
+# Entrypoint Jar File
+ENV ENTRYPOINT_JAR "$ELEMENTS_BIN/main.jar"
 
 USER root:root
 
@@ -19,4 +28,5 @@ RUN mkdir -p "$ELEMENTS_HOME/bin" && \
 
 USER elements:elements
 
-ENTRYPOINT ["java", "-jar", "$ENTRYPOINT_JAR"]
+WORKDIR $ELEMENTS_HOME
+ENTRYPOINT ["sh", "-c", "java -jar echo $ENTRYPOINT_JAR"]

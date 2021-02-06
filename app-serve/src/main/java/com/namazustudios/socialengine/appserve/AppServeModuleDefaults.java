@@ -11,6 +11,8 @@ import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREA
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_QUERY;
+import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_SERVERS;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
@@ -32,6 +34,8 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
+        properties.setProperty(SRV_QUERY, "_elements._tcp.localhost");
+        properties.setProperty(SRV_SERVERS, "");
         return properties;
     }
 

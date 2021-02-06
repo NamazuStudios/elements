@@ -6,6 +6,10 @@ import com.namazustudios.socialengine.rt.Subscription;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xbill.DNS.ExtendedResolver;
+import org.xbill.DNS.Lookup;
+import org.xbill.DNS.TextParseException;
+import org.xbill.DNS.Type;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -16,9 +20,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryService {
@@ -31,9 +38,13 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
     private static final TimeUnit DNS_LOOKUP_POLLING_RATE_UNITS = TimeUnit.SECONDS;
 
-    public static final String SRV_QUERY_NAME = "com.namazustudios.socialengine.rt.srv.query";
+    public static final String SRV_QUERY = "com.namazustudios.socialengine.rt.srv.query";
+
+    public static final String SRV_SERVERS = "com.namazustudios.socialengine.rt.srv.servers";
 
     private String srvQuery;
+
+    private String srvServers;
 
     private final AtomicReference<SrvDiscoveryContext> context = new AtomicReference<>();
 
@@ -92,8 +103,17 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
     }
 
     @Inject
-    public void setSrvQuery(@Named(SRV_QUERY_NAME) String srvQuery) {
+    public void setSrvQuery(@Named(SRV_QUERY) String srvQuery) {
         this.srvQuery = srvQuery;
+    }
+
+    public String getSrvServers() {
+        return srvServers;
+    }
+
+    @Inject
+    public void setSrvServers(@Named(SRV_SERVERS) String srvServers) {
+        this.srvServers = srvServers;
     }
 
     private class SrvDiscoveryContext implements ChangeNotifier.Listener<LookupResult>, ErrorHandler {
@@ -114,7 +134,12 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         public void start() {
 
-            dnsSrvResolver = DnsSrvResolvers.newBuilder()
+            var builder = DnsSrvResolvers.newBuilder();
+
+            final var servers = parseServers();
+            if (!servers.isEmpty()) builder = builder.servers(servers);
+
+            dnsSrvResolver = builder
                     .cachingLookups(true)
                     .dnsLookupTimeoutMillis(DNS_LOOKUP_TIMEOUT)
                 .build();
@@ -127,6 +152,10 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
             nodeChangeNotifier = dnsSrvWatcher.watch(getSrvQuery());
             nodeChangeNotifier.setListener(this, true);
 
+        }
+
+        private List<String> parseServers() {
+            return Stream.of(getSrvServers().split("[\\s,;:]+")).collect(toList());
         }
 
         public void stop() {
@@ -188,13 +217,15 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         private final LookupResult lookupResult;
 
-        public LookupResultInstanceHostInfo(LookupResult lookupResult) {
+        public LookupResultInstanceHostInfo(final LookupResult lookupResult) {
             this.lookupResult = lookupResult;
         }
 
         @Override
         public String getConnectAddress() {
-            return String.format("tcp://%s:%d", lookupResult.host(), lookupResult.port());
+            var host = lookupResult.host();
+            host = host.endsWith(".") ? host.substring(0, host.length() - 1) : host;
+            return String.format("tcp://%s:%d", host, lookupResult.port());
         }
 
         @Override
@@ -208,5 +239,14 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
         }
 
     }
+
+
+    public static void main(String[] args) throws Exception {
+        final var lookup = new Lookup("_elements._tcp.localhost", Type.SRV);
+        lookup.setResolver(new ExtendedResolver(new String[]{"192.168.1.1"}));
+        final var records = lookup.run();
+        System.out.println(records);
+    }
+
 
 }

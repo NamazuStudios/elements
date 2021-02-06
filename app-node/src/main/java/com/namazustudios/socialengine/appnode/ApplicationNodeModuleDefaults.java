@@ -18,7 +18,10 @@ import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCK
 import static com.namazustudios.socialengine.rt.remote.PersistentInstanceIdProvider.INSTANCE_ID_FILE;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_QUERY;
+import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_SERVERS;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
+import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.SPOTIFY_SRV;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
@@ -41,7 +44,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(INSTANCE_ID_FILE, "instance-id.txt");
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
-        properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
+        properties.setProperty(INSTANCE_DISCOVERY_SERVICE, SPOTIFY_SRV.toString());
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_NODE_MIN_CONNECTIONS, "10");
         properties.setProperty(JEROMQ_NODE_MAX_CONNECTIONS, "100");
@@ -55,7 +58,10 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(GIT_STORAGE_DIRECTORY, "repositories");
+        properties.setProperty(SRV_QUERY, "_elements._tcp.internal");
+        properties.setProperty(SRV_SERVERS, "");
         return properties;
     }
 
 }
+

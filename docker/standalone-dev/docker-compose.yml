@@ -9,6 +9,18 @@
 version: '3'
 services:
 
+  dnssrv:
+    image: andyshinn/dnsmasq:2.76
+  command:
+    - -W
+    - _elements._tcp.local,pod-1,80
+    - -W
+    - _http._tcp.router.lipe-routing.svc.cluster.local,pod-2,80
+    - -A
+    - /pod-1/10.0.0.1
+    - -A
+    - /pod-2/10.0.0.2
+
   redis:
     image: redis:4.0.1
     deploy:
@@ -105,7 +117,25 @@ services:
     volumes:
       - script-repos:/opt/socialengine/script-repos
 
-  app-node:
+  app-node-0:
+    build:
+      context: ./app-node
+    links:
+      - redis
+      - mongo
+    depends_on:
+      - mongo
+      - redis
+    deploy:
+      replicas: 1
+    networks:
+      - socialengine
+    ports:
+      - "28883:28883"
+    volumes:
+      - script-repos:/opt/socialengine/script-repos
+
+  app-node-1:
     build:
       context: ./app-node
     links:

@@ -10,6 +10,8 @@ import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREA
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_QUERY;
+import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_SERVERS;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
@@ -26,12 +28,14 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.put(API_CONTEXT, DEFAULT_API_CONTEXT);
         properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
-        properties.setProperty(HOST_INFO, "tcp://localhost:28883");
-        properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "");
-        properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
-        properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
-        properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
-        properties.setProperty(MAX_SOCKETS, "500000");
+        properties.put(HOST_INFO, "tcp://localhost:28883");
+        properties.put(JEROMQ_CLUSTER_BIND_ADDRESS, "");
+        properties.put(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
+        properties.put(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
+        properties.put(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
+        properties.put(MAX_SOCKETS, "500000");
+        properties.put(SRV_QUERY, "_elements._tcp.localhost");
+        properties.put(SRV_SERVERS, "");
         return properties;
     }
 
