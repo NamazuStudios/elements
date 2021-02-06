@@ -4,8 +4,6 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.appnode.Constants.CONTROL_REQUEST_TIMEOUT;
-import static com.namazustudios.socialengine.appnode.Constants.STORAGE_BASE_DIRECTORY;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.JEROMQ_NODE_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.JEROMQ_NODE_MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
@@ -35,10 +33,8 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(CONTROL_REQUEST_TIMEOUT, "1000");
         properties.setProperty(SCHEDULER_THREADS, Integer.toString(Runtime.getRuntime().availableProcessors()) + 1);
         properties.setProperty(HANDLER_TIMEOUT_MSEC, "180000");
-        properties.setProperty(STORAGE_BASE_DIRECTORY, "storage.xodus");
         properties.setProperty(INSTANCE_ID_FILE, "instance-id.txt");
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
