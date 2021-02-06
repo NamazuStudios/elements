@@ -29,4 +29,4 @@ RUN mkdir -p "$ELEMENTS_HOME/bin" && \
 USER elements:elements
 
 WORKDIR $ELEMENTS_HOME
-ENTRYPOINT ["sh", "-c", "java -jar echo $ENTRYPOINT_JAR"]
+ENTRYPOINT java -jar echo $ENTRYPOINT_JAR

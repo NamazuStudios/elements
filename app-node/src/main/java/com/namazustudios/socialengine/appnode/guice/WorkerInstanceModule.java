@@ -18,13 +18,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import static com.namazustudios.socialengine.rt.git.FilesystemGitLoader.getLegacyDirectory;
-import static java.nio.file.Files.createSymbolicLink;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 
@@ -67,7 +64,7 @@ public class WorkerInstanceModule extends PrivateModule {
                     final var appId = ApplicationId.forUniqueName(application.getId());
 
                     try {
-                        codeDirectory = gitLoader.getCodeDirectory(appId, dir -> gitLoader.getLegacyCodeDirectory(application.getId()));
+                        codeDirectory = gitLoader.getCodeDirectory(appId);
                     } catch (ApplicationCodeNotFoundException nfe) {
                         logger.info("Application code not found.  Skipping application {}", application.getName());
                         return null;

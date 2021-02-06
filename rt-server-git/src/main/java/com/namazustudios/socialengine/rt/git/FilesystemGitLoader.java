@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.*;
-import java.nio.file.FileSystemAlreadyExistsException;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Comparator;
@@ -30,19 +29,18 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
-import static com.google.common.io.Files.*;
+import static com.namazustudios.socialengine.rt.git.Constants.GIT_STORAGE_DIRECTORY;
 import static java.lang.String.format;
 import static java.lang.String.join;
-import static java.nio.file.Files.createTempDirectory;
+import static java.nio.file.Files.*;
 
 /**
  * A special class which will load an {@link ApplicationId}'s code to a local temporary directory where it can be
  * processed and run.
  *
  * The source of the {@link org.eclipse.jgit.lib.Repository} is a path on the file system, and therefore it clones from
- * a git repository stored elsewhere on disk.  This is specified using the {@link #GIT_STORAGE_DIRECTORY}
+ * a git repository stored elsewhere on disk.  This is specified using the {@link Constants#GIT_STORAGE_DIRECTORY}
  * configuration parameter.
  *
  * Note that the {@link GitLoader} interface essentially calls for unpacking of the {@link ApplicationId} code to a
@@ -52,8 +50,6 @@ import static java.nio.file.Files.createTempDirectory;
  * Created by patricktwohig on 8/19/17.
  */
 public class FilesystemGitLoader implements GitLoader {
-
-    public static final String GIT_STORAGE_DIRECTORY = "com.namazustudios.socialengine.rt.git.storage.directory";
 
     private static final String GIT_DIRECTORY = ".git";
 
@@ -80,41 +76,8 @@ public class FilesystemGitLoader implements GitLoader {
      *
      */
     public static File getBareStorageDirectory(final File parent, final ApplicationId applicationId) {
-        return getBareStorageDirectory(parent, applicationId, Function.identity());
-    }
-
-    /**
-     *
-     * Used by the {@link GitLoader} instances to determine the bare storage directory for a
-     * particular {@link ApplicationId}.  This derives the path in a unique and consistent
-     * manner.
-     *
-     * @param parent the parent directory as expressed by a {@link File}
-     * @param applicationId the {@link ApplicationId}
-     * @param failover a {@link Function<File,File>} which may be used to remap legacy storage directories
-     *
-     * @return a {@link File} representing the bare storage directory for the {@link ApplicationId}
-     *
-     */
-    public static File getBareStorageDirectory(final File parent,
-                                               final ApplicationId applicationId,
-                                               final Function<File, File> failover) {
-        final var directoryName = format("%s.%s", applicationId.asString(), GIT_SUFFIX);
-        final var gitDirectory = new File(parent, directoryName);
-        return gitDirectory.isDirectory() ? gitDirectory : failover.apply(gitDirectory);
-    }
-
-    /**
-     * When attempting to access a directory by legacy ID, this will generate the {@link File} representing the
-     * legacy ID scheme.
-     *
-     * @param parent the parent directory
-     * @param legacyDirectoryId the legacy directory ID
-     * @return the legacy directory id
-     */
-    public static File getLegacyDirectory(final File parent, final String legacyDirectoryId) {
-        final var directoryName = format("%s.%s", legacyDirectoryId, GIT_SUFFIX);
-        return new File(parent, directoryName);
+        final var gitDirectory = new File(parent, format("%s.%s", applicationId.asString(), GIT_SUFFIX)).toPath();
+        return gitDirectory.toFile();
     }
 
     @Override
@@ -164,32 +127,27 @@ public class FilesystemGitLoader implements GitLoader {
 
 
     @Override
-    public File getCodeDirectory(final ApplicationId applicationId, final Function<File, File> failover) {
+    public File getCodeDirectory(final ApplicationId applicationId) {
 
         final var lock = lockFor(applicationId);
 
         try {
             lock.lock();
-            return doGetCodeDirectory(applicationId, failover);
+            return doGetCodeDirectory(applicationId);
         } finally {
             lock.unlock();
         }
 
     }
 
-    @Override
-    public File getLegacyCodeDirectory(String legacyId) {
-        return getLegacyDirectory(getGitStorageDirectory(), legacyId);
-    }
-
     private Lock lockFor(final ApplicationId applicationId) {
         return applicationIdLockConcurrentMap.computeIfAbsent(applicationId.asString(), k -> new ReentrantLock());
     }
 
-    private File doGetCodeDirectory(final ApplicationId applicationId, Function<File, File> failover) {
+    private File doGetCodeDirectory(final ApplicationId applicationId) {
         final File workTree;
         workTree = applicationIdFileConcurrentMap.computeIfAbsent(applicationId.asString(), this::computeWorkTreeDirectory);
-        cloneIfNecessary(applicationId, workTree, failover);
+        cloneIfNecessary(applicationId, workTree);
         return workTree;
     }
 
@@ -215,7 +173,7 @@ public class FilesystemGitLoader implements GitLoader {
 
     }
 
-    private void cloneIfNecessary(final ApplicationId applicationId, final File workTree, Function<File, File> failover) {
+    private void cloneIfNecessary(final ApplicationId applicationId, final File workTree) {
 
         final FileRepositoryBuilder fileRepositoryBuilder = new FileRepositoryBuilder()
             .setWorkTree(workTree)
@@ -228,17 +186,15 @@ public class FilesystemGitLoader implements GitLoader {
                 applicationId.asString(),
                 workTree.getAbsolutePath());
         } catch (RepositoryNotFoundException ex) {
-            clone(applicationId, workTree, failover);
+            clone(applicationId, workTree);
         } catch (IOException ex) {
             throw new InternalException(ex);
         }
 
     }
 
-    private void clone(final ApplicationId applicationId,
-                       final File destinationDirectory,
-                       final Function<File, File> failover) {
-        try (final Git git = openCloneCommand(applicationId, destinationDirectory, failover).call()) {
+    private void clone(final ApplicationId applicationId, final File destinationDirectory) {
+        try (final Git git = openCloneCommand(applicationId, destinationDirectory).call()) {
 
             final List<Ref> branches = git.branchList().call();
             logger.info("Branches available [{}]", join(","), branches);
@@ -253,11 +209,9 @@ public class FilesystemGitLoader implements GitLoader {
         }
     }
 
-    private CloneCommand openCloneCommand(final ApplicationId applicationId,
-                                          final File destinationDirectory,
-                                          final Function<File, File> failover) {
+    private CloneCommand openCloneCommand(final ApplicationId applicationId, final File destinationDirectory) {
 
-        final var gitDirectory = getBareStorageDirectory(applicationId, failover);
+        final var gitDirectory = getBareStorageDirectory(applicationId);
 
         if (!gitDirectory.isDirectory()) {
             throw new ApplicationCodeNotFoundException("git directory not found for application: " + applicationId.asString());
@@ -292,9 +246,8 @@ public class FilesystemGitLoader implements GitLoader {
 
     }
 
-    private File getBareStorageDirectory(final ApplicationId applicationId,
-                                         final Function<File, File> failover) {
-        return getBareStorageDirectory(getGitStorageDirectory(), applicationId, failover);
+    private File getBareStorageDirectory(final ApplicationId applicationId) {
+        return getBareStorageDirectory(getGitStorageDirectory(), applicationId);
     }
 
     public File getGitStorageDirectory() {

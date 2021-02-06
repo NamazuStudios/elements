@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.codeserve;
 
-import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.git.FilesystemGitLoader;
+import com.namazustudios.socialengine.rt.git.Constants;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import org.eclipse.jgit.internal.storage.file.FileRepository;
 import org.eclipse.jgit.lib.Repository;
@@ -14,11 +13,12 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.git.Constants.GIT_STORAGE_DIRECTORY;
 import static com.namazustudios.socialengine.rt.git.FilesystemGitLoader.*;
-import static java.nio.file.Files.createSymbolicLink;
 
 /**
  * This loads an instance of {@link Repository} from a place on the filesystem.
@@ -50,12 +50,7 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
     private final File getStorageDirectoryForApplication(final Application application) throws ServiceMayNotContinueException {
 
         final var applicationId = ApplicationId.forUniqueName(application.getId());
-
-        final var repositoryDirectory = getBareStorageDirectory(
-            getGitStorageDirectory(),
-            applicationId,
-            dir -> getLegacyDirectory(getGitStorageDirectory(), application.getId())
-        );
+        final var repositoryDirectory = getBareStorageDirectory(getGitStorageDirectory(), applicationId);
 
         if (!repositoryDirectory.exists() && !repositoryDirectory.mkdirs()) {
             throw new ServiceMayNotContinueException("cannot create " + repositoryDirectory.getAbsolutePath());
@@ -73,7 +68,15 @@ public class FileSystemApplicationRepositoryResolver implements ApplicationRepos
 
     @Inject
     public void setGitStorageDirectory(@Named(GIT_STORAGE_DIRECTORY) File gitStorageDirectory) {
+
+        if (gitStorageDirectory.mkdirs()) {
+            logger.info("Created git storage directory {}", gitStorageDirectory);
+        } else {
+            logger.debug("Directory already exists {}", gitStorageDirectory);
+        }
+
         this.gitStorageDirectory = gitStorageDirectory;
+
     }
 
 }

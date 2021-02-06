@@ -45,31 +45,8 @@ public interface GitLoader {
      *
      * @param applicationId the {@link ApplicationId} instance
      *
-     * @return the {@link }
-     */
-    default File getCodeDirectory(ApplicationId applicationId) {
-        return getCodeDirectory(applicationId, Function.identity());
-    }
-
-    /**
-     * Gets the code directory for the supplied {@Link Application} and clones if necessary.  This will
-     * ensure that the latest branch, as specified by {@link #DEFAULT_MAIN_BRANCH} is checked out and current.
-     *
-     * The returned {@link File} will likely be a temporary live copy of the code backing the {@link ApplicationId}.
-     *
-     * @param applicationId the {@link ApplicationId} instance
-     * @param failover a failover remapping function which allows the calling code to remap the directory if the application is not found
-     *
      * @return the {@link File} to the git repository
      */
-    File getCodeDirectory(ApplicationId applicationId, Function<File, File> failover);
-
-    /**
-     * Gets the legacy code directory.
-     *
-     * @param legacyId the legacy application id
-     * @return
-     */
-    File getLegacyCodeDirectory(String legacyId);
+    File getCodeDirectory(ApplicationId applicationId);
 
 }
