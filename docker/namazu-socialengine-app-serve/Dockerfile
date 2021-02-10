@@ -1,3 +1,8 @@
-ARG APP_SERVE_JAR
 FROM namazu-socialengine-base:latest
-COPY $APP_SERVE_JAR $ELEMENTS_HOME/bin/main.jar
+
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
+
+EXPOSE 8083
+
+ENTRYPOINT ["java", "com.namazustudios.socialengine.appserve.AppServeMain"]

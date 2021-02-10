@@ -24,7 +24,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(HTTP_TUNNEL_PORT, "8080");
+        properties.setProperty(HTTP_TUNNEL_PORT, "8083");
         properties.setProperty(Constants.HTTP_TIMEOUT_MSEC, "180000");
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));

@@ -1,3 +1,8 @@
-ARG REST_JETTY_JAR
 FROM namazu-socialengine-base:latest
-COPY --chown=elements:elements $REST_JETTY_JAR $ENTRYPOINT_JAR
+
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
+
+EXPOSE 8081
+
+ENTRYPOINT ["java", "com.namazustudios.socialengine.rest.RestAPIMain"]

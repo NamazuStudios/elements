@@ -24,6 +24,11 @@
             <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>namazu-socialengine-base</artifactId>
             <version>${project.version}</version>
@@ -70,7 +75,7 @@
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>REST_JETTY_JAR=target/lib/rest-jetty-${project.version}-jar-with-dependencies.jar</argument>
+                        <argument>ELEMENTS_CLASSPATH=target/lib/*.jar</argument>
                         <argument>--tag</argument>
                         <argument>${project.artifactId}:latest</argument>
                         <argument>--tag</argument>

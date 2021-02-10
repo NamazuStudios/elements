@@ -1,3 +1,8 @@
-ARG APP_NODE_JAR
 FROM namazu-socialengine-base:latest
-COPY --chown=elements:elements $APP_NODE_JAR $ENTRYPOINT_JAR
+
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
+
+EXPOSE 28883
+
+ENTRYPOINT ["java", "com.namazustudios.socialengine.appnode.ApplicationNodeMain"]
