@@ -1,5 +1,5 @@
 
-# A docker-compose file which incorporates all necessary services that SocialEngine needs
+# A docker-compose file which incorporates all necessary services that elements needs
 # to run in development mode.  This does not include and security and exposes all ports
 # the outside world such that the user may connected to the various underlying services.
 #
@@ -14,7 +14,7 @@ services:
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "6379:6379"
 
@@ -23,7 +23,7 @@ services:
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "27017:27017"
 
@@ -31,7 +31,7 @@ services:
     build:
       context: ./setup
     networks:
-      - socialengine
+      - elements
     depends_on:
       - mongo
     links:
@@ -51,11 +51,11 @@ services:
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "8080:8080"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
   code-serve:
     build:
@@ -69,11 +69,11 @@ services:
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "8082:8080"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
   app-serve:
     build:
@@ -87,11 +87,11 @@ services:
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "8083:8080"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
   app-node:
     build:
@@ -105,14 +105,14 @@ services:
     deploy:
       replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "28883:28883"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
 networks:
-  socialengine:
+  elements:
 
 volumes:
   script-repos:

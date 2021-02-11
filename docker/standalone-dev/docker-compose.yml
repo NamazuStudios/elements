@@ -1,5 +1,5 @@
 
-# A docker-compose file which incorporates all necessary services that SocialEngine needs
+# A docker-compose file which incorporates all necessary services that elements needs
 # to run in development mode.  This does not include and security and exposes all ports
 # the outside world such that the user may connected to the various underlying services.
 #
@@ -10,29 +10,22 @@ version: '3'
 services:
 
   discovery:
-    image: andyshinn/dnsmasq:2.76
-    command:
-      - -d
-      - -W
-      - _elements._tcp.internal,app-node-0,28883,1
-      - -W
-      - _elements._tcp.internal,app-node-1,28884,1
-      - -W
-      - _mongodb._tcp.internal,mongo,27017
-    ports:
-      - 53/udp
+    build:
+      context: ./discovery
+    networks:
+      - elements
 
   redis:
     image: redis:4.0.1
     networks:
-      - socialengine
+      - elements
     ports:
       - "6379:6379"
 
   mongo:
     image: mongo:3.4.6
     networks:
-      - socialengine
+      - elements
     ports:
       - "27017:27017"
 
@@ -40,7 +33,7 @@ services:
     build:
       context: ./setup
     networks:
-      - socialengine
+      - elements
     depends_on:
       - mongo
     links:
@@ -52,7 +45,7 @@ services:
     depends_on:
       - api
     networks:
-      - socialengine
+      - elements
     ports:
       - "8080:8080"
 
@@ -66,11 +59,11 @@ services:
       - mongo
       - redis
     networks:
-      - socialengine
+      - elements
     ports:
       - "8081:8081"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
   code-serve:
     build:
@@ -82,11 +75,11 @@ services:
       - mongo
       - redis
     networks:
-      - socialengine
+      - elements
     ports:
       - "8082:8082"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
   app-serve:
     build:
@@ -98,11 +91,11 @@ services:
       - mongo
       - redis
     networks:
-      - socialengine
+      - elements
     ports:
       - "8083:8083"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
   app-node-0:
     build:
@@ -114,11 +107,11 @@ services:
       - mongo
       - redis
     networks:
-      - socialengine
+      - elements
     ports:
       - "28883:28883"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
   app-node-1:
     build:
@@ -130,14 +123,14 @@ services:
       - mongo
       - redis
     networks:
-      - socialengine
+      - elements
     ports:
       - "28884:28883"
     volumes:
-      - script-repos:/opt/socialengine/script-repos
+      - script-repos:/opt/elements/script-repos
 
 networks:
-  socialengine:
+  elements:
 
 volumes:
   script-repos:

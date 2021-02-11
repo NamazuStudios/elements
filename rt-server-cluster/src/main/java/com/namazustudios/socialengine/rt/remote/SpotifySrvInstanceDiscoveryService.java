@@ -133,11 +133,19 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         public void start() {
 
+            logger.info("Using FQDN {}", getSrvQuery());
+
             final var builder = new HostList()
                 .with(getSrvServers())
                 .get()
-                .map(hosts -> DnsSrvResolvers.newBuilder().servers(hosts))
-                .orElse(DnsSrvResolvers.newBuilder());
+                .map(hosts -> {
+                    logger.info("Using DNS Hosts {}", hosts);
+                    return DnsSrvResolvers.newBuilder().servers(hosts);
+                })
+                .orElseGet(() -> {
+                    logger.info("Using default DNS Server.");
+                    return DnsSrvResolvers.newBuilder();
+                });
 
             dnsSrvResolver = builder
                     .cachingLookups(true)
@@ -152,10 +160,6 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
             nodeChangeNotifier = dnsSrvWatcher.watch(getSrvQuery());
             nodeChangeNotifier.setListener(this, true);
 
-        }
-
-        private List<String> parseServers() {
-            return Stream.of(getSrvServers().split("[\\s,;:]+")).collect(toList());
         }
 
         public void stop() {
@@ -239,14 +243,5 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
         }
 
     }
-
-
-    public static void main(String[] args) throws Exception {
-        final var lookup = new Lookup("_elements._tcp.localhost", Type.SRV);
-        lookup.setResolver(new ExtendedResolver(new String[]{"192.168.1.1"}));
-        final var records = lookup.run();
-        System.out.println(records);
-    }
-
 
 }

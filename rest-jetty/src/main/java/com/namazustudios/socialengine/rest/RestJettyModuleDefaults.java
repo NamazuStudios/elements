@@ -34,7 +34,7 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.put(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.put(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.put(MAX_SOCKETS, "500000");
-        properties.put(SRV_QUERY, "_elements._tcp.localhost");
+        properties.put(SRV_QUERY, "_elements._tcp.internal");
         properties.put(SRV_SERVERS, "");
         return properties;
     }

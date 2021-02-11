@@ -26,7 +26,7 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoClientProvider.class);
 
-    public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.client.uri";
+    public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.uri";
 
     private String mongoDbUri;
 

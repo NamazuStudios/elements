@@ -1,8 +1,6 @@
-ARG SETUP_JAR
-
 FROM namazu-socialengine-base:latest
-COPY --chown=elements:elements $SETUP_JAR $ENTRYPOINT_JAR
 
-# When running as command, this drops you into a shell to service the isntance
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
 
-CMD ["java", "-jar", "$ENTRYPOINT_JAR", "shell"]
+ENTRYPOINT ["java", "com.namazustudios.socialengine.setup.Setup"]

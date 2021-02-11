@@ -34,7 +34,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
-        properties.setProperty(SRV_QUERY, "_elements._tcp.localhost");
+        properties.setProperty(SRV_QUERY, "_elements._tcp.internal");
         properties.setProperty(SRV_SERVERS, "");
         return properties;
     }
