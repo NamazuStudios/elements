@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
 import com.namazustudios.socialengine.rt.git.GitApplicationBootstrapperModule;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
+import com.namazustudios.socialengine.service.guice.RedissonClientModule;
 import ru.vyarus.guice.validator.ValidationModule;
 
 import java.util.Properties;
@@ -24,7 +25,8 @@ public class CodeServeModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new ConfigurationModule(configurationSupplier));
-        install(new RedisModule());
+//        install(new RedisModule());
+        install(new RedissonClientModule());
         install(new ServicesModule());
         install(new MongoCoreModule());
         install(new MongoDaoModule());

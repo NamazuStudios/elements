@@ -99,7 +99,7 @@
         <jackson.version>2.12.0</jackson.version>
         <bson4jackson.version>2.4.0</bson4jackson.version>
         <reflections.version>0.9.12</reflections.version>
-        <swagger.version>1.5.13</swagger.version>
+        <swagger.version>1.6.2</swagger.version>
         <rocoto.version>6.2</rocoto.version>
         <dozer.version>6.0.0</dozer.version>
         <hibernate.validator.version>6.1.0.Final</hibernate.validator.version>

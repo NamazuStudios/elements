@@ -55,7 +55,7 @@ public interface Constants {
     /**
      * The default property file to configure the server.
      */
-    String DEFAULT_PROPERTIES_FILE = "elements-configuration.properties";
+    String DEFAULT_PROPERTIES_FILE = "elements.properties";
 
     /**
      * The system property which defines the configuration file path

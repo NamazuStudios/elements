@@ -97,6 +97,11 @@
             <artifactId>javax.el</artifactId>
             <version>${javax.el.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>service-guice</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

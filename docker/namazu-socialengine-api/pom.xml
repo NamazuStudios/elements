@@ -21,7 +21,6 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rest-jetty</artifactId>
             <version>${project.version}</version>
-            <classifier>jar-with-dependencies</classifier>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>

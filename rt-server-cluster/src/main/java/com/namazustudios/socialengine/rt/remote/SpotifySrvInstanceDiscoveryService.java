@@ -3,12 +3,12 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.AsyncPublisher;
 import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
 import com.namazustudios.socialengine.rt.Subscription;
+import com.namazustudios.socialengine.rt.util.HostList;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
-import org.xbill.DNS.TextParseException;
 import org.xbill.DNS.Type;
 
 import javax.inject.Inject;
@@ -20,7 +20,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
@@ -134,10 +133,11 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         public void start() {
 
-            var builder = DnsSrvResolvers.newBuilder();
-
-            final var servers = parseServers();
-            if (!servers.isEmpty()) builder = builder.servers(servers);
+            final var builder = new HostList()
+                .with(getSrvServers())
+                .get()
+                .map(hosts -> DnsSrvResolvers.newBuilder().servers(hosts))
+                .orElse(DnsSrvResolvers.newBuilder());
 
             dnsSrvResolver = builder
                     .cachingLookups(true)
