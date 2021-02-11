@@ -24,7 +24,6 @@
         <module>mongo-dao</module>
         <module>dao</module>
         <module>setup</module>
-        <module>rest-war</module>
         <module>rest-jetty</module>
         <module>guice</module>
         <module>rest-guice</module>
@@ -65,7 +64,6 @@
         <module>docker</module>
         <module>code-serve</module>
         <module>code-serve-guice</module>
-        <module>code-serve-war</module>
         <module>code-serve-jetty</module>
         <module>app-serve</module>
         <module>app-serve-testkit</module>
