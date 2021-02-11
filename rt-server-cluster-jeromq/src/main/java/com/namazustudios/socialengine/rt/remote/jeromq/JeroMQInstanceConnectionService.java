@@ -27,14 +27,13 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.NO_SUCH_NODE_ROUTE;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.function.Predicate.not;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toUnmodifiableList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
@@ -46,6 +45,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     public static final String JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS =
         "com.namazustudios.socialengine.rt.remote.jeromq.connection.service.refresh.interval.sec";
+
+    private static final long REPORT_INTERVAL_SECONDS = 15;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
@@ -268,14 +269,52 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 getRefreshIntervalInSeconds(),
                 SECONDS);
 
+            scheduler.scheduleWithFixedDelay(
+                this::logStatus,
+                0,
+                REPORT_INTERVAL_SECONDS,
+                SECONDS);
+
+        }
+
+        private void logStatus() {
+
+            if (logger.isInfoEnabled()) {
+
+                final var known = getInstanceDiscoveryService()
+                    .getKnownHosts()
+                    .stream()
+                    .map(Object::toString)
+                    .collect(joining(","));
+
+                final var active = rwGuard.computeRO(c -> this.active
+                    .keySet()
+                    .stream()
+                    .map(Object::toString)
+                    .collect(joining(","))
+                );
+
+                final var pending = rwGuard.computeRO(c -> this.pending
+                    .keySet()
+                    .stream()
+                    .map(Object::toString)
+                    .collect(joining(","))
+                );
+
+                logger.info("\nKnown Hosts [{}]\nPending[{}]\nActive [{}]", known, pending, active);
+
+            }
+
         }
 
         private void bgRefresh() {
+
             getInstanceDiscoveryService()
                 .getKnownHosts()
                 .stream()
                 .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
                 .forEach(this::createNewConnectionIfAbsent);
+
         }
 
         public void createNewConnectionIfAbsent(final InstanceHostInfo instanceHostInfo) {
@@ -315,6 +354,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 // node and formally establish the route to the node. This way, we know the node ID and can associate
                 // its IP/endpoint address.
 
+                logger.info("Fetching instance status for {}", instanceHostInfo);
+
                 return rClient.getInstanceStatus(response -> {
 
                     final InstanceStatus status;
@@ -322,6 +363,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     try {
                         // We first attempt to get the status from the socket.
                         status = response.get();
+                        logger.info("Got status. {} -> {}", instanceHostInfo, status);
                     } catch (Exception ex) {
                         // If that fails we log it, close the client, as well as use the write lock to both remove
                         // the pending request. We also return here to bail out from processing further.
@@ -339,7 +381,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 });
 
             }));
-
         }
 
         private void openRouteToMasterNode(final InstanceHostInfo instanceHostInfo,
@@ -351,6 +392,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             final var instanceId = instanceStatus.getInstanceId();
             final var masterNodeId = forMasterNode(instanceId);
             final var instanceConnectAddress = instanceHostInfo.getConnectAddress();
+
+            logger.info("Opening route to master node @{}", instanceHostInfo);
 
             // Knowing the host information, we use the local control client to tell the local routing server to connect
             // to the instance. This opens up the route to the node such that this instance may see it and other clients
@@ -364,6 +407,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     // We attempt to fetch the newly created connect address. This can be used to create the permanent
                     // connection through this server.
                     masterNodeConnectAddress = response.get();
+                    logger.info("Obtained master node connect address {}", masterNodeConnectAddress);
                 } catch (Exception ex) {
                     logger.warn("Failed to open route to master node {} -> {}", masterNodeId, instanceConnectAddress);
                     rwGuard.rw(condition -> pending.remove(instanceHostInfo));
@@ -400,6 +444,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 // add some checks to ensure that this is correctly processed.
 
                 return active.compute(instanceHostInfo, (nfo, existing) -> {
+
+                    logger.info("Activating connection for {}", nfo);
 
                     if (existing != null) return existing;
 

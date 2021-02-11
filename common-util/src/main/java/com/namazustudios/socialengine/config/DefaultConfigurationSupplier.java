@@ -7,8 +7,10 @@ import org.slf4j.LoggerFactory;
 import java.io.*;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -27,6 +29,10 @@ import static java.lang.System.getenv;
 public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfigurationSupplier.class);
+
+    private static final String PROPERTY_PREFIX = "com.namazustudios";
+
+    private static final String ENVIRONMENT_PREFIX = "ELEMENTS";
 
     private final Properties properties;
 
@@ -159,15 +165,30 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         this.properties = new Properties(defaultProperties);
         this.properties.putAll(properties);
 
-        final StringBuilder sb = new StringBuilder();
-        sb.append("Application Properties:\n");
-        properties.forEach((k, v) -> sb.append(format("\t%s=%s\n", k, v)));
-        logger.info("{}\n", sb.toString());
+        final var sb = new StringBuilder();
+
+        final Predicate<Map.Entry<Object, Object>> filter = e ->
+            e.getKey().toString().startsWith(PROPERTY_PREFIX) ||
+            e.getKey().toString().startsWith(ENVIRONMENT_PREFIX);
+
+        sb.append("\nApplication Properties:\n");
+        properties
+            .entrySet()
+            .stream()
+            .filter(filter)
+            .forEach(e -> sb.append(format("\t%s=%s\n", e.getKey(), e.getValue())));
 
         sb.append("Default Properties:\n");
         defaultProperties.forEach((k, v) -> sb.append(format("\t%s=%s\n", k, v)));
-        logger.info("{}\n", sb.toString());
 
+        sb.append("System Properties (Included in Application Properties):\n");
+        properties
+            .entrySet()
+            .stream()
+            .filter(filter.negate())
+            .forEach(e -> sb.append(format("\t%s=%s\n", e.getKey(), e.getValue())));
+
+        logger.info("{}\n", sb.toString());
     }
 
     @Override

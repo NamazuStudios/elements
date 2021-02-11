@@ -242,6 +242,15 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
             return InstanceHostInfo.hashCode(this);
         }
 
+        @Override
+        public String toString() {
+            return format("SRV Record %s:%d %d %d",
+                lookupResult.host(),
+                lookupResult.port(),
+                lookupResult.priority(),
+                lookupResult.weight()
+            );
+        }
     }
 
 }

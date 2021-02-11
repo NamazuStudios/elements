@@ -12,8 +12,8 @@ EXPOSE 53/udp
 
 ENTRYPOINT [ \
     "dockerize", "-timeout", "1m", \
-    "-wait", "tcp://redis:6379", \
-    "-wait", "tcp://mongo:27017", \
+    "-wait", "tcp://app-node-0:28883", \
+    "-wait", "tcp://app-node-1:28883", \
     "dnsmasq", "--keep-in-foreground", \
     "-W", "_elements._tcp.internal,app-node-0,28883,1", \
     "-W", "_elements._tcp.internal,app-node-1,28883,1"\
