@@ -68,6 +68,13 @@ public interface Context {
     TaskContext getTaskContext();
 
     /**
+     * Gets the {@link EventContext}.
+     *
+     * @return the {@link EventContext}
+     */
+    EventContext getEventContext();
+
+    /**
      * Gets the {@link ManifestContext} which provides metadata to about the application to the rest of the application.
      *
      * @return the {@link ManifestContext}

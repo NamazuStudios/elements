@@ -4,6 +4,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.goods.Item;

@@ -23,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static com.namazustudios.socialengine.rt.EventContext.EVENT_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static java.lang.String.format;
 import static java.lang.Thread.sleep;
@@ -49,6 +50,7 @@ public class SerialStressTest {
                 bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
                 bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
                 bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
+                bind(Long.class).annotatedWith(named(EVENT_TIMEOUT_MSEC)).toInstance(90l);
 
             }
         });

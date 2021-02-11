@@ -295,14 +295,14 @@ public class ApplicationDocumentationResource {
             }).forEach(parameters::add);
 
         httpOperation.getParameters()
-            .entrySet()
-            .stream()
-            .map(entry -> {
-                final QueryParameter parameter = new QueryParameter();
-                parameter.setName(entry.getKey());
-                parameter.setType(entry.getValue().name());
-                return parameter;
-            }).forEach(parameters::add);
+                .entrySet()
+                .stream()
+                .map(entry -> {
+                    final QueryParameter parameter = new QueryParameter();
+                    parameter.setName(entry.getKey());
+                    parameter.setType(entry.getValue().getType().name());
+                    return parameter;
+                }).forEach(parameters::add);
 
         return parameters;
 

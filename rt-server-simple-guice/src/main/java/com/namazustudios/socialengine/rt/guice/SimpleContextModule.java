@@ -3,12 +3,9 @@ package com.namazustudios.socialengine.rt.guice;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
-import com.namazustudios.socialengine.rt.ResourceLockService;
 import com.namazustudios.socialengine.rt.SimpleContext;
-import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.Context.LOCAL;
 
 public class SimpleContextModule extends PrivateModule {
 
@@ -27,6 +24,7 @@ public class SimpleContextModule extends PrivateModule {
     /**
      * Specifies the default contexts and services.
      *
+     * @param contextName the {@link Context} name
      * @return this instance
      */
     public SimpleContextModule withDefaultContexts() {
@@ -48,6 +46,7 @@ public class SimpleContextModule extends PrivateModule {
     public SimpleContextModule withSchedulerContextModules(final com.google.inject.Module ... modules) {
         bindSchedulerContext = () -> { for (final com.google.inject.Module m : modules) install(m); };
         return this;
+
     }
 
     @Override

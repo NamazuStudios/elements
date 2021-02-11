@@ -1,0 +1,70 @@
+package com.namazustudios.socialengine.dao.mongo.model;
+
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Indexed;
+import org.mongodb.morphia.annotations.Property;
+import org.mongodb.morphia.annotations.Reference;
+
+import java.sql.Timestamp;
+
+public class MongoDeployment {
+
+    @Id
+    private ObjectId objectId;
+
+    @Property
+    private String version;
+
+    @Property
+    private String revision;
+
+    @Indexed
+    @Property
+    private Timestamp createdAt;
+
+    @Indexed
+    @Reference
+    private MongoApplication application;
+
+    public ObjectId getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
+    }
+
+    public String getVersion() {
+        return version;
+    }
+
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getRevision() {
+        return revision;
+    }
+
+    public void setRevision(String revision) {
+        this.revision = revision;
+    }
+
+    public Timestamp getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(Timestamp createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public MongoApplication getApplication() {
+        return application;
+    }
+
+    public void setApplication(MongoApplication application) {
+        this.application = application;
+    }
+}

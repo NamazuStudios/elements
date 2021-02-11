@@ -39,13 +39,13 @@ public class DefaultClient implements Client, IncomingNetworkOperations  {
 
     private final int maxPendingRequests;
 
-    private final EventService eventService;
+    private final EventServiceOld eventService;
 
     private final OutgoingNetworkOperations outgoingNetworkOperations;
 
     @Inject
     public DefaultClient(@Named(MAX_PENDING_REQUESTS) final int maxPendingRequests,
-                         final EventService eventService,
+                         final EventServiceOld eventService,
                          final OutgoingNetworkOperations outgoingNetworkOperations) {
         this.maxPendingRequests = maxPendingRequests;
         this.eventService = eventService;

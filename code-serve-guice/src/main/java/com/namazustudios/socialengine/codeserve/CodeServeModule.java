@@ -4,12 +4,10 @@ import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
+import com.namazustudios.socialengine.dao.rt.guice.RTGitBootstrapModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
-import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
-import com.namazustudios.socialengine.rt.git.GitApplicationBootstrapperModule;
-import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
-import com.namazustudios.socialengine.service.guice.RedissonClientModule;
-import ru.vyarus.guice.validator.ValidationModule;
+import org.apache.bval.guice.ValidationModule;
 
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -25,7 +23,6 @@ public class CodeServeModule extends AbstractModule {
     @Override
     protected void configure() {
         install(new ConfigurationModule(configurationSupplier));
-//        install(new RedisModule());
         install(new RedissonClientModule());
         install(new ServicesModule());
         install(new MongoCoreModule());
@@ -34,11 +31,8 @@ public class CodeServeModule extends AbstractModule {
         install(new ValidationModule());
         install(new GitSecurityModule());
         install(new GitServletModule());
-        install(new FilesystemGitLoaderModule());
+        install(new RTFilesystemGitLoaderModule());
+        install(new RTGitBootstrapModule());
         install(new FileSystemCodeServeModule());
-        install(new BootstrapResourcesModule());
-        install(new GitApplicationBootstrapperModule());
-        install(new ClusterContextFactoryModule());
     }
-
 }

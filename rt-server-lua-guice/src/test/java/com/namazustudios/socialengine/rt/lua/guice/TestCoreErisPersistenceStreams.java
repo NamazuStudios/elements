@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
@@ -22,7 +23,11 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
+import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
+import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static java.util.UUID.randomUUID;
+import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
 @Guice(modules = ErisPersistenceTestModule.class)
@@ -62,21 +67,20 @@ public class TestCoreErisPersistenceStreams {
     @Test(dataProvider = "allLuaResources", invocationCount = 10)
     public void testPersistUnpersist(final String moduleName) throws IOException {
 
-        logger.debug("Testing Persistence for {}", moduleName);
+        logger.info("Testing Persistence for {}", moduleName);
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final byte[] bytes;
 
-        try (final var fos = new FileOutputStream(tempFile.toFile());
-             final var bos = new BufferedOutputStream(fos);
-             final var resource = getResourceLoader().load(moduleName)) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load(moduleName)) {
             resource.setVerbose(true);
             resource.serialize(bos);
+            bytes = bos.toByteArray();
         }
 
-        try (final var fis = new FileInputStream(tempFile.toFile());
-             final var bis = new BufferedInputStream(fis);
-             final var resource = getResourceLoader().load(bis)) {
-            logger.debug("Successfully loaded {}", resource);
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             final Resource resource = getResourceLoader().load(bis)) {
+            logger.info("Successfully loaded {}", resource);
         }
 
     }
@@ -84,11 +88,10 @@ public class TestCoreErisPersistenceStreams {
     @Test
     public void testIocIsRestoredAfterUnpersist() throws IOException {
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final byte[] bytes;
 
-        try (final var fos = new FileOutputStream(tempFile.toFile());
-             final var bos = new BufferedOutputStream(fos);
-             final var resource = getResourceLoader().load("test.ioc_resolve")) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -102,12 +105,12 @@ public class TestCoreErisPersistenceStreams {
 
             resource.setVerbose(true);
             resource.serialize(bos);
+            bytes = bos.toByteArray();
 
         }
 
-        try (final var fis = new FileInputStream(tempFile.toFile());
-             final var bis = new BufferedInputStream(fis);
-             final var resource = getResourceLoader().load(bis, true)) {
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             final Resource resource = getResourceLoader().load(bis, true)) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -126,11 +129,10 @@ public class TestCoreErisPersistenceStreams {
     @Test
     public void testIocProviderIsRestoredAfterUnpersist() throws IOException {
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final byte[] bytes;
 
-        try (final var fos = new FileOutputStream(tempFile.toFile());
-             final var bos = new BufferedOutputStream(fos);
-             final var resource = getResourceLoader().load("test.ioc_resolve")) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -144,12 +146,12 @@ public class TestCoreErisPersistenceStreams {
 
             resource.setVerbose(true);
             resource.serialize(bos);
+            bytes = bos.toByteArray();
 
         }
 
-        try (final var fis = new FileInputStream(tempFile.toFile());
-             final var bis = new BufferedInputStream(fis);
-             final var resource = getResourceLoader().load(bis, true)) {
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+             final Resource resource = getResourceLoader().load(bis, true)) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();
@@ -168,39 +170,33 @@ public class TestCoreErisPersistenceStreams {
     @Test(threadPoolSize = 100, invocationCount = 100)
     public void testUpvaluesArePersisted() throws Exception {
 
-        final var original = new DummyObject();
-        final var tempFile = testTemporaryFiles.createTempFile();
+        byte[] bytes;
+        final Set<TaskId> tasks;
+        final DummyObject original = new DummyObject();
 
-        try (final var fos = new FileOutputStream(tempFile.toFile());
-             final var bos = new BufferedOutputStream(fos);
-             final var resource = getResourceLoader().load("test.persist_upvalue")) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load("test.persist_upvalue")) {
 
             resource.getMethodDispatcher("set_upval")
                     .params(original)
                     .dispatch(o -> assertNull(o), ex -> fail("No error expected."));
 
-            resource.getTasks();
+            tasks = resource.getTasks();
             resource.serialize(bos);
+            bytes = bos.toByteArray();
 
         }
 
-        var toRead = tempFile;
-        var toWrite = testTemporaryFiles.createTempFile();
-
-        for (int i = 0; i < 100; ++i) try (final var fis = new FileInputStream(toRead.toFile());
-                                           final var bis = new BufferedInputStream(fis);
-                                           final var resource = getResourceLoader().load(bis);
-                                           final var fos = new FileOutputStream(toWrite.toFile());
-                                           final var bos = new BufferedOutputStream(fos)) {
+        for (int i = 0; i < 100; ++i) try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                           final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
+                                           final Resource resource = getResourceLoader().load(bis)) {
 
             resource.getMethodDispatcher("assert_upval")
                     .params()
                     .dispatch(o -> assertEquals(original, o), ex -> fail("No error expected."));
 
             resource.serialize(bos);
-
-            toRead = toWrite;
-            toWrite = testTemporaryFiles.createTempFile();
+            bytes = bos.toByteArray();
 
         }
 
@@ -209,14 +205,13 @@ public class TestCoreErisPersistenceStreams {
     @Test
     public void testCoroutinesAreRestored() throws IOException {
 
+        final byte[] bytes;
+
         final TaskId taskId;
         final Set<TaskId> taskIdSet;
 
-        final var tempFile = testTemporaryFiles.createTempFile();
-
-        try (final var fos = new FileOutputStream(tempFile.toFile());
-             final var bos = new BufferedOutputStream(fos);
-             final var resource = getResourceLoader().load("test.simple_yield")) {
+        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
+             final Resource resource = getResourceLoader().load("test.simple_yield")) {
 
             final AtomicReference<String> taskIdAtomicReference = new AtomicReference<>();
 
@@ -233,11 +228,11 @@ public class TestCoreErisPersistenceStreams {
 
             resource.setVerbose(true);
             resource.serialize(bos);
+            bytes = bos.toByteArray();
 
         }
 
-        try (final var fis = new FileInputStream(tempFile.toFile());
-             final var bis = new BufferedInputStream(fis);
+        try (final ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
              final Resource resource = getResourceLoader().load(bis, true)) {
             assertEquals(resource.getTasks(), taskIdSet);
             final Set<TaskId> restoredIdSet = resource.getTasks();
@@ -252,8 +247,35 @@ public class TestCoreErisPersistenceStreams {
     }
 
     @Inject
-    public void setResourceLoader(final ResourceLoader resourceLoader) {
+    public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
+    }
+
+    public Context getContext() {
+        return context;
+    }
+
+    @Inject
+    public void setContext(Context context) {
+        this.context = context;
+    }
+
+    public static class Module extends AbstractModule {
+
+        @Override
+        protected void configure() {
+
+            install(new LuaModule());
+            install(new SimpleContextModule());
+
+            bind(Client.class).toInstance(mock(Client.class));
+            bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
+            bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
+            bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
+            bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
+
+        }
+
     }
 
     private static final class DummyObject implements Serializable {

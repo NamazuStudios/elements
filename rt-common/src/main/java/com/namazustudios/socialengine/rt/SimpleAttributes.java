@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 
 import java.io.Serializable;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.BiPredicate;
 
 import static java.util.Collections.emptySet;

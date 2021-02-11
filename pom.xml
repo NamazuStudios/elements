@@ -55,6 +55,7 @@
         <module>rt-server-lua-guice</module>
         <module>rt-server-lua-stress-tests</module>
         <module>rt-client</module>
+        <module>rt-dao</module>
         <module>rt-http-servlet</module>
         <module>rt-fst</module>
         <module>rt-fst-guice</module>
@@ -68,6 +69,7 @@
         <module>app-serve</module>
         <module>app-serve-testkit</module>
         <module>app-node</module>
+        <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>
@@ -91,6 +93,7 @@
         <jersey.version>2.32</jersey.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <lucene.version>7.2.0</lucene.version>
+        <mongo.java.driver.version>3.4.0</mongo.java.driver.version>
         <testng.version>6.13.1</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>3.0.0-M5</surefire.version>

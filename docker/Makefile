@@ -18,6 +18,7 @@ APP_SERVE_JAR=target/lib/app-serve-$(MAVEN_PROJECT_VERSION)-jar-with-dependencie
 CODE_SERVE_WAR=target/lib/code-serve-war-$(MAVEN_PROJECT_VERSION).war
 SETUP_JAR=target/lib/setup-$(MAVEN_PROJECT_VERSION)-jar-with-dependencies.jar
 WEB_UI_DIR=target/lib/dist
+CDN_SERVE_JAR=target/lib/cdn-serve-jetty-$(MAVEN_PROJECT_VERSION)-jar-with-dependencies.jar
 
 push:
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-api
@@ -26,6 +27,7 @@ push:
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-code-serve
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-setup
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-ui
+	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-cdn-serve
 
 revision: login
 	$(DOCKER_BUILD) namazu-socialengine-api \
@@ -58,6 +60,11 @@ revision: login
 		--tag namazu-socialengine-ui:$(TAG) \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG) \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG_SHORT)
+	$(DOCKER_BUILD) namazu-socialengine-cdn-serve \
+		--build-arg CDN_SERVE_JAR=$(CDN_SERVE_JAR) \
+		--tag namazu-socialengine-cdn-serve:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-cdn-serve:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-cdn-serve:$(TAG_SHORT)
 
 latest: login
 	$(DOCKER_BUILD) namazu-socialengine-api \
@@ -84,6 +91,10 @@ latest: login
 		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
 		--tag namazu-socialengine-ui:latest \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:latest
+	$(DOCKER_BUILD) namazu-socialengine-cdn-serve \
+		--build-arg CDN_SERVE_JAR=$(CDN_SERVE_JAR) \
+		--tag namazu-socialengine-cdn-serve:latest \
+		--tag docker.namazustudios.net/namazu-socialengine-cdn-serve:latest
 
 login:
 	- echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net

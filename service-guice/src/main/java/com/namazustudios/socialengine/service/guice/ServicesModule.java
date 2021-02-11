@@ -16,6 +16,8 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
+import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
+import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
 import com.namazustudios.socialengine.service.friend.FriendServiceProvider;
 import com.namazustudios.socialengine.service.gameon.*;
@@ -124,6 +126,10 @@ public class ServicesModule extends PrivateModule {
         bind(ProfileService.class)
             .toProvider(ProfileServiceProvider.class)
             .in(scope);
+
+        bind(FollowerService.class)
+                .toProvider(FollowerServiceProvider.class)
+                .in(scope);
 
         bind(MatchService.class)
             .toProvider(MatchServiceProvider.class)
@@ -316,6 +322,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserProfileService.class);
 
+        bind(FollowerService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserFollowerService.class);
+
         bind(ProfileOverrideService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserProfileOverrideService.class);
@@ -399,6 +409,7 @@ public class ServicesModule extends PrivateModule {
         expose(IosApplicationConfigurationService.class);
         expose(GooglePlayApplicationConfigurationService.class);
         expose(ProfileService.class);
+        expose(FollowerService.class);
         expose(ProfileOverrideService.class);
         expose(MatchService.class);
         expose(ManifestService.class);
@@ -444,6 +455,7 @@ public class ServicesModule extends PrivateModule {
         expose(IosApplicationConfigurationService.class).annotatedWith(Unscoped.class);
         expose(GooglePlayApplicationConfigurationService.class).annotatedWith(Unscoped.class);
         expose(ProfileService.class).annotatedWith(Unscoped.class);
+        expose(FollowerService.class).annotatedWith(Unscoped.class);
         expose(ProfileOverrideService.class).annotatedWith(Unscoped.class);
         expose(FCMRegistrationService.class).annotatedWith(Unscoped.class);
         expose(ScoreService.class).annotatedWith(Unscoped.class);

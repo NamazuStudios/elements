@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;

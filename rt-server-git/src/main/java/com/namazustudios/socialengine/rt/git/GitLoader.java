@@ -38,7 +38,7 @@ public interface GitLoader {
     void performInGit(ApplicationId applicationId, BiConsumer<Git, Function<Path, OutputStream>> gitConsumer);
 
     /**
-     * Gets the code directory for the supplied {@Link Application} and clones if necessary.  This will
+     * Gets the code directory for the supplied {@link Application} and clones if necessary.  This will
      * ensure that the latest branch, as specified by {@link #DEFAULT_MAIN_BRANCH} is checked out and current.
      *
      * The returned {@link File} will likely be a temporary live copy of the code backing the {@link ApplicationId}.

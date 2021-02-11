@@ -5,12 +5,17 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.Path.fromContextAndComponents;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
@@ -25,6 +30,8 @@ public class LuaResourceLinkingAdvancedTest {
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .withDefaultHttpClient()
         .start();
+
+    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -76,6 +83,10 @@ public class LuaResourceLinkingAdvancedTest {
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
+    }
+
+    public Node getNode() {
+        return node;
     }
 
     public Context getContext() {

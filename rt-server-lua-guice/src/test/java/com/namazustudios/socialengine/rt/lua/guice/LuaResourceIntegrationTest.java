@@ -1,8 +1,10 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
@@ -19,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.UUID.randomUUID;
+import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.*;
 
 /**
@@ -33,6 +36,8 @@ public class LuaResourceIntegrationTest {
         .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
         .withDefaultHttpClient()
         .start();
+
+    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -102,6 +107,8 @@ public class LuaResourceIntegrationTest {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create(moduleName, path);
         final Object result = getContext().getResourceContext().invoke(resourceId, methodName);
+        final ObjectMapper om = new ObjectMapper();
+        final String value = om.writeValueAsString(result);
         logger.info("Successfuly got test result {}", result);
         resultConsumer.accept(result);
         getContext().getResourceContext().destroy(resourceId);
@@ -156,7 +163,6 @@ public class LuaResourceIntegrationTest {
         final Path path = new Path(randomUUID().toString());
         final ResourceId resourceId = getContext().getResourceContext().create("test.util.java", path);
 
-
         try {
             getContext().getResourceContext().invoke(resourceId, "test_pcallx_unhandled");
             fail("Expected exception by this pointl");
@@ -182,6 +188,10 @@ public class LuaResourceIntegrationTest {
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
+    }
+
+    public Node getNode() {
+        return node;
     }
 
     public Context getContext() {

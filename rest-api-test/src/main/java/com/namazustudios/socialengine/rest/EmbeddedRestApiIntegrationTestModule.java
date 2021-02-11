@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rest.guice.RestAPIModule;
-import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;

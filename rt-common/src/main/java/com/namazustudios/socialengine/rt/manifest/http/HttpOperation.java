@@ -233,6 +233,13 @@ public class HttpOperation implements Serializable {
             .orElseThrow(() -> new InternalException("No default Content Type Found for " + getName()));
     }
 
+    /**
+     * Sorts the {@link HttpContent} parameters based off of its index, to keep parameter order consistent
+     */
+    public void sortParameters() {
+        parameters = remapParameters(parameters);
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -267,4 +274,17 @@ public class HttpOperation implements Serializable {
         return result;
     }
 
+    private Map<String, HttpParameter> remapParameters(Map<String, HttpParameter> unsortedParameters) {
+        List<Map.Entry<String, HttpParameter>> list =
+                new LinkedList<>(unsortedParameters.entrySet());
+
+        list.sort(Map.Entry.comparingByValue());
+
+        Map<String, HttpParameter> sortedParameters = new LinkedHashMap<>();
+        for (Map.Entry<String, HttpParameter> entry : list) {
+            sortedParameters.put(entry.getKey(), entry.getValue());
+        }
+
+        return sortedParameters;
+    }
 }

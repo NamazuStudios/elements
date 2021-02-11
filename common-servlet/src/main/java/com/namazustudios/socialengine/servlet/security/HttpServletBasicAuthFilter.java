@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.codeserve;
+package com.namazustudios.socialengine.servlet.security;
 
 import com.namazustudios.socialengine.exception.security.AuthorizationHeaderParseException;
 import com.namazustudios.socialengine.exception.BaseException;
@@ -24,9 +24,9 @@ import static com.namazustudios.socialengine.security.AuthorizationHeader.AUTH_T
 /**
  * Created by patricktwohig on 8/2/17.
  */
-public class BasicAuthFilter implements Filter {
+public class HttpServletBasicAuthFilter implements Filter {
 
-    private static final Logger logger = LoggerFactory.getLogger(BasicAuthFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(HttpServletBasicAuthFilter.class);
 
     /**
      * Constant for the WWW-Authenticate header.
@@ -42,7 +42,7 @@ public class BasicAuthFilter implements Filter {
     public void doFilter(
             final ServletRequest servletRequest,
             final ServletResponse servletResponse,
-            final FilterChain filterChain) throws IOException, ServletException {
+            final FilterChain filterChain) {
 
         final HttpServletRequest httpServletRequest = (HttpServletRequest) servletRequest;
         final HttpServletResponse httpServletResponse = (HttpServletResponse) servletResponse;

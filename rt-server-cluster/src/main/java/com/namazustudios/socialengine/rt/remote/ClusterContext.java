@@ -1,14 +1,12 @@
-package com.namazustudios.socialengine.rt.remote;
+package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.remote.RemoteInvoker;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 
-/**
- * A type of {@link Context} which is used to house remotely invokable instances.
- */
-public class ClusterContext implements Context {
+public class ClusterClientContext implements Context {
+
+    private RemoteInvoker remoteInvoker;
 
     private ResourceContext resourceContext;
 
@@ -22,11 +20,26 @@ public class ClusterContext implements Context {
 
     private ManifestContext manifestContext;
 
-    @Override
-    public void start() {}
+    private EventContext eventContext
 
     @Override
-    public void shutdown() {}
+    public void start() {
+        getRemoteInvoker().start();
+    }
+
+    @Override
+    public void shutdown() {
+        getRemoteInvoker().stop();
+    }
+
+    public RemoteInvoker getRemoteInvoker() {
+        return remoteInvoker;
+    }
+
+    @Inject
+    public void setRemoteInvoker(RemoteInvoker remoteInvoker) {
+        this.remoteInvoker = remoteInvoker;
+    }
 
     @Override
     public ResourceContext getResourceContext() {
@@ -34,7 +47,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setResourceContext(@Named(REMOTE)ResourceContext resourceContext) {
+    public void setResourceContext(ResourceContext resourceContext) {
         this.resourceContext = resourceContext;
     }
 
@@ -44,7 +57,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setIndexContext(@Named(REMOTE) IndexContext indexContext) {
+    public void setIndexContext(IndexContext indexContext) {
         this.indexContext = indexContext;
     }
 
@@ -54,7 +67,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setSchedulerContext(@Named(REMOTE) SchedulerContext schedulerContext) {
+    public void setSchedulerContext(SchedulerContext schedulerContext) {
         this.schedulerContext = schedulerContext;
     }
 
@@ -64,7 +77,7 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setHandlerContext(@Named(REMOTE) HandlerContext handlerContext) {
+    public void setHandlerContext(HandlerContext handlerContext) {
         this.handlerContext = handlerContext;
     }
 
@@ -74,8 +87,17 @@ public class ClusterContext implements Context {
     }
 
     @Inject
-    public void setTaskContext(@Named(REMOTE) TaskContext taskContext) {
+    public void setTaskContext(TaskContext taskContext) {
         this.taskContext = taskContext;
+    }
+    @Override
+    public EventContext getEventContext() {
+        return eventContext;
+    }
+
+    @Inject
+    public void setEventContext(EventContext eventContext) {
+        this.eventContext = eventContext;
     }
 
     @Override

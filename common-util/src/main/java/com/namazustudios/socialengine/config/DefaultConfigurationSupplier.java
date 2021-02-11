@@ -213,9 +213,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
                 final ModuleDefaults defaults = cls.newInstance();
                 defaultProperties.putAll(defaults.get());
 
-            } catch (InstantiationException e) {
-                logger.error("Could not build module defaults.", e);
-            } catch (IllegalAccessException e) {
+            } catch (InstantiationException | IllegalAccessException e) {
                 logger.error("Could not build module defaults.", e);
             }
         }

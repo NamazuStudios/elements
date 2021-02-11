@@ -32,7 +32,10 @@ public class GuiceMain extends GuiceServletContextListener {
     protected Injector getInjector() {
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier(servletContext.getClassLoader());
-        return createInjector(new CodeServeModule((defaultConfigurationSupplier)));
+        return createInjector(new CodeServeModule((defaultConfigurationSupplier))
+                .withModule(new GitServletModule())
+                .withModule(new RTGitBootstrapModule())
+                .withModule(new GitSecurityModule()));
     }
 
 }
