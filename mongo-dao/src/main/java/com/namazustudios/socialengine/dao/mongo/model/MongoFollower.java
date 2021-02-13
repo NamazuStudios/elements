@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import com.namazustudios.socialengine.model.profile.Profile;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 @Indexes({
-        @Index(fields = @Field("_id.profileId")),
-        @Index(fields = @Field("_id.followedId"))
+    @Index(fields = @Field("_id.profileId")),
+    @Index(fields = @Field("_id.followedId"))
 })
-@Entity(value = "follower", noClassnameStored = true)
+@Entity("follower")
 public class MongoFollower {
 
     @Id
@@ -48,4 +47,5 @@ public class MongoFollower {
         result = 31 * result + (getFollowedProfile() != null ? getFollowedProfile().hashCode() : 0);
         return result;
     }
+
 }

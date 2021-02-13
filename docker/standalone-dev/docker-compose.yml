@@ -90,14 +90,12 @@ services:
     depends_on:
       - mongo
       - redis
-    deploy:
-      replicas: 1
     networks:
-      - socialengine
+      - elements
     ports:
       - "8084:8084"
     volumes:
-      - cdn-repos:/opt/socialengine/cdn-repos
+      - cdn-repos:/opt/elements/cdn-repos
 
   app-serve:
     build:

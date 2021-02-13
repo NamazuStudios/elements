@@ -27,6 +27,7 @@ import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
+import org.zeromq.ZMQ;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -213,10 +214,6 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
         return this;
 
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

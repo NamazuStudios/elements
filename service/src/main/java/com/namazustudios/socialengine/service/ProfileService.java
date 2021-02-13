@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -85,22 +87,23 @@ public interface ProfileService {
      * Updates the supplied {@link Profile}.  The {@link Profile#getId()} method is
      * used to key the {@link Profile}.
      *
-     * @param profile the {@link Profile} to update
+     * @param profileId the profile id of the {@link Profile} to update
+     * @param profileRequest the {@link UpdateProfileRequest} with the information to update
      * @return the {@link Profile} as it was changed by the service.
      */
-    Profile updateProfile(Profile profile);
+    Profile updateProfile(String profileId, UpdateProfileRequest profileRequest);
 
     /**
      * Creates a new profile.  The ID of the profile, as specified by {@link Profile#getId()},
      * should be null and will be assigned.
      *
-     * @param profile the {@link Profile} to create
+     * @param profileRequest the {@link CreateProfileRequest} with the information to create
      * @return the {@link Profile} as it was created by the service.
      */
-    Profile createProfile(Profile profile);
+    Profile createProfile(CreateProfileRequest profileRequest);
 
     /**
-     * Deletes the {@link Profile} with the suppolied profile ID.
+     * Deletes the {@link Profile} with the supplied profile ID.
      *
      * @param profileId the profile ID.
      */

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import dev.morphia.annotations.Embedded;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Embedded;
 
 @Embedded
 public class MongoFollowerId {
@@ -10,6 +10,18 @@ public class MongoFollowerId {
 
     private ObjectId followedId;
 
+    public MongoFollowerId() {}
+
+    public MongoFollowerId(String profileId, String followedId){
+        this.profileId = new ObjectId(profileId);
+        this.followedId = new ObjectId(followedId);
+    }
+
+    public MongoFollowerId(ObjectId profileId, ObjectId followedId) {
+        this.profileId = profileId;
+        this.followedId = followedId;
+    }
+
     public ObjectId getProfileId(){ return profileId; }
 
     public void setProfileId(ObjectId profileId){ this.profileId = profileId; }
@@ -17,13 +29,6 @@ public class MongoFollowerId {
     public ObjectId getFollowedId(){ return followedId; }
 
     public void setFollowedId(ObjectId followedId){ this.followedId = followedId; }
-
-    public MongoFollowerId(){}
-
-    public MongoFollowerId(String profileId, String followedId){
-        this.profileId = new ObjectId(profileId);
-        this.followedId = new ObjectId(followedId);
-    }
 
     @Override
     public boolean equals(Object o) {
@@ -42,4 +47,5 @@ public class MongoFollowerId {
         result = 31 * result + (getFollowedId() != null ? getFollowedId().hashCode() : 0);
         return result;
     }
+
 }

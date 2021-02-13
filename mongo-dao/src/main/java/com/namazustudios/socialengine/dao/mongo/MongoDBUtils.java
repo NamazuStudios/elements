@@ -20,6 +20,7 @@ import dev.morphia.query.Query;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -43,18 +44,46 @@ public class MongoDBUtils {
 
     /**
      * Performs the supplied operation, catching all {@link MongoCommandException} instances and
-     * mapping to the appropraite type of exception internally.
+     * mapping to the appropriate type of exception internally.
      *
      * @param operation the operation
      * @param <T> the expected return type
      * @return the object retured by the supplied operation
      */
     public <T> T perform(final Function<Datastore, T> operation) {
+        return perform(operation, DuplicateException::new);
+    }
+
+    /**
+     * Performs the supplied operation, catching all {@link MongoCommandException} instances and
+     * mapping to the appropriate type of exception internally.
+     *
+     * @param operation the operation
+     * @return the object retured by the supplied operation
+     */
+    public void performV(final Consumer<Datastore> operation) {
+        perform(ds -> {
+            operation.accept(ds);
+            return null;
+        }, DuplicateException::new);
+    }
+
+    /**
+     * Performs the supplied operation, catching all {@link MongoCommandException} instances and
+     * mapping to the appropraite type of exception internally.
+     *
+     * @param operation the operation
+     * @param <T> the expected return type
+     * @return the object retured by the supplied operation
+     */
+    public <T, ExceptionT extends Throwable> T perform(
+            final Function<Datastore, T> operation,
+            final Function<Throwable, ExceptionT> exceptionTSupplier) throws ExceptionT {
         try {
             return operation.apply(getDatastore());
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
+                throw exceptionTSupplier.apply(ex);
             } else {
                 throw new InternalException(ex);
             }
@@ -138,7 +167,25 @@ public class MongoDBUtils {
      */
     public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
             final Query<MongoModelT> query, final int offset, final int count,
-            final Function<MongoModelT,  ModelT> function, FindOptions options) {
+            final Function<MongoModelT,  ModelT> function) {
+        return paginationFromQuery(query, offset, count, function, new FindOptions());
+    }
+
+    /**
+     * Transforms the given {@link Query} to the resulting {@link Pagination}.
+     *
+     * @param query the query
+     * @param offset the offset
+     * @param count the count
+     * @param function the function to transform the values
+     * @param options a {@link FindOptions} used to modify the query results
+     * @param <ModelT> the desired model type
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
+            final Query<MongoModelT> query, final int offset, final int count,
+            final Function<MongoModelT,  ModelT> function, final FindOptions options) {
 
 
         final Pagination<ModelT> pagination = new Pagination<>();

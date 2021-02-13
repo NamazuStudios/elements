@@ -1,29 +1,28 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.Mongo;
 import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.FollowerDao;
-import com.namazustudios.socialengine.dao.mongo.model.*;
+import com.namazustudios.socialengine.dao.mongo.model.MongoFollower;
+import com.namazustudios.socialengine.dao.mongo.model.MongoFollowerId;
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.follower.CreateFollowerRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.bson.types.ObjectId;
+import dev.morphia.Datastore;
+import dev.morphia.DeleteOptions;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
+import static dev.morphia.query.experimental.filters.Filters.eq;
 import static java.lang.String.format;
 
 public class MongoFollowerDao implements FollowerDao {
-    private AdvancedDatastore datastore;
+
+    private Datastore datastore;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -33,72 +32,84 @@ public class MongoFollowerDao implements FollowerDao {
 
     @Override
     public Pagination<Profile> getFollowersForProfile(String profileId, int offset, int count) {
-        final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
-        final ObjectId profileOid = getMongoDBUtils().parseOrReturnNull(profileId);
 
-        followerQuery.field("_id.profileId").equal(profileOid);
+        final var query = getDatastore().find(MongoFollower.class);
+        final var profileObjectId = getMongoDBUtils().parseOrThrow(profileId, ProfileNotFoundException::new);
 
-        return getMongoDBUtils().paginationFromQuery(followerQuery, offset, count, f -> getDozerMapper().map(f.getFollowedProfile(), Profile.class));
+        query.filter(eq("_id.profileId", profileObjectId));
+
+        return getMongoDBUtils()
+            .paginationFromQuery(
+                query, offset, count,
+                f -> getDozerMapper().map(f.getFollowedProfile(), Profile.class)
+            );
+
     }
 
     @Override
     public Profile getFollowerForProfile(String profileId, String followedId) {
-        final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
-        final MongoFollowerId id = new MongoFollowerId(profileId, followedId);
 
-        followerQuery.field("_id").equal(id);
+        final var followerQuery = getDatastore().find(MongoFollower.class);
+        final var mongoFollowerId = new MongoFollowerId(profileId, followedId);
 
-        MongoFollower follower = followerQuery.get();
+        followerQuery.filter(eq("_id", mongoFollowerId));
+
+        final var follower = followerQuery.first();
 
         if(follower == null) {
-            throw new NotFoundException(format("No follower relationship exists with profile id %s, and followed id %s", profileId, followedId));
+
+            final var msg = format("No follower relationship exists with profile id %s, and followed id %s",
+                profileId,
+                followedId);
+
+            throw new NotFoundException(msg);
+
         }
 
         return getDozerMapper().map(follower.getFollowedProfile(), Profile.class);
+
     }
 
     @Override
-    public void createFollowerForProfile(String profileId, CreateFollowerRequest createFollowerRequest) {
-        Profile profile = getMongoProfileDao().getActiveProfile(profileId);
-        if(profile == null){
-            throw new ProfileNotFoundException(format("The profile with id %s was not found or does not exist.", profileId));
-        }
-        profile = getMongoProfileDao().getActiveProfile(createFollowerRequest.getFollowedId());
-        if(profile == null){
-            throw new ProfileNotFoundException(format("The profile with id %s was not found or does not exist.", createFollowerRequest.getFollowedId()));
-        }
+    public void createFollowerForProfile(final String profileId, final CreateFollowerRequest createFollowerRequest) {
 
-        final MongoFollower mongoFollower = new MongoFollower();
-        final MongoFollowerId id = new MongoFollowerId(profileId, createFollowerRequest.getFollowedId());
+        final var follower = getMongoProfileDao().getActiveMongoProfile(profileId);
+        final var followed = getMongoProfileDao().getActiveMongoProfile(createFollowerRequest.getFollowedId());
 
-        mongoFollower.setObjectId(id);
-        mongoFollower.setFollowedProfile(getDatastore().get(MongoProfile.class, id.getFollowedId()));
+        final var mongoFollower = new MongoFollower();
+        final var mongoFollowerId = new MongoFollowerId(follower.getObjectId(), followed.getObjectId());
 
-        getDatastore().insert(mongoFollower);
+        mongoFollower.setObjectId(mongoFollowerId);
+        mongoFollower.setFollowedProfile(followed);
+
+        getMongoDBUtils().performV(ds -> getDatastore().insert(mongoFollower));
+
     }
 
     @Override
-    public void deleteFollowerForProfile(String profileId, String profileToUnfollowId) {
-        final Query<MongoFollower> followerQuery = getDatastore().createQuery(MongoFollower.class);
-        final MongoFollowerId id = new MongoFollowerId(profileId, profileToUnfollowId);
+    public void deleteFollowerForProfile(final String profileId, final String profileToUnfollowId) {
 
-        followerQuery.field("_id").equal(id);
+        final var query = getDatastore().find(MongoFollower.class);
+        final var mongoFollowerId = new MongoFollowerId(profileId, profileToUnfollowId);
 
-        final WriteResult writeResult = getDatastore().delete(followerQuery);
+        query.filter(eq("_id", mongoFollowerId));
 
-        if (writeResult.getN() == 0) {
+        final var result = query.delete(new DeleteOptions());
+
+        if (result.getDeletedCount() == 0) {
             throw new NotFoundException("Follower not found: " + profileToUnfollowId);
-        } else if (writeResult.getN() > 1) {
+        } else if (result.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
         }
+
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

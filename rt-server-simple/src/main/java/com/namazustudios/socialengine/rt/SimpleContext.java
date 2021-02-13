@@ -3,10 +3,12 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupModule;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupOperation;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
 import java.util.HashMap;
 import java.util.Map;
@@ -38,6 +40,8 @@ public class SimpleContext implements Context, NodeLifecycle {
 
     private ManifestContext manifestContext;
 
+    private EventContext eventContext;
+
     private Thread hook = new Thread(this::shutdown);
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleContext.class);
@@ -50,13 +54,13 @@ public class SimpleContext implements Context, NodeLifecycle {
         getSchedulerContext().start();
         getIndexContext().start();
         getHandlerContext().start();
-        getManifestLoader().loadAndRunIfNecessary();
+        getManifestContext().start();
         runStartupManifest();
     }
 
     private void runStartupManifest() {
 
-        final StartupManifest startupManifest = getManifestLoader().getStartupManifest();
+        final StartupManifest startupManifest = getManifestContext().getStartupManifest();
 
         if (startupManifest == null) {
             logger.info("No startup Resources to run.  Skipping.");
@@ -116,7 +120,7 @@ public class SimpleContext implements Context, NodeLifecycle {
         // Then stops all services
         getResourceLoader().close();
         getAssetLoader().close();
-        getManifestLoader().close();
+        getManifestContext().stop();
 
     }
 
@@ -145,9 +149,49 @@ public class SimpleContext implements Context, NodeLifecycle {
         return handlerContext;
     }
 
+    @Override
+    public TaskContext getTaskContext() {
+        return taskContext;
+    }
+
+    @Override
+    public ManifestContext getManifestContext() {
+        return manifestContext;
+    }
+
+    @Override
+    public EventContext getEventContext() {
+        return eventContext;
+    }
+
     @Inject
-    public void setSchedulerContext(SchedulerContext schedulerContext) {
+    public void setSchedulerContext(@Named(LOCAL) SchedulerContext schedulerContext) {
         this.schedulerContext = schedulerContext;
+    }
+
+    @Inject
+    public void setIndexContext(@Named(LOCAL) IndexContext indexContext) {
+        this.indexContext = indexContext;
+    }
+
+    @Inject
+    public void setHandlerContext(@Named(LOCAL) HandlerContext handlerContext) {
+        this.handlerContext = handlerContext;
+    }
+
+    @Inject
+    public void setTaskContext(@Named(LOCAL) TaskContext taskContext) {
+        this.taskContext = taskContext;
+    }
+
+    @Inject
+    public void setManifestContext(@Named(LOCAL) ManifestContext manifestContext) {
+        this.manifestContext = manifestContext;
+    }
+
+    @Inject
+    public void setEventContext(@Named(LOCAL) EventContext eventContext) {
+        this.eventContext = eventContext;
     }
 
     public Scheduler getScheduler() {
@@ -184,35 +228,6 @@ public class SimpleContext implements Context, NodeLifecycle {
     @Inject
     public void setAssetLoader(AssetLoader assetLoader) {
         this.assetLoader = assetLoader;
-    }
-
-    @Inject
-    public void setIndexContext(IndexContext indexContext) {
-        this.indexContext = indexContext;
-    }
-
-    @Inject
-    public void setHandlerContext(HandlerContext handlerContext) {
-        this.handlerContext = handlerContext;
-    }
-
-    @Override
-    public TaskContext getTaskContext() {
-        return taskContext;
-    }
-
-    @Inject
-    public void setTaskContext(TaskContext taskContext) {
-        this.taskContext = taskContext;
-    }
-
-    public ManifestLoader getManifestLoader() {
-        return manifestLoader;
-    }
-
-    @Inject
-    public void setManifestLoader(ManifestLoader manifestLoader) {
-        this.manifestLoader = manifestLoader;
     }
 
 }

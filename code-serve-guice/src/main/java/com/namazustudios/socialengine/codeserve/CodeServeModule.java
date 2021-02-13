@@ -4,10 +4,10 @@ import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTGitBootstrapModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
-import org.apache.bval.guice.ValidationModule;
+import com.namazustudios.socialengine.service.guice.RedissonClientModule;
+import ru.vyarus.guice.validator.ValidationModule;
+
 
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -31,8 +31,7 @@ public class CodeServeModule extends AbstractModule {
         install(new ValidationModule());
         install(new GitSecurityModule());
         install(new GitServletModule());
-        install(new RTFilesystemGitLoaderModule());
-        install(new RTGitBootstrapModule());
         install(new FileSystemCodeServeModule());
     }
+
 }

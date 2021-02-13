@@ -24,10 +24,14 @@ public class CdnServeMain implements Callable<Void>, Runnable {
      * @throws ProgramArgumentException if there was a problem parsing the command line arguments
      */
     public CdnServeMain(final String[] args) throws ProgramArgumentException {
-        final DefaultConfigurationSupplier defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-        server = createInjector(new CodeServeModule(defaultConfigurationSupplier)
-                .withModule(new ServerModule())
+
+        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+
+        server = createInjector(
+            new ServerModule(),
+            new CodeServeModule(defaultConfigurationSupplier)
         ).getInstance(Server.class);
+
     }
 
     /**

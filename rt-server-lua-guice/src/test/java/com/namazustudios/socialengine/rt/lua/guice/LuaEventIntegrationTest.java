@@ -1,27 +1,18 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
-import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.TestNG;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Exchanger;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
 public class LuaEventIntegrationTest {
 
@@ -30,22 +21,10 @@ public class LuaEventIntegrationTest {
     private final TestJavaEvent tje = mock(TestJavaEvent.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withNodeModule(new LuaModule())
-            .withNodeModule(new XodusContextModule()
-                    .withSchedulerThreads(1)
-                    .withHandlerTimeout(3, MINUTES))
-            .withNodeModule(new XodusEnvironmentModule()
-                    .withTempEnvironments())
-            .withNodeModule(new AbstractModule() {
-                @Override
-                protected void configure() {
-                    bind(TestJavaEvent.class).toInstance(tje);
-                }
-            })
+            .withWorkerModule(new LuaModule())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .withDefaultHttpClient()
             .start();
-
-    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -101,11 +80,8 @@ public class LuaEventIntegrationTest {
         return embeddedTestService;
     }
 
-    public Node getNode() {
-        return node;
-    }
-
     public Context getContext() {
         return context;
     }
+
 }

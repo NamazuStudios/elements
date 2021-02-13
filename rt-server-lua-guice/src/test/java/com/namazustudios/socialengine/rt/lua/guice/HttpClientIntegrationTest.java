@@ -1,11 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,7 +12,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
 public class HttpClientIntegrationTest {
 
@@ -29,27 +25,26 @@ public class HttpClientIntegrationTest {
         .withWorkerModule(new XodusEnvironmentModule().withTempResourceEnvironment().withTempSchedulerEnvironment())
         .start();
 
-    private final Node node = getEmbeddedTestService().getNode();
-
     private final Context context = getEmbeddedTestService().getContext();
 
     @BeforeClass
     private void start() throws Exception {
         getJettyEmbeddedRESTService().start();
+        getContext().start();
     }
 
     @AfterClass
     private void stop() throws Exception {
-        getNode().stop();
+        getContext().shutdown();
         getJettyEmbeddedRESTService().stop();
     }
 
     @Test(dataProvider = "resourcesToTest")
     public void performTest(final String methodName) {
-        final Path path = new Path(randomUUID().toString());
-        final ResourceId resourceId = getContext().getResourceContext().create("test.http.client", path);
-        final String base = getJettyEmbeddedRESTService().getUri();
-        final Object result = getContext().getResourceContext().invoke(resourceId, methodName, base);
+        final var path = new Path(randomUUID().toString());
+        final var resourceId = getContext().getResourceContext().create("test.http.client", path);
+        final var base = getJettyEmbeddedRESTService().getUri();
+        final var result = getContext().getResourceContext().invoke(resourceId, methodName, base);
         logger.info("Successfully got test result {}", result);
         getContext().getResourceContext().destroy(resourceId);
     }
@@ -71,10 +66,6 @@ public class HttpClientIntegrationTest {
 
     public JettyEmbeddedRESTService getJettyEmbeddedRESTService() {
         return jettyEmbeddedRESTService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

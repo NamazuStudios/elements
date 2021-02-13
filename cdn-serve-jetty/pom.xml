@@ -106,16 +106,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-core</artifactId>
-            <version>${bval.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.bval</groupId>
-            <artifactId>bval-guice</artifactId>
-            <version>${bval.guice.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-http</artifactId>
             <version>${jetty.version}</version>

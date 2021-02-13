@@ -31,8 +31,6 @@ public class LuaResourceLinkingAdvancedTest {
             .withDefaultHttpClient()
         .start();
 
-    private final Node node = getEmbeddedTestService().getNode();
-
     private final Context context = getEmbeddedTestService().getContext();
 
     @AfterClass
@@ -80,13 +78,8 @@ public class LuaResourceLinkingAdvancedTest {
 
     }
 
-
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

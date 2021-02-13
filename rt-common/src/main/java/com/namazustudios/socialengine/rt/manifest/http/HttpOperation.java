@@ -2,12 +2,10 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.manifest.model.Type;
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
 
 import java.io.Serializable;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Represents a single operation performed over an HTTP request.  This contains a
@@ -28,7 +26,7 @@ public class HttpOperation implements Serializable {
 
     private String method;
 
-    private Map<String, Type> parameters;
+    private Map<String, HttpParameter> parameters;
 
     private List<String> authSchemes;
 
@@ -130,18 +128,18 @@ public class HttpOperation implements Serializable {
     /**
      * Gets the parameters this operation accepts by type.
      *
-     * @return a {@link Map<String, Type>} containing the parameter metadata
+     * @return a {@link Map<String, HttpParameter>} containing the parameter metadata
      */
-    public Map<String, Type> getParameters() {
-        return parameters;
+    public Map<String, HttpParameter> getParameters() {
+        return remapParameters(parameters);
     }
 
     /**
      * Sets the parameters this operation accepts by type.
      *
-     * @param parameters a {@link Map<String, Type>} containing the parameter metadata
+     * @param parameters a {@link Map<String, HttpParameter>} containing the parameter metadata
      */
-    public void setParameters(Map<String, Type> parameters) {
+    public void setParameters(Map<String, HttpParameter> parameters) {
         this.parameters = parameters;
     }
 
@@ -275,16 +273,18 @@ public class HttpOperation implements Serializable {
     }
 
     private Map<String, HttpParameter> remapParameters(Map<String, HttpParameter> unsortedParameters) {
-        List<Map.Entry<String, HttpParameter>> list =
-                new LinkedList<>(unsortedParameters.entrySet());
 
+        final var list = new ArrayList<>(unsortedParameters.entrySet());
         list.sort(Map.Entry.comparingByValue());
 
-        Map<String, HttpParameter> sortedParameters = new LinkedHashMap<>();
-        for (Map.Entry<String, HttpParameter> entry : list) {
+        final var sortedParameters = new LinkedHashMap<String, HttpParameter>();
+
+        for (var entry : list) {
             sortedParameters.put(entry.getKey(), entry.getValue());
         }
 
         return sortedParameters;
+
     }
+
 }

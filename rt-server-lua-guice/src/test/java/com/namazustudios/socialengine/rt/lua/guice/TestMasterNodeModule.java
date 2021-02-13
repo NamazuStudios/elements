@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.guice.SimpleInstanceMetadataContextModule;
 import com.namazustudios.socialengine.rt.guice.SimpleLoadMonitorServiceModule;
 import com.namazustudios.socialengine.rt.id.InstanceId;

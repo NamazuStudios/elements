@@ -55,7 +55,6 @@
         <module>rt-server-lua-guice</module>
         <module>rt-server-lua-stress-tests</module>
         <module>rt-client</module>
-        <module>rt-dao</module>
         <module>rt-http-servlet</module>
         <module>rt-fst</module>
         <module>rt-fst-guice</module>
@@ -66,10 +65,13 @@
         <module>code-serve</module>
         <module>code-serve-guice</module>
         <module>code-serve-jetty</module>
+        <module>jetty-util</module>
+        <module>cdn-serve</module>
+        <module>cdn-serve-api</module>
+        <module>cdn-serve-jetty</module>
         <module>app-serve</module>
         <module>app-serve-testkit</module>
         <module>app-node</module>
-        <module>rt-dao-guice</module>
         <module>rt-server-lua-testkit</module>
         <module>socialengine-jnlua/jnlua</module>
         <module>common-lua</module>

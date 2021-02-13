@@ -4,7 +4,6 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
@@ -21,7 +20,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.*;
 
 /**
@@ -36,8 +34,6 @@ public class LuaResourceIntegrationTest {
         .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
         .withDefaultHttpClient()
         .start();
-
-    private final Node node = getEmbeddedTestService().getNode();
 
     private final Context context = getEmbeddedTestService().getContext();
 
@@ -188,10 +184,6 @@ public class LuaResourceIntegrationTest {
 
     public JeroMQEmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

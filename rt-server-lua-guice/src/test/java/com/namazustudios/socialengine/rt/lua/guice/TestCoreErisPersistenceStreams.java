@@ -2,8 +2,9 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceLoader;
+import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
+import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.id.TaskId;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
@@ -16,6 +17,7 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
+import javax.ws.rs.client.Client;
 import java.io.*;
 import java.util.Objects;
 import java.util.Set;
@@ -38,6 +40,8 @@ public class TestCoreErisPersistenceStreams {
     private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles();
 
     private ResourceLoader resourceLoader;
+
+    private Context context;
 
     @AfterSuite
     public static void deleteTempFiles() {
@@ -90,8 +94,8 @@ public class TestCoreErisPersistenceStreams {
 
         final byte[] bytes;
 
-        try (final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-             final Resource resource = getResourceLoader().load("test.ioc_resolve")) {
+        try (final var bos = new ByteArrayOutputStream();
+             final var resource = getResourceLoader().load("test.ioc_resolve")) {
 
             final AtomicReference<Object> result = new AtomicReference<>();
             final AtomicReference<Throwable> exception = new AtomicReference<>();

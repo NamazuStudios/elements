@@ -1,7 +1,12 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.*;
-import com.namazustudios.socialengine.rt.remote.*;
+import com.google.inject.PrivateModule;
+import com.google.inject.Provider;
+import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
+import com.namazustudios.socialengine.rt.remote.Worker;
 
 import java.util.Set;
 

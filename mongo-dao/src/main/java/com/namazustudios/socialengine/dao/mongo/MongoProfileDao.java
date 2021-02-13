@@ -19,14 +19,10 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
-import org.apache.lucene.search.*;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.*;
-import org.mongodb.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.util.*;
@@ -37,7 +33,8 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.and;
 import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.updates.UpdateOperators.*;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 /**
  *
@@ -206,7 +203,6 @@ public class MongoProfileDao implements ProfileDao {
     public Profile getActiveProfile(String profileId) {
         final MongoProfile mongoProfile = getActiveMongoProfile(profileId);
         return getBeanMapper().map(mongoProfile, Profile.class);
-
     }
 
     public MongoProfile getActiveMongoProfile(final Profile profile) {
@@ -290,7 +286,7 @@ public class MongoProfileDao implements ProfileDao {
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
         final var query = getDatastore().find(MongoProfile.class);
 
-        final UpdateBuilder builder = new UpdateBuilder();
+        final var builder = new UpdateBuilder();
 
         query.filter(and(
             eq("active", true),
@@ -406,51 +402,6 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile createOrReactivateProfile(final Profile profile, final Map<String, Object> metadata) {
-
-        getValidationHelper().validateModel(profile, Insert.class);
-
-        final Query<MongoProfile> query = getDatastore().createQuery(MongoProfile.class);
-
-        final MongoUser user = getMongoUserFromProfile(profile);
-        final MongoApplication application = getMongoApplicationFromProfile(profile);
-
-        query.and(
-                query.criteria("user").equal(user),
-                query.criteria("application").equal(application)
-        );
-
-        final UpdateOperations<MongoProfile> updateOperations;
-
-        updateOperations = getDatastore().createUpdateOperations(MongoProfile.class);
-        updateOperations.set("user", user);
-        updateOperations.set("active", true);
-        updateOperations.set("application", application);
-        updateOperations.set("imageUrl", nullToEmpty(profile.getImageUrl()).trim());
-        updateOperations.set("displayName", nullToEmpty(profile.getDisplayName()).trim());
-
-        if (metadata == null) {
-            updateOperations.unset("metadata");
-        } else {
-            updateOperations.set("metadata", metadata);
-        }
-
-        final MongoProfile mongoProfile = getMongoDBUtils().perform(ds -> {
-
-            final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                    .upsert(true)
-                    .returnNew(true);
-
-            return ds.findAndModify(query, updateOperations, findAndModifyOptions);
-
-        });
-
-        getObjectIndex().index(mongoProfile);
-        return transform(mongoProfile);
-
-    }
-
-    @Override
     public Profile createOrRefreshProfile(final Profile profile) {
 
         getValidationHelper().validateModel(profile, Insert.class);
@@ -478,7 +429,7 @@ public class MongoProfileDao implements ProfileDao {
         final var mongoProfile = getMongoDBUtils().perform(ds ->
             builder.with(
                 set("active", true),
-                setOnInsert(insertMap),
+                UpdateOperators.setOnInsert(insertMap),
                 set("imageUrl", nullToEmpty(profile.getImageUrl()).trim())
             ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
