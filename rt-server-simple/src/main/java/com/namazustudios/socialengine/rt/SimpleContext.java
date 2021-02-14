@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupModule;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupOperation;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
+import jdk.jfr.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,53 +56,6 @@ public class SimpleContext implements Context, NodeLifecycle {
         getIndexContext().start();
         getHandlerContext().start();
         getManifestContext().start();
-        runStartupManifest();
-    }
-
-    private void runStartupManifest() {
-
-        final StartupManifest startupManifest = getManifestContext().getStartupManifest();
-
-        if (startupManifest == null) {
-            logger.info("No startup Resources to run.  Skipping.");
-            return;
-        } else if (startupManifest.getModulesByName() == null) {
-            logger.info("No startup modules specified in manifest.  Skipping.");
-            return;
-        }
-
-        for (final Map.Entry<String, StartupModule> entry : startupManifest.getModulesByName().entrySet()) {
-
-            final StartupModule startupModule = entry.getValue();
-
-            if (startupModule == null) {
-                logger.info("Startup module '{}' specifies no operation.  Skipping.", entry.getKey());
-                continue;
-            }
-
-            final String module = entry.getKey();
-            final Map<String, StartupOperation> startupOperationsByName = startupModule.getOperationsByName();
-
-            for (final StartupOperation startupOperation : startupOperationsByName.values()) {
-
-                final String method = startupOperation.getMethod();
-                logger.info("Executing startup operation {}: {}.{}", startupOperation.getName(), module, method);
-
-                final Consumer<Throwable> failure = ex -> {
-                    logger.error("Startup exception caught for module: {}, method: {}.", module, method, ex);
-                };
-
-                final Consumer<Object> success = result -> {
-                    logger.info("Startup operation '{}: {}.{}': Success.", startupOperation.getName(), module, method);
-                };
-
-                // unused for now
-                final SimpleAttributes attributes = new SimpleAttributes();
-                getHandlerContext().invokeRetainedHandlerAsync(success, failure, attributes, module, method);
-
-            }
-        }
-
     }
 
     @Override
@@ -127,11 +81,6 @@ public class SimpleContext implements Context, NodeLifecycle {
     @Override
     public ResourceContext getResourceContext() {
         return resourceContext;
-    }
-
-    @Inject
-    public void setResourceContext(ResourceContext resourceContext) {
-        this.resourceContext = resourceContext;
     }
 
     @Override
@@ -162,6 +111,11 @@ public class SimpleContext implements Context, NodeLifecycle {
     @Override
     public EventContext getEventContext() {
         return eventContext;
+    }
+
+    @Inject
+    public void setResourceContext(@Named(LOCAL) ResourceContext resourceContext) {
+        this.resourceContext = resourceContext;
     }
 
     @Inject

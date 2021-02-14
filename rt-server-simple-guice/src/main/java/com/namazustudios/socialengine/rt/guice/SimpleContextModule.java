@@ -23,10 +23,11 @@ public class SimpleContextModule extends PrivateModule {
 
     private Runnable bindManifestContext = () -> {};
 
+    private Runnable bindEventContext = () -> {};
+
     /**
      * Specifies the default contexts and services.
      *
-     * @param contextName the {@link Context} name
      * @return this instance
      */
     public SimpleContextModule withDefaultContexts() {
@@ -36,6 +37,7 @@ public class SimpleContextModule extends PrivateModule {
         bindHandlerContext = () -> install(new SimpleHandlerContextModule().withDefaultTimeout());
         bindTaskContext = () -> install(new SimpleTaskContextModule());
         bindManifestContext = () -> install(new SimpleManifestContextModule());
+        bindEventContext = () -> install(new SimpleEventContextModule());
         return this;
     }
 
@@ -63,6 +65,7 @@ public class SimpleContextModule extends PrivateModule {
         bindHandlerContext.run();
         bindTaskContext.run();
         bindManifestContext.run();
+        bindEventContext.run();
 
         // Binding to SimpleContext to multiple interfaces
 

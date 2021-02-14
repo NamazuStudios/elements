@@ -54,6 +54,11 @@ public class ClusterContextModule extends PrivateModule {
             .toProvider(new RemoteProxyProvider<>(ManifestContext.class, REMOTE))
             .asEagerSingleton();
 
+        bind(EventContext.class)
+            .annotatedWith(named(REMOTE))
+            .toProvider(new RemoteProxyProvider<>(EventContext.class, REMOTE))
+            .asEagerSingleton();
+
     }
 
 }

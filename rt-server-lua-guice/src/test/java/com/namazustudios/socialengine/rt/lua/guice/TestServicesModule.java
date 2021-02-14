@@ -19,6 +19,7 @@ public class TestServicesModule extends PrivateModule {
         bind(RetainedHandlerService.class).to(SimpleRetainedHandlerService.class).asEagerSingleton();
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
         bind(LoadMonitorService.class).to(SimpleLoadMonitorService.class).asEagerSingleton();
+        bind(EventService.class).to(SimpleEventService.class).asEagerSingleton();
 
         bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
                 .toProvider(() -> new ProxyLockService<>(Deque.class));
@@ -31,6 +32,7 @@ public class TestServicesModule extends PrivateModule {
         expose(SingleUseHandlerService.class);
         expose(TaskService.class);
         expose(ResourceLockService.class);
+        expose(EventService.class);
 
     }
 

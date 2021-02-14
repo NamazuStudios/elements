@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.PrivateModule;
 
 import static org.mockito.Mockito.mock;
 
@@ -13,4 +12,5 @@ public class JavaEventModule extends AbstractModule {
     protected void configure() {
         bind(TestJavaEvent.class).toInstance(tje);
     }
+
 }

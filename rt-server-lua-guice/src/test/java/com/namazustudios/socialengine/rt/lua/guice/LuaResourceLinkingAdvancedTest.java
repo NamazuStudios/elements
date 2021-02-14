@@ -41,25 +41,24 @@ public class LuaResourceLinkingAdvancedTest {
     @Test
     public void performAdvancedLinkingTest() {
 
-        final String pathASuffix = UUID.randomUUID().toString();
-        final String pathBSuffix = UUID.randomUUID().toString();
+        final var pathASuffix = UUID.randomUUID().toString();
+        final var pathBSuffix = UUID.randomUUID().toString();
 
-        final List<String> results = (List<String>) getContext()
+        final var results = (List<String>) getContext()
             .getHandlerContext()
             .invokeSingleUseHandler(
                 Attributes.emptyAttributes(),
                 "test.link.handler", "test_create", pathASuffix, pathBSuffix);
 
-        final Path root = new Path(results.get(0));
-        final ResourceId resourceId = resourceIdFromString(results.get(1));
+        final var resourceId = resourceIdFromString(results.get(1));
 
-        final Map<String, String> resultsA = (Map<String, String>) getContext()
+        final var resultsA = (Map<String, String>) getContext()
             .getHandlerContext()
             .invokeSingleUseHandler(
                 Attributes.emptyAttributes(),
                 "test.link.handler", "test_list", pathASuffix);
 
-        final Map<String, String> resultsB = (Map<String, String>) getContext()
+        final var resultsB = (Map<String, String>) getContext()
             .getHandlerContext()
             .invokeSingleUseHandler(
                 Attributes.emptyAttributes(),
