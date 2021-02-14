@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import java.util.concurrent.TimeUnit;
+
 public interface EventService {
 
     /**
@@ -19,5 +21,8 @@ public interface EventService {
      * @param eventName the event name
      * @param attributes the {@link Attributes}.
      */
-    void postAsync(String eventName, Attributes attributes, Object... args);
+    void postAsync(String eventName, Attributes attributes,
+                   long timeout, TimeUnit timeoutTimeUnit,
+                   Object... args);
+
 }

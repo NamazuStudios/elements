@@ -75,7 +75,7 @@ public class JeroMQNode implements Node {
     @Override
     public Startup beginStartup() {
 
-        final NodeContext c = new NodeContext();
+        final var c = new NodeContext();
 
         c.logger.info("Beginning startup.");
 
@@ -272,7 +272,7 @@ public class JeroMQNode implements Node {
 
         private AsyncConnection<ZContext, ZMQ.Socket> frontendConnection;
 
-        private AsyncConnectionGroup mainConnectionGroup;
+        private AsyncConnectionGroup<ZContext, ZMQ.Socket> mainConnectionGroup;
 
         private AsyncConnectionPool<ZContext, ZMQ.Socket> outboundConnectionPool;
 

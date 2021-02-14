@@ -29,6 +29,8 @@ public class ContextLocalInvocationDispatcher extends AbstractLocalInvocationDis
             return getContext().getTaskContext();
         } else if (ManifestContext.class.equals(type)) {
             return getContext().getManifestContext();
+        } else if (EventContext.class.equals(type)) {
+            return getContext().getEventContext();
         } else {
             throw new InternalException("No dispatch-mapping for type: " + type + "name: " + name);
         }

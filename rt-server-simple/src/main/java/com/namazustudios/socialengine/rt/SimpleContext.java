@@ -1,20 +1,13 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
-import com.namazustudios.socialengine.rt.manifest.startup.StartupModule;
-import com.namazustudios.socialengine.rt.manifest.startup.StartupOperation;
+import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
-import jdk.jfr.Name;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import static java.lang.Runtime.getRuntime;
 
@@ -76,6 +69,16 @@ public class SimpleContext implements Context, NodeLifecycle {
         getAssetLoader().close();
         getManifestContext().stop();
 
+    }
+
+    @Override
+    public void nodePreStart(Node node) {
+        start();
+    }
+
+    @Override
+    public void nodePostStop(Node node) {
+        shutdown();
     }
 
     @Override

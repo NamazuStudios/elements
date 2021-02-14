@@ -30,12 +30,12 @@ public class HttpClientIntegrationTest {
     @BeforeClass
     private void start() throws Exception {
         getJettyEmbeddedRESTService().start();
-        getContext().start();
+        getEmbeddedTestService().start();
     }
 
     @AfterClass
     private void stop() throws Exception {
-        getContext().shutdown();
+        getEmbeddedTestService().close();
         getJettyEmbeddedRESTService().stop();
     }
 

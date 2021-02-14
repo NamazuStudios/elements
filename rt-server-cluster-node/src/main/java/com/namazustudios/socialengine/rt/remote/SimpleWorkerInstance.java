@@ -90,7 +90,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
             logger.debug("Opening binding for node id {}", s.getNodeId());
 
-            final InstanceBinding binding = getInstanceConnectionService().openBinding(s.getNodeId());
+            final var binding = getInstanceConnectionService().openBinding(s.getNodeId());
             bindingSet.add(binding);
 
             logger.debug("Opened binding for node {}.", s.getNodeId());

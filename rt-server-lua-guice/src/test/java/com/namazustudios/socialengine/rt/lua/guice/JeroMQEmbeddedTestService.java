@@ -142,6 +142,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 );
 
                 install(commonModule);
+                install(new JavaEventModule());
                 install(new ClusterContextModule());
                 install(new FSTPayloadReaderWriterModule());
                 install(new TestWorkerInstanceModule());

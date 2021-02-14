@@ -47,7 +47,7 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public void start() {
 
-        final Context context = new Context();
+        final var context = new Context();
 
         if (this.context.compareAndSet(null, context)) {
             logger.info("Started.");
@@ -59,7 +59,7 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public void stop() {
-        final Context context = this.context.getAndSet(null);
+        final var context = this.context.getAndSet(null);
         if (context == null) throw new IllegalStateException("Not currently running.");
     }
 

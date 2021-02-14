@@ -10,7 +10,6 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQContextModule;
-import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQRemoteInvokerModule;
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.Unscoped;
