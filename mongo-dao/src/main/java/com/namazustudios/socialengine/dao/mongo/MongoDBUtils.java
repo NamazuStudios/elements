@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Iterables;
 import com.mongodb.MongoCommandException;
+import com.mongodb.MongoWriteException;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -83,6 +84,12 @@ public class MongoDBUtils {
             return operation.apply(getDatastore());
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
+                throw exceptionTSupplier.apply(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        } catch (MongoWriteException ex) {
+            if (ex.getCode() == 11000) {
                 throw exceptionTSupplier.apply(ex);
             } else {
                 throw new InternalException(ex);
