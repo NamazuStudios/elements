@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.file.DirectoryNotEmptyException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
@@ -160,14 +161,10 @@ public class UnixFSGarbageCollectionCycle {
             final Path directory = pathMapping.getPathDirectory();
 
             try {
-                if (utils.list(directory).findAny().isPresent() && pessimisticLocking.tryLock(pathMapping.getPath())) {
-                    // If the lock fails, it's because a transaction is writing the directory. In that case,
-                    // if the directory is ever fully emptied it will be picked up in subsequent collection
-                    // cycles.
-                    //
-                    // We use try lock because the garbage collector simply can't fail and re-process.
-                    logger.trace("Directory {} is empty. Deleting.", directory);
+                try {
                     deleteIfExists(directory);
+                } catch (DirectoryNotEmptyException ex) {
+                    logger.warn("Directory not empty. SKipping.", ex);
                 }
             } finally {
                 pessimisticLocking.unlock(pathMapping.getPath());

@@ -9,17 +9,22 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
+
 public class LuaHandlerIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaHandlerIntegrationTest.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withWorkerModule(new LuaModule())
-        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
-        .withDefaultHttpClient()
+            .withWorkerModule(new LuaModule())
+            .withWorkerModule(new JavaEventModule())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
+            .withDefaultHttpClient()
         .start();
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final Context context = getEmbeddedTestService()
+        .getClientIocResolver()
+        .inject(Context.class, REMOTE);
 
     @AfterClass
     public void teardown() {

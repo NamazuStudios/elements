@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.Module;
 import com.google.inject.PrivateModule;
+import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -32,6 +33,7 @@ public class TestWorkerNodeModule extends PrivateModule {
     protected void configure() {
 
         expose(Node.class);
+        expose(IocResolver.class);
         expose(RemoteInvocationDispatcher.class);
 
         workerModules.forEach(this::install);

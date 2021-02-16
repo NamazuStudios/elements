@@ -12,21 +12,27 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static org.mockito.Mockito.*;
 
 public class LuaEventIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
-    private final TestJavaEvent tje = mock(TestJavaEvent.class);
-
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
             .withWorkerModule(new LuaModule())
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
+            .withWorkerModule(new JavaEventModule())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
             .withDefaultHttpClient()
-            .start();
+        .start();
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final Context context = getEmbeddedTestService()
+        .getClientIocResolver()
+        .inject(Context.class, REMOTE);
+
+    private final TestJavaEvent tje = getEmbeddedTestService()
+        .getWorkerIocResolver()
+        .inject(TestJavaEvent.class);
 
     @AfterClass
     public void teardown() {

@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 
@@ -17,12 +18,15 @@ public class TestYielding {
     private static final Logger logger = LoggerFactory.getLogger(TestYielding.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withWorkerModule(new LuaModule())
-        .withDefaultHttpClient()
-        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
+            .withWorkerModule(new LuaModule())
+            .withWorkerModule(new JavaEventModule())
+            .withDefaultHttpClient()
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
         .start();
 
-    private final Context context = embeddedTestService.getContext();
+    private final Context context = embeddedTestService
+        .getClientIocResolver()
+        .inject(Context.class, REMOTE);
 
     @Test
     public void testConcurrentCoroutine() throws Exception {

@@ -17,7 +17,6 @@ public class ResourceEnvironmentProvider implements Provider<Environment> {
 
     public static final String RESOURCE_ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.environment.path";
 
-
     private Provider<String> environmentPathProvider;
 
     @Override

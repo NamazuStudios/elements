@@ -28,6 +28,7 @@ public class ErisPersistenceTestModule extends AbstractModule {
         bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
         bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
+        bind(TestJavaEvent.class).toInstance(mock(TestJavaEvent.class));
 
         // Types that are mocks
 

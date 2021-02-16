@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
@@ -30,12 +31,15 @@ public class LuaResourceIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withWorkerModule(new LuaModule())
-        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
-        .withDefaultHttpClient()
+            .withWorkerModule(new LuaModule())
+            .withWorkerModule(new JavaEventModule())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
+            .withDefaultHttpClient()
         .start();
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final Context context = getEmbeddedTestService()
+        .getClientIocResolver()
+        .inject(Context.class, REMOTE);
 
     @AfterClass
     public void teardown() {

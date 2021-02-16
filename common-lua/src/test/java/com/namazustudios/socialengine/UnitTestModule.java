@@ -18,6 +18,7 @@ import javax.ws.rs.client.Client;
 import java.lang.annotation.Annotation;
 import java.util.*;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.spy;
 
@@ -50,7 +51,10 @@ public class UnitTestModule extends AbstractModule {
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .start());
 
-        bind(Context.class).toProvider(embeddedTestService::getContext);
+        bind(Context.class).toProvider(() -> embeddedTestService
+            .getClientIocResolver()
+            .inject(Context.class, REMOTE)
+        );
 
     }
 

@@ -1,18 +1,19 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider;
 import com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider;
 import jetbrains.exodus.env.Environment;
 
-import java.io.File;
+import java.io.IOException;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
+import static java.nio.file.Files.createTempDirectory;
 
 public class XodusEnvironmentModule extends AbstractModule {
 
@@ -55,15 +56,21 @@ public class XodusEnvironmentModule extends AbstractModule {
     }
 
     public XodusEnvironmentModule withTempResourceEnvironment() {
-        final File resourceDirectory = Files.createTempDir();
-        resourceDirectory.deleteOnExit();
-        return withResourceEnvironmentPath(resourceDirectory.getAbsolutePath());
+        try {
+            final var dir = createTempDirectory("resource-xodus");
+            return withResourceEnvironmentPath(dir.toAbsolutePath().toString());
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
     }
 
     public XodusEnvironmentModule withTempSchedulerEnvironment() {
-        final File schedulerDirectory = Files.createTempDir();
-        schedulerDirectory.deleteOnExit();
-        return withSchedulerEnvironmentPath(schedulerDirectory.getAbsolutePath());
+        try {
+            final var dir = createTempDirectory("scheduler-xodus");
+            return withSchedulerEnvironmentPath(dir.toAbsolutePath().toString());
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.guice.rest.SimpleModelEndpoint;
 import com.namazustudios.socialengine.rt.lua.guice.rest._t;
 import org.eclipse.jetty.server.Server;
@@ -19,7 +20,7 @@ public class JettyEmbeddedRESTService {
 
     private Server server;
 
-    public void start() throws Exception {
+    public JettyEmbeddedRESTService start() {
 
         if (server != null) throw new IllegalStateException();
         server = new Server(0);
@@ -33,7 +34,14 @@ public class JettyEmbeddedRESTService {
         servlet.setInitParameter(ServerProperties.PROVIDER_CLASSNAMES, JacksonFeature.class.getName());
 
         server.setHandler(context);
-        server.start();
+
+        try {
+            server.start();
+        } catch (Exception e) {
+            throw new InternalException(e);
+        }
+
+        return this;
 
     }
 

@@ -11,27 +11,26 @@ import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static java.util.UUID.randomUUID;
 
 public class HttpClientIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientIntegrationTest.class);
 
-    private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService();
-
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withDefaultHttpClient()
-        .withWorkerModule(new LuaModule())
-        .withWorkerModule(new XodusEnvironmentModule().withTempResourceEnvironment().withTempSchedulerEnvironment())
+    private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService()
         .start();
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+            .withWorkerModule(new LuaModule())
+            .withWorkerModule(new JavaEventModule())
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
+            .withDefaultHttpClient()
+        .start();
 
-    @BeforeClass
-    private void start() throws Exception {
-        getJettyEmbeddedRESTService().start();
-        getEmbeddedTestService().start();
-    }
+    private final Context context = getEmbeddedTestService()
+        .getClientIocResolver()
+        .inject(Context.class, REMOTE);
 
     @AfterClass
     private void stop() throws Exception {

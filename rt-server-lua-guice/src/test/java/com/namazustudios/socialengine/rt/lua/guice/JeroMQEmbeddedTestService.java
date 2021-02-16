@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.*;
 import com.namazustudios.socialengine.rt.*;
@@ -34,7 +32,7 @@ import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.inject.Key.get;
+import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
@@ -52,11 +50,13 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     public static final int MAXIMUM_CONNECTIONS = 250;
 
-    private Context context;
-
     private Instance worker;
 
     private Instance client;
+
+    private Injector clientInjector;
+
+    private Injector workerInjector;
 
     private final ZContext zContext = new ZContext();
 
@@ -81,6 +81,8 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
     }
 
     public JeroMQEmbeddedTestService start() {
+
+        if (client != null || worker != null) throw new IllegalStateException("Already started.");
 
         final var prefix = JeroMQEmbeddedTestService.class.getSimpleName();
         final var clientInstanceId = InstanceId.forUniqueName(format("%s.client", prefix));
@@ -142,7 +144,6 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 );
 
                 install(commonModule);
-                install(new JavaEventModule());
                 install(new ClusterContextModule());
                 install(new FSTPayloadReaderWriterModule());
                 install(new TestWorkerInstanceModule());
@@ -185,12 +186,11 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             }
         };
 
-        final var workerInjector = Guice.createInjector(workerModule);
+        workerInjector = createInjector(workerModule);
         worker = workerInjector.getInstance(Instance.class);
 
-        final var clientInjector = Guice.createInjector(clientModule);
+        clientInjector = createInjector(clientModule);
         client = clientInjector.getInstance(Instance.class);
-        context = clientInjector.getInstance(get(Context.class, named(REMOTE)));
 
         final List<Exception> exceptionList = new ArrayList<>();
 
@@ -215,10 +215,6 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
         return this;
 
-    }
-
-    public Context getContext() {
-        return context;
     }
 
     public Instance getClient() {
@@ -250,6 +246,14 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
 
+    }
+
+    public IocResolver getClientIocResolver() {
+        return clientInjector.getInstance(IocResolver.class);
+    }
+
+    public IocResolver getWorkerIocResolver() {
+        return workerInjector.getInstance(IocResolver.class);
     }
 
 }

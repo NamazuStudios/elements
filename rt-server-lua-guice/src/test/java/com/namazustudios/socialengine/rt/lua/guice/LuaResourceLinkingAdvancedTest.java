@@ -17,6 +17,7 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.Path.fromContextAndComponents;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static org.testng.Assert.assertEquals;
@@ -27,11 +28,14 @@ public class LuaResourceLinkingAdvancedTest {
 
     private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
             .withWorkerModule(new LuaModule())
+            .withWorkerModule(new JavaEventModule())
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .withDefaultHttpClient()
         .start();
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final Context context = getEmbeddedTestService()
+        .getClientIocResolver()
+        .inject(Context.class, REMOTE);
 
     @AfterClass
     public void teardown() {

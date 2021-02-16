@@ -41,8 +41,6 @@ public class TestCoreErisPersistenceStreams {
 
     private ResourceLoader resourceLoader;
 
-    private Context context;
-
     @AfterSuite
     public static void deleteTempFiles() {
         testTemporaryFiles.deleteTempFiles();
@@ -253,33 +251,6 @@ public class TestCoreErisPersistenceStreams {
     @Inject
     public void setResourceLoader(ResourceLoader resourceLoader) {
         this.resourceLoader = resourceLoader;
-    }
-
-    public Context getContext() {
-        return context;
-    }
-
-    @Inject
-    public void setContext(Context context) {
-        this.context = context;
-    }
-
-    public static class Module extends AbstractModule {
-
-        @Override
-        protected void configure() {
-
-            install(new LuaModule());
-            install(new SimpleContextModule());
-
-            bind(Client.class).toInstance(mock(Client.class));
-            bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
-            bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
-            bind(Integer.class).annotatedWith(named(SCHEDULER_THREADS)).toInstance(1);
-            bind(Long.class).annotatedWith(named(HANDLER_TIMEOUT_MSEC)).toInstance(90l);
-
-        }
-
     }
 
     private static final class DummyObject implements Serializable {
