@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -19,7 +21,7 @@ public class LuaEventIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+    private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
             .withWorkerModule(new LuaModule())
             .withWorkerModule(new JavaEventModule())
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
@@ -82,7 +84,7 @@ public class LuaEventIntegrationTest {
         verify(tje, times(2)).whoWithCount(anyString(), anyString());
     }
 
-    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+    public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
     }
 

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.lua.guice;
+package com.namazustudios.socialengine.test.guice;
 
 import com.google.inject.Key;
 import com.google.inject.PrivateModule;

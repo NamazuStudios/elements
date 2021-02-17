@@ -78,6 +78,7 @@
         <module>web-ui-angular</module>
         <module>rest-api-test</module>
         <module>setup-sshd</module>
+        <module>rt-server-testkit</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

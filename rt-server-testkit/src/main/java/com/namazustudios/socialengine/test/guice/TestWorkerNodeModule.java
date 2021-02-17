@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.lua.guice;
+package com.namazustudios.socialengine.test.guice;
 
 import com.google.inject.Module;
 import com.google.inject.PrivateModule;
@@ -13,8 +13,8 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
-import static com.namazustudios.socialengine.rt.lua.guice.JeroMQEmbeddedTestService.MAXIMUM_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.lua.guice.JeroMQEmbeddedTestService.MINIMUM_CONNECTIONS;
+import static com.namazustudios.socialengine.test.JeroMQEmbeddedTestService.MAXIMUM_CONNECTIONS;
+import static com.namazustudios.socialengine.test.JeroMQEmbeddedTestService.MINIMUM_CONNECTIONS;
 
 public class TestWorkerNodeModule extends PrivateModule {
 

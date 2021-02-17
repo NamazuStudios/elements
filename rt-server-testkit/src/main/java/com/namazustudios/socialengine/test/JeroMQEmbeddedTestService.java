@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.rt.lua.guice;
+package com.namazustudios.socialengine.test;
 
 import com.google.inject.Module;
 import com.google.inject.*;
@@ -22,6 +22,7 @@ import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceSer
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
+import com.namazustudios.socialengine.test.guice.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -32,17 +33,12 @@ import javax.ws.rs.client.ClientBuilder;
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.google.inject.Guice.createInjector;
-import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.Context.REMOTE;
-import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
 import static java.lang.String.format;
-import static org.zeromq.ZContext.shadow;
 
 /**
  * Embeds a test kit which supplies an instance of {@link Context} and {@link Node}.
  */
-public class JeroMQEmbeddedTestService implements AutoCloseable {
+public class JeroMQEmbeddedTestService implements EmbeddedTestService {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQEmbeddedTestService.class);
 
@@ -50,11 +46,13 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     public static final int MAXIMUM_CONNECTIONS = 250;
 
-    private Instance worker;
-
     private Instance client;
 
     private Injector clientInjector;
+
+    private Worker worker;
+
+    private Instance workerInstance;
 
     private Injector workerInjector;
 
@@ -77,20 +75,24 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
     }
 
     public JeroMQEmbeddedTestService withDefaultHttpClient() {
-        return withWorkerModule(binder -> binder.bind(Client.class).toProvider(ClientBuilder::newClient).asEagerSingleton());
+        return withWorkerModule(binder -> binder
+            .bind(Client.class)
+            .toProvider(ClientBuilder::newClient)
+            .asEagerSingleton());
     }
 
-    public JeroMQEmbeddedTestService start() {
+    @Override
+    public EmbeddedTestService start() {
 
-        if (client != null || worker != null) throw new IllegalStateException("Already started.");
+        if (client != null || workerInstance != null) throw new IllegalStateException("Already started.");
 
         final var prefix = JeroMQEmbeddedTestService.class.getSimpleName();
         final var clientInstanceId = InstanceId.forUniqueName(format("%s.client", prefix));
         final var workerInstanceId = InstanceId.forUniqueName(format("%s.worker", prefix));
         final var applicationId = ApplicationId.forUniqueName(format("%s.application", prefix));
 
-        final var clientBindAddress = format("inproc://integration-test-client/%s", clientInstanceId.asString());
-        final var workerBindAddress = format("inproc://integration-test-worker/%s", workerInstanceId.asString());
+        final var clientBindAddress = String.format("inproc://integration-test-client/%s", clientInstanceId.asString());
+        final var workerBindAddress = String.format("inproc://integration-test-worker/%s", workerInstanceId.asString());
 
         final var commonModule = new AbstractModule() {
             @Override
@@ -99,7 +101,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
                 final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
                 bind(ApplicationId.class).toInstance(applicationId);
 
-                bind(ZContext.class).toProvider(() -> shadow(zContext));
+                bind(ZContext.class).toProvider(() -> ZContext.shadow(zContext));
 
                 bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
 
@@ -165,7 +167,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
                 bind(InstanceId.class).toInstance(clientInstanceId);
                 bind(ApplicationId.class).toInstance(applicationId);
-                bind(NodeId.class).toInstance(forInstanceAndApplication(clientInstanceId, applicationId));
+                bind(NodeId.class).toInstance(NodeId.forInstanceAndApplication(clientInstanceId, applicationId));
 
                 bind(RemoteInvocationDispatcher.class)
                     .to(SimpleRemoteInvocationDispatcher.class)
@@ -186,16 +188,17 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             }
         };
 
-        workerInjector = createInjector(workerModule);
-        worker = workerInjector.getInstance(Instance.class);
+        workerInjector = Guice.createInjector(workerModule);
+        worker = workerInjector.getInstance(Worker.class);
+        workerInstance = workerInjector.getInstance(Instance.class);
 
-        clientInjector = createInjector(clientModule);
+        clientInjector = Guice.createInjector(clientModule);
         client = clientInjector.getInstance(Instance.class);
 
         final List<Exception> exceptionList = new ArrayList<>();
 
         try {
-            getWorker().start();
+            getWorkerInstance().start();
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Exception starting test worker instance.", ex);
@@ -208,7 +211,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
             logger.error("Exception starting test client instance.", ex);
         }
 
-        getWorker().refreshConnections();
+        getWorkerInstance().refreshConnections();
         getClient().refreshConnections();
 
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
@@ -217,12 +220,19 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     }
 
+    @Override
     public Instance getClient() {
         return client;
     }
 
-    public Instance getWorker() {
+    @Override
+    public Worker getWorker() {
         return worker;
+    }
+
+    @Override
+    public Instance getWorkerInstance() {
+        return workerInstance;
     }
 
     @Override
@@ -238,7 +248,7 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
         }
 
         try {
-            getWorker().close();
+            getWorkerInstance().close();
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Exception stopping test worker instance.", ex);
@@ -248,10 +258,12 @@ public class JeroMQEmbeddedTestService implements AutoCloseable {
 
     }
 
+    @Override
     public IocResolver getClientIocResolver() {
         return clientInjector.getInstance(IocResolver.class);
     }
 
+    @Override
     public IocResolver getWorkerIocResolver() {
         return workerInjector.getInstance(IocResolver.class);
     }

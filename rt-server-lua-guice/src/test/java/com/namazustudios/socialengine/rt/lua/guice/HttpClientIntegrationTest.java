@@ -2,12 +2,12 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -21,7 +21,7 @@ public class HttpClientIntegrationTest {
     private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService()
         .start();
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+    private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
             .withWorkerModule(new LuaModule())
             .withWorkerModule(new JavaEventModule())
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
@@ -59,7 +59,7 @@ public class HttpClientIntegrationTest {
         };
     }
 
-    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+    public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
     }
 
