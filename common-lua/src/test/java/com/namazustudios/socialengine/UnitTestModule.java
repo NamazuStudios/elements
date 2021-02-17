@@ -6,10 +6,12 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
-import com.namazustudios.socialengine.rt.lua.guice.JeroMQEmbeddedTestService;
+
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.NotificationBuilder;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,12 +45,12 @@ public class UnitTestModule extends AbstractModule {
         mockModule.mock(NotificationBuilder.class);
         mockModule.bind(spyApplication, Key.get(Application.class));
 
-        bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService
-            .withWorkerModule(new LuaModule()
-                .visitDiscoveredModule(mockModule::mock))
+        bind(EmbeddedTestService.class).toInstance(embeddedTestService
+            .withWorkerModule(new LuaModule().visitDiscoveredModule(mockModule::mock))
             .withWorkerModule(mockModule)
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
-            .start());
+            .start()
+        );
 
         bind(Context.class).toProvider(() -> embeddedTestService
             .getClientIocResolver()
