@@ -1,11 +1,11 @@
 package com.namazustudios.socialengine.cdnserve.resolver;
 
 import com.namazustudios.socialengine.codeserve.ApplicationRepositoryResolver;
-import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.rt.git.GitLoader;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
-
 import java.io.IOException;
 
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
@@ -75,7 +74,7 @@ public class CdnServeRepositoryResolver implements RepositoryResolver<HttpServle
         try {
             logger.info("Resolving content repository for application {}", application.getId());
             return getApplicationRepositoryResolver().resolve(application, r -> {
-                getGitLoader().performInGit(application, (g, f) -> doInit(user, g));
+                getGitLoader().performInGit(application.getId(), (g, f) -> doInit(user, g));
                 logger.info("Created content repository for application {} ({})", application.getName(), application.getId());
             });
         } catch (RepositoryNotFoundException   |

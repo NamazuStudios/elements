@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.cdnserve.api;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.DeploymentDao;
-import com.namazustudios.socialengine.dao.rt.GitLoader;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.application.ApplicationNotFoundException;
 import com.namazustudios.socialengine.exception.cdnserve.GitCloneIOException;
@@ -10,6 +9,7 @@ import com.namazustudios.socialengine.exception.cdnserve.SymbolicLinkIOException
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.git.GitLoader;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -117,7 +117,10 @@ public class SuperuserDeploymentService implements DeploymentService {
 
 
     private void copyRepositoryContentsForRevision(Deployment newDeployment) {
-        getGitLoader().performInGit(newDeployment.getApplication(), (git, r) -> {
+
+        final var applicationId = newDeployment.getApplication().getId();
+
+        getGitLoader().performInGit(applicationId, (git, r) -> {
             try {
                 git.pull().call();
             } catch (GitAPIException e) {

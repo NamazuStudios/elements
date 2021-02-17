@@ -109,7 +109,9 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile createProfile(CreateProfileRequest profileRequest) {
         checkUserAndProfile(profileRequest.getUserId());
-        final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
+        final EventContext eventContext = getContextFactory()
+            .getContextForApplication(profileRequest.getApplicationId())
+            .getEventContext();
         final Profile createdProfile = getProfileDao().createOrReactivateProfile(createNewProfile(profileRequest));
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)

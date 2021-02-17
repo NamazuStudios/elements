@@ -18,19 +18,19 @@ public class ReadOnlyManifestService implements ManifestService {
 
     @Override
     public HttpManifest getHttpManifestForApplication(Application application) {
-        final Context context = getContextFactory().getContextForApplicationUniqueId(application.getId());
+        final Context context = getContextFactory().getContextForApplication(application.getId());
         return context.getManifestContext().getHttpManifest();
     }
 
     @Override
     public ModelManifest getModelManifestForApplication(Application application) {
-        final Context context = getContextFactory().getContextForApplicationUniqueId(application.getId());
+        final Context context = getContextFactory().getContextForApplication(application.getId());
         return context.getManifestContext().getModelManifest();
     }
 
     @Override
     public SecurityManifest getSecurityManifestForApplication(Application application) {
-        final Context context = getContextFactory().getContextForApplicationUniqueId(application.getId());
+        final Context context = getContextFactory().getContextForApplication(application.getId());
         return context.getManifestContext().getSecurityManifest();
     }
 

@@ -32,13 +32,28 @@ public interface GitLoader {
      * Opens a {@link Git} instance for the supplied {@link ApplicationId} which can be used to manipulate the various
      * files within the repository.  When call returns the supplied {@link Git} instance will be closed.
      *
+     * {@see {@link ApplicationId#forUniqueName(String)}} to understand how this method interprets the first parameter.
+     *
+     * @param applicationUniqueName the {@link ApplicationId} for which to open a {@link Git} instance
+     * @param gitConsumer consumes an instance of {@link Git} which will be used to perform the desired actions
+     */
+    default void performInGit(final String applicationUniqueName,
+                              final BiConsumer<Git, Function<Path, OutputStream>> gitConsumer) {
+        final var id = ApplicationId.forUniqueName(applicationUniqueName);
+        performInGit(id, gitConsumer);
+    }
+
+    /**
+     * Opens a {@link Git} instance for the supplied {@link ApplicationId} which can be used to manipulate the various
+     * files within the repository.  When call returns the supplied {@link Git} instance will be closed.
+     *
      * @param applicationId the {@link ApplicationId} for which to open a {@link Git} instance
      * @param gitConsumer consumes an instance of {@link Git} which will be used to perform the desired actions
      */
     void performInGit(ApplicationId applicationId, BiConsumer<Git, Function<Path, OutputStream>> gitConsumer);
 
     /**
-     * Gets the code directory for the supplied {@link Application} and clones if necessary.  This will
+     * Gets the code directory for the supplied {@link ApplicationId} and clones if necessary.  This will
      * ensure that the latest branch, as specified by {@link #DEFAULT_MAIN_BRANCH} is checked out and current.
      *
      * The returned {@link File} will likely be a temporary live copy of the code backing the {@link ApplicationId}.

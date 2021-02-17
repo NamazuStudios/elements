@@ -87,23 +87,13 @@ public interface Context {
     interface Factory {
 
         /**
-         * Returns the {@link Context} given the application's unique name.
-         * @param applicationUniqueName
-         * @return
-         */
-        default Context getContextForApplicationUniqueId(final String applicationUniqueName) {
-            final var applicationId = ApplicationId.forUniqueName(applicationUniqueName);
-            return getContextForApplication(applicationId);
-        }
-
-        /**
-         * Gets the {@link Context} for the supplied string representing the {@link ApplicationId}
+         * Gets the {@link Context} for the supplied string representing the {@link ApplicationId}.
          *
-         * @param applicationIdString the string representing the application
+         * @param applicationIdString The unique application name {@see {@link ApplicationId#forUniqueName(String)}}
          * @return the {@link Context}
          */
         default Context getContextForApplication(final String applicationIdString) {
-            final var applicationId = new ApplicationId(applicationIdString);
+            final var applicationId = ApplicationId.forUniqueName(applicationIdString);
             return getContextForApplication(applicationId);
         }
 
