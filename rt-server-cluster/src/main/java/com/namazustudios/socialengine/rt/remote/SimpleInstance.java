@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.AsyncConnection;
 import com.namazustudios.socialengine.rt.AsyncConnectionService;
+import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import org.slf4j.Logger;
@@ -17,6 +18,8 @@ public class SimpleInstance implements Instance {
     private static final Logger logger = LoggerFactory.getLogger(SimpleInstance.class);
 
     protected InstanceId instanceId;
+
+    private IocResolver iocResolver;
 
     private RemoteInvokerRegistry remoteInvokerRegistry;
 
@@ -141,6 +144,17 @@ public class SimpleInstance implements Instance {
     @Inject
     public void setInstanceId(InstanceId instanceId) {
         this.instanceId = instanceId;
+    }
+
+
+    @Override
+    public IocResolver getIocResolver() {
+        return iocResolver;
+    }
+
+    @Inject
+    public void setIocResolver(IocResolver iocResolver) {
+        this.iocResolver = iocResolver;
     }
 
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {

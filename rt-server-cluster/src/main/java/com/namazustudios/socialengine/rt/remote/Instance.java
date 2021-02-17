@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -36,5 +37,13 @@ public interface Instance extends AutoCloseable {
      * Forces a refresh of the underlying connections as necessary.
      */
     void refreshConnections();
+
+    /**
+     * Gets the IoC resolver used by this {@link Instance} which may be used to access the instances services. Typically
+     * this is used for testing.
+     *
+     * @return the {@link IocResolver}
+     */
+    IocResolver getIocResolver();
 
 }

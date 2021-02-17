@@ -36,7 +36,7 @@ import java.util.List;
 import static java.lang.String.format;
 
 /**
- * Embeds a test kit which supplies an instance of {@link Context} and {@link Node}.
+ * Embeds a test kit which supplies two {@link Instance}s. One which runs the client, and one which runs a worker.
  */
 public class JeroMQEmbeddedTestService implements EmbeddedTestService {
 
@@ -58,27 +58,18 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
 
     private final ZContext zContext = new ZContext();
 
-    private final List<Module> workerModules = new ArrayList<>();
-
-    private final List<Module> clientModules = new ArrayList<>();
-
     public JeroMQEmbeddedTestService() {}
 
     public JeroMQEmbeddedTestService withWorkerModule(final Module module) {
-        workerModules.add(module);
-        return this;
+        throw new UnsupportedOperationException();
     }
 
     public JeroMQEmbeddedTestService withClientModule(final Module module) {
-        clientModules.add(module);
-        return this;
+        throw new UnsupportedOperationException();
     }
 
     public JeroMQEmbeddedTestService withDefaultHttpClient() {
-        return withWorkerModule(binder -> binder
-            .bind(Client.class)
-            .toProvider(ClientBuilder::newClient)
-            .asEagerSingleton());
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -98,32 +89,32 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
             @Override
             protected void configure() {
 
-                final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
-                bind(ApplicationId.class).toInstance(applicationId);
-
-                bind(ZContext.class).toProvider(() -> ZContext.shadow(zContext));
-
-                bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
-
-                bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
-                    .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))
-                    .asEagerSingleton();
-
-                bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
-                    .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
-
-                bind(RemoteInvokerRegistry.class)
-                    .to(SimpleRemoteInvokerRegistry.class)
-                    .asEagerSingleton();
-
-                install(new StaticInstanceDiscoveryServiceModule()
-                    .withInstanceAddresses(workerBindAddress));
-
-                install(new JeroMQRemoteInvokerModule()
-                    .withMinimumConnections(MINIMUM_CONNECTIONS)
-                    .withMaximumConnections(MAXIMUM_CONNECTIONS));
-
-                install(new JeroMQControlClientModule());
+//                final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
+//                bind(ApplicationId.class).toInstance(applicationId);
+//
+//                bind(ZContext.class).toProvider(() -> ZContext.shadow(zContext));
+//
+//                bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
+//
+//                bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
+//                    .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))
+//                    .asEagerSingleton();
+//
+//                bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
+//                    .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
+//
+//                bind(RemoteInvokerRegistry.class)
+//                    .to(SimpleRemoteInvokerRegistry.class)
+//                    .asEagerSingleton();
+//
+//                install(new StaticInstanceDiscoveryServiceModule()
+//                    .withInstanceAddresses(workerBindAddress));
+//
+//                install(new JeroMQRemoteInvokerModule()
+//                    .withMinimumConnections(MINIMUM_CONNECTIONS)
+//                    .withMaximumConnections(MAXIMUM_CONNECTIONS));
+//
+//                install(new JeroMQControlClientModule());
 
             }
         };
@@ -132,31 +123,31 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
             @Override
             protected void configure() {
 
-                bind(InstanceId.class).toInstance(workerInstanceId);
-                bind(ApplicationId.class).toInstance(applicationId);
-                bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(ClassLoader.getSystemClassLoader()));
-
-                final var allWorkerModules = new ArrayList<>(workerModules);
-
-                allWorkerModules.add(new TestServicesModule());
-                allWorkerModules.add(new TransactionalResourceServiceModule());
-                allWorkerModules.add(new SimpleContextModule()
-                    .withDefaultContexts()
-                    .withSchedulerContextModules(new XodusSchedulerContextModule())
-                );
-
-                install(commonModule);
-                install(new ClusterContextModule());
-                install(new FSTPayloadReaderWriterModule());
-                install(new TestWorkerInstanceModule());
-                install(new TestMasterNodeModule(workerInstanceId));
-                install(new TestWorkerNodeModule(workerInstanceId, applicationId, allWorkerModules));
-                install(new JeroMQInstanceConnectionServiceModule()
-                    .withBindAddress(workerBindAddress)
-                    .withDefaultRefreshInterval());
-                install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
-                install(new SimpleTransactionalResourceServicePersistenceModule());
-                install(new UnixFSTransactionalPersistenceContextModule().withTestingDefaults());
+//                bind(InstanceId.class).toInstance(workerInstanceId);
+//                bind(ApplicationId.class).toInstance(applicationId);
+//                bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(ClassLoader.getSystemClassLoader()));
+//
+//                final var allWorkerModules = new ArrayList<>(workerModules);
+//
+//                allWorkerModules.add(new TestServicesModule());
+//                allWorkerModules.add(new TransactionalResourceServiceModule());
+//                allWorkerModules.add(new SimpleContextModule()
+//                    .withDefaultContexts()
+//                    .withSchedulerContextModules(new XodusSchedulerContextModule())
+//                );
+//
+//                install(commonModule);
+//                install(new ClusterContextModule());
+//                install(new FSTPayloadReaderWriterModule());
+//                install(new TestWorkerInstanceModule());
+//                install(new TestMasterNodeModule(workerInstanceId));
+//                install(new TestWorkerNodeModule(workerInstanceId, applicationId, allWorkerModules));
+//                install(new JeroMQInstanceConnectionServiceModule()
+//                    .withBindAddress(workerBindAddress)
+//                    .withDefaultRefreshInterval());
+//                install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
+//                install(new SimpleTransactionalResourceServicePersistenceModule());
+//                install(new UnixFSTransactionalPersistenceContextModule().withTestingDefaults());
 
             }
         };
@@ -165,25 +156,25 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
             @Override
             protected void configure() {
 
-                bind(InstanceId.class).toInstance(clientInstanceId);
-                bind(ApplicationId.class).toInstance(applicationId);
-                bind(NodeId.class).toInstance(NodeId.forInstanceAndApplication(clientInstanceId, applicationId));
-
-                bind(RemoteInvocationDispatcher.class)
-                    .to(SimpleRemoteInvocationDispatcher.class)
-                    .asEagerSingleton();
-
-                install(commonModule);
-                clientModules.forEach(this::install);
-
-                install(new GuiceIoCResolverModule());
-                install(new ClusterContextModule());
-                install(new FSTPayloadReaderWriterModule());
-                install(new TestClientInstanceModule());
-                install(new JeroMQInstanceConnectionServiceModule()
-                    .withBindAddress(clientBindAddress)
-                    .withDefaultRefreshInterval()
-                );
+//                bind(InstanceId.class).toInstance(clientInstanceId);
+//                bind(ApplicationId.class).toInstance(applicationId);
+//                bind(NodeId.class).toInstance(NodeId.forInstanceAndApplication(clientInstanceId, applicationId));
+//
+//                bind(RemoteInvocationDispatcher.class)
+//                    .to(SimpleRemoteInvocationDispatcher.class)
+//                    .asEagerSingleton();
+//
+//                install(commonModule);
+//                clientModules.forEach(this::install);
+//
+//                install(new GuiceIoCResolverModule());
+//                install(new ClusterContextModule());
+//                install(new FSTPayloadReaderWriterModule());
+//                install(new TestClientInstanceModule());
+//                install(new JeroMQInstanceConnectionServiceModule()
+//                    .withBindAddress(clientBindAddress)
+//                    .withDefaultRefreshInterval()
+//                );
 
             }
         };
@@ -266,6 +257,123 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
     @Override
     public IocResolver getWorkerIocResolver() {
         return workerInjector.getInstance(IocResolver.class);
+    }
+
+    public class TestApplicationBuilder {
+
+        private final List<Module> workerModules = new ArrayList<>();
+
+        private final List<Module> clientModules = new ArrayList<>();
+
+        private TestApplicationBuilder() {}
+
+        public JeroMQEmbeddedTestService build() {
+
+            final var prefix = JeroMQEmbeddedTestService.class.getSimpleName();
+            final var clientInstanceId = InstanceId.forUniqueName(format("%s.client", prefix));
+            final var workerInstanceId = InstanceId.forUniqueName(format("%s.worker", prefix));
+            final var applicationId = ApplicationId.forUniqueName(format("%s.application", prefix));
+
+            final var clientBindAddress = String.format("inproc://integration-test-client/%s", clientInstanceId.asString());
+            final var workerBindAddress = String.format("inproc://integration-test-worker/%s", workerInstanceId.asString());
+
+            final var commonModule = new AbstractModule() {
+                @Override
+                protected void configure() {
+
+                    final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
+                    bind(ApplicationId.class).toInstance(applicationId);
+
+                    bind(ZContext.class).toProvider(() -> ZContext.shadow(zContext));
+
+                    bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
+
+                    bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
+                            .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))
+                            .asEagerSingleton();
+
+                    bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
+                            .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
+
+                    bind(RemoteInvokerRegistry.class)
+                            .to(SimpleRemoteInvokerRegistry.class)
+                            .asEagerSingleton();
+
+                    install(new StaticInstanceDiscoveryServiceModule()
+                            .withInstanceAddresses(workerBindAddress));
+
+                    install(new JeroMQRemoteInvokerModule()
+                            .withMinimumConnections(MINIMUM_CONNECTIONS)
+                            .withMaximumConnections(MAXIMUM_CONNECTIONS));
+
+                    install(new JeroMQControlClientModule());
+
+                }
+            };
+
+            final var workerModule = new AbstractModule() {
+                @Override
+                protected void configure() {
+
+                    bind(InstanceId.class).toInstance(workerInstanceId);
+                    bind(ApplicationId.class).toInstance(applicationId);
+                    bind(AssetLoader.class).toProvider(() -> new ClasspathAssetLoader(ClassLoader.getSystemClassLoader()));
+
+                    final var allWorkerModules = new ArrayList<>(workerModules);
+
+                    allWorkerModules.add(new TestServicesModule());
+                    allWorkerModules.add(new TransactionalResourceServiceModule());
+                    allWorkerModules.add(new SimpleContextModule()
+                            .withDefaultContexts()
+                            .withSchedulerContextModules(new XodusSchedulerContextModule())
+                    );
+
+                    install(commonModule);
+                    install(new ClusterContextModule());
+                    install(new FSTPayloadReaderWriterModule());
+                    install(new TestWorkerInstanceModule());
+                    install(new TestMasterNodeModule(workerInstanceId));
+                    install(new TestWorkerNodeModule(workerInstanceId, applicationId, allWorkerModules));
+                    install(new JeroMQInstanceConnectionServiceModule()
+                            .withBindAddress(workerBindAddress)
+                            .withDefaultRefreshInterval());
+                    install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
+                    install(new SimpleTransactionalResourceServicePersistenceModule());
+                    install(new UnixFSTransactionalPersistenceContextModule().withTestingDefaults());
+
+                }
+            };
+
+            final var clientModule = new AbstractModule() {
+                @Override
+                protected void configure() {
+
+                    bind(InstanceId.class).toInstance(clientInstanceId);
+                    bind(ApplicationId.class).toInstance(applicationId);
+                    bind(NodeId.class).toInstance(NodeId.forInstanceAndApplication(clientInstanceId, applicationId));
+
+                    bind(RemoteInvocationDispatcher.class)
+                            .to(SimpleRemoteInvocationDispatcher.class)
+                            .asEagerSingleton();
+
+                    install(commonModule);
+                    clientModules.forEach(this::install);
+
+                    install(new GuiceIoCResolverModule());
+                    install(new ClusterContextModule());
+                    install(new FSTPayloadReaderWriterModule());
+                    install(new TestClientInstanceModule());
+                    install(new JeroMQInstanceConnectionServiceModule()
+                            .withBindAddress(clientBindAddress)
+                            .withDefaultRefreshInterval()
+                    );
+
+                }
+            };
+
+            return JeroMQEmbeddedTestService.this;
+        }
+
     }
 
 }
