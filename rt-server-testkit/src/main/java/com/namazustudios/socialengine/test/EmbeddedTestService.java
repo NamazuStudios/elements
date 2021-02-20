@@ -2,8 +2,11 @@ package com.namazustudios.socialengine.test;
 
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.IocResolver;
+import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.Worker;
+
+import java.util.function.Consumer;
 
 /**
  * Represents a completely and entirely separate test kit. This is an interface to a complete and total embedded test
@@ -25,25 +28,12 @@ public interface EmbeddedTestService extends AutoCloseable {
     EmbeddedTestService start();
 
     /**
-     * Gets the client {@link Instance}.
+     * Subscribes to an even that is fired when the service is closed.
      *
-     * @return the client {@link Instance}
+     * @param consumer
+     * @return
      */
-    Instance getClient();
-
-    /**
-     * Gets the worker {@link Worker}.
-     *
-     * @return the worker {@link Worker}
-     */
-    Worker getWorker();
-
-    /**
-     * Gets the worker {@link Instance}.
-     *
-     * @return the worker {@link Instance}
-     */
-    Instance getWorkerInstance();
+    Subscription onClose(Consumer<? super EmbeddedTestService> consumer);
 
     /**
      * Closes the test service.
@@ -52,17 +42,27 @@ public interface EmbeddedTestService extends AutoCloseable {
     void close();
 
     /**
-     * Returns an {@link IocResolver} which can be used to access internal services bound to the client instance.
+     * Gets the client {@link Instance}.
      *
-     * @return the client {@link IocResolver}
+     * @return the client {@link Instance}
      */
-    IocResolver getClientIocResolver();
+    EmbeddedInstanceContainer getClient();
 
     /**
-     * Return an {@link IocResolver} which can be used toa access internal services bound to the worker instance.
+     * Gets the worker {@link Worker}.
      *
-     * @return the client {@link IocResolver}
+     * @return the worker {@link Worker}
+     */
+    EmbeddedWorkerInstanceContainer getWorker();
+
+    /**
+     * Gets the {@link IocResolver} for the default application. This is implementation specific. Typically this means
+     * it is the first-configured {@link com.namazustudios.socialengine.rt.id.ApplicationId}
+     *
+     * @return
      */
     IocResolver getWorkerIocResolver();
+
+    IocResolver getClientIocResolver();
 
 }

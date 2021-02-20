@@ -38,12 +38,4 @@ public interface Instance extends AutoCloseable {
      */
     void refreshConnections();
 
-    /**
-     * Gets the IoC resolver used by this {@link Instance} which may be used to access the instances services. Typically
-     * this is used for testing.
-     *
-     * @return the {@link IocResolver}
-     */
-    IocResolver getIocResolver();
-
 }

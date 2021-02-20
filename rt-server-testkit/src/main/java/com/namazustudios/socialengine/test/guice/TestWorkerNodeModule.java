@@ -13,8 +13,8 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import java.util.List;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
-import static com.namazustudios.socialengine.test.JeroMQEmbeddedTestService.MAXIMUM_CONNECTIONS;
-import static com.namazustudios.socialengine.test.JeroMQEmbeddedTestService.MINIMUM_CONNECTIONS;
+import static com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.MAXIMUM_CONNECTIONS;
+import static com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.MINIMUM_CONNECTIONS;
 
 public class TestWorkerNodeModule extends PrivateModule {
 
@@ -22,10 +22,8 @@ public class TestWorkerNodeModule extends PrivateModule {
 
     private final List<Module> workerModules;
 
-    public TestWorkerNodeModule(final InstanceId instanceId,
-                                final ApplicationId applicationId,
-                                final List<Module> workerModules) {
-        this.nodeId = forInstanceAndApplication(instanceId, applicationId);
+    public TestWorkerNodeModule(final NodeId nodeId, final List<Module> workerModules) {
+        this.nodeId = nodeId;
         this.workerModules = workerModules;
     }
 
@@ -33,6 +31,7 @@ public class TestWorkerNodeModule extends PrivateModule {
     protected void configure() {
 
         expose(Node.class);
+        expose(NodeId.class);
         expose(IocResolver.class);
         expose(RemoteInvocationDispatcher.class);
 

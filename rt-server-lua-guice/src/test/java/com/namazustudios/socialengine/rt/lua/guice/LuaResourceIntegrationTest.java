@@ -33,10 +33,12 @@ public class LuaResourceIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
     private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
+            .withClient()
             .withWorkerModule(new LuaModule())
             .withWorkerModule(new JavaEventModule())
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .withDefaultHttpClient()
+            .withApplication().build()
         .start();
 
     private final Context context = getEmbeddedTestService()

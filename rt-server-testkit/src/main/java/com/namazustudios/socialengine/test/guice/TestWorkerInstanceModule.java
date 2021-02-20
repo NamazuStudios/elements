@@ -17,7 +17,7 @@ public class TestWorkerInstanceModule extends PrivateModule {
     @Override
     protected void configure() {
 
-        final Provider<Node> nodeProvider = getProvider(Node.class);
+        final var nodeProvider = getProvider(Node.class);
         bind(new TypeLiteral<Set<Node>>(){}).toProvider(() -> singleton(nodeProvider.get()));
 
         bind(SimpleWorkerInstance.class).asEagerSingleton();

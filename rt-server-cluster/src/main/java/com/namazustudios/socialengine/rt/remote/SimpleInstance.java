@@ -146,17 +146,6 @@ public class SimpleInstance implements Instance {
         this.instanceId = instanceId;
     }
 
-
-    @Override
-    public IocResolver getIocResolver() {
-        return iocResolver;
-    }
-
-    @Inject
-    public void setIocResolver(IocResolver iocResolver) {
-        this.iocResolver = iocResolver;
-    }
-
     public RemoteInvokerRegistry getRemoteInvokerRegistry() {
         return remoteInvokerRegistry;
     }

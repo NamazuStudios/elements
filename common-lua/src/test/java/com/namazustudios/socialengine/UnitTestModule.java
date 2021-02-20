@@ -52,11 +52,6 @@ public class UnitTestModule extends AbstractModule {
             .start()
         );
 
-        bind(Context.class).toProvider(() -> embeddedTestService
-            .getClientIocResolver()
-            .inject(Context.class, REMOTE)
-        );
-
     }
 
     private class MockModule extends AbstractModule {
