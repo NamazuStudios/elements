@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.NotificationBuilder;
@@ -39,18 +41,28 @@ public class UnitTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        final MockModule mockModule = new MockModule();
+        final var mockModule = new MockModule();
+        final var applicationId = ApplicationId.forUniqueName(spyApplication.getId());
 
         mockModule.mock(Client.class);
         mockModule.mock(NotificationBuilder.class);
         mockModule.bind(spyApplication, Key.get(Application.class));
 
         bind(EmbeddedTestService.class).toInstance(embeddedTestService
-            .withWorkerModule(new LuaModule().visitDiscoveredModule(mockModule::mock))
-            .withWorkerModule(mockModule)
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
+            .withClient()
+            .withApplicationNode(applicationId)
+                .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
+                .withNodeModules(new LuaModule().visitDiscoveredModule(mockModule::mock))
+                .withNodeModules(mockModule)
+            .endApplication()
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
             .start()
         );
+
+        bind(Context.class).toProvider(() -> {
+            final var factory = embeddedTestService.getClient().getContextFactory();
+            return factory.getContextForApplication(spyApplication.getId());
+        });
 
     }
 

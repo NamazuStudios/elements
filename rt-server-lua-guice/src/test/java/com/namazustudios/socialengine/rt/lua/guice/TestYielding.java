@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
@@ -20,15 +22,24 @@ public class TestYielding {
     private static final Logger logger = LoggerFactory.getLogger(TestYielding.class);
 
     private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withWorkerModule(new LuaModule())
-            .withWorkerModule(new JavaEventModule())
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
-            .withDefaultHttpClient()
+        .withClient()
+        .withApplicationNode()
+            .withNodeModules(new LuaModule())
+            .withNodeModules(new JavaEventModule())
+            .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
+        .endApplication()
+        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
+        .withDefaultHttpClient()
         .start();
 
-    private final Context context = embeddedTestService
-        .getClientIocResolver()
-        .inject(Context.class, REMOTE);
+    private final ApplicationId testApplicationId = getEmbeddedTestService()
+        .getWorker()
+        .getApplicationId();
+
+    private final Context context = getEmbeddedTestService()
+        .getClient()
+        .getContextFactory()
+        .getContextForApplication(testApplicationId);
 
     @Test
     public void testConcurrentCoroutine() throws Exception {
@@ -113,6 +124,10 @@ public class TestYielding {
 
     public Context getContext() {
         return context;
+    }
+
+    public EmbeddedTestService getEmbeddedTestService() {
+        return embeddedTestService;
     }
 
 }

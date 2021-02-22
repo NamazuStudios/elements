@@ -24,7 +24,7 @@ public class LuaEventIntegrationTest {
 
     private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
             .withClient()
-            .withApplication()
+            .withApplicationNode()
                 .withNodeModules(new LuaModule())
                 .withNodeModules(new JavaEventModule())
                 .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())

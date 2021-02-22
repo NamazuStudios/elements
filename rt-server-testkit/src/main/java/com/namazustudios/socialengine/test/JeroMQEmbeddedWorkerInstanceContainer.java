@@ -15,7 +15,7 @@ import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceSer
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
 import com.namazustudios.socialengine.test.guice.TestMasterNodeModule;
 import com.namazustudios.socialengine.test.guice.TestWorkerInstanceModule;
-import com.namazustudios.socialengine.test.guice.TestWorkerNodeModule;
+import com.namazustudios.socialengine.test.guice.TestApplicationNodeModule;
 import org.zeromq.ZContext;
 
 import javax.ws.rs.client.Client;
@@ -189,7 +189,7 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
 
         public ChainedT endApplication() {
             checkNotRunning();
-            final var module = new TestWorkerNodeModule(nodeId, nodeModules);
+            final var module = new TestApplicationNodeModule(nodeId, nodeModules);
             applicationModules.add(module);
             return chainedTSupplier.get();
         }

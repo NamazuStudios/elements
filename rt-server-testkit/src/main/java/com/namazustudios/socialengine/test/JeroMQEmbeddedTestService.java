@@ -116,9 +116,9 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
      * Adds a randomly-assigned
      * @return
      */
-    public ApplicationNodeBuilder<JeroMQEmbeddedTestService> withApplication() {
+    public ApplicationNodeBuilder<JeroMQEmbeddedTestService> withApplicationNode() {
         final var applicationId = ApplicationId.randomApplicationId();
-        return withApplication(applicationId);
+        return withApplicationNode(applicationId);
     }
 
     /**
@@ -128,9 +128,9 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
      *
      * @return a new instance of {@link ApplicationNodeBuilder}
      */
-    public ApplicationNodeBuilder<JeroMQEmbeddedTestService> withApplication(final String uniqueName) {
+    public ApplicationNodeBuilder<JeroMQEmbeddedTestService> withApplicationNode(final String uniqueName) {
         final var applicationId = ApplicationId.forUniqueName(uniqueName);
-        return withApplication(applicationId);
+        return withApplicationNode(applicationId);
     }
 
     /**
@@ -140,7 +140,7 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
      *
      * @return a new instance of {@link ApplicationNodeBuilder}
      */
-    public ApplicationNodeBuilder<JeroMQEmbeddedTestService> withApplication(final ApplicationId applicationId) {
+    public ApplicationNodeBuilder<JeroMQEmbeddedTestService> withApplicationNode(final ApplicationId applicationId) {
         return withWorker().worker.withApplication(applicationId, () -> this);
     }
 

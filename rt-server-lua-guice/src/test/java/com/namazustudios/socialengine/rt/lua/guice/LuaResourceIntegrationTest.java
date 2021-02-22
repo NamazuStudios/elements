@@ -5,6 +5,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
@@ -33,17 +35,24 @@ public class LuaResourceIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
     private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withClient()
-            .withWorkerModule(new LuaModule())
-            .withWorkerModule(new JavaEventModule())
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
-            .withDefaultHttpClient()
-            .withApplication().endApplication()
+        .withClient()
+        .withApplicationNode()
+            .withNodeModules(new LuaModule())
+            .withNodeModules(new JavaEventModule())
+            .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
+        .endApplication()
+        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
+        .withDefaultHttpClient()
         .start();
 
+    private final ApplicationId testApplicationId = getEmbeddedTestService()
+        .getWorker()
+        .getApplicationId();
+
     private final Context context = getEmbeddedTestService()
-        .getClientIocResolver()
-        .inject(Context.class, REMOTE);
+        .getClient()
+        .getContextFactory()
+        .getContextForApplication(testApplicationId);
 
     @AfterClass
     public void teardown() {

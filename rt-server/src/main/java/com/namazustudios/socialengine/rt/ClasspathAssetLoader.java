@@ -12,7 +12,7 @@ public class ClasspathAssetLoader extends AbstractAssetLoader {
 
     private final ClassLoader classLoader;
 
-    private Path root;
+    private Path root = Path.fromPathString("");
 
     public ClasspathAssetLoader() {
         this.classLoader = getClass().getClassLoader();

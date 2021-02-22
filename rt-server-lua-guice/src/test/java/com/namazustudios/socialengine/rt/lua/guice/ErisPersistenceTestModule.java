@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
@@ -26,9 +27,9 @@ public class ErisPersistenceTestModule extends AbstractModule {
 
         // Types backed by actual implementations
         bind(IocResolver.class).to(GuiceIoCResolver.class).asEagerSingleton();
-        bind(AssetLoader.class).to(ClasspathAssetLoader.class).asEagerSingleton();
         bind(ResourceLockService.class).to(SimpleResourceLockService.class).asEagerSingleton();
         bind(TestJavaEvent.class).toInstance(mock(TestJavaEvent.class));
+        install(new ClasspathAssetLoaderModule().withDefaultPackageRoot());
 
         // Types that are mocks
 

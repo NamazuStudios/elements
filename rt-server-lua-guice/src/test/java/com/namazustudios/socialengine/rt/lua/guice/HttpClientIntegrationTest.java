@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
@@ -11,7 +13,6 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
-import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static java.util.UUID.randomUUID;
 
 public class HttpClientIntegrationTest {
@@ -22,15 +23,24 @@ public class HttpClientIntegrationTest {
         .start();
 
     private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withWorkerModule(new LuaModule())
-            .withWorkerModule(new JavaEventModule())
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
-            .withDefaultHttpClient()
+        .withClient()
+        .withApplicationNode()
+            .withNodeModules(new LuaModule())
+            .withNodeModules(new JavaEventModule())
+            .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
+        .endApplication()
+        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
+        .withDefaultHttpClient()
         .start();
 
+    private final ApplicationId testApplicationId = getEmbeddedTestService()
+        .getWorker()
+        .getApplicationId();
+
     private final Context context = getEmbeddedTestService()
-        .getClientIocResolver()
-        .inject(Context.class, REMOTE);
+        .getClient()
+        .getContextFactory()
+        .getContextForApplication(testApplicationId);
 
     @AfterClass
     private void stop() throws Exception {

@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
@@ -23,15 +25,24 @@ public class LuaResourceLinkingAdvancedTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
     private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withWorkerModule(new LuaModule())
-            .withWorkerModule(new JavaEventModule())
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
-            .withDefaultHttpClient()
+        .withClient()
+        .withApplicationNode()
+            .withNodeModules(new LuaModule())
+            .withNodeModules(new JavaEventModule())
+            .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
+        .endApplication()
+        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
+        .withDefaultHttpClient()
         .start();
 
+    private final ApplicationId testApplicationId = getEmbeddedTestService()
+        .getWorker()
+        .getApplicationId();
+
     private final Context context = getEmbeddedTestService()
-        .getClientIocResolver()
-        .inject(Context.class, REMOTE);
+        .getClient()
+        .getContextFactory()
+        .getContextForApplication(testApplicationId);
 
     @AfterClass
     public void teardown() {
