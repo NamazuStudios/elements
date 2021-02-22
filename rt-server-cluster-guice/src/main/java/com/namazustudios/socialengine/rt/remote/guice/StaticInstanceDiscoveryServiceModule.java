@@ -19,6 +19,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 
 public class StaticInstanceDiscoveryServiceModule extends PrivateModule {
 
@@ -46,8 +47,11 @@ public class StaticInstanceDiscoveryServiceModule extends PrivateModule {
 
         convertToTypes(only(new TypeLiteral<Set<InstanceHostInfo>>(){}), (value, toType) -> new HostList()
             .with(value)
-            .get().map(HashSet::new)
-            .orElseGet(HashSet::new)
+            .get()
+            .orElseGet(Collections::emptyList)
+            .stream()
+            .map(SimpleInstanceHostInfo::new)
+            .collect(toSet())
         );
 
         expose(InstanceDiscoveryService.class);

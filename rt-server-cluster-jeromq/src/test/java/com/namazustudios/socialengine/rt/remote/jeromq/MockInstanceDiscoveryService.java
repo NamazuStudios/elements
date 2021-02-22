@@ -122,16 +122,13 @@ public class MockInstanceDiscoveryService implements InstanceDiscoveryService {
         }
 
         @Override
-        public boolean equals(Object o) {
-            if (this == o) return true;
-            if (!(o instanceof InstanceHostInfo)) return false;
-            InstanceHostInfo that = (InstanceHostInfo) o;
-            return Objects.equals(getConnectAddress(), that.getConnectAddress());
+        public int hashCode() {
+            return InstanceHostInfo.hashCode(this);
         }
 
         @Override
-        public int hashCode() {
-            return Objects.hash(getConnectAddress());
+        public boolean equals(Object obj) {
+            return InstanceHostInfo.equals(this, obj);
         }
 
     }

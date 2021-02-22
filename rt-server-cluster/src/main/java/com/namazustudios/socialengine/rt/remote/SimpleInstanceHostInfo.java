@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
-
 public class SimpleInstanceHostInfo implements InstanceHostInfo {
 
     private final String connectAddress;
@@ -17,7 +15,7 @@ public class SimpleInstanceHostInfo implements InstanceHostInfo {
 
     @Override
     public int hashCode() {
-        return super.hashCode();
+        return InstanceHostInfo.hashCode(this);
     }
 
     @Override
