@@ -38,7 +38,7 @@ public class LuaResourceIntegrationTest {
             .withWorkerModule(new JavaEventModule())
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment().withTempResourceEnvironment())
             .withDefaultHttpClient()
-            .withApplication().build()
+            .withApplication().endApplication()
         .start();
 
     private final Context context = getEmbeddedTestService()

@@ -4,11 +4,15 @@ import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
+import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
+import com.namazustudios.socialengine.rt.remote.guice.ClusterContextModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
+import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
+import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
 
 import java.util.List;
 
@@ -37,7 +41,11 @@ public class TestWorkerNodeModule extends PrivateModule {
 
         workerModules.forEach(this::install);
 
+        install(new ClusterContextModule());
+
+        install(new TestNodeServicesModule());
         install(new GuiceIoCResolverModule());
+        install(new TransactionalResourceServiceModule());
 
         install(new JeroMQNodeModule()
             .withNodeName("integration-test-node")
@@ -54,6 +62,11 @@ public class TestWorkerNodeModule extends PrivateModule {
         bind(RemoteInvocationDispatcher.class)
             .to(SimpleRemoteInvocationDispatcher.class)
             .asEagerSingleton();
+
+        install(new SimpleContextModule()
+            .withDefaultContexts()
+            .withSchedulerContextModules(new XodusSchedulerContextModule())
+        );
 
     }
 

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.test;
 
 import com.google.inject.Module;
-import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Publisher;
 import com.namazustudios.socialengine.rt.SimplePublisher;
 import com.namazustudios.socialengine.rt.Subscription;
@@ -17,6 +16,7 @@ import org.zeromq.ZContext;
 import javax.ws.rs.client.Client;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
@@ -37,13 +37,28 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
 
     private final Publisher<JeroMQEmbeddedTestService> onClosePublisher = new SimplePublisher<>();
 
+    /**
+     * Configures a client {@link Instance}.
+     *
+     * @return this instance
+     */
     public JeroMQEmbeddedTestService withClient() {
         if (client == null) client = new JeroMQEmbeddedClientInstanceContainer();
         return this;
     }
 
+    /**
+     * Configures a worker {@link Instance}.
+     *
+     * @return this instance
+     */
     public JeroMQEmbeddedTestService withWorker() {
         if (worker == null) worker = new JeroMQEmbeddedWorkerInstanceContainer();
+        return this;
+    }
+
+    public JeroMQEmbeddedTestService withZContext(final ZContext zContext) {
+        this.zContext = zContext;
         return this;
     }
 
@@ -138,17 +153,34 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
             throw new IllegalStateException("Already started.");
         }
 
+        final ZContext zc;
+
+        if (zContext == null) {
+            final var created = zc = new ZContext();
+            onClose(s -> created.close());
+        } else {
+            zc = zContext;
+        }
+
+        if (worker != null) worker.withZContext(zc);
+
+        if (client != null) {
+            client.withZContext(zc);
+            client.clearConnectAddresses()
+                  .withConnectAddress(worker.getBindAddress());
+        }
+
         final List<Exception> exceptionList = new ArrayList<>();
 
         try {
-            if (getWorker() != null) getWorker().start();
+            getWorkerOptional().ifPresent(EmbeddedWorkerInstanceContainer::start);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Exception starting test worker instance.", ex);
         }
 
         try {
-            if (getClient() != null) getClient().start();
+            getClientOptional().ifPresent(EmbeddedClientInstanceContainer::start);
         } catch (Exception ex) {
             exceptionList.add(ex);
             logger.error("Exception starting test client instance.", ex);
@@ -156,31 +188,21 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
 
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
 
-        if (getWorker() != null) getWorker().getInstance().refreshConnections();
-        if (getClient() != null) getClient().getInstance().refreshConnections();
+        getWorkerOptional().ifPresent(w -> w.getInstance().refreshConnections());
+        getClientOptional().ifPresent(c -> c.getInstance().refreshConnections());
 
         return this;
 
     }
 
     @Override
-    public EmbeddedInstanceContainer getClient() {
-        return client;
+    public Optional<EmbeddedClientInstanceContainer> getClientOptional() {
+        return Optional.ofNullable(client);
     }
 
     @Override
-    public EmbeddedWorkerInstanceContainer getWorker() {
-        return worker;
-    }
-
-    @Override
-    public IocResolver getClientIocResolver() {
-        return client.getIocResolver();
-    }
-
-    @Override
-    public IocResolver getWorkerIocResolver() {
-        return worker.getIocResolver();
+    public Optional<EmbeddedWorkerInstanceContainer> getWorkerOptional() {
+        return Optional.of(worker);
     }
 
     @Override

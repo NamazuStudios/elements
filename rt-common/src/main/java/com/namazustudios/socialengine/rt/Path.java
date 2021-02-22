@@ -124,7 +124,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
     private static List<String> components(final Path parent, final Path path) {
 
-        if (parent.hasContext() && path.hasContext() && !Objects.equals(parent.context, parent.context)) {
+        if (parent.hasContext() && !Objects.equals(path.context, parent.context)) {
             throw new IllegalArgumentException("context mismatch " + parent.context + "!=" + path.context);
         } if (!parent.hasContext() && path.hasContext()) {
             throw new IllegalArgumentException("child path must have no context or same as parent");

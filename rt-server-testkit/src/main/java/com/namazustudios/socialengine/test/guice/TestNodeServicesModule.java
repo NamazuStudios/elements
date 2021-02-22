@@ -4,10 +4,11 @@ import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 
 import java.util.Deque;
 
-public class TestServicesModule extends PrivateModule {
+public class TestNodeServicesModule extends PrivateModule {
 
     @Override
     protected void configure() {
@@ -20,12 +21,6 @@ public class TestServicesModule extends PrivateModule {
         bind(SingleUseHandlerService.class).to(SimpleSingleUseHandlerService.class).asEagerSingleton();
         bind(LoadMonitorService.class).to(SimpleLoadMonitorService.class).asEagerSingleton();
         bind(EventService.class).to(SimpleEventService.class).asEagerSingleton();
-
-        bind(new TypeLiteral<OptimisticLockService<Deque<Path>>>() {})
-                .toProvider(() -> new ProxyLockService<>(Deque.class));
-
-        bind(new TypeLiteral<OptimisticLockService<ResourceId>>() {})
-                .to(SimpleResourceIdOptimisticLockService.class);
 
         expose(Scheduler.class);
         expose(RetainedHandlerService.class);

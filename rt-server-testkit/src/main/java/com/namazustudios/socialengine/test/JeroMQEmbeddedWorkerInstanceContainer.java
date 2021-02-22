@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.test;
 
+import com.google.inject.AbstractModule;
+import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.google.inject.*;
+import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.IocResolver;
-import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -21,7 +22,6 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import java.util.*;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import static java.lang.String.format;
 import static java.util.Arrays.asList;
@@ -43,7 +43,6 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
         withInstanceModules(
             new TestWorkerInstanceModule(),
             new TestMasterNodeModule(getInstanceId()),
-            new FSTPayloadReaderWriterModule(),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
             new SimpleTransactionalResourceServicePersistenceModule(),
             new UnixFSTransactionalPersistenceContextModule().withTestingDefaults(),
@@ -53,14 +52,15 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             new AbstractModule() {
                 @Override
                 protected void configure() {
-                    bind(new TypeLiteral<Set<Node>>(){}).toProvider(JeroMQEmbeddedWorkerInstanceContainer.this::loadNodes);
+                    final var parent = getProvider(Injector.class);
+                    bind(new TypeLiteral<Set<Node>>(){}).toProvider(() -> loadNodes(parent.get()));
                 }
             }
         );
 
     }
 
-    private Set<Node> loadNodes() {
+    private Set<Node> loadNodes(final Injector parent) {
 
         if (!applicationIdInjectorMap.isEmpty()) {
             throw new IllegalStateException("Expected empty map.");
@@ -68,7 +68,7 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
 
         final var applicationIdInjectorMap = applicationModules
             .stream()
-            .map(Guice::createInjector)
+            .map(parent::createChildInjector)
             .collect(toMap(
                 injector -> injector.getInstance(NodeId.class),
                 i -> i,
@@ -85,6 +85,11 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             .map(injector -> injector.getInstance(Node.class))
             .collect(toSet());
 
+    }
+
+    @Override
+    public JeroMQEmbeddedWorkerInstanceContainer clearConnectAddresses() {
+        return (JeroMQEmbeddedWorkerInstanceContainer) super.clearConnectAddresses();
     }
 
     @Override
@@ -126,7 +131,13 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
         });
     }
 
+    @Override
+    public String getBindAddress() {
+        return bindAddress;
+    }
+
     public JeroMQEmbeddedWorkerInstanceContainer withBindAddress(final String bindAddress) {
+        checkNotRunning();
         requireNonNull(bindAddress, "bindAddress");
         this.bindAddress = bindAddress;
         return this;
@@ -134,6 +145,7 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
 
     public ApplicationNodeBuilder<JeroMQEmbeddedWorkerInstanceContainer> withApplication(
             final ApplicationId applicationId) {
+        checkNotRunning();
         return new ApplicationNodeBuilder<>(applicationId, () -> this);
     }
 
@@ -161,13 +173,13 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             this.chainedTSupplier = chainedTSupplier;
         }
 
-        public ApplicationNodeBuilder withNodeModules(final Module module) {
+        public ApplicationNodeBuilder<ChainedT> withNodeModules(final Module module) {
             requireNonNull(module, "module");
             nodeModules.add(module);
             return this;
         }
 
-        public ApplicationNodeBuilder withNodeModules(final Module module, final Module ... additional) {
+        public ApplicationNodeBuilder<ChainedT> withNodeModules(final Module module, final Module ... additional) {
             requireNonNull(module, "module");
             requireNonNull(additional, "additional");
             nodeModules.add(module);
@@ -175,7 +187,8 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             return this;
         }
 
-        public ChainedT build() {
+        public ChainedT endApplication() {
+            checkNotRunning();
             final var module = new TestWorkerNodeModule(nodeId, nodeModules);
             applicationModules.add(module);
             return chainedTSupplier.get();

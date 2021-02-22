@@ -6,7 +6,9 @@ import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.remote.InstanceHostInfo;
 import com.namazustudios.socialengine.rt.remote.SimpleInstanceHostInfo;
 import com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.util.HostList;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -15,8 +17,7 @@ import java.util.stream.Stream;
 import static com.google.inject.matcher.Matchers.only;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
-import static java.util.Collections.singletonList;
-import static java.util.Collections.unmodifiableSet;
+import static java.util.Collections.*;
 import static java.util.stream.Collectors.joining;
 
 public class StaticInstanceDiscoveryServiceModule extends PrivateModule {
@@ -24,11 +25,11 @@ public class StaticInstanceDiscoveryServiceModule extends PrivateModule {
     private Runnable bindAddresses = () -> {};
 
     public StaticInstanceDiscoveryServiceModule withInstanceAddresses(final String ... instanceAddresses) {
-        return withInstanceAddresses(Stream.of(instanceAddresses).collect(joining(",")));
+        return withInstanceAddresses(String.join(",", instanceAddresses));
     }
 
     public StaticInstanceDiscoveryServiceModule withInstanceAddresses(final List<String> instanceAddresses) {
-        return withInstanceAddresses(instanceAddresses.stream().collect(joining(",")));
+        return withInstanceAddresses(String.join(",", instanceAddresses));
     }
 
     public StaticInstanceDiscoveryServiceModule withInstanceAddresses(final String instanceAddresses) {
@@ -43,11 +44,11 @@ public class StaticInstanceDiscoveryServiceModule extends PrivateModule {
 
         bind(InstanceDiscoveryService.class).to(StaticInstanceDiscoveryService.class).asEagerSingleton();
 
-        convertToTypes(only(new TypeLiteral<Set<InstanceHostInfo>>(){}), (value, toType) -> {
-            final Set<InstanceHostInfo> hosts = new HashSet<>();
-            for (final String addr : value.split("[\\s,]+")) hosts.add(new SimpleInstanceHostInfo(addr));
-            return unmodifiableSet(hosts);
-        });
+        convertToTypes(only(new TypeLiteral<Set<InstanceHostInfo>>(){}), (value, toType) -> new HostList()
+            .with(value)
+            .get().map(HashSet::new)
+            .orElseGet(HashSet::new)
+        );
 
         expose(InstanceDiscoveryService.class);
 

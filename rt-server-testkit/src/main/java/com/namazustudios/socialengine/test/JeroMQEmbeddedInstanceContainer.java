@@ -8,10 +8,9 @@ import com.namazustudios.socialengine.rt.IocResolver;
 import com.namazustudios.socialengine.rt.Publisher;
 import com.namazustudios.socialengine.rt.SimplePublisher;
 import com.namazustudios.socialengine.rt.Subscription;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.id.InstanceId;
-import com.namazustudios.socialengine.rt.remote.Instance;
-import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
-import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry;
+import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.guice.StaticInstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQAsyncConnectionServiceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQControlClientModule;
@@ -88,6 +87,12 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
         return this;
     }
 
+    public JeroMQEmbeddedInstanceContainer clearConnectAddresses() {
+        checkNotRunning();
+        connectAddresses.clear();
+        return this;
+    }
+
     public JeroMQEmbeddedInstanceContainer withConnectAddress(final String address) {
         checkNotRunning();
         requireNonNull(address, "address");
@@ -123,56 +128,37 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
     @Override
     public JeroMQEmbeddedInstanceContainer start() {
 
-        if (zContext == null) {
-            // This instance owns this ZContext, so it has to clean it up when it's finished with it.
-            zContext = new ZContext();
-            onClose(ic -> zContext.close());
-        }
-
         if (!running.compareAndSet(false, true)) {
             throw new IllegalStateException("Already Running.");
         }
 
-        doStart();
+        if (zContext == null) {
+            final var created = new ZContext();
+            onClose(s -> created.close());
+            doStart(created);
+        } else {
+            doStart(zContext);
+        }
+
         return this;
 
     }
 
-    protected void doStart() {
+    protected void doStart(final ZContext zContext) {
 
-        final var zContext = shadow(this.zContext);
-
-        final var module = new AbstractModule() {
-            @Override
-            protected void configure() {
-
-                bind(ZContext.class).toInstance(zContext);
-                bind(InstanceId.class).toInstance(instanceId);
-
-                bind(RemoteInvokerRegistry.class)
-                    .to(SimpleRemoteInvokerRegistry.class)
-                    .asEagerSingleton();
-
-                install(new StaticInstanceDiscoveryServiceModule()
-                    .withInstanceAddresses(connectAddresses));
-
-                install(new JeroMQRemoteInvokerModule()
-                    .withMinimumConnections(MINIMUM_CONNECTIONS)
-                    .withMaximumConnections(MAXIMUM_CONNECTIONS));
-
-                install(new JeroMQControlClientModule());
-                install(new JeroMQAsyncConnectionServiceModule());
-
-                instanceModules.forEach(this::install);
-
-            }
-        };
+        final var zContextShadow = shadow(zContext);
+        final var module = new TestInstanceModule(zContextShadow);
 
         // Creates injector and starts the instance.
         injector = Guice.createInjector(module);
         instance = injector.getInstance(Instance.class);
         instance.start();
 
+    }
+
+    protected Injector getInjector() {
+        checkRunning();
+        return injector;
     }
 
     @Override
@@ -218,10 +204,38 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
         return instanceId;
     }
 
-    @Override
-    public IocResolver getIocResolver() {
-        checkRunning();
-        return injector.getInstance(IocResolver.class);
+    private class TestInstanceModule extends AbstractModule {
+
+        private final ZContext zContext;
+
+        private TestInstanceModule(final ZContext zContext) {
+            this.zContext = zContext;
+        }
+
+        @Override
+        protected void configure() {
+
+            bind(ZContext.class).toInstance(zContext);
+            bind(InstanceId.class).toInstance(instanceId);
+
+            bind(RemoteInvokerRegistry.class)
+                .to(SimpleRemoteInvokerRegistry.class)
+                .asEagerSingleton();
+
+            install(new StaticInstanceDiscoveryServiceModule()
+                .withInstanceAddresses(connectAddresses));
+
+            install(new JeroMQRemoteInvokerModule()
+                .withMinimumConnections(MINIMUM_CONNECTIONS)
+                .withMaximumConnections(MAXIMUM_CONNECTIONS));
+
+            install(new JeroMQControlClientModule());
+            install(new FSTPayloadReaderWriterModule());
+            install(new JeroMQAsyncConnectionServiceModule());
+
+            instanceModules.forEach(this::install);
+
+        }
     }
 
 }

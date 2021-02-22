@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.Worker;
 
+import java.util.Optional;
 import java.util.function.Consumer;
 
 /**
@@ -41,28 +42,46 @@ public interface EmbeddedTestService extends AutoCloseable {
     @Override
     void close();
 
-    /**
-     * Gets the client {@link Instance}.
-     *
-     * @return the client {@link Instance}
-     */
-    EmbeddedInstanceContainer getClient();
+    @Deprecated
+    default IocResolver getIocResolver() {
+        throw new UnsupportedOperationException("Deprecated.");
+    }
+
+    @Deprecated
+    default IocResolver getClientIocResolver() {
+        throw new UnsupportedOperationException("Deprecated.");
+    }
 
     /**
-     * Gets the worker {@link Worker}.
+     * Gets the client {@link EmbeddedInstanceContainer}.
      *
-     * @return the worker {@link Worker}
+     * @return the client {@link EmbeddedInstanceContainer}
      */
-    EmbeddedWorkerInstanceContainer getWorker();
+    default EmbeddedClientInstanceContainer getClient() {
+        return getClientOptional().orElseThrow(IllegalStateException::new);
+    }
 
     /**
-     * Gets the {@link IocResolver} for the default application. This is implementation specific. Typically this means
-     * it is the first-configured {@link com.namazustudios.socialengine.rt.id.ApplicationId}
+     * Gets the client {@link Optional<EmbeddedInstanceContainer>}. Is present only if configured.
      *
-     * @return
+     * @return the client {@link Optional<EmbeddedInstanceContainer>}
      */
-    IocResolver getWorkerIocResolver();
+    Optional<EmbeddedClientInstanceContainer> getClientOptional();
 
-    IocResolver getClientIocResolver();
+    /**
+     * Gets the worker {@link EmbeddedWorkerInstanceContainer}.
+     *
+     * @return the worker {@link EmbeddedWorkerInstanceContainer}
+     */
+    default EmbeddedWorkerInstanceContainer getWorker() {
+        return getWorkerOptional().orElseThrow(IllegalStateException::new);
+    }
+
+    /**
+     * Gets the client {@link Optional<EmbeddedWorkerInstanceContainer>}. Is present only if configured.
+     *
+     * @return the client {@link Optional<EmbeddedWorkerInstanceContainer>}
+     */
+    Optional<EmbeddedWorkerInstanceContainer> getWorkerOptional();
 
 }

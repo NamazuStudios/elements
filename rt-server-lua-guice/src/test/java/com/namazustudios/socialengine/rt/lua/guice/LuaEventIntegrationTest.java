@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
@@ -14,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static org.mockito.Mockito.*;
 
 public class LuaEventIntegrationTest {
@@ -22,18 +23,28 @@ public class LuaEventIntegrationTest {
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
     private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withWorkerModule(new LuaModule())
-            .withWorkerModule(new JavaEventModule())
+            .withClient()
+            .withApplication()
+                .withNodeModules(new LuaModule())
+                .withNodeModules(new JavaEventModule())
+                .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
+            .endApplication()
             .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
             .withDefaultHttpClient()
         .start();
 
+    private final ApplicationId testApplicationId = getEmbeddedTestService()
+        .getWorker()
+        .getApplicationId();
+
     private final Context context = getEmbeddedTestService()
-        .getClientIocResolver()
-        .inject(Context.class, REMOTE);
+        .getClient()
+        .getContextFactory()
+        .getContextForApplication(testApplicationId);
 
     private final TestJavaEvent tje = getEmbeddedTestService()
-        .getWorkerIocResolver()
+        .getWorker()
+        .getIocResolver()
         .inject(TestJavaEvent.class);
 
     @AfterClass

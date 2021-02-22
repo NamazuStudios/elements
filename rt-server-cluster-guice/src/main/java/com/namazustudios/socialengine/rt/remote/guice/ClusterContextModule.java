@@ -2,11 +2,8 @@ package com.namazustudios.socialengine.rt.remote.guice;
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.remote.ClusterContext;
-import com.namazustudios.socialengine.rt.remote.RemoteInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.RemoteProxyProvider;
-import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvocationDispatcher;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
