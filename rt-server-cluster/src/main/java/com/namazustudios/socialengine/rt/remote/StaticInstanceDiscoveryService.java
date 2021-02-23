@@ -12,7 +12,7 @@ import static java.util.Collections.unmodifiableSet;
 
 public class StaticInstanceDiscoveryService implements InstanceDiscoveryService {
 
-    public static final String HOST_INFO = "com.namazustudios.socialengine.rt.static.host.info";
+    public static final String STATIC_HOST_INFO = "com.namazustudios.socialengine.rt.static.host.info";
 
     private Set<InstanceHostInfo> hostInfoSet;
 
@@ -49,7 +49,7 @@ public class StaticInstanceDiscoveryService implements InstanceDiscoveryService 
     }
 
     @Inject
-    public void setHostInfoSet(@Named(HOST_INFO) Set<InstanceHostInfo> hostInfoSet) {
+    public void setHostInfoSet(@Named(STATIC_HOST_INFO) Set<InstanceHostInfo> hostInfoSet) {
         this.hostInfoSet = hostInfoSet;
     }
 

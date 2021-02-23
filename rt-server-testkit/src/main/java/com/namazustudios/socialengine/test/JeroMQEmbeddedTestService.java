@@ -7,8 +7,10 @@ import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.ApplicationNodeBuilder;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.NodeModuleFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -142,6 +144,18 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
      */
     public ApplicationNodeBuilder<JeroMQEmbeddedTestService> withApplicationNode(final ApplicationId applicationId) {
         return withWorker().worker.withApplication(applicationId, () -> this);
+    }
+
+    /**
+     * Specifies an {@link NodeModuleFactory} to use when creating new {@link Node}s in the worker instance.
+     *
+     * @param nodeModuleFactory the {@link NodeModuleFactory}
+     *
+     * @return the this instance
+     */
+    public JeroMQEmbeddedTestService withNodeModuleFactory(final NodeModuleFactory nodeModuleFactory) {
+        withWorker().worker.withNodeModuleFactory(nodeModuleFactory);
+        return this;
     }
 
     @Override

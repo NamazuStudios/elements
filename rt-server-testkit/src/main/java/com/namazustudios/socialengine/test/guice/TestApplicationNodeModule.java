@@ -13,7 +13,7 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQNodeModule;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContextModule;
 
-import java.util.List;
+import java.util.Collection;
 
 import static com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.MAXIMUM_CONNECTIONS;
 import static com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.MINIMUM_CONNECTIONS;
@@ -22,9 +22,9 @@ public class TestApplicationNodeModule extends PrivateModule {
 
     private final NodeId nodeId;
 
-    private final List<Module> workerModules;
+    private final Collection<? extends Module> workerModules;
 
-    public TestApplicationNodeModule(final NodeId nodeId, final List<Module> workerModules) {
+    public TestApplicationNodeModule(final NodeId nodeId, final Collection<? extends Module> workerModules) {
         this.nodeId = nodeId;
         this.workerModules = workerModules;
     }

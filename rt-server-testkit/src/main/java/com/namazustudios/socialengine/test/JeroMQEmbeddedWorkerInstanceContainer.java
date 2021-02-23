@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
 import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
@@ -33,11 +34,20 @@ import static java.util.stream.Collectors.toSet;
 public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanceContainer
                                                    implements EmbeddedWorkerInstanceContainer {
 
-    private String bindAddress = format("inproc://%s.worker", randomUUID());
-
     private final List<Module> applicationModules = new ArrayList<>();
 
     private final Map<NodeId, Injector> applicationIdInjectorMap = new LinkedHashMap<>();
+
+    private String bindAddress = format("inproc://%s.worker", randomUUID());
+
+    private final JeroMQInstanceConnectionServiceModule jeroMQInstanceConnectionServiceModule =
+        new JeroMQInstanceConnectionServiceModule()
+            .withDefaultRefreshInterval()
+            .withBindAddress(bindAddress);
+
+    private NodeModuleFactory nodeModuleFactory = applicationId -> {
+        throw new UnsupportedOperationException("Node.Factory not supported: ");
+    };
 
     public JeroMQEmbeddedWorkerInstanceContainer() {
         withInstanceModules(
@@ -46,18 +56,21 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
             new SimpleTransactionalResourceServicePersistenceModule(),
             new UnixFSTransactionalPersistenceContextModule().withTestingDefaults(),
-            new JeroMQInstanceConnectionServiceModule()
-                .withBindAddress(bindAddress)
-                .withDefaultRefreshInterval(),
+            jeroMQInstanceConnectionServiceModule,
             new AbstractModule() {
                 @Override
                 protected void configure() {
                     final var parent = getProvider(Injector.class);
                     bind(new TypeLiteral<Set<Node>>(){}).toProvider(() -> loadNodes(parent.get()));
+                    bind(Node.Factory.class).toInstance(aid -> {
+                        final var nodeId = NodeId.forInstanceAndApplication(getInstanceId(), aid);
+                        final var suppliedModules = nodeModuleFactory.create(nodeId);
+                        final var module = new TestApplicationNodeModule(nodeId, suppliedModules);
+                        return parent.get().createChildInjector(module).getInstance(Node.class);
+                    });
                 }
             }
         );
-
     }
 
     private Set<Node> loadNodes(final Injector parent) {
@@ -132,6 +145,11 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
     }
 
     @Override
+    public Worker getWorker() {
+        return getInjector().getInstance(Worker.class);
+    }
+
+    @Override
     public String getBindAddress() {
         return bindAddress;
     }
@@ -139,19 +157,20 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
     public JeroMQEmbeddedWorkerInstanceContainer withBindAddress(final String bindAddress) {
         checkNotRunning();
         requireNonNull(bindAddress, "bindAddress");
-        this.bindAddress = bindAddress;
+        jeroMQInstanceConnectionServiceModule.withBindAddress(this.bindAddress = bindAddress);
         return this;
-    }
-
-    public ApplicationNodeBuilder<JeroMQEmbeddedWorkerInstanceContainer> withApplication(
-            final ApplicationId applicationId) {
-        checkNotRunning();
-        return new ApplicationNodeBuilder<>(applicationId, () -> this);
     }
 
     public <ChainedT> ApplicationNodeBuilder<ChainedT> withApplication(final ApplicationId applicationId,
                                                                        final Supplier<ChainedT> chainedTSupplier) {
         return new ApplicationNodeBuilder<>(applicationId, chainedTSupplier);
+    }
+
+    public JeroMQEmbeddedWorkerInstanceContainer withNodeModuleFactory(final NodeModuleFactory nodeModuleFactory) {
+        checkNotRunning();
+        requireNonNull(nodeModuleFactory, "injectorNodeFactory");
+        this.nodeModuleFactory = nodeModuleFactory;
+        return this;
     }
 
     @Override
@@ -209,6 +228,23 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
         final var injector = applicationIdInjectorMap.get(nodeId);
         if (injector == null) throw new IllegalArgumentException("Unknown NodeId: " + nodeId);
         return injector.getInstance(IocResolver.class);
+    }
+
+    /**
+     * Creates a new {@link Node}.
+     */
+    @FunctionalInterface
+    public interface NodeModuleFactory {
+
+        /**
+         * Creates a new {@link Node} given the {@link Injector} and {@link ApplicationId}.
+         *
+         * @param nodeId the {@link NodeId} to use when creating the {@link Node}
+         *
+         * @return a {@link List<Module>} with all user-supplied {@link Module}s required to start the {@link Node}
+         */
+        Collection<? extends Module> create(NodeId nodeId);
+
     }
 
 }

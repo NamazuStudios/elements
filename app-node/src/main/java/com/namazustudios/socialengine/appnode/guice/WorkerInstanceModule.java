@@ -5,6 +5,7 @@ import com.google.inject.PrivateModule;
 import com.google.inject.Provider;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.dao.ApplicationDao;
+import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.exception.ApplicationCodeNotFoundException;
 import com.namazustudios.socialengine.rt.git.GitLoader;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
@@ -37,6 +38,9 @@ public class WorkerInstanceModule extends PrivateModule {
         bind(new TypeLiteral<Set<Node>>(){})
             .toProvider(nodeProvider())
             .asEagerSingleton();
+
+        bind(Node.Factory.class)
+            .toInstance(Node.Factory.unsupported());
 
         expose(Worker.class);
         expose(Instance.class);

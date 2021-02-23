@@ -222,4 +222,15 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     }
 
+    /**
+     * Returns a copy of the loaded system default properties.
+     *
+     * @return the default properties.
+     */
+    public Properties getDefaultProperties() {
+        final Properties defaultProperties = new Properties();
+        defaultProperties.putAll(this.defaultProperties);
+        return defaultProperties;
+    }
+
 }

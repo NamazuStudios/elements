@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
+import com.namazustudios.socialengine.rt.remote.Worker.Mutator;
 
 import javax.inject.Named;
 
@@ -124,6 +126,34 @@ public interface Node {
          * Performs any post-start operations. {@link NodeLifecycle#nodePostStop(Node)}
          */
         void postStop();
+
+    }
+
+    /**
+     * Allows for the creation of {@link Node} instances on-the-fly. This is used by the {@link Worker} and
+     * {@link Mutator} to add new {@link Node}s after start-up.
+     */
+    interface Factory {
+
+        /**
+         * Creates a {@link Node} for the supplied {@link ApplicationId}
+         *
+         * @param applicationId the {@link ApplicationId} which will be used to create the {@link Node}
+         *
+         * @return the {@link Node}
+         */
+        Node create(ApplicationId applicationId);
+
+        /**
+         * Indicates that factory support is currently disabled or otherwise unsupported.
+         *
+         * @return a factoyr which simply throw an instance of {@link UnsupportedOperationException}
+         */
+        static Factory unsupported() {
+            return aid -> {
+                throw new UnsupportedOperationException("Not Supported");
+            };
+        }
 
     }
 

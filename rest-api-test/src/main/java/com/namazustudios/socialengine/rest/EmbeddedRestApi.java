@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.test.EmbeddedTestService;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import org.slf4j.Logger;
@@ -24,16 +25,23 @@ public class EmbeddedRestApi {
 
     private final MongodExecutable mongodExecutable;
 
+    private final EmbeddedTestService embeddedTestService;
+
     @Inject
     public EmbeddedRestApi(final RestAPIMain restAPIMain,
                            final RedisServer redisServer,
                            final MongodProcess mongodProcess,
-                           final MongodExecutable mongodExecutable) throws Exception {
+                           final MongodExecutable mongodExecutable,
+                           final EmbeddedTestService embeddedTestService) throws Exception {
+
         this.restAPIMain = restAPIMain;
         this.redisServer = redisServer;
         this.mongodProcess = mongodProcess;
         this.mongodExecutable = mongodExecutable;
+        this.embeddedTestService = embeddedTestService;
+
         getRestAPIMain().start();
+
         getRuntime().addShutdownHook(new Thread(() ->{
             try {
                 stop();
@@ -41,6 +49,7 @@ public class EmbeddedRestApi {
                 logger.error("Could not stop services.", ex);
             }
         }));
+
     }
 
     public void stop() {
@@ -63,6 +72,12 @@ public class EmbeddedRestApi {
             logger.warn("Caught exception Redis.  Disregarding.", ex);
         }
 
+        try {
+            getEmbeddedTestService().close();
+        } catch (Exception ex) {
+            logger.warn("Caught exception closing embedded test service.", ex);
+        }
+
     }
 
     public RestAPIMain getRestAPIMain() {
@@ -80,4 +95,9 @@ public class EmbeddedRestApi {
     public MongodExecutable getMongodExecutable() {
         return mongodExecutable;
     }
+
+    public EmbeddedTestService getEmbeddedTestService() {
+        return embeddedTestService;
+    }
+
 }

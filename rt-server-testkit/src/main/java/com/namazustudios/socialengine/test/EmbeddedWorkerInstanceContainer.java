@@ -13,6 +13,13 @@ import com.namazustudios.socialengine.rt.remote.Worker;
 public interface EmbeddedWorkerInstanceContainer extends EmbeddedInstanceContainer {
 
     /**
+     * Gets the underlying {@link Worker}.
+     *
+     * @return the worker
+     */
+    Worker getWorker();
+
+    /**
      * Gets the worker's bind address.
      *
      * @return the bind address

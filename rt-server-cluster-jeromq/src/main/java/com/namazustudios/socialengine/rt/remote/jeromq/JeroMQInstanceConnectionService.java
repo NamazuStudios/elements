@@ -94,7 +94,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     @Override
     public void refresh() {
-        final InstanceConnectionContext context = getContext();
+        final var context = getContext();
         context.refresh();
     }
 

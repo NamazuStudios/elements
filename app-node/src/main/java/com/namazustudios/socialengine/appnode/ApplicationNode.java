@@ -19,6 +19,7 @@ import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
@@ -40,19 +41,24 @@ import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKN
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSChecksumAlgorithm.ADLER_32;
-import static java.lang.Thread.interrupted;
 
 public class ApplicationNode {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationNode.class);
 
+    private Worker worker;
+
+    private Instance instance;
+
     private final Injector injector;
+
+    private final Object lock = new Object();
 
     public ApplicationNode(final DefaultConfigurationSupplier defaultConfigurationSupplier) {
 
         final var facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier();
 
-        this.injector = Guice.createInjector(
+        injector = Guice.createInjector(
             new ClusterContextFactoryModule(),
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
@@ -99,32 +105,80 @@ public class ApplicationNode {
                     return objectMapper;
                 })
         );
+
     }
 
     /**
-     * Starts the ApplicationNode. Note: this is a thread-blocking method.
+     * Gets the {@link Worker} for this {@link ApplicationNode}.
+     *
+     * @return the {@link Worker}
+     */
+    public Worker getWorker() {
+        return worker;
+    }
+
+    /**
+     * Starts the ApplicationNode.
      */
     public void start() {
-        final Object lock = new Object();
+        synchronized (lock) {
 
-        try (final Instance container = injector.getInstance(Instance.class)) {
+            if (worker != null) throw new IllegalStateException("Already running.");
+            lock.notifyAll();
 
-            logger.info("Starting container.");
+            worker = injector.getInstance(Worker.class);
+            instance = injector.getInstance(Instance.class);
 
-            container.start();
-            logger.info("Container started.");
+            try {
 
-            synchronized (lock) {
-                while (!interrupted()) {
-                    lock.wait();
-                }
+                logger.info("Starting Instance.");
+                instance.start();
+
+                logger.info("Instance started.");
+
+            } catch (Exception ex) {
+                worker = null;
+                instance = null;
+                logger.error("Could not start ApplicationNode", ex);
+                throw ex;
             }
 
-        } catch (InterruptedException ex) {
-            logger.info("Interrupted.  Shutting down.");
         }
+    }
 
-        logger.info("Container shut down.  Exiting process.");
+    /**
+     * Stops the ApplicationNode.
+     */
+    public void stop() {
+        synchronized (lock) {
+
+            if (worker == null) throw new IllegalStateException("Not currently running.");
+            lock.notifyAll();
+
+            try {
+                logger.info("Starting Instance.");
+                instance.close();
+                logger.info("Instance started.");
+            } catch (Exception ex) {
+                logger.error("Could not start ApplicationNode", ex);
+                throw ex;
+            } finally {
+                worker = null;
+                instance = null;
+            }
+
+        }
+    }
+
+    /**
+     * Waits for the ApplicationNode to shut down.
+     */
+    public void waitForShutdown() throws InterruptedException {
+        synchronized (lock) {
+            while (worker != null) {
+                lock.wait();
+            }
+        }
     }
 
 }

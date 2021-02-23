@@ -2,11 +2,9 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
-import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.util.Set;
-import java.util.UUID;
 
 /**
  * Provides data for an Instance, which is representative of the physical machine running one or more nodes.  Each

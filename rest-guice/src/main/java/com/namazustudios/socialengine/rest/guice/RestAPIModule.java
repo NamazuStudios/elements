@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
-import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
@@ -15,6 +14,8 @@ import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
+import com.namazustudios.socialengine.rt.remote.guice.SimpleInstanceModule;
+import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
@@ -37,17 +38,8 @@ public class RestAPIModule extends AbstractModule {
 
     private final Supplier<List<FacebookPermission>> facebookPermissionSupplier;
 
-    @SuppressWarnings("unused")
-    public RestAPIModule() {
-        this(new DefaultConfigurationSupplier());
-    }
-
     public RestAPIModule(final Supplier<Properties> propertiesSupplier) {
         this(propertiesSupplier, new FacebookBuiltinPermissionsSupplier());
-    }
-
-    public RestAPIModule(final ClassLoader classLoader) {
-        this(new DefaultConfigurationSupplier(classLoader), new FacebookBuiltinPermissionsSupplier(classLoader));
     }
 
     public RestAPIModule(final Supplier<Properties> configurationSupplier,
@@ -89,6 +81,8 @@ public class RestAPIModule extends AbstractModule {
         install(new JeroMQInstanceConnectionServiceModule());
         install(new JeroMQRemoteInvokerModule());
         install(new JeroMQControlClientModule());
+        install(new SimpleRemoteInvokerRegistryModule());
+        install(new SimpleInstanceModule());
         install(new FSTPayloadReaderWriterModule());
         install(new JacksonHttpClientModule()
             .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)

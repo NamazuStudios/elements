@@ -13,7 +13,7 @@ import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVO
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_QUERY;
 import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_SERVERS;
-import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
+import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS;
@@ -31,7 +31,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "");
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
-        properties.setProperty(HOST_INFO, "tcp://localhost:28883");
+        properties.setProperty(STATIC_HOST_INFO, "tcp://localhost:28883");
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.setProperty(SRV_QUERY, "_elements._tcp.internal");

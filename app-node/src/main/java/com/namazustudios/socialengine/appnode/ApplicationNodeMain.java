@@ -23,7 +23,7 @@ public class ApplicationNodeMain {
         .withOptionalArg()
         .ofType(String.class);
 
-    public static void main(final String[] args) {
+    public static void main(final String[] args) throws InterruptedException {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
@@ -39,6 +39,7 @@ public class ApplicationNodeMain {
             } else {
                 final ApplicationNode applicationNode = new ApplicationNode(defaultConfigurationSupplier);
                 applicationNode.start();
+                applicationNode.waitForShutdown();
             }
 
         } catch (OptionException ex) {

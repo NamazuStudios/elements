@@ -5,6 +5,7 @@ import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.rest.guice.RestAPIModule;
+import com.namazustudios.socialengine.rt.remote.Instance;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -84,7 +85,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
             .accepts("help", "Displays the help message.")
             .forHelp();
 
-    private final Injector injector;
+    private final Instance instance;
 
     private final Server server = new Server();
 
@@ -120,8 +121,8 @@ public class RestAPIMain implements Callable<Void>, Runnable {
             throw new ProgramArgumentException(ex);
         }
 
-        final DefaultConfigurationSupplier defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-        injector = createInjector(stage, new RestAPIModule(defaultConfigurationSupplier));
+        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+        final var injector = createInjector(stage, new RestAPIModule(defaultConfigurationSupplier));
 
         final ServerConnector connector = new ServerConnector(server);
         connector.setHost(bind);
@@ -148,16 +149,16 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
         server.setHandler(handlerCollection);
         server.setConnectors(new Connector[]{connector});
+        instance = injector.getInstance(Instance.class);
 
     }
 
     @Inject
-    private RestAPIMain(@Named(HTTP_PORT) final int port,
+    private RestAPIMain(final Instance instance,
+                        final Injector injector,
+                        @Named(HTTP_PORT) final int port,
                         @Named(HTTP_BIND_ADDRESS) final String bind,
-                        @Named(API_CONTEXT) final String apiContext,
-                        final Injector injector) {
-
-        this.injector = injector;
+                        @Named(API_CONTEXT) final String apiContext) {
 
         final ServerConnector connector = new ServerConnector(server);
         connector.setHost(bind);
@@ -184,6 +185,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
         server.setHandler(handlerCollection);
         server.setConnectors(new Connector[]{connector});
+        this.instance = instance;
 
     }
 
@@ -193,6 +195,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
      * @throws Exception
      */
     public void start() throws Exception {
+        instance.start();
         server.start();
     }
 
@@ -204,6 +207,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     public void stop() throws Exception {
         server.stop();
         server.join();
+        instance.close();
     }
 
     /**
@@ -233,12 +237,12 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     }
 
     /**
-     * Gets the {@link Injector} used intenrally by this instance.'
+     * Gets the {@link Instance} used by this {@link RestAPIMain}.
      *
-     * @return the injector
+     * @return the {@link Instance}
      */
-    public Injector getInjesctor() {
-        return injector;
+    public Instance getInstance() {
+        return instance;
     }
 
     /**

@@ -9,15 +9,12 @@ import com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.util.HostList;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import static com.google.inject.matcher.Matchers.only;
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.HOST_INFO;
-import static java.util.Collections.*;
+import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
@@ -34,7 +31,7 @@ public class StaticInstanceDiscoveryServiceModule extends PrivateModule {
     }
 
     public StaticInstanceDiscoveryServiceModule withInstanceAddresses(final String instanceAddresses) {
-        bindAddresses = () -> bind(String.class).annotatedWith(named(HOST_INFO)).toInstance(instanceAddresses);
+        bindAddresses = () -> bind(String.class).annotatedWith(named(STATIC_HOST_INFO)).toInstance(instanceAddresses);
         return this;
     }
 
