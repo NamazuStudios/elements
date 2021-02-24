@@ -1,15 +1,14 @@
-package com.namazustudios.socialengine.codeserve;
+package com.namazustudios.socialengine.rt.git;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.TypeLiteral;
 import com.namazustudios.socialengine.rt.ApplicationBootstrapper;
-import com.namazustudios.socialengine.rt.ApplicationBootstrapper.BootstrapResources;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
-import com.namazustudios.socialengine.rt.lua.LuaBootstrapResources;
 
+import java.util.Collections;
 import java.util.function.Function;
 
-public class BootstrapResourcesModule extends PrivateModule {
+public class BareBootstrapResourcesModule extends PrivateModule {
 
     @Override
     protected void configure() {
@@ -18,8 +17,8 @@ public class BootstrapResourcesModule extends PrivateModule {
         // we just return the instance as requested, but this could be expanded to more languages or
         // frameworks in the future.
 
-        final var tl = new TypeLiteral<Function<ApplicationId, BootstrapResources>>(){};
-        bind(tl).toInstance(a -> new LuaBootstrapResources());
+        final var tl = new TypeLiteral<Function<ApplicationId, ApplicationBootstrapper.BootstrapResources>>(){};
+        bind(tl).toInstance(a -> Collections::emptyMap);
         expose(tl);
 
     }

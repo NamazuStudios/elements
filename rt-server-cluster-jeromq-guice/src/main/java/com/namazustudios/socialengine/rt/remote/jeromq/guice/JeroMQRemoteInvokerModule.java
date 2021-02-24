@@ -10,15 +10,9 @@ import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVO
 
 public class JeroMQRemoteInvokerModule extends PrivateModule {
 
-    private Runnable bindConnectAddressAction = () -> {};
-
-    private Runnable bindTimeoutAction = () -> {};
-
     private Runnable bindMinConnectionsAction = () -> {};
 
     private Runnable bindMaxConnectionsAction = () -> {};
-
-    private Runnable bindExecutorServiceAction = () -> {};
 
     /**
      * Specifies the minimum number of connections to keep active, even if the timeout has expired.
@@ -48,17 +42,10 @@ public class JeroMQRemoteInvokerModule extends PrivateModule {
 
     @Override
     protected void configure() {
-
-        bindConnectAddressAction.run();
         bindMinConnectionsAction.run();
         bindMaxConnectionsAction.run();
-        bindExecutorServiceAction.run();
-        bindTimeoutAction.run();
-
         bind(RemoteInvoker.class).to(JeroMQRemoteInvoker.class);
-
         expose(RemoteInvoker.class);
-
     }
 
 }

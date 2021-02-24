@@ -1,11 +1,8 @@
-FROM openjdk:8
+FROM namazu-socialengine-base:latest
 
-ARG CDN_SERVE_JAR
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
 
-USER root:root
-RUN useradd socialengine
-RUN mkdir -p "/opt/socialengine/cdn-repos"
-RUN chown -R socialengine:socialengine /opt/socialengine
+EXPOSE 28883
 
-COPY $CDN_SERVE_JAR /opt/socialengine/cdn-serve.jar
-USER socialengine:socialengine
+ENTRYPOINT ["java", "com.namazustudios.socialengine.cdnserve.CdnServeMain"]

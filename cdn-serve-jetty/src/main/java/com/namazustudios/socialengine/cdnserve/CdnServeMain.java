@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.cdnserve;
 import com.namazustudios.socialengine.cdnserve.guice.ServerModule;
 import com.namazustudios.socialengine.codeserve.CodeServeModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.rt.git.BareBootstrapResourcesModule;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 
@@ -29,6 +30,7 @@ public class CdnServeMain implements Callable<Void>, Runnable {
 
         server = createInjector(
             new ServerModule(),
+            new BareBootstrapResourcesModule(),
             new CodeServeModule(defaultConfigurationSupplier)
         ).getInstance(Server.class);
 

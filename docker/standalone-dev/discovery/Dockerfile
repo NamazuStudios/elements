@@ -16,5 +16,5 @@ ENTRYPOINT [ \
     "-wait", "tcp://app-node-1:28883", \
     "dnsmasq", "--keep-in-foreground", \
     "-W", "_elements._tcp.internal,app-node-0,28883,1", \
-    "-W", "_elements._tcp.internal,app-node-1,28883,1"\
+    "-W", "_elements._tcp.internal,app-node-1,28883,1" \
 ]

@@ -112,6 +112,7 @@ public class CodeServeMain implements Callable<Void>, Runnable {
         injector = createInjector(stage,
                 new GitServletModule(),
                 new GitSecurityModule(),
+                new LuaBootstrapResourcesModule(),
                 new CodeServeModule((defaultConfigurationSupplier))
         );
 

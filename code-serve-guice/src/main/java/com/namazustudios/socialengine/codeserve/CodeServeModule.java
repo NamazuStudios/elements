@@ -5,6 +5,9 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.git.BareBootstrapResourcesModule;
+import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
+import com.namazustudios.socialengine.rt.git.GitApplicationBootstrapperModule;
 import com.namazustudios.socialengine.service.guice.RedissonClientModule;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -29,9 +32,10 @@ public class CodeServeModule extends AbstractModule {
         install(new MongoDaoModule());
         install(new MongoSearchModule());
         install(new ValidationModule());
-        install(new GitSecurityModule());
         install(new GitServletModule());
+        install(new FilesystemGitLoaderModule());
         install(new FileSystemCodeServeModule());
+        install(new GitApplicationBootstrapperModule());
     }
 
 }

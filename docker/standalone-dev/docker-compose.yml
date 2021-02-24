@@ -83,7 +83,7 @@ services:
 
   cdn-serve:
     build:
-      context: ./cdn-serve
+        context: ./cdn-serve
     links:
       - redis
       - mongo
