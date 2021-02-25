@@ -16,7 +16,7 @@ public class CdnServeMain implements Callable<Void>, Runnable {
 
     private static final Logger logger = getLogger(CdnServeMain.class);
 
-    private Server server = new Server();
+    private final Server server;
 
     /**
      * Args style constructor.
@@ -66,7 +66,7 @@ public class CdnServeMain implements Callable<Void>, Runnable {
      * Thrown by the {@link CdnServeMain#run()} method.  The value of {@link #getCause()} will always be the exact
      * cause of the underlying exception.
      */
-    public class ServerRuntimeException extends RuntimeException {
+    public static class ServerRuntimeException extends RuntimeException {
         public ServerRuntimeException(final Throwable ex) {
             super(ex);
         }
@@ -76,7 +76,7 @@ public class CdnServeMain implements Callable<Void>, Runnable {
      * Thrown when bad arguments are passed to the {@link CdnServeMain#CdnServeMain(String[])} constructor or the
      * arguments supplied cannot be used to creat the server.
      */
-    public class ProgramArgumentException extends IllegalArgumentException {
+    public static class ProgramArgumentException extends IllegalArgumentException {
 
         public ProgramArgumentException() {}
 
@@ -85,7 +85,7 @@ public class CdnServeMain implements Callable<Void>, Runnable {
     /**
      * Thrown when the options specified a request for help.
      */
-    public class HelpRequestedException extends ProgramArgumentException {}
+    public static class HelpRequestedException extends ProgramArgumentException {}
 
     public static void main(final String[] args) throws Exception {
         try {

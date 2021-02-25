@@ -111,9 +111,9 @@ public interface Constants {
     String HTTP_TUNNEL_URL = "com.namazustudios.socialengine.http.tunnel.url";
 
     /**
-     * Used to specify the port that the http tunnel will run against.
+     * Used to specify the port that the http service will use when binding.
      */
-    String HTTP_TUNNEL_PORT = "com.namazustudios.socialengine.http.tunnel.port";
+    String HTTP_PORT = "com.namazustudios.socialengine.http.port";
 
     /**
      * Used to specify the session timeout, in seconds

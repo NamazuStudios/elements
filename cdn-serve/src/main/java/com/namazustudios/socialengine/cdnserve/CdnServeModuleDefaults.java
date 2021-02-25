@@ -16,7 +16,7 @@ public class CdnServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(HTTP_TUNNEL_PORT, "8084");
+        properties.put(HTTP_PORT, "8084");
         properties.put(CDN_FILE_DIRECTORY, "content");
         properties.put(CDN_CLONE_ENDPOINT, "clone");
         properties.put(CDN_SERVE_ENDPOINT, "serve");

@@ -1,14 +1,15 @@
 package com.namazustudios.socialengine.codeserve;
 
-import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 
 /**
  * Created by patricktwohig on 8/2/17.
  */
-public class FileSystemCodeServeModule extends AbstractModule {
+public class FileSystemApplicationRepositoryResolverModule extends PrivateModule {
 
     @Override
     protected void configure() {
+        expose(ApplicationRepositoryResolver.class);
         bind(ApplicationRepositoryResolver.class).to(FileSystemApplicationRepositoryResolver.class);
     }
 

@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.rt.Constants;
 
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.Constants.HTTP_TUNNEL_PORT;
+import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
@@ -24,7 +24,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.setProperty(HTTP_TUNNEL_PORT, "8083");
+        properties.setProperty(HTTP_PORT, "8083");
         properties.setProperty(Constants.HTTP_TIMEOUT_MSEC, "180000");
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
