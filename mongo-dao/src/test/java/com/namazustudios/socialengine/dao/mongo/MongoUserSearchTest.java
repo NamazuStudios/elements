@@ -92,7 +92,7 @@ public class MongoUserSearchTest {
 
     }
 
-    @Test
+    @Test(enabled = false)
     public void testUserSearch() {
         var users = getUserDao().getActiveUsers(0, 0, "testysearch");
         assertEquals(users.getTotal(), TEST_USER_COUNT);
@@ -103,7 +103,7 @@ public class MongoUserSearchTest {
         }
     }
 
-    @Test
+    @Test(enabled = false)
     public void testProfileSearch() {
 
         var profiles = getProfileDao().getActiveProfiles(0, 0, "testysearch.display");
