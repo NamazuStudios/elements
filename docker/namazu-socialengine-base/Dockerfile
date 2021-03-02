@@ -25,6 +25,7 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_LIB" && \
     mkdir -p "$ELEMENTS_CONF" && \
+    mkdir -p "$ELEMENTS_CDN_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_STORAGE" && \
     useradd elements && chown -R elements:elements "$ELEMENTS_HOME"
