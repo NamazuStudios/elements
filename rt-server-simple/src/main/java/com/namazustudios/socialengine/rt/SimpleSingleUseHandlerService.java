@@ -76,7 +76,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
         final var resourceId = resource.getId();
         final var destroy = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
-        try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
+        try { // TODO Ensure Locking isn't necessary here
 
             final Consumer<Throwable> _failure = t -> {
                 try {

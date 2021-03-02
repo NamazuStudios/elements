@@ -75,7 +75,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         final ResourceId resourceId = resource.getId();
         final RunnableFuture<Void> unlink = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
-        try (final Monitor m = getResourceLockService().getMonitor(resourceId)) {
+        try {  // TODO Ensure Locking isn't necessary here
 
             final AtomicBoolean sent = new AtomicBoolean();
 
