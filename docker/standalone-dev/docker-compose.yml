@@ -58,6 +58,7 @@ services:
     depends_on:
       - mongo
       - redis
+      - discovery
     networks:
       - elements
     ports:
@@ -68,12 +69,10 @@ services:
   code-serve:
     build:
       context: ./code-serve
-    links:
-      - redis
-      - mongo
     depends_on:
       - mongo
       - redis
+      - discovery
     networks:
       - elements
     ports:
@@ -84,12 +83,10 @@ services:
   cdn-serve:
     build:
         context: ./cdn-serve
-    links:
-      - redis
-      - mongo
     depends_on:
       - mongo
       - redis
+      - discovery
     networks:
       - elements
     ports:
@@ -100,12 +97,10 @@ services:
   app-serve:
     build:
       context: ./app-serve
-    links:
-      - redis
-      - mongo
     depends_on:
       - mongo
       - redis
+      - discovery
     networks:
       - elements
     ports:
@@ -116,34 +111,34 @@ services:
   app-node-0:
     build:
       context: ./app-node
-    links:
-      - redis
-      - mongo
     depends_on:
       - mongo
       - redis
+      - discovery
     networks:
       - elements
     ports:
       - "28883:28883"
     volumes:
       - script-repos:/opt/elements/script-repos
+    environment:
+      - com.namazustudios.socialengine.fts.jeromq.condition.host.address=tcp://app-node-0
 
   app-node-1:
     build:
       context: ./app-node
-    links:
-      - redis
-      - mongo
     depends_on:
       - mongo
       - redis
+      - discovery
     networks:
       - elements
     ports:
       - "28884:28883"
     volumes:
       - script-repos:/opt/elements/script-repos
+    environment:
+      - com.namazustudios.socialengine.fts.jeromq.condition.host.address=tcp://app-node-1
 
 networks:
   elements:
