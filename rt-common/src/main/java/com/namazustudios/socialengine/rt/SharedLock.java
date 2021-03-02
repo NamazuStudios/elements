@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import java.util.concurrent.locks.Lock;
+import com.namazustudios.socialengine.rt.util.Monitor;
 
 /**
  * Represents a shared lock.

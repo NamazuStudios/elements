@@ -72,7 +72,7 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
     public ReadOnlyTransaction openRO(final NodeId nodeId) {
         try {
             lock.lock();
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadCommitted();
+            final var revision = getRevisionDataStore().lockLatestReadCommitted();
             return new SimpleReadOnlyTransaction(nodeId, revision);
         } finally {
             lock.unlock();
@@ -83,8 +83,8 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
     public ReadWriteTransaction openRW(final NodeId nodeId) {
         try {
             lock.lock();
-            final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadCommitted();
+            final var entry = getTransactionJournal().newMutableEntry(nodeId);
+            final var revision = getRevisionDataStore().lockLatestReadCommitted();
             return new SimpleReadWriteTransaction(nodeId, revision, entry);
         } finally {
             lock.unlock();
@@ -95,8 +95,8 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
     public com.namazustudios.socialengine.rt.transact.ExclusiveReadWriteTransaction openExclusiveRW(final NodeId nodeId) {
         try {
             exclusiveLock.lock();
-            final TransactionJournal.MutableEntry entry = getTransactionJournal().newMutableEntry(nodeId);
-            final RevisionDataStore.LockedRevision revision = getRevisionDataStore().lockLatestReadCommitted();
+            final var entry = getTransactionJournal().newMutableEntry(nodeId);
+            final var revision = getRevisionDataStore().lockLatestReadCommitted();
             return new ExclusiveSimpleReadWriteTransaction(nodeId, revision, entry);
         } finally {
             exclusiveLock.unlock();
@@ -118,7 +118,7 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
     private boolean existsAt(final Revision<?> revision,
                              final ResourceId resourceId) {
 
-        final Revision<Boolean> exists = getRevisionDataStore()
+        final var exists = getRevisionDataStore()
             .getResourceIndex()
             .existsAt(revision.comparableTo(), resourceId);
 
@@ -179,11 +179,6 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
         }
 
         @Override
-        public Revision<?> getReadRevision() {
-            return revision.getRevision();
-        }
-
-        @Override
         public boolean exists(final ResourceId resourceId) {
             check(nodeId, resourceId);
             return existsAt(revision.getRevision(), resourceId);
@@ -239,11 +234,6 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
             this.nodeId = nodeId;
             this.lock = lock;
             lock.lock();
-        }
-
-        @Override
-        public Revision<?> getReadRevision() {
-            return revision.getRevision();
         }
 
         @Override
@@ -343,9 +333,9 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
         @Override
         public void close() {
             FinallyAction.begin()
-                .then(() -> entry.close())
-                .then(() -> lock.unlock())
-                .then(() -> revision.close())
+                .then(entry::close)
+                .then(lock::unlock)
+                .then(revision::close)
             .run();
         }
 

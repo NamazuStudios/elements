@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.util.Monitor;
 
 import java.util.concurrent.locks.Lock;
 

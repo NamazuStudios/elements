@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,7 +12,6 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.Thread.interrupted;
@@ -61,7 +61,6 @@ public class SimpleResourceLockService implements ResourceLockService {
                     break;
                 } catch (Exception ex) {
                     logger.error("Caught exception running cleanup routine.", ex);
-                    continue;
                 }
             }
         } finally {

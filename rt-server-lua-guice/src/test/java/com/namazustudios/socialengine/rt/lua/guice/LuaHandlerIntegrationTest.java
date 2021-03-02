@@ -44,7 +44,8 @@ public class LuaHandlerIntegrationTest {
         getEmbeddedTestService().close();
     }
 
-    @Test(dataProvider = "resourcesToTest")
+//    @Test(dataProvider = "resourcesToTest")
+    @Test(dataProvider = "resourcesToTest", threadPoolSize = 5, invocationCount = 10)
     public void performRetainedHandlerTest(final String moduleName, final String methodName) {
 
         final Object result = getContext()
@@ -55,7 +56,7 @@ public class LuaHandlerIntegrationTest {
 
     }
 
-    @Test(dataProvider = "resourcesToTest")
+    @Test(dataProvider = "resourcesToTest", enabled = false) // TODO Enable This Test
     public void performSingleUseHandlerTest(final String moduleName, final String methodName) {
 
         final Object result = getContext()
