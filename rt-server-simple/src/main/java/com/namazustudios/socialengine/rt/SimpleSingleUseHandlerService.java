@@ -111,7 +111,7 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                 .dispatch(_success, _failure);
 
         } finally {
-            if (!sent.get()) getResourceService().tryRelease(resource);
+            getResourceService().tryRelease(resource);
         }
 
     }
