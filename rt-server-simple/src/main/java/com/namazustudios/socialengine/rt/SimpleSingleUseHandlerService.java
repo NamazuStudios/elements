@@ -76,43 +76,37 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
         final var resourceId = resource.getId();
         final var destroy = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
-        try { // TODO Ensure Locking isn't necessary here
+        final Consumer<Throwable> _failure = t -> {
+            try {
 
-            final Consumer<Throwable> _failure = t -> {
-                try {
+                final var _args = stream(args)
+                    .map(a -> a == null ? "null" : a.toString())
+                    .collect(Collectors.joining(","));
 
-                    final var _args = stream(args)
-                        .map(a -> a == null ? "null" : a.toString())
-                        .collect(Collectors.joining(","));
+                logger.error("Caught exception processing single-use handler {}.{}({}).", module, method, _args, t);
+                if (sent.compareAndSet(false, true)) failure.accept(t);
 
-                    logger.error("Caught exception processing single-use handler {}.{}({}).", module, method, _args, t);
-                    if (sent.compareAndSet(false, true)) failure.accept(t);
+            } catch (Exception ex) {
+                logger.error("Caught exception sending response from resource {}", resourceId, ex);
+            } finally {
+                destroy.run();
+            }
+        };
 
-                } catch (Exception ex) {
-                    logger.error("Caught exception sending response from resource {}", resourceId, ex);
-                } finally {
-                    destroy.run();
-                }
-            };
+        final Consumer<Object> _success = o -> {
+            try {
+                if (sent.compareAndSet(false, true)) success.accept(o);
+            } catch (Throwable th) {
+                _failure.accept(th);
+            } finally {
+                destroy.run();
+            }
+        };
 
-            final Consumer<Object> _success = o -> {
-                try {
-                    if (sent.compareAndSet(false, true)) success.accept(o);
-                } catch (Throwable th) {
-                    _failure.accept(th);
-                } finally {
-                    destroy.run();
-                }
-            };
-
-            return resource
-                .getMethodDispatcher(method)
-                .params(args)
-                .dispatch(_success, _failure);
-
-        } finally {
-            getResourceService().tryRelease(resource);
-        }
+        return resource
+            .getMethodDispatcher(method)
+            .params(args)
+            .dispatch(_success, _failure);
 
     }
 
