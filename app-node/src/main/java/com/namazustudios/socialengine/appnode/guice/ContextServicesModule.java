@@ -34,11 +34,16 @@ public class ContextServicesModule extends PrivateModule {
             .to(SimpleLoadMonitorService.class)
             .asEagerSingleton();
 
+        bind(EventService.class)
+            .to(SimpleEventService.class)
+            .asEagerSingleton();
+
         expose(Scheduler.class);
         expose(RetainedHandlerService.class);
         expose(SingleUseHandlerService.class);
         expose(TaskService.class);
         expose(ResourceLockService.class);
+        expose(EventService.class);
 
     }
 
