@@ -27,49 +27,4 @@ public class XodusResourceBlock {
         return value;
     }
 
-    public class BlockIterator implements Iterator<XodusResourceBlock>, AutoCloseable {
-
-        private final Cursor cursor;
-
-        private BlockIterator(final ResourceId resourceId,
-                              final ResourceStores stores,
-                              final Transaction transaction) {
-
-        cursor = stores.getResourceBlocks().openCursor(transaction);
-
-        final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
-
-        final var first = cursor.getSearchKeyRange(resourceIdKey);
-        if (first == null) throw new ResourceNotFoundException("Resource not found: " + resourceId);
-
-        }
-
-
-        return new Iterator<>() {
-
-            ByteIterable key = resourceBlockCursor.getKey();
-
-            ByteIterable value = resourceBlockCursor.getValue();
-
-            @Override
-            public boolean hasNext() {
-                return XodusUtil.isMatchingBlockKey(key, value);
-            }
-
-            @Override
-            public XodusResourceBlock next() {
-
-
-                return null;
-            }
-
-            @Override
-            public void remove() {
-
-            }
-
-        };
-
-    }
-
 }

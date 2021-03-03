@@ -33,7 +33,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     @Override
     public boolean exists(final ResourceId resourceId) {
         final var key = new ArrayByteIterable(resourceId.asBytes());
-        return stores.getReversePaths().get(transaction, key) != null;
+        return getStores().getReversePaths().get(getTransaction(), key) != null;
     }
 
     @Override
@@ -43,7 +43,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
     private Stream<ResourceService.Listing> listSingular(final Path path) {
         final var pathKey = XodusUtil.pathKey(path);
-        final var resourceIdValue = stores.getPaths().get(transaction, pathKey);
+        final var resourceIdValue = getStores().getPaths().get(getTransaction(), pathKey);
         if (resourceIdValue == null) throw new ResourceNotFoundException("No resource at path: " + path);
         return Stream.of(new XodusListing(path, resourceIdValue));
     }
@@ -51,7 +51,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     private Stream<ResourceService.Listing> listWildcard(final Path wildcard) {
 
         final var pathPrefixKey = XodusUtil.pathKey(wildcard.stripWildcard());
-        final var cursor = stores.getPaths().openCursor(transaction);
+        final var cursor = getStores().getPaths().openCursor(getTransaction());
         final var first = cursor.getSearchKeyRange(pathPrefixKey);
         if (first == null) return Stream.empty();
 
@@ -85,7 +85,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     @Override
     public ResourceId getResourceId(final Path path) {
         final var key = new ArrayByteIterable(path.toByteArray());
-        final var value = stores.getReversePaths().get(transaction, key);
+        final var value = getStores().getReversePaths().get(getTransaction(), key);
         if (value == null) throw new ResourceNotFoundException();
         return XodusUtil.resourceId(value);
     }
@@ -94,7 +94,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
 
         final var key = XodusUtil.resourceIdKey(resourceId);
-        final var cursor = stores.getResourceBlocks().openCursor(transaction);
+        final var cursor = getStores().getResourceBlocks().openCursor(getTransaction());
 
         final var first = cursor.getSearchKeyRange(key);
         if (first == null) throw new ResourceNotFoundException();
@@ -111,7 +111,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
                 if (current == null) {
                     return -1;
                 } else if (!current.hasRemaining()) {
-                    if (cursor.getNext()) {
+                    if (cursor.getNext() && XodusUtil.isMatchingBlockKey(key, cursor.getKey())) {
                         current = XodusUtil.byteBuffer(cursor.getValue());
                     } else {
                         current = null;
@@ -143,6 +143,13 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
     }
 
+    public ResourceStores getStores() {
+        return stores;
+    }
+
+    public Transaction getTransaction() {
+        return transaction;
+    }
 
     @Override
     public void close() {}
