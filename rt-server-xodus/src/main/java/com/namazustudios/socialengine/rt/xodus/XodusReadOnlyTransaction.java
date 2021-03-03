@@ -48,8 +48,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     private Stream<ResourceService.Listing> listSingular(final Path path) {
         final var pathKey = XodusUtil.pathKey(path);
         final var resourceIdValue = getStores().getPaths().get(getTransaction(), pathKey);
-        if (resourceIdValue == null) throw new ResourceNotFoundException("No resource at path: " + path);
-        return Stream.of(new XodusListing(path, resourceIdValue));
+        return resourceIdValue == null ? Stream.empty() : Stream.of(new XodusListing(path, resourceIdValue));
     }
 
     private Stream<ResourceService.Listing> listWildcard(final Path wildcard) {
@@ -107,6 +106,8 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
         final var first = cursor.getSearchKeyRange(resourceIdKey);
         if (first == null) throw new ResourceNotFoundException();
 
+        final var onCloseSubscription = onClose.subscribe(t -> cursor.close());
+
         return new ReadableByteChannel() {
 
             boolean open = true;
@@ -115,6 +116,8 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
             @Override
             public int read(final ByteBuffer dst) {
+
+                if (!open) throw new IllegalStateException();
 
                 if (current == null) {
                     return -1;
@@ -144,6 +147,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
                 if (open) {
                     open = false;
                     cursor.close();
+                    onCloseSubscription.unsubscribe();
                 }
             }
 

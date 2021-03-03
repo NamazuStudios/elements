@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.io.IOException;
+import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.List;
 import java.util.stream.Stream;
@@ -39,6 +40,10 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
      *
      * If the {@link ResourceId} is not found, then this must throw an instance of {@link ResourceNotFoundException}
      * to indicate that the operation is not possible.
+     *
+     * The supplied {@link WritableByteChannel} is only guaranteed to be valid for the life of the transaction which
+     * created it. It may still be possible to write after the transaction is closed. However, the behavior of which
+     * is not defined.
      *
      * @param resourceId the {@link ResourceId} of the existing {@link ResourceId}
      * @return a {@link WritableByteChannel} which must be closed by the calling code when finished.

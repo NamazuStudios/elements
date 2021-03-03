@@ -55,6 +55,10 @@ public interface ReadOnlyTransaction extends AutoCloseable {
      * {@link ResourceNotFoundException} to indicate there is no resource in the persistent storage with that
      * particular {@link ResourceId}.
      *
+     * The supplied {@link ReadableByteChannel} is only guaranteed to be valid for the life of the transaction which
+     * created it. It may still be possible to write after the transaction is closed. However, the behavior of which
+     * is not defined.
+     *
      * @param resourceId the {@link ResourceId}
      * @return a {@link ReadableByteChannel} with the contents of the {@link Resource}
      */
