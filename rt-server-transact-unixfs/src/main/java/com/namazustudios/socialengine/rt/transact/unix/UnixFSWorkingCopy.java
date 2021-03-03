@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
+import com.namazustudios.socialengine.rt.transact.PessimisticLocking;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,14 +39,14 @@ class UnixFSWorkingCopy {
 
     private final UnixFSPathIndex unixFSPathIndex;
 
-    private final UnixFSPessimisticLocking pessimisticLocking;
+    private final PessimisticLocking pessimisticLocking;
 
     private final Map<Object, Modification> modifications = new HashMap<>();
 
     public UnixFSWorkingCopy(final NodeId nodeId,
                              final Revision<?> revision,
                              final UnixFSPathIndex unixFSPathIndex,
-                             final UnixFSPessimisticLocking pessimisticLocking) {
+                             final PessimisticLocking pessimisticLocking) {
         this.nodeId = nodeId;
         this.revision = revision;
         this.unixFSPathIndex = unixFSPathIndex;

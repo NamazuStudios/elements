@@ -6,7 +6,9 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.io.File;
 import java.io.Serializable;
+import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -76,7 +78,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     /**
      * The default encoding for converting a {@link Path} into an array of bytes.
      */
-    public static final Charset ENCODING = Charset.forName("UTF-8");
+    public static final Charset ENCODING = StandardCharsets.UTF_8;
 
     /**
      * The context for the path, e.g. `{nodeUuid}://path/to/resource`.
@@ -300,7 +302,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
     /**
-     * Checks if this path matches the other path.  Note taht this considers wildcards
+     * Checks if this path matches the other path.  Note that this considers wildcards
      * whereas the {@link #hashCode()} and {@link #equals(Object)} methods determine
      * absolute equality.
      *
@@ -435,6 +437,11 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
     }
 
+    /**
+     * Gets a byte[] representation of this {@link Path}.
+     *
+     * @return the byte array
+     */
     public byte[] toByteArray() {
         return toNormalizedPathString().getBytes(ENCODING);
     }
@@ -511,6 +518,21 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
         return fromContextAndComponents(context, components);
 
+    }
+
+    /**
+     * Converts the supplied byte array representation to a {@link Path}
+     * @param pathBytes the bytes of the path
+     * @return the {@link Path}
+     */
+    public static Path fromBytes(final byte[] pathBytes) {
+        final var wrapped = ByteBuffer.wrap(pathBytes);
+        return fromByteBuffer(wrapped);
+    }
+
+    private static Path fromByteBuffer(final ByteBuffer byteBuffer) {
+        final var pathString = ENCODING.decode(byteBuffer).toString();
+        return fromPathString(pathString);
     }
 
     /**

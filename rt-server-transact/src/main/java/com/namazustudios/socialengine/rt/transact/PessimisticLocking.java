@@ -1,20 +1,19 @@
-package com.namazustudios.socialengine.rt.transact.unix;
+package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 
 import java.util.Collection;
 
 /**
- * Implements an optimistic locking approach. As the transaction is processed, the {@link UnixFSJournalEntry} will
- * lock each object of interest. If another transaction locks those objects, then this will ensure that the second
- * transaction will fail immediately upon locking.
+ * Implements an optimistic locking approach. As the transaction is processed, lock each object of interest. If another
+ * transaction locks those objects, then this will ensure that the second transaction will fail immediately upon
+ * locking.
  *
  * Once the transaction is committed, the objects locked will be removed from the global locking pool. This allows
  * for multiple concurrent transactions writing unrelated data.
  */
-public interface UnixFSPessimisticLocking {
+public interface PessimisticLocking {
 
     /**
      * Attempts to lock the supplied {@link Path}, throwing an instance of {@link TransactionConflictException}
@@ -65,17 +64,7 @@ public interface UnixFSPessimisticLocking {
     }
 
     /**
-     * Convenience method to lock multiple {@link ResourceId} values
-     *
-     * @param values the values to lock
-     * @throws TransactionConflictException if any of the supplied {@link ResourceId}s are locked
-     */
-    default void lockResources(Collection<? extends ResourceId> values) throws TransactionConflictException {
-        for (final ResourceId value : values) lock(value);
-    }
-
-    /**
-     * Releases all objects locked by this {@link UnixFSPessimisticLocking} instance.
+     * Releases all objects locked by this {@link PessimisticLocking} instance.
      */
     void unlock();
 

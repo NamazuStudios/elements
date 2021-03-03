@@ -4,6 +4,7 @@ import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.Revision;
+import com.namazustudios.socialengine.rt.transact.PessimisticLocking;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionProgramInterpreter.ExecutionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,7 +34,7 @@ public class UnixFSGarbageCollectionCycle {
 
     private final UnixFSTransactionJournal transactionJournal;
 
-    private final UnixFSPessimisticLocking pessimisticLocking;
+    private final PessimisticLocking pessimisticLocking;
 
     // Variables used within the scope of the collection cycle
 

@@ -151,13 +151,13 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     }
 
     /**
-     * Returns a new instance of {@link UnixFSPessimisticLocking} such that {@link ResourceId}s and {@link Path}s may be
+     * Returns a new instance of {@link PessimisticLocking} such that {@link ResourceId}s and {@link Path}s may be
      * locked while a transaction is processing.
      *
-     * @return a new instance of {@link UnixFSPessimisticLocking}
+     * @return a new instance of {@link PessimisticLocking}
      */
-    public UnixFSPessimisticLocking newPessimisticLocking() {
-        return getContext().newPessimisticLocking();
+    public PessimisticLocking newPessimisticLocking() {
+        return getContext().lockedResources.newPessimisticLocking();
     }
 
     /**
@@ -254,7 +254,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         private final UnixFSJournalHeader header = new UnixFSJournalHeader();
 
-        private final Map<Object, Object> lockedResources = new ConcurrentHashMap<>();
+        private final SimplePessimisticLockingMaster lockedResources = new SimplePessimisticLockingMaster();
 
         // Set in constructor
 
@@ -494,7 +494,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
             final Slice<ByteBuffer> slice = getRawView().nextLeading();
 
             final RevisionDataStore.LockedRevision readRevision = getRevisionDataStore().lockLatestReadCommitted();
-            final UnixFSPessimisticLocking pessimisticLocking = newPessimisticLocking();
+            final PessimisticLocking pessimisticLocking = newPessimisticLocking();
 
             // Sets up a build for the specific slide of the journal file.
             final UnixFSTransactionProgramBuilder builder = getProgramBuilderProvider().get()
@@ -529,52 +529,6 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
         }
 
-        private UnixFSPessimisticLocking newPessimisticLocking() {
-
-            return new UnixFSPessimisticLocking() {
-
-                final List<Object> toRelease = new ArrayList<>();
-
-                private boolean tryLock(final Object object) {
-
-                    final Object existing = lockedResources.putIfAbsent(object, this);
-
-                    if (existing == null || existing == this) {
-                        toRelease.add(object);
-                        return true;
-                    } else {
-                        return false;
-                    }
-
-                }
-
-                @Override
-                public boolean tryLock(final com.namazustudios.socialengine.rt.Path path) {
-                    return tryLock((Object) path);
-                }
-
-                @Override
-                public boolean tryLock(final ResourceId resourceId) {
-                    return tryLock((Object) resourceId);
-                }
-
-                @Override
-                public void unlock() {
-                    lockedResources.keySet().removeAll(toRelease);
-                }
-
-                @Override
-                public boolean unlock(final com.namazustudios.socialengine.rt.Path rtPath) {
-                    return lockedResources.remove(rtPath, this);
-                }
-
-                @Override
-                public boolean unlock(final ResourceId resourceId) {
-                    return lockedResources.remove(resourceId, this);
-                }
-
-            };
-        }
 
         public void reclaimInvalidEntries() {
             programView.incrementTrailingUntil(slice -> !slice.getValue().isValid());
