@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.Publisher;
 import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.SimplePublisher;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.ReadOnlyTransaction;
@@ -24,6 +26,8 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     private final ResourceStores stores;
 
     private final Transaction transaction;
+
+    private final Publisher<XodusReadOnlyTransaction> onClose = new SimplePublisher<>();
 
     public XodusReadOnlyTransaction(final ResourceStores stores, final Transaction transaction) {
         this.stores = stores;
@@ -55,6 +59,8 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
         final var first = cursor.getSearchKeyRange(pathPrefixKey);
         if (first == null) return Stream.empty();
 
+        final var onCloseSubscription = onClose.subscribe(t -> cursor.close());
+
         final var spliterator = new Spliterators.AbstractSpliterator<ResourceService.Listing>(Long.MAX_VALUE, 0) {
 
             @Override
@@ -71,6 +77,8 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
                     action.accept(listing);
                     return true;
                 } else {
+                    cursor.close();
+                    onCloseSubscription.unsubscribe();
                     return false;
                 }
 
@@ -93,10 +101,10 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     @Override
     public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
 
-        final var key = XodusUtil.resourceIdKey(resourceId);
+        final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
         final var cursor = getStores().getResourceBlocks().openCursor(getTransaction());
 
-        final var first = cursor.getSearchKeyRange(key);
+        final var first = cursor.getSearchKeyRange(resourceIdKey);
         if (first == null) throw new ResourceNotFoundException();
 
         return new ReadableByteChannel() {
@@ -111,7 +119,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
                 if (current == null) {
                     return -1;
                 } else if (!current.hasRemaining()) {
-                    if (cursor.getNext() && XodusUtil.isMatchingBlockKey(key, cursor.getKey())) {
+                    if (cursor.getNext() && XodusUtil.isMatchingBlockKey(resourceIdKey, cursor.getKey())) {
                         current = XodusUtil.byteBuffer(cursor.getValue());
                     } else {
                         current = null;
@@ -152,6 +160,9 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     }
 
     @Override
-    public void close() {}
+    public void close() {
+        onClose.publish(this);
+        onClose.clear();
+    }
 
 }
