@@ -169,9 +169,11 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
                     nodeChangeNotifier = dnsSrvWatcher.watch(getSrvQuery());
                     nodeChangeNotifier.setListener(this, true);
 
+                    logger.info("Started SRV Watcher.");
+
                 } catch (Exception ex) {
 
-                    logger.warn("Could not start watcher thread.", ex);
+                    logger.warn("Could not start watcher. Retrying.", ex);
                     final var time = DNS_LOOKUP_POLLING_RATE_UNITS.toMillis(DNS_LOOKUP_POLLING_RATE);
 
                     try {
