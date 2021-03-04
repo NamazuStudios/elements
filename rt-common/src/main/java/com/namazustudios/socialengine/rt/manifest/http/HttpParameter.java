@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
-public class HttpParameter implements Comparable<HttpParameter> {
+import java.io.Serializable;
+
+public class HttpParameter implements Serializable, Comparable<HttpParameter> {
 
         private int index;
 
