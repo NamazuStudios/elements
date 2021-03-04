@@ -7,6 +7,7 @@ import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteBufferByteIterable;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.env.Transaction;
+import jetbrains.exodus.util.ByteIterableUtil;
 
 import java.nio.ByteBuffer;
 import java.util.Iterator;
@@ -130,6 +131,28 @@ public class XodusUtil {
         var blockKeyItr = resourceBlockKey.iterator();
         while (blockKeyItr.hasNext() && ktyItr.hasNext()) if (ktyItr.next() != blockKeyItr.next()) break;
         return !ktyItr.hasNext();
+    }
+
+    /**
+     * Checks if two {@link ByteIterable} isntances are equal in contents.
+     *
+     * @param l the left side
+     * @param r the right side
+     * @return true if equal, false otherwise
+     */
+    static boolean isEqual(final ByteIterable l, final ByteIterable r) {
+        return (l == r) || ByteIterableUtil.compare(l, r) == 0;
+    }
+
+    /**
+     * Checks if two {@link ByteIterable} isntances are equal in contents.
+     *
+     * @param l the left side (may be null)
+     * @param r the right side (may be null)
+     * @return true if equal, false otherwise
+     */
+    static boolean isEqualNullSafe(final ByteIterable l, final ByteIterable r) {
+        return (l == r) || (l != null && r != null && isEqual(l, r));
     }
 
 }

@@ -5,6 +5,9 @@ import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.ResourceService.Listing;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.HasNodeId;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 
 import java.io.IOException;
@@ -12,12 +15,21 @@ import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.util.stream.Stream;
 
+import static java.lang.String.format;
+
 /**
  * Represents a snapshot of the current database at a particular {@link Revision}. This guarantees that the data must
  * exist for the life of this transaction at the supplied {@link Revision}. Once closed, however, the {@link Revision}
  * may be collected by the database.
  */
 public interface ReadOnlyTransaction extends AutoCloseable {
+
+    /**
+     * Returns the {@link NodeId} of this {@link ReadOnlyTransaction}.
+     *
+     * @return the {@link NodeId}
+     */
+    NodeId getNodeId();
 
     /**
      * Checks if the resource exists, returning false if it does not exist.
@@ -70,5 +82,31 @@ public interface ReadOnlyTransaction extends AutoCloseable {
      * @throws TransactionConflictException if the operation caused a conflict on close.
      */
     void close();
+
+    /**
+     * Checks that this transaction's {@link NodeId} matches the supplied {@link Path}. If the {@link Path} has a
+     * context, then the {@link Path} is presumed to match as the {@link NodeId} will be inferred and returned.
+     *
+     * @param path the {@link Path}
+     * @return the fully qualified {@link Path}
+     */
+    default Path check(final Path path) {
+        return path.getOptionalNodeId()
+            .map(pathNodeId -> check(path))
+            .orElseGet(() -> path.toPathWithContext(getNodeId().asString()));
+    }
+
+    /**
+     * Checks that this transaction's {@link NodeId} matches the supplied {@link NodeId}, which is to say that both
+     * {@link NodeId} instances have the same {@link InstanceId}.
+     *
+     * @param owner the object owning the {@link NodeId} (used only for exception formatting)
+     * @return the owner object, if the check succeeds
+     */
+    default <T extends HasNodeId> T check(final T owner) {
+        if (getNodeId().getInstanceId().equals(owner.getNodeId().getInstanceId())) return owner;
+        final String msg = format("%s %s have differing instance IDs.", getNodeId(), owner);
+        throw new IllegalArgumentException(msg);
+    }
 
 }

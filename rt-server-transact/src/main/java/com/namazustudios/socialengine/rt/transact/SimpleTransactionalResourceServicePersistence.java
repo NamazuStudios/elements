@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
-import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore.PendingRevisionChange;
@@ -21,7 +20,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class SimpleTransactionalResourceServicePersistence implements Persistence, TransactionalResourceServicePersistence {
@@ -179,26 +177,31 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
         }
 
         @Override
+        public NodeId getNodeId() {
+            return nodeId;
+        }
+
+        @Override
         public boolean exists(final ResourceId resourceId) {
-            check(nodeId, resourceId);
+            check(resourceId);
             return existsAt(revision.getRevision(), resourceId);
         }
 
         @Override
         public Stream<ResourceService.Listing> list(final Path path) {
-            check(nodeId, path);
+            check(path);
             return listAt(nodeId, revision.getRevision(), path);
         }
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            check(nodeId, path);
+            check(path);
             return getResourceIdAt(nodeId, revision.getRevision(), path);
         }
 
         @Override
         public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
-            check(nodeId, resourceId);
+            check(resourceId);
             return loadResourceContentsAt(revision.getRevision(), resourceId);
         }
 
@@ -237,15 +240,20 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
         }
 
         @Override
+        public NodeId getNodeId() {
+            return nodeId;
+        }
+
+        @Override
         public boolean exists(final ResourceId resourceId) {
-            check(nodeId, resourceId);
+            check(resourceId);
             return existsAt(revision.getRevision(), resourceId);
         }
 
         @Override
         public Stream<ResourceService.Listing> list(final Path path) {
 
-            check(nodeId, path);
+            check(path);
 
             final Revision<Stream<ResourceService.Listing>> indexed = getRevisionDataStore()
                 .getPathIndex()
@@ -257,68 +265,68 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
 
         @Override
         public ResourceId getResourceId(final Path path) {
-            check(nodeId, path);
+            check(path);
             return getResourceIdAt(nodeId, revision.getRevision(), path);
         }
 
         @Override
         public ReadableByteChannel loadResourceContents(final ResourceId resourceId)
                 throws IOException {
-            check(nodeId, resourceId);
+            check(resourceId);
             return loadResourceContentsAt(revision.getRevision(), resourceId);
         }
 
         @Override
         public WritableByteChannel saveNewResource(final Path path, final ResourceId resourceId)
                 throws IOException, TransactionConflictException {
-            check(nodeId, path);
+            check(path);
             return entry.saveNewResource(path, resourceId);
         }
 
         @Override
         public WritableByteChannel updateResource(final ResourceId resourceId)
                 throws IOException, TransactionConflictException {
-            check(nodeId, resourceId);
+            check(resourceId);
             return entry.updateResource(resourceId);
         }
 
         @Override
         public void linkNewResource(final Path path, final ResourceId id)
                 throws TransactionConflictException {
-            check(nodeId, id);
-            check(nodeId, path);
+            check(id);
+            check(path);
             entry.linkNewResource(id, path);
         }
 
         @Override
         public void linkExistingResource(final ResourceId sourceResourceId, final Path destination)
                 throws TransactionConflictException {
-            check(nodeId, destination);
-            check(nodeId, sourceResourceId);
+            check(destination);
+            check(sourceResourceId);
             entry.linkExistingResource(sourceResourceId, destination);
         }
 
         @Override
         public ResourceService.Unlink unlinkPath(final Path path) throws TransactionConflictException {
-            check(nodeId, path);
+            check(path);
             return entry.unlinkPath(path);
         }
 
         @Override
         public List<ResourceService.Unlink> unlinkMultiple(final Path path, final int max) throws TransactionConflictException {
-            check(nodeId, path);
+            check(path);
             return entry.unlinkMultiple(path, max);
         }
 
         @Override
         public void removeResource(final ResourceId resourceId) throws TransactionConflictException {
-            check(nodeId, resourceId);
+            check(resourceId);
             entry.removeResource(resourceId);
         }
 
         @Override
         public List<ResourceId> removeResources(final Path path, final int max) throws TransactionConflictException {
-            check(nodeId, path);
+            check(path);
             return entry.removeResources(path, max);
         }
 
@@ -357,24 +365,6 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
 
     }
 
-    protected void check(final NodeId nodeId, final Path path) {
-        final InstanceId thisInstanceId = nodeId.getInstanceId();
-        final InstanceId pathInstanceId = path.getNodeId().getInstanceId();
-        check(nodeId, path, thisInstanceId, pathInstanceId);
-    }
-
-    protected void check(final NodeId nodeId, final ResourceId resourceId) {
-        final InstanceId thisInstanceId = nodeId.getInstanceId();
-        final InstanceId resourceIdInstanceId = resourceId.getInstanceId();
-        check(nodeId, resourceId, thisInstanceId, resourceIdInstanceId);
-    }
-
-    protected void check(final NodeId nodeId, final Object context,
-                         final InstanceId thisInstanceId, final InstanceId otherInstanceId) {
-        if (thisInstanceId.equals(otherInstanceId)) return;
-        final String msg = format("%s %s have differing instance IDs.", nodeId, context);
-        throw new IllegalArgumentException(msg);
-    }
 
     private class ExclusiveSimpleReadWriteTransaction
             extends SimpleReadWriteTransaction

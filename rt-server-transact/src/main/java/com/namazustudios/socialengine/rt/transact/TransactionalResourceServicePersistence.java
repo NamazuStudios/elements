@@ -1,7 +1,12 @@
 package com.namazustudios.socialengine.rt.transact;
 
+import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+
+import static java.lang.String.format;
 
 /**
  * Supplies instances of {@link ReadOnlyTransaction} as well as {@link ReadWriteTransaction} for manipulating the

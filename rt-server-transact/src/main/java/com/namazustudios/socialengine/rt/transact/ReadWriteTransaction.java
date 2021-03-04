@@ -145,6 +145,6 @@ public interface ReadWriteTransaction extends ReadOnlyTransaction {
      *
      * @throws TransactionConflictException
      */
-    void commit();
+    void commit() throws TransactionConflictException;
 
 }
