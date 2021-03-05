@@ -540,15 +540,19 @@ public class TransactionalResourceService implements ResourceService {
 
         private TransactionalResource acquire(final Resource resource) {
 
-            final ResourceId resourceId = resource.getId();
+            final var resourceId = resource.getId();
 
-            final TransactionalResource transactionalResource = new TransactionalResource(resource, context::purge);
-            transactionalResource.acquire();
-
-            final TransactionalResource result = context.acquires.putIfAbsent(resourceId, transactionalResource);
-            if (result != null) throw new DuplicateException("Resource already acquired.");
-
-            return transactionalResource;
+            return context.acquires.compute(resourceId, (rid, existing) -> {
+                if (existing == null || existing.isTombstone()) {
+                    final var transactionalResource = new TransactionalResource(resource, context::purge);
+                    transactionalResource.acquire();
+                    return transactionalResource;
+                } else if (existing.getDelegate() == resource) {
+                    return existing;
+                } else {
+                    throw new DuplicateException("Resource already acquired.");
+                }
+            });
 
         }
 

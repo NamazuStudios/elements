@@ -18,6 +18,7 @@ import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
 import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 
+@Test
 public class LuaHandlerIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaHandlerIntegrationTest.class);

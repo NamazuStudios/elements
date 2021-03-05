@@ -18,6 +18,7 @@ import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTes
 import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
 
+@Test
 public class HttpClientIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientIntegrationTest.class);

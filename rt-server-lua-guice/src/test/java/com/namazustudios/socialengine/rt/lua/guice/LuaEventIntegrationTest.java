@@ -21,6 +21,7 @@ import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTes
 import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static org.mockito.Mockito.*;
 
+@Test
 public class LuaEventIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);

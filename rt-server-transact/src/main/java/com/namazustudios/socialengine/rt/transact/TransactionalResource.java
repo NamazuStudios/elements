@@ -44,7 +44,7 @@ public class TransactionalResource implements Resource {
 
     private final Resource delegate;
 
-    private final AtomicInteger acquires = new AtomicInteger(MIN_VALUE);
+    private final AtomicInteger acquires;
 
     /**
      * Gets the tombstone {@link TransactionalResource}. This is a {@link TransactionalResource} that is used as
@@ -57,8 +57,9 @@ public class TransactionalResource implements Resource {
     }
 
     private TransactionalResource() {
-        this.resourceId = randomResourceId();
+        this.acquires = new AtomicInteger(MIN_VALUE);
         this.acquires.set(TOMBSTONE_MAGIC);
+        this.resourceId = randomResourceId();
         this.delegate = DeadResource.getInstance();
         this.onDestroy = new AtomicReference<>(ON_DESTROY_DEAD);
     }
@@ -72,9 +73,18 @@ public class TransactionalResource implements Resource {
      */
     public TransactionalResource(final Resource delegate,
                                  final Consumer<TransactionalResource> onDestroy) {
+        this.acquires = new AtomicInteger(MIN_VALUE);
         this.resourceId = delegate.getId();
         this.delegate = delegate;
         this.onDestroy = new AtomicReference<>(onDestroy);
+    }
+
+    private TransactionalResource(final Resource delegate,
+                                  final TransactionalResource other) {
+        this.delegate = delegate;
+        this.resourceId = other.resourceId;
+        this.acquires = other.acquires;
+        this.onDestroy = other.onDestroy;
     }
 
     /**
@@ -88,6 +98,15 @@ public class TransactionalResource implements Resource {
      */
     public boolean acquire() {
         return acquireAndGet() > 0;
+    }
+
+    /**
+     *
+     * @param resource
+     * @return
+     */
+    public TransactionalResource updated(final Resource resource) {
+        return resource == delegate ? this : new TransactionalResource(resource, this);
     }
 
     public int acquireAndGet() {
