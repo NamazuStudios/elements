@@ -23,6 +23,12 @@ public class ApplicationNodeMain {
         .withOptionalArg()
         .ofType(String.class);
 
+    private static final OptionSpec<ApplicationNode.StorageDriver> STORAGE_DRIVER_OPTION = OPTION_PARSER
+        .accepts("storage-driver", "Runs with the UnixFS Storage Driver")
+        .withRequiredArg()
+        .ofType(ApplicationNode.StorageDriver.class)
+        .defaultsTo(ApplicationNode.StorageDriver.XODUS);
+
     public static void main(final String[] args) throws InterruptedException {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
@@ -33,11 +39,12 @@ public class ApplicationNodeMain {
             final OptionSet optionSet = OPTION_PARSER.parse(args);
 
             if (optionSet.has(STATUS_CHECK_OPTION)) {
-                final String connectAddress = optionSet.valueOf(STATUS_CHECK_OPTION);
-                final StatusCheck statusCheck = new StatusCheck(connectAddress);
+                final var connectAddress = optionSet.valueOf(STATUS_CHECK_OPTION);
+                final var statusCheck = new StatusCheck(connectAddress);
                 statusCheck.run();
             } else {
-                final ApplicationNode applicationNode = new ApplicationNode(defaultConfigurationSupplier);
+                final var storageDriver = optionSet.valueOf(STORAGE_DRIVER_OPTION);
+                final var applicationNode = new ApplicationNode(defaultConfigurationSupplier, storageDriver);
                 applicationNode.start();
                 applicationNode.waitForShutdown();
             }

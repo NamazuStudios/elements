@@ -3,10 +3,8 @@ package com.namazustudios.socialengine.appnode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.appnode.guice.AppNodeSecurityModule;
-import com.namazustudios.socialengine.appnode.guice.AppNodeServicesModule;
-import com.namazustudios.socialengine.appnode.guice.MasterNodeModule;
-import com.namazustudios.socialengine.appnode.guice.WorkerInstanceModule;
+import com.google.inject.Module;
+import com.namazustudios.socialengine.appnode.guice.*;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
@@ -25,9 +23,6 @@ import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceMo
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
-import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceModule;
-import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
@@ -40,7 +35,6 @@ import java.text.DateFormat;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
-import static com.namazustudios.socialengine.rt.transact.unix.UnixFSChecksumAlgorithm.ADLER_32;
 
 public class ApplicationNode {
 
@@ -54,11 +48,26 @@ public class ApplicationNode {
 
     private final Object lock = new Object();
 
-    public ApplicationNode(final DefaultConfigurationSupplier defaultConfigurationSupplier) {
+    public ApplicationNode(final DefaultConfigurationSupplier defaultConfigurationSupplier,
+                           final StorageDriver storageDriver) {
 
         final var facebookBuiltinPermissionsSupplier = new FacebookBuiltinPermissionsSupplier();
 
+        final Module storageDriverModule;
+
+        switch (storageDriver) {
+            case XODUS:
+                storageDriverModule = new XodusStorageDriverModule();
+                break;
+            case UNIX_FS:
+                storageDriverModule = new UnixFSStorageDriverModule();
+                break;
+            default:
+                throw new IllegalArgumentException("Invalid storage driver: " + storageDriver);
+        }
+
         injector = Guice.createInjector(
+            storageDriverModule,
             new ClusterContextFactoryModule(),
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
@@ -82,9 +91,6 @@ public class ApplicationNode {
             new FirebaseAppFactoryModule(),
             new GuiceStandardNotificationFactoryModule(),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
-            new JournalTransactionalResourceServicePersistenceModule(),
-            new UnixFSTransactionalPersistenceContextModule().withChecksumAlgorithm(ADLER_32),
-            new XodusEnvironmentModule().withSchedulerEnvironment().withResourceEnvironment(),
             new AppNodeServicesModule(),
             new RedissonServicesModule(ResourceScope.getInstance()),
             new AppleIapReceiptInvokerModule(),
@@ -179,6 +185,20 @@ public class ApplicationNode {
                 lock.wait();
             }
         }
+    }
+
+    public enum StorageDriver {
+
+        /**
+         * Uses the Xodus Storage system.
+         */
+        XODUS,
+
+        /**
+         * Uses the UnixFS Storage system.
+         */
+        UNIX_FS
+
     }
 
 }
