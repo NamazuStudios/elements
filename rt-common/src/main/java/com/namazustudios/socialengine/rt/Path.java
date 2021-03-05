@@ -388,7 +388,11 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
     public Path toPathWithContext(final String context) {
-        return new Path(context, components);
+        if (this.context == null || this.context.equals(context)) {
+            return new Path(context, components);
+        } else {
+            throw new IllegalArgumentException("Context mismatch.");
+        }
     }
 
     @Override
