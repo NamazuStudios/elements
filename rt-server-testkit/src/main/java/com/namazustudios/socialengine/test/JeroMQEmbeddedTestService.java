@@ -9,6 +9,10 @@ import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceModule;
+import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
+import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.ApplicationNodeBuilder;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedWorkerInstanceContainer.NodeModuleFactory;
 import org.slf4j.Logger;
@@ -156,6 +160,44 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
     public JeroMQEmbeddedTestService withNodeModuleFactory(final NodeModuleFactory nodeModuleFactory) {
         withWorker().worker.withNodeModuleFactory(nodeModuleFactory);
         return this;
+    }
+
+    /**
+     * Configures the {@link Worker} to use the UnixFS Storage system.
+     *
+     * @return this instance
+     */
+    public JeroMQEmbeddedTestService withUnixFSWorker() {
+
+        withWorker().worker.withInstanceModules(
+            new JournalTransactionalResourceServicePersistenceModule(),
+            new UnixFSTransactionalPersistenceContextModule().withTestingDefaults(),
+            new XodusEnvironmentModule()
+                .withTempSchedulerEnvironment()
+                .withTempResourceEnvironment()
+        );
+
+        return this;
+
+    }
+
+    /**
+     * Configures the {@link Worker} to use the Xodus-based Storage system.
+     *
+     * @return this instance
+     */
+    public JeroMQEmbeddedTestService withXodusWorker() {
+
+        withWorker().worker.withInstanceModules(
+            new XodusEnvironmentModule()
+                .withTempSchedulerEnvironment()
+                .withTempResourceEnvironment(),
+            new XodusTransactionalResourceServicePersistenceModule()
+                .withDefaultBlockSize()
+        );
+
+        return this;
+
     }
 
     @Override

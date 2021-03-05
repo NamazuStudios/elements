@@ -54,8 +54,6 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             new TestWorkerInstanceModule(),
             new TestMasterNodeModule(getInstanceId()),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
-            new JournalTransactionalResourceServicePersistenceModule(),
-            new UnixFSTransactionalPersistenceContextModule().withTestingDefaults(),
             jeroMQInstanceConnectionServiceModule,
             new AbstractModule() {
                 @Override

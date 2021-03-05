@@ -196,10 +196,7 @@ public class SimpleScheduler implements Scheduler {
             } catch (Exception ex) {
                 failure.accept(ex);
                 throw ex;
-            } finally {
-                getResourceService().release(resource);
             }
-
 
         };
     }
@@ -223,8 +220,6 @@ public class SimpleScheduler implements Scheduler {
             } catch (Exception ex) {
                 failure.accept(ex);
                 throw ex;
-            } finally {
-                getResourceService().release(resource);
             }
 
         };

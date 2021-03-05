@@ -11,36 +11,46 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
 
 public class HttpClientIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientIntegrationTest.class);
 
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+            getXodusTest(HttpClientIntegrationTest::new),
+            getUnixFSTest(HttpClientIntegrationTest::new)
+        };
+    }
+
     private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService()
         .start();
 
-    private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withClient()
-        .withApplicationNode()
-            .withNodeModules(new LuaModule())
-            .withNodeModules(new JavaEventModule())
-            .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
-        .endApplication()
-        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
-        .withDefaultHttpClient()
-        .start();
+    private final Context context;
 
-    private final ApplicationId testApplicationId = getEmbeddedTestService()
-        .getWorker()
-        .getApplicationId();
+    private final EmbeddedTestService embeddedTestService;
 
-    private final Context context = getEmbeddedTestService()
-        .getClient()
-        .getContextFactory()
-        .getContextForApplication(testApplicationId);
+    private HttpClientIntegrationTest(final EmbeddedTestService embeddedTestService) {
+
+        this.embeddedTestService = embeddedTestService;
+
+        final var testApplicationId = getEmbeddedTestService()
+            .getWorker()
+            .getApplicationId();
+
+        this.context = getEmbeddedTestService()
+            .getClient()
+            .getContextFactory()
+            .getContextForApplication(testApplicationId);
+
+    }
 
     @AfterClass
     private void stop() throws Exception {

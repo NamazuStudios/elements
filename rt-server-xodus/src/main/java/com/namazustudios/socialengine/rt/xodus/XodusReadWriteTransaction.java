@@ -117,7 +117,7 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         return deleteBlocks(resourceIdKey);
     }
 
-    private boolean deleteBlocks(final ByteIterable resourceIdKey) {
+    boolean deleteBlocks(final ByteIterable resourceIdKey) {
 
         try (final var cursor = getXodusResourceStores().getResourceBlocks().openCursor(transaction)) {
 

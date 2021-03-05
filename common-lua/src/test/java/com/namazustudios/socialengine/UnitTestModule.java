@@ -55,7 +55,9 @@ public class UnitTestModule extends AbstractModule {
                 .withNodeModules(new LuaModule().visitDiscoveredModule(mockModule::mock))
                 .withNodeModules(mockModule)
             .endApplication()
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
+            .withWorkerModule(new XodusEnvironmentModule()
+                .withTempSchedulerEnvironment()
+                .withTempResourceEnvironment())
             .start()
         );
 

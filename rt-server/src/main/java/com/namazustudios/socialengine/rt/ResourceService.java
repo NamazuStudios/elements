@@ -67,7 +67,7 @@ public interface ResourceService extends AutoCloseable {
      *
      * @param resourceId the {@link ResourceId}
      * @return the Resource, never null
-     * @throws {@link ResourceNotFoundException} if no resource exists with that particular ID
+     * @throws ResourceNotFoundException if no resource exists with that particular ID
      */
     Resource getAndAcquireResourceWithId(ResourceId resourceId);
 
@@ -78,8 +78,8 @@ public interface ResourceService extends AutoCloseable {
      * @param path the path the {@link Path}
      * @return the resource the {@link Resource}
      *
-     * @throws {@link ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws ResourceNotFoundException if no resource exists at that path
+     * @throws IllegalArgumentException if the path is a wildcard path
      */
     Resource getAndAcquireResourceAtPath(Path path);
 
@@ -102,8 +102,8 @@ public interface ResourceService extends AutoCloseable {
      * @param path the initial path for the {@link Resource}
      * @param resource the resource to insert
      *
-     * @throws {@link DuplicateException} if a resource is already present
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  DuplicateException if a resource is already present
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     void addAndReleaseResource(Path path, Resource resource);
 
@@ -132,7 +132,7 @@ public interface ResourceService extends AutoCloseable {
 
     /**
      * Attempts to release ownership of the specified {@link Resource}, throwing an instance of
-     * {@link ResourceNotFoundException} if the operation failed.
+     * {@link ResourceNotFoundException if the operation failed.
      *
      * @param resource the {@link Resource} to release
      */
@@ -166,7 +166,7 @@ public interface ResourceService extends AutoCloseable {
      * many {@link ResourceId} instances.
      *
      * The returned {@link Collection<ResourceId>} will be read only, and the {@link Iterator#remove()} method will throw
-     * an instance of {@link UnsupportedOperationException} if removal is attempted.
+     * an instance of {@link UnsupportedOperationException if removal is attempted.
      *
      * @param path the {@link Path} to match
      * @return an {@link Iterable<ResourceId>} instances
@@ -203,8 +203,8 @@ public interface ResourceService extends AutoCloseable {
      * @param sourceResourceId
      * @param destination
      *
-     * @throws {@link DuplicateException} if an alias already exists for the destination
-     * @throws {@link ResourceNotFoundException} if the {@link Resource} can't be found
+     * @throws  DuplicateException if an alias already exists for the destination
+     * @throws  ResourceNotFoundException if the {@link Resource} can't be found
      */
     void link(ResourceId sourceResourceId, Path destination);
 
@@ -247,7 +247,7 @@ public interface ResourceService extends AutoCloseable {
      * @param path a {@link Path} to unlink
      * @param removed a Consumer<Resource> which will receive the removed {@link Resource}
      * @return true if the {@link Resource} associated with the {@link Path} was removed, false otherwise
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     Unlink unlinkPath(Path path, Consumer<Resource> removed);
 
@@ -284,8 +284,8 @@ public interface ResourceService extends AutoCloseable {
      *
      * @param resourceId the path to the resource
      *
-     * @throws {@link ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  ResourceNotFoundException if no resource exists at that path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     Resource removeResource(ResourceId resourceId);
 
@@ -295,7 +295,7 @@ public interface ResourceService extends AutoCloseable {
      * @param resourceIdString the path as a string
      * @return the removed {@link Resource}
      *
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      *
      */
     default Resource removeResource(final  String resourceIdString) {
@@ -325,8 +325,8 @@ public interface ResourceService extends AutoCloseable {
      * Removes a {@link Resource} and then immediately closes it.
      *
      * @param resourceId
-     * @throws {@link ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  ResourceNotFoundException if no resource exists at that path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     default void destroy(final ResourceId resourceId) {
         final var resource = removeResource(resourceId);
@@ -336,9 +336,9 @@ public interface ResourceService extends AutoCloseable {
     /**
      * Removes a {@link Resource} and then immediately closes it.
      *
-     * @param resourceIdString
-     * @throws {@link ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @param resourceIdString the {@link String} representation of a {@link ResourceId}
+     * @throws  ResourceNotFoundException if no resource exists at that path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     default void destroy(final String resourceIdString) {
         final Resource resource = removeResource(resourceIdString);

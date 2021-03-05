@@ -259,13 +259,11 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public Stream<Resource> removeAllResources() {
-
-        final Context context = getContext();
-
         try (final ExclusiveReadWriteTransaction txn = getPersistence().openExclusiveRW(getNodeId())) {
             final Context old = this.context.getAndSet(new Context());
-            txn.removeAllResources();
-            return old.acquires.values().stream().map(tr -> tr.getDelegate());
+            if (old == null) throw new IllegalStateException("Not running.");
+            txn.truncate();
+            return old.acquires.values().stream().map(TransactionalResource::getDelegate);
         }
 
     }
@@ -502,7 +500,7 @@ public class TransactionalResourceService implements ResourceService {
             toAcquire.forEach(r -> {
                 // This should never fail because we conservatively acquire each resource as we encounter it even
                 // among all the contention (which should be rare).
-                if (!r.acquire()) logger.error("Failed to acquire {} in post-acquire loop.");
+                if (!r.acquire()) logger.error("Failed to acquire {} in post-acquire loop.", r);
             });
 
             toRelease.forEach(r -> {

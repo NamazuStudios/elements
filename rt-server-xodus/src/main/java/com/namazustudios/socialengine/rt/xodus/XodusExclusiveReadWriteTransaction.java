@@ -32,7 +32,10 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
             final XodusResourceStores stores,
             final Transaction transaction,
             final PessimisticLocking pessimisticLocking) {
-        if (!transaction.isReadonly()) throw new IllegalArgumentException("Must use read-write transaction.");
+
+        if (!transaction.isExclusive() && transaction.isReadonly())
+            throw new IllegalArgumentException("Must use read-write transaction.");
+
         this.transaction = transaction;
         this.xodusResourceStores = stores;
         this.xodusReadWriteTransaction = new XodusReadWriteTransaction(
@@ -41,6 +44,7 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
             stores,
             transaction,
             pessimisticLocking);
+
     }
 
     @Override
@@ -117,21 +121,31 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
 
         final var resourceIds = new ArrayList<ResourceId>();
 
-        try (var reversePathsCursor = getXodusResourceStores().getReversePaths().openCursor(getTransaction())) {
+        try (var pathsCursor = getXodusResourceStores().getPaths().openCursor(getTransaction());
+             var reversePathsCursor = getXodusResourceStores().getReversePaths().openCursor(getTransaction());
+             var resourceBlockCursor = getXodusResourceStores().getResourceBlocks().openCursor(getTransaction())
+        ) {
 
             if (reversePathsCursor.getNext()) {
                 do {
-                    final var resourceIdKey = reversePathsCursor.getValue();
+                    final var resourceIdKey = reversePathsCursor.getKey();
                     final var resourceId = XodusUtil.resourceId(resourceIdKey);
                     resourceIds.add(resourceId);
                 } while (reversePathsCursor.getNextNoDup());
             }
-        }
 
-        ALL_STORES.forEach(store -> getEnvironment().truncateStore(store, getTransaction()));
+            while (pathsCursor.getNext()) pathsCursor.deleteCurrent();
+            while (resourceBlockCursor.getNext()) resourceBlockCursor.deleteCurrent();
+
+        }
 
         return resourceIds.stream();
 
+    }
+
+    @Override
+    public void truncate() {
+        ALL_STORES.forEach(store -> getEnvironment().truncateStore(store, getTransaction()));
     }
 
     @Override
