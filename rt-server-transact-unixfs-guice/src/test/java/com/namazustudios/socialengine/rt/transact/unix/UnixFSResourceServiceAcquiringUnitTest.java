@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceAcquiringUnitTest;
@@ -14,7 +15,6 @@ import org.testng.annotations.Factory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.channels.ReadableByteChannel;
 
@@ -54,13 +54,13 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
     private boolean gcEnable;
 
     @Inject
+    private Persistence persistence;
+
+    @Inject
     private UnixFSGarbageCollector garbageCollector;
 
     @Inject
     private TransactionalResourceService transactionalResourceService;
-
-    @Inject
-    private TransactionalPersistenceContext transactionalPersistenceContext;
 
     @Override
     public ResourceService getResourceService() {
@@ -69,7 +69,7 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
 
     @BeforeClass
     public void start() {
-        transactionalPersistenceContext.start();
+        persistence.start();
         garbageCollector.setPaused(!gcEnable);
         transactionalResourceService.start();
     }
@@ -77,7 +77,7 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
     @AfterClass
     public void stop() {
         transactionalResourceService.stop();
-        transactionalPersistenceContext.stop();
+        persistence.stop();
     }
 
     public static class Module extends AbstractModule {
@@ -100,7 +100,7 @@ public class UnixFSResourceServiceAcquiringUnitTest extends AbstractResourceServ
             bind(boolean.class).annotatedWith(named(GC_ENABLE)).toInstance(gcEnable);
 
             install(new TransactionalResourceServiceModule().exposeTransactionalResourceService());
-            install(new SimpleTransactionalResourceServicePersistenceModule());
+            install(new JournalTransactionalResourceServicePersistenceModule());
 
             install(new UnixFSTransactionalPersistenceContextModule()
                 .exposeDetailsForTesting()

@@ -1,70 +1,37 @@
-package com.namazustudios.socialengine.rt.transact.unix;
+package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceLinkingUnitTest;
+import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceReleasingUnitTest;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceService;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 import org.mockito.Mockito;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
-import org.testng.annotations.Factory;
+import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
-import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
-public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServiceLinkingUnitTest {
-
-    private static final String GC_ENABLE = "com.namazustudios.socialengine.rt.transact.unix.UnixFSResourceServiceAcquiringUnitTest.gc.enable";
-
-    @Factory
-    public static Object[] getTests() {
-        return new Object[] {
-            withGarbageCollectionEnabled(),
-            withGarbageCollectionDisabled()
-        };
-    }
-
-    private static UnixFSResourceServiceLinkingUnitTest withGarbageCollectionEnabled() {
-        final Module module = new Module("gc-enabled", true);
-        final Injector injector = Guice.createInjector(module);
-        return injector.getInstance(UnixFSResourceServiceLinkingUnitTest.class);
-    }
-
-    private static UnixFSResourceServiceLinkingUnitTest withGarbageCollectionDisabled() {
-        final Module module = new Module("gc-disabled", false);
-        final Injector injector = Guice.createInjector(module);
-        return injector.getInstance(UnixFSResourceServiceLinkingUnitTest.class);
-    }
-
-    @Inject
-    @Named(GC_ENABLE)
-    private boolean gcEnable;
+@Guice(modules = XodusResourceServiceReleasingUnitTest.Module.class)
+public class XodusResourceServiceReleasingUnitTest extends AbstractResourceServiceReleasingUnitTest {
 
     @Inject
     private Persistence persistence;
-
-    @Inject
-    private UnixFSGarbageCollector garbageCollector;
 
     @Inject
     private TransactionalResourceService transactionalResourceService;
@@ -77,7 +44,6 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
     @BeforeClass
     public void start() {
         persistence.start();
-        garbageCollector.setPaused(!gcEnable);
         transactionalResourceService.start();
     }
 
@@ -89,31 +55,22 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
 
     public static class Module extends AbstractModule {
 
-        private final String name;
-
-        private final boolean gcEnable;
-
-        public Module(final String name, final boolean gcEnable) {
-            this.name = name;
-            this.gcEnable = gcEnable;
-        }
-
         @Override
         protected void configure() {
 
-            final NodeId testNodeId = randomNodeId();
+            final var testNodeId = randomNodeId();
 
             bind(NodeId.class).toInstance(testNodeId);
-            bind(boolean.class).annotatedWith(named(GC_ENABLE)).toInstance(gcEnable);
+
+            install(new XodusEnvironmentModule()
+                    .withTempSchedulerEnvironment()
+                    .withTempResourceEnvironment()
+            );
 
             install(new TransactionalResourceServiceModule().exposeTransactionalResourceService());
-            install(new JournalTransactionalResourceServicePersistenceModule());
+            install(new XodusTransactionalResourceServicePersistenceModule().withDefaultBlockSize());
 
-            install(new UnixFSTransactionalPersistenceContextModule()
-                    .exposeDetailsForTesting()
-                    .withTestingDefaults(name));
-
-            final ResourceLoader resourceLoader = mock(ResourceLoader.class);
+            final var resourceLoader = mock(ResourceLoader.class);
 
             doAnswer(a -> {
 
@@ -125,7 +82,7 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
                 final ResourceId resourceId = ResourceId.resourceIdFromByteBuffer(byteBuffer);
                 return doGetMockResource(resourceId);
 
-            }).when(resourceLoader).load(any(ReadableByteChannel.class));
+            }).when(resourceLoader).load(any(ReadableByteChannel.class), anyBoolean());
 
             bind(ResourceLoader.class).toInstance(resourceLoader);
 

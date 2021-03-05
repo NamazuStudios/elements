@@ -111,20 +111,20 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         final Path path = new Path(asList("test", "*"));
 
         final Set<ResourceId> expectedResourceIdList = intermediates.stream()
-                .map(a -> (ResourceId) a[0])
-                .collect(toSet());
+            .map(a -> (ResourceId) a[0])
+            .collect(toSet());
 
         final Set<Path> expectedPathList = intermediates.stream()
-                .map(a -> (Path) a[1])
-                .collect(toSet());
+            .map(a -> (Path) a[1])
+            .collect(toSet());
 
         final Set<ResourceId> resourceIdList = getResourceService().listStream(path)
-                .map(l -> l.getResourceId())
-                .collect(toSet());
+            .map(ResourceService.Listing::getResourceId)
+            .collect(toSet());
 
         final Set<Path> pathList = getResourceService().listStream(path)
-                .map(l -> l.getPath())
-                .collect(toSet());
+            .map(ResourceService.Listing::getPath)
+            .collect(toSet());
 
         assertEquals(resourceIdList, expectedResourceIdList);
         assertEquals(pathList, expectedPathList);

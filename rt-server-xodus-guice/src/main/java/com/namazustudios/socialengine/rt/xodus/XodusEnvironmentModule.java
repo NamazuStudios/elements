@@ -28,16 +28,14 @@ public class XodusEnvironmentModule extends AbstractModule {
     public XodusEnvironmentModule withResourceEnvironment() {
         bindResourceEnvironment = () -> bind(Environment.class)
             .annotatedWith(named(RESOURCE_ENVIRONMENT))
-            .toProvider(ResourceEnvironmentProvider.class)
-            .asEagerSingleton();
+            .toProvider(ResourceEnvironmentProvider.class);
         return this;
     }
 
     public XodusEnvironmentModule withSchedulerEnvironment() {
         bindSchedulerEnvironment = () -> bind(Environment.class)
             .annotatedWith(named(SCHEDULER_ENVIRONMENT))
-            .toProvider(SchedulerEnvironmentProvider.class)
-            .asEagerSingleton();
+            .toProvider(SchedulerEnvironmentProvider.class);
         return this;
     }
 

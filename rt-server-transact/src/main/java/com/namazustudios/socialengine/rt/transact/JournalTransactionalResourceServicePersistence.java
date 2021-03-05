@@ -22,9 +22,9 @@ import java.util.stream.Stream;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class SimpleTransactionalResourceServicePersistence implements Persistence, TransactionalResourceServicePersistence {
+public class JournalTransactionalResourceServicePersistence implements Persistence, TransactionalResourceServicePersistence {
 
-    private static final Logger logger = getLogger(SimpleTransactionalResourceServicePersistence.class);
+    private static final Logger logger = getLogger(JournalTransactionalResourceServicePersistence.class);
 
     private final Lock lock;
 
@@ -34,13 +34,13 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
 
     private final TransactionJournal transactionJournal;
 
-    private final TransactionalPersistenceContext transactionalPersistenceContext;
+    private final JournalTransactionalPersistenceDriver journalTransactionalPersistenceDriver;
 
     @Inject
-    public SimpleTransactionalResourceServicePersistence(
+    public JournalTransactionalResourceServicePersistence(
             final RevisionDataStore revisionDataStore,
             final TransactionJournal transactionJournal,
-            final TransactionalPersistenceContext transactionalPersistenceContext) {
+            final JournalTransactionalPersistenceDriver journalTransactionalPersistenceDriver) {
 
         final ReadWriteLock rwLock = new ReentrantReadWriteLock();
         this.lock = rwLock.readLock();
@@ -48,21 +48,21 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
 
         this.revisionDataStore = revisionDataStore;
         this.transactionJournal = transactionJournal;
-        this.transactionalPersistenceContext = transactionalPersistenceContext;
+        this.journalTransactionalPersistenceDriver = journalTransactionalPersistenceDriver;
 
     }
 
     @Override
     public void start() {
-        getTransactionalPersistenceContext().start();
+        getJournalTransactionalPersistenceDriver().start();
     }
 
     @Override
     public void stop() {
         try {
-            getTransactionalPersistenceContext().stop();
+            getJournalTransactionalPersistenceDriver().stop();
         } catch (Exception ex) {
-            logger.error("Caught exception closing {}", getTransactionalPersistenceContext(), ex);
+            logger.error("Caught exception closing {}", getJournalTransactionalPersistenceDriver(), ex);
         }
     }
 
@@ -109,8 +109,8 @@ public class SimpleTransactionalResourceServicePersistence implements Persistenc
         return transactionJournal;
     }
 
-    public TransactionalPersistenceContext getTransactionalPersistenceContext() {
-        return transactionalPersistenceContext;
+    public JournalTransactionalPersistenceDriver getJournalTransactionalPersistenceDriver() {
+        return journalTransactionalPersistenceDriver;
     }
 
     private boolean existsAt(final Revision<?> revision,

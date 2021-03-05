@@ -92,7 +92,11 @@ public interface ReadOnlyTransaction extends AutoCloseable {
      */
     default Path check(final Path path) {
         return path.getOptionalNodeId()
-            .map(pathNodeId -> check(path))
+            .map(pathNodeId -> {
+                if (getNodeId().getInstanceId().equals(pathNodeId.getNodeId().getInstanceId())) return path;
+                final String msg = format("%s %s have differing instance IDs.", getNodeId(), path);
+                throw new IllegalArgumentException(msg);
+            })
             .orElseGet(() -> path.toPathWithContext(getNodeId().asString()));
     }
 

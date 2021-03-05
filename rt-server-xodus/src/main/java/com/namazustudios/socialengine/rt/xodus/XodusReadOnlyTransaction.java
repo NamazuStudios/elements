@@ -1,15 +1,15 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.Publisher;
-import com.namazustudios.socialengine.rt.ResourceService;
-import com.namazustudios.socialengine.rt.SimplePublisher;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.transact.NullResourceException;
 import com.namazustudios.socialengine.rt.transact.ReadOnlyTransaction;
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.env.Transaction;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
@@ -19,6 +19,10 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
+
+    private final Logger logger = LoggerFactory.getLogger(XodusReadOnlyTransaction.class);
+
+    private boolean open = true;
 
     private final NodeId nodeId;
 
@@ -34,15 +38,24 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
         this.nodeId = nodeId;
         this.stores = stores;
         this.transaction = transaction;
+        onClose(rot -> logger.debug("Closing {}", rot));
+        onClose(rot -> open = false);
+        onClose(t -> {
+            if (!getTransaction().isFinished()) {
+                getTransaction().abort();
+            }
+        });
     }
 
     @Override
     public NodeId getNodeId() {
+        check();
         return nodeId;
     }
 
     @Override
     public boolean exists(final ResourceId resourceId) {
+        check();
         check(resourceId);
         final var key = new ArrayByteIterable(resourceId.asBytes());
         return getStores().getReversePaths().get(getTransaction(), key) != null;
@@ -50,6 +63,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
     @Override
     public Stream<ResourceService.Listing> list(final Path path) {
+        check();
         final var qualified = check(path);
         return qualified.isWildcard() ? listWildcard(qualified) : listSingular(qualified);
     }
@@ -64,18 +78,23 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
         final var pathPrefixKey = XodusUtil.pathKey(check(wildcard.stripWildcard()));
         final var cursor = getStores().getPaths().openCursor(getTransaction());
+        final var onCloseSubscription = onClose(t -> cursor.close());
+
         final var first = cursor.getSearchKeyRange(pathPrefixKey);
         if (first == null) return Stream.empty();
 
-        final var onCloseSubscription = onClose.subscribe(t -> cursor.close());
-
         final var spliterator = new Spliterators.AbstractSpliterator<ResourceService.Listing>(Long.MAX_VALUE, 0) {
+
+            boolean more = true;
 
             @Override
             public boolean tryAdvance(final Consumer<? super ResourceService.Listing> action) {
 
+                if (!more) return cleanup();
+
                 final var pathKey = cursor.getKey();
                 final var resourceIdValue = cursor.getValue();
+                more = cursor.getNext();
 
                 final var path = XodusUtil.path(pathKey);
                 final var resourceId = XodusUtil.resourceId(resourceIdValue);
@@ -85,11 +104,15 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
                     action.accept(listing);
                     return true;
                 } else {
-                    cursor.close();
-                    onCloseSubscription.unsubscribe();
-                    return false;
+                    return cleanup();
                 }
 
+            }
+
+            private boolean cleanup() {
+                cursor.close();
+                onCloseSubscription.unsubscribe();
+                return false;
             }
 
         };
@@ -101,10 +124,10 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
     @Override
     public ResourceId getResourceId(final Path path) {
         final var qualified = check(path);
-        final var key = new ArrayByteIterable(qualified.toByteArray());
-        final var value = getStores().getReversePaths().get(getTransaction(), key);
-        if (value == null) throw new ResourceNotFoundException();
-        return XodusUtil.resourceId(value);
+        final var pathKey = XodusUtil.pathKey(qualified);
+        final var resourceIdKey = getStores().getPaths().get(getTransaction(), pathKey);
+        if (resourceIdKey == null) throw new ResourceNotFoundException();
+        return XodusUtil.resourceId(resourceIdKey);
     }
 
     @Override
@@ -116,9 +139,9 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
         final var cursor = getStores().getResourceBlocks().openCursor(getTransaction());
 
         final var first = cursor.getSearchKeyRange(resourceIdKey);
-        if (first == null) throw new ResourceNotFoundException();
+        if (first == null) throw new NullResourceException();
 
-        final var onCloseSubscription = onClose.subscribe(t -> cursor.close());
+        final var onCloseSubscription = onClose(t -> cursor.close());
 
         return new ReadableByteChannel() {
 
@@ -167,18 +190,27 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
     }
 
+    @Override
+    public void close() {
+        onClose.publish(this);
+        onClose.clear();
+        onClose.subscribe(rot -> logger.warn("Transaction already closed {}", rot));
+    }
+
+    public void check() {
+        if (!open) throw new IllegalStateException("Transaction is closed.");
+    }
+
+    public Subscription onClose(final Consumer<ReadOnlyTransaction> readOnlyTransactionConsumer) {
+        return onClose.subscribe(readOnlyTransactionConsumer);
+    }
+
     public XodusResourceStores getStores() {
         return stores;
     }
 
     public Transaction getTransaction() {
         return transaction;
-    }
-
-    @Override
-    public void close() {
-        onClose.publish(this);
-        onClose.clear();
     }
 
 }

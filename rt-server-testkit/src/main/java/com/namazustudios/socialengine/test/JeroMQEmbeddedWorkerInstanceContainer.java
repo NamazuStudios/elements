@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
-import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
 import com.namazustudios.socialengine.test.guice.TestMasterNodeModule;
 import com.namazustudios.socialengine.test.guice.TestWorkerInstanceModule;
@@ -54,7 +54,7 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             new TestWorkerInstanceModule(),
             new TestMasterNodeModule(getInstanceId()),
             new SimpleExecutorsModule().withDefaultSchedulerThreads(),
-            new SimpleTransactionalResourceServicePersistenceModule(),
+            new JournalTransactionalResourceServicePersistenceModule(),
             new UnixFSTransactionalPersistenceContextModule().withTestingDefaults(),
             jeroMQInstanceConnectionServiceModule,
             new AbstractModule() {

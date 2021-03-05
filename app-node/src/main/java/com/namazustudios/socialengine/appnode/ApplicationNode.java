@@ -25,7 +25,7 @@ import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceMo
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
-import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceModule;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.guice.*;
@@ -68,7 +68,7 @@ public class ApplicationNode {
             new PersistentInstanceIdModule(),
             new ZContextModule(),
             new MasterNodeModule(),
-            new SimpleTransactionalResourceServicePersistenceModule(),
+            new JournalTransactionalResourceServicePersistenceModule(),
             new JeroMQRemoteInvokerModule(),
             new JeroMQAsyncConnectionServiceModule(),
             new JeroMQInstanceConnectionServiceModule(),

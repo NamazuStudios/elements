@@ -1,18 +1,18 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalPersistenceDriver;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
-public class UnixFSTransactionalPersistenceContext implements TransactionalPersistenceContext {
+public class UnixFSJournalTransactionalPersistenceDriver implements JournalTransactionalPersistenceDriver {
 
-    private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionalPersistenceContext.class);
+    private static final Logger logger = LoggerFactory.getLogger(UnixFSJournalTransactionalPersistenceDriver.class);
 
-    private static final ShutdownHooks shutdownHooks = new ShutdownHooks(UnixFSTransactionalPersistenceContext.class);
+    private static final ShutdownHooks shutdownHooks = new ShutdownHooks(UnixFSJournalTransactionalPersistenceDriver.class);
 
     private UnixFSUtils unixFSUtils;
 
@@ -26,7 +26,7 @@ public class UnixFSTransactionalPersistenceContext implements TransactionalPersi
 
     private UnixFSRevisionDataStore revisionDataStore;
 
-    public UnixFSTransactionalPersistenceContext() {
+    public UnixFSJournalTransactionalPersistenceDriver() {
         shutdownHooks.add(this, () -> {
             try {
                 stop();

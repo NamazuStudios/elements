@@ -4,13 +4,12 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.Revision;
-import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalPersistenceDriver;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.SortedSet;
@@ -31,18 +30,18 @@ public class UnixFSRevisionPoolIntegrationTest {
     private UnixFSRevisionPool revisionPool;
 
     @Inject
-    private TransactionalPersistenceContext transactionalPersistenceContext;
+    private JournalTransactionalPersistenceDriver journalTransactionalPersistenceDriver;
 
     private final List<UnixFSRevision<?>> revisions = new ArrayList<>();
 
     @BeforeClass
     public void start() {
-        transactionalPersistenceContext.start();
+        journalTransactionalPersistenceDriver.start();
     }
 
     @AfterClass
     public void stop() {
-        transactionalPersistenceContext.stop();
+        journalTransactionalPersistenceDriver.stop();
     }
 
     private UnixFSRevision<?> testNextRevision() {

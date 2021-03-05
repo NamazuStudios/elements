@@ -7,8 +7,8 @@ import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.transact.SimpleTransactionalResourceServicePersistenceModule;
-import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceModule;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalPersistenceDriver;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceService;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 import org.mockito.Mockito;
@@ -50,13 +50,13 @@ public class UnixFSGarbageCollectorTest {
     private TransactionalResourceService transactionalResourceService;
 
     @Inject
-    private TransactionalPersistenceContext transactionalPersistenceContext;
+    private JournalTransactionalPersistenceDriver journalTransactionalPersistenceDriver;
 
     private final Queue<Throwable> garbageCollectionErrors = new ConcurrentLinkedQueue<>();
 
     @BeforeClass
     public void start() {
-        transactionalPersistenceContext.start();
+        journalTransactionalPersistenceDriver.start();
         transactionalResourceService.start();
         garbageCollector.setPaused(true);
         garbageCollector.setUncaughtExceptionHandler((thread, error) -> garbageCollectionErrors.add(error));
@@ -65,7 +65,7 @@ public class UnixFSGarbageCollectorTest {
     @AfterClass
     public void stop() {
         transactionalResourceService.stop();
-        transactionalPersistenceContext.stop();
+        journalTransactionalPersistenceDriver.stop();
     }
 
     @DataProvider
@@ -123,7 +123,7 @@ public class UnixFSGarbageCollectorTest {
             bind(NodeId.class).toInstance(testNodeId);
 
             install(new TransactionalResourceServiceModule().exposeTransactionalResourceService());
-            install(new SimpleTransactionalResourceServicePersistenceModule());
+            install(new JournalTransactionalResourceServicePersistenceModule());
 
             install(new UnixFSTransactionalPersistenceContextModule()
                 .exposeDetailsForTesting()

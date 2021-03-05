@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.*;
+import jdk.jfr.Name;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Transaction;
 import org.slf4j.Logger;
@@ -25,7 +26,9 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
 
     public static final String RESOURCE_BLOCK_SIZE = "com.namazustudios.socialengine.rt.xodus.resource.block.size";
 
-    private int blockSize;
+    public static final long DEFAULT_RESOURCE_BLOCK_SIZE = 4096L;
+
+    private long blockSize;
 
     private Provider<Environment> environmentProvider;
 
@@ -38,7 +41,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
 
         final var environment = getEnvironmentProvider().get();
 
-        if (!this.environment.compareAndSet(null, environment)) {
+        if (this.environment.compareAndSet(null, environment)) {
             logger.info("Started Environment");
             setup(environment);
         } else {
@@ -110,7 +113,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
 
     }
 
-    public int getBlockSize() {
+    public long getBlockSize() {
         return blockSize;
     }
 
@@ -121,7 +124,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
     }
 
     @Inject
-    public void setBlockSize(@Named(RESOURCE_BLOCK_SIZE) int blockSize) {
+    public void setBlockSize(@Named(RESOURCE_BLOCK_SIZE) long blockSize) {
         this.blockSize = blockSize;
     }
 
@@ -130,7 +133,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
     }
 
     @Inject
-    public void setEnvironmentProvider(Provider<Environment> environmentProvider) {
+    public void setEnvironmentProvider(@Named(RESOURCE_ENVIRONMENT) Provider<Environment> environmentProvider) {
         this.environmentProvider = environmentProvider;
     }
 

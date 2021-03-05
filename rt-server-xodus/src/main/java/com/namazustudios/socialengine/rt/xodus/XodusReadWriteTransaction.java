@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -8,73 +10,86 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.PessimisticLocking;
 import com.namazustudios.socialengine.rt.transact.ReadWriteTransaction;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
-import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteBufferByteIterable;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.env.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import static java.util.stream.Collectors.filtering;
 import static java.util.stream.Collectors.toList;
 
 public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
     private static final Logger logger = LoggerFactory.getLogger(XodusReadWriteTransaction.class);
 
-    private final int blockSize;
-
-    private final XodusResourceStores stores;
+    private final long blockSize;
 
     private final Transaction transaction;
 
     private final PessimisticLocking pessimisticLocking;
 
-    private final XodusReadOnlyTransaction readOnlyTransaction;
+    private final XodusResourceStores xodusResourceStores;
 
-    private final Publisher<XodusReadWriteTransaction> onClose = new SimplePublisher<>();
+    private final XodusReadOnlyTransaction xodusReadOnlyTransaction;
 
     public XodusReadWriteTransaction(
             final NodeId nodeId,
-            final int blockSize,
-            final XodusResourceStores stores,
+            final long blockSize,
+            final XodusResourceStores xodusResourceStores,
             final Transaction transaction,
             final PessimisticLocking pessimisticLocking) {
-        this.stores = stores;
+        if (transaction.isReadonly()) throw new IllegalArgumentException("Must use read-write transaction.");
+        this.xodusResourceStores = xodusResourceStores;
         this.blockSize = blockSize;
         this.transaction = transaction;
         this.pessimisticLocking = pessimisticLocking;
-        this.readOnlyTransaction = new XodusReadOnlyTransaction(nodeId, stores, transaction);
-        if (!transaction.isReadonly()) throw new IllegalArgumentException("Must use read-write transaction.");
+        this.xodusReadOnlyTransaction = new XodusReadOnlyTransaction(nodeId, xodusResourceStores, transaction);
+        this.xodusReadOnlyTransaction.onClose(t -> getPessimisticLocking().unlock());
     }
 
     @Override
     public NodeId getNodeId() {
-        return getReadOnlyTransaction().getNodeId();
+        return getXodusReadOnlyTransaction().getNodeId();
     }
 
     @Override
     public WritableByteChannel saveNewResource(final Path path, final ResourceId resourceId) throws TransactionConflictException {
+
+        getXodusReadOnlyTransaction().check();
+
         final var qualified = check(path);
         doLinkNew(qualified, resourceId);
         return new BlockWritableChannel(resourceId);
+
     }
 
     @Override
     public WritableByteChannel updateResource(final ResourceId resourceId) throws TransactionConflictException {
 
+        getXodusReadOnlyTransaction().check();
         check(resourceId);
+
+        final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
+
+        if (getXodusResourceStores().getReversePaths().get(getTransaction(), resourceIdKey) == null) {
+            throw new ResourceNotFoundException("Resource does not exist: " + resourceId);
+        }
+
         getPessimisticLocking().lock(resourceId);
 
-        if (!deleteBlocks(resourceId)) {
-            throw new ResourceNotFoundException("No such resource exists with resource id " + resourceId);
+        if (deleteBlocks(resourceIdKey)) {
+            logger.debug("Deleted blocks for {}", resourceId);
+        } else {
+            logger.debug("No blocks found when deleting {}", resourceId);
         }
 
         return new BlockWritableChannel(resourceId);
@@ -82,14 +97,13 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
     }
 
     private boolean deleteBlocks(final ResourceId resourceId) {
-        check(resourceId);
         final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
         return deleteBlocks(resourceIdKey);
     }
 
     private boolean deleteBlocks(final ByteIterable resourceIdKey) {
 
-        try (final var cursor = getStores().getResourceBlocks().openCursor(transaction)) {
+        try (final var cursor = getXodusResourceStores().getResourceBlocks().openCursor(transaction)) {
 
             if (cursor.getSearchKeyRange(resourceIdKey) == null) return false;
 
@@ -105,9 +119,13 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
     @Override
     public void linkNewResource(final Path path, final ResourceId resourceId) throws TransactionConflictException {
+
+        getXodusReadOnlyTransaction().check();
+
         final var qualified = check(path);
         check(resourceId);
         doLinkNew(qualified, resourceId);
+
     }
 
     private void doLinkNew(final Path path, final ResourceId resourceId) throws TransactionConflictException {
@@ -115,25 +133,25 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         check(resourceId);
 
         final var qualified = check(path);
-        final var pathKey = new ArrayByteIterable(qualified.toByteArray());
-        final var resourceIdKey = new ArrayByteIterable(resourceId.asBytes());
+        final var pathKey = XodusUtil.pathKey(qualified);
+        final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
 
-        if (getStores().getPaths().get(getTransaction(), pathKey) != null) {
+        if (getXodusResourceStores().getPaths().get(getTransaction(), pathKey) != null) {
             throw new DuplicateException("Resource exists at path " + qualified);
-        } else if (getStores().getReversePaths().get(getTransaction(), resourceIdKey) != null) {
+        } else if (getXodusResourceStores().getReversePaths().get(getTransaction(), resourceIdKey) != null) {
             throw new DuplicateException("Resource exists with resource id " + resourceId);
         }
 
         getPessimisticLocking().lock(qualified);
         getPessimisticLocking().lock(resourceId);
 
-        if (getStores().getPaths().put(getTransaction(), pathKey, resourceIdKey)) {
+        if (getXodusResourceStores().getPaths().put(getTransaction(), pathKey, resourceIdKey)) {
             logger.debug("Added new mapping {} -> {}", qualified, resourceId);
         } else {
             logger.error("Could not add new mapping {} -> {}", qualified, resourceId);
         }
 
-        if (getStores().getReversePaths().put(getTransaction(), resourceIdKey, pathKey)) {
+        if (getXodusResourceStores().getReversePaths().put(getTransaction(), resourceIdKey, pathKey)) {
             logger.debug("Added new reverse mapping {} -> {}", resourceId, qualified);
         } else {
             logger.error("Could not add new reverse mapping {} -> {}", resourceId, qualified);
@@ -144,6 +162,7 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
     @Override
     public void linkExistingResource(final ResourceId sourceResourceId, final Path destination) throws TransactionConflictException {
 
+        getXodusReadOnlyTransaction().check();
         check(sourceResourceId);
 
         final var qualified = check(destination);
@@ -154,25 +173,25 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
     private void doLinkExisting(final Path path, final ResourceId resourceId) throws TransactionConflictException {
 
         final var qualified = check(path);
-        final var pathKey = new ArrayByteIterable(qualified.toByteArray());
-        final var resourceIdKey = new ArrayByteIterable(resourceId.asBytes());
+        final var pathKey = XodusUtil.pathKey(qualified);
+        final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
 
-        if (getStores().getPaths().get(getTransaction(), pathKey) != null) {
+        if (getXodusResourceStores().getPaths().get(getTransaction(), pathKey) != null) {
             throw new DuplicateException("Resource exists at path " + qualified);
-        } else if (getStores().getReversePaths().get(getTransaction(), resourceIdKey) != null) {
+        } else if (getXodusResourceStores().getReversePaths().get(getTransaction(), resourceIdKey) == null) {
             throw new ResourceNotFoundException("Resource does not exist " + resourceId);
         }
 
         getPessimisticLocking().lock(qualified);
         getPessimisticLocking().lock(resourceId);
 
-        if (getStores().getPaths().put(getTransaction(), pathKey, resourceIdKey)) {
+        if (getXodusResourceStores().getPaths().put(getTransaction(), pathKey, resourceIdKey)) {
             logger.debug("Added existing mapping {} -> {}", qualified, resourceId);
         } else {
             logger.error("Could not add existing mapping {} -> {}", qualified, resourceId);
         }
 
-        if (getStores().getReversePaths().put(getTransaction(), resourceIdKey, pathKey)) {
+        if (getXodusResourceStores().getReversePaths().put(getTransaction(), resourceIdKey, pathKey)) {
             logger.debug("Added existing reverse mapping {} -> {}", resourceId, qualified);
         } else {
             logger.error("Could not add existing reverse mapping {} -> {}", resourceId, qualified);
@@ -183,11 +202,13 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
     @Override
     public ResourceService.Unlink unlinkPath(final Path path) throws TransactionConflictException {
 
+        getXodusReadOnlyTransaction().check();
+
         final var qualified = check(path);
         final var pathKey = XodusUtil.pathKey(qualified);
 
-        try (var pathsCursor = getStores().getPaths().openCursor(getTransaction());
-             var reversePathsCursor = getStores().getReversePaths().openCursor(getTransaction())) {
+        try (var pathsCursor = getXodusResourceStores().getPaths().openCursor(getTransaction());
+             var reversePathsCursor = getXodusResourceStores().getReversePaths().openCursor(getTransaction())) {
 
             final var resourceIdKey = pathsCursor.getSearchKey(pathKey);
             if (resourceIdKey == null) throw new ResourceNotFoundException("No resource exists for path: " + qualified);
@@ -277,25 +298,38 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
     @Override
     public void removeResource(final ResourceId resourceId) throws TransactionConflictException {
 
+        getXodusReadOnlyTransaction().check();
+
         check(resourceId);
 
         final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
 
-        try (var pathsCursor = getStores().getPaths().openCursor(getTransaction());
-             var reversePathsCursor = getStores().getPaths().openCursor(getTransaction())) {
+        try (var pathsCursor = getXodusResourceStores().getPaths().openCursor(getTransaction());
+             var reversePathsCursor = getXodusResourceStores().getReversePaths().openCursor(getTransaction())) {
 
             if (reversePathsCursor.getSearchKey(resourceIdKey) == null) {
                 throw new ResourceNotFoundException("Resource with id not found: " + resourceId);
             }
 
+            final var paths = new ArrayList<Path>();
+            final var pathKeys = new ArrayList<ByteIterable>();
+
             getPessimisticLocking().lock(resourceId);
 
             do {
-
                 final var pathKey = reversePathsCursor.getValue();
                 final var path = XodusUtil.path(pathKey);
+                paths.add(path);
+                pathKeys.add(pathKey);
+            } while (reversePathsCursor.getNextDup());
 
-                getPessimisticLocking().lock(path);
+            final var pathsItr = paths.iterator();
+            final var pathKeysItr = pathKeys.iterator();
+
+            do {
+
+                final var path = pathsItr.next();
+                final var pathKey = pathKeysItr.next();
 
                 if (pathsCursor.getSearchBoth(pathKey, resourceIdKey)) {
 
@@ -305,17 +339,21 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
                         logger.error("Could not delete path mapping {} -> {}.", path, resourceId);
                     }
 
-                    if (reversePathsCursor.deleteCurrent()) {
-                        logger.debug("Deleted reverse path mapping {} -> {}.", resourceId, path);
-                    } else {
-                        logger.error("Could not delete {} -> {} from paths.", path, resourceId);
-                    }
-
                 } else {
                     logger.error("Reverse path mapping broken {} -> {}", resourceId, path);
                 }
 
-            } while (reversePathsCursor.getNextDup());
+                if (reversePathsCursor.getSearchBoth(resourceIdKey, pathKey)) {
+                    if (reversePathsCursor.deleteCurrent()) {
+                        logger.debug("Deleted reverse path mapping {} -> {}.", resourceId, path);
+                    } else {
+                        logger.error("Could not delete {} -> {} from reverse paths.", resourceId, path);
+                    }
+                } else {
+                    logger.error("Reverse path mapping broken {} -> {}", resourceId, path);
+                }
+
+            } while (pathsItr.hasNext() && pathKeysItr.hasNext());
 
             if (deleteBlocks(resourceIdKey)) {
                 logger.debug("Deleted resource blocks for {}", resourceId);
@@ -331,6 +369,8 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
     @Override
     public List<ResourceId> removeResources(final Path path, int max) throws TransactionConflictException {
+
+        getXodusReadOnlyTransaction().check();
 
         final var qualified = check(path);
         final var paths = list(qualified).limit(max).collect(toList());
@@ -353,52 +393,48 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
     @Override
     public void commit() throws TransactionConflictException {
+
+        getXodusReadOnlyTransaction().check();
+
         if (getTransaction().commit()) {
             logger.debug("Successfully committed transaction.");
         } else {
             throw new TransactionConflictException();
         }
+
     }
 
     @Override
     public boolean exists(final ResourceId resourceId) {
-        return getReadOnlyTransaction().exists(resourceId);
+        return getXodusReadOnlyTransaction().exists(resourceId);
     }
 
     @Override
     public Stream<ResourceService.Listing> list(final Path path) {
-        return getReadOnlyTransaction().list(path);
+        return getXodusReadOnlyTransaction().list(path);
     }
 
     @Override
     public ResourceId getResourceId(final Path path) {
-        return getReadOnlyTransaction().getResourceId(path);
+        return getXodusReadOnlyTransaction().getResourceId(path);
     }
 
     @Override
-    public ReadableByteChannel loadResourceContents(final ResourceId resourceId) throws IOException {
-        return getReadOnlyTransaction().loadResourceContents(resourceId);
+    public ReadableByteChannel loadResourceContents(final ResourceId resourceId) {
+        return getXodusReadOnlyTransaction().loadResourceContents(resourceId);
     }
 
     @Override
     public void close() {
-
-        getReadOnlyTransaction().close();
-        onClose.publish(this);
-        onClose.clear();
-
-        if (!getTransaction().isFinished()) {
-            getTransaction().abort();
-        }
-
+        getXodusReadOnlyTransaction().close();
     }
 
-    public int getBlockSize() {
+    public long getBlockSize() {
         return blockSize;
     }
 
-    public XodusResourceStores getStores() {
-        return stores;
+    public XodusResourceStores getXodusResourceStores() {
+        return xodusResourceStores;
     }
 
     public Transaction getTransaction() {
@@ -409,23 +445,23 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         return pessimisticLocking;
     }
 
-    public XodusReadOnlyTransaction getReadOnlyTransaction() {
-        return readOnlyTransaction;
+    public XodusReadOnlyTransaction getXodusReadOnlyTransaction() {
+        return xodusReadOnlyTransaction;
     }
 
     private class BlockWritableChannel implements WritableByteChannel {
 
         private final ResourceId resourceId;
 
-        boolean open = false;
+        boolean open = true;
 
         long sequence = 0;
 
-        final byte[] array = new byte[getBlockSize()];
+        final byte[] array = new byte[(int)getBlockSize()];
 
         final ByteBuffer buffer = ByteBuffer.wrap(array);
 
-        final Subscription onCloseSubscription = onClose.subscribe(t -> this.close());
+        final Subscription onCloseSubscription = getXodusReadOnlyTransaction().onClose(t -> this.close());
 
         public BlockWritableChannel(ResourceId resourceId) {
             this.resourceId = resourceId;
@@ -447,7 +483,7 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         private void doFlush() {
             final var block = new ByteBufferByteIterable(buffer.flip());
             final var blockKey = XodusUtil.resourceBlockKey(resourceId, sequence++);
-            getStores().getResourceBlocks().put(transaction, blockKey, block);
+            getXodusResourceStores().getResourceBlocks().put(transaction, blockKey, block);
             buffer.clear();
         }
 

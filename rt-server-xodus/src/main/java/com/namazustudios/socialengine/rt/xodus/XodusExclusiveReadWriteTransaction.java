@@ -24,46 +24,48 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
 
     private final XodusResourceStores xodusResourceStores;
 
-    private final XodusReadOnlyTransaction xodusReadOnlyTransaction;
-
     private final XodusReadWriteTransaction xodusReadWriteTransaction;
 
     public XodusExclusiveReadWriteTransaction(
             final NodeId nodeId,
-            final int blockSize,
+            final long blockSize,
             final XodusResourceStores stores,
             final Transaction transaction,
             final PessimisticLocking pessimisticLocking) {
+        if (!transaction.isReadonly()) throw new IllegalArgumentException("Must use read-write transaction.");
         this.transaction = transaction;
         this.xodusResourceStores = stores;
-        this.xodusReadOnlyTransaction = new XodusReadOnlyTransaction(nodeId, stores, transaction);
-        this.xodusReadWriteTransaction = new XodusReadWriteTransaction(nodeId, blockSize, stores, transaction, pessimisticLocking);
-        if (!transaction.isReadonly()) throw new IllegalArgumentException("Must use read-write transaction.");
+        this.xodusReadWriteTransaction = new XodusReadWriteTransaction(
+            nodeId,
+            blockSize,
+            stores,
+            transaction,
+            pessimisticLocking);
     }
 
     @Override
     public NodeId getNodeId() {
-        return getXodusReadOnlyTransaction().getNodeId();
+        return getXodusReadWriteTransaction().getNodeId();
     }
 
     @Override
     public boolean exists(ResourceId resourceId) {
-        return getXodusReadOnlyTransaction().exists(resourceId);
+        return getXodusReadWriteTransaction().exists(resourceId);
     }
 
     @Override
     public Stream<ResourceService.Listing> list(Path path) {
-        return getXodusReadOnlyTransaction().list(path);
+        return getXodusReadWriteTransaction().list(path);
     }
 
     @Override
     public ResourceId getResourceId(Path path) {
-        return getXodusReadOnlyTransaction().getResourceId(path);
+        return getXodusReadWriteTransaction().getResourceId(path);
     }
 
     @Override
     public ReadableByteChannel loadResourceContents(ResourceId resourceId) {
-        return getXodusReadOnlyTransaction().loadResourceContents(resourceId);
+        return getXodusReadWriteTransaction().loadResourceContents(resourceId);
     }
 
     @Override
@@ -109,6 +111,10 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
     @Override
     public Stream<ResourceId> removeAllResources() {
 
+        getXodusReadWriteTransaction()
+            .getXodusReadOnlyTransaction()
+            .check();
+
         final var resourceIds = new ArrayList<ResourceId>();
 
         try (var reversePathsCursor = getXodusResourceStores().getReversePaths().openCursor(getTransaction())) {
@@ -125,6 +131,7 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
         ALL_STORES.forEach(store -> getEnvironment().truncateStore(store, getTransaction()));
 
         return resourceIds.stream();
+
     }
 
     @Override
@@ -134,7 +141,6 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
 
     @Override
     public void close() {
-        getXodusReadOnlyTransaction().close();
         getXodusReadWriteTransaction().close();
     }
 
@@ -150,11 +156,8 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
         return xodusResourceStores;
     }
 
-    public XodusReadOnlyTransaction getXodusReadOnlyTransaction() {
-        return xodusReadOnlyTransaction;
-    }
-
     public XodusReadWriteTransaction getXodusReadWriteTransaction() {
         return xodusReadWriteTransaction;
     }
+
 }

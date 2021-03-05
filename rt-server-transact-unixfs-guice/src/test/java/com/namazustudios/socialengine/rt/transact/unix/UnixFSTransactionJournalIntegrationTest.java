@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.id.NodeId;
-import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalPersistenceDriver;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
@@ -32,16 +32,16 @@ public class UnixFSTransactionJournalIntegrationTest {
     private UnixFSTransactionJournal journal;
 
     @Inject
-    private TransactionalPersistenceContext transactionalPersistenceContext;
+    private JournalTransactionalPersistenceDriver journalTransactionalPersistenceDriver;
 
     @BeforeClass
     public void start() {
-        transactionalPersistenceContext.start();
+        journalTransactionalPersistenceDriver.start();
     }
 
     @AfterClass
     public void stop() {
-        transactionalPersistenceContext.stop();
+        journalTransactionalPersistenceDriver.stop();
     }
 
     @Test

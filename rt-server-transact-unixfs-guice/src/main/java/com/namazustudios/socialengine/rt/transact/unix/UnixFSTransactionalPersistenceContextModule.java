@@ -4,7 +4,7 @@ import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
-import com.namazustudios.socialengine.rt.transact.TransactionalPersistenceContext;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalPersistenceDriver;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -42,12 +42,12 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
         bind(UnixFSRevisionPool.class).asEagerSingleton();
         bind(UnixFSRevisionTable.class).asEagerSingleton();
         bind(UnixFSTransactionJournal.class).asEagerSingleton();
-        bind(UnixFSTransactionalPersistenceContext.class).asEagerSingleton();
+        bind(UnixFSJournalTransactionalPersistenceDriver.class).asEagerSingleton();
 
         bind(RevisionDataStore.class).to(UnixFSRevisionDataStore.class).asEagerSingleton();
         bind(Revision.Factory.class).to(UnixFSRevisionPool.class).asEagerSingleton();
         bind(TransactionJournal.class).to(UnixFSTransactionJournal.class).asEagerSingleton();
-        bind(TransactionalPersistenceContext.class).to(UnixFSTransactionalPersistenceContext.class).asEagerSingleton();
+        bind(JournalTransactionalPersistenceDriver.class).to(UnixFSJournalTransactionalPersistenceDriver.class).asEagerSingleton();
 
         storageRootBinding.run();
         transactionSizeBinding.run();
@@ -59,7 +59,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
 
         expose(RevisionDataStore.class);
         expose(TransactionJournal.class);
-        expose(TransactionalPersistenceContext.class);
+        expose(JournalTransactionalPersistenceDriver.class);
 
     }
 
@@ -138,7 +138,7 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
             expose(UnixFSRevisionPool.class);
             expose(UnixFSRevisionTable.class);
             expose(UnixFSTransactionJournal.class);
-            expose(UnixFSTransactionalPersistenceContext.class);
+            expose(UnixFSJournalTransactionalPersistenceDriver.class);
         };
 
         return this;

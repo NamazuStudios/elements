@@ -5,15 +5,15 @@ package com.namazustudios.socialengine.rt.transact;
  * This is responsible for handling any internal configuration and locking of the underlying datastore such that only
  * one JVM process may have access to it at any given time.
  */
-public interface TransactionalPersistenceContext {
+public interface JournalTransactionalPersistenceDriver {
 
     /**
-     * Starts the {@link TransactionalPersistenceContext}.
+     * Starts the {@link JournalTransactionalPersistenceDriver}.
      */
     void start();
 
     /**
-     * Stops the {@link TransactionalPersistenceContext}.
+     * Stops the {@link JournalTransactionalPersistenceDriver}.
      */
     void stop();
 
