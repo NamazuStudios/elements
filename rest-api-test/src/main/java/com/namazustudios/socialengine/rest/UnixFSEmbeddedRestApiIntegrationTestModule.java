@@ -18,7 +18,6 @@ import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;
@@ -40,9 +39,12 @@ import java.util.Properties;
 
 import static com.google.inject.Scopes.SINGLETON;
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static com.namazustudios.socialengine.rest.ClientContext.CONTEXT_APPLICATION;
+import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
+import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.service.RedissonClientProvider.REDIS_URL;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
@@ -50,19 +52,19 @@ import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 
-public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
+public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(EmbeddedRestApiIntegrationTestModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(XodusEmbeddedRestApiIntegrationTestModule.class);
 
-    private static final int TEST_MONGO_PORT = 45000;
+    private static final int TEST_MONGO_PORT = 46000;
 
     private static final String TEST_MONGO_BIND_IP = "127.0.0.1";
 
-    private static final int TEST_REDIS_PORT = 45001;
+    private static final int TEST_REDIS_PORT = 46001;
 
     private static final String TEST_REDIS_BIND_IP = "127.0.0.1";
 
-    private static final int TEST_APP_NODE_PORT = 45002;
+    private static final int TEST_APP_NODE_PORT = 46002;
 
     private static final String TEST_APP_NODE_BIND_IP = "127.0.0.1";
 
@@ -73,6 +75,8 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
             @Override
             public Properties get() {
                 final var properties = super.get();
+                properties.put(HTTP_PORT, "8181");
+                properties.put(TEST_API_ROOT, "http://localhost:8181/api/rest");
                 properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
                 properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
                 properties.put(STATIC_HOST_INFO, format("tcp://%s:%d", TEST_APP_NODE_BIND_IP, TEST_APP_NODE_PORT));
@@ -145,7 +149,7 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
         final var config = MongodConfig.builder()
                 .version(Version.V3_4_5)
                 .net(new Net(TEST_MONGO_BIND_IP, TEST_MONGO_PORT, localhostIsIPv6()))
-            .build();
+                .build();
 
         final var starter = getDefaultInstance();
         return starter.prepare(config);
@@ -159,32 +163,34 @@ public class EmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
         properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
+        properties.remove(RESOURCE_ENVIRONMENT_PATH);
         properties.remove(SCHEDULER_ENVIRONMENT_PATH);
 
         final var facebookPermissionSupplier = new FacebookBuiltinPermissionsSupplier();
 
         return new JeroMQEmbeddedTestService()
-            .withNodeModuleFactory(nodeId -> {
-                final var modules = new ArrayList<Module>();
-                modules.add(new LuaModule());
-                modules.add(new ValidationModule());
-                modules.add(new MongoCoreModule());
-                modules.add(new MongoDaoModule());
-                modules.add(new MongoSearchModule());
-                modules.add(new AppNodeServicesModule());
-                modules.add(new ClasspathAssetLoaderModule().withDefaultPackageRoot());
-                modules.add(new AppNodeSecurityModule());
-                modules.add(new ConfigurationModule(() -> properties));
-                modules.add(new AppleIapReceiptInvokerModule());
-                modules.add(new GameOnInvokerModule());
-                modules.add(new ClusterContextFactoryModule());
-                modules.add(new RedissonServicesModule(ResourceScope.getInstance()));
-                modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
-                return modules;
-            })
-            .withWorkerBindAddress(format("tcp://%s:%d", TEST_APP_NODE_BIND_IP, TEST_APP_NODE_PORT))
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
-            .withDefaultHttpClient();
+                .withNodeModuleFactory(nodeId -> {
+                    final var modules = new ArrayList<Module>();
+                    modules.add(new LuaModule());
+                    modules.add(new ValidationModule());
+                    modules.add(new MongoCoreModule());
+                    modules.add(new MongoDaoModule());
+                    modules.add(new MongoSearchModule());
+                    modules.add(new AppNodeServicesModule());
+                    modules.add(new ClasspathAssetLoaderModule().withDefaultPackageRoot());
+                    modules.add(new AppNodeSecurityModule());
+                    modules.add(new ConfigurationModule(() -> properties));
+                    modules.add(new AppleIapReceiptInvokerModule());
+                    modules.add(new GameOnInvokerModule());
+                    modules.add(new ClusterContextFactoryModule());
+                    modules.add(new RedissonServicesModule(ResourceScope.getInstance()));
+                    modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
+                    return modules;
+                })
+                .withUnixFSWorker()
+                .withWorkerBindAddress(format("tcp://%s:%d", TEST_APP_NODE_BIND_IP, TEST_APP_NODE_PORT))
+                .withDefaultHttpClient();
     }
 
 }
+

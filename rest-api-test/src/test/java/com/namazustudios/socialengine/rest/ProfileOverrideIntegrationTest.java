@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.client.Client;
@@ -14,12 +12,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.*;
+import static com.namazustudios.socialengine.rest.TestUtils.*;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
-@Guice(modules = {EmbeddedRestApiIntegrationTestModule.class})
 public class ProfileOverrideIntegrationTest {
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+                TestUtils.getInstance().getXodusTest(ProfileOverrideIntegrationTest.class),
+                TestUtils.getInstance().getUnixFSTest(ProfileOverrideIntegrationTest.class)
+        };
+    }
+
+    @Inject
+    @Named(TEST_API_ROOT)
+    private String apiRoot;
 
     @Inject
     private EmbeddedRestApi embeddedRestApi;
@@ -51,7 +61,7 @@ public class ProfileOverrideIntegrationTest {
     @Test(dataProvider = "getAuthHeader")
     public void testOverrideProfileFailure(final String authHeader) throws Exception {
         try {
-            client.target("http://localhost:8081/api/rest/profile/current")
+            client.target(apiRoot + "/profile/current")
                   .request()
                   .header(authHeader, clientContext.getSessionSecret())
                   .buildGet()
@@ -81,7 +91,7 @@ public class ProfileOverrideIntegrationTest {
     public void testOverrideProfileProfileIdHeader(final Profile profile, final String authHeader) throws Exception {
 
         final Profile current = client
-            .target("http://localhost:8081/api/rest/profile/current")
+            .target(apiRoot + "/profile/current")
             .request()
             .header(authHeader, clientContext.getSessionSecret())
             .header(PROFILE_ID, profile.getId())
@@ -99,7 +109,7 @@ public class ProfileOverrideIntegrationTest {
         final String sessionSecretHeader = format("%s p%s", clientContext.getSessionSecret(), profile.getId());
 
         final Profile current = client
-                .target("http://localhost:8081/api/rest/profile/current")
+                .target(apiRoot + "/profile/current")
                 .request()
                 .header(authHeader, sessionSecretHeader)
                 .buildGet()

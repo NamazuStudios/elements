@@ -30,6 +30,7 @@ import java.util.concurrent.Callable;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
+import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 import static java.util.EnumSet.allOf;
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
@@ -44,8 +45,6 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     private static final OptionParser optionParser = new OptionParser();
 
     public static final String HTTP_BIND_ADDRESS = "com.namazustudios.socialengine.rest.api.bind.address";
-
-    public static final String HTTP_PORT = "com.namazustudios.socialengine.rest.api.port";
 
     public static final String API_CONTEXT = "com.namazustudios.socialengine.rest.api.context";
 

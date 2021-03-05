@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 
+import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.rest.RestAPIMain.*;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
