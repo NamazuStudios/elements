@@ -25,7 +25,6 @@ import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
@@ -547,12 +546,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
         }
 
-        private void flushRemainingBuffer() {
-            final var block = new ByteBufferByteIterable(buffer.flip());
-            final var blockKey = XodusUtil.resourceBlockKey(resourceId, sequence++);
-            getXodusResourceStores().getResourceBlocks().put(transaction, blockKey, block);
-        }
-
         @Override
         public boolean isOpen() {
             return open;
@@ -566,33 +559,45 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
                 open = false;
                 onCloseSubscription.unsubscribe();
 
-                // If we created a temporary file, we must flush the contents of that file to disk before the
-                // transaction may proceed as it may reference parts of the file.
-//                if (file != null) fileChannel.close();
+                // Whatever is left in the buffer will be written to at the end of the sequence
+                flushTemporaryFileIfNecessary();
+                flushRemainingBufferIfNecessary();
 
-                if (file != null) {
+            }
+        }
 
-                    final ByteBuffer mapped = fileChannel.map(READ_ONLY, 0, fileChannel.size());
-                    fileChannel.close();
+        private void flushTemporaryFileIfNecessary() throws IOException {
 
-                    for (int blockSequence = 0; blockSequence < sequence; ++blockSequence) {
+            // If we created a temporary file, we must flush the contents of that file to disk before the
+            // transaction may proceed as it may reference parts of the file.
 
-                        // Calculates the offset and length based on the block size.
-                        final int offset = (int) (getBlockSize() * blockSequence);
-                        final int limit  = (int)  (offset + getBlockSize());
+            if (file != null) {
 
-                        // And finally carves apart the iterable into a sub-iterable
-                        final var block = new ByteBufferByteIterable(mapped.position(offset).limit(limit).slice());
-                        final var blockKey = XodusUtil.resourceBlockKey(resourceId, blockSequence);
-                        getXodusResourceStores().getResourceBlocks().put(transaction, blockKey, block);
+                final ByteBuffer mapped = fileChannel.map(READ_ONLY, 0, fileChannel.size());
+                fileChannel.close();
 
-                    }
+                for (int blockSequence = 0; blockSequence < sequence; ++blockSequence) {
+
+                    // Calculates the offset and length based on the block size.
+                    final int offset = (int) (getBlockSize() * blockSequence);
+                    final int limit  = (int)  (offset + getBlockSize());
+
+                    // And finally carves apart the iterable into a sub-iterable
+                    final var block = new ByteBufferByteIterable(mapped.position(offset).limit(limit).slice());
+                    final var blockKey = XodusUtil.resourceBlockKey(resourceId, blockSequence);
+                    getXodusResourceStores().getResourceBlocks().put(transaction, blockKey, block);
 
                 }
 
-                // Whatever is left in the buffer will be written to at the end of the sequence
-                flushRemainingBuffer();
+            }
 
+        }
+
+        private void flushRemainingBufferIfNecessary() {
+            if (buffer.flip().hasRemaining()) {
+                final var block = new ByteBufferByteIterable(buffer);
+                final var blockKey = XodusUtil.resourceBlockKey(resourceId, sequence++);
+                getXodusResourceStores().getResourceBlocks().put(transaction, blockKey, block);
             }
         }
 

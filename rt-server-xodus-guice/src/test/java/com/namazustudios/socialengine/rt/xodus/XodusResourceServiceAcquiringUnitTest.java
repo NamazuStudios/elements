@@ -14,6 +14,7 @@ import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
 import java.io.InputStream;
+import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
@@ -73,6 +74,9 @@ public class XodusResourceServiceAcquiringUnitTest extends AbstractResourceServi
             }).when(resourceLoader).load(any(InputStream.class));
 
             doAnswer(a -> {
+                final var rbc = (ReadableByteChannel) a.getArgument(0);
+                final var buffer = ByteBuffer.allocate(4096);
+                rbc.read(buffer);
                 fail("No attempt to load resource should be made for this test.");
                 return null;
             }).when(resourceLoader).load(any(ReadableByteChannel.class));
