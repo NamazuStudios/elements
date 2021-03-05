@@ -248,10 +248,19 @@ public class NodeId implements Serializable, HasNodeId {
      * @return the {@link NodeId} instance
      */
     public static NodeId nodeIdFromByteBuffer(final ByteBuffer byteBufferRepresentation) {
-        return new NodeId(new V1CompoundId.Builder()
-            .with(byteBufferRepresentation)
-            .only(INSTANCE, APPLICATION)
-            .build());
+
+        final var oldLimit = byteBufferRepresentation.limit();
+        final var newLimit = byteBufferRepresentation.position() + getSizeInBytes();
+
+        try {
+            return new NodeId(new V1CompoundId.Builder()
+                    .with(byteBufferRepresentation.limit(newLimit))
+                    .only(INSTANCE, APPLICATION, RESOURCE)
+                    .build());
+        } finally {
+            byteBufferRepresentation.limit(oldLimit);
+        }
+
     }
 
     /**

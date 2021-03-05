@@ -12,6 +12,7 @@ import jetbrains.exodus.util.ByteIterableUtil;
 import java.nio.ByteBuffer;
 import java.util.Iterator;
 
+import static java.lang.Integer.min;
 import static java.lang.System.arraycopy;
 import static java.nio.ByteOrder.BIG_ENDIAN;
 
@@ -48,15 +49,15 @@ public class XodusUtil {
      */
     static ResourceId resourceId(final ByteIterable byteIterable) {
 
-        final var ridBytes = new byte[byteIterable.getLength()];
+        final var ridBytes = new byte[ResourceId.getSizeInBytes()];
 
         try {
             final var unsafe = byteIterable.getBytesUnsafe();
-            arraycopy(unsafe, 0, ridBytes, 0, ridBytes.length);
+            arraycopy(unsafe, 0, ridBytes, 0, min(ridBytes.length, byteIterable.getLength()));
         } catch (UnsupportedOperationException ex) {
             int idx = 0;
             final var itr = byteIterable.iterator();
-            while (itr.hasNext()) ridBytes[idx++] = itr.next();
+            while (itr.hasNext() && idx < ResourceId.getSizeInBytes()) ridBytes[idx++] = itr.next();
         }
 
         return ResourceId.resourceIdFromBytes(ridBytes);
@@ -101,10 +102,10 @@ public class XodusUtil {
      * @return the key for the resource id and block sequence
      */
     static ByteIterable resourceBlockKey(final ResourceId resourceId, final long blockSequence) {
-        final var buffer = ByteBuffer.allocate(ResourceId.getSizeInBytes() + Long.BYTES);
+        final var buffer = ByteBuffer.allocate(ResourceId.getSizeInBytes() + Integer.BYTES);
         buffer.order(BIG_ENDIAN);
         buffer.put(resourceId.asBytes());
-        buffer.putLong(blockSequence);
+        buffer.putInt( (int) blockSequence);
         buffer.flip();
         return new ByteBufferByteIterable(buffer);
     }

@@ -12,24 +12,37 @@ import com.namazustudios.socialengine.rt.transact.ReadWriteTransaction;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 import jetbrains.exodus.ByteBufferByteIterable;
 import jetbrains.exodus.ByteIterable;
+import jetbrains.exodus.FileByteIterable;
 import jetbrains.exodus.env.Transaction;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
-import static java.util.stream.Collectors.filtering;
+import static java.lang.Integer.min;
+import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
+import static java.nio.file.StandardOpenOption.READ;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.stream.Collectors.toList;
 
 public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
     private static final Logger logger = LoggerFactory.getLogger(XodusReadWriteTransaction.class);
+
+    private static final String TEMP_FILE_PREFIX = XodusReadWriteTransaction.class.getSimpleName();
+
+    private static final String TEMP_FILE_SUFFIX = "resource";
 
     private final long blockSize;
 
@@ -40,6 +53,8 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
     private final XodusResourceStores xodusResourceStores;
 
     private final XodusReadOnlyTransaction xodusReadOnlyTransaction;
+
+    private final List<File> temporaryFiles = new ArrayList<>();
 
     public XodusReadWriteTransaction(
             final NodeId nodeId,
@@ -54,6 +69,7 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         this.pessimisticLocking = pessimisticLocking;
         this.xodusReadOnlyTransaction = new XodusReadOnlyTransaction(nodeId, xodusResourceStores, transaction);
         this.xodusReadOnlyTransaction.onClose(t -> getPessimisticLocking().unlock());
+        this.xodusReadOnlyTransaction.onClose(t -> temporaryFiles.forEach(File::delete));
     }
 
     @Override
@@ -449,42 +465,92 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         return xodusReadOnlyTransaction;
     }
 
-    private class BlockWritableChannel implements WritableByteChannel {
+    public File allocateTemporaryFile() throws IOException {
+        final var temporaryFile = Files.createTempFile(TEMP_FILE_PREFIX, TEMP_FILE_SUFFIX).toFile();
+        temporaryFiles.add(temporaryFile);
+        return temporaryFile;
+    }
 
-        private final ResourceId resourceId;
+    private class BlockWritableChannel implements WritableByteChannel {
 
         boolean open = true;
 
-        long sequence = 0;
+        private File file = null;
 
-        final byte[] array = new byte[(int)getBlockSize()];
+        private FileChannel fileChannel = null;
 
-        final ByteBuffer buffer = ByteBuffer.wrap(array);
+        private FileByteIterable fileByteIterable = null;
 
-        final Subscription onCloseSubscription = getXodusReadOnlyTransaction().onClose(t -> this.close());
+        private long sequence = 0;
+
+        private final ResourceId resourceId;
+
+        private final ByteBuffer buffer = ByteBuffer.allocate( (int) getBlockSize());
+
+        private final Subscription onCloseSubscription = getXodusReadOnlyTransaction().onClose(t -> {
+            try {
+                this.close();
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        });
 
         public BlockWritableChannel(ResourceId resourceId) {
             this.resourceId = resourceId;
         }
 
         @Override
-        public int write(final ByteBuffer src) {
+        public int write(final ByteBuffer src) throws IOException {
+
             if (!open) throw new IllegalStateException();
+
             final var initial = buffer.remaining();
-            return !buffer.put(src).hasRemaining() ? flush(initial) : initial - buffer.remaining();
+
+            final var oldLimit = src.limit();
+            final var newLimit = src.position() + min(buffer.remaining(), src.remaining());
+
+            try {
+                return !buffer.put(src.limit(newLimit)).hasRemaining()
+                    ? flushToFileIfNecessary(initial)
+                    : initial - buffer.remaining();
+            } finally {
+                src.limit(oldLimit);
+            }
+
         }
 
-        private int flush(final int initial) {
+        private int flushToFileIfNecessary(final int initial) throws IOException {
+
+            // If we go beyond what a single block can hold, we dump the contents to a file such that it
+            // may be read later block by block. This prevents loading potentially large files into memory
+            // while committing the transaction.
+
             final int written = initial - buffer.remaining();
-            doFlush();
+
+            // This lazily creates the file.
+
+            if (file == null) {
+                file = allocateTemporaryFile();
+                fileChannel = FileChannel.open(file.toPath(), READ, WRITE);
+                fileByteIterable = new FileByteIterable(file);
+            }
+
+            // Dumps the whole buffer to the file, and rewinds the buffer for the next set of write operations
+
+            buffer.rewind();
+            while (buffer.hasRemaining()) fileChannel.write(buffer);
+            buffer.rewind();
+
+            sequence++;
+
             return written;
+
         }
 
-        private void doFlush() {
+        private void flushRemainingBuffer() {
             final var block = new ByteBufferByteIterable(buffer.flip());
             final var blockKey = XodusUtil.resourceBlockKey(resourceId, sequence++);
             getXodusResourceStores().getResourceBlocks().put(transaction, blockKey, block);
-            buffer.clear();
         }
 
         @Override
@@ -493,14 +559,39 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         }
 
         @Override
-        public void close() {
+        public void close() throws IOException {
             if (open) {
 
+                // Flags the buffer as closed
                 open = false;
                 onCloseSubscription.unsubscribe();
 
-                doFlush();
-                getPessimisticLocking().unlock();
+                // If we created a temporary file, we must flush the contents of that file to disk before the
+                // transaction may proceed as it may reference parts of the file.
+//                if (file != null) fileChannel.close();
+
+                if (file != null) {
+
+                    final ByteBuffer mapped = fileChannel.map(READ_ONLY, 0, fileChannel.size());
+                    fileChannel.close();
+
+                    for (int blockSequence = 0; blockSequence < sequence; ++blockSequence) {
+
+                        // Calculates the offset and length based on the block size.
+                        final int offset = (int) (getBlockSize() * blockSequence);
+                        final int limit  = (int)  (offset + getBlockSize());
+
+                        // And finally carves apart the iterable into a sub-iterable
+                        final var block = new ByteBufferByteIterable(mapped.position(offset).limit(limit).slice());
+                        final var blockKey = XodusUtil.resourceBlockKey(resourceId, blockSequence);
+                        getXodusResourceStores().getResourceBlocks().put(transaction, blockKey, block);
+
+                    }
+
+                }
+
+                // Whatever is left in the buffer will be written to at the end of the sequence
+                flushRemainingBuffer();
 
             }
         }

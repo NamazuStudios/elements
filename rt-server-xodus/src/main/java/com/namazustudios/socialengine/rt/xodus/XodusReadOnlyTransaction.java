@@ -18,6 +18,8 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import static java.lang.Integer.min;
+
 public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
     private final Logger logger = LoggerFactory.getLogger(XodusReadOnlyTransaction.class);
@@ -154,6 +156,25 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
                 if (!open) throw new IllegalStateException();
 
+                long sequence = -1;
+                final var blockResourceIdKey = cursor.getKey();
+                final var blockResourceId = XodusUtil.resourceId(blockResourceIdKey);
+
+                if (resourceId.equals(blockResourceId)) {
+                    if (logger.isDebugEnabled()) {
+
+                        final var keyBuf = XodusUtil
+                            .byteBuffer(blockResourceIdKey)
+                            .position(ResourceId.getSizeInBytes());
+
+                        sequence = keyBuf.getInt() & 0x00000000FFFFFFFFL;
+                        logger.debug("Loading from block {} ({})", resourceId, sequence);
+
+                    }
+                } else {
+                    logger.error("Detected corrupt block {} != {}", resourceId, blockResourceId);
+                }
+
                 if (current == null) {
                     return -1;
                 } else if (!current.hasRemaining()) {
@@ -166,7 +187,14 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
                 }
 
                 final var initial = current.remaining();
-                dst.put(current);
+                final var oldLimit = current.limit();
+                final var newLimit = current.position() + min(initial, dst.remaining());
+
+                try {
+                    dst.put(current.limit(newLimit));
+                } finally {
+                    current.limit(oldLimit);
+                }
 
                 return initial - current.remaining();
 

@@ -210,13 +210,22 @@ public class ResourceId implements Serializable, HasNodeId {
      * Parses a new {@link ResourceId} from the given {@link ByteBuffer[]}.  The should be the string representation
      * returned by {@link #asBytes()}.
      *
-     * @param byteBufferRepresentation the  {@link ByteBuffer} representation of the {@link ResourceId} from {@link ResourceId#f()}.
+     * @param byteBufferRepresentation the  {@link ByteBuffer} representation of the {@link ResourceId} from {@link ResourceId#asBytes()}.
      */
     public static ResourceId resourceIdFromByteBuffer(final ByteBuffer byteBufferRepresentation) {
-        return new ResourceId(new V1CompoundId.Builder()
-            .with(byteBufferRepresentation)
-            .only(INSTANCE, APPLICATION, RESOURCE)
-            .build());
+
+        final var oldLimit = byteBufferRepresentation.limit();
+        final var newLimit = byteBufferRepresentation.position() + getSizeInBytes();
+
+        try {
+            return new ResourceId(new V1CompoundId.Builder()
+                .with(byteBufferRepresentation.limit(newLimit))
+                .only(INSTANCE, APPLICATION, RESOURCE)
+                .build());
+        } finally {
+            byteBufferRepresentation.limit(oldLimit);
+        }
+
     }
 
 }

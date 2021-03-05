@@ -329,8 +329,8 @@ public interface ResourceService extends AutoCloseable {
      * @throws {@link IllegalArgumentException} if the path is a wildcard path
      */
     default void destroy(final ResourceId resourceId) {
-        final Resource resource = removeResource(resourceId);
-        resource.close();
+        final var resource = removeResource(resourceId);
+        if (resource != null) resource.close();
     }
 
     /**
