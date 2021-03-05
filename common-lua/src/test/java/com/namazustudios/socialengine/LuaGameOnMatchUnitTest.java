@@ -3,6 +3,7 @@ package com.namazustudios.socialengine;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -16,6 +17,8 @@ import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 
+import static com.namazustudios.socialengine.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.mockito.ArgumentMatchers.any;
@@ -28,10 +31,17 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.testng.Assert.assertNull;
 
-@Guice(modules = UnitTestModule.class)
 public class LuaGameOnMatchUnitTest {
 
     private  static final int SCORE = 42;
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+            getXodusTest(LuaGameOnMatchUnitTest.class),
+            getUnixFSTest(LuaGameOnMatchUnitTest.class)
+        };
+    }
 
     private Client client;
 

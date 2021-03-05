@@ -6,11 +6,9 @@ import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
-
 import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.NotificationBuilder;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
@@ -19,9 +17,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
-import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.spy;
 
@@ -29,7 +29,11 @@ public class UnitTestModule extends AbstractModule {
 
     private static final Logger logger = LoggerFactory.getLogger(UnitTestModule.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService();
+    private final JeroMQEmbeddedTestService embeddedTestService;
+
+    public UnitTestModule(JeroMQEmbeddedTestService embeddedTestService) {
+        this.embeddedTestService = embeddedTestService;
+    }
 
     private final Application spyApplication; {
         spyApplication = spy(Application.class);
@@ -55,9 +59,6 @@ public class UnitTestModule extends AbstractModule {
                 .withNodeModules(new LuaModule().visitDiscoveredModule(mockModule::mock))
                 .withNodeModules(mockModule)
             .endApplication()
-            .withWorkerModule(new XodusEnvironmentModule()
-                .withTempSchedulerEnvironment()
-                .withTempResourceEnvironment())
             .start()
         );
 

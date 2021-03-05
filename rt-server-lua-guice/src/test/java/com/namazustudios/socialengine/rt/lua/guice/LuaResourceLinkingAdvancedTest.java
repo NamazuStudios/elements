@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.util.List;
@@ -18,31 +19,40 @@ import java.util.UUID;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static com.namazustudios.socialengine.rt.Path.fromContextAndComponents;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static org.testng.Assert.assertEquals;
 
 public class LuaResourceLinkingAdvancedTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
-    private final EmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withClient()
-        .withApplicationNode()
-            .withNodeModules(new LuaModule())
-            .withNodeModules(new JavaEventModule())
-            .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
-        .endApplication()
-        .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
-        .withDefaultHttpClient()
-        .start();
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+                getXodusTest(LuaResourceLinkingAdvancedTest::new),
+                getUnixFSTest(LuaResourceLinkingAdvancedTest::new)
+        };
+    }
 
-    private final ApplicationId testApplicationId = getEmbeddedTestService()
-        .getWorker()
-        .getApplicationId();
+    private final Context context;
 
-    private final Context context = getEmbeddedTestService()
-        .getClient()
-        .getContextFactory()
-        .getContextForApplication(testApplicationId);
+    private final EmbeddedTestService embeddedTestService;
+
+    private LuaResourceLinkingAdvancedTest(final EmbeddedTestService embeddedTestService) {
+
+        this.embeddedTestService = embeddedTestService;
+
+        final var testApplicationId = getEmbeddedTestService()
+                .getWorker()
+                .getApplicationId();
+
+        this.context = getEmbeddedTestService()
+                .getClient()
+                .getContextFactory()
+                .getContextForApplication(testApplicationId);
+
+    }
 
     @AfterClass
     public void teardown() {
