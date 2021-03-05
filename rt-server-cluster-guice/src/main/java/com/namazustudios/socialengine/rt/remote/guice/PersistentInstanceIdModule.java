@@ -8,7 +8,7 @@ public class PersistentInstanceIdModule extends AbstractModule {
 
     @Override
     protected void configure() {
-        bind(InstanceId.class).toProvider(PersistentInstanceIdProvider.class).asEagerSingleton();
+        bind(InstanceId.class).toProvider(PersistentInstanceIdProvider.class);
     }
 
 }

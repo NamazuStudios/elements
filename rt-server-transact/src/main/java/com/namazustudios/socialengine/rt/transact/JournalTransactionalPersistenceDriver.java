@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.transact;
 
+import com.namazustudios.socialengine.rt.id.InstanceId;
+
 /**
  * An opaque context which is started first and stopped last by the {@link TransactionalResourceServicePersistence}.
  * This is responsible for handling any internal configuration and locking of the underlying datastore such that only

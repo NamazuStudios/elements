@@ -28,8 +28,6 @@ import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import redis.embedded.RedisServer;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -44,8 +42,8 @@ import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvi
 import static com.namazustudios.socialengine.rest.ClientContext.CONTEXT_APPLICATION;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
-import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
-import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.service.RedissonClientProvider.REDIS_URL;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
 import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
@@ -53,8 +51,6 @@ import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 
 public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
-
-    private static final Logger logger = LoggerFactory.getLogger(XodusEmbeddedRestApiIntegrationTestModule.class);
 
     private static final int TEST_MONGO_PORT = 46000;
 
@@ -163,6 +159,7 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         properties.put(REDIS_URL, format("redis://%s:%d", TEST_REDIS_BIND_IP, TEST_REDIS_PORT));
         properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_MONGO_BIND_IP, TEST_MONGO_PORT));
+
         properties.remove(RESOURCE_ENVIRONMENT_PATH);
         properties.remove(SCHEDULER_ENVIRONMENT_PATH);
 
@@ -193,4 +190,3 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
     }
 
 }
-

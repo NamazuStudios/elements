@@ -1,12 +1,14 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.transact.JournalTransactionalPersistenceDriver;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import java.io.File;
 
 public class UnixFSJournalTransactionalPersistenceDriver implements JournalTransactionalPersistenceDriver {
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.xodus.provider;
 
+import com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
 import org.slf4j.Logger;
@@ -12,8 +13,6 @@ import javax.inject.Provider;
 public class SchedulerEnvironmentProvider implements Provider<Environment> {
 
     private static final Logger logger = LoggerFactory.getLogger(SchedulerEnvironmentProvider.class);
-
-    public static final String SCHEDULER_ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.scheduler.path";
 
     private Provider<String> environmentPathProvider;
 
@@ -29,7 +28,7 @@ public class SchedulerEnvironmentProvider implements Provider<Environment> {
     }
 
     @Inject
-    public void setEnvironmentPathProvider(@Named(SCHEDULER_ENVIRONMENT_PATH) Provider<String> environmentPathProvider) {
+    public void setEnvironmentPathProvider(@Named(XodusSchedulerContext.SCHEDULER_ENVIRONMENT_PATH) Provider<String> environmentPathProvider) {
         this.environmentPathProvider = environmentPathProvider;
     }
 

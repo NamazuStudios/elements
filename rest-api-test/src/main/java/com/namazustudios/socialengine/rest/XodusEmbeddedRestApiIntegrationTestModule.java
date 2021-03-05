@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rest;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
-import com.mchange.v2.c3p0.util.TestUtils;
 import com.namazustudios.socialengine.appnode.guice.AppNodeSecurityModule;
 import com.namazustudios.socialengine.appnode.guice.AppNodeServicesModule;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
@@ -19,6 +18,7 @@ import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
+import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;
@@ -29,8 +29,6 @@ import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.config.MongodConfig;
 import de.flapdoodle.embed.mongo.config.Net;
 import de.flapdoodle.embed.mongo.distribution.Version;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import redis.embedded.RedisServer;
 import ru.vyarus.guice.validator.ValidationModule;
 
@@ -45,8 +43,8 @@ import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvi
 import static com.namazustudios.socialengine.rest.ClientContext.CONTEXT_APPLICATION;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
-import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
-import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT_PATH;
 import static com.namazustudios.socialengine.service.RedissonClientProvider.REDIS_URL;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
 import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
@@ -54,8 +52,6 @@ import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 
 public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
-
-    private static final Logger logger = LoggerFactory.getLogger(XodusEmbeddedRestApiIntegrationTestModule.class);
 
     private static final int TEST_MONGO_PORT = 45000;
 
@@ -168,7 +164,6 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
         properties.remove(RESOURCE_ENVIRONMENT_PATH);
         properties.remove(SCHEDULER_ENVIRONMENT_PATH);
 
-
         final var facebookPermissionSupplier = new FacebookBuiltinPermissionsSupplier();
 
         return new JeroMQEmbeddedTestService()
@@ -190,8 +185,8 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
                 return modules;
             })
-            .withXodusWorker()
             .withWorkerBindAddress(format("tcp://%s:%d", TEST_APP_NODE_BIND_IP, TEST_APP_NODE_PORT))
+            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
             .withDefaultHttpClient();
     }
 

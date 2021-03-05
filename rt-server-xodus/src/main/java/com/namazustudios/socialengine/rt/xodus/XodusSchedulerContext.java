@@ -23,9 +23,11 @@ import static jetbrains.exodus.env.StoreConfig.WITH_DUPLICATES_WITH_PREFIXING;
 
 public class XodusSchedulerContext implements SchedulerContext {
 
-    public static final String STORE_TIMER = "scheduled";
+    public static final String STORE_TIMER = "com.namazustudios.socialengine.rt.xodus.scheduler";
 
     public static final String SCHEDULER_ENVIRONMENT = "com.namazustudios.socialengine.rt.xodus.scheduler";
+
+    public static final String SCHEDULER_ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.scheduler.path";
 
     private static final Logger logger = LoggerFactory.getLogger(XodusSchedulerContext.class);
 

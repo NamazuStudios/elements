@@ -37,6 +37,6 @@ node_modules
 /verbose.log
 /repositories/*
 /host_key
-/script-storage
-/script-repos
+/script-storage/*
+/script-repos/*
 

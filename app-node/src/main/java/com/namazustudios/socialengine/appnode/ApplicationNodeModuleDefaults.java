@@ -26,8 +26,8 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJ
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_SIZE;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.UNIXFS_STORAGE_ROOT_DIRECTORY;
 import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_BLOCK_SIZE;
-import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
-import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT_PATH;
 import static java.lang.Runtime.getRuntime;
 
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
@@ -37,7 +37,6 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         final Properties properties = new Properties();
         properties.setProperty(SCHEDULER_THREADS, Integer.toString(getRuntime().availableProcessors()) + 1);
         properties.setProperty(HANDLER_TIMEOUT_MSEC, "180000");
-        properties.setProperty(INSTANCE_ID_FILE, "instance-id.txt");
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "tcp://localhost:28883");
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
@@ -50,6 +49,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(UNIXFS_TRANSACTION_BUFFER_SIZE, "4096");
         properties.setProperty(UNIXFS_TRANSACTION_BUFFER_COUNT, "8192");
         properties.setProperty(RESOURCE_BLOCK_SIZE, "4096");
+        properties.setProperty(INSTANCE_ID_FILE, "script-storage/instance-id.txt");
         properties.setProperty(RESOURCE_ENVIRONMENT_PATH, "script-storage/storage.xodus.resources");
         properties.setProperty(SCHEDULER_ENVIRONMENT_PATH, "script-storage/storage.xodus.scheduler");
         properties.setProperty(UNIXFS_STORAGE_ROOT_DIRECTORY, "script-storage/storage.unixfs");

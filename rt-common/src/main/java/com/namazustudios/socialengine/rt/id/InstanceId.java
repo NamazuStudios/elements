@@ -1,12 +1,14 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
 
-import java.io.Serializable;
+import java.io.*;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Builder;
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
+import static java.io.File.createTempFile;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
@@ -137,6 +139,73 @@ public class InstanceId implements Serializable {
         final var bytes = uniqueInstanceName.getBytes(V1CompoundId.CHARSET);
         final var applicationUuid = nameUUIDFromBytes(bytes);
         return new InstanceId(applicationUuid);
+    }
+
+    /**
+     * Creates a file on disk at the supplied path to hold an {@link InstanceId}. A file already exists at at that
+     * location and it is a valid instance ID, it will simply return that value read from disk.
+     *
+     * @param path the path to the instance ID file
+     * @return the {@link InstanceId} read or generated
+     */
+    public static InstanceId loadOrGenerate(final String path) {
+        final var file = new File(path);
+        return loadOrGenerate(file);
+    }
+
+    /**
+     * Creates a file on disk at the supplied path to hold an {@link InstanceId}. A file already exists at at that
+     * location and it is a valid instance ID, it will simply return that value read from disk.
+     *
+     * @param file the path to the instance ID file
+     * @return the {@link InstanceId} read or generated
+     */
+    public static InstanceId loadOrGenerate(final File file) {
+        try (final FileInputStream fis = new FileInputStream(file);
+             final BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
+            return read(reader);
+        } catch (FileNotFoundException | InvalidInstanceIdException ex) {
+            return generateAndWrite(file);
+        } catch (IOException ex) {
+            throw new InternalException("Unable to read InstanceId from disk.", ex);
+        }
+    }
+
+    private static InstanceId read(final BufferedReader reader) throws IOException {
+        final String stringRepresentation = reader.readLine();
+        return new InstanceId(stringRepresentation);
+    }
+
+    private static InstanceId generateAndWrite(final File file) {
+
+        final var parent = file.getParentFile();
+
+        if (!parent.isDirectory() && !parent.mkdirs()) {
+            throw new InternalException("Could not make directories.");
+        }
+
+        final File temp;
+
+        try {
+            temp = createTempFile("instance-id", "txt");
+            temp.deleteOnExit();
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        }
+
+        final InstanceId instanceId = randomInstanceId();
+
+        try (final OutputStream os = new FileOutputStream(temp);
+             final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
+            writer.write(instanceId.asString());
+        } catch (IOException ex) {
+            throw new InternalException(ex);
+        }
+
+        if (!temp.renameTo(file)) throw new InternalException("Unable to set file location to " + file);
+
+        return instanceId;
+
     }
 
 }

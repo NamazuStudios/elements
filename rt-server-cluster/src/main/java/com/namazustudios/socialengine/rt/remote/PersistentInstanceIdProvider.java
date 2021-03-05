@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -20,50 +21,7 @@ public class PersistentInstanceIdProvider implements Provider<InstanceId> {
 
     @Override
     public InstanceId get() {
-        try (final FileInputStream fis = new FileInputStream(getInstanceIdFilePath());
-             final BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
-            return read(reader);
-        } catch (InvalidInstanceIdException ex) {
-            return generateAndWrite();
-        } catch (FileNotFoundException ex) {
-            return generateAndWrite();
-        } catch (IOException ex) {
-            throw new InternalException("Unable to read InstanceId from disk.", ex);
-        }
-    }
-
-    private InstanceId read(final BufferedReader reader) throws IOException {
-        final String stringRepresentation = reader.readLine();
-        return new InstanceId(stringRepresentation);
-    }
-
-    private InstanceId generateAndWrite() {
-
-        final File file = new File(".", getInstanceIdFilePath());
-        file.getParentFile().mkdirs();
-
-        final File temp;
-
-        try {
-             temp = createTempFile("instance-id", "txt");
-             temp.deleteOnExit();
-        } catch (IOException ex) {
-            throw new InternalException(ex);
-        }
-
-        final InstanceId instanceId = randomInstanceId();
-
-        try (final OutputStream os = new FileOutputStream(temp);
-             final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
-            writer.write(instanceId.asString());
-        } catch (IOException ex) {
-            throw new InternalException(ex);
-        }
-
-        if (!temp.renameTo(file)) throw new InternalException("Unable to set file location to " + file);
-
-        return instanceId;
-
+        return InstanceId.loadOrGenerate(getInstanceIdFilePath());
     }
 
     public String getInstanceIdFilePath() {

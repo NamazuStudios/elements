@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore.PendingRevisionChange;
