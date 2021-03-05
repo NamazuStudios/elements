@@ -15,6 +15,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
@@ -23,7 +25,9 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.lang.Thread.interrupted;
 import static java.util.Collections.unmodifiableSet;
+import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -117,8 +121,6 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
     private class SrvDiscoveryContext implements ChangeNotifier.Listener<LookupResult>, ErrorHandler {
 
-        private DnsSrvResolver dnsSrvResolver;
-
         private DnsSrvWatcher<LookupResult> dnsSrvWatcher;
 
         private ChangeNotifier<LookupResult> nodeChangeNotifier;
@@ -127,51 +129,82 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         private final Lock lock = new ReentrantLock();
 
+        private final Thread startup = new Thread(this::startWatcher);
+
         private final AsyncPublisher<InstanceHostInfo> onDisovery = new ConcurrentLockedPublisher<>(lock);
 
         private final AsyncPublisher<InstanceHostInfo> onUndiscovery = new ConcurrentLockedPublisher<>(lock);
 
         public void start() {
+            logger.info("Using SRV FQDN {} querying servers {}", getSrvQuery(), getSrvServers());
+            startup.start();
+        }
 
-            logger.info("Using FQDN {}", getSrvQuery());
+        private void startWatcher() {
+            while (!interrupted() && dnsSrvWatcher == null) {
+                try {
 
-            final var builder = new HostList()
-                .with(getSrvServers())
-                .get()
-                .map(hosts -> {
-                    logger.info("Using DNS Hosts {}", hosts);
-                    return DnsSrvResolvers.newBuilder().servers(hosts);
-                })
-                .orElseGet(() -> {
-                    logger.info("Using default DNS Server.");
-                    return DnsSrvResolvers.newBuilder();
-                });
+                    final var builder = new HostList()
+                        .with(getSrvServers())
+                        .get()
+                        .map(hosts -> {
+                            logger.info("Using DNS Hosts {}", hosts);
+                            return DnsSrvResolvers.newBuilder().servers(hosts);
+                        })
+                        .orElseGet(() -> {
+                            logger.info("Using default DNS Server.");
+                            return DnsSrvResolvers.newBuilder();
+                        });
 
-            dnsSrvResolver = builder
-                    .cachingLookups(true)
-                    .dnsLookupTimeoutMillis(DNS_LOOKUP_TIMEOUT)
-                .build();
+                    final var dnsSrvResolver = builder
+                            .cachingLookups(true)
+                            .dnsLookupTimeoutMillis(DNS_LOOKUP_TIMEOUT)
+                        .build();
 
-            dnsSrvWatcher = DnsSrvWatchers.newBuilder(dnsSrvResolver)
-                    .polling(DNS_LOOKUP_POLLING_RATE, DNS_LOOKUP_POLLING_RATE_UNITS)
-                    .withErrorHandler(this)
-                .build();
+                    dnsSrvWatcher = DnsSrvWatchers.newBuilder(dnsSrvResolver)
+                            .polling(DNS_LOOKUP_POLLING_RATE, DNS_LOOKUP_POLLING_RATE_UNITS)
+                            .withErrorHandler(this)
+                        .build();
 
-            nodeChangeNotifier = dnsSrvWatcher.watch(getSrvQuery());
-            nodeChangeNotifier.setListener(this, true);
+                    nodeChangeNotifier = dnsSrvWatcher.watch(getSrvQuery());
+                    nodeChangeNotifier.setListener(this, true);
 
+                    logger.info("Started SRV Watcher.");
+
+                } catch (Exception ex) {
+
+                    logger.warn("Could not start watcher. Retrying.", ex);
+                    final var time = DNS_LOOKUP_POLLING_RATE_UNITS.toMillis(DNS_LOOKUP_POLLING_RATE);
+
+                    try {
+                        Thread.sleep(time);
+                    } catch (InterruptedException ex0) {
+                        logger.debug("Interrupted while connecting.", ex0);
+                        break;
+                    }
+
+                }
+
+            }
         }
 
         public void stop() {
 
             try {
-                nodeChangeNotifier.close();
+                startup.interrupt();
+                startup.join();
+            } catch (Exception ex) {
+                logger.error("Caught error interrupting startup thread.", ex);
+            }
+
+            try {
+                if (nodeChangeNotifier != null) nodeChangeNotifier.close();
             } catch (Exception ex) {
                 logger.error("Caught exception closing Change Notifier.", ex);
             }
 
             try {
-                dnsSrvWatcher.close();
+                if (dnsSrvWatcher != null) dnsSrvWatcher.close();
             } catch (IOException ex) {
                 logger.error("Caught exception closing SRV Watcher.", ex);
             }

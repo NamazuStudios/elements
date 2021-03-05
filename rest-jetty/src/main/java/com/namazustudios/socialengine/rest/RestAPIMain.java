@@ -218,6 +218,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     @Override
     public void run() throws ServerRuntimeException {
         try {
+            instance.start();
             server.start();
             server.dumpStdErr();
             server.join();
@@ -233,6 +234,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         server.start();
         server.dumpStdErr();
         server.join();
+        instance.close();
         return null;
     }
 

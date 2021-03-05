@@ -19,11 +19,12 @@ public class MongoSearchModule extends PrivateModule {
 
     @Override
     protected void configure() {
-        bind(Analyzer.class).toProvider(MongoStandardAnalyzerProvider.class);
-        bind(Directory.class).toProvider(MongoDirectoryProvider.class).asEagerSingleton();
-        bind(Condition.class).toProvider(JeroMQConditionProvider.class).asEagerSingleton();
-        bind(LockFactory.class).toProvider(MongoLockFactoryProvider.class).asEagerSingleton();
-        bind(ObjectIndex.class).toProvider(MongoObjectIndexProvider.class).asEagerSingleton();
+// This is disabled for now
+//        bind(Analyzer.class).toProvider(MongoStandardAnalyzerProvider.class);
+//        bind(Directory.class).toProvider(MongoDirectoryProvider.class).asEagerSingleton();
+//        bind(Condition.class).toProvider(JeroMQConditionProvider.class).asEagerSingleton();
+//        bind(LockFactory.class).toProvider(MongoLockFactoryProvider.class).asEagerSingleton();
+        bind(ObjectIndex.class).toProvider(NullObjectIndexProvider.class).asEagerSingleton();
         expose(ObjectIndex.class);
     }
 

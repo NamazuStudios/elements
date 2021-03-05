@@ -112,7 +112,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
                 .dispatch(_success, _failure);
 
         } finally {
-            getResourceService().tryRelease(resource);
+//            getResourceService().tryRelease(resource);
         }
 
     }
