@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.google.common.collect.Comparators;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -44,7 +45,8 @@ class RemoteInvokerRegistrySnapshot {
         try {
             lock.lock();
             final List<RemoteInvoker> byLoad = storage.invokersByApplication.get(applicationId);
-            if (byLoad == null || byLoad.isEmpty()) throw new NodeNotFoundException("Unknown Application: " + applicationId);            return byLoad.get(0);
+            if (byLoad == null || byLoad.isEmpty()) throw new NodeNotFoundException("Unknown Application: " + applicationId);
+            return byLoad.get(0);
         } finally {
             lock.unlock();
         }
@@ -189,7 +191,6 @@ class RemoteInvokerRegistrySnapshot {
             final List<RemoteInvoker> remoteInvokerList = invokersByApplication
                 .computeIfAbsent(applicationId, nid -> new ArrayList<>());
 
-
             final PriorityRemoteInvoker update = new PriorityRemoteInvoker(invoker, load);
 
             remoteInvokerList.removeIf(ri -> {
@@ -244,11 +245,15 @@ class RemoteInvokerRegistrySnapshot {
         }
 
         private void sort() {
-            invokersByApplication.forEach((id, invokers) -> Collections.sort(invokers, (o1, o2) -> {
-                final PriorityRemoteInvoker po1 = (PriorityRemoteInvoker)o1;
-                final PriorityRemoteInvoker po2 = (PriorityRemoteInvoker)o2;
+
+            final Comparator<RemoteInvoker> cmp = (o1, o2) -> {
+                final var po1 = (PriorityRemoteInvoker) o1;
+                final var po2 = (PriorityRemoteInvoker) o2;
                 return po1.compareTo(po2);
-            }));
+            };
+
+            invokersByApplication.forEach((id, invokers) -> invokers.sort(cmp.reversed()));
+
         }
 
         private void clear() {

@@ -135,9 +135,9 @@ public class SimpleRemoteInvokerRegistryTest {
             .stream()
             .map(c -> c.getInstanceId())
             .sorted((i0, i1) -> {
-                final double load0 = mockLoadMap.get(i0);
-                final double load1 = mockLoadMap.get(i1);
-                return Double.compare(load0, load1);
+                final double quality0 = mockLoadMap.get(i0);
+                final double quality1 = mockLoadMap.get(i1);
+                return Double.compare(quality1, quality0);
             }).findFirst().get();
 
         // Verify that the best instance is returned for each application when requesting any remote invoker.  Since
@@ -279,9 +279,9 @@ public class SimpleRemoteInvokerRegistryTest {
             return mockInstanceConnection;
 
         }).sorted((i0, i1) -> {
-            final double load0 = i0.getInstanceMetadataContext().getInstanceQuality();
-            final double load1 = i1.getInstanceMetadataContext().getInstanceQuality();
-            return Double.compare(load0, load1);
+            final double quality0 = i0.getInstanceMetadataContext().getInstanceQuality();
+            final double quality1 = i1.getInstanceMetadataContext().getInstanceQuality();
+            return Double.compare(quality1, quality0);
         }).collect(toList()));
 
         // Determines the best instance based on the mocked load values.
@@ -406,9 +406,9 @@ public class SimpleRemoteInvokerRegistryTest {
             return mockInstanceConnection;
 
         }).sorted((i0, i1) -> {
-            final double load0 = i0.getInstanceMetadataContext().getInstanceQuality();
-            final double load1 = i1.getInstanceMetadataContext().getInstanceQuality();
-            return Double.compare(load0, load1);
+            final double quality0 = i0.getInstanceMetadataContext().getInstanceQuality();
+            final double quality1 = i1.getInstanceMetadataContext().getInstanceQuality();
+            return Double.compare(quality1, quality0);
         }).collect(toList()));
 
         when(getRemoteInvokerSupplier().get()).thenAnswer(i -> {
