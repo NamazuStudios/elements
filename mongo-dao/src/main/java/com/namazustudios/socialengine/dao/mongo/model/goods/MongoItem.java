@@ -6,7 +6,7 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.*;
 
@@ -23,7 +23,7 @@ import java.util.*;
     @SearchableField(name = "description", path = "/description"),
     @SearchableField(name = "tags", path = "/tags")
 })
-@Entity(value = "items", noClassnameStored = true)
+@Entity(value = "items", useDiscriminator = false)
 public class MongoItem {
 
     @Id

@@ -8,11 +8,15 @@ import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchLock;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NoSuitableMatchException;
 import com.namazustudios.socialengine.model.match.Match;
+import dev.morphia.ModifyOptions;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.FindAndModifyOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,6 +27,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.*;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 import static java.lang.System.currentTimeMillis;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.toList;
@@ -37,7 +45,7 @@ public class MongoMatchUtils {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoMatchUtils.class);
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private Mapper dozerMapper;
 
@@ -93,15 +101,16 @@ public class MongoMatchUtils {
                 continue;
             }
 
-            final MongoMatch refreshed = getDatastore().get(playerMatch);
+            final MongoMatch refreshed = getDatastore().find(MongoMatch.class).filter(eq("_id", playerMatch.getObjectId())).first();
 
             if (refreshed.getPlayer() != null && refreshed.getGameId() != null) {
 
-                final MongoMatch other = getDatastore().createQuery(MongoMatch.class)
-                      .field("player").equal(refreshed.getOpponent())
-                      .field("opponent").equal(refreshed.getPlayer())
-                      .field("gameId").equal(refreshed.getGameId())
-                      .get();
+                final MongoMatch other = getDatastore().find(MongoMatch.class)
+                      .filter(Filters.and(
+                              eq("player", refreshed.getOpponent()),
+                              eq("opponent", refreshed.getPlayer()),
+                              eq("gameId", refreshed.getGameId())
+                      )).first();
 
                 if (other != null) {
                     return new Matchmaker.SuccessfulMatchTuple() {
@@ -168,15 +177,15 @@ public class MongoMatchUtils {
         // opponent together, driving any deltas as necessary.
 
         final Query<MongoMatch> playerQuery = getDatastore()
-            .createQuery(MongoMatch.class)
-            .field("_id").equal(playerMatch.getObjectId());
+            .find(MongoMatch.class)
+            .filter(eq("_id", playerMatch.getObjectId()));
 
         final Query<MongoMatch> opponentQuery = getDatastore()
-            .createQuery(MongoMatch.class)
-            .field("_id").equal(opponentMatch.getObjectId());
+            .find(MongoMatch.class)
+            .filter(eq("_id", opponentMatch.getObjectId()));
 
-        playerMatch = playerQuery.get();
-        opponentMatch = opponentQuery.get();
+        playerMatch = playerQuery.first();
+        opponentMatch = opponentQuery.first();
 
         if (playerMatch == null || opponentMatch == null) {
             throw new NoSuitableMatchException("player or opponent not found");
@@ -189,45 +198,32 @@ public class MongoMatchUtils {
 
         final String gameId = finalizer.apply(
             getDozerMapper().map(playerMatch, Match.class),
-            getDozerMapper().map(opponentMatch, Match.class));
+            getDozerMapper().map(opponentMatch, Match.class)
+        );
 
-        final Timestamp now = new Timestamp(currentTimeMillis());
-
-        final UpdateOperations<MongoMatch> playerUpdateOperations;
-        playerUpdateOperations = getDatastore().createUpdateOperations(MongoMatch.class);
-
-        final UpdateOperations<MongoMatch> oppponentUpdateOperations;
-        oppponentUpdateOperations = getDatastore().createUpdateOperations(MongoMatch.class);
+        final var now = new Timestamp(currentTimeMillis());
 
         if (gameId == null) {
             throw new InternalException("Unspecified gameId");
         }
 
-        playerUpdateOperations
-            .set("opponent", opponentMatch.getPlayer())
-            .set("expiry", now)
-            .set("lastUpdatedTimestamp", now)
-            .set("gameId", gameId);
-
-        oppponentUpdateOperations
-            .set("opponent", playerMatch.getPlayer())
-            .set("expiry", now)
-            .set("lastUpdatedTimestamp", now)
-            .set("gameId", gameId);
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-            .upsert(false)
-            .returnNew(true);
-
         // Perform the updates as requested.  Both objects should exist, and if they don't then
         // we should throw an exception.  This is happening because something is deleting the
         // matches outside of the scope, which should never happen.
 
-        final MongoMatch updatedPlayerMatch;
-        updatedPlayerMatch = getDatastore().findAndModify(playerQuery, playerUpdateOperations, findAndModifyOptions);
+        final var updatedPlayerMatch = playerQuery.modify(
+            set("opponent", opponentMatch.getPlayer()),
+            set("expiry", now),
+            set("lastUpdatedTimestamp", now),
+            set("gameId", gameId)
+        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
-        final MongoMatch updatedOpponentMatch;
-        updatedOpponentMatch = getDatastore().findAndModify(opponentQuery, oppponentUpdateOperations, findAndModifyOptions);
+        final var updatedOpponentMatch = opponentQuery.modify(
+            set("opponent", playerMatch.getPlayer()),
+            set("expiry", now),
+            set("lastUpdatedTimestamp", now),
+            set("gameId", gameId)
+        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
         if (playerMatch == null || opponentMatch == null) {
             // This should never happen if the locking is done properly, so we chalk this up to an
@@ -251,12 +247,12 @@ public class MongoMatchUtils {
 
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 
@@ -293,41 +289,35 @@ public class MongoMatchUtils {
 
         public void attempt() throws MongoConcurrentUtils.ContentionException {
 
-            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+            final var query = getDatastore().find(MongoMatch.class);
 
-            query.field("_id").equal(match.getObjectId())
-                 .or(
-                    query.criteria("lock").doesNotExist(),
-                    query.criteria("lock.timestamp").lessThan(timeout)
+            query.filter(eq("_id", match.getObjectId()))
+                 .filter(or(
+                        exists("lock").not(),
+                        lt("lock.timestamp", timeout)
+                     )
                  );
 
-            final UpdateOperations<MongoMatch> updates = getDatastore()
-                    .createUpdateOperations(MongoMatch.class)
-                    .set("lock", lock);
-
-            final MongoMatch result = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(false));
+            final var result = query.modify(
+                set("lock", lock)
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
             if (result == null) {
                 throw new MongoConcurrentUtils.ContentionException();
             }
+
         }
 
         public void release() {
 
-            final Query<MongoMatch> query = getDatastore().createQuery(MongoMatch.class);
+            final var query = getDatastore().find(MongoMatch.class);
 
-            query.field("_id").equal(match.getObjectId())
-                    .field("lock.uuid").equal(lock.getUuid());
+            query.filter(eq("_id", match.getObjectId()))
+                 .filter(eq("lock.uuid", lock.getUuid()));
 
-            final UpdateOperations<MongoMatch> updates = getDatastore()
-                    .createUpdateOperations(MongoMatch.class)
-                    .unset("lock");
-
-            getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
-                    .returnNew(true)
-                    .upsert(false));
+            query.update(
+                unset("lock")
+            ).execute(new UpdateOptions().upsert(false));
 
         }
 

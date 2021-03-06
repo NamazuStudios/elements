@@ -2,10 +2,9 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.ParameterizedPath;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.manifest.model.Type;
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
-import com.namazustudios.socialengine.rt.manifest.http.HttpParameter;
 
+import java.io.Serializable;
 import java.util.*;
 
 /**
@@ -15,7 +14,7 @@ import java.util.*;
  *
  * Created by patricktwohig on 8/9/17.
  */
-public class HttpOperation {
+public class HttpOperation implements Serializable {
 
     private String name;
 
@@ -274,16 +273,18 @@ public class HttpOperation {
     }
 
     private Map<String, HttpParameter> remapParameters(Map<String, HttpParameter> unsortedParameters) {
-        List<Map.Entry<String, HttpParameter>> list =
-                new LinkedList<>(unsortedParameters.entrySet());
 
+        final var list = new ArrayList<>(unsortedParameters.entrySet());
         list.sort(Map.Entry.comparingByValue());
 
-        Map<String, HttpParameter> sortedParameters = new LinkedHashMap<>();
-        for (Map.Entry<String, HttpParameter> entry : list) {
+        final var sortedParameters = new LinkedHashMap<String, HttpParameter>();
+
+        for (var entry : list) {
             sortedParameters.put(entry.getKey(), entry.getValue());
         }
 
         return sortedParameters;
+
     }
+
 }

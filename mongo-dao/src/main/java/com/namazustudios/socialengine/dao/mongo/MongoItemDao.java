@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
@@ -11,25 +12,25 @@ import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
+import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoItemDao implements ItemDao {
@@ -40,7 +41,7 @@ public class MongoItemDao implements ItemDao {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -67,7 +68,8 @@ public class MongoItemDao implements ItemDao {
 
     public MongoItem getMongoItem(final ObjectId objectId) {
 
-        final MongoItem mongoItem = getDatastore().get(MongoItem.class, objectId);
+        final MongoItem mongoItem = getDatastore().find(MongoItem.class)
+                .filter(eq("_id", objectId)).first();
 
         if(null == mongoItem) {
             throw new NotFoundException("Unable to find item with an id of " + objectId);
@@ -83,15 +85,15 @@ public class MongoItemDao implements ItemDao {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
         }
 
-        final Query<MongoItem> itemQuery = getDatastore().createQuery(MongoItem.class);
+        final Query<MongoItem> itemQuery = getDatastore().find(MongoItem.class);
 
         if (ObjectId.isValid(itemNameOrId)) {
-            itemQuery.criteria("_id").equal(new ObjectId(itemNameOrId));
+            itemQuery.filter(eq("_id", new ObjectId(itemNameOrId)));
         } else {
-            itemQuery.criteria("name").equal(itemNameOrId);
+            itemQuery.filter(eq("name", itemNameOrId));
         }
 
-        final MongoItem mongoItem = itemQuery.get();
+        final MongoItem mongoItem = itemQuery.first();
 
         if(null == mongoItem) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
@@ -103,21 +105,21 @@ public class MongoItemDao implements ItemDao {
 
     public MongoItem refresh(final MongoItem mongoItem) {
 
-        final Query<MongoItem> query = getDatastore().createQuery(MongoItem.class);
+        final Query<MongoItem> query = getDatastore().find(MongoItem.class);
 
         final String identifier;
 
         if (mongoItem.getObjectId() != null) {
-            query.criteria("_id").equal(mongoItem.getObjectId());
+            query.filter(eq("_id", mongoItem.getObjectId()));
             identifier = mongoItem.getObjectId().toHexString();
         } else if (mongoItem.getName() != null) {
-            query.criteria("name").equal(mongoItem.getName());
+            query.filter(eq("name", mongoItem.getName()));
             identifier = mongoItem.getName();
         } else {
             throw new InvalidDataException("Must specify Item name or id");
         }
 
-        final MongoItem refreshedMongoItem = query.get();
+        final MongoItem refreshedMongoItem = query.first();
 
         if (refreshedMongoItem == null) {
             throw new ItemNotFoundException("Unable to find item with an id or name of " + identifier);
@@ -135,44 +137,43 @@ public class MongoItemDao implements ItemDao {
                         "by tags");
         }
 
-        final Query<MongoItem> mongoQuery = getDatastore().createQuery(MongoItem.class);
+        final Query<MongoItem> mongoQuery = getDatastore().find(MongoItem.class);
 
         if (tags != null && !tags.isEmpty()) {
-            mongoQuery.criteria("tags").hasAnyOf(tags);
+            mongoQuery.filter(Filters.in("tags", tags));
         }
 
         return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Item.class));
+            mongoItem -> getDozerMapper().map(mongoItem, Item.class), new FindOptions());
     }
 
     @Override
-    public Item updateItem(Item item) {
+    public Item updateItem(final Item item) {
+
         validate(item);
         normalize(item);
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
+        final var query = getDatastore().find(MongoItem.class);
+        query.filter(eq("_id", objectId));
 
-        final Query<MongoItem> query = getDatastore().createQuery(MongoItem.class);
-        query.criteria("_id").equal(objectId);
+        final var updatedMongoItem = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("name", item.getName()),
+                set("displayName", item.getDisplayName()),
+                set("metadata", item.getMetadata()),
+                set("tags", item.getTags()),
+                set("description", item.getDescription())
+            ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
+        );
 
-        final UpdateOperations<MongoItem> operations = getDatastore().createUpdateOperations(MongoItem.class);
-        operations.set("name", item.getName());
-        operations.set("displayName", item.getDisplayName());
-        operations.set("metadata", item.getMetadata());
-        operations.set("tags", item.getTags());
-        operations.set("description", item.getDescription());
-
-        final FindAndModifyOptions options = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(false);
-
-        final MongoItem updatedMongoItem = getDatastore().findAndModify(query, operations, options);
         if (updatedMongoItem == null) {
-            throw new NotFoundException("Item with id or name of " + item.getId() + " does not exist");
+            throw new ItemNotFoundException("Item with ID not found: " + item.getId());
         }
-        getObjectIndex().index(updatedMongoItem);
 
+        getObjectIndex().index(updatedMongoItem);
         return getDozerMapper().map(updatedMongoItem, Item.class);
+
     }
 
     @Override
@@ -189,7 +190,10 @@ public class MongoItemDao implements ItemDao {
         }
         getObjectIndex().index(mongoItem);
 
-        return getDozerMapper().map(getDatastore().get(mongoItem), Item.class);
+        final Query<MongoItem> query = getDatastore().find(MongoItem.class);
+        query.filter(eq("_id", mongoItem.getObjectId()));
+
+        return getDozerMapper().map(query.first(), Item.class);
     }
 
     private void validate(Item item) {
@@ -205,12 +209,12 @@ public class MongoItemDao implements ItemDao {
         item.validateTags();
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

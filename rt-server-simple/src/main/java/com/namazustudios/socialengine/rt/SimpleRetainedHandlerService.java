@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -74,7 +75,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         final ResourceId resourceId = resource.getId();
         final RunnableFuture<Void> unlink = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
-        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+        try {  // TODO Ensure Locking isn't necessary here
 
             final AtomicBoolean sent = new AtomicBoolean();
 
@@ -111,7 +112,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
                 .dispatch(_success, _failure);
 
         } finally {
-            getResourceService().tryRelease(resource);
+//            getResourceService().tryRelease(resource);
         }
 
     }

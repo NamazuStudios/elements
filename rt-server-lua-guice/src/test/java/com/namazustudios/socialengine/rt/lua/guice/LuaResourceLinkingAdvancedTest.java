@@ -1,73 +1,85 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
-import java.util.concurrent.ThreadLocalRandom;
-import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.toList;
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
+import static com.namazustudios.socialengine.rt.Path.fromContextAndComponents;
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static org.testng.Assert.assertEquals;
 
 public class LuaResourceLinkingAdvancedTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withNodeModule(new LuaModule())
-            .withNodeModule(new XodusContextModule()
-                .withSchedulerThreads(1)
-                .withHandlerTimeout(3, MINUTES))
-            .withNodeModule(new XodusEnvironmentModule()
-                .withTempEnvironments())
-            .withNodeModule(new JavaEventModule())
-            .withDefaultHttpClient()
-        .start();
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+                getXodusTest(LuaResourceLinkingAdvancedTest::new),
+                getUnixFSTest(LuaResourceLinkingAdvancedTest::new)
+        };
+    }
 
-    private final Node node = getEmbeddedTestService().getNode();
+    private final Context context;
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final EmbeddedTestService embeddedTestService;
+
+    private LuaResourceLinkingAdvancedTest(final EmbeddedTestService embeddedTestService) {
+
+        this.embeddedTestService = embeddedTestService;
+
+        final var testApplicationId = getEmbeddedTestService()
+                .getWorker()
+                .getApplicationId();
+
+        this.context = getEmbeddedTestService()
+                .getClient()
+                .getContextFactory()
+                .getContextForApplication(testApplicationId);
+
+    }
 
     @AfterClass
     public void teardown() {
         getEmbeddedTestService().close();
     }
 
-    @Test()
-    public void performAdvancedLinkingTest() throws Exception {
+    @Test
+    public void performAdvancedLinkingTest() {
 
-        final String pathASuffix = UUID.randomUUID().toString();
-        final String pathBSuffix = UUID.randomUUID().toString();
+        final var pathASuffix = UUID.randomUUID().toString();
+        final var pathBSuffix = UUID.randomUUID().toString();
 
-        final List<String> results = (List<String>) getContext()
+        final var results = (List<String>) getContext()
             .getHandlerContext()
             .invokeSingleUseHandler(
                 Attributes.emptyAttributes(),
                 "test.link.handler", "test_create", pathASuffix, pathBSuffix);
 
-        final Path root = new Path(results.get(0));
-        final ResourceId resourceId = new ResourceId(results.get(1));
+        final var resourceId = resourceIdFromString(results.get(1));
 
-        final Map<String, String> resultsA = (Map<String, String>) getContext()
+        final var resultsA = (Map<String, String>) getContext()
             .getHandlerContext()
             .invokeSingleUseHandler(
                 Attributes.emptyAttributes(),
                 "test.link.handler", "test_list", pathASuffix);
 
-        final Map<String, String> resultsB = (Map<String, String>) getContext()
+        final var resultsB = (Map<String, String>) getContext()
             .getHandlerContext()
             .invokeSingleUseHandler(
                 Attributes.emptyAttributes(),
@@ -78,21 +90,16 @@ public class LuaResourceLinkingAdvancedTest {
         assertEquals(resultsA.size(), 1);
         assertEquals(resultsB.size(), 1);
 
-        final Path patha = Path.fromComponents("test_case", pathASuffix, resourceId.toString());
-        final Path pathb = Path.fromComponents("test_case", pathBSuffix, resourceId.toString());
+        final var patha = fromContextAndComponents(resourceId, "test_case", pathASuffix, resourceId.toString());
+        final var pathb = fromContextAndComponents(resourceId, "test_case", pathBSuffix, resourceId.toString());
 
         assertEquals(resultsA.get(patha.toNormalizedPathString()), resourceId.toString());
         assertEquals(resultsB.get(pathb.toNormalizedPathString()), resourceId.toString());
 
     }
 
-
-    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+    public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

@@ -1,18 +1,19 @@
 package com.namazustudios.socialengine.rt.xodus;
 
-import com.google.common.io.Files;
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider;
 import com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider;
 import jetbrains.exodus.env.Environment;
 
-import java.io.File;
+import java.io.IOException;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.xodus.XodusResourceService.RESOURCE_ENVIRONMENT;
 import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT;
-import static com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider.RESOURCE_ENVIRONMENT_PATH;
-import static com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT_PATH;
+import static java.nio.file.Files.createTempDirectory;
 
 public class XodusEnvironmentModule extends AbstractModule {
 
@@ -27,30 +28,15 @@ public class XodusEnvironmentModule extends AbstractModule {
     public XodusEnvironmentModule withResourceEnvironment() {
         bindResourceEnvironment = () -> bind(Environment.class)
             .annotatedWith(named(RESOURCE_ENVIRONMENT))
-            .toProvider(ResourceEnvironmentProvider.class)
-            .asEagerSingleton();
+            .toProvider(ResourceEnvironmentProvider.class);
         return this;
     }
 
     public XodusEnvironmentModule withSchedulerEnvironment() {
         bindSchedulerEnvironment = () -> bind(Environment.class)
             .annotatedWith(named(SCHEDULER_ENVIRONMENT))
-            .toProvider(SchedulerEnvironmentProvider.class)
-            .asEagerSingleton();
+            .toProvider(SchedulerEnvironmentProvider.class);
         return this;
-    }
-
-    public XodusEnvironmentModule withTempEnvironments() {
-
-        final File resourceDirectory = Files.createTempDir();
-        final File schedulerDirectory = Files.createTempDir();
-
-        resourceDirectory.deleteOnExit();
-        schedulerDirectory.deleteOnExit();
-
-        return withResourceEnvironmentPath(resourceDirectory.getAbsolutePath()).
-               withSchedulerEnvironmentPath(schedulerDirectory.getAbsolutePath());
-
     }
 
     public XodusEnvironmentModule withResourceEnvironmentPath(final String path) {
@@ -65,6 +51,24 @@ public class XodusEnvironmentModule extends AbstractModule {
             .annotatedWith(named(SCHEDULER_ENVIRONMENT_PATH))
             .toInstance(path);
         return withSchedulerEnvironment();
+    }
+
+    public XodusEnvironmentModule withTempResourceEnvironment() {
+        try {
+            final var dir = createTempDirectory("resource-xodus");
+            return withResourceEnvironmentPath(dir.toAbsolutePath().toString());
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
+    }
+
+    public XodusEnvironmentModule withTempSchedulerEnvironment() {
+        try {
+            final var dir = createTempDirectory("scheduler-xodus");
+            return withSchedulerEnvironmentPath(dir.toAbsolutePath().toString());
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
     }
 
     @Override

@@ -2,12 +2,22 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.SessionCreation;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Used to authorize requests users using Facebook Apple Sign-in tokens.
  *
  * Created by patricktwohig on 6/22/17.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.applesignin"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.applesignin",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
+})
 public interface AppleSignInAuthService {
 
     /**

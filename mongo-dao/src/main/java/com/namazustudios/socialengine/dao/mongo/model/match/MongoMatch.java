@@ -7,9 +7,9 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
-import java.sql.Timestamp;
+import java.util.Date;
 import java.util.Map;
 import java.util.Objects;
 
@@ -30,7 +30,7 @@ import java.util.Objects;
         @SearchableField(name = "playerId",  path = "/player/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class),
         @SearchableField(name = "opponentId",  path = "/opponent/objectId", extractor = ObjectIdExtractor.class, processors = ObjectIdProcessor.class)
     })
-@Entity(value = "match", noClassnameStored = true)
+@Entity(value = "match", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "gameId")),
     @Index(fields = @Field(value = "lock.uuid")),
@@ -67,19 +67,17 @@ public class MongoMatch {
 
     @Indexed
     @Property
-    private Timestamp lastUpdatedTimestamp;
+    private Date lastUpdatedTimestamp;
 
     @Property
     private String gameId;
 
     @Property
-    private Timestamp expiry;
+    private Date expiry;
 
     @Indexed
-    @Embedded
     private MongoMatchLock lock;
 
-    @Embedded
     private Map<String, Object> metadata;
 
     public ObjectId getObjectId() {
@@ -122,11 +120,11 @@ public class MongoMatch {
         this.opponent = opponent;
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    public Date getLastUpdatedTimestamp() {
         return lastUpdatedTimestamp;
     }
 
-    public void setLastUpdatedTimestamp(Timestamp lastUpdatedTimestamp) {
+    public void setLastUpdatedTimestamp(Date lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 
@@ -138,11 +136,11 @@ public class MongoMatch {
         this.gameId = gameId;
     }
 
-    public Timestamp getExpiry() {
+    public Date getExpiry() {
         return expiry;
     }
 
-    public void setExpiry(Timestamp expiry) {
+    public void setExpiry(Date expiry) {
         this.expiry = expiry;
     }
 

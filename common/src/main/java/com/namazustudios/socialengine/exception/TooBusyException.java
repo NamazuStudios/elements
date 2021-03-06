@@ -4,8 +4,8 @@ package com.namazustudios.socialengine.exception;
  * Created by patricktwohig on 3/30/15.
  */
 public class TooBusyException extends BaseException {
-    public TooBusyException() {
-    }
+
+    public TooBusyException() {}
 
     public TooBusyException(String message) {
         super(message);

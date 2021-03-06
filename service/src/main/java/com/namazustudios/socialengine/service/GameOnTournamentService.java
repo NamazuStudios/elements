@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.gameon.game.*;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
 
@@ -8,6 +11,9 @@ import java.util.List;
  * Handles interaction with the {@link GameOnTournamentDetail} and the {@link GameOnTournamentSummary}.  This interacts
  * with the GameOn APIs as well as performs any filtering necessary to determine which instances to show to the client.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.tournament")
+})
 public interface GameOnTournamentService {
 
 

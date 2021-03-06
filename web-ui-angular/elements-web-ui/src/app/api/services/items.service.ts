@@ -9,7 +9,6 @@ import { map as __map, filter as __filter } from 'rxjs/operators';
 
 import { PaginationItem } from '../models/pagination-item';
 import { Item } from '../models/item';
-import {Http} from '@angular/http';
 @Injectable({
   providedIn: 'root',
 })

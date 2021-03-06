@@ -115,16 +115,21 @@ public class DispatcherServlet extends HttpServlet {
 
     private void mapRequestAndPerformAsync(final HttpServletRequest httpServletRequest,
                                            final HttpServletResponse httpServletResponse) {
+        getExceptionMapperResolver().performExceptionSafe(
+            r -> assembleAndWrite(httpServletRequest, r, httpServletResponse),
+            () -> {
 
-        final AsyncContext asyncContext = httpServletRequest.startAsync();
-        asyncContext.setTimeout(getAsyncTimeoutMillisecoinds());
+                final var asyncContext = httpServletRequest.startAsync();
+                asyncContext.setTimeout(getAsyncTimeoutMillisecoinds());
 
-        final Session session = getHttpSessionService().getSession(httpServletRequest);
-        final HttpRequest httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
-        final Consumer<Response> responseConsumer = getConsumer(asyncContext, httpRequest, httpServletResponse);
+                final var session = getHttpSessionService().getSession(httpServletRequest);
+                final var httpRequest = getHttpRequestService().getAsyncRequest(asyncContext);
+                final var responseConsumer = getConsumer(asyncContext, httpRequest, httpServletResponse);
 
-        performAsync(httpRequest, session, responseConsumer);
+                getSessionRequestDispatcher().dispatch(session, httpRequest, responseConsumer);
 
+            }
+        );
     }
 
     private Consumer<Response> getConsumer(final AsyncContext asyncContext,
@@ -176,17 +181,24 @@ public class DispatcherServlet extends HttpServlet {
 
     }
 
-    private void performAsync(final HttpRequest httpRequest,
-                              final Session session,
-                              final Consumer<Response> responseConsumer) {
+    private void assembleAndWrite(final HttpServletRequest httpServletRequest,
+                                  final Response response,
+                                  final HttpServletResponse httpServletResponse) {
         try {
-            getSessionRequestDispatcher().dispatch(session, httpRequest, responseConsumer);
+            getHttpResponseService().write(httpServletRequest, response, httpServletResponse);
         } catch (Exception ex) {
-            logger.info("Mapping exception for {} {}", httpRequest.getVerb(), httpRequest.getHeader().getPath());
-            getExceptionMapperResolver().getExceptionMapper(ex).map(ex, responseConsumer);
-        }
-    }
 
+            logger.error("Caught exception writing normal response.", ex);
+
+            try {
+                httpServletResponse.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            } catch (IOException e) {
+                logger.error("Caught exception sending error response.", ex);
+            }
+
+        }
+
+    }
     private void assembleAndWrite(final HttpRequest httpRequest,
                                   final Response response,
                                   final HttpServletResponse httpServletResponse) {

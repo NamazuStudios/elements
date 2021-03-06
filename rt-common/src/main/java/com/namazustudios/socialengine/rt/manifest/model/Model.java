@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import java.io.Serializable;
 import java.util.Map;
 
 /**
  * Created by patricktwohig on 8/16/17.
  */
-public class Model {
+public class Model implements Serializable {
 
     private String name;
 

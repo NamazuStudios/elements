@@ -8,13 +8,11 @@ dependency-reduced-pom.xml
 buildNumber.properties
 *.iml
 test-repositories
-storage.xodus
 node_modules
-
-# Default Script storage
-/repositories/*
+.DS_Store
 
 #IntelliJ Configurations (except shared run configurations
+.idea/jarRepositories.xml
 .idea/artifacts/
 .idea/compiler.xml
 .idea/encodings.xml
@@ -29,3 +27,16 @@ node_modules
 .idea/codeStyles/
 .idea/dbnavigator.xml
 .idea/jarRepositories.xml
+.idea/dictionaries
+
+# Files typically created by running the local applicatio in the IDE
+
+/storage.unixfs/*
+/storage.xodus.scheduler/*
+/instance-id.txt
+/verbose.log
+/repositories/*
+/host_key
+/script-storage/*
+/script-repos/*
+

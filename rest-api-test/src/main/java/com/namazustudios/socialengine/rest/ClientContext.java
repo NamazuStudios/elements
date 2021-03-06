@@ -3,12 +3,12 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
+import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -39,6 +39,8 @@ class ClientContext {
 
     private SessionCreation sessionCreation;
 
+    private EmbeddedTestService embeddedTestService;
+
     public User getUser() {
         return user;
     }
@@ -47,7 +49,6 @@ class ClientContext {
         if (profiles.isEmpty()) throw new IllegalStateException("No profiles set.");
         return profiles.get(0);
     }
-
 
     public String getSessionSecret() {
         if (sessionCreation == null) throw new IllegalStateException("No profiles set.");
@@ -141,4 +142,5 @@ class ClientContext {
     public SessionCreation getSessionCreation() {
         return sessionCreation;
     }
+
 }

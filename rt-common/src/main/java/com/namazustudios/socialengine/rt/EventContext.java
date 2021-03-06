@@ -27,4 +27,5 @@ public interface EventContext {
     void postAsync(@Serialize String eventName,
                    @Serialize Attributes attributes,
                    @Serialize Object... args);
+
 }

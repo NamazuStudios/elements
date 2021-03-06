@@ -10,8 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.io.Serializable;
 import java.util.function.Consumer;
+
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
 
 /**
  * Loads an instance of {@link Resource} into the {@link ResourceService}, executes the {@link Request}, collects the
@@ -117,7 +120,7 @@ public class RequestScopedHttpSessionDispatcher implements SessionRequestDispatc
     }
 
     @Inject
-    public void setContext(Context context) {
+    public void setContext(@Named(REMOTE) Context context) {
         this.context = context;
     }
 

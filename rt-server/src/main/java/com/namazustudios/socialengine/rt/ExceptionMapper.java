@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.function.Consumer;
 
 /**
@@ -62,35 +65,46 @@ public interface ExceptionMapper<ExceptionT extends Throwable> {
         <ExceptionT extends Throwable> ExceptionMapper<ExceptionT> getExceptionMapper(ExceptionT ex);
 
         /**
+         * Performs the provided {@link Runnable} within a try/catch passing any caught exceptions to the appropriate
+         * {@link ExceptionMapper<?>}
+         *
+         * @param responseConsumer the response consumer
+         * @param runnable the operation to perform
+         */
+        default void performExceptionSafe(final Consumer<Response> responseConsumer,
+                                          final ProtectedOperation runnable) {
+            try {
+                runnable.perform();
+            } catch (Throwable ex) {
+                getExceptionMapper(ex).map(ex, responseConsumer);
+            }
+        }
+
+        /**
          * Performs the provided {@link Runnable} within a try/catch.
          *
-         * @param request
-         * @param responseConsumer
-         * @param runnable
+         * @param request the request
+         * @param responseConsumer the response consumer
+         * @param runnable the operation to perform
          */
-        default ProtectedOperation protect(final Request request,
-                                           final Consumer<Response> responseConsumer,
-                                           final ProtectedOperation runnable) {
+        default ProtectedOperation performExceptionSafe(final Request request,
+                                                        final Consumer<Response> responseConsumer,
+                                                        final ProtectedOperation runnable) {
             return () -> {
                 try {
                     runnable.perform();
-                } catch (Throwable ex) {
+                } catch (Exception ex) {
                     getExceptionMapper(ex).map(ex, request, responseConsumer);
                 }
             };
         }
 
-        @FunctionalInterface
-        interface ProtectedOperation {
+    }
 
-            void perform();
+    @FunctionalInterface
+    interface ProtectedOperation {
 
-            default void performAndFinally(final Runnable runnable) {
-                perform();
-                runnable.run();
-            };
-
-        }
+        void perform() throws Exception;
 
     }
 

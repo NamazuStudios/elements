@@ -18,7 +18,17 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>app-node</artifactId>
             <version>${project.version}</version>
-            <classifier>jar-with-dependencies</classifier>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>namazu-socialengine-base</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
     </dependencies>
 
@@ -63,7 +73,7 @@
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>APP_NODE_JAR=target/lib/app-node-${project.version}-jar-with-dependencies.jar</argument>
+                        <argument>ELEMENTS_CLASSPATH=target/lib/*.jar</argument>
                         <argument>--tag</argument>
                         <argument>${project.artifactId}:latest</argument>
                         <argument>--tag</argument>

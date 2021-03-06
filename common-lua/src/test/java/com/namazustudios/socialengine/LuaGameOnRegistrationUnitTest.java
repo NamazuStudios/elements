@@ -12,11 +12,8 @@ import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import org.testng.annotations.*;
 
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.GenericType;
@@ -29,6 +26,8 @@ import java.util.Map;
 import java.util.concurrent.CompletionStage;
 import java.util.function.BiFunction;
 
+import static com.namazustudios.socialengine.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.TestUtils.getXodusTest;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.AMAZON_GAME_ON;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -40,8 +39,15 @@ import static org.mockito.ArgumentMatchers.matches;
 import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertNull;
 
-@Guice(modules = UnitTestModule.class)
 public class LuaGameOnRegistrationUnitTest {
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+                getXodusTest(LuaGameOnRegistrationUnitTest.class),
+                getUnixFSTest(LuaGameOnRegistrationUnitTest.class)
+        };
+    }
 
     private Client client;
 

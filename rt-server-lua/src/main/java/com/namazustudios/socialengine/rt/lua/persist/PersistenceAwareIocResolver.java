@@ -14,7 +14,7 @@ public class PersistenceAwareIocResolver implements IocResolver {
 
     private final IocResolver delegate;
 
-    private final Persistence persistence;
+    private final ErisPersistence erisPersistence;
 
     private static final String TYPE = "_t";
 
@@ -24,12 +24,12 @@ public class PersistenceAwareIocResolver implements IocResolver {
 
     private static final String PROVIDER_TYPE = Provider.class.getName();
 
-    public PersistenceAwareIocResolver(final IocResolver delegate, final Persistence persistence) {
+    public PersistenceAwareIocResolver(final IocResolver delegate, final ErisPersistence erisPersistence) {
 
         this.delegate = delegate;
-        this.persistence = persistence;
+        this.erisPersistence = erisPersistence;
 
-        persistence.addCustomUnpersistence(INJECT_TYPE, l -> {
+        erisPersistence.addCustomUnpersistence(INJECT_TYPE, l -> {
 
             if (l.getTop() != 1) {
                 throw new IllegalArgumentException("Function expects exactly 1 argument.");
@@ -53,7 +53,7 @@ public class PersistenceAwareIocResolver implements IocResolver {
 
         });
 
-        persistence.addCustomUnpersistence(PROVIDER_TYPE, l -> {
+        erisPersistence.addCustomUnpersistence(PROVIDER_TYPE, l -> {
 
             if (l.getTop() != 1) {
                 throw new IllegalArgumentException("Function expects exactly 1 argument.");
@@ -82,28 +82,28 @@ public class PersistenceAwareIocResolver implements IocResolver {
     @Override
     public <T> T inject(final Class<T> tClass) {
         final T instance = getDelegate().inject(tClass);
-        getPersistence().addCustomPersistence(instance, INJECT_TYPE, l -> persist(l, tClass));
+        getErisPersistence().addCustomPersistence(instance, INJECT_TYPE, l -> persist(l, tClass));
         return instance;
     }
 
     @Override
     public <T> T inject(final Class<T> tClass, final String named) {
         final T instance = getDelegate().inject(tClass, named);
-        getPersistence().addCustomPersistence(instance, INJECT_TYPE, l -> persist(l, tClass, named));
+        getErisPersistence().addCustomPersistence(instance, INJECT_TYPE, l -> persist(l, tClass, named));
         return instance;
     }
 
     @Override
     public <T> Provider<T> provider(final Class<T> tClass) {
         final Provider<T> provider = getDelegate().provider(tClass);
-        getPersistence().addCustomPersistence(provider, PROVIDER_TYPE, l -> persist(l, tClass));
+        getErisPersistence().addCustomPersistence(provider, PROVIDER_TYPE, l -> persist(l, tClass));
         return provider;
     }
 
     @Override
     public <T> Provider<T> provider(final Class<T> tClass, final String named) {
         final Provider<T> provider = getDelegate().provider(tClass);
-        getPersistence().addCustomPersistence(provider, PROVIDER_TYPE, l -> persist(l, tClass, named));
+        getErisPersistence().addCustomPersistence(provider, PROVIDER_TYPE, l -> persist(l, tClass, named));
         return provider;
     }
 
@@ -145,8 +145,8 @@ public class PersistenceAwareIocResolver implements IocResolver {
         return delegate;
     }
 
-    public Persistence getPersistence() {
-        return persistence;
+    public ErisPersistence getErisPersistence() {
+        return erisPersistence;
     }
 
 }

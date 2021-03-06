@@ -31,7 +31,7 @@ public class Application implements Serializable {
     private String id;
 
     @NotNull
-    @Pattern(regexp = Constants.Regexp.WORD_ONLY)
+    @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
     private String name;
 
     private String description;

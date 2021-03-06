@@ -1,18 +1,17 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.*;
 
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity(value = "entrant", noClassnameStored = true)
+@Entity(value = "entrant", useDiscriminator = false)
+@Indexes({
+        @Index(fields = @Field("steamId"), options = @IndexOptions(name = "indexing_test"))
+})
 public class MongoSteamEntrant extends MongoBasicEntrant {
 
-
     @Property
-    @Indexed(unique = true)
     private String steamId;
 
     public String getSteamId() {

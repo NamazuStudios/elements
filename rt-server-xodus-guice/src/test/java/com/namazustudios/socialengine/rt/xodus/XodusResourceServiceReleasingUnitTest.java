@@ -1,31 +1,55 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.ResourceLoader;
+import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceReleasingUnitTest;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.transact.TransactionalResourceService;
+import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 import org.mockito.Mockito;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 
-import java.io.*;
-
-import static java.nio.charset.StandardCharsets.UTF_8;
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @Guice(modules = XodusResourceServiceReleasingUnitTest.Module.class)
 public class XodusResourceServiceReleasingUnitTest extends AbstractResourceServiceReleasingUnitTest {
 
-    private ResourceService resourceService;
+    @Inject
+    private Persistence persistence;
+
+    @Inject
+    private TransactionalResourceService transactionalResourceService;
 
     @Override
     public ResourceService getResourceService() {
-        return resourceService;
+        return transactionalResourceService;
     }
 
-    @Inject
-    public void setResourceService(ResourceService resourceService) {
-        this.resourceService = resourceService;
+    @BeforeClass
+    public void start() {
+        persistence.start();
+        transactionalResourceService.start();
+    }
+
+    @AfterClass
+    public void stop() {
+        transactionalResourceService.stop();
+        persistence.stop();
     }
 
     @Override
@@ -34,29 +58,40 @@ public class XodusResourceServiceReleasingUnitTest extends AbstractResourceServi
     }
 
     public static class Module extends AbstractModule {
+
         @Override
         protected void configure() {
 
-            install(new XodusServicesModule().withSchedulerThreads(1));
-            install(new XodusEnvironmentModule().withTempEnvironments());
+            final var testNodeId = randomNodeId();
 
-            final AssetLoader mockAssetLoader = mock(AssetLoader.class);
-            bind(AssetLoader.class).toInstance(mockAssetLoader);
+            bind(NodeId.class).toInstance(testNodeId);
 
-            final ResourceLoader resourceLoader = mock(ResourceLoader.class);
+            install(new XodusEnvironmentModule()
+                    .withTempSchedulerEnvironment()
+                    .withTempResourceEnvironment()
+            );
+
+            install(new TransactionalResourceServiceModule().exposeTransactionalResourceService());
+            install(new XodusTransactionalResourceServicePersistenceModule().withDefaultBlockSize());
+
+            final var resourceLoader = mock(ResourceLoader.class);
 
             doAnswer(a -> {
-                final InputStream is = a.getArgument(0);
-                final ByteArrayOutputStream bos = new ByteArrayOutputStream();
-                for (int b = is.read(); b >= 0; b = is.read()) bos.write((byte)b);
-                final String resourceIdString = new String(bos.toByteArray(), UTF_8);
-                final ResourceId resourceId = new ResourceId(resourceIdString);
+
+                final ReadableByteChannel rbc = a.getArgument(0);
+                final ByteBuffer byteBuffer = ByteBuffer.allocate(ResourceId.getSizeInBytes());
+                while (byteBuffer.hasRemaining() && rbc.read(byteBuffer) >= 0);
+                byteBuffer.rewind();
+
+                final ResourceId resourceId = ResourceId.resourceIdFromByteBuffer(byteBuffer);
                 return doGetMockResource(resourceId);
-            }).when(resourceLoader).load(any());
+
+            }).when(resourceLoader).load(any(ReadableByteChannel.class), anyBoolean());
 
             bind(ResourceLoader.class).toInstance(resourceLoader);
 
         }
+
     }
 
     private static Resource doGetMockResource(final ResourceId resourceId) {
@@ -66,11 +101,12 @@ public class XodusResourceServiceReleasingUnitTest extends AbstractResourceServi
 
         try {
             doAnswer(a -> {
-                final OutputStream os = a.getArgument(0);
-                final byte[] bytes = resourceId.asString().getBytes(UTF_8);
-                os.write(bytes);
+                final var wbc = (WritableByteChannel) a.getArgument(0);
+                final var bytes = resourceId.asBytes();
+                final var buffer = ByteBuffer.wrap(bytes);
+                while (buffer.hasRemaining()) wbc.write(buffer);
                 return null;
-            }).when(resource).serialize(any(OutputStream.class));
+            }).when(resource).serialize(any(WritableByteChannel.class));
         } catch (IOException e) {
             // Should never happen in test code unless something is really wrong
             throw new UncheckedIOException(e);

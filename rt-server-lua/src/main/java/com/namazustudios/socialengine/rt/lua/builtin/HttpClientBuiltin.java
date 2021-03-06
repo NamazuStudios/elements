@@ -3,12 +3,13 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.TaskId;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.client.*;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MultivaluedMap;
@@ -20,6 +21,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 import static com.namazustudios.socialengine.rt.lua.builtin.coroutine.YieldInstruction.INDEFINITELY;
 import static java.lang.String.format;
@@ -277,8 +279,8 @@ public class HttpClientBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
-        persistence.addPermanentJavaObject(send, HttpClientBuiltin.class, SEND);
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(send, HttpClientBuiltin.class, SEND);
     }
 
     public Client getClient() {
@@ -295,7 +297,7 @@ public class HttpClientBuiltin implements Builtin {
     }
 
     @Inject
-    public void setContext(Context context) {
+    public void setContext(@Named(LOCAL) Context context) {
         this.context = context;
     }
 

@@ -16,12 +16,9 @@ public class GitServletProvider implements Provider<GitServlet> {
 
     @Override
     public GitServlet get() {
-        final GitServlet gitServlet = new GitServlet();
-
-        final RepositoryResolver<HttpServletRequest> servletRequestRepositoryResolver;
-        servletRequestRepositoryResolver = getServletRequestRepositoryResolverProvider().get();
+        final var gitServlet = new GitServlet();
+        final var servletRequestRepositoryResolver = getServletRequestRepositoryResolverProvider().get();
         gitServlet.setRepositoryResolver(servletRequestRepositoryResolver);
-
         return gitServlet;
     }
 

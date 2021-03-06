@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.model.application;
 
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.HashMap;
 import java.util.Map;

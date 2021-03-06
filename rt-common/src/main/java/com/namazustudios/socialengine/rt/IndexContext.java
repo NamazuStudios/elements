@@ -1,11 +1,14 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.routing.ListAggregateRoutingStrategy;
+import com.namazustudios.socialengine.rt.routing.SameNodeIdRoutingStrategy;
 import com.namazustudios.socialengine.rt.util.SyncWait;
 
+import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 /**
  * Used to index various {@link Resource} instances by {@link Path}.
@@ -27,10 +30,10 @@ public interface IndexContext {
      * Performs the operations of {@link #listAsync(Path, Consumer, Consumer)} synchronously.
      *
      * @param path the {@link Path} to match
-     * @return a {@link Stream<Listing>} representing all matched {@link Path}s
+     * @return a {@link List<Listing>} representing all matched {@link Path}s
      */
-    default Stream<Listing> list(@Serialize final Path path) {
-        final SyncWait<Stream<Listing>> streamSyncWait = new SyncWait<>(getClass());
+    default List<Listing> list(@Serialize final Path path) {
+        final SyncWait<List<Listing>> streamSyncWait = new SyncWait<>(getClass());
         listAsync(path, v -> streamSyncWait.getResultConsumer(), streamSyncWait.getErrorConsumer());
         return streamSyncWait.get();
     }
@@ -40,17 +43,17 @@ public interface IndexContext {
      * provided {@link Path}.  Unlike other methods for linking and unlinking, the provided {@link Path} may be a
      * wildcard as determined by {@link Path#isWildcard()}.
      *
-     * The supplied {@link Stream<Listing>>} should represent a complete buffering of all {@link Listing} instances
+     * The supplied {@link List<Listing>>} should represent a complete buffering of all {@link Listing} instances
      * matching the {@link Path}.
      *
      * @param path the {@link Path} to match
      * @param success a {@link Consumer<Listing>} which receives an instance of {@link Listing}
      * @param failure a {@link Consumer<Throwable>} which receives an exception indicating a failure reason.
-     * @return a {@link Future<Stream<Listing>>} which can be used to obtain the result
+     * @return a {@link Future<List<Listing>>} which can be used to obtain the result
      */
-    @RemotelyInvokable
+    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
     void listAsync(@Serialize Path path,
-                   @ResultHandler Consumer<Stream<Listing>> success,
+                   @ResultHandler Consumer<List<Listing>> success,
                    @ErrorHandler  Consumer<Throwable> failure);
 
     /**
@@ -78,9 +81,9 @@ public interface IndexContext {
      *
      *
      */
-    @RemotelyInvokable
-    void linkAsync(@Serialize ResourceId resourceId,
-                   @Serialize Path destination,
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    void linkAsync(@ProvidesAddress @Serialize ResourceId resourceId,
+                   @ProvidesAddress @Serialize Path destination,
                    @ResultHandler Consumer<Void> success,
                    @ErrorHandler  Consumer<Throwable> failure);
 
@@ -105,8 +108,9 @@ public interface IndexContext {
      * @param failure @ {@link Consumer<Throwable> which will be called on a failure
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
-    @RemotelyInvokable
-    void linkPathAsync(@Serialize Path source, @Serialize Path destination,
+    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
+    void linkPathAsync(@ProvidesAddress @Serialize Path source,
+                       @ProvidesAddress @Serialize Path destination,
                        @ResultHandler Consumer<Void> success,
                        @ErrorHandler  Consumer<Throwable> failure);
 
@@ -124,7 +128,7 @@ public interface IndexContext {
 
     /**
      * Unlinks the provided {@link Path} and if this is the last {@link Path} reference to a {@link ResourceId}, then
-     * the cluster will remove and destroy the associated {@link Resource}. Futher details on the operation can be
+     * the cluster will remove and destroy the associated {@link Resource}. Further details on the operation can be
      * obtained through the {@link Unlink} interface.
      *
      * If the result is a complete removal, then this will have the same end result as
@@ -136,8 +140,8 @@ public interface IndexContext {
      * @param failure a {@link Consumer<Throwable>} to receive an exception if one was generated
      * @return a {@link Future} which can be used to obtain the result of the operation
      */
-    @RemotelyInvokable
-    void unlinkAsync(@Serialize Path path,
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    void unlinkAsync(@ProvidesAddress @Serialize Path path,
                      @ResultHandler Consumer<Unlink> success,
                      @ErrorHandler  Consumer<Throwable> failure);
 

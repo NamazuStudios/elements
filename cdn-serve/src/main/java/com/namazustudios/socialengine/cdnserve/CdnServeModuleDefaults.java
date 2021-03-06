@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 import java.util.Properties;
 
 import static com.namazustudios.socialengine.Constants.*;
+import static com.namazustudios.socialengine.rt.git.Constants.GIT_STORAGE_DIRECTORY;
 
 /**
  * Module defaults for the content server.
@@ -16,11 +17,11 @@ public class CdnServeModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(GIT_STORAGE_DIRECTORY, "repositories");
-        properties.put(HTTP_TUNNEL_PORT, "8084");
+        properties.put(HTTP_PORT, "8084");
         properties.put(CDN_FILE_DIRECTORY, "content");
         properties.put(CDN_CLONE_ENDPOINT, "clone");
         properties.put(CDN_SERVE_ENDPOINT, "serve");
+        properties.put(GIT_STORAGE_DIRECTORY, "cdn-repos/git");
         return properties;
     }
 

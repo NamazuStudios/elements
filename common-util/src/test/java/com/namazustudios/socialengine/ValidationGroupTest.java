@@ -6,9 +6,9 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.exception.ValidationFailureException;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.util.ValidationHelper;
-import org.apache.bval.guice.ValidationModule;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
+import ru.vyarus.guice.validator.ValidationModule;
 
 @Guice(modules = ValidationGroupTest.Module.class)
 public class ValidationGroupTest {

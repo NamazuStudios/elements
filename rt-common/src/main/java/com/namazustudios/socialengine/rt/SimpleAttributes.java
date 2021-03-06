@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+
 import java.io.Serializable;
 import java.util.*;
 import java.util.function.BiConsumer;
@@ -109,7 +110,7 @@ public class SimpleAttributes implements MutableAttributes, Serializable {
         public Builder from(final Attributes attributes) {
 
             for (final String name : attributes.getAttributeNames()) {
-                setAttribute(name, attributes.getAttributeOptional(name));
+                setAttribute(name, attributes.getAttribute(name));
             }
 
             return this;

@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rest.user;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
+import com.namazustudios.socialengine.service.Unscoped;
+import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;

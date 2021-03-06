@@ -5,7 +5,7 @@ import com.mongodb.client.MongoDatabase;
 import com.namazustudios.elements.fts.concurrent.Condition;
 import com.namazustudios.elements.fts.mongo.MongoLockFactory;
 import com.namazustudios.elements.fts.mongo.MongoLockFactoryBuilder;
-import com.namazustudios.socialengine.util.ShutdownHooks;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.apache.lucene.store.LockFactory;
 import org.bson.Document;
 

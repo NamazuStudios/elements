@@ -1,54 +1,67 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.Routing;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
+import com.namazustudios.socialengine.rt.routing.ListAggregateRoutingStrategy;
+import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.toList;
 
 public class SimpleIndexContext implements IndexContext {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleResourceContext.class);
 
-    public static final String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.SimpleIndexContext.executorService";
-
     private ExecutorService executorService;
 
     private ResourceService resourceService;
 
+    private final AtomicReference<LatchedExecutorServiceCompletionService> completionService = new AtomicReference<>();
+
+    @Override
+    public void stop() {
+
+        final var completionService = this.completionService.getAndSet(null);
+
+        if (completionService == null) {
+            throw new IllegalStateException("Not running.");
+        } else {
+            completionService.stop();
+        }
+
+    }
+
+    @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
     @Override
     public void listAsync(final Path path,
-                          final Consumer<Stream<Listing>> success,
+                          final Consumer<List<Listing>> success,
                           final Consumer<Throwable> failure) {
         getExecutorService().submit(() -> {
             try {
-                final Stream<Listing> stream = getResourceService().listParallelStream(path).map(this::transform);
-                success.accept(stream);
-                return getResourceService().listParallelStream(path).map(this::transform);
+
+                final List<Listing> listings = getResourceService()
+                    .listParallelStream(path)
+                    .map(SimpleIndexContextListing::new)
+                    .collect(toList());
+
+                success.accept(listings);
+
             } catch (Throwable th) {
                 logger.error("Caught exception listing {}", path, th);
                 failure.accept(th);
                 throw th;
             }
         });
-    }
-
-    private Listing transform(final ResourceService.Listing listing) {
-        return new Listing() {
-            @Override
-            public Path getPath() {
-                return listing.getPath();
-            }
-
-            @Override
-            public ResourceId getResourceId() {
-                return listing.getResourceId();
-            }
-        };
     }
 
     @Override
@@ -122,7 +135,7 @@ public class SimpleIndexContext implements IndexContext {
     }
 
     @Inject
-    public void setExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService executorService) {
+    public void setExecutorService(@Named(SimpleWorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
         this.executorService = executorService;
     }
 

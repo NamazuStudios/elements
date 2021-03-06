@@ -98,4 +98,4 @@ then
     end
 end
 
-return log;
+return log

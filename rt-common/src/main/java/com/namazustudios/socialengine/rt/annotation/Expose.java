@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rt.annotation;
 
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
+import java.lang.annotation.*;
 
 /**
  * Used to expose specific types to the Resource instances where necessary.
@@ -14,10 +11,20 @@ import java.lang.annotation.Target;
 public @interface Expose {
 
     /**
+     * The value of this {@link Expose} annotation. This lists out the modules to expose to the underlying services
+     * which may need to make use of them.
+     *
+     * @return the value
+     */
+    ExposedModuleDefinition[] value() default {};
+
+    /**
      * The name of the lua module which will map to the object.
+     *
+     * @deprecated The {@link #value()} field provides a better definition.
      *
      * @return the module name
      */
-    String[] modules();
+    @Deprecated String[] modules() default {};
 
 }

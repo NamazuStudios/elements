@@ -2,12 +2,14 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.google.common.cache.Cache;
 import com.namazustudios.socialengine.rt.Reflection;
+import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
@@ -19,6 +21,7 @@ import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.Reflection.methods;
 import static java.lang.System.identityHashCode;
 import static java.lang.reflect.Proxy.newProxyInstance;
 
@@ -35,6 +38,8 @@ public class ProxyBuilder<ProxyT> {
         throw new NoSuchMethodError("No invocation handler for method: " + method);
     };
 
+    private final String name;
+
     private final Class<ProxyT> interfaceClassT;
 
     private final Map<Method, InvocationHandler> handlerMap = new HashMap<>();
@@ -45,6 +50,17 @@ public class ProxyBuilder<ProxyT> {
      * @param interfaceClassT
      */
     public ProxyBuilder(final Class<ProxyT> interfaceClassT) {
+        this(interfaceClassT, null);
+    }
+
+    /**
+     * Creates a {@link ProxyBuilder<ProxyT>} for the supplied interface type.
+     *
+     * @param interfaceClassT
+     * @param name Relates to {@link Invocation#getName()} and maps to the naming used in {@link javax.inject.Named}.
+     */
+    public ProxyBuilder(final Class<ProxyT> interfaceClassT, final String name) {
+        this.name = name;
         this.interfaceClassT = interfaceClassT;
         classLoader = interfaceClassT.getClassLoader();
     }
@@ -63,18 +79,14 @@ public class ProxyBuilder<ProxyT> {
             final Supplier<MethodHandle> methodHandleSupplier = () -> {
                 try {
 
-                    final Constructor<MethodHandles.Lookup> constructor;
-                    constructor = MethodHandles.Lookup.class.getDeclaredConstructor(Class.class, int.class);
-                    constructor.setAccessible(true);
+                    final Class<?> clazz = methodHandleKey.getInterfaceClassT();
+                    final MethodType methodType = methodHandleKey.getMethodType();
 
-                    final Class<?> declaringClass = methodHandleKey.getMethod().getDeclaringClass();
-
-                    return constructor.newInstance(declaringClass, MethodHandles.Lookup.PRIVATE)
-                        .in(declaringClass)
-                        .unreflectSpecial(methodHandleKey.getMethod(), declaringClass)
+                    return MethodHandles.lookup()
+                        .findSpecial(clazz, method.getName(), methodType, clazz)
                         .bindTo(methodHandleKey.getProxy());
 
-                } catch (InstantiationException | InvocationTargetException | NoSuchMethodException | IllegalAccessException e) {
+                } catch (NoSuchMethodException | IllegalAccessException e) {
                     throw new InternalException(e);
                 }
             };
@@ -177,6 +189,35 @@ public class ProxyBuilder<ProxyT> {
     public ProxyBuilder<ProxyT> withDefaultHashCodeAndEquals() {
         handler((proxy, method, args) -> identityHashCode(proxy)).forMethod("hashCode");
         handler((proxy, method, args) -> proxy == args[0]).forMethod("equals", Object.class);
+        return this;
+    }
+
+    /**
+     * Generates an {@link InvocationHandler} for each method in the class marked {@link RemotelyInvokable} using the
+     * specified {@link RemoteInvoker}.
+     *
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> withHandlersForRemoteInvoker(final RemoteInvoker remoteInvoker) {
+        Reflection.methods(interfaceClassT)
+            .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
+            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvoker, interfaceClassT, m).withName(name))
+            .forEach(b -> handler(b.build()).forMethod(b.getMethod()));
+        return this;
+    }
+
+    /**
+     * Generates an {@link InvocationHandler} for each method int he class marked {@link RemotelyInvokable} using the
+     * specifed {@link RemoteInvocationDispatcher}.
+     *
+     * @param remoteInvocationDispatcher the {@link RemoteInvocationDispatcher}
+     * @return this instance
+     */
+    public ProxyBuilder<ProxyT> withHandlersForRemoteDispatcher(final RemoteInvocationDispatcher remoteInvocationDispatcher) {
+        Reflection.methods(interfaceClassT)
+            .filter(m -> m.getAnnotation(RemotelyInvokable.class) != null)
+            .map(m -> new RemoteInvocationHandlerBuilder(remoteInvocationDispatcher, interfaceClassT, m).withName(name))
+            .forEach(b -> handler(b.build()).forMethod(b.getMethod()));
         return this;
     }
 

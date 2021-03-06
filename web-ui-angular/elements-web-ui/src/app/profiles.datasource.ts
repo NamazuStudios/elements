@@ -1,5 +1,5 @@
 import {Profile} from './api/models/profile';
-import {DataSource} from '@angular/cdk/typings/collections';
+import {DataSource} from '@angular/cdk/collections';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {Application} from './api/models/application';
 import {ApplicationsService} from './api/services/applications.service';

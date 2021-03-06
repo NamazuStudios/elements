@@ -3,7 +3,17 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.session"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.session",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
+})
 public interface SessionService {
 
     /**

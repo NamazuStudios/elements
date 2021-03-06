@@ -17,6 +17,8 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.flexible.core.QueryNodeException;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
@@ -25,8 +27,8 @@ import org.apache.lucene.search.BooleanQuery;
 import org.apache.lucene.search.TermQuery;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
@@ -41,7 +43,7 @@ import static java.util.concurrent.TimeUnit.MINUTES;
  */
 public class MongoMatchDao implements MatchDao {
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private Mapper dozerMapper;
 
@@ -72,11 +74,14 @@ public class MongoMatchDao implements MatchDao {
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
 
-        final Query<MongoMatch> mongoMatchQuery = getDatastore().createQuery(MongoMatch.class)
-            .field("_id").equal(objectId)
-            .field("player").equal(playerProfile);
+        final Query<MongoMatch> mongoMatchQuery = getDatastore().find(MongoMatch.class);
 
-        final MongoMatch mongoMatch = mongoMatchQuery.get();
+        mongoMatchQuery.filter(Filters.and(
+                Filters.eq("_id", objectId),
+                Filters.eq("player", playerProfile)
+        ));
+
+        final MongoMatch mongoMatch = mongoMatchQuery.first();
 
         if (mongoMatch == null) {
             throw new NotFoundException("match with id " + matchId + " not found.");
@@ -89,7 +94,8 @@ public class MongoMatchDao implements MatchDao {
     public MongoMatch getMongoMatch(final String matchId) {
 
         final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(matchId);
-        final MongoMatch mongoMatch = getDatastore().get(MongoMatch.class, objectId);
+        final MongoMatch mongoMatch = getDatastore().find(MongoMatch.class)
+                .filter(Filters.eq("_id", objectId)).first();
 
         if (mongoMatch == null) {
             throw new NotFoundException("match with id " + matchId + " not found.");
@@ -105,10 +111,10 @@ public class MongoMatchDao implements MatchDao {
         final MongoProfile playerProfile = getMongoProfileDao().getActiveMongoProfile(playerId);
 
         final Query<MongoMatch> mongoMatchQuery = getDatastore()
-            .createQuery(MongoMatch.class)
-            .field("player").equal(playerProfile);
+            .find(MongoMatch.class)
+            .filter(Filters.eq("player", playerProfile));
 
-        return getMongoDBUtils().paginationFromQuery(mongoMatchQuery, offset, count, m -> getDozerMapper().map(m, Match.class));
+        return getMongoDBUtils().paginationFromQuery(mongoMatchQuery, offset, count, m -> getDozerMapper().map(m, Match.class), new FindOptions());
 
     }
 
@@ -164,7 +170,7 @@ public class MongoMatchDao implements MatchDao {
         try {
             getMongoConcurrentUtils().performOptimistic(ds -> getMongoMatchUtils().attemptLock(() -> {
 
-                final MongoMatch m = ds.get(toDelete);
+                final MongoMatch m = ds.find(MongoMatch.class).filter(Filters.eq("_id", toDelete.getObjectId())).first();
 
                 if (m.getOpponent() != null) {
                     throw new InvalidDataException("Already Matched");
@@ -189,12 +195,12 @@ public class MongoMatchDao implements MatchDao {
         getValidationHelper().validateModel(match);
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

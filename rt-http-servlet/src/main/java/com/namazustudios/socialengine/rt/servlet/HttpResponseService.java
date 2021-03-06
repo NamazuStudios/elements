@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpContent;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 
 import javax.servlet.ServletException;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.OutputStream;
@@ -57,5 +58,17 @@ public interface HttpResponseService {
      * @param destination the {@link HttpServletResponse} to receive
      */
     void write(HttpResponse toWrite, HttpServletResponse destination);
+
+    /**
+     * Assembles the supplied a {@link HttpResponse} from the supplied {@link HttpRequest} and {@link Response}
+     * and then writes it to the supplied {@link HttpServletResponse}.
+     *
+     * The default implementation accmplishes this by using {@link #assemble(HttpRequest, Response)} and then
+     * calling {@link #write(HttpResponse, HttpServletResponse)}.
+     *
+     * @param toWrite the {@link Response} to write
+     * @param destination the destination of the {@link Response}
+     */
+    void write(HttpServletRequest httpServletRequest, Response toWrite, HttpServletResponse destination);
 
 }

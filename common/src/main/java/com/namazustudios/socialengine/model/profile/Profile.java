@@ -1,15 +1,16 @@
 package com.namazustudios.socialengine.model.profile;
 
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.Map;
 import java.util.Objects;
@@ -23,6 +24,11 @@ import java.util.Objects;
  */
 @ApiModel
 public class Profile implements Serializable {
+
+    /**
+     * Alpha-numeric only.  Allows underscore, but does not allow the word to start with an underscore.
+     */
+    public static final String PROFILE_DISPLAY_NAME_REGEX = "[^ '\\-_.][A-Za-z0-9 '\\-_.]+$";
 
     /**
      * Used as the key for the profile attribute where appropriate.  This is equivalent
@@ -47,6 +53,7 @@ public class Profile implements Serializable {
     private String imageUrl;
 
     @NotNull
+    @Pattern(regexp = PROFILE_DISPLAY_NAME_REGEX)
     @ApiModelProperty("A non-unique display name for this profile.")
     private String displayName;
 

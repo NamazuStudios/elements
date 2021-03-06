@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.dao.mongo.model.match;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Reference;
+import dev.morphia.annotations.Indexed;
+import dev.morphia.annotations.Property;
+import dev.morphia.annotations.Reference;
 
 import java.sql.Timestamp;
+import java.util.Date;
 
 /**
  * Created by patricktwohig on 7/30/17.
@@ -21,7 +22,7 @@ public class MongoMatchSnapshot {
 
     @Indexed
     @Property
-    private Timestamp lastUpdatedTimestamp;
+    private Date lastUpdatedTimestamp;
 
     public MongoProfile getPlayer() {
         return player;
@@ -39,11 +40,11 @@ public class MongoMatchSnapshot {
         this.opponent = opponent;
     }
 
-    public Timestamp getLastUpdatedTimestamp() {
+    public Date getLastUpdatedTimestamp() {
         return lastUpdatedTimestamp;
     }
 
-    public void setLastUpdatedTimestamp(Timestamp lastUpdatedTimestamp) {
+    public void setLastUpdatedTimestamp(Date lastUpdatedTimestamp) {
         this.lastUpdatedTimestamp = lastUpdatedTimestamp;
     }
 

@@ -6,7 +6,7 @@ import org.apache.lucene.document.Document;
 import org.bson.types.ObjectId;
 import org.dozer.CustomConverter;
 import org.dozer.MappingException;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.Property;
 
 import java.util.Base64;
 import java.util.Objects;

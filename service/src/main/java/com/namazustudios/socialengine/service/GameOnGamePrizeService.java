@@ -1,10 +1,16 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.gameon.game.*;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Provides interaction with GameOn for prizes from the User/Player perspective.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.prize")
+})
 public interface GameOnGamePrizeService {
 
     /**

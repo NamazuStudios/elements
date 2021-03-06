@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.Property;
 
 import java.nio.ByteBuffer;
 import java.util.Base64;

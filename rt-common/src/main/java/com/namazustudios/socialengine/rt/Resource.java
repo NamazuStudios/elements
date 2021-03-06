@@ -1,14 +1,24 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.exception.MethodNotFoundException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.exception.ResourceDestroyedException;
+import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
+import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
+import org.slf4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static com.namazustudios.socialengine.rt.util.OutputStreamAdapter.FLUSH;
+import static java.nio.ByteBuffer.allocate;
 
 /**
  * A {@link Resource} is a logical unit of work, which is represented by an instance of this type.  It essentially
@@ -22,6 +32,11 @@ import java.util.function.Consumer;
  * Created by patricktwohig on 8/8/15.
  */
 public interface Resource extends AutoCloseable {
+
+    /**
+     * Default IO Buffer size, 4kb
+     */
+    int DEFAULT_IO_BUFFER_SIZE = 4096;
 
     /**
      * Returns the immutable and globally-unique ID of this resource.  Though a resource
@@ -38,7 +53,7 @@ public interface Resource extends AutoCloseable {
      *
      * @return this instance's {@link Attributes}
      */
-    Attributes getAttributes();
+    MutableAttributes getAttributes();
 
     /**
      * Returns an instance of {@link MethodDispatcher}, which is used to invoke methods against this {@link Resource}.
@@ -117,6 +132,40 @@ public interface Resource extends AutoCloseable {
     void deserialize(final InputStream is) throws IOException;
 
     /**
+     * Dumps the entire contents of this {@link Resource} to the supplied {@link WritableByteChannel} where it can be
+     * reconstituted later using the {@link #deserialize(InputStream)} method.
+     *
+     * @param wbc the {@link OutputStream} used to receive the serialized {@link Resource}
+     * @throws IOException if something failed during serialization
+     */
+    default void serialize(final WritableByteChannel wbc) throws IOException {
+
+        final ByteBuffer byteBuffer = allocate(DEFAULT_IO_BUFFER_SIZE);
+
+        try (final OutputStream os = new OutputStreamAdapter(wbc, byteBuffer, FLUSH)) {
+            serialize(os);
+        }
+
+    }
+
+    /**
+     * Restores the entire state of this {@link Resource} from the supplied {@link InputStream}.  This assumes the
+     * {@link InputStream} was produced by a call to {@link #serialize(OutputStream)}.
+     *
+     * @param is the {@link InputStream} from which to read the serialized resource
+     * @throws IOException if something failed during deserialization
+     */
+    default void deserialize(final ReadableByteChannel ibc) throws IOException {
+
+        final ByteBuffer byteBuffer = allocate(DEFAULT_IO_BUFFER_SIZE);
+
+        try (final InputStream is = new InputStreamAdapter(ibc, byteBuffer, FLUSH)) {
+            deserialize(is);
+        }
+
+    }
+
+    /**
      * Sets the verbose mode.  This will enable enhanced logging for debug purposes.
      *
      * @param verbose true if verbose, false otherwise
@@ -131,7 +180,7 @@ public interface Resource extends AutoCloseable {
     default boolean isVerbose() {return false; }
 
     /**
-     * Gets a {@link Set} of active tasks.
+     * Gets a {@link Set<TaskId>} representing active tasks at the current state.
      *
      * @return the running tasks as a {@link Set}
      */
@@ -139,7 +188,11 @@ public interface Resource extends AutoCloseable {
 
     /**
      * Closes and destroys this Resource.  A resource, once destroyed, cannot be used again.  Any tasks pending on the
-     * resource will be completed with a {@link ResourceDestroyedException} immediately.
+     * resource will be completed with a {@link ResourceDestroyedException} immediately.  This is simlar to
+     * {@link #close()} in that it frees up memory associated with this {@link Resource}.  However, its key difference
+     * is that it also propagates exceptions which indicate that it has reached a final state.  In contrast to
+     * {@link #unload()} which indicates that the {@link Resource} my be reconstituted later to continue performing
+     * work.
      */
     void close();
 
@@ -149,5 +202,12 @@ public interface Resource extends AutoCloseable {
      * and the contents of this deserialized back into this one.
      */
     void unload();
+
+    /**
+     * Gets the {@link Logger} used by this {@link Resource}.
+     *
+     * @return the logger
+     */
+    Logger getLogger();
 
 }

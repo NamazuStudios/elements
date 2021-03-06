@@ -1,6 +1,14 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { ItemsListComponent } from './items-list.component';
+import {ItemsService} from "../api/services/items.service";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
+import {AlertService} from "../alert.service";
+import {RouterTestingModule} from "@angular/router/testing";
+import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
+import {MatDialogModule} from "@angular/material/dialog";
+import {MatPaginatorModule} from "@angular/material/paginator";
+import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 
 describe('ItemsListComponent', () => {
   let component: ItemsListComponent;
@@ -8,7 +16,13 @@ describe('ItemsListComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ ItemsListComponent ]
+      declarations: [ ItemsListComponent ],
+      imports: [HttpClientTestingModule, RouterTestingModule, MatDialogModule, MatPaginatorModule, BrowserAnimationsModule],
+      providers: [
+        ItemsService,
+        AlertService,
+        ConfirmationDialogService
+      ]
     })
     .compileComponents();
   }));

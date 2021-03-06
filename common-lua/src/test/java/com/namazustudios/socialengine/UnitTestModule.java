@@ -1,14 +1,20 @@
 package com.namazustudios.socialengine;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.Key;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.lua.guice.JeroMQEmbeddedTestService;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.NotificationBuilder;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.Client;
 import java.util.ArrayList;
@@ -17,12 +23,17 @@ import java.util.List;
 import java.util.Set;
 
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.mockito.Mockito.spy;
 
 public class UnitTestModule extends AbstractModule {
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService();
+    private static final Logger logger = LoggerFactory.getLogger(UnitTestModule.class);
+
+    private final JeroMQEmbeddedTestService embeddedTestService;
+
+    public UnitTestModule(JeroMQEmbeddedTestService embeddedTestService) {
+        this.embeddedTestService = embeddedTestService;
+    }
 
     private final Application spyApplication; {
         spyApplication = spy(Application.class);
@@ -34,46 +45,84 @@ public class UnitTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        final MockModule mockModule = new MockModule();
+        final var mockModule = new MockModule();
+        final var applicationId = ApplicationId.forUniqueName(spyApplication.getId());
+
         mockModule.mock(Client.class);
         mockModule.mock(NotificationBuilder.class);
-        mockModule.bind(spyApplication, Application.class);
+        mockModule.bind(spyApplication, Key.get(Application.class));
 
-        bind(JeroMQEmbeddedTestService.class).toInstance(embeddedTestService
-            .withNodeModule(new LuaModule().visitDiscoveredExtension((m, c) -> mockModule.mock(c)))
-            .withNodeModule(mockModule)
-            .withNodeModule(new XodusContextModule()
-                .withSchedulerThreads(1)
-                .withHandlerTimeout(3, MINUTES))
-            .withNodeModule(new XodusEnvironmentModule()
-                .withTempEnvironments())
-            .start());
+        bind(EmbeddedTestService.class).toInstance(embeddedTestService
+            .withClient()
+            .withApplicationNode(applicationId)
+                .withNodeModules(new ClasspathAssetLoaderModule().withDefaultPackageRoot())
+                .withNodeModules(new LuaModule().visitDiscoveredModule(mockModule::mock))
+                .withNodeModules(mockModule)
+            .endApplication()
+            .start()
+        );
 
-        bind(Context.class).toProvider(embeddedTestService::getContext);
+        bind(Context.class).toProvider(() -> {
+            final var factory = embeddedTestService.getClient().getContextFactory();
+            return factory.getContextForApplication(spyApplication.getId());
+        });
 
     }
 
     private class MockModule extends AbstractModule {
 
-        private Set<Class<?>> types = new HashSet<>();
+        private Set<Key<?>> types = new HashSet<>();
 
         private List<Runnable> bindings = new ArrayList<>();
 
         @Override
         protected void configure() {
-            bindings.forEach(runnable -> runnable.run());
+            bindings.forEach(Runnable::run);
         }
 
         public <T> void mock(final Class<T> type) {
-            if (!type.isEnum() && types.add(type)) {
-                final T mock = Mockito.mock(type);
-                bind(mock, type);
+
+            final var key = Key.get(type);
+
+            if (!type.isEnum() && types.add(key)) {
+                final var mock = Mockito.mock(type);
+                bind(mock, key);
             }
+
         }
 
-        private <T> void bind(final T mock, final Class<T> binding) {
+        public <T> void mock(final ExposedModuleDefinition module, final Class<T> type) {
+
+            if (module.annotation().value() == ExposedBindingAnnotation.Undefined.class) {
+
+                final var key = Key.get(type);
+
+                if (!type.isEnum() && types.add(key)) {
+                    final var mock = Mockito.mock(type);
+                    bind(mock, key);
+                }
+
+            } else {
+
+                final var annotation = ExposedBindingAnnotation.Util.resolve(type, module.annotation());
+                final var key = Key.get(type, annotation);
+
+                if (!type.isEnum() && types.add(key)) {
+                    final var mock = Mockito.mock(type);
+                    bind(mock, key);
+                }
+
+            }
+
+        }
+
+        private <T> void bind(final T mock, final Key<T> binding) {
+
             UnitTestModule.this.bind(binding).toInstance(mock);
-            bindings.add(() -> bind(binding).toInstance(mock));
+            bindings.add(() -> {
+                logger.info("Binding {} to mock {}", binding, mock);
+                bind(binding).toInstance(mock);
+            });
         }
 
     }

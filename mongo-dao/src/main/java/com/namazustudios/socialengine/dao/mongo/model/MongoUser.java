@@ -4,11 +4,14 @@ import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.model.user.User;
+import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.Arrays;
 import java.util.Objects;
+
+import static dev.morphia.utils.IndexType.TEXT;
 
 /**
  * Created by patricktwohig on 3/31/15.
@@ -27,7 +30,9 @@ import java.util.Objects;
     @SearchableField(name = "facebookId", path = "/facebookId"),
     @SearchableField(name = "appleSignInId", path = "/appleSignInId")
 })
-@Entity(value = "user", noClassnameStored = true)
+
+@Entity(value = "user", useDiscriminator = false)
+@Indexes(@Index(fields = {@Field(value = "name", type = TEXT), @Field(value = "email", type = TEXT)}))
 public class MongoUser {
 
     @Id

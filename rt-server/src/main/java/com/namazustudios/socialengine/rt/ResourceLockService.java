@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt;
 
 
-import com.namazustudios.socialengine.rt.exception.DuplicateException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.util.Monitor;
 
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.Lock;
 
 /**
@@ -16,38 +16,36 @@ import java.util.concurrent.locks.Lock;
 public interface ResourceLockService {
 
     /**
+     * Returns the number of {@link SharedLock} instances tracked in this {@link ResourceLockService}.
+     *
+     * @return the number of {@link SharedLock} instances
+     */
+    int size();
+
+    /**
+     * Returns a {@link SharedLock} for the provided {@link ResourceId}.
+     *
+     * @param resourceId the resource ID
+     *
+     * @return the {@link Monitor}
+     */
+    SharedLock getLock(ResourceId resourceId);
+
+    /**
      * Returns a {@link Monitor} for the provided {@link ResourceId}.
      *
      * @param resourceId the resource ID
      *
      * @return the {@link Monitor}
      */
-    Monitor getMonitor(final ResourceId resourceId);
+    default Monitor getMonitor(final ResourceId resourceId) {
+        final var lock = getLock(resourceId);
+        return lock.lock();
+    }
 
     /**
      * Deletes the lock with the given {@link ResourceId}.
      */
     void delete(ResourceId resourceId);
-
-    /**
-     * Convenience wrapper to automatically manage the state of an underlying lock.  {@lin #getMonitor}
-     */
-    interface Monitor extends AutoCloseable {
-
-        /**
-         * Releases the underlying {@link Lock}
-         */
-        @Override
-        void close();
-
-        /**
-         * Gets a {@link Condition} with an arbitrary name associated with the supplied {@link Monitor}.
-         *
-         * @param name the name of the {@link Condition}
-         * @return the {@link Condition}
-         */
-        Condition getCondition(final String name);
-
-    }
 
 }

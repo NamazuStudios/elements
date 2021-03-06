@@ -8,13 +8,14 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
 
 /**
  * Created by patricktwohig on 7/13/15.
  */
-@Expose(modules = "namazu.socialengine.dao.applicationconfiguration")
+@Expose(@ExposedModuleDefinition("namazu.socialengine.dao.applicationconfiguration"))
 public interface ApplicationConfigurationDao {
 
     /**

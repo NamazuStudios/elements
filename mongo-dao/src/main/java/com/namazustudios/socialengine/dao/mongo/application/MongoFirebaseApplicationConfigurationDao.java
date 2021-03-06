@@ -1,35 +1,36 @@
 package com.namazustudios.socialengine.dao.mongo.application;
 
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.FirebaseApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoFirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
+import dev.morphia.UpdateOptions;
+import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.namazustudios.socialengine.model.application.ConfigurationCategory.FIREBASE;
+import static dev.morphia.query.experimental.filters.Filters.and;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationConfigurationDao
         implements FirebaseApplicationConfigurationDao {
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private MongoApplicationDao mongoApplicationDao;
 
@@ -44,37 +45,29 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
             final String applicationNameOrId,
             final FirebaseApplicationConfiguration firebaseApplicationConfiguration) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
-
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
         validate(firebaseApplicationConfiguration);
 
-        final Query<MongoFirebaseApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
+        final var query = getDatastore().find(MongoFirebaseApplicationConfiguration.class);
 
-        query.and(
-            query.criteria("active").equal(false),
-            query.criteria("parent").equal(mongoApplication),
-            query.criteria("category").equal(FIREBASE),
-            query.criteria("uniqueIdentifier").equal(firebaseApplicationConfiguration.getProjectId().trim())
+        query.filter(
+            and(
+                eq("active", false),
+                eq("parent", mongoApplication),
+                eq("category", FIREBASE),
+                eq("uniqueIdentifier", firebaseApplicationConfiguration.getProjectId().trim())
+            )
         );
 
-        final UpdateOperations<MongoFirebaseApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoFirebaseApplicationConfiguration.class);
-
-        updateOperations.set("uniqueIdentifier", firebaseApplicationConfiguration.getProjectId().trim());
-        updateOperations.set("active", true);
-        updateOperations.set("category", firebaseApplicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-        updateOperations.set("serviceAccountCredentials", firebaseApplicationConfiguration.getServiceAccountCredentials().trim());
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(true);
-
-        final MongoFirebaseApplicationConfiguration mongoFirebaseApplicationProfile;
-        mongoFirebaseApplicationProfile = getMongoDBUtils()
-                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+        final var mongoFirebaseApplicationProfile = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("uniqueIdentifier", firebaseApplicationConfiguration.getProjectId().trim()),
+                set("active", true),
+                set("category", firebaseApplicationConfiguration.getCategory()),
+                set("parent", mongoApplication),
+                set("serviceAccountCredentials", firebaseApplicationConfiguration.getServiceAccountCredentials().trim())
+            ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
 
         getObjectIndex().index(mongoFirebaseApplicationProfile);
         return getBeanMapper().map(mongoFirebaseApplicationProfile, FirebaseApplicationConfiguration.class);
@@ -84,21 +77,22 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
     @Override
     public FirebaseApplicationConfiguration getApplicationConfiguration(final String applicationConfigurationNameOrId) {
 
-        final Query<MongoFirebaseApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
+        final var query = getDatastore().find(MongoFirebaseApplicationConfiguration.class);
 
-        query.and(
-                query.criteria("active").equal(true),
-                query.criteria( "category").equal(FIREBASE)
+        query.filter(
+            and(
+                eq("active", true),
+                eq("category", FIREBASE)
+            )
         );
 
-        try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
-        } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final MongoFirebaseApplicationConfiguration mongoFirebaseApplicationConfiguration = query.get();
+        final var mongoFirebaseApplicationConfiguration = query.first();
 
         if (mongoFirebaseApplicationConfiguration == null) {
             throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
@@ -113,25 +107,24 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var query = getDatastore().find(MongoFirebaseApplicationConfiguration.class);
 
-        final Query<MongoFirebaseApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
-
-        query.and(
-                query.criteria("active").equal(true),
-                query.criteria("parent").equal(mongoApplication),
-                query.criteria( "category").equal(FIREBASE)
+        query.filter(
+            and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq( "category", FIREBASE)
+            )
         );
 
-        try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
-        } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final MongoFirebaseApplicationConfiguration mongoFirebaseApplicationConfiguration = query.get();
+        final var mongoFirebaseApplicationConfiguration = query.first();
 
         if (mongoFirebaseApplicationConfiguration == null) {
             throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
@@ -144,7 +137,7 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
     @Override
     public FirebaseApplicationConfiguration updateApplicationConfiguration(
             final String applicationNameOrId,
-            final String applicationProfileNameOrId,
+            final String applicationConfigurationNameOrId,
             final FirebaseApplicationConfiguration firebaseApplicationConfiguration) {
 
         final MongoApplication mongoApplication;
@@ -152,38 +145,33 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
         validate(firebaseApplicationConfiguration);
 
         final Query<MongoFirebaseApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
+        query = getDatastore().find(MongoFirebaseApplicationConfiguration.class);
 
-        query.and(
-                query.criteria("active").equal(true),
-                query.criteria("parent").equal(mongoApplication),
-                query.criteria( "category").equal(FIREBASE)
+        query.filter(
+            and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq( "category", FIREBASE)
+            )
         );
 
-        try {
-            query.filter("_id = ", new ObjectId(applicationProfileNameOrId));
-        } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationProfileNameOrId);
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final UpdateOperations<MongoFirebaseApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoFirebaseApplicationConfiguration.class);
-
-        updateOperations.set("uniqueIdentifier", firebaseApplicationConfiguration.getProjectId().trim());
-        updateOperations.set("category", firebaseApplicationConfiguration.getCategory());
-        updateOperations.set("parent", mongoApplication);
-        updateOperations.set("serviceAccountCredentials", firebaseApplicationConfiguration.getServiceAccountCredentials().trim());
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
-
-        final MongoFirebaseApplicationConfiguration mongoFirebaseApplicationConfiguration;
-        mongoFirebaseApplicationConfiguration = getMongoDBUtils()
-                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+        final var mongoFirebaseApplicationConfiguration = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("uniqueIdentifier", firebaseApplicationConfiguration.getProjectId().trim()),
+                set("category", firebaseApplicationConfiguration.getCategory()),
+                set("parent", mongoApplication),
+                set("serviceAccountCredentials", firebaseApplicationConfiguration.getServiceAccountCredentials().trim())
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
 
         if (mongoFirebaseApplicationConfiguration == null) {
-            throw new NotFoundException("profile with ID not found: " + applicationProfileNameOrId);
+            throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
         getObjectIndex().index(mongoFirebaseApplicationConfiguration);
@@ -196,37 +184,28 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
             final String applicationNameOrId,
             final String applicationConfigurationNameOrId) {
 
-        final MongoApplication mongoApplication;
-        mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var mongoApplication = getMongoApplicationDao().getActiveMongoApplication(applicationNameOrId);
+        final var query = getDatastore().find(MongoFirebaseApplicationConfiguration.class);
 
-        final Query<MongoFirebaseApplicationConfiguration> query;
-        query = getDatastore().createQuery(MongoFirebaseApplicationConfiguration.class);
-
-        query.and(
-                query.criteria("active").equal(true),
-                query.criteria("parent").equal(mongoApplication),
-                query.criteria( "category").equal(FIREBASE)
+        query.filter(
+            and(
+                eq("active", true),
+                eq("parent", mongoApplication),
+                eq( "category", FIREBASE)
+            )
         );
 
-        try {
-            query.filter("_id = ", new ObjectId(applicationConfigurationNameOrId));
-        } catch (IllegalArgumentException ex) {
-            query.filter("uniqueIdentifier = ", applicationConfigurationNameOrId);
+        if (ObjectId.isValid(applicationConfigurationNameOrId)) {
+            query.filter(eq("_id", new ObjectId(applicationConfigurationNameOrId)));
+        } else {
+            query.filter(eq("uniqueIdentifier", applicationConfigurationNameOrId));
         }
 
-        final UpdateOperations<MongoFirebaseApplicationConfiguration> updateOperations;
-        updateOperations = getDatastore().createUpdateOperations(MongoFirebaseApplicationConfiguration.class);
-
-        updateOperations.set("active", false);
-
-        final FindAndModifyOptions findAndModifyOptions = new FindAndModifyOptions()
-                .returnNew(true)
-                .upsert(false);
-
-        final MongoFirebaseApplicationConfiguration mongoFirebaseApplicationProfile;
-
-        mongoFirebaseApplicationProfile = getMongoDBUtils()
-                .perform(ds -> ds.findAndModify(query, updateOperations, findAndModifyOptions));
+        final var mongoFirebaseApplicationProfile = getMongoDBUtils().perform(ds ->
+            query.modify(
+                set("active", false)
+            ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
 
         if (mongoFirebaseApplicationProfile == null) {
             throw new NotFoundException("profile with ID not found: " + mongoFirebaseApplicationProfile.getObjectId());
@@ -266,12 +245,12 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
         this.objectIndex = objectIndex;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

@@ -96,9 +96,9 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
             throw new IllegalArgumentException("App must have origin ID: " + MANAGE_CONTEXT);
         }
 
-        final Injector injector = getInjector().createChildInjector(new CdnJerseyModule(), new CdnServeSecurityModule());
-        final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
-        final SessionIdAuthenticationFilter authFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
+        final var injector = getInjector().createChildInjector(new CdnJerseyModule(), new CdnServeSecurityModule());
+        final var guiceFilter = injector.getInstance(GuiceFilter.class);
+        final var authFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(MANAGE_CONTEXT);

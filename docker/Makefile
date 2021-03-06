@@ -12,13 +12,23 @@ DOCKER_LOGIN=docker login
 
 MAVEN_PROJECT_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
-REST_WAR=target/lib/rest-war-$(MAVEN_PROJECT_VERSION).war
-APP_NODE_JAR=target/lib/app-node-$(MAVEN_PROJECT_VERSION)-jar-with-dependencies.jar
-APP_SERVE_JAR=target/lib/app-serve-$(MAVEN_PROJECT_VERSION)-jar-with-dependencies.jar
-CODE_SERVE_WAR=target/lib/code-serve-war-$(MAVEN_PROJECT_VERSION).war
-SETUP_JAR=target/lib/setup-$(MAVEN_PROJECT_VERSION)-jar-with-dependencies.jar
 WEB_UI_DIR=target/lib/dist
-CDN_SERVE_JAR=target/lib/cdn-serve-jetty-$(MAVEN_PROJECT_VERSION)-jar-with-dependencies.jar
+ELEMENTS_CLASSPATH=target/lib/*.jar
+
+define DOCKER_BUILD_TAG
+	$(DOCKER_BUILD) $(1) \
+		--build-arg ELEMENTS_CLASSPATH=target/lib/*.jar \
+		--tag $(1):$(TAG) \
+		--tag docker.namazustudios.net/$(1):$(TAG) \
+		--tag docker.namazustudios.net/$(1):$(TAG_SHORT)
+endef
+
+define DOCKER_BUILD_LATEST
+	$(DOCKER_BUILD) $(1) \
+		--build-arg ELEMENTS_CLASSPATH=target/lib/*.jar \
+		--tag $(1):latest \
+		--tag docker.namazustudios.net/$(1):latest
+endef
 
 push:
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-api
@@ -30,71 +40,36 @@ push:
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-cdn-serve
 
 revision: login
-	$(DOCKER_BUILD) namazu-socialengine-api \
-		--build-arg REST_WAR=$(REST_WAR) \
-		--tag namazu-socialengine-api:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-api:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-api:$(TAG_SHORT)
-	$(DOCKER_BUILD) namazu-socialengine-app-node \
-		--build-arg APP_NODE_JAR=$(APP_NODE_JAR) \
-		--tag namazu-socialengine-app-node:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-node:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-node:$(TAG_SHORT)
-	$(DOCKER_BUILD) namazu-socialengine-app-serve \
-		--build-arg APP_SERVE_JAR=$(APP_SERVE_JAR) \
-		--tag namazu-socialengine-app-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-app-serve:$(TAG_SHORT)
-	$(DOCKER_BUILD) namazu-socialengine-code-serve \
-		--build-arg CODE_SERVE_WAR=$(CODE_SERVE_WAR) \
-		--tag namazu-socialengine-code-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-code-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-code-serve:$(TAG_SHORT)
-	$(DOCKER_BUILD) namazu-socialengine-setup \
-		--build-arg SETUP_JAR=$(SETUP_JAR) \
-		--tag namazu-socialengine-setup:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-setup:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-setup:$(TAG_SHORT)
+	$(DOCKER_BUILD) namazu-socialengine-base \
+		--tag namazu-socialengine-base:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG_SHORT)
 	$(DOCKER_BUILD) namazu-socialengine-ui \
 		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
 		--tag namazu-socialengine-ui:$(TAG) \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG) \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG_SHORT)
-	$(DOCKER_BUILD) namazu-socialengine-cdn-serve \
-		--build-arg CDN_SERVE_JAR=$(CDN_SERVE_JAR) \
-		--tag namazu-socialengine-cdn-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-cdn-serve:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-cdn-serve:$(TAG_SHORT)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-api)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-node)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-serve)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-code-serve)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-setup)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-cdn-serve)
 
 latest: login
-	$(DOCKER_BUILD) namazu-socialengine-api \
-		--build-arg REST_WAR=$(REST_WAR) \
-		--tag namazu-socialengine-api:latest \
-		--tag docker.namazustudios.net/namazu-socialengine-api:latest
-	$(DOCKER_BUILD) namazu-socialengine-app-node \
-		--build-arg APP_NODE_JAR=$(APP_NODE_JAR) \
-		--tag namazu-socialengine-app-node:latest \
-		--tag docker.namazustudios.net/namazu-socialengine-app-node:latest
-	$(DOCKER_BUILD) namazu-socialengine-app-serve \
-		--build-arg APP_SERVE_JAR=$(APP_SERVE_JAR) \
-		--tag namazu-socialengine-app-serve:latest \
-		--tag docker.namazustudios.net/namazu-socialengine-app-serve:latest
-	$(DOCKER_BUILD) namazu-socialengine-code-serve \
-		--build-arg CODE_SERVE_WAR=$(CODE_SERVE_WAR) \
-		--tag namazu-socialengine-code-serve:latest \
-		--tag docker.namazustudios.net/namazu-socialengine-code-serve:latest
-	$(DOCKER_BUILD) namazu-socialengine-setup \
-		--build-arg SETUP_JAR=$(SETUP_JAR) \
-		--tag namazu-socialengine-setup:latest \
-		--tag docker.namazustudios.net/namazu-socialengine-setup:latest
+	$(DOCKER_BUILD) namazu-socialengine-base \
+		--tag namazu-socialengine-base:latest \
+		--tag docker.namazustudios.net/namazu-socialengine-base:latest
 	$(DOCKER_BUILD) namazu-socialengine-ui \
 		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
 		--tag namazu-socialengine-ui:latest \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:latest
-	$(DOCKER_BUILD) namazu-socialengine-cdn-serve \
-		--build-arg CDN_SERVE_JAR=$(CDN_SERVE_JAR) \
-		--tag namazu-socialengine-cdn-serve:latest \
-		--tag docker.namazustudios.net/namazu-socialengine-cdn-serve:latest
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-api)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-app-node)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-app-serve)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-code-serve)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-setup)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-cdn-serve)
 
 login:
 	- echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net

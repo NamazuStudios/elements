@@ -3,11 +3,13 @@ package com.namazustudios.socialengine;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.service.Notification;
 import com.namazustudios.socialengine.service.NotificationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
@@ -16,13 +18,22 @@ import javax.inject.Inject;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.namazustudios.socialengine.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.*;
 
-@Guice(modules = UnitTestModule.class)
 public class LuaNotificationIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaNotificationIntegrationTest.class);
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+                getXodusTest(LuaNotificationIntegrationTest.class),
+                getUnixFSTest(LuaNotificationIntegrationTest.class)
+        };
+    }
 
     private Context context;
 

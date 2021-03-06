@@ -1,13 +1,8 @@
-FROM openjdk:8
+FROM namazu-socialengine-base:latest
 
-ARG APP_NODE_JAR
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
 
-USER root:root
-RUN useradd socialengine
-RUN mkdir -p "/opt/socialengine/script-repos"
+EXPOSE 28883
 
-COPY $APP_NODE_JAR /opt/socialengine/app-node.jar
-
-RUN chown socialengine:socialengine /opt/socialengine
-
-USER socialengine:socialengine
+ENTRYPOINT ["java", "com.namazustudios.socialengine.appnode.ApplicationNodeMain"]

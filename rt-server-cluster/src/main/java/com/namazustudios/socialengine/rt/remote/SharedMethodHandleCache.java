@@ -5,14 +5,17 @@ import com.google.common.cache.CacheBuilder;
 
 import java.lang.invoke.MethodHandle;
 
-public class SharedMethodHandleCache {
+/**
+ * Caches {@link MethodHandle} instances
+ */
+class SharedMethodHandleCache {
 
     private SharedMethodHandleCache() {}
 
     private static final Cache<MethodHandleKey, MethodHandle> sharedMethodHandleCache = CacheBuilder
-            .newBuilder()
-            .weakKeys()
-            .build();
+        .newBuilder()
+        .weakKeys()
+        .build();
 
     /**
      * Retruns the singleton shared {@link Cache} to load {@link MethodHandle} instances.

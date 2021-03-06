@@ -1,60 +1,70 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
-import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 
+@Test
 public class HttpClientIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpClientIntegrationTest.class);
 
-    private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService();
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+            getXodusTest(HttpClientIntegrationTest::new),
+            getUnixFSTest(HttpClientIntegrationTest::new)
+        };
+    }
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withDefaultHttpClient()
-        .withNodeModule(new LuaModule())
-        .withNodeModule(new XodusContextModule()
-            .withSchedulerThreads(1)
-            .withHandlerTimeout(3, MINUTES))
-        .withNodeModule(new XodusEnvironmentModule()
-            .withTempEnvironments())
-        .withNodeModule(new JavaEventModule())
+    private final JettyEmbeddedRESTService jettyEmbeddedRESTService = new JettyEmbeddedRESTService()
         .start();
 
-    private final Node node = getEmbeddedTestService().getNode();
+    private final Context context;
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final EmbeddedTestService embeddedTestService;
 
-    @BeforeClass
-    private void start() throws Exception {
-        getJettyEmbeddedRESTService().start();
+    private HttpClientIntegrationTest(final EmbeddedTestService embeddedTestService) {
+
+        this.embeddedTestService = embeddedTestService;
+
+        final var testApplicationId = getEmbeddedTestService()
+            .getWorker()
+            .getApplicationId();
+
+        this.context = getEmbeddedTestService()
+            .getClient()
+            .getContextFactory()
+            .getContextForApplication(testApplicationId);
+
     }
 
     @AfterClass
     private void stop() throws Exception {
-        getNode().stop();
+        getEmbeddedTestService().close();
         getJettyEmbeddedRESTService().stop();
     }
 
     @Test(dataProvider = "resourcesToTest")
     public void performTest(final String methodName) {
-        final Path path = new Path(randomUUID().toString());
-        final ResourceId resourceId = getContext().getResourceContext().create("test.http.client", path);
-        final String base = getJettyEmbeddedRESTService().getUri();
-        final Object result = getContext().getResourceContext().invoke(resourceId, methodName, base);
+        final var path = new Path(randomUUID().toString());
+        final var resourceId = getContext().getResourceContext().create("test.http.client", path);
+        final var base = getJettyEmbeddedRESTService().getUri();
+        final var result = getContext().getResourceContext().invoke(resourceId, methodName, base);
         logger.info("Successfully got test result {}", result);
         getContext().getResourceContext().destroy(resourceId);
     }
@@ -70,16 +80,12 @@ public class HttpClientIntegrationTest {
         };
     }
 
-    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+    public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
     }
 
     public JettyEmbeddedRESTService getJettyEmbeddedRESTService() {
         return jettyEmbeddedRESTService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

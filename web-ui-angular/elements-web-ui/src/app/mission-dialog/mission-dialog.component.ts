@@ -1,6 +1,8 @@
 import {Component, Inject, OnInit, ViewChild} from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
-import {MAT_DIALOG_DATA, MatChipInputEvent, MatDialogRef, MatSnackBar} from '@angular/material';
+import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
+import {MatChipInputEvent} from '@angular/material/chips';
+import {MatSnackBar} from '@angular/material/snack-bar'
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {MissionStepsCardComponent} from './mission-steps-card/mission-steps-card.component';

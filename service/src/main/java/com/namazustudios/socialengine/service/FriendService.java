@@ -3,11 +3,17 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.friend.Friend;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Allows access to instances of {@link Friend}.  This is responsible for determining the current {@link User} as well
  * and ensuring that the associated {@link Friend} instances are properly filtered and represented.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.friend")
+})
 public interface FriendService {
 
     /**

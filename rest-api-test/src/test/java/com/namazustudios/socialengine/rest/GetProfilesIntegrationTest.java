@@ -5,23 +5,33 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.testng.annotations.BeforeClass;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import javax.ws.rs.client.Client;
 import java.util.Set;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.TestUtils.*;
 import static java.util.stream.Collectors.toSet;
 import static org.testng.Assert.*;
 
-@Guice(modules = {EmbeddedRestApiIntegrationTestModule.class})
 public class GetProfilesIntegrationTest {
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+                TestUtils.getInstance().getXodusTest(GetProfilesIntegrationTest.class),
+                TestUtils.getInstance().getUnixFSTest(GetProfilesIntegrationTest.class)
+        };
+    }
+
+    @Inject
+    @Named(TEST_API_ROOT)
+    private String apiRoot;
 
     @Inject
     private Client client;
@@ -50,6 +60,7 @@ public class GetProfilesIntegrationTest {
             .createUser("GetProfileIntegrationTest0")
             .createProfiles(5)
             .createSession();
+
         client1 = clientContextProvider.get()
             .createUser("GetProfileIntegrationTest1")
             .createProfiles(5)
@@ -77,7 +88,7 @@ public class GetProfilesIntegrationTest {
     public void testGetAllProfiles(final ClientContext clientContext, final String authHeader) throws Exception {
 
         final Pagination<Profile> profiles = client
-              .target("http://localhost:8081/api/rest/profile")
+              .target(apiRoot + "/profile")
               .queryParam("count", 20)
               .request()
               .header(authHeader, clientContext.getSessionSecret())
@@ -97,14 +108,14 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("count", 20)
                 .queryParam("user", clientContext.getUser().getId())
                 .request()
                 .header(authHeader, clientContext.getSessionSecret())
                 .buildGet()
                 .submit(ProfilePagination.class)
-                .get();
+            .get();
 
         final Set<String> profileIds = clientContext.getProfiles().stream().map(p -> p.getId()).collect(toSet());
 
@@ -121,7 +132,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("count", 20)
                 .queryParam("user", clientContext.getUser().getId())
                 .queryParam("application", clientContext.getApplication().getId())
@@ -146,7 +157,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("count", 20)
                 .queryParam("user", clientContext.getUser().getId())
                 .queryParam("application", clientContext.getApplication().getName())
@@ -171,7 +182,7 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("count", 20)
                 .queryParam("user", "me")
                 .request()
@@ -195,7 +206,7 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("count", 20)
                 .queryParam("user", user.getId())
                 .request()
@@ -219,7 +230,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("application", other.getId())
                 .request()
                 .header(authHeader, clientContext.getSessionSecret())
@@ -231,7 +242,7 @@ public class GetProfilesIntegrationTest {
         assertEquals(profiles.getObjects().size(), 0);
 
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("application", other.getName())
                 .request()
                 .header(SESSION_SECRET, clientContext.getSessionSecret())
@@ -251,7 +262,7 @@ public class GetProfilesIntegrationTest {
         Pagination<Profile> profiles;
 
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("application", other.getName())
                 .request()
                 .header(authHeader, clientContext.getSessionSecret())
@@ -270,7 +281,7 @@ public class GetProfilesIntegrationTest {
 
         Pagination<Profile> profiles;
         profiles = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .queryParam("application", "bogo")
                 .request()
                 .header(authHeader, clientContext.getSessionSecret())

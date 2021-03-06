@@ -2,9 +2,11 @@ package com.namazustudios.socialengine.rt.lua.builtin;
 
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import com.namazustudios.socialengine.rt.lua.LogAssist;
 import com.namazustudios.socialengine.rt.lua.LuaResource;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +14,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinUtils.currentTaskId;
 
 /**
@@ -31,17 +34,15 @@ public class ResourceDetailBuiltin implements Builtin {
 
     public static final String DESTROY = "schedule_destroy";
 
-    private final Context context;
-
     private final LuaResource luaResource;
 
-    public ResourceDetailBuiltin(final LuaResource luaResource, final Context context) {
-        this.context = context;
+    public ResourceDetailBuiltin(final LuaResource luaResource) {
         this.luaResource = luaResource;
     }
 
     private JavaFunction create = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
@@ -51,54 +52,56 @@ public class ResourceDetailBuiltin implements Builtin {
             final Map<?, ?> attributesMap = luaState.checkJavaObject(3, Map.class);
             final Object[] params = luaState.checkJavaObject(4, Object[].class);
 
-            final TaskId taskId = currentTaskId(luaState);
-
             final Attributes attributes = attributesMap == null ? emptyAttributes() : new SimpleAttributes.Builder()
                 .setAttributes(attributesMap.entrySet().stream().collect(Collectors.toMap(e -> e.getKey().toString(), e -> e.getValue())))
                 .build();
 
-            getContext().getResourceContext().createAttributesAsync(
-                rid -> getContext().getSchedulerContext().resumeFromNetwork(taskId, rid.asString()),
-                throwable -> getContext().getSchedulerContext().resumeWithError(taskId, throwable),
+            getLuaResource().getLocalContextOrContextFor(taskId).getResourceContext().createAttributesAsync(
+                rid -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, rid.asString()),
+                throwable -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
                 module, path, attributes, params);
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
 
     private JavaFunction invoke = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
 
-            final ResourceId resourceId = new ResourceId(luaState.checkString(1));
+            final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
             final String methodName = luaState.checkString(2);
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
 
-            final TaskId taskId = currentTaskId(luaState);
+            logger.trace("Invoking {} {} {}", resourceId, methodName, params);
 
-            getContext().getResourceContext().invokeAsync(
-                object -> getContext().getSchedulerContext().resumeFromNetwork(taskId, object),
-                throwable -> getContext().getSchedulerContext().resumeWithError(taskId, throwable),
+            getLuaResource().getLocalContextOrContextFor(resourceId).getResourceContext().invokeAsync(
+                object -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, object),
+                throwable -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
                 resourceId, methodName, params);
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
 
     private JavaFunction invokePath = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
@@ -107,38 +110,39 @@ public class ResourceDetailBuiltin implements Builtin {
             final String methodName = luaState.checkString(2);
             final Object[] params = luaState.checkJavaObject(3, Object[].class);
 
-            final TaskId taskId = currentTaskId(luaState);
-
-            getContext().getResourceContext().invokePathAsync(
-                    object -> getContext().getSchedulerContext().resumeFromNetwork(taskId, object),
-                    throwable -> getContext().getSchedulerContext().resumeWithError(taskId, throwable),
+            getLuaResource().getLocalContextOrContextFor(path).getResourceContext().invokePathAsync(
+                    object -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeFromNetwork(taskId, object),
+                    throwable -> getLuaResource().getLocalContextOrContextFor(taskId).getSchedulerContext().resumeWithError(taskId, throwable),
                     path, methodName, params);
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
 
     private JavaFunction destroy = luaState -> {
 
+        final TaskId taskId = currentTaskId(luaState);
         final LogAssist logAssist = new LogAssist(() -> logger, () -> luaState);
 
         try {
 
-            final ResourceId resourceId = new ResourceId(luaState.checkString(1));
+            final ResourceId resourceId = resourceIdFromString(luaState.checkString(1));
 
-            final TaskId taskId = currentTaskId(luaState);
-
-            getContext().getResourceContext().destroyAsync(
+            getLuaResource().getLocalContextOrContextFor(resourceId).getResourceContext().destroyAsync(
                 object -> {
                     if (taskId.getResourceId().equals(resourceId)) {
                         logger.info("Destroyed {}", resourceId);
                     } else {
-                        getContext().getSchedulerContext().resumeFromNetwork(taskId, null);
+                        getLuaResource()
+                            .getLocalContextOrContextFor(taskId)
+                            .getSchedulerContext()
+                            .resumeFromNetwork(taskId, null);
                     }
                 },
                 throwable -> {
@@ -147,7 +151,9 @@ public class ResourceDetailBuiltin implements Builtin {
                         logger.error("Could not self-destruct resource {}", resourceId);
                     }
 
-                    getContext().getSchedulerContext().resumeWithError(taskId, throwable);
+                    getLuaResource()
+                        .getLocalContextOrContextFor(taskId)
+                        .getSchedulerContext().resumeWithError(taskId, throwable);
 
                 },
                 resourceId
@@ -155,9 +161,10 @@ public class ResourceDetailBuiltin implements Builtin {
 
             return 0;
 
-        } catch (Throwable th) {
-            logAssist.error("Error invoking method.", th);
-            throw th;
+        } catch (Exception ex) {
+            logAssist.error("Error invoking method.", ex);
+            getLuaResource().getLocalContextOrContextFor(taskId).getTaskContext().finishWithError(taskId, ex);
+            throw ex;
         }
 
     };
@@ -200,15 +207,11 @@ public class ResourceDetailBuiltin implements Builtin {
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
-        persistence.addPermanentJavaObject(create, IndexDetailBuiltin.class, CREATE);
-        persistence.addPermanentJavaObject(invoke, IndexDetailBuiltin.class, INVOKE);
-        persistence.addPermanentJavaObject(invokePath, IndexDetailBuiltin.class, INVOKE_PATH);
-        persistence.addPermanentJavaObject(destroy, IndexDetailBuiltin.class, DESTROY);
-    }
-
-    public Context getContext() {
-        return context;
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
+        erisPersistence.addPermanentJavaObject(create, IndexDetailBuiltin.class, CREATE);
+        erisPersistence.addPermanentJavaObject(invoke, IndexDetailBuiltin.class, INVOKE);
+        erisPersistence.addPermanentJavaObject(invokePath, IndexDetailBuiltin.class, INVOKE_PATH);
+        erisPersistence.addPermanentJavaObject(destroy, IndexDetailBuiltin.class, DESTROY);
     }
 
     public LuaResource getLuaResource() {

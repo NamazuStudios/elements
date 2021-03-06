@@ -5,6 +5,7 @@ import {AbstractControl, FormBuilder, FormControl, FormGroup, Validators} from '
 import {MissionStepViewModel} from '../../models/mission-step-view-model';
 import {MissionRewardsEditorComponent} from '../mission-rewards-editor/mission-rewards-editor.component';
 import {MissionStep} from '../../api/models/mission-step';
+import {MissionViewModel} from '../../models/mission-view-model';
 
 @Component({
   selector: 'app-mission-steps-card',
@@ -23,16 +24,15 @@ export class MissionStepsCardComponent implements OnInit {
 
   public stepsValid() {
     // invalid if neither steps nor final step exist
-    if (this.mission.steps.length == 0 && !this.mission.finalRepeatStep) {
-      //console.log("No steps or final step");
+    if (this.mission.steps.length === 0 && !this.mission.finalRepeatStep) {
       return false;
     }
 
     // invalid if final step or prelim step doesn't have rewards
-    for(let i = 0; i < this.mission.steps.length; i++) {
-      if (this.mission.steps[i].rewards.length == 0) return false;
+    for (let i = 0; i < this.mission.steps.length; i++) {
+      if (this.mission.steps[i].rewards.length === 0) { return false; }
     }
-    if(this.mission.finalRepeatStep && this.mission.finalRepeatStep.rewards.length == 0) return false;
+    if (this.mission.finalRepeatStep && this.mission.finalRepeatStep.rewards.length === 0) { return false; }
 
     // all existing steps must be valid
     if (!this.stepForm.valid) {
@@ -41,7 +41,6 @@ export class MissionStepsCardComponent implements OnInit {
 
     // all existing rewards must be valid
     if (!this.rewardEditors) {
-      //console.log("No reward editors");
       return true;
     }
     const rewardEditors = this.rewardEditors.toArray();
@@ -49,13 +48,9 @@ export class MissionStepsCardComponent implements OnInit {
       const rewardEditor = rewardEditors[i];
 
       if (!rewardEditor.existingRewardForm.valid) {
-        //console.log("Invalid existing reward form");
-        //console.log(rewardEditor);
         return false;
       }
     }
-
-    //console.log("All steps valid");
     // all validity tests passed
     return true;
   }
@@ -133,6 +128,8 @@ export class MissionStepsCardComponent implements OnInit {
   }
 
   ngOnInit() {
+    if (!this.mission) { this.mission = new MissionViewModel(); }
+
     if (!this.mission.steps) { this.mission.steps = []; }
 
     if (this.mission.steps) {

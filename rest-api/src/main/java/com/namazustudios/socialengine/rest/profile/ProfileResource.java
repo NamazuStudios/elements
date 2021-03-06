@@ -145,9 +145,7 @@ public class ProfileResource {
             notes = "Supplying the create profile request, this will update the profile with the new information supplied " +
                     "in the body of the request. This will fire an event, " + PROFILE_CREATED_EVENT + ", from the event manifest.")
     public Profile createProfile(final CreateProfileRequest profileRequest) {
-
         getValidationHelper().validateModel(profileRequest, Create.class);
-
         return getProfileService().createProfile(profileRequest);
     }
 

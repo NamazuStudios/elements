@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt;
 
 import com.google.common.base.Stopwatch;
 import com.namazustudios.socialengine.rt.exception.NoSuchTaskException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,7 +32,7 @@ public interface Scheduler {
      * @param runnable the {@link Runnable} to run
      * @return a {@link Future<Void>} to control the execution state of the task
      */
-    default Future<Void> submitV(Runnable runnable) {
+    default Future<Void> submitV(final Runnable runnable) {
         return submit(() -> {
             runnable.run();
             return null;
@@ -235,11 +237,19 @@ public interface Scheduler {
     }
 
     /**
-     * Shuts down the Scheduler.  All resources are removed and then the server is shut down.  Attempting to invoke any
-     * the other methods after invoking this will result in an {@link IllegalStateException}.
+     * Shuts down the Scheduler.  Attempting to invoke any the other methods after invoking this will result in an
+     * {@link IllegalStateException} until a subsequent call to {@link #start()} is made.
      *
      * @throws {@link IllegalStateException}
      */
-    void shutdown() throws IllegalStateException;
+    default void stop() throws IllegalStateException {}
+
+    /**
+     * Starts the Scheduler.  Attempting to invoke any the other methods before invoking this will result in an
+     * {@link IllegalStateException}.
+     *
+     * @throws {@link IllegalStateException}
+     */
+    default void start() throws IllegalStateException {}
 
 }

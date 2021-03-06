@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
+import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.multibindings.Multibinder;
 import com.namazustudios.socialengine.jnlua.Converter;
@@ -8,6 +9,9 @@ import com.namazustudios.socialengine.rt.ManifestLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation.Undefined;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
@@ -22,6 +26,8 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.reducing;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Created by patricktwohig on 8/17/17.
@@ -30,7 +36,9 @@ public class LuaModule extends PrivateModule {
 
     private Multibinder<Builtin> builtinMultibinder;
 
-    private BiConsumer<String, Class<Object>> visitors = (s, t) -> {};
+    private BiConsumer<String, Class<?>> legacyVisitors = (s, t) -> {};
+
+    private BiConsumer<ExposedModuleDefinition, Class<?>>  visitors = (e, t) -> {};
 
     @Override
     protected final void configure() {
@@ -113,6 +121,7 @@ public class LuaModule extends PrivateModule {
      *
      * @return this instance
      */
+    @SuppressWarnings("deprecation")
     public LuaModule enableJavaExtensions(final String packageName) {
 
         final Reflections reflections = new Reflections(packageName, getClass().getClassLoader());
@@ -122,19 +131,33 @@ public class LuaModule extends PrivateModule {
 
         classSet.stream()
             .filter(cls -> cls.getAnnotation(Expose.class) != null)
-            .collect(Collectors.toMap(cls -> cls.getAnnotation(Expose.class), identity()))
-            .forEach((expose, type) -> bindModuleBuiltin(type).toModulesNamed(expose.modules()));
+            .collect(toMap(cls -> cls.getAnnotation(Expose.class), identity()))
+            .forEach((expose, type) -> {
+                bindModuleBuiltin(type).toModulesNamed(expose.modules());
+                bindModuleBuiltin(type).toModulesWithDefinitions(expose.value());
+            });
 
         // set up the exposed Java Enum classes
         final Set<Class<?>> enumClassSet = reflections.getTypesAnnotatedWith(ExposeEnum.class);
 
         enumClassSet.stream()
-                .filter(cls -> cls.getAnnotation(ExposeEnum.class) != null)
-                .collect(Collectors.toMap(cls -> cls.getAnnotation(ExposeEnum.class), identity()))
-                .forEach((exposeEnum, type) -> bindEnumModuleBuiltin(type).toModulesNamed(exposeEnum.modules()));
+            .filter(cls -> cls.getAnnotation(ExposeEnum.class) != null)
+            .collect(toMap(cls -> cls.getAnnotation(ExposeEnum.class), identity()))
+            .forEach((exposeEnum, type) -> bindEnumModuleBuiltin(type).toModulesNamed(exposeEnum.modules()));
 
         return this;
 
+    }
+
+    /**
+     * Allows for client code to be made aware of the discovery of an extension.
+     *
+     * @param visitor the visitor
+     * @return this instance
+     */
+    public LuaModule visitDiscoveredModule(final BiConsumer<ExposedModuleDefinition, Class<?>> visitor) {
+        visitors = visitors.andThen(visitor);
+        return this;
     }
 
     /**
@@ -144,9 +167,11 @@ public class LuaModule extends PrivateModule {
      * @param visitor the {@link BiConsumer} used to receive the visited class.
      * @return this instance
      *
+     * @deprecated this is for supporting legacy code only
+     *
      */
-    public LuaModule visitDiscoveredExtension(final BiConsumer<String, Class<Object>> visitor) {
-        visitors = visitors.andThen(visitor);
+    public LuaModule visitDiscoveredExtension(final BiConsumer<String, Class<?>> visitor) {
+        legacyVisitors = legacyVisitors.andThen(visitor);
         return this;
     }
 
@@ -159,39 +184,67 @@ public class LuaModule extends PrivateModule {
      */
     public <T> ModuleBinding bindModuleBuiltin(final Class<T> cls) {
 
-        final Provider<?> provider = getProvider(cls);
+        return new ModuleBinding() {
+            @Override
+            public LuaModule toModulesNamed(final String[] moduleNames) {
 
-        return moduleNames -> {
+                final var provider = getProvider(cls);
 
-            for (final String moduleName : moduleNames) {
-                visitors.accept(moduleName, (Class<Object>) cls);
-                builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+                for (final var moduleName : moduleNames) {
+                    legacyVisitors.accept(moduleName, cls);
+                    builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+                }
+
+                return LuaModule.this;
+
             }
 
-            return this;
+            @Override
+            public LuaModule toModulesWithDefinitions(final ExposedModuleDefinition[] moduleDefinitions) {
+
+                for (final var definition : moduleDefinitions) {
+                    final String moduleName = definition.value();
+
+                    final Provider<?> provider;
+
+                    if (Undefined.class.equals(definition.annotation().value())) {
+                        provider = getProvider(cls);
+                    } else {
+                        final var annotation = ExposedBindingAnnotation.Util.resolve(cls, definition.annotation());
+                        annotation.toString();
+                        provider = getProvider(Key.get(cls, annotation));
+                    }
+
+                    visitors.accept(definition, cls);
+                    builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+
+                }
+
+                return LuaModule.this;
+
+            }
 
         };
 
     }
 
-    public ModuleBinding bindEnumModuleBuiltin(final Class cls) {
+    @SuppressWarnings({"rawtypes", "unchecked"})
+    public EnumModuleBinding bindEnumModuleBuiltin(final Class cls) {
         return moduleNames -> {
 
             for (final String moduleName : moduleNames) {
-                visitors.accept(moduleName, (Class<Object>) cls);
+                legacyVisitors.accept(moduleName, (Class<Object>) cls);
                 builtinMultibinder.addBinding().toProvider(() -> new EnumModuleBuiltin<>(cls, moduleName));
             }
 
             return this;
 
         };
-
     }
 
     /**
      * Used to add a binding to a Lua module.
      */
-    @FunctionalInterface
     public interface ModuleBinding {
 
         /**
@@ -199,7 +252,26 @@ public class LuaModule extends PrivateModule {
          *
          * @param moduleNames the module name.
          */
-        LuaModule toModulesNamed(final String[] moduleNames);
+        LuaModule toModulesNamed(String[] moduleNames);
+
+        /**
+         * Specifies the module.
+         *
+         * @param moduleDefinitions the module name.
+         */
+        LuaModule toModulesWithDefinitions(ExposedModuleDefinition[] moduleDefinitions);
+
+    }
+
+    @FunctionalInterface
+    public interface EnumModuleBinding {
+
+        /**
+         * Specifies the module.
+         *
+         * @param moduleNames the module name.
+         */
+        LuaModule toModulesNamed(String[] moduleNames);
 
     }
 

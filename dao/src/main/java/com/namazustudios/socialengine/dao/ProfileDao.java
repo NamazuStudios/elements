@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -7,6 +8,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.Map;
 import java.util.Optional;
@@ -14,9 +16,11 @@ import java.util.Optional;
 /**
  * Created by patricktwohig on 6/28/17.
  */
-@Expose(modules = {
-        "namazu.elements.dao.profile",
-        "namazu.socialengine.dao.profile",
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.profile"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.profile",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.profile instead"))
 })
 public interface ProfileDao {
 
@@ -126,7 +130,9 @@ public interface ProfileDao {
      *
      * @return the {@link Profile} as it was written into the database
      */
-    Profile createOrReactivateProfile(Profile profile);
+    default Profile createOrReactivateProfile(Profile profile) {
+        return createOrReactivateProfile(profile, profile.getMetadata());
+    }
 
     /**
      * Creates or reactivates an inactive profile.  If the profile is active then this throws a

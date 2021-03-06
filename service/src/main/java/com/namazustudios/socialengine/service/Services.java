@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 
 import java.lang.reflect.Proxy;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
@@ -19,6 +20,8 @@ import static java.lang.reflect.Proxy.newProxyInstance;
 public class Services {
 
     private static final ConcurrentMap<Class<?>, Object> forbiddenServices = new ConcurrentHashMap<>();
+
+    private Services() {}
 
     /**
      * Gets a proxy that always throws an instance of {@link ForbiddenException}.  This uses the {@link Proxy}

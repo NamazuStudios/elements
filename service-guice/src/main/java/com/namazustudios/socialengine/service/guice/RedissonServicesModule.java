@@ -26,9 +26,10 @@ public class RedissonServicesModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        install(new RedissonClientModule());
+
         bind(TopicService.class).to(RedissonTopicService.class).in(scope);
         bind(FacebookFriendCache.class).to(RedissonFacebookFriendCache.class).in(scope);
-        bind(RedissonClient.class).toProvider(RedissonClientProvider.class).asEagerSingleton();
 
         bind(new TypeLiteral<RListMultimapCache<String, FacebookFriend>>(){})
             .annotatedWith(named(RedissonFacebookFriendCache.CACHE_NAME))

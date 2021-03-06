@@ -1,10 +1,8 @@
-FROM jetty:9.4.26-jre8
+FROM namazu-socialengine-base:latest
 
-ARG REST_WAR
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
 
-USER root:root
-RUN mkdir -p "/opt/socialengine/script-repos"
-RUN chown -R jetty:jetty /opt/socialengine/script-repos
+EXPOSE 8081
 
-USER jetty:jetty
-COPY $REST_WAR /var/lib/jetty/webapps/api.war
+ENTRYPOINT ["java", "com.namazustudios.socialengine.rest.RestAPIMain"]

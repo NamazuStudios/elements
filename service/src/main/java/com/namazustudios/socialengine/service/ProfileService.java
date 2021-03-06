@@ -5,12 +5,22 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 /**
  * Manages instances of {@link Profile}.
  *
  * Created by patricktwohig on 6/27/17.
  */
+@Expose({
+    @ExposedModuleDefinition(value = "namazu.elements.service.profile"),
+    @ExposedModuleDefinition(
+        value = "namazu.elements.service.unscoped.profile",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
+})
 public interface ProfileService {
 
     /**
@@ -74,7 +84,7 @@ public interface ProfileService {
     Profile getCurrentProfile();
 
     /**
-     * Updates the supplied {@link Profile}.  The profile id is
+     * Updates the supplied {@link Profile}.  The {@link Profile#getId()} method is
      * used to key the {@link Profile}.
      *
      * @param profileId the profile id of the {@link Profile} to update

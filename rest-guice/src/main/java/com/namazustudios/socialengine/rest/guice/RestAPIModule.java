@@ -4,21 +4,23 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
-import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import com.namazustudios.socialengine.guice.ZContextModule;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
+import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
+import com.namazustudios.socialengine.rt.remote.guice.SimpleInstanceModule;
+import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
-import org.apache.bval.guice.ValidationModule;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import java.text.DateFormat;
 import java.util.List;
@@ -28,6 +30,7 @@ import java.util.function.Supplier;
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
+import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 
 public class RestAPIModule extends AbstractModule {
 
@@ -35,17 +38,8 @@ public class RestAPIModule extends AbstractModule {
 
     private final Supplier<List<FacebookPermission>> facebookPermissionSupplier;
 
-    @SuppressWarnings("unused")
-    public RestAPIModule() {
-        this(new DefaultConfigurationSupplier());
-    }
-
     public RestAPIModule(final Supplier<Properties> propertiesSupplier) {
         this(propertiesSupplier, new FacebookBuiltinPermissionsSupplier());
-    }
-
-    public RestAPIModule(final ClassLoader classLoader) {
-        this(new DefaultConfigurationSupplier(classLoader), new FacebookBuiltinPermissionsSupplier(classLoader));
     }
 
     public RestAPIModule(final Supplier<Properties> configurationSupplier,
@@ -60,6 +54,7 @@ public class RestAPIModule extends AbstractModule {
         final Properties properties = configurationSupplier.get();
         final String apiRoot = properties.getProperty(Constants.API_PREFIX);
 
+        install(new InstanceDiscoveryServiceModule(configurationSupplier));
         install(new ConfigurationModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
         install(new JerseyModule(apiRoot) {
@@ -77,13 +72,18 @@ public class RestAPIModule extends AbstractModule {
         install(new MongoCoreModule());
         install(new MongoDaoModule());
         install(new MongoSearchModule());
-        install(new RTFilesystemGitLoaderModule());
         install(new ZContextModule());
-        install(new RTDaoModule());
-        install(new RTGitApplicationModule());
+        install(new ClusterContextFactoryModule());
         install(new ValidationModule());
         install(new GameOnInvokerModule());
         install(new AppleIapReceiptInvokerModule());
+        install(new JeroMQAsyncConnectionServiceModule());
+        install(new JeroMQInstanceConnectionServiceModule());
+        install(new JeroMQRemoteInvokerModule());
+        install(new JeroMQControlClientModule());
+        install(new SimpleRemoteInvokerRegistryModule());
+        install(new SimpleInstanceModule());
+        install(new FSTPayloadReaderWriterModule());
         install(new JacksonHttpClientModule()
             .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
             .withDefaultObjectMapperProvider(() -> {
@@ -100,6 +100,8 @@ public class RestAPIModule extends AbstractModule {
                 return objectMapper;
             })
         );
+
+        bind(InstanceId.class).toInstance(randomInstanceId());
 
     }
 }

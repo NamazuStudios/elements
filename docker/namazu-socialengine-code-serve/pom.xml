@@ -19,9 +19,19 @@
     <dependencies>
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>code-serve-war</artifactId>
+            <artifactId>code-serve-jetty</artifactId>
             <version>${project.version}</version>
-            <type>war</type>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>namazu-socialengine-base</artifactId>
+            <version>${project.version}</version>
+            <type>pom</type>
         </dependency>
     </dependencies>
 
@@ -66,7 +76,7 @@
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>CODE_SERVE_WAR=target/lib/code-serve-war-${project.version}.war</argument>
+                        <argument>ELEMENTS_CLASSPATH=target/lib/*.jar</argument>
                         <argument>--tag</argument>
                         <argument>${project.artifactId}:latest</argument>
                         <argument>--tag</argument>

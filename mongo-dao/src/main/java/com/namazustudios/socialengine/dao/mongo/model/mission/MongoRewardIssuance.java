@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.model.reward.RewardIssuance.Type;
 import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -12,8 +12,9 @@ import java.util.Map;
 import java.util.Objects;
 
 
-@Entity(value = "progress_pending_award", noClassnameStored = true)
+@Entity(value = "progress_pending_award", useDiscriminator = false)
 public class MongoRewardIssuance {
+
     @Id
     private MongoRewardIssuanceId objectId;
 
@@ -39,10 +40,10 @@ public class MongoRewardIssuance {
     @Property
     private String source;
 
-    @Embedded
+    @Property
     private Map<String, Object> metadata;
 
-    @Embedded
+    @Property
     private List<String> tags;
 
     @Indexed(options = @IndexOptions(expireAfterSeconds = 0))

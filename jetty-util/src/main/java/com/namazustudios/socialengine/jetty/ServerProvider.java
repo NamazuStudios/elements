@@ -11,8 +11,6 @@ import org.eclipse.jetty.server.handler.RequestLogHandler;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.net.InetSocketAddress;
-import java.net.URI;
 
 public class ServerProvider implements Provider<Server> {
 
@@ -49,7 +47,7 @@ public class ServerProvider implements Provider<Server> {
     }
 
     @Inject
-    public void setServerPortProvider(@Named(Constants.HTTP_TUNNEL_PORT) Provider<Integer> serverPortProvider) {
+    public void setServerPortProvider(@Named(Constants.HTTP_PORT) Provider<Integer> serverPortProvider) {
         this.serverPortProvider = serverPortProvider;
     }
 

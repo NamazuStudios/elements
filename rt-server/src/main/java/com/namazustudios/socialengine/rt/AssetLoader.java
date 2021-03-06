@@ -60,7 +60,7 @@ public interface AssetLoader extends AutoCloseable {
      * @return true if the asset at the {@link Path} exists, false otherwise.
      */
     default boolean exists(final Path path) {
-        try (final InputStream inputStream = open(path)) {
+        try (final var is = open(path)) {
             return true;
         } catch (IOException ex) {
             throw new InternalException(ex);

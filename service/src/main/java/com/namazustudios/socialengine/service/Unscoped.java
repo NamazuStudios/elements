@@ -10,7 +10,8 @@ import static java.lang.annotation.ElementType.*;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
- * Requests injection for the unscoped version of a particular service.
+ * Requests injection for the unscoped version of a particular service. Typically this means that the security checks
+ * are bypassed.
  */
 @Qualifier
 @Retention(RUNTIME)

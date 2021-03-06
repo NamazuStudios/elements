@@ -1,22 +1,23 @@
 package com.namazustudios.socialengine.dao.mongo;
 
+import com.mongodb.client.model.ReturnDocument;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.FacebookFriendDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendship;
 import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.model.user.User;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.UpdateOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
-import org.mongodb.morphia.query.UpdateResults;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoFacebookFriendDao implements FacebookFriendDao {
 
@@ -56,20 +57,16 @@ public class MongoFacebookFriendDao implements FacebookFriendDao {
             final MongoFriendshipId mongoFriendshipId;
             mongoFriendshipId = new MongoFriendshipId(mongoUser.getObjectId(), friend.getObjectId());
 
-            final UpdateOperations<MongoFriendship> update;
-            update = getDatastore().createUpdateOperations(MongoFriendship.class);
+            final var query = getDatastore().find(MongoFriendship.class);
 
-            update.set("_id", mongoFriendshipId);
-            update.set("lesserAccepted", true);
-            update.set("greaterAccepted", true);
+            final var mongoFriendship = query
+                .filter(eq("_id", mongoFriendshipId))
+                .modify(set("_id", mongoFriendshipId),
+                        set("lesserAccepted", true),
+                        set("greaterAccepted", true))
+                .execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER));
 
-            final Query<MongoFriendship> query = getDatastore().createQuery(MongoFriendship.class);
-            query.field("_id").equal(mongoFriendshipId);
-
-            final UpdateResults r = getDatastore().update(query, update, new UpdateOptions().upsert(true));
-            logger.debug("Updated {}.  Inserted {}", r.getUpdatedCount(), r.getInsertedCount());
-
-            getObjectIndex().index(query.get());
+            getObjectIndex().index(mongoFriendship);
 
         }
     }

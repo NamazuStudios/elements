@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 
@@ -74,6 +75,11 @@ public enum ResponseCode {
     RESOURCE_DESTROYED,
 
     /**
+     * A resource has been destroyed and the client code is now operating with a dead handle to a Resource.
+     */
+    RESOURCE_DEAD,
+
+    /**
      * Indicates that the requested asset is not found.
      */
     ASSET_NOT_FOUND,
@@ -97,6 +103,11 @@ public enum ResponseCode {
      * A particular operation, (eg {@link HttpOperation}) could not be found.
      */
     OPERATION_NOT_FOUND,
+
+    /**
+     * The system could not contact the app node with the given address.
+     */
+    NODE_NOT_FOUND,
 
     /**
      * No {@link HttpOperation} for the particular {@link HttpVerb} could be matched.
@@ -154,6 +165,16 @@ public enum ResponseCode {
      * Indicates the server encountered a bad manifest and the
      */
     INTERNAL_ERROR_BAD_MANIFEST_FATAL,
+
+    /**
+     * Indicates that there was a problem routing calls to a remote node.
+     */
+    ROUTING_EXCEPTION,
+
+    /**
+     * Indicates that a type has an invalid {@link NodeId}
+     */
+    INVALID_NODE_ID,
 
     /**
      * Indicates that a handler reached a timeout condition.

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.dao.*;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -55,7 +56,7 @@ public class MongoFollowerDaoTest {
         getFollowerDao().createFollowerForProfile(testProfileA.getId(), createFollowerRequest);
     }
 
-    @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = DuplicateKeyException.class)
+    @Test(dependsOnMethods = "createFollowerForProfile", expectedExceptions = DuplicateException.class)
     public void createFollowerForProfileDuplicate(){
         final CreateFollowerRequest createFollowerRequest = new CreateFollowerRequest();
         createFollowerRequest.setFollowedId(testProfileB.getId());

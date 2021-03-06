@@ -1,24 +1,37 @@
 package com.namazustudios.socialengine;
 
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.Context;
+import com.namazustudios.socialengine.rt.Path;
+import com.namazustudios.socialengine.rt.SimpleAttributes;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.Guice;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
+import static com.namazustudios.socialengine.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
 
-@Guice(modules = UnitTestModule.class)
 public class LuaAuthUnitTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaAuthUnitTest.class);
 
     private Context context;
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+            getXodusTest(LuaAuthUnitTest.class),
+            getUnixFSTest(LuaAuthUnitTest.class)
+        };
+    }
 
     @Test
     public void testProfile() throws Exception {

@@ -4,10 +4,17 @@ import com.google.common.base.Function;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
 import com.namazustudios.socialengine.jnlua.LuaState;
+import com.namazustudios.socialengine.rt.CurrentResource;
+import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.lua.persist.Persistence;
+import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
+import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -16,7 +23,10 @@ import java.util.stream.Collectors;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static com.namazustudios.socialengine.rt.lua.persist.Persistence.mangle;
+import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromDefinition;
+import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
+import static com.namazustudios.socialengine.rt.lua.persist.ErisPersistence.mangle;
+import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
 
@@ -25,9 +35,11 @@ import static java.util.Collections.unmodifiableList;
  */
 public class JavaObjectModuleBuiltin implements Builtin {
 
-    private final String moduleName;
+    private static final Logger logger = LoggerFactory.getLogger(JavaObjectModuleBuiltin.class);
 
     private final Provider<?> provider;
+
+    private final BuiltinDefinition builtinDefinition;
 
     private final Function<String, String> caseConverter;
 
@@ -37,15 +49,20 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
     public <T> JavaObjectModuleBuiltin(final String moduleName,
                                        final Provider<T> tProvider) {
-        this(moduleName, tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
+        this(fromModuleName(moduleName), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
     }
 
-    public <T> JavaObjectModuleBuiltin(final String moduleName,
+    public <T> JavaObjectModuleBuiltin(final ExposedModuleDefinition definition,
+                                       final Provider<T> tProvider) {
+        this(fromDefinition(definition), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
+    }
+
+    public <T> JavaObjectModuleBuiltin(final BuiltinDefinition builtinDefinition,
                                        final Provider<T> tProvider,
                                        final Function<String, String> caseConverter) {
-        this.moduleName = moduleName;
         this.provider = tProvider;
         this.caseConverter = caseConverter;
+        this.builtinDefinition = builtinDefinition;
     }
 
     @Override
@@ -54,12 +71,12 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
             @Override
             public String getChunkName() {
-                return moduleName;
+                return builtinDefinition.getModuleName();
             }
 
             @Override
             public boolean exists() {
-                return moduleName.equals(name);
+                return builtinDefinition.getModuleName().equals(name);
             }
 
         };
@@ -69,23 +86,44 @@ public class JavaObjectModuleBuiltin implements Builtin {
     public JavaFunction getLoader() {
         return luaState -> {
             final JavaReflector javaReflector = makeJavaReflector();
+
+            if (builtinDefinition.isDeprecated()) {
+
+                Logger logger;
+
+                try {
+                    final var current = CurrentResource.getInstance().getCurrent();
+                    logger = current.getLogger();
+                } catch (IllegalStateException ex) {
+                    // This shouldn't happen but if it does happen, we can continue on but it's an indicator that
+                    // something else is wrong in the code.
+                    logger = JavaObjectModuleBuiltin.logger;
+                    logger.warn("No current resource.", ex);
+                }
+
+                logger.warn("{} is deprecated: {}",
+                    builtinDefinition.getModuleName(),
+                    builtinDefinition.getDeprecationWarning());
+
+            }
+
             luaState.pushJavaObjectRaw(javaReflector);
             return 1;
         };
     }
 
     @Override
-    public void makePersistenceAware(final Persistence persistence) {
+    public void makePersistenceAware(final ErisPersistence erisPersistence) {
 
-        final String type = mangle(JavaObjectModuleBuiltin.class, moduleName);
+        final String type = mangle(JavaObjectModuleBuiltin.class, builtinDefinition.getModuleName());
 
-        persistence.addCustomUnpersistence(type, l -> {
+        erisPersistence.addCustomUnpersistence(type, l -> {
             l.pushJavaObject(makeJavaReflector());
             return 1;
         });
 
         persistenceJavaReflectorConsumer = r -> {
-            persistence.addCustomPersistence(r, type, l -> {
+            erisPersistence.addCustomPersistence(r, type, l -> {
                 l.pushNil();
                 return 1;
             });
@@ -182,8 +220,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
     private boolean parametersMatch(final LuaState luaState, final Method method) {
 
-        final int nargs = luaState.getTop();
-        final Class<?>[] parameterTypes = method.getParameterTypes();
+        final var parameterTypes = method.getParameterTypes();
 
         for (int i = 0; i < parameterTypes.length; ++i) {
             if (!luaState.isJavaObject(i + 1, parameterTypes[i])) {

@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.concurrent.Future;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -68,50 +69,44 @@ public class SimpleSingleUseHandlerService implements SingleUseHandlerService {
                           long timeoutDelay, TimeUnit timeoutUnit,
                           final String module, final Attributes attributes,
                           final String method, final Object... args) {
-        final Path path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
-        final Resource resource = acquire(path, module, attributes);
-        final ResourceId resourceId = resource.getId();
-        final RunnableFuture<Void> destroy = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
-        try (final ResourceLockService.Monitor m = getResourceLockService().getMonitor(resourceId)) {
+        final var sent = new AtomicBoolean();
+        final var path = Path.fromComponents("tmp", "handler", "su", randomUUID().toString());
+        final var resource = acquire(path, module, attributes);
+        final var resourceId = resource.getId();
+        final var destroy = getScheduler().scheduleDestruction(resourceId, timeoutDelay, timeoutUnit);
 
-            final AtomicBoolean sent = new AtomicBoolean();
+        final Consumer<Throwable> _failure = t -> {
+            try {
 
-            final Consumer<Throwable> _failure = t -> {
-                try {
+                final var _args = stream(args)
+                    .map(a -> a == null ? "null" : a.toString())
+                    .collect(Collectors.joining(","));
 
-                    final String _args = stream(args)
-                        .map(a -> a == null ? "null" : a.toString())
-                        .collect(Collectors.joining(","));
+                logger.error("Caught exception processing single-use handler {}.{}({}).", module, method, _args, t);
+                if (sent.compareAndSet(false, true)) failure.accept(t);
 
-                    logger.error("Caught exception processing single-use handler {}.{}({}).", module, method, _args, t);
-                    if (sent.compareAndSet(false, true)) failure.accept(t);
+            } catch (Exception ex) {
+                logger.error("Caught exception sending response from resource {}", resourceId, ex);
+            } finally {
+                destroy.run();
+            }
+        };
 
-                } catch (Exception ex) {
-                    logger.error("Caught exception sending response from resource {}", resourceId, ex);
-                } finally {
-                    destroy.run();
-                }
-            };
+        final Consumer<Object> _success = o -> {
+            try {
+                if (sent.compareAndSet(false, true)) success.accept(o);
+            } catch (Throwable th) {
+                _failure.accept(th);
+            } finally {
+                destroy.run();
+            }
+        };
 
-            final Consumer<Object> _success = o -> {
-                try {
-                    if (sent.compareAndSet(false, true)) success.accept(o);
-                } catch (Throwable th) {
-                    _failure.accept(th);
-                } finally {
-                    destroy.run();
-                }
-            };
-
-            return resource
-                .getMethodDispatcher(method)
-                .params(args)
-                .dispatch(_success, _failure);
-
-        } finally {
-            getResourceService().tryRelease(resource);
-        }
+        return resource
+            .getMethodDispatcher(method)
+            .params(args)
+            .dispatch(_success, _failure);
 
     }
 

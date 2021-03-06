@@ -2,9 +2,10 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -12,14 +13,14 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.Arrays.asList;
+import static java.util.Comparator.comparing;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
@@ -31,13 +32,16 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
 
     private final List<Object[]> linkedIntermediates = new ArrayList<>();
 
+    @Inject
+    private NodeId nodeId;
+
     @DataProvider
-    public static Object[][] initialDataProvider() {
+    public Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId();
+            final ResourceId resourceId = randomResourceIdForNode(nodeId);
             final Path path = new Path(asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
@@ -66,24 +70,49 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
 
         final Path path = new Path(asList("test", "*"));
 
-        final Set<ResourceId> expectedResourceIdList = intermediates.stream()
+        final var expectedPathList = intermediates.stream()
+            .map(a -> ((Path) a[1]).toPathWithContext(nodeId.toString()))
+            .sorted(Path::compareTo)
+            .collect(toList());
+
+        final var expectedResourceIdList = intermediates.stream()
             .map(a -> (ResourceId) a[0])
-            .collect(toSet());
+            .sorted(comparing(ResourceId::asString))
+            .collect(toList());
 
-        final Set<Path> expectedPathList = intermediates.stream()
-                .map(a -> (Path) a[1])
-                .collect(toSet());
+        final var pathList = getResourceService().listStream(path)
+            .map(ResourceService.Listing::getPath)
+            .sorted(Path::compareTo)
+            .collect(toList());
 
-        final Set<ResourceId> resourceIdList = getResourceService().listStream(path)
-            .map(l -> l.getResourceId())
-            .collect(toSet());
+        final var resourceIdList = getResourceService().listStream(path)
+            .map(ResourceService.Listing::getResourceId)
+            .sorted(comparing(ResourceId::asString))
+            .collect(toList());
 
-        final Set<Path> pathList = getResourceService().listStream(path)
-                .map(l -> l.getPath())
-                .collect(toSet());
+        // Joining to strings just to make it easier to read diffs in IntelliJ
 
-        assertEquals(resourceIdList, expectedResourceIdList);
-        assertEquals(pathList, expectedPathList);
+        assertEquals(
+                resourceIdList
+                        .stream()
+                        .map(ResourceId::asString)
+                        .collect(joining("\n")),
+                expectedResourceIdList
+                        .stream()
+                        .map(ResourceId::asString)
+                        .collect(joining("\n"))
+        );
+
+        assertEquals(
+                pathList
+                        .stream()
+                        .map(Path::toString)
+                        .collect(joining("\n")),
+                expectedPathList
+                        .stream()
+                        .map(Path::toString)
+                        .collect(joining("\n"))
+        );
 
     }
 
@@ -92,24 +121,49 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
 
         final Path path = new Path(asList("test", "*"));
 
-        final Set<ResourceId> expectedResourceIdList = intermediates.stream()
+        final var expectedPathList = intermediates.stream()
+                .map(a -> ((Path) a[1]).toPathWithContext(nodeId.toString()))
+                .sorted(Path::compareTo)
+                .collect(toList());
+
+        final var expectedResourceIdList = intermediates.stream()
                 .map(a -> (ResourceId) a[0])
-                .collect(toSet());
+                .sorted(comparing(ResourceId::asString))
+                .collect(toList());
 
-        final Set<Path> expectedPathList = intermediates.stream()
-                .map(a -> (Path) a[1])
-                .collect(toSet());
+        final var pathList = getResourceService().listParallelStream(path)
+                .map(ResourceService.Listing::getPath)
+                .sorted(Path::compareTo)
+                .collect(toList());
 
-        final Set<ResourceId> resourceIdList = getResourceService().listParallelStream(path)
-                .map(l -> l.getResourceId())
-                .collect(toSet());
+        final var resourceIdList = getResourceService().listParallelStream(path)
+                .map(ResourceService.Listing::getResourceId)
+                .sorted(comparing(ResourceId::asString))
+                .collect(toList());
 
-        final Set<Path> pathList = getResourceService().listParallelStream(path)
-                .map(l -> l.getPath())
-                .collect(toSet());
+        // Joining to strings just to make it easier to read diffs in IntelliJ
 
-        assertEquals(resourceIdList, expectedResourceIdList);
-        assertEquals(pathList, expectedPathList);
+        assertEquals(
+                resourceIdList
+                        .stream()
+                        .map(ResourceId::asString)
+                        .collect(joining("\n")),
+                expectedResourceIdList
+                        .stream()
+                        .map(ResourceId::asString)
+                        .collect(joining("\n"))
+        );
+
+        assertEquals(
+                pathList
+                        .stream()
+                        .map(Path::toString)
+                        .collect(joining("\n")),
+                expectedPathList
+                        .stream()
+                        .map(Path::toString)
+                        .collect(joining("\n"))
+        );
 
     }
 
@@ -256,8 +310,9 @@ public abstract class AbstractResourceServiceReleasingUnitTest {
 
     @Test(dependsOnMethods = "testAllPathsUnlinked")
     public void testDeleteWithPaths() {
-        final ResourceId resourceId = new ResourceId();
-        final Resource resource = Mockito.mock(Resource.class);
+
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
+        final Resource resource = getMockResource(resourceId);
 
         when(resource.getId()).thenReturn(resourceId);
 

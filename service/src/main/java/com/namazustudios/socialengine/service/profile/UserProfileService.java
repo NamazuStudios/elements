@@ -3,16 +3,16 @@ package com.namazustudios.socialengine.service.profile;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.ApplicationDao;
-import com.namazustudios.socialengine.dao.ContextFactory;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.Attributes;
+import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.EventContext;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.service.ProfileService;
@@ -37,7 +37,7 @@ public class UserProfileService implements ProfileService {
 
     private ApplicationDao applicationDao;
 
-    private ContextFactory contextFactory;
+    private Context.Factory contextFactory;
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -109,7 +109,9 @@ public class UserProfileService implements ProfileService {
     @Override
     public Profile createProfile(CreateProfileRequest profileRequest) {
         checkUserAndProfile(profileRequest.getUserId());
-        final EventContext eventContext = getContextFactory().getContextForApplication(profileRequest.getApplicationId()).getEventContext();
+        final EventContext eventContext = getContextFactory()
+            .getContextForApplication(profileRequest.getApplicationId())
+            .getEventContext();
         final Profile createdProfile = getProfileDao().createOrReactivateProfile(createNewProfile(profileRequest));
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
@@ -180,12 +182,12 @@ public class UserProfileService implements ProfileService {
         this.applicationDao = applicationDao;
     }
 
-    public ContextFactory getContextFactory() {
+    public Context.Factory getContextFactory() {
         return contextFactory;
     }
 
     @Inject
-    public void setContextFactory(ContextFactory contextFactory) {
+    public void setContextFactory(Context.Factory contextFactory) {
         this.contextFactory = contextFactory;
     }
 

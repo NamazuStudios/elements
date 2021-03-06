@@ -6,10 +6,11 @@ import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import static com.namazustudios.socialengine.model.gameon.game.DeviceOSType.valueOf;
 
-@Expose(modules = "namazu.elements.dao.gameon.session")
+@Expose(@ExposedModuleDefinition("namazu.elements.dao.gameon.session"))
 public interface GameOnSessionDao {
 
     /**

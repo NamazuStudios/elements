@@ -6,11 +6,15 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
-@Expose(modules = {
-        "namazu.elements.dao.googleplayiapreceipt",
-        "namazu.socialengine.dao.googleplayiapreceipt",
+@Expose({
+    @ExposedModuleDefinition("namazu.elements.dao.googleplayiapreceipt"),
+    @ExposedModuleDefinition(
+        value = "namazu.socialengine.dao.googleplayiapreceipt",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.googleplayiapreceipt instead"))
 })
 public interface GooglePlayIapReceiptDao {
 

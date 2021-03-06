@@ -33,14 +33,45 @@ public interface Constants {
     String SHORT_LINK_BASE = "com.namazustudios.socialengine.short.link.base";
 
     /**
+     * The ELEMENTS_HOME environment variable.
+     */
+    String ELEMENTS_HOME = "ELEMENTS_HOME";
+
+    /**
+     * The default elements configuration directory.
+     */
+    String ELEMENTS_HOME_DEFAULT = "/opt/elements";
+
+    /**
+     * The ELEMENTS_HOME environment variable.
+     */
+    String CONFIGURATION_DIRECTORY = "conf";
+
+    /**
      * The system property which defines the configuration file path
      */
-    String PROPERTIES_FILE = "com.namazustudios.socialengine.configuration.properties";
+    String PROPERTIES_FILE = "com.namazustudios.elements.configuration.properties";
 
     /**
      * The default property file to configure the server.
      */
-    String DEFAULT_PROPERTIES_FILE = "socialengine-configuration.properties";
+    String DEFAULT_PROPERTIES_FILE = "elements.properties";
+
+    /**
+     * The system property which defines the configuration file path
+     *
+     * @deprecated Use the file specified in {@link #PROPERTIES_FILE}
+     */
+    @Deprecated
+    String PROPERTIES_FILE_OLD = "com.namazustudios.socialengine.configuration.properties";
+
+    /**
+     * The (deprecated) default property file to configure the server
+     *
+     * @deprecated Use the file specified in {@link #DEFAULT_PROPERTIES_FILE}
+     */
+    @Deprecated
+    String DEFAULT_PROPERTIES_FILE_OLD = "socialengine-configuration.properties";
 
     /**
      * The web API prefix.  This is the location from which all API requests are served relative to
@@ -74,21 +105,15 @@ public interface Constants {
     String CODE_SERVE_URL = "com.namazustudios.socialengine.code.serve.url";
 
     /**
-     * The storage directory for the git repositories shared among instances that need to have
-     * access to git repositories.
-     */
-    String GIT_STORAGE_DIRECTORY = "com.namazustudios.socialengine.git.storage.directory";
-
-    /**
      * The HTTP tunneling root URL.  This is the base URL where the http rt-http service
      * services requests.
      */
     String HTTP_TUNNEL_URL = "com.namazustudios.socialengine.http.tunnel.url";
 
     /**
-     * Used to specify the port that the http tunnel will run against.
+     * Used to specify the port that the http service will use when binding.
      */
-    String HTTP_TUNNEL_PORT = "com.namazustudios.socialengine.http.tunnel.port";
+    String HTTP_PORT = "com.namazustudios.socialengine.http.port";
 
     /**
      * Used to specify the session timeout, in seconds
@@ -125,16 +150,21 @@ public interface Constants {
      */
     interface Regexp {
 
+        //language=JSRegexp
         /**
-         * Non-blank string.
+         * A string containing no white spaces.
          */
         String NO_WHITE_SPACE = "^\\S+$";
 
+        //language=JSRegexp
         /**
          * Alpha-numeric only.  Allows underscore, but does not allow the word to start with an underscore.
          */
-        String WORD_ONLY = "[^_]\\w+";
+        String WHOLE_WORD_ONLY = "[^_]\\w+";
 
+        //language=JSRegexp
+
+        //language=JSRegexp
         /**
          * A very simple validator
          */

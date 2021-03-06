@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.InternalException;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -11,6 +10,9 @@ import javax.inject.Provider;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.Map;
+
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 /**
  * Created by patricktwohig on 6/25/17.
@@ -26,12 +28,13 @@ public class MongoPasswordUtils {
     private Provider<MessageDigest> messageDigestProvider;
 
     /**
-     * Generates salt and password hash according to the configuration.
+     * Generates salt and password hash according to the configuration and adds the required update operations to the
+     * supplied {@link UpdateBuilder} instance.
      *
-     * @param operations the operations to mutate
+     * @param builder the {@link UpdateBuilder} to mutate
      * @param password the password
      */
-    public void addPasswordToOperations(final UpdateOperations<MongoUser> operations, final String password) {
+    public UpdateBuilder addPasswordToBuilder(final UpdateBuilder builder, final String password) {
 
         final byte[] passwordBytes;
 
@@ -50,9 +53,11 @@ public class MongoPasswordUtils {
         digest.update(salt);
         digest.update(passwordBytes);
 
-        operations.set("salt", salt);
-        operations.set("passwordHash", digest.digest());
-        operations.set("hashAlgorithm", digest.getAlgorithm());
+        return builder.with(
+            set("salt", salt),
+            set("passwordHash", digest.digest()),
+            set("hashAlgorithm", digest.getAlgorithm())
+        );
 
     }
 
@@ -60,24 +65,27 @@ public class MongoPasswordUtils {
      * Scrambles both the salt and the password.  This effectively wipes out the account's
      * password making it inaccessible.
      *
-     * @param operations the operations
+     * @param builder the {@link UpdateBuilder}
      */
-    public void scramblePassword(final UpdateOperations<MongoUser> operations) {
+    public UpdateBuilder scramblePassword(final UpdateBuilder builder) {
 
-        final SecureRandom secureRandom = new SecureRandom();
+        final var secureRandom = new SecureRandom();
 
         byte[] tmp;
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.set("salt", tmp);
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.set("passwordHash", tmp);
 
         final MessageDigest digest = getMessageDigestProvider().get();
-        operations.set("hashAlgorithm", digest.getAlgorithm());
+
+        return builder.with(
+            set("salt", tmp),
+            set("passwordHash", tmp),
+            set("hashAlgorithm", digest.getAlgorithm())
+        );
 
     }
 
@@ -85,9 +93,10 @@ public class MongoPasswordUtils {
      * Scrambles both the salt and the password.  This effectively wipes out the account's
      * password making it inaccessible.
      *
-     * @param operations the operations
+     * @param insertMap the map of objects to set on insert
+     * @return a map with scrambled password added to it
      */
-    public void scramblePasswordOnInsert(final UpdateOperations<MongoUser> operations) {
+    public Map<String, Object> scramblePasswordOnInsert(final Map<String, Object> insertMap) {
 
         final SecureRandom secureRandom = new SecureRandom();
 
@@ -95,15 +104,16 @@ public class MongoPasswordUtils {
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.setOnInsert("salt", tmp);
+        insertMap.put("salt", tmp);
 
         tmp = new byte[SALT_LENGTH];
         secureRandom.nextBytes(tmp);
-        operations.setOnInsert("passwordHash", tmp);
+        insertMap.put("passwordHash", tmp);
 
         final MessageDigest digest = getMessageDigestProvider().get();
-        operations.setOnInsert("hashAlgorithm", digest.getAlgorithm());
+        insertMap.put("hashAlgorithm", digest.getAlgorithm());
 
+        return insertMap;
     }
 
     /**

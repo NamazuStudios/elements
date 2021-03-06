@@ -52,6 +52,10 @@ local function forumulate_headers(code, headers, sequence)
         return sequence
     end
 
+    function methods:toString()
+        return "ResponseHeader { headers, code, sequence }"
+    end
+
     return ResponseHeader:new(methods)
 
 end
@@ -80,6 +84,10 @@ function response.formulate(code, payload, headers, sequence)
 
     function methods:getPayload()
         return payload
+    end
+
+    function methods:toString()
+        return "Response { responseHeaders, payload }"
     end
 
     local r = Response:new(methods)

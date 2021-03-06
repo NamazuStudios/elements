@@ -1,18 +1,11 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.manifest.event.EventManifest;
-import com.namazustudios.socialengine.rt.manifest.event.EventOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
-import java.util.List;
-import java.util.Map;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
-
-import static com.namazustudios.socialengine.rt.EventContext.EVENT_TIMEOUT_MSEC;
-import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 public class SimpleEventService implements EventService {
 
@@ -22,19 +15,18 @@ public class SimpleEventService implements EventService {
 
     private ManifestLoader manifestLoader;
 
-    private long timeout;
+    @Override
+    public void start() {}
 
     @Override
-    public void start() {
-    }
+    public void stop() {}
 
     @Override
-    public void stop() {
-    }
+    public void postAsync(final String eventName, final Attributes attributes,
+                          long timeout, TimeUnit timeoutTimeUnit,
+                          final Object... args) {
 
-    @Override
-    public void postAsync(String eventName, Attributes attributes, Object... args) {
-        final EventManifest eventManifest = getManifestLoader().getEventManifest();
+        final var eventManifest = getManifestLoader().getEventManifest();
 
         if (eventManifest == null) {
             logger.info("No event resources to run.  Skipping.");
@@ -47,16 +39,18 @@ public class SimpleEventService implements EventService {
             return;
         }
 
-        final List<EventOperation> eventOperations = eventManifest.getModulesByEventName().get(eventName);
+        final var eventOperations = eventManifest.getModulesByEventName().get(eventName);
 
         if (eventOperations == null) {
             logger.debug("Event module '{}' specifies no operation.  Skipping.", eventName);
+            return;
         }
 
-        for (final EventOperation operation : eventOperations) {
+        for (final var operation : eventOperations) {
 
-            final String method = operation.getMethod();
-            final String module = operation.getModule();
+            final var method = operation.getMethod();
+            final var module = operation.getModule();
+
             logger.debug("Executing event operation {}: {}.{}", eventName, module, method);
 
             final Consumer<Throwable> failure = ex -> {
@@ -67,9 +61,13 @@ public class SimpleEventService implements EventService {
                 logger.debug("Event operation '{}: {}.{}': Success.", eventName, module, method);
             };
 
-            getRetainedHandlerService().perform(success, failure, getTimeout(), MILLISECONDS, module, attributes, method, args);
+            getRetainedHandlerService().perform(success, failure,
+                                                timeout, timeoutTimeUnit,
+                                                module, attributes,
+                                                method, args);
 
         }
+
     }
 
     public RetainedHandlerService getRetainedHandlerService() {
@@ -90,12 +88,4 @@ public class SimpleEventService implements EventService {
         this.manifestLoader = manifestLoader;
     }
 
-    public long getTimeout() {
-        return timeout;
-    }
-
-    @Inject
-    public void setTimeout(@Named(EVENT_TIMEOUT_MSEC) long timeout) {
-        this.timeout = timeout;
-    }
 }

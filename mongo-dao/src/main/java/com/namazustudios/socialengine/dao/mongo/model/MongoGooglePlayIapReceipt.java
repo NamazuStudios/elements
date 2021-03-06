@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.model;
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.Objects;
 
@@ -11,7 +11,7 @@ import java.util.Objects;
         @SearchableField(name = "orderId", path = "/orderId", type = String.class)
 )
 @SearchableDocument()
-@Entity(value = "google_play_iap_receipt", noClassnameStored = true)
+@Entity(value = "google_play_iap_receipt", useDiscriminator = false)
 public class MongoGooglePlayIapReceipt {
 
     @Id

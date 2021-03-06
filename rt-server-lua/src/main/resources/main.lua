@@ -335,16 +335,16 @@ manifest.http = {
 }
 
 manifest.startup = { 
-    ["example.startup"] = {
-        operations = {
-            run_once = {
-                method = "run_once"
-            },
-            run_forever = {
-                method = "run_forever"
-            }
-        }
-    }
+    --["example.startup"] = {
+    --    operations = {
+    --        run_once = {
+    --            method = "run_once"
+    --        },
+    --        run_forever = {
+    --            method = "run_forever"
+    --        }
+    --    }
+    --}
 }
 
 manifest.event = {

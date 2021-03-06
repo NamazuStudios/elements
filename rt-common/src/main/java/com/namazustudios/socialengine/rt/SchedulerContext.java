@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.annotation.*;
+import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.routing.SameNodeIdRoutingStrategy;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Serialize;
@@ -32,8 +35,8 @@ public interface SchedulerContext {
      * @param timeUnit the {@link TimeUnit} instance designating the time units of measure
      *
      */
-    @RemotelyInvokable
-    void resumeTaskAfterDelay(@Serialize TaskId taskId,
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    void resumeTaskAfterDelay(@ProvidesAddress @Serialize TaskId taskId,
                               @Serialize long time,
                               @Serialize TimeUnit timeUnit);
 
@@ -43,8 +46,8 @@ public interface SchedulerContext {
      * @param taskId the {@link TaskId} of the supplied task
      * @param results zero or more results from resuming the task
      */
-    @RemotelyInvokable
-    void resume(@Serialize TaskId taskId, @Serialize Object ... results);
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    void resume(@ProvidesAddress @Serialize TaskId taskId, @Serialize Object ... results);
 
     /**
      * Resumes a task that was waiting on a network call.
@@ -52,8 +55,8 @@ public interface SchedulerContext {
      * @param result the result of the network operation, passed to the task
      *
      */
-    @RemotelyInvokable
-    void resumeFromNetwork(@Serialize TaskId taskId, @Serialize Object result);
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    void resumeFromNetwork(@ProvidesAddress @Serialize TaskId taskId, @Serialize Object result);
 
     /**
      * Resumes a task that was waiting for any reason.  This is used to hand an error to the running task in order to a
@@ -62,7 +65,7 @@ public interface SchedulerContext {
      * @param throwable the error in the blocked operation
      *
      */
-    @RemotelyInvokable
-    void resumeWithError(@Serialize TaskId taskId, @Serialize Throwable throwable);
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    void resumeWithError(@ProvidesAddress @Serialize TaskId taskId, @Serialize Throwable throwable);
 
 }

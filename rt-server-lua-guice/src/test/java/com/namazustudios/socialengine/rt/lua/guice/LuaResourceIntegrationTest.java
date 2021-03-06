@@ -4,26 +4,26 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterClass;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+import static com.namazustudios.socialengine.rt.Context.REMOTE;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.*;
 
 /**
@@ -33,20 +33,32 @@ public class LuaResourceIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withNodeModule(new LuaModule())
-        .withNodeModule(new XodusContextModule()
-            .withSchedulerThreads(1)
-            .withHandlerTimeout(3, MINUTES))
-        .withNodeModule(new XodusEnvironmentModule()
-            .withTempEnvironments())
-        .withNodeModule(new JavaEventModule())
-        .withDefaultHttpClient()
-        .start();
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+                getXodusTest(LuaResourceIntegrationTest::new),
+                getUnixFSTest(LuaResourceIntegrationTest::new)
+        };
+    }
 
-    private final Node node = getEmbeddedTestService().getNode();
+    private final Context context;
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final EmbeddedTestService embeddedTestService;
+
+    private LuaResourceIntegrationTest(final EmbeddedTestService embeddedTestService) {
+
+        this.embeddedTestService = embeddedTestService;
+
+        final var testApplicationId = getEmbeddedTestService()
+                .getWorker()
+                .getApplicationId();
+
+        this.context = getEmbeddedTestService()
+                .getClient()
+                .getContextFactory()
+                .getContextForApplication(testApplicationId);
+
+    }
 
     @AfterClass
     public void teardown() {
@@ -186,15 +198,15 @@ public class LuaResourceIntegrationTest {
 
     @AfterMethod
     public void clearResourceService() {
-        getContext().getResourceContext().destroyAllResources();
+        try{
+            getContext().getResourceContext().destroyAllResources();
+        } catch (UnsupportedOperationException ex){
+
+        }
     }
 
-    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+    public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {

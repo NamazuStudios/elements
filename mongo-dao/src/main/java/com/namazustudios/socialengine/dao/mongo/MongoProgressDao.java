@@ -1,12 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
-import com.mongodb.WriteResult;
+import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ProgressDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.mission.*;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -19,15 +18,18 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.mission.Step;
+
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.namazustudios.socialengine.model.mission.Step.buildRewardIssuanceTags;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.ModifyOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.UpdateOperations;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -39,6 +41,8 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoProgressId.parseOrThrowNotFoundException;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.*;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.*;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.*;
 import static java.util.Collections.emptyList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
@@ -48,13 +52,13 @@ import static org.apache.commons.lang3.StringUtils.isNotEmpty;
 @Singleton
 public class MongoProgressDao implements ProgressDao {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MongoProgressDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoProgressDao.class);
 
     private StandardQueryParser standardQueryParser;
 
     private ObjectIndex objectIndex;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ValidationHelper validationHelper;
 
@@ -80,21 +84,21 @@ public class MongoProgressDao implements ProgressDao {
     public Pagination<Progress> getProgresses(final Profile profile, final int offset, final int count,
                                               final List<String> tags, final String search) {
         if (isNotEmpty(nullToEmpty(search).trim())) {
-            LOGGER.warn("getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
+            logger.warn("getProgresss(Profile profile, int offset, int count, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values");
         }
 
-        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
+        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
 
-        query.field("profile").equal(getDozerMapper().map(profile, MongoProfile.class));
+        query.filter(eq("profile", getDozerMapper().map(profile, MongoProfile.class)));
 
         if (tags != null && !tags.isEmpty()) {
-            query.field("mission.tags").hasAnyOf(tags);
+            query.filter(Filters.in("mission.tags", tags));
         }
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
+            mongoItem -> getDozerMapper().map(mongoItem, Progress.class), new FindOptions());
 
     }
 
@@ -108,19 +112,19 @@ public class MongoProgressDao implements ProgressDao {
                                               final List<String> tags, final String search) {
 
         if (isNotEmpty(search)) {
-            LOGGER.warn(" getProgresss(int offset, int count, String query) was called with a query " +
+            logger.warn(" getProgresss(int offset, int count, String query) was called with a query " +
                     "string parameter.  This field is presently ignored and will return all values");
         }
 
-        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
+        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
 
         if (tags != null && !tags.isEmpty()) {
-            query.field("mission.tags").hasAnyOf(tags);
+            query.filter(Filters.in("mission.tags", tags));
         }
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Progress.class));
+            mongoItem -> getDozerMapper().map(mongoItem, Progress.class), new FindOptions());
 
     }
 
@@ -130,11 +134,11 @@ public class MongoProgressDao implements ProgressDao {
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profile);
         final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(missionNameOrId);
 
-        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
-        query.field("profile").equal(mongoProfile);
-        query.field("_id.missionId").equal(mongoMission.getObjectId());
+        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+        query.filter(eq("profile", mongoProfile));
+        query.filter(eq("_id.missionId", mongoMission.getObjectId()));
 
-        final MongoProgress mongoProgress = query.get();
+        final MongoProgress mongoProgress = query.first();
 
         if (mongoProgress == null) {
             throw new NotFoundException("Progress not found.");
@@ -152,11 +156,11 @@ public class MongoProgressDao implements ProgressDao {
         }
 
         final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(identifier);
-        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
+        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
 
-        query.field("_id").equal(mongoProgressId);
+        query.filter(eq("_id", mongoProgressId));
 
-        final MongoProgress progress = query.get();
+        final MongoProgress progress = query.first();
 
         if (progress == null) {
             throw new NotFoundException("Unable to find item with an id or name of " + identifier);
@@ -171,29 +175,23 @@ public class MongoProgressDao implements ProgressDao {
 
         getValidationHelper().validateModel(progress, Update.class);
 
-        final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(progress.getId());
+        final var mongoProgressId = parseOrThrowNotFoundException(progress.getId());
 
-        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
-        query.field("_id").equal(mongoProgressId);
+        final var query = getDatastore().find(MongoProgress.class);
+        query.filter(eq("_id", mongoProgressId));
 
-        final UpdateOperations<MongoProgress> operations = getDatastore().createUpdateOperations(MongoProgress.class);
+        final var mongoProgress = query.modify(
+            set("version", randomUUID().toString()),
+            set("remaining", progress.getRemaining()),
+            set("currentStep", progress.getCurrentStep())
+        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
 
-        operations.set("version", randomUUID().toString());
-        operations.set("remaining", progress.getRemaining());
-        operations.set("currentStep", progress.getCurrentStep());
-
-        final FindAndModifyOptions options = new FindAndModifyOptions()
-            .returnNew(true)
-            .upsert(false);
-
-        final MongoProgress updatedMongoProgress = getDatastore().findAndModify(query, operations, options);
-
-        if (updatedMongoProgress == null) {
+        if (mongoProgress == null) {
             throw new NotFoundException("Progress with id or name of " + progress.getId() + " does not exist");
         }
 
-        getObjectIndex().index(updatedMongoProgress);
-        return getDozerMapper().map(updatedMongoProgress, Progress.class);
+        getObjectIndex().index(mongoProgress);
+        return getDozerMapper().map(mongoProgress, Progress.class);
 
     }
 
@@ -213,7 +211,9 @@ public class MongoProgressDao implements ProgressDao {
                 final MongoMission mongoMission = getMongoMissionDao().getMongoMissionByNameOrId(progress.getMission().getId());
                 final MongoProgressId mongoProgressId = new MongoProgressId(mongoProfile, mongoMission);
 
-                final MongoProgress mongoProgress = getDatastore().get(MongoProgress.class, mongoProgressId);
+                final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+                query.filter(eq("_id", mongoProgressId));
+                final MongoProgress mongoProgress = query.first();
                 if (mongoProgress != null) return mongoProgress;
 
                 final List<Step> steps = progress.getMission().getSteps();
@@ -237,7 +237,7 @@ public class MongoProgressDao implements ProgressDao {
 
                 try {
                     getDatastore().insert(toCreate);
-                    return getDatastore().get(toCreate);
+                    return toCreate;
                 } catch (DuplicateKeyException ex) {
                     throw new ContentionException(ex);
                 }
@@ -257,9 +257,11 @@ public class MongoProgressDao implements ProgressDao {
     @Override
     public void deleteProgress(final String progressId) {
         final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(progressId);
-        final WriteResult writeResult = getDatastore().delete(MongoProgress.class, mongoProgressId);
+        final Query<MongoProgress> query = getDatastore().find(MongoProgress.class);
+        query.filter(eq("_id", mongoProgressId));
+        final DeleteResult deleteResult = query.delete();
 
-        if (writeResult.getN() == 0) {
+        if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Progress not found: " + progressId);
         }
     }
@@ -279,35 +281,25 @@ public class MongoProgressDao implements ProgressDao {
             throw new TooBusyException(e);
         }
 
-        return getDozerMapper().map(getDatastore().get(mongoProgress), Progress.class);
+        return getDozerMapper().map(mongoProgress, Progress.class);
 
     }
 
     private MongoProgress doAdvanceProgress(final Progress progress, final int actionsPerformed) throws ContentionException {
 
-        final MongoProgressId mongoProgressId = parseOrThrowNotFoundException(progress.getId());
-        final MongoProgress mongoProgress = getDatastore().get(MongoProgress.class, mongoProgressId);
+        final var mongoProgressId = parseOrThrowNotFoundException(progress.getId());
 
-        final Query<MongoProgress> query = getDatastore().createQuery(MongoProgress.class);
+        final var query = getDatastore().find(MongoProgress.class);
+        query.filter(eq("_id", mongoProgressId));
 
-        query.field("_id").equal(mongoProgressId);
-        query.field("version").equal(mongoProgress.getVersion());
+        final var mongoProgress = query.first();
 
-        if (mongoProgress == null) {
-            throw new NotFoundException("Progress with id not found: " + progress.getId());
-        }
+        if (mongoProgress == null) throw new NotFoundException("Progress with id not found: " + progress.getId());
+        query.filter(eq("version", mongoProgress.getVersion()));
 
-        final UpdateOperations<MongoProgress> updates = getDatastore().createUpdateOperations(MongoProgress.class);
-
-        if ((progress.getRemaining() - actionsPerformed) > 0) {
-            updates.dec("remaining", actionsPerformed);
-        } else {
-            advanceMission(updates, mongoProgress, actionsPerformed);
-        }
-
-        final MongoProgress result = getDatastore().findAndModify(query, updates, new FindAndModifyOptions()
-            .upsert(false)
-            .returnNew(true));
+        final var result = progress.getRemaining() - actionsPerformed > 0
+                ? debitActions(query, actionsPerformed)
+                : advanceMission(query, mongoProgress, actionsPerformed);
 
         if (result == null) {
             // This happens because either the Progress was deleted while applying the rewards, the version mismatched
@@ -320,16 +312,25 @@ public class MongoProgressDao implements ProgressDao {
 
     }
 
-    private void advanceMission(final UpdateOperations<MongoProgress> updates,
-                                final MongoProgress mongoProgress,
-                                final int actionsPerformed) {
+    private MongoProgress debitActions(final Query<MongoProgress> query,
+                                       final int actionsPerformed) {
+        return query.modify(
+            set("version", randomUUID().toString()),
+            dec("remaining", actionsPerformed)
+        ).execute(new ModifyOptions().upsert(false).returnDocument(AFTER));
+    }
+
+    private MongoProgress advanceMission(final Query<MongoProgress> query,
+                                         final MongoProgress mongoProgress,
+                                         final int actionsPerformed) {
 
         int completedSteps = 0;
         int actionsToApply = actionsPerformed;
         int remaining = mongoProgress.getRemaining();
-        MongoStep step = mongoProgress.getCurrentStep();
+        var step = mongoProgress.getCurrentStep();
 
-        final MongoUser mongoUser = mongoProgress.getProfile().getUser();
+        final var builder = new UpdateBuilder();
+        final var mongoUser = mongoProgress.getProfile().getUser();
 
         while (step != null && actionsToApply >= remaining) {
 
@@ -339,46 +340,48 @@ public class MongoProgressDao implements ProgressDao {
 
             // Assigns the rewards from the step
 
-            final MongoStep _step = step;
-            final int _completedSteps = completedSteps;
-            final List<MongoRewardIssuance> rewardIssuances = step.getRewards()
+            final var _step = step;
+            final var _completedSteps = completedSteps;
+            final var rewardIssuances = step.getRewards()
                 .stream()
                 .filter(r -> r != null && r.getItem() != null)
                 .map(r -> {
-                    final Progress progress = getDozerMapper().map(mongoProgress, Progress.class);
-                    final Step __step = getDozerMapper().map(_step, Step.class);
-                    final Reward reward = getDozerMapper().map(r, Reward.class);
-                    final User user = getDozerMapper().map(mongoUser, User.class);
-                    final Map<String, Object> metadata = generateMissionProgressMetadata(progress, __step);
+
+                    final var progress = getDozerMapper().map(mongoProgress, Progress.class);
+                    final var __step = getDozerMapper().map(_step, Step.class);
+                    final var reward = getDozerMapper().map(r, Reward.class);
+                    final var user = getDozerMapper().map(mongoUser, User.class);
+                    final var metadata = generateMissionProgressMetadata(progress, __step);
 
                     final int stepSequence = progress.getSequence() + _completedSteps;
 
                     final String context = buildMissionProgressContextString(
-                            mongoProgress.getObjectId().toHexString(),
-                            stepSequence,
-                            __step.getRewards().indexOf(reward));
+                        mongoProgress.getObjectId().toHexString(),
+                        stepSequence,
+                        __step.getRewards().indexOf(reward));
 
-                    final List<String> tags = buildRewardIssuanceTags(progress, stepSequence);
+                    final var tags = buildRewardIssuanceTags(progress, stepSequence);
 
-                    final RewardIssuance issuance = new RewardIssuance();
+                    final var issuance = new RewardIssuance();
                     issuance.setItem(reward.getItem());
                     issuance.setItemQuantity(reward.getQuantity());
                     issuance.setUser(user);
                     issuance.setType(PERSISTENT);
                     issuance.setSource(MISSION_PROGRESS_SOURCE);
-                    issuance.setContext(context);
                     issuance.setMetadata(metadata);
                     issuance.setTags(tags);
+                    issuance.setContext(context);
 
-                    final RewardIssuance createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(issuance);
+                    final var createdRewardIssuance = getRewardIssuanceDao().getOrCreateRewardIssuance(issuance);
+                    return getDozerMapper().map(createdRewardIssuance, MongoRewardIssuance.class);
 
-                    final MongoRewardIssuance mongoRewardIssuance =
-                            getDozerMapper().map(createdRewardIssuance, MongoRewardIssuance.class);
-
-                    return mongoRewardIssuance;
                 }).collect(toList());
 
-            updates.addToSet("rewardIssuances", rewardIssuances);
+            builder.with(
+                set("version", randomUUID().toString()),
+                addToSet("rewardIssuances", rewardIssuances)
+            );
+
             actionsToApply -= remaining;
 
             // Increments the completed steps and applies to the remaining actions to apply.  We keep
@@ -397,8 +400,12 @@ public class MongoProgressDao implements ProgressDao {
         // where the Step is simply null, then we set the remaining to zero.  Future iterations of this should
         // skip the mission.
 
-        updates.inc("sequence", completedSteps);
-        updates.set("remaining", step == null ? 0 : step.getCount() - actionsToApply);
+        return builder.with(
+            inc("sequence", completedSteps),
+            set("version", randomUUID().toString()),
+            set("remaining", step == null ? 0 : step.getCount() - actionsToApply)
+        ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER));
+
     }
 
     public Map<String, Object> generateMissionProgressMetadata(Progress progress, Step step) {
@@ -411,12 +418,12 @@ public class MongoProgressDao implements ProgressDao {
         return map;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

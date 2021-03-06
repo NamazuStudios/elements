@@ -13,10 +13,11 @@ import com.namazustudios.socialengine.model.session.AppleSignInSession;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.query.experimental.filters.Filters;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -94,14 +95,14 @@ public class MongoAppleSignInSessionDao implements AppleSignInSessionDao {
         final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(mongoUserId);
         final String sessionId = mongoSessionSecret.getSecretDigestEncoded(messageDigest, mongoUser.getPasswordHash());
 
-        final Query<MongoAppleSignInSession> query = getDatastore().createQuery(MongoAppleSignInSession.class);
+        final Query<MongoAppleSignInSession> query = getDatastore().find(MongoAppleSignInSession.class);
 
-        query.and(
-            query.criteria("_id").equal(sessionId),
-            query.criteria("type").equal(APPLE_SIGN_IN)
-        );
+        query.filter(Filters.and(
+                Filters.eq("_id", sessionId),
+                Filters.eq("type", APPLE_SIGN_IN)
+        ));
 
-        final MongoSession mongoSession = query.get();
+        final MongoSession mongoSession = query.first();
 
         if (mongoSession == null) {
             return Optional.empty();

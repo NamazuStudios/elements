@@ -1,22 +1,18 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
-import com.namazustudios.socialengine.rt.manifest.startup.StartupModule;
-import com.namazustudios.socialengine.rt.manifest.startup.StartupOperation;
+import com.namazustudios.socialengine.rt.remote.Node;
+import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Singleton;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Consumer;
 
 import static java.lang.Runtime.getRuntime;
 
 @Singleton
-public class SimpleContext implements Context {
+public class SimpleContext implements Context, NodeLifecycle {
 
     private Scheduler scheduler;
 
@@ -34,11 +30,11 @@ public class SimpleContext implements Context {
 
     private TaskContext taskContext;
 
-    private EventContext eventContext;
-
     private AssetLoader assetLoader;
 
-    private ManifestLoader manifestLoader;
+    private ManifestContext manifestContext;
+
+    private EventContext eventContext;
 
     private Thread hook = new Thread(this::shutdown);
 
@@ -52,54 +48,7 @@ public class SimpleContext implements Context {
         getSchedulerContext().start();
         getIndexContext().start();
         getHandlerContext().start();
-        getManifestLoader().loadAndRunIfNecessary();
-        runStartupManifest();
-    }
-
-    private void runStartupManifest() {
-
-        final StartupManifest startupManifest = getManifestLoader().getStartupManifest();
-
-        if (startupManifest == null) {
-            logger.info("No startup Resources to run.  Skipping.");
-            return;
-        } else if (startupManifest.getModulesByName() == null) {
-            logger.info("No startup modules specified in manifest.  Skipping.");
-            return;
-        }
-
-        for (final Map.Entry<String, StartupModule> entry : startupManifest.getModulesByName().entrySet()) {
-
-            final StartupModule startupModule = entry.getValue();
-
-            if (startupModule == null) {
-                logger.info("Startup module '{}' specifies no operation.  Skipping.", entry.getKey());
-                continue;
-            }
-
-            final String module = entry.getKey();
-            final Map<String, StartupOperation> startupOperationsByName = startupModule.getOperationsByName();
-
-            for (final StartupOperation startupOperation : startupOperationsByName.values()) {
-
-                final String method = startupOperation.getMethod();
-                logger.info("Executing startup operation {}: {}.{}", startupOperation.getName(), module, method);
-
-                final Consumer<Throwable> failure = ex -> {
-                    logger.error("Startup exception caught for module: {}, method: {}.", module, method, ex);
-                };
-
-                final Consumer<Object> success = result -> {
-                    logger.info("Startup operation '{}: {}.{}': Success.", startupOperation.getName(), module, method);
-                };
-
-                // unused for now
-                final SimpleAttributes attributes = new SimpleAttributes();
-                getHandlerContext().invokeRetainedHandlerAsync(success, failure, attributes, module, method);
-
-            }
-        }
-
+        getManifestContext().start();
     }
 
     @Override
@@ -118,18 +67,23 @@ public class SimpleContext implements Context {
         // Then stops all services
         getResourceLoader().close();
         getAssetLoader().close();
-        getManifestLoader().close();
+        getManifestContext().stop();
 
+    }
+
+    @Override
+    public void nodePreStart(Node node) {
+        start();
+    }
+
+    @Override
+    public void nodePostStop(Node node) {
+        shutdown();
     }
 
     @Override
     public ResourceContext getResourceContext() {
         return resourceContext;
-    }
-
-    @Inject
-    public void setResourceContext(ResourceContext resourceContext) {
-        this.resourceContext = resourceContext;
     }
 
     @Override
@@ -147,9 +101,54 @@ public class SimpleContext implements Context {
         return handlerContext;
     }
 
+    @Override
+    public TaskContext getTaskContext() {
+        return taskContext;
+    }
+
+    @Override
+    public ManifestContext getManifestContext() {
+        return manifestContext;
+    }
+
+    @Override
+    public EventContext getEventContext() {
+        return eventContext;
+    }
+
     @Inject
-    public void setSchedulerContext(SchedulerContext schedulerContext) {
+    public void setResourceContext(@Named(LOCAL) ResourceContext resourceContext) {
+        this.resourceContext = resourceContext;
+    }
+
+    @Inject
+    public void setSchedulerContext(@Named(LOCAL) SchedulerContext schedulerContext) {
         this.schedulerContext = schedulerContext;
+    }
+
+    @Inject
+    public void setIndexContext(@Named(LOCAL) IndexContext indexContext) {
+        this.indexContext = indexContext;
+    }
+
+    @Inject
+    public void setHandlerContext(@Named(LOCAL) HandlerContext handlerContext) {
+        this.handlerContext = handlerContext;
+    }
+
+    @Inject
+    public void setTaskContext(@Named(LOCAL) TaskContext taskContext) {
+        this.taskContext = taskContext;
+    }
+
+    @Inject
+    public void setManifestContext(@Named(LOCAL) ManifestContext manifestContext) {
+        this.manifestContext = manifestContext;
+    }
+
+    @Inject
+    public void setEventContext(@Named(LOCAL) EventContext eventContext) {
+        this.eventContext = eventContext;
     }
 
     public Scheduler getScheduler() {
@@ -186,45 +185,6 @@ public class SimpleContext implements Context {
     @Inject
     public void setAssetLoader(AssetLoader assetLoader) {
         this.assetLoader = assetLoader;
-    }
-
-    @Inject
-    public void setIndexContext(IndexContext indexContext) {
-        this.indexContext = indexContext;
-    }
-
-    @Inject
-    public void setHandlerContext(HandlerContext handlerContext) {
-        this.handlerContext = handlerContext;
-    }
-
-    @Override
-    public TaskContext getTaskContext() {
-        return taskContext;
-    }
-
-    @Inject
-    public void setTaskContext(TaskContext taskContext) {
-        this.taskContext = taskContext;
-    }
-
-    public ManifestLoader getManifestLoader() {
-        return manifestLoader;
-    }
-
-    @Inject
-    public void setManifestLoader(ManifestLoader manifestLoader) {
-        this.manifestLoader = manifestLoader;
-    }
-
-    @Override
-    public EventContext getEventContext() {
-        return eventContext;
-    }
-
-    @Inject
-    public void setEventContext(EventContext eventContext) {
-        this.eventContext = eventContext;
     }
 
 }

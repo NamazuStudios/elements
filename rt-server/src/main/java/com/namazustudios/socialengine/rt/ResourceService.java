@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,9 @@ import java.util.Spliterator;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
+
+import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
+import static org.slf4j.LoggerFactory.getLogger;
 
 /**
  * This is the service responsible for maintaining a set of {@link Resource} instances.  This contains code to handle a
@@ -37,6 +41,16 @@ public interface ResourceService extends AutoCloseable {
      */
     default void start() {};
 
+
+    /**
+     * Releases all memory associated with this {@link ResourceService}.  The actual action that happens here is
+     * dependent on the specific implementation.  For in-memory implementations, this will simply close all resources
+     * and exit.  For persistence-backed implementations this should flush all resources to disk before closing all.
+     *
+     * Once closed this instance may only be used after it has been restarted.
+     */
+    default void stop() {}
+
     /**
      * Without affecting acquisition or releases, this performs a simple check to see if the {@link Resource} with the
      * supplied {@link ResourceId} exists in this {@link ResourceService}.
@@ -53,7 +67,7 @@ public interface ResourceService extends AutoCloseable {
      *
      * @param resourceId the {@link ResourceId}
      * @return the Resource, never null
-     * @throws {@link ResourceNotFoundException} if no resource exists with that particular ID
+     * @throws ResourceNotFoundException if no resource exists with that particular ID
      */
     Resource getAndAcquireResourceWithId(ResourceId resourceId);
 
@@ -64,8 +78,8 @@ public interface ResourceService extends AutoCloseable {
      * @param path the path the {@link Path}
      * @return the resource the {@link Resource}
      *
-     * @throws {@link ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws ResourceNotFoundException if no resource exists at that path
+     * @throws IllegalArgumentException if the path is a wildcard path
      */
     Resource getAndAcquireResourceAtPath(Path path);
 
@@ -88,8 +102,8 @@ public interface ResourceService extends AutoCloseable {
      * @param path the initial path for the {@link Resource}
      * @param resource the resource to insert
      *
-     * @throws {@link DuplicateException} if a resource is already present
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  DuplicateException if a resource is already present
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     void addAndReleaseResource(Path path, Resource resource);
 
@@ -102,10 +116,13 @@ public interface ResourceService extends AutoCloseable {
      * initially, which can be thought of as the primary path, and then subsequent aliases or links be maintained, even
      * if those particular {@link Path}s may collide.
      *
-     * Unlike {@link #addAndAcquireResource(Path, Resource)}, this will not immediately scheduleRelease the {@link Resource}
+     * Unlike {@link #addAndAcquireResource(Path, Resource)}, this will not immediately release the {@link Resource}
      * therefore forcing it to stay in memory until a subsequent call to {@link #release(Resource)} is made.  This is
      * useful for {@link Resource} instances that are short-lived and may never need to be serialized (such as those
      * {@link Resource}s used by the {@link HandlerContext}).
+     *
+     * This is only safe to use with freshly created {@link Resource} instances whose {@link ResourceId} has never
+     * before been seen by the system.
      *
      * @param path
      * @param resource
@@ -114,10 +131,10 @@ public interface ResourceService extends AutoCloseable {
     Resource addAndAcquireResource(Path path, Resource resource);
 
     /**
-     * Attempts to scheduleRelease ownership of the specified {@link Resource}, throwing an instance of
-     * {@link ResourceNotFoundException} if the operation failed.
+     * Attempts to release ownership of the specified {@link Resource}, throwing an instance of
+     * {@link ResourceNotFoundException if the operation failed.
      *
-     * @param resource the {@link Resource} to scheduleRelease
+     * @param resource the {@link Resource} to release
      */
     default void release(final Resource resource) {
         if (!tryRelease(resource)) {
@@ -131,7 +148,7 @@ public interface ResourceService extends AutoCloseable {
      *
      * This does not guarantee that the {@link Resource} will be serialized.  It does however, make it a candidate
      * for serialization as soon as possible.  Usually when all other processes operating against the {@link Resource}
-     * scheduleRelease their implementation.
+     * release their implementation.
      *
      * The default implementation of this does nothing as in-memory implementations do not need to implement this.  If
      * the {@link Resource} is not managed by this {@link ResourceService} then the behavior of this call is undefined.
@@ -149,7 +166,7 @@ public interface ResourceService extends AutoCloseable {
      * many {@link ResourceId} instances.
      *
      * The returned {@link Collection<ResourceId>} will be read only, and the {@link Iterator#remove()} method will throw
-     * an instance of {@link UnsupportedOperationException} if removal is attempted.
+     * an instance of {@link UnsupportedOperationException if removal is attempted.
      *
      * @param path the {@link Path} to match
      * @return an {@link Iterable<ResourceId>} instances
@@ -186,8 +203,8 @@ public interface ResourceService extends AutoCloseable {
      * @param sourceResourceId
      * @param destination
      *
-     * @throws {@link DuplicateException} if an alias already exists for the destination
-     * @throws {@link ResourceNotFoundException} if the {@link Resource} can't be found
+     * @throws  DuplicateException if an alias already exists for the destination
+     * @throws  ResourceNotFoundException if the {@link Resource} can't be found
      */
     void link(ResourceId sourceResourceId, Path destination);
 
@@ -230,7 +247,7 @@ public interface ResourceService extends AutoCloseable {
      * @param path a {@link Path} to unlink
      * @param removed a Consumer<Resource> which will receive the removed {@link Resource}
      * @return true if the {@link Resource} associated with the {@link Path} was removed, false otherwise
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     Unlink unlinkPath(Path path, Consumer<Resource> removed);
 
@@ -242,7 +259,7 @@ public interface ResourceService extends AutoCloseable {
      * @return
      */
     default List<Unlink> unlinkMultiple(final Path path, int max) {
-        final Logger logger = LoggerFactory.getLogger(getClass());
+        final Logger logger = getLogger(getClass());
         return unlinkMultiple(path, max, r -> {
             try {
                 r.close();
@@ -267,22 +284,23 @@ public interface ResourceService extends AutoCloseable {
      *
      * @param resourceId the path to the resource
      *
-     * @throws {@l  ink ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  ResourceNotFoundException if no resource exists at that path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     Resource removeResource(ResourceId resourceId);
 
     /**
      * Removes a {@link Resource} instance from this resource service.
      *
-     * @param resoureIdString the path as a string
+     * @param resourceIdString the path as a string
      * @return the removed {@link Resource}
      *
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      *
      */
-    default Resource removeResource(final  String resoureIdString) {
-        return removeResource(new ResourceId(resoureIdString));
+    default Resource removeResource(final  String resourceIdString) {
+        final ResourceId resourceId = resourceIdFromString(resourceIdString);
+        return removeResource(resourceId);
     }
 
     /**
@@ -307,20 +325,20 @@ public interface ResourceService extends AutoCloseable {
      * Removes a {@link Resource} and then immediately closes it.
      *
      * @param resourceId
-     * @throws {@link ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @throws  ResourceNotFoundException if no resource exists at that path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     default void destroy(final ResourceId resourceId) {
-        final Resource resource = removeResource(resourceId);
-        resource.close();
+        final var resource = removeResource(resourceId);
+        if (resource != null) resource.close();
     }
 
     /**
      * Removes a {@link Resource} and then immediately closes it.
      *
-     * @param resourceIdString
-     * @throws {@link ResourceNotFoundException} if no resource exists at that path
-     * @throws {@link IllegalArgumentException} if the path is a wildcard path
+     * @param resourceIdString the {@link String} representation of a {@link ResourceId}
+     * @throws  ResourceNotFoundException if no resource exists at that path
+     * @throws  IllegalArgumentException if the path is a wildcard path
      */
     default void destroy(final String resourceIdString) {
         final Resource resource = removeResource(resourceIdString);
@@ -344,21 +362,11 @@ public interface ResourceService extends AutoCloseable {
     Stream<Resource> removeAllResources();
 
     /**
-     * Releases all memory associated with this {@link ResourceService}.  The actual action that happens here is
-     * dependent on the specific implementation.  For in-memory implementations, this will simply close all resources
-     * and exit.  For persistence-backed implementations this should flush all resources to disk before closing all.
-     *
-     * Once closed this instance may no longer be used.
-     */
-    @Override
-    void close();
-
-    /**
      * Removes all resources from the service and closes them.  Any exceptions encountered are logged and all resources
      * are attempted to be closed.
      */
     default void removeAndCloseAllResources() {
-        final Logger logger = LoggerFactory.getLogger(getClass());
+        final Logger logger = getLogger(getClass());
         removeAllResources().forEach(resource -> {
             try {
                 resource.close();
@@ -367,6 +375,21 @@ public interface ResourceService extends AutoCloseable {
             }
         });
     }
+
+    long getInMemoryResourceCount();
+
+    /**
+     * Closes this {@link ResourceService}. Equivalent to calling {@link #stop()}
+     */
+    @Override
+    default void close() {
+        try {
+            stop();
+        } catch (IllegalStateException ex) {
+            final Logger logger = getLogger(getClass());
+            logger.info("Already closed.", ex);
+        }
+    };
 
     /**
      * Contains the association between the {@link Path} and {@link ResourceId}.

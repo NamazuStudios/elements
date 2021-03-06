@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MatchmakingApplicationConfigurationDialogComponent } from './matchmaking-application-configuration-dialog.component';
+import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
+import {FormBuilder, FormsModule, ReactiveFormsModule} from "@angular/forms";
 
 describe('MatchmakingApplicationConfigurationDialogComponent', () => {
   let component: MatchmakingApplicationConfigurationDialogComponent;
@@ -8,7 +10,23 @@ describe('MatchmakingApplicationConfigurationDialogComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ MatchmakingApplicationConfigurationDialogComponent ]
+      declarations: [ MatchmakingApplicationConfigurationDialogComponent ],
+      imports: [MatDialogModule, FormsModule, ReactiveFormsModule],
+      providers: [
+        FormBuilder,
+        { provide: MatDialogRef, useValue: {} },
+        { provide: MAT_DIALOG_DATA, useValue: { applicationConfiguration: {
+              scheme: 1234,
+              success: {
+                module: "module",
+                method: "method"
+              },
+              parent: {
+                id: 1234
+              }
+            }}},
+      ]
+
     })
     .compileComponents();
   }));

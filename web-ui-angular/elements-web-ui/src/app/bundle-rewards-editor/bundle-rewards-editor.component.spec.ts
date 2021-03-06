@@ -1,6 +1,8 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { BundleRewardsEditorComponent } from './bundle-rewards-editor.component';
+import {FormBuilder, FormsModule, ReactiveFormsModule} from "@angular/forms";
+import {HttpClientTestingModule} from "@angular/common/http/testing";
 
 describe('BundleRewardsEditorComponent', () => {
   let component: BundleRewardsEditorComponent;
@@ -8,7 +10,9 @@ describe('BundleRewardsEditorComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ BundleRewardsEditorComponent ]
+      declarations: [ BundleRewardsEditorComponent ],
+      imports: [FormsModule, ReactiveFormsModule, HttpClientTestingModule],
+      providers: [FormBuilder]
     })
     .compileComponents();
   }));

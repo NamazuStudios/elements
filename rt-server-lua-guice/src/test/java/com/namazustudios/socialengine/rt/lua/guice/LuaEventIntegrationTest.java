@@ -1,53 +1,64 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.Node;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
-import org.mockito.Mockito;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.Assert;
-import org.testng.TestNG;
 import org.testng.annotations.AfterClass;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.Exchanger;
 
-import static java.util.concurrent.TimeUnit.MINUTES;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.verify;
 
+@Test
 public class LuaEventIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
 
-    private final TestJavaEvent tje = mock(TestJavaEvent.class);
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+            getXodusTest(LuaEventIntegrationTest::new),
+            getUnixFSTest(LuaEventIntegrationTest::new)
+        };
+    }
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-            .withNodeModule(new LuaModule())
-            .withNodeModule(new XodusContextModule()
-                    .withSchedulerThreads(1)
-                    .withHandlerTimeout(3, MINUTES))
-            .withNodeModule(new XodusEnvironmentModule()
-                    .withTempEnvironments())
-            .withNodeModule(new AbstractModule() {
-                @Override
-                protected void configure() {
-                    bind(TestJavaEvent.class).toInstance(tje);
-                }
-            })
-            .withDefaultHttpClient()
-            .start();
+    private final Context context;
 
-    private final Node node = getEmbeddedTestService().getNode();
+    private final EmbeddedTestService embeddedTestService;
 
-    private final Context context = getEmbeddedTestService().getContext();
+    private final TestJavaEvent tje;
+
+    private LuaEventIntegrationTest(final EmbeddedTestService embeddedTestService) {
+
+        this.embeddedTestService = embeddedTestService;
+
+        final var testApplicationId = getEmbeddedTestService()
+            .getWorker()
+            .getApplicationId();
+
+        this.context = getEmbeddedTestService()
+            .getClient()
+            .getContextFactory()
+            .getContextForApplication(testApplicationId);
+
+        tje = getEmbeddedTestService()
+            .getWorker()
+            .getIocResolver()
+            .inject(TestJavaEvent.class);
+
+    }
 
     @AfterClass
     public void teardown() {
@@ -97,15 +108,12 @@ public class LuaEventIntegrationTest {
         verify(tje, times(2)).whoWithCount(anyString(), anyString());
     }
 
-    public JeroMQEmbeddedTestService getEmbeddedTestService() {
+    public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;
-    }
-
-    public Node getNode() {
-        return node;
     }
 
     public Context getContext() {
         return context;
     }
+
 }

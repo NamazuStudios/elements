@@ -44,7 +44,8 @@ public class RedissonTopic<T> implements Topic<T> {
     @Override
     public Subscription subscribe(final Consumer<T> consumer) {
 
-        final RPatternTopic<T> rTopic = redisson.getPatternTopic(name + WILDCARD);
+        final RPatternTopic rTopic = redisson.getPatternTopic(name + WILDCARD);
+
         final PatternMessageListener<T> patternMessageListener = (pattern, channel, msg) -> {
             if (msg == null || tClass.isInstance(msg)) {
                 consumer.accept(msg);
@@ -53,15 +54,15 @@ public class RedissonTopic<T> implements Topic<T> {
             }
         };
 
-        rTopic.addListener(patternMessageListener);
+        rTopic.addListener(tClass, patternMessageListener);
         return () -> rTopic.removeListener(patternMessageListener);
 
     }
 
     @Override
     public Publisher<T> getPublisher() {
-        final RTopic<T> rTopic = redisson.getTopic(name);
-        return t -> rTopic.publish(t);
+        final RTopic rTopic = redisson.getTopic(name);
+        return rTopic::publish;
     }
 
     @Override

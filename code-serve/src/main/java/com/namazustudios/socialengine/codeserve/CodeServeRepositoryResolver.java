@@ -1,9 +1,10 @@
 package com.namazustudios.socialengine.codeserve;
 
-import com.namazustudios.socialengine.dao.BootstrapDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.rt.ApplicationBootstrapper;
+import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.service.ApplicationService;
 import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
@@ -29,9 +30,9 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
 
     private Provider<User> userProvider;
 
-    private BootstrapDao bootstrapDao;
-
     private ApplicationService applicationService;
+
+    private ApplicationBootstrapper applicationBootstrapper;
 
     private ApplicationRepositoryResolver applicationRepositoryResolver;
 
@@ -67,17 +68,36 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
         }
 
         try {
+
             logger.info("Resolving repository for application {}", application.getId());
+
             return getApplicationRepositoryResolver().resolve(application, r -> {
 
                 logger.info("Created repository for application {} ({})", application.getName(), application.getId());
 
                 logger.info("Bootstrapping application repository {} ({})", application.getName(), application.getId());
-                getBootstrapDao().bootstrap(user, application);
+
+                final var userMetadata = new ApplicationBootstrapper.BootstrapUserMetadata() {
+
+                    @Override
+                    public String getName() {
+                        return user.getName();
+                    }
+
+                    @Override
+                    public String getEmail() {
+                        return user.getEmail();
+                    }
+
+                };
+
+                final var applicationId = ApplicationId.forUniqueName(application.getId());
+                getApplicationBootstrapper().bootstrap(userMetadata, applicationId);
 
                 logger.info("Bootstrapped application repository {} ({})", application.getName(), application.getId());
 
             });
+
         } catch (RepositoryNotFoundException   |
                  ServiceNotAuthorizedException |
                  ServiceNotEnabledException    |
@@ -90,13 +110,13 @@ public class CodeServeRepositoryResolver implements RepositoryResolver<HttpServl
 
     }
 
-    public BootstrapDao getBootstrapDao() {
-        return bootstrapDao;
+    public ApplicationBootstrapper getApplicationBootstrapper() {
+        return applicationBootstrapper;
     }
 
     @Inject
-    public void setBootstrapDao(BootstrapDao bootstrapDao) {
-        this.bootstrapDao = bootstrapDao;
+    public void setApplicationBootstrapper(ApplicationBootstrapper applicationBootstrapper) {
+        this.applicationBootstrapper = applicationBootstrapper;
     }
 
     public Provider<User> getUserProvider() {

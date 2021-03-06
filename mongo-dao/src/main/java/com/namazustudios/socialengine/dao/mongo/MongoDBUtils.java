@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.common.collect.Iterables;
 import com.mongodb.MongoCommandException;
+import com.mongodb.MongoWriteException;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
@@ -13,13 +14,14 @@ import com.namazustudios.elements.fts.TopDocsSearchResult;
 import com.namazustudios.socialengine.model.Pagination;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.query.FindOptions;
-import org.mongodb.morphia.query.Query;
+import dev.morphia.Datastore;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -33,7 +35,7 @@ import static java.util.stream.Collectors.*;
  */
 public class MongoDBUtils {
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private ObjectIndex objectIndex;
 
@@ -43,18 +45,52 @@ public class MongoDBUtils {
 
     /**
      * Performs the supplied operation, catching all {@link MongoCommandException} instances and
+     * mapping to the appropriate type of exception internally.
+     *
+     * @param operation the operation
+     * @param <T> the expected return type
+     * @return the object retured by the supplied operation
+     */
+    public <T> T perform(final Function<Datastore, T> operation) {
+        return perform(operation, DuplicateException::new);
+    }
+
+    /**
+     * Performs the supplied operation, catching all {@link MongoCommandException} instances and
+     * mapping to the appropriate type of exception internally.
+     *
+     * @param operation the operation
+     * @return the object retured by the supplied operation
+     */
+    public void performV(final Consumer<Datastore> operation) {
+        perform(ds -> {
+            operation.accept(ds);
+            return null;
+        }, DuplicateException::new);
+    }
+
+    /**
+     * Performs the supplied operation, catching all {@link MongoCommandException} instances and
      * mapping to the appropraite type of exception internally.
      *
      * @param operation the operation
      * @param <T> the expected return type
      * @return the object retured by the supplied operation
      */
-    public <T> T perform(final Function<AdvancedDatastore, T> operation) {
+    public <T, ExceptionT extends Throwable> T perform(
+            final Function<Datastore, T> operation,
+            final Function<Throwable, ExceptionT> exceptionTSupplier) throws ExceptionT {
         try {
             return operation.apply(getDatastore());
         } catch (MongoCommandException ex) {
             if (ex.getErrorCode() == 11000) {
-                throw new DuplicateException(ex);
+                throw exceptionTSupplier.apply(ex);
+            } else {
+                throw new InternalException(ex);
+            }
+        } catch (MongoWriteException ex) {
+            if (ex.getCode() == 11000) {
+                throw exceptionTSupplier.apply(ex);
             } else {
                 throw new InternalException(ex);
             }
@@ -122,7 +158,7 @@ public class MongoDBUtils {
     public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
             final Query<MongoModelT> query, final int offset, final int count,
             final Class<ModelT> modelTClass) {
-        return paginationFromQuery(query, offset, count, o -> getMapper().map(o, modelTClass));
+        return paginationFromQuery(query, offset, count, o -> getMapper().map(o, modelTClass), new FindOptions());
     }
 
     /**
@@ -139,6 +175,24 @@ public class MongoDBUtils {
     public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
             final Query<MongoModelT> query, final int offset, final int count,
             final Function<MongoModelT,  ModelT> function) {
+        return paginationFromQuery(query, offset, count, function, new FindOptions());
+    }
+
+    /**
+     * Transforms the given {@link Query} to the resulting {@link Pagination}.
+     *
+     * @param query the query
+     * @param offset the offset
+     * @param count the count
+     * @param function the function to transform the values
+     * @param options a {@link FindOptions} used to modify the query results
+     * @param <ModelT> the desired model type
+     * @param <MongoModelT> the mongoDB model type
+     * @return a {@link Pagination} instance for the given ModelT
+     */
+    public <ModelT, MongoModelT> Pagination<ModelT> paginationFromQuery(
+            final Query<MongoModelT> query, final int offset, final int count,
+            final Function<MongoModelT,  ModelT> function, final FindOptions options) {
 
 
         final Pagination<ModelT> pagination = new Pagination<>();
@@ -148,11 +202,10 @@ public class MongoDBUtils {
 
         final int limit = min(getQueryMaxResults(), count);
 
-        final FindOptions options = new FindOptions()
-            .skip(offset)
-            .limit(limit);
+        options.skip(offset);
+        options.limit(limit);
 
-        final List<ModelT> modelTList = query.asList(options)
+        final List<ModelT> modelTList = query.iterator(options).toList()
             .stream()
             .map(function)
             .collect(toList());
@@ -197,7 +250,7 @@ public class MongoDBUtils {
 
     /**
      * Combines the functionality of {@link #queryForSearch(Class, org.apache.lucene.search.Query, int, int)} with
-     * the functionality of {@link #paginationFromQuery(Query, int, int, Function)} together to simplify
+     * the functionality of {@link #paginationFromQuery(Query, int, int, Function, FindOptions)} together to simplify
      * searching for objects.
      *
      * @param kind the kind to search
@@ -219,14 +272,14 @@ public class MongoDBUtils {
 
     /**
      * Combines the functionality of {@link #queryForSearch(Class, org.apache.lucene.search.Query, int, int)} with
-     * the functionality of {@link #paginationFromQuery(Query, int, int, Function)} together to simplify
+     * the functionality of {@link #paginationFromQuery(Query, int, int, Function, FindOptions)} together to simplify
      * searching for objects.
      *
      * @param kind the kind to search
      * @param searchQuery the search query
      * @param offset the offset
      * @param count the count
-     * @param function the function to transform the values {@see {@link #paginationFromQuery(Query, int, int, Function)}}
+     * @param function the function to transform the values {@see {@link #paginationFromQuery(Query, int, int, Function, FindOptions)}}
      * @param <ModelT>
      * @param <MongoModelT>
      * @return the pagination object
@@ -238,7 +291,7 @@ public class MongoDBUtils {
             final Function<MongoModelT,  ModelT> function) {
         try {
             final Query<MongoModelT> mongoQuery = queryForSearch(kind, searchQuery, offset, count);
-            final Pagination<ModelT> pagination = paginationFromQuery(mongoQuery, offset, count, function);
+            final Pagination<ModelT> pagination = paginationFromQuery(mongoQuery, offset, count, function, new FindOptions());
             pagination.setApproximation(true);
             return pagination;
         } catch (NoResultException ex) {
@@ -250,12 +303,12 @@ public class MongoDBUtils {
         }
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

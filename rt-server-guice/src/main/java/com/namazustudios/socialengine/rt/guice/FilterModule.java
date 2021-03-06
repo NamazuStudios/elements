@@ -27,7 +27,7 @@ public class FilterModule extends PrivateModule {
         bind(Filter.Chain.Builder.class).to(GuiceInjectorFilterChainBuilder.class);
 
         // Ensures that the scope
-        RequestScope.getInstance().bind(binder());
+        RequestScope.bind(binder());
 
         filterMultibinder = Multibinder.newSetBinder(binder(), Filter.class);
         configureFilters();

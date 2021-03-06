@@ -8,22 +8,32 @@ import com.namazustudios.socialengine.model.session.UsernamePasswordSessionReque
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.TestUtils.*;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 
-@Guice(modules = {EmbeddedRestApiIntegrationTestModule.class})
 public class CreateUserAndProfileTest {
+
+    @Factory
+    public Object[] getTests() {
+        return new Object[] {
+                TestUtils.getInstance().getXodusTest(CreateUserAndProfileTest.class),
+                TestUtils.getInstance().getUnixFSTest(CreateUserAndProfileTest.class)
+        };
+    }
 
     private User user;
 
@@ -36,6 +46,10 @@ public class CreateUserAndProfileTest {
     private final String email = "testuser-email-" + randomUUID().toString() + "@example.com";
 
     private final String password = randomUUID().toString();
+
+    @Inject
+    @Named(TEST_API_ROOT)
+    private String apiRoot;
 
     @Inject
     private Client client;
@@ -60,7 +74,7 @@ public class CreateUserAndProfileTest {
         toCreate.setPassword(password);
 
         user = client
-            .target("http://localhost:8081/api/rest/user")
+            .target(apiRoot + "/user")
             .request()
             .post(Entity.entity(toCreate, APPLICATION_JSON))
             .readEntity(User.class);
@@ -90,7 +104,7 @@ public class CreateUserAndProfileTest {
         request.setPassword(password);
 
         final Response response = client
-            .target("http://localhost:8081/api/rest/session")
+            .target(apiRoot + "/session")
             .request()
             .post(Entity.entity(request, APPLICATION_JSON));
 
@@ -115,7 +129,7 @@ public class CreateUserAndProfileTest {
         request.setPassword("bogus password");
 
         final Response response = client
-            .target("http://localhost:8081/api/rest/session")
+            .target(apiRoot + "/session")
             .request()
             .post(Entity.entity(request, APPLICATION_JSON));
 
@@ -132,7 +146,7 @@ public class CreateUserAndProfileTest {
         toCreate.setApplicationId(clientContext.getApplication().getId());
 
         final Response response = client
-            .target("http://localhost:8081/api/rest/profile")
+            .target(apiRoot + "/profile")
             .request()
             .post(Entity.entity(toCreate, APPLICATION_JSON));
 
@@ -150,7 +164,7 @@ public class CreateUserAndProfileTest {
         toCreate.setApplicationId(clientContext.getApplication().getId());
 
         final Response response = client
-            .target("http://localhost:8081/api/rest/profile")
+            .target(apiRoot + "/profile")
             .request()
             .header(authHeader, sessionCreation.getSessionSecret())
             .post(Entity.entity(toCreate, APPLICATION_JSON));
@@ -175,7 +189,7 @@ public class CreateUserAndProfileTest {
         toCreate.setApplicationId(clientContext.getApplication().getId());
 
         final Response response = client
-                .target("http://localhost:8081/api/rest/profile")
+                .target(apiRoot + "/profile")
                 .request()
                 .header(authHeader, sessionCreation.getSessionSecret())
                 .post(Entity.entity(toCreate, APPLICATION_JSON));
@@ -183,6 +197,5 @@ public class CreateUserAndProfileTest {
         assertEquals(response.getStatus(), 400);
 
     }
-
 
 }

@@ -2,41 +2,85 @@ package com.namazustudios.socialengine.rt.guice;
 
 import com.namazustudios.socialengine.rt.Path;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.ResourceId;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
+import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
+import org.testng.Assert;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
+import javax.inject.Inject;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.UncheckedIOException;
+import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
 import static java.util.Arrays.asList;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertFalse;
 import static org.testng.AssertJUnit.fail;
 
 public abstract class AbstractResourceServiceAcquiringUnitTest {
 
-    private final List<Object[]> intermediates = new ArrayList<>();
+    private final List<Object[]> intermediates = new CopyOnWriteArrayList<>();
 
-    private final List<Object[]> linkedIntermediates = new ArrayList<>();
+    private final List<Object[]> linkedIntermediates = new CopyOnWriteArrayList<>();
+
+    /**
+     * Returns the actual {@link ResourceService} we need to fetch.
+     * @return
+     */
+    public abstract ResourceService getResourceService();
+
+    public Resource getMockResource(final ResourceId resourceId)  {
+        final Resource resource = Mockito.mock(Resource.class);
+
+        when(resource.getId()).thenReturn(resourceId);
+
+        try {
+            doAnswer(a -> {
+                Assert.fail("No attempt to save resource should be made for this test.");
+                return null;
+            }).when(resource).serialize(any(OutputStream.class));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        try {
+            doAnswer(a -> {
+                Assert.fail("No attempt to save resource should be made for this test.");
+                return null;
+            }).when(resource).serialize(any(WritableByteChannel.class));
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+
+        return resource;
+    }
+
+    @Inject
+    private NodeId nodeId;
 
     @DataProvider
-    public static Object[][] initialDataProvider() {
+    public Object[][] initialDataProvider() {
 
         final List<Object[]> testData = new ArrayList<>();
 
         for (int i = 0; i < 100; ++i) {
-            final ResourceId resourceId = new ResourceId();
-            final Path path = new Path(asList("test", randomUUID().toString()));
+            final ResourceId resourceId = randomResourceIdForNode(nodeId);
+            final Path path = new Path(nodeId.asString(), asList("test", randomUUID().toString()));
             testData.add(new Object[]{resourceId, path});
         }
 
@@ -65,20 +109,20 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         final Path path = new Path(asList("test", "*"));
 
         final Set<ResourceId> expectedResourceIdList = intermediates.stream()
-                .map(a -> (ResourceId) a[0])
-                .collect(toSet());
+            .map(a -> (ResourceId) a[0])
+            .collect(toSet());
 
         final Set<Path> expectedPathList = intermediates.stream()
-                .map(a -> (Path) a[1])
-                .collect(toSet());
+            .map(a -> (Path) a[1])
+            .collect(toSet());
 
         final Set<ResourceId> resourceIdList = getResourceService().listStream(path)
-                .map(l -> l.getResourceId())
-                .collect(toSet());
+            .map(ResourceService.Listing::getResourceId)
+            .collect(toSet());
 
         final Set<Path> pathList = getResourceService().listStream(path)
-                .map(l -> l.getPath())
-                .collect(toSet());
+            .map(ResourceService.Listing::getPath)
+            .collect(toSet());
 
         assertEquals(resourceIdList, expectedResourceIdList);
         assertEquals(pathList, expectedPathList);
@@ -139,28 +183,16 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
 
     @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testGetResourceFail(final ResourceId resourceId, final Path path) {
-
         final Resource acquired = getResourceService().getAndAcquireResourceWithId(resourceId);
-
-        try {
-            fail("Expected exception.");
-        } finally {
-            getResourceService().release(acquired);
-        }
-
+        fail("Expected exception.");
+        getResourceService().release(acquired);
     }
 
     @Test(dataProvider = "initialDataProvider", expectedExceptions = ResourceNotFoundException.class)
     public void testGetResourceAtPathFail(final ResourceId resourceId, final Path path) {
-
         final Resource acquired = getResourceService().getAndAcquireResourceAtPath(path);
-
-        try {
-            fail("Expected exception.");
-        } finally {
-            getResourceService().release(acquired);
-        }
-
+        fail("Expected exception.");
+        getResourceService().release(acquired);
     }
 
     @Test(dependsOnMethods = {"testAdd", "testGetResource", "testGetResourceAtPath"}, dataProvider = "intermediateDataProvider")
@@ -259,13 +291,13 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         List<ResourceService.Listing> listingList = listingStream.collect(toList());
         assertEquals(listingList.size(), 0, "Expected empty dataset to start.");
 
-        final ResourceId resourceId = new ResourceId();
+        final ResourceId resourceId = randomResourceIdForNode(nodeId);
         final Resource resource = Mockito.mock(Resource.class);
 
         when(resource.getId()).thenReturn(resourceId);
 
         final Path path = new Path(randomUUID().toString());
-        getResourceService().addAndReleaseResource(path, resource);
+        getResourceService().addAndAcquireResource(path, resource);
 
         final Path a = new Path(path, Path.fromComponents("a"));
         final Path b = new Path(path, Path.fromComponents("b"));
@@ -278,14 +310,6 @@ public abstract class AbstractResourceServiceAcquiringUnitTest {
         listingList = listingStream.collect(toList());
         assertEquals(listingList.size(), 0);
 
-    }
-
-    public abstract ResourceService getResourceService();
-
-    public Resource getMockResource(final ResourceId resourceId) {
-        final Resource resource = Mockito.mock(Resource.class);
-        when(resource.getId()).thenReturn(resourceId);
-        return resource;
     }
 
 }

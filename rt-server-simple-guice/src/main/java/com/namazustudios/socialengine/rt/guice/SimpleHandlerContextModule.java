@@ -1,21 +1,28 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.HandlerContext;
 import com.namazustudios.socialengine.rt.SimpleHandlerContext;
 
 import java.util.concurrent.TimeUnit;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.EventContext.EVENT_TIMEOUT_MSEC;
+import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static java.util.concurrent.TimeUnit.SECONDS;
 
-public class SimpleHandlerContextModule extends AbstractModule {
+public class SimpleHandlerContextModule extends PrivateModule {
 
     private Runnable bindTimeout = () -> {};
 
-    private Runnable bindEventTimeout = () -> {};
+    /**
+     * Specifies the {@link HandlerContext} timeout to the default values.
+     */
+    public SimpleHandlerContextModule withDefaultTimeout() {
+        return withTimeout(60, SECONDS);
+    }
 
     /**
      * Specifies the {@link HandlerContext} timeout.
@@ -27,18 +34,22 @@ public class SimpleHandlerContextModule extends AbstractModule {
         bindTimeout = () -> bind(Long.class)
             .annotatedWith(named(HANDLER_TIMEOUT_MSEC))
             .toInstance(MILLISECONDS.convert(duration, sourceUnits));
-        bindEventTimeout = () -> bind(Long.class)
-                .annotatedWith(named(EVENT_TIMEOUT_MSEC))
-                .toInstance(MILLISECONDS.convert(duration, sourceUnits));
         return this;
     }
 
     @Override
     protected void configure() {
+
         bindTimeout.run();
-        bindEventTimeout.run();
-        bind(SimpleHandlerContext.class).asEagerSingleton();
-        bind(HandlerContext.class).to(SimpleHandlerContext.class);
+
+        expose(HandlerContext.class)
+            .annotatedWith(named(LOCAL));
+
+        bind(HandlerContext.class)
+            .annotatedWith(named(LOCAL))
+            .to(SimpleHandlerContext.class)
+            .asEagerSingleton();
+
     }
 
 }

@@ -9,26 +9,23 @@ import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTApplicationInjectorScopedProvider;
-import com.namazustudios.socialengine.dao.rt.guice.RTDaoModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTFilesystemGitLoaderModule;
-import com.namazustudios.socialengine.dao.rt.guice.RTGitApplicationModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
-import com.namazustudios.socialengine.guice.ZContextModule;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
+import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.remote.guice.*;
+import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
 import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
 import com.namazustudios.socialengine.util.AppleDateFormat;
-import org.apache.bval.guice.ValidationModule;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import ru.vyarus.guice.validator.ValidationModule;
 
 import javax.inject.Inject;
-
 import java.text.DateFormat;
 import java.util.List;
 import java.util.function.Supplier;
@@ -83,7 +80,8 @@ public class AppServeMain implements Runnable {
         main.join();
     }
 
-    private static Server createServer(final String[] args) {
+    private static final Server createServer(final String[] args) {
+
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
@@ -93,6 +91,9 @@ public class AppServeMain implements Runnable {
 
         return createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
+            new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
+            new JeroMQControlClientModule(),
+            new SimpleInstanceModule(),
             new MongoCoreModule(),
             new ServerModule(),
             new AppServeFilterModule(),
@@ -103,10 +104,14 @@ public class AppServeMain implements Runnable {
             new MongoSearchModule(),
             new ZContextModule(),
             new GameOnInvokerModule(),
-            new RTFilesystemGitLoaderModule(),
-            new RTDaoModule(),
-            new RTGitApplicationModule(),
+            new ClusterContextFactoryModule(),
             new AppServeRedissonServicesmodule(),
+            new JeroMQRemoteInvokerModule(),
+            new JeroMQInstanceConnectionServiceModule(),
+            new JeroMQAsyncConnectionServiceModule(),
+            new SimpleRemoteInvokerRegistryModule(),
+            new FSTPayloadReaderWriterModule(),
+            new RandomInstanceIdModule(),
             new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
             new AbstractModule() {
                 @Override
@@ -116,19 +121,19 @@ public class AppServeMain implements Runnable {
             },
             new AppleIapReceiptInvokerModule(),
             new JacksonHttpClientModule()
-                    .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-                    .withDefaultObjectMapperProvider(() -> {
-                        final ObjectMapper objectMapper = new ObjectMapper();
-                        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                        return objectMapper;
-                    }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                final ObjectMapper objectMapper = new ObjectMapper();
-                final DateFormat dateFormat = new AppleDateFormat();
-                objectMapper.setDateFormat(dateFormat);
-                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                return objectMapper;
-            })
+                .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
+                .withDefaultObjectMapperProvider(() -> {
+                    final ObjectMapper objectMapper = new ObjectMapper();
+                    objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    return objectMapper;
+                }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
+                    final ObjectMapper objectMapper = new ObjectMapper();
+                    final DateFormat dateFormat = new AppleDateFormat();
+                    objectMapper.setDateFormat(dateFormat);
+                    objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+                    objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                    return objectMapper;
+                })
         ).getInstance(Server.class);
 
     }

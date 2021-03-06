@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.DuplicateTaskException;
+import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.routing.SameNodeIdRoutingStrategy;
 
 import java.util.function.Consumer;
 
@@ -37,8 +39,8 @@ public interface TaskContext {
      * @param throwableTConsumer
      * @throws DuplicateTaskException if the supplied {@link TaskId} was already registered.
      */
-    @RemotelyInvokable
-    void register(@Serialize TaskId taskId,
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    void register(@Serialize @ProvidesAddress TaskId taskId,
                   @ResultHandler Consumer<Object> tConsumer,
                   @ErrorHandler Consumer<Throwable> throwableTConsumer);
 
@@ -52,8 +54,9 @@ public interface TaskContext {
      * @param taskId
      * @return true if the task was finished, false if otherwise
      */
-    @RemotelyInvokable
-    boolean finishWithResult(@Serialize TaskId taskId, Object result);
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    boolean finishWithResult(@Serialize @ProvidesAddress TaskId taskId,
+                             @Serialize Object result);
 
     /**
      * Finishes the task with associated {@link TaskId} with the provided {@link Throwable} error.
@@ -64,7 +67,8 @@ public interface TaskContext {
      * @param taskId the {@link TaskId}
      * @return true if the task was finished, false if otherwise
      */
-    @RemotelyInvokable
-    boolean finishWithError(@Serialize TaskId taskId, Throwable error);
+    @RemotelyInvokable(routing = @Routing(SameNodeIdRoutingStrategy.class))
+    boolean finishWithError(@Serialize @ProvidesAddress TaskId taskId,
+                            @Serialize Throwable error);
 
 }

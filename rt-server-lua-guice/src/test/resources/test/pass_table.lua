@@ -2,19 +2,30 @@ local util = require "namazu.util"
 local resource = require "namazu.resource"
 local responsecode = require "namazu.response.code"
 local index = require "namazu.index"
+local log = require "namazu.log"
 
 local pass_table = {}
 
 local ROOT_RESOURCE_PATH = "/test/echo/"
 
 local function make_resource(subdirectory)
+
     local path = subdirectory == nil and
             ROOT_RESOURCE_PATH .. util.uuid() or
             ROOT_RESOURCE_PATH .. subdirectory .. util.uuid()
 
     local rid, code = resource.create("test.echo", path), path
+
+    if rid == nil
+    then
+        log.error("Failed to create resource response {}", code)
+    else
+        log.error("Successfully created resource {} {}", rid, code)
+    end
+
     print("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
     return rid, code
+
 end
 
 function pass_table.pass_simple_array()
@@ -121,7 +132,7 @@ function pass_table.pass_complex_table_to_multiple_resources()
 
     for test = 1, 5 do
 
-        local subdirectory = tostring(test) .. "/"
+        local subdirectory = tostring(test) .. util.uuid() .. "/"
 
         for i = 1, resources_per_path do
             result, code = make_resource(subdirectory)

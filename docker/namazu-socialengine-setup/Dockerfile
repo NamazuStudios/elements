@@ -1,6 +1,6 @@
-FROM openjdk:8
+FROM namazu-socialengine-base:latest
 
-ARG SETUP_JAR
+ARG ELEMENTS_CLASSPATH
+COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
 
-RUN mkdir -p "/opt/socialengine"
-COPY $SETUP_JAR /opt/socialengine/setup.jar
+ENTRYPOINT ["java", "com.namazustudios.socialengine.setup.Setup"]

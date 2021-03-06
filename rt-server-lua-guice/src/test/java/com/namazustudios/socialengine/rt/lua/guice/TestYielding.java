@@ -2,37 +2,49 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.ResourceId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.util.SyncWait;
-import com.namazustudios.socialengine.rt.xodus.XodusContextModule;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
-import org.testng.annotations.TestInstance;
 
-import java.util.concurrent.Future;
-
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTest;
+import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTest;
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.testng.Assert.assertEquals;
 
 public class TestYielding {
 
     private static final Logger logger = LoggerFactory.getLogger(TestYielding.class);
 
-    private final JeroMQEmbeddedTestService embeddedTestService = new JeroMQEmbeddedTestService()
-        .withNodeModule(new LuaModule())
-        .withDefaultHttpClient()
-        .withNodeModule(new XodusContextModule()
-            .withSchedulerThreads(1)
-            .withHandlerTimeout(3, MINUTES))
-        .withNodeModule(new XodusEnvironmentModule()
-            .withTempEnvironments())
-        .withNodeModule(new JavaEventModule())
-        .start();
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+                getXodusTest(TestYielding::new),
+                getUnixFSTest(TestYielding::new)
+        };
+    }
 
-    private final Context context = embeddedTestService.getContext();
+    private final Context context;
+
+    private final EmbeddedTestService embeddedTestService;
+
+    private TestYielding(final EmbeddedTestService embeddedTestService) {
+
+        this.embeddedTestService = embeddedTestService;
+
+        final var testApplicationId = getEmbeddedTestService()
+                .getWorker()
+                .getApplicationId();
+
+        this.context = getEmbeddedTestService()
+                .getClient()
+                .getContextFactory()
+                .getContextForApplication(testApplicationId);
+
+    }
 
     @Test
     public void testConcurrentCoroutine() throws Exception {
@@ -117,6 +129,10 @@ public class TestYielding {
 
     public Context getContext() {
         return context;
+    }
+
+    public EmbeddedTestService getEmbeddedTestService() {
+        return embeddedTestService;
     }
 
 }

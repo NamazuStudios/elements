@@ -2,10 +2,10 @@ package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import io.swagger.annotations.ApiModelProperty;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Embedded;
-import org.mongodb.morphia.annotations.Index;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Index;
+import dev.morphia.annotations.Indexed;
+import dev.morphia.annotations.Property;
 
 import java.util.List;
 import java.util.Map;
@@ -25,10 +25,8 @@ public class MongoProgressMissionInfo {
     @Property
     private String description;
 
-    @Embedded
     private List<MongoStep> steps;
 
-    @Embedded
     private MongoStep finalRepeatStep;
 
     @Indexed

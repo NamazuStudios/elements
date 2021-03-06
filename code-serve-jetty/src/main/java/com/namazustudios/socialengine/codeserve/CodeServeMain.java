@@ -4,7 +4,6 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
-import com.namazustudios.socialengine.dao.rt.guice.RTGitBootstrapModule;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -28,7 +27,6 @@ import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
 import static java.util.EnumSet.allOf;
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
-import static org.eclipse.jetty.util.Loader.getResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class CodeServeMain implements Callable<Void>, Runnable {
@@ -109,8 +107,14 @@ public class CodeServeMain implements Callable<Void>, Runnable {
             throw new ProgramArgumentException(ex);
         }
 
-        final DefaultConfigurationSupplier defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-        injector = createInjector(stage, new CodeServeModule(defaultConfigurationSupplier).withModule(new RTGitBootstrapModule()).withModule(new GitServletModule()).withModule(new GitSecurityModule()));
+        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+
+        injector = createInjector(stage,
+                new GitServletModule(),
+                new GitSecurityModule(),
+                new LuaBootstrapResourcesModule(),
+                new CodeServeModule((defaultConfigurationSupplier))
+        );
 
         final ServerConnector connector = new ServerConnector(server);
         connector.setHost(bind);

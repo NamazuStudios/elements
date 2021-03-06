@@ -10,10 +10,12 @@ import com.namazustudios.socialengine.model.leaderboard.Rank;
 import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
+import dev.morphia.Datastore;
+import dev.morphia.query.Query;
+import dev.morphia.query.Sort;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -61,15 +63,13 @@ public class MongoRankDao implements RankDao {
                 throw new IllegalStateException("Invalid time strategy type.");
         }
 
-        final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
-        query
-            .filter("leaderboard", mongoLeaderboard)
-            .filter("leaderboardEpoch",
-                    leaderboardEpochLookupValue > 0 ? leaderboardEpochLookupValue : mongoLeaderboard.getCurrentEpoch())
-            .order(Sort.descending("pointValue"));
+        final Query<MongoScore> query = getDatastore().find(MongoScore.class);
+
+        query.filter(Filters.eq("leaderboard", mongoLeaderboard));
+        query.filter("leaderboardEpoch", leaderboardEpochLookupValue > 0 ? leaderboardEpochLookupValue : mongoLeaderboard.getCurrentEpoch());
 
         final long adjustedOffset = max(0, offset);
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset), new FindOptions().sort(Sort.descending("pointValue")));
 
     }
 
@@ -99,21 +99,19 @@ public class MongoRankDao implements RankDao {
         }
 
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard, leaderboardEpochLookupValue);
-        final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+        final MongoScore mongoScore = getDatastore().find(MongoScore.class).filter(Filters.eq("_id", mongoScoreId)).first();
 
-        final Query<MongoScore> query = getDatastore()
-            .createQuery(MongoScore.class)
-            .field("leaderboard").equal(mongoLeaderboard)
-            .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
-            .order(Sort.descending("pointValue"));
+        final Query<MongoScore> query = getDatastore().find(MongoScore.class);
+        query.filter(Filters.eq("leaderboard", mongoLeaderboard))
+            .filter(Filters.eq("leaderboardEpoch", leaderboardEpochLookupValue));
 
-        final long playerRank = mongoScore == null ? 0 : query
-            .cloneQuery()
-            .field("pointValue").greaterThan(mongoScore.getPointValue())
+        final Query<MongoScore> copyQuery = query;
+        final long playerRank = mongoScore == null ? 0 : copyQuery
+            .filter(Filters.gte("pointValue", mongoScore.getPointValue()))
             .count();
 
         final long offset = Math.max(0, playerRank - count/2);
-        return getMongoDBUtils().paginationFromQuery(query, (int) offset, count, new Counter(offset));
+        return getMongoDBUtils().paginationFromQuery(query, (int) offset, count, new Counter(offset), new FindOptions().sort(Sort.descending("pointValue")));
 
     }
 
@@ -153,15 +151,14 @@ public class MongoRankDao implements RankDao {
                 throw new IllegalStateException("Invalid time strategy type.");
         }
 
-        final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
+        final Query<MongoScore> query = getDatastore().find(MongoScore.class);
 
-        query.field("profile").in(profiles)
-             .field("leaderboard").equal(mongoLeaderboard)
-             .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
-             .order(Sort.descending("pointValue"));
+        query.filter(Filters.in("profile", profiles))
+            .filter(Filters.eq("leaderboard", mongoLeaderboard))
+            .filter(Filters.eq("leaderboardEpoch", leaderboardEpochLookupValue));
 
         final long adjustedOffset = max(0, offset);
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, new Counter(adjustedOffset), new FindOptions().sort(Sort.descending("pointValue")));
     }
 
     @Override
@@ -171,7 +168,7 @@ public class MongoRankDao implements RankDao {
         final MongoProfile mongoProfile = getMongoProfileDao().getActiveMongoProfile(profileId);
         final MongoLeaderboard mongoLeaderboard = getMongoLeaderboardDao().getMongoLeaderboard(leaderboardNameOrId);
         final MongoScoreId mongoScoreId = new MongoScoreId(mongoProfile, mongoLeaderboard);
-        final MongoScore mongoScore = getDatastore().get(MongoScore.class, mongoScoreId);
+        final MongoScore mongoScore = getDatastore().find(MongoScore.class).filter(Filters.eq("_id", mongoScoreId)).first();
 
         final List<MongoProfile> profiles = getMongoFriendDao()
             .getAllMongoFriendshipsForUser(mongoProfile.getUser())
@@ -200,21 +197,21 @@ public class MongoRankDao implements RankDao {
                 throw new IllegalStateException("Invalid time strategy type.");
         }
 
-        final Query<MongoScore> query = getDatastore().createQuery(MongoScore.class);
+        final Query<MongoScore> query = getDatastore().find(MongoScore.class);
 
-        query.field("leaderboard").equal(mongoLeaderboard)
-             .field("leaderboardEpoch").equal(leaderboardEpochLookupValue)
-             .field("profile").in(profiles)
-             .order(Sort.descending("pointValue"));
+        query.filter(Filters.eq("leaderboard", mongoLeaderboard))
+             .filter(Filters.eq("leaderboardEpoch", leaderboardEpochLookupValue))
+             .filter(Filters.in("profile", profiles));
 
-        final long playerRank = mongoScore == null ? 0 : query
-            .cloneQuery()
-            .field("profile").notEqual(mongoProfile)
-            .field("pointValue").greaterThan(mongoScore.getPointValue())
+        final Query<MongoScore> copyQuery = query;
+
+        final long playerRank = mongoScore == null ? 0 : copyQuery
+            .filter(Filters.ne("profile", mongoProfile))
+            .filter(Filters.gt("pointValue", mongoScore.getPointValue()))
             .count();
 
         final long adjustedOffset = max(0, offset + playerRank);
-        return getMongoDBUtils().paginationFromQuery(query, (int) adjustedOffset, count, new Counter(adjustedOffset));
+        return getMongoDBUtils().paginationFromQuery(query, (int) adjustedOffset, count, new Counter(adjustedOffset), new FindOptions().sort(Sort.descending("pointValue")));
 
     }
 

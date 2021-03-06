@@ -1,8 +1,14 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.id.TaskId;
+import org.slf4j.Logger;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Set;
 
 /**
@@ -30,7 +36,7 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
-    public Attributes getAttributes() {
+    public MutableAttributes getAttributes() {
         return getDelegate().getAttributes();
     }
 
@@ -65,7 +71,17 @@ public class SimpleDelegateResource implements Resource {
     }
 
     @Override
+    public void serialize(WritableByteChannel wbc) throws IOException {
+        delegate.serialize(wbc);
+    }
+
+    @Override
     public void deserialize(InputStream is) throws IOException {
+        delegate.deserialize(is);
+    }
+
+    @Override
+    public void deserialize(ReadableByteChannel is) throws IOException {
         delegate.deserialize(is);
     }
 
@@ -89,6 +105,11 @@ public class SimpleDelegateResource implements Resource {
         return "SimpleDelegateResource{" +
                 "delegate=" + delegate +
                 '}';
+    }
+
+    @Override
+    public Logger getLogger() {
+        return getDelegate().getLogger();
     }
 
     @Override

@@ -2,10 +2,9 @@
   <configuration default="false" name="AppServeMain" type="Application" factoryName="Application" nameIsGenerated="true">
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appserve.AppServeMain" />
     <module name="app-serve" />
-    <option name="VM_PARAMETERS" value="-Dcom.namazustudios.socialengine.http.tunnel.port=8083" />
     <extension name="coverage">
       <pattern>
-        <option name="PATTERN" value="com.namazustudios.socialengine.*" />
+        <option name="PATTERN" value="com.namazustudios.socialengine.rt.security.*" />
         <option name="ENABLED" value="true" />
       </pattern>
     </extension>

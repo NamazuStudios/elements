@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.*;
+import dev.morphia.annotations.*;
 
 import java.util.Objects;
 import java.util.Set;
@@ -30,7 +30,7 @@ import static java.util.stream.Collectors.toSet;
         @SearchableField(name = "userName",         path = "/user/name"),
         @SearchableField(name = "userEmail",        path = "/user/email")
 })
-@Entity(value = "inventoryitems", noClassnameStored = true)
+@Entity(value = "inventoryitems")
 public class MongoInventoryItem {
 
     @Id

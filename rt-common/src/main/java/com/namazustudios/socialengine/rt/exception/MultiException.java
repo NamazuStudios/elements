@@ -9,6 +9,7 @@ import java.util.function.BiConsumer;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.List.copyOf;
 
 public class MultiException extends InternalException {
 
@@ -20,11 +21,8 @@ public class MultiException extends InternalException {
 
     public MultiException(final String message, final List<? extends Throwable> causes) {
         super(message, causes == null || causes.isEmpty() ? null : causes.get(0));
-
         this.additionalCauses = causes == null || causes.size() < 2 ?
-            emptyList() :
-            unmodifiableList(new ArrayList<>(causes.subList(1, causes.size())));
-
+            emptyList() : copyOf(causes.subList(1, causes.size()));
     }
 
     public List<Throwable> getAdditionalCauses() {

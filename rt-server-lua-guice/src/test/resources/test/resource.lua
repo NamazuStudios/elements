@@ -6,6 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
+local log = require "namazu.log"
 local util = require "namazu.util"
 local resource = require "namazu.resource"
 local responsecode = require "namazu.response.code"
@@ -14,19 +15,35 @@ local this_resource = require "namazu.resource.this"
 local test_resource = {}
 
 local function make_resource()
+
     local path = "/test/helloworld/" .. util.uuid()
     local rid, code = resource.create("test.helloworld", path), path
-    print("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
+
+    if rid then
+        log.info("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
+    else
+        log.info("Failed to create clear(); (" .. code .. ") at path " .. path)
+    end
+
     return rid, code
+
 end
 
 function test_resource.test_create()
 
-    local ResourceId = java.require "com.namazustudios.socialengine.rt.ResourceId"
+    local path = "/test/helloworld/" .. util.uuid()
+    local ResourceId = java.require "com.namazustudios.socialengine.rt.id.ResourceId"
 
-    local rid = make_resource()
+    log.info("Making Resource")
+    local rid = resource.create("test.helloworld", path)
+
+    log.info("Made Resource")
     assert(type(rid) == "string", "Expected string for resource_id got: " .. type(rid))
-    ResourceId:new(rid);
+
+    log.info("Resource id {}", rid)
+    local parsed = ResourceId:resourceIdFromString(rid);
+
+    log.info("Parsed ResourceId {}", parsed)
 
 end
 

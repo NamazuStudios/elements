@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt;
 
-import com.namazustudios.socialengine.rt.exception.InvalidConversionException;
+import com.namazustudios.socialengine.rt.id.TaskId;
 
 import java.util.function.Consumer;
 

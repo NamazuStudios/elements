@@ -1,14 +1,18 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
+import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Indexed;
-import org.mongodb.morphia.annotations.Property;
-import org.mongodb.morphia.annotations.Reference;
 
 import java.sql.Timestamp;
 
+@Entity("deployment")
+@Indexes(
+    @Index(
+        fields = { @Field("application"), @Field("version") },
+        options = @IndexOptions(unique = true)
+    )
+)
 public class MongoDeployment {
 
     @Id
@@ -67,4 +71,5 @@ public class MongoDeployment {
     public void setApplication(MongoApplication application) {
         this.application = application;
     }
+
 }

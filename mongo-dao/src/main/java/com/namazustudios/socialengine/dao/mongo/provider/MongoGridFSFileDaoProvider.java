@@ -1,15 +1,16 @@
 package com.namazustudios.socialengine.dao.mongo.provider;
 
-import com.mongodb.MongoClient;
+import com.mongodb.client.MongoClient;
+import com.mongodb.client.gridfs.GridFSBucket;
+import com.mongodb.client.gridfs.GridFSBuckets;
 import com.mongodb.gridfs.GridFS;
 import com.namazustudios.socialengine.dao.mongo.MongoGridFSFileDao;
-import com.namazustudios.socialengine.util.ShutdownHooks;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-import static com.namazustudios.socialengine.dao.mongo.provider.MongoDatabaseProvider.DATABASE_NAME;
+import static com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider.DATABASE_NAME;
 
 /**
  * Created by patricktwohig on 6/29/17.
@@ -27,9 +28,9 @@ public class MongoGridFSFileDaoProvider implements Provider<MongoGridFSFileDao> 
     @Override
     public MongoGridFSFileDao get() {
         final MongoClient mongoClient = getMongoClientProvider().get();
-        final GridFS gridFS = new GridFS(mongoClient.getDB(getMongoDatabaseName()), getMongoFileBucketName());
+        final GridFSBucket gridFSBucket = GridFSBuckets.create(mongoClient.getDatabase(getMongoDatabaseName()), getMongoFileBucketName());
         final MongoGridFSFileDao mongoGridFSFileDao = new MongoGridFSFileDao();
-        mongoGridFSFileDao.setGridFS(gridFS);
+        mongoGridFSFileDao.setGridFSBucket(gridFSBucket);
         return mongoGridFSFileDao;
     }
 

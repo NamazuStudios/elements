@@ -12,22 +12,27 @@ import com.namazustudios.socialengine.exception.cdnserve.DeploymentNotFoundExcep
 import com.namazustudios.socialengine.exception.cdnserve.DuplicateDeploymentException;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.Pagination;
+import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import org.mongodb.morphia.AdvancedDatastore;
-import org.mongodb.morphia.FindAndModifyOptions;
-import org.mongodb.morphia.query.Query;
-import org.mongodb.morphia.query.Sort;
-import org.mongodb.morphia.query.UpdateOperations;
 
 import javax.inject.Inject;
 import java.util.Date;
+
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.Sort.descending;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static java.lang.String.format;
 
 public class MongoDeploymentDao implements DeploymentDao {
 
     private MongoDBUtils mongoDBUtils;
 
-    private AdvancedDatastore datastore;
+    private Datastore datastore;
 
     private Mapper beanMapper;
 
@@ -35,140 +40,147 @@ public class MongoDeploymentDao implements DeploymentDao {
 
     @Override
     public Pagination<Deployment> getDeployments(String applicationId, final int offset, final int count) {
-        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(applicationId);
-        if(application == null){
-            throw new ApplicationNotFoundException("Application not found with Id: " + applicationId);
-        }
-        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
-
-        query.criteria("application").equal(application);
-
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, Deployment.class));
+        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var query = getDatastore().find(MongoDeployment.class);
+        query.filter(eq("application", application));
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, Deployment.class);
     }
 
     @Override
     public Pagination<Deployment> getAllDeployments(final int offset, final int count) {
-        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
-
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> getBeanMapper().map(input, Deployment.class));
+        final var query = getDatastore().find(MongoDeployment.class);
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, Deployment.class);
     }
 
     @Override
-    public Deployment getDeployment(String applicationId, String deploymentId) {
-        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(applicationId);
-        if(application == null){
-            throw new ApplicationNotFoundException("Application not found with Id: " + applicationId);
-        }
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(deploymentId);
-        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
+    public Deployment getDeployment(final String applicationId, final String deploymentId) {
 
-        query.and(
-                query.criteria("_id").equal(objectId),
-                query.criteria("application").equal(application)
+        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var objectId = getMongoDBUtils().parseOrThrow(deploymentId, DeploymentNotFoundException::new);
+        final var query = getDatastore().find(MongoDeployment.class);
+
+        query.filter(
+            eq("_id", objectId),
+            eq("application", application)
         );
 
-        return getBeanMapper().map(query.get(), Deployment.class);
+        return getBeanMapper().map(query.first(), Deployment.class);
+
     }
 
     @Override
     public Deployment getCurrentDeployment(String applicationId) {
-        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(applicationId);
-        if(application == null){
-            throw new ApplicationNotFoundException("Application not found with Id: " + applicationId);
-        }
-        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
-        query.criteria("application").equal(application);
+        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var query = getDatastore().find(MongoDeployment.class);
 
-        query.order(Sort.descending("createdAt"));
+        query.filter(
+            eq("application", application)
+        );
 
-        return getBeanMapper().map(query.get(), Deployment.class);
+        final var opts = new FindOptions().sort(descending("createdAt"));
+        final var deployment = query.first(opts);
+        if (deployment == null) throw new DeploymentNotFoundException("No deployments exist for: " + applicationId);
+
+        return getBeanMapper().map(deployment, Deployment.class);
+
     }
 
     @Override
     public Deployment updateDeployment(String applicationId, Deployment deployment) {
-        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(deployment.getApplication().getId());
-        if(application == null){
-            throw new ApplicationNotFoundException("Application not found with Id: " + deployment.getApplication().getId());
-        }
 
-        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
+        final var application = getMongoApplicationDao().getActiveMongoApplication(deployment.getApplication().getId());
+        final var query = getDatastore().find(MongoDeployment.class);
 
-        query.and(
-                query.criteria("version").equal(deployment.getVersion()),
-                query.criteria("application").equal(application)
+        query.filter(
+            eq("version", deployment.getVersion()),
+            eq("application", application)
         );
 
-        if(query.get() == null){
-            throw new DeploymentNotFoundException(String.format("Deployment version: %s, for application: %s, not found", deployment.getVersion(), application.getName()));
+        final var nowDate = new Date();
+        final var builder = new UpdateBuilder();
+
+        builder.with(
+            set("createdAt", nowDate),
+            set("revision", deployment.getRevision())
+        );
+
+        final var opts = new ModifyOptions()
+            .upsert(false)
+            .returnDocument(AFTER);
+
+        final var result = getMongoDBUtils().perform(
+            ds -> builder.execute(query, opts),
+            DuplicateDeploymentException::new);
+
+        if (result == null) {
+
+            final var msg = format("Deployment version: %s, for application: %s, not found",
+                deployment.getVersion(),
+                application.getName());
+
+            throw new DeploymentNotFoundException(msg);
+
         }
 
-        final UpdateOperations<MongoDeployment> updateOperations;
+        return getBeanMapper().map(result, Deployment.class);
 
-        updateOperations = getDatastore().createUpdateOperations(MongoDeployment.class);
-        updateOperations.set("revision", deployment.getRevision());
-        final Date nowDate = new Date();
-        updateOperations.set("createdAt", nowDate);
-
-        final MongoDeployment mongoDeployment = getDatastore().findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true).returnNew(true));
-
-        return getBeanMapper().map(mongoDeployment, Deployment.class);
     }
 
     @Override
     public Deployment createDeployment(Deployment deployment) {
-        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(deployment.getApplication().getId());
-        if(application == null){
-            throw new ApplicationNotFoundException("Application not found with Id: " + deployment.getApplication().getId());
-        }
 
-        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
+        final var application = getMongoApplicationDao().getActiveMongoApplication(deployment.getApplication().getId());
 
-        query.and(
-                query.criteria("version").equal(deployment.getVersion()),
-                query.criteria("application").equal(application)
+        final var query = getDatastore().find(MongoDeployment.class);
+
+        final Date nowDate = new Date();
+        final var builder = new UpdateBuilder();
+
+        builder.with(
+            set("createdAt", nowDate),
+            set("application", application),
+            set("version", deployment.getVersion()),
+            set("revision", deployment.getRevision())
         );
 
-        MongoDeployment res = query.get();
-        if(res != null && res.getVersion().equals(deployment.getVersion())) {
-            throw new DuplicateDeploymentException(String.format("Deployment version: %s, already exists, suggest changing version or updating existing version", deployment.getVersion()));
+        final var opts = new ModifyOptions().upsert(true).returnDocument(AFTER);
+        final var result = getMongoDBUtils().perform(ds -> builder.execute(query, opts));
+
+        if (result == null) {
+
+            final var msg = format("Deployment version: %s, for application: %s, not found",
+                    deployment.getVersion(),
+                    application.getName());
+
+            throw new DeploymentNotFoundException(msg);
+
         }
 
-        final UpdateOperations<MongoDeployment> updateOperations;
+        return getBeanMapper().map(result, Deployment.class);
 
-        updateOperations = getDatastore().createUpdateOperations(MongoDeployment.class);
-        updateOperations.set("version", deployment.getVersion());
-        updateOperations.set("revision", deployment.getRevision());
-        updateOperations.set("application", application);
-        final Date nowDate = new Date();
-        updateOperations.set("createdAt", nowDate);
-
-        final MongoDeployment mongoDeployment = getDatastore().findAndModify(query, updateOperations, new FindAndModifyOptions().upsert(true).returnNew(true));
-
-        return getBeanMapper().map(mongoDeployment, Deployment.class);
     }
 
     @Override
     public void deleteDeployment(String applicationId, String deploymentId) {
-        final MongoApplication application = getMongoApplicationDao().findActiveMongoApplication(applicationId);
-        if(application == null){
-            throw new ApplicationNotFoundException("Application not found with Id: " + applicationId);
-        }
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(deploymentId);
-        final Query<MongoDeployment> query = getDatastore().createQuery(MongoDeployment.class);
 
-        query.and(
-                query.criteria("_id").equal(objectId),
-                query.criteria("application").equal(application)
+        final var application = getMongoApplicationDao().getActiveMongoApplication(applicationId);
+        final var objectId = getMongoDBUtils().parseOrThrow(deploymentId, DeploymentNotFoundException::new);
+        final var query = getDatastore().find(MongoDeployment.class);
+
+        query.filter(
+            eq("_id", objectId),
+            eq("application", application)
         );
 
-        final WriteResult writeResult = getDatastore().delete(query);
+        final var writeResult = query.delete();
 
-        if (writeResult.getN() == 0) {
+        if (writeResult.getDeletedCount() == 0) {
             throw new NotFoundException("Deployment not found: " + deploymentId);
-        } else if (writeResult.getN() > 1) {
+        } else if (writeResult.getDeletedCount() > 1) {
             throw new InternalException("Deleted more rows than expected.");
         }
+
     }
 
 
@@ -182,12 +194,12 @@ public class MongoDeploymentDao implements DeploymentDao {
         this.mongoDBUtils = mongoDBUtils;
     }
 
-    public AdvancedDatastore getDatastore() {
+    public Datastore getDatastore() {
         return datastore;
     }
 
     @Inject
-    public void setDatastore(AdvancedDatastore datastore) {
+    public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
     }
 

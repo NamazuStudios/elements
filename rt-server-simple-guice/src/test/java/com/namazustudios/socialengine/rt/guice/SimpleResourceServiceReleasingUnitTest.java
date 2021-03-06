@@ -5,8 +5,11 @@ import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.AssetLoader;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
+import com.namazustudios.socialengine.rt.id.NodeId;
 import org.mockito.Mockito;
 import org.testng.annotations.Guice;
+
+import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 
 @Guice(modules = SimpleResourceServiceReleasingUnitTest.Module.class)
 public class SimpleResourceServiceReleasingUnitTest extends AbstractResourceServiceReleasingUnitTest {
@@ -28,13 +31,16 @@ public class SimpleResourceServiceReleasingUnitTest extends AbstractResourceServ
         @Override
         protected void configure() {
 
-            install(new SimpleServicesModule().withSchedulerThreads(1));
+            install(new SimpleServicesModule());
+            install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
 
             final AssetLoader mockAssetLoader = Mockito.mock(AssetLoader.class);
             bind(AssetLoader.class).toInstance(mockAssetLoader);
 
             final ResourceLoader resourceLoader = Mockito.mock(ResourceLoader.class);
             bind(ResourceLoader.class).toInstance(resourceLoader);
+
+            bind(NodeId.class).toInstance(randomNodeId());
 
         }
 

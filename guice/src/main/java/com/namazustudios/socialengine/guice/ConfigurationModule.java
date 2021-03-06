@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.guice;
 
 import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import org.nnsoft.guice.rocoto.converters.FileConverter;
 import org.nnsoft.guice.rocoto.converters.URIConverter;
@@ -10,9 +11,13 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.function.Supplier;
 
+import static com.google.inject.TypeLiteral.get;
+import static com.google.inject.matcher.Matchers.only;
 import static com.google.inject.multibindings.Multibinder.newSetBinder;
 import static com.google.inject.name.Names.bindProperties;
 import static com.google.inject.name.Names.named;
@@ -36,6 +41,7 @@ public class ConfigurationModule extends AbstractModule {
 
         install(new URIConverter());
         install(new FileConverter());
+        convertToTypes(only(get(Path.class)), (s, to) -> Paths.get(s));
 
         final Properties properties = propertiesSupplier.get();
         if (properties == null) addError("Supplier supplied null properties.");

@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import com.namazustudios.socialengine.model.SocialCampaign;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Property;
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Property;
 
 import java.util.Date;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by patricktwohig on 3/26/15.
  */
-@Entity(value = "social_campaign", noClassnameStored = true)
+@Entity(value = "social_campaign", useDiscriminator = false)
 public class MongoSocialCampaign {
 
     @Id
