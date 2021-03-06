@@ -19,8 +19,8 @@ import java.util.function.BooleanSupplier;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_ERROR;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.currentThread;
-import static java.lang.Thread.interrupted;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.Poller.POLLERR;
@@ -31,7 +31,11 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     public static final Charset CHARSET = StandardCharsets.UTF_8;
 
+    private long nextLog = 0;
+
     private final Logger logger;
+
+    private static final long LOG_INTERVAL = 5000;
 
     private static final long POLL_TIMEOUT_MILLISECONDS = 1000;
 
@@ -90,6 +94,15 @@ public class JeroMQRoutingServer implements AutoCloseable {
                 if (item == null) continue;
                 final var err = item.getSocket().errno();
                 if (err != 0 && err != EAGAIN) logger.error("Socket got errno: {}", err);
+            }
+
+            final long now = currentTimeMillis();
+
+            if (nextLog <= now) {
+                control.log();
+                multiplex.log();
+                demultiplex.log();
+                nextLog = now + LOG_INTERVAL;
             }
 
         }

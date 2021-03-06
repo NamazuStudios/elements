@@ -12,7 +12,7 @@ import static java.util.UUID.randomUUID;
 /**
  * Uniquely identifies an application.
  */
-public class ApplicationId implements Serializable {
+public class ApplicationId implements Serializable, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;
 
@@ -80,6 +80,11 @@ public class ApplicationId implements Serializable {
         } catch (IllegalArgumentException ex) {
             throw new InvalidApplicationIdException(ex);
         }
+    }
+
+    @Override
+    public V1CompoundId getId() {
+        return v1CompoundId;
     }
 
     /**

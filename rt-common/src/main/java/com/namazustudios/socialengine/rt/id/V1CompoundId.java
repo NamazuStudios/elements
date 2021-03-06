@@ -25,7 +25,7 @@ import static java.util.stream.Collectors.*;
  *
  * This class is immutable, in a style similar to {@link String}.
  */
-class V1CompoundId implements Serializable {
+class V1CompoundId implements Serializable, Comparable<V1CompoundId> {
 
     public static final String PREFIX = "V1::";
 
@@ -267,6 +267,11 @@ class V1CompoundId implements Serializable {
     }
 
     @Override
+    public int compareTo(V1CompoundId o) {
+        return Arrays.compare(components, o.components, Component::compareToFieldAndValue);
+    }
+
+    @Override
     public boolean equals(final Object object) {
         if (object == null) return false;
         if (!V1CompoundId.class.equals(object.getClass())) return false;
@@ -284,7 +289,7 @@ class V1CompoundId implements Serializable {
         return asString();
     }
 
-    public byte[] asBytes(final Field ... fields) {
+    byte[] asBytes(final Field ... fields) {
         final byte[] bytes = new byte[fields.length * (16 + 1) + 1];
 
         int index = 0;
@@ -321,7 +326,7 @@ class V1CompoundId implements Serializable {
 
     }
 
-    public void toByteBuffer(final ByteBuffer byteBuffer, final Field ... fields) {
+    void toByteBuffer(final ByteBuffer byteBuffer, final Field ... fields) {
 
         byteBuffer.put(PREFIX_BYTE);
 
@@ -457,6 +462,27 @@ class V1CompoundId implements Serializable {
         @Override
         public int compareTo(final Component o) {
             return field.compareTo(o.field);
+        }
+
+        /**
+         * Compares both the field and value of the {@link Component}.
+         *
+         * @param c0 the first Component to compare
+         * @param c1 the second Component to compare
+         * @return {@see {@link Comparable#compareTo(Object)}}
+         */
+        static int compareToFieldAndValue(final Component c0, final Component c1) {
+
+            // Performs null checks
+            if (c0 == null && c1 == null) return 0;
+            else if (c0 != null && c1 == null) return 1;
+            else if (c0 == null && c1 != null) return -1;
+
+            // Then, it checks the fields. If they match, compares values.
+            final var field = c0.field.compareTo(c1.field);
+            if (field != 0) return field;
+            else return c0.value.compareTo(c1.value);
+
         }
 
         public String asString() {
