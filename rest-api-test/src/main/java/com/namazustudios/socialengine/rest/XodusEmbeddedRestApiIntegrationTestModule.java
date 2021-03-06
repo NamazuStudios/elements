@@ -185,8 +185,8 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 modules.add(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
                 return modules;
             })
+            .withXodusWorker()
             .withWorkerBindAddress(format("tcp://%s:%d", TEST_APP_NODE_BIND_IP, TEST_APP_NODE_PORT))
-            .withWorkerModule(new XodusEnvironmentModule().withTempSchedulerEnvironment())
             .withDefaultHttpClient();
     }
 
