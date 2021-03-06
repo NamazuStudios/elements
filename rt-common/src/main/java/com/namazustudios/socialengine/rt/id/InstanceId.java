@@ -4,11 +4,16 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
 
 import java.io.*;
+import java.nio.file.CopyOption;
+import java.nio.file.FileAlreadyExistsException;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Builder;
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
 import static java.io.File.createTempFile;
+import static java.nio.file.Files.move;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
@@ -161,11 +166,20 @@ public class InstanceId implements Serializable {
      * @return the {@link InstanceId} read or generated
      */
     public static InstanceId loadOrGenerate(final File file) {
-        try (final FileInputStream fis = new FileInputStream(file);
-             final BufferedReader reader = new BufferedReader(new InputStreamReader(fis))) {
+        try (final var fis = new FileInputStream(file);
+             final var reader = new BufferedReader(new InputStreamReader(fis))) {
             return read(reader);
         } catch (FileNotFoundException | InvalidInstanceIdException ex) {
             return generateAndWrite(file);
+        } catch (IOException ex) {
+            throw new InternalException("Unable to read InstanceId from disk.", ex);
+        }
+    }
+
+    private static InstanceId read(final File file) {
+        try (final var fis = new FileInputStream(file);
+             final var reader = new BufferedReader(new InputStreamReader(fis))) {
+            return read(reader);
         } catch (IOException ex) {
             throw new InternalException("Unable to read InstanceId from disk.", ex);
         }
@@ -187,7 +201,7 @@ public class InstanceId implements Serializable {
         final File temp;
 
         try {
-            temp = createTempFile("instance-id", "txt");
+            temp = createTempFile("instance-id", ".txt", parent);
             temp.deleteOnExit();
         } catch (IOException ex) {
             throw new InternalException(ex);
@@ -198,11 +212,18 @@ public class InstanceId implements Serializable {
         try (final OutputStream os = new FileOutputStream(temp);
              final BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(os))) {
             writer.write(instanceId.asString());
+            writer.write('\n');
         } catch (IOException ex) {
             throw new InternalException(ex);
         }
 
-        if (!temp.renameTo(file)) throw new InternalException("Unable to set file location to " + file);
+        try {
+            move(temp.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE);
+        } catch (FileNotFoundException e) {
+            return read(file);
+        } catch (IOException ex) {
+            throw new InternalException("Unable to read InstanceId from disk.", ex);
+        }
 
         return instanceId;
 
