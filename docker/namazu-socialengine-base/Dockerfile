@@ -22,6 +22,8 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
     && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
     && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
 
+ENV PATH=/usr/local/bin:$PATH
+
 RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_LIB" && \
     mkdir -p "$ELEMENTS_CONF" && \
