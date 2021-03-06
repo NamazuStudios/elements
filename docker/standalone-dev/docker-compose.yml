@@ -36,6 +36,8 @@ services:
       - elements
     depends_on:
       - mongo
+      - redis
+      - discovery
     links:
       - mongo
 
@@ -121,6 +123,7 @@ services:
       - "28883:28883"
     volumes:
       - script-repos:/opt/elements/script-repos
+      - script-storage-0:/opt/elements/script-storage
     environment:
       - com.namazustudios.socialengine.fts.jeromq.condition.host.address=tcp://app-node-0
 
@@ -137,6 +140,7 @@ services:
       - "28884:28883"
     volumes:
       - script-repos:/opt/elements/script-repos
+      - script-storage-1:/opt/elements/script-storage
     environment:
       - com.namazustudios.socialengine.fts.jeromq.condition.host.address=tcp://app-node-1
 
@@ -144,5 +148,7 @@ networks:
   elements:
 
 volumes:
-  script-repos:
   cdn-repos:
+  script-repos:
+  script-storage-0:
+  script-storage-1:
