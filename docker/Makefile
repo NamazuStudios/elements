@@ -6,7 +6,7 @@ TAG ?= $(shell git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 
 DOCKER_TAG=docker tag
-DOCKER_PUSH=docker push
+DOCKER_PUSH=docker push 
 DOCKER_BUILD=docker build
 DOCKER_LOGIN=docker login
 
@@ -30,14 +30,21 @@ define DOCKER_BUILD_LATEST
 		--tag docker.namazustudios.net/$(1):latest
 endef
 
+define DOCKER_PUSH_ALL
+	$(DOCKER_PUSH) $(1)
+	$(DOCKER_PUSH) $(1):$(TAG)
+	$(DOCKER_PUSH) $(1):$(TAG_SHORT)
+endef
+
 push:
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-api
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-app-node
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-app-serve
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-code-serve
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-setup
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-ui
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-cdn-serve
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-base)
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-api)
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-app-node)
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-app-serve)
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-code-serve)
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-setup)
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-ui)
+	$(call DOCKER_PUSH_ALL,docker.namazustudios.net/namazu-socialengine-cdn-serve)
 
 revision: login
 	$(DOCKER_BUILD) namazu-socialengine-base \
