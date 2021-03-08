@@ -240,7 +240,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             localControlClient = getAsyncControlClientFactory()
                 .open(getInternalBindAddress())
-                .withDispatch(scheduler::submit);
+                .withDispatch(scheduler::submit)
+                .withErrorTracing();
 
             onDiscover = getInstanceDiscoveryService().subscribeToDiscovery(this::createNewConnectionIfAbsent);
             onUndiscover = getInstanceDiscoveryService().subscribeToUndiscovery(this::disconnect);
@@ -348,7 +349,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 final var instanceConnectAddress = nfo.getConnectAddress();
                 final var rClient = getAsyncControlClientFactory()
                     .open(instanceConnectAddress)
-                    .withDispatch(scheduler::execute);
+                    .withDispatch(scheduler::execute)
+                    .withErrorTracing();
 
                 // Now that we have an async client, we can interrogate the remote end to get the instance id of the
                 // node and formally establish the route to the node. This way, we know the node ID and can associate
