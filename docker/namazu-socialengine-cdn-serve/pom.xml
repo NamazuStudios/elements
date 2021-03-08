@@ -67,7 +67,7 @@
                         <argument>build</argument>
                         <argument>${project.basedir}</argument>
                         <argument>--build-arg</argument>
-                        <argument>ELEMENTS_CLASSPATH=target/lib/*.jar</argument>
+                        <argument>APPLICATION_LIBS=target/lib/*.jar</argument>
                         <argument>--tag</argument>
                         <argument>${project.artifactId}:latest</argument>
                         <argument>--tag</argument>

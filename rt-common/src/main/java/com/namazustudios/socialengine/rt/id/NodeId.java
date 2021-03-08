@@ -17,7 +17,7 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
  * across two ec2 instances represented by UUIDs I1, I2, then we will have six workers in the deployment addressable
  * with the pairs (I1, A1), (I1, A2), (I1, A3), (I2, A1), (I2, A2), (I2, A3).
  */
-public class NodeId implements Serializable, HasNodeId {
+public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1CompoundId> {
 
     private static final int SIZE = new NodeId(new V1CompoundId.Builder()
             .with(INSTANCE, UUID.randomUUID())
@@ -111,6 +111,11 @@ public class NodeId implements Serializable, HasNodeId {
      */
     public void toByteBuffer(final ByteBuffer byteBuffer, int position) {
         v1CompoundId.toByteBuffer(byteBuffer, position, INSTANCE, APPLICATION);
+    }
+
+    @Override
+    public V1CompoundId getId() {
+        return v1CompoundId;
     }
 
     @Override

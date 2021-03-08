@@ -5,13 +5,14 @@ import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import java.util.Collection;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
@@ -25,6 +26,8 @@ import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQDemultiplexRouter {
+
+    private final Stats stats;
 
     private final Logger logger;
 
@@ -46,6 +49,7 @@ public class JeroMQDemultiplexRouter {
         this.zContext = zContext;
         this.poller = poller;
         this.frontend = frontend;
+        this.stats = new Stats();
     }
 
     public void poll() {
@@ -61,7 +65,9 @@ public class JeroMQDemultiplexRouter {
         final ZMQ.Socket socket = zContext.createSocket(DEALER);
         final int index = poller.register(socket, POLLIN | POLLERR);
         final String localConnectAddress = getLocalConnectAddress(nodeId);
+
         socket.connect(localConnectAddress);
+        stats.addRoute(nodeId, localConnectAddress);
 
         if (backends.put(nodeId, index) != null) {
             logger.error("Attempting to duplicate binding for node {}", nodeId);
@@ -73,19 +79,21 @@ public class JeroMQDemultiplexRouter {
     }
 
     public void closeBindingForNode(final NodeId nodeId) {
+        try {
+            final Integer index = backends.remove(nodeId);
 
-        final Integer index = backends.remove(nodeId);
-
-        if (index == null) {
-            logger.warn("No such binding {}", nodeId);
-            throw new JeroMQControlException(NO_SUCH_NODE_BINDING);
-        } else {
-            final ZMQ.Socket socket = poller.getSocket(index);
-            poller.unregister(socket);
-            socket.close();
-            logger.info("Removed binding for node {}", nodeId);
+            if (index == null) {
+                logger.warn("No such binding {}", nodeId);
+                throw new JeroMQControlException(NO_SUCH_NODE_BINDING);
+            } else {
+                final ZMQ.Socket socket = poller.getSocket(index);
+                poller.unregister(socket);
+                socket.close();
+                logger.info("Removed binding for node {}", nodeId);
+            }
+        } finally {
+            stats.removeRoute(nodeId);
         }
-
     }
 
     public void forward(final ZMsg zMsg, final ZMsg identity) {
@@ -126,6 +134,44 @@ public class JeroMQDemultiplexRouter {
 
     public static String getLocalConnectAddress(final NodeId nodeId) {
         return format("inproc://demux/%s?%s", nodeId.asString(), randomUUID());
+    }
+
+    public void log() {
+        stats.log();
+    }
+
+    private class Stats {
+
+        private final SortedMap<NodeId, String> routes = new TreeMap<>();
+
+        private final JeroMQDebugCounter errorCounter = new JeroMQDebugCounter();
+
+        private final Runnable log = logger.isDebugEnabled() ? this::doLog : () -> {};
+
+        private void doLog() {
+            logger.debug("Demultiplexer Stats:");
+            logger.debug("  Errors {}", errorCounter);
+            logger.debug("  Total Routes: {}", routes.size());
+            logger.debug("  Routes:");
+            routes.forEach((nid, addr) -> logger.debug("  Node {} -> {} @{})", nid, addr, backends.get(nid)));
+        }
+
+        public void log() {
+            log.run();
+        }
+
+        public void error() {
+            errorCounter.increment();
+        }
+
+        public void addRoute(final NodeId nodeId, final String nodeBindAddress) {
+            routes.put(nodeId, nodeBindAddress);
+        }
+
+        public void removeRoute(final NodeId nodeId) {
+            routes.remove(nodeId);
+        }
+
     }
 
 }

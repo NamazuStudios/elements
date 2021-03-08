@@ -1,7 +1,7 @@
 FROM namazu-socialengine-base:latest
 
-ARG ELEMENTS_CLASSPATH
-COPY --chown=elements:elements $ELEMENTS_CLASSPATH $ELEMENTS_LIB/
+ARG APPLICATION_LIBS
+COPY --chown=elements:elements $APPLICATION_LIBS $ELEMENTS_LIB/
 
 EXPOSE 8082
 

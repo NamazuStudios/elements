@@ -19,8 +19,8 @@ import java.util.function.BooleanSupplier;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.EXCEPTION;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.UNKNOWN_ERROR;
 import static java.lang.String.format;
+import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.currentThread;
-import static java.lang.Thread.interrupted;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
 import static org.zeromq.ZMQ.Poller.POLLERR;
@@ -31,7 +31,11 @@ public class JeroMQRoutingServer implements AutoCloseable {
 
     public static final Charset CHARSET = StandardCharsets.UTF_8;
 
+    private long nextLog = 0;
+
     private final Logger logger;
+
+    private static final long LOG_INTERVAL = 5000;
 
     private static final long POLL_TIMEOUT_MILLISECONDS = 1000;
 
@@ -92,32 +96,50 @@ public class JeroMQRoutingServer implements AutoCloseable {
                 if (err != 0 && err != EAGAIN) logger.error("Socket got errno: {}", err);
             }
 
+            final long now = currentTimeMillis();
+
+            if (nextLog <= now) {
+                control.log();
+                multiplex.log();
+                demultiplex.log();
+                nextLog = now + LOG_INTERVAL;
+            }
+
         }
 
     }
 
     @Override
     public void close() {
+
         poller.close();
         zContextShadow.close();
+
+        try {
+            monitorThread.interrupt();
+            monitorThread.join();
+        } catch (InterruptedException ex) {
+            logger.error("Interrupted while closing monitor thread.", ex);
+        }
+
     }
 
     public static ZMsg error(final JeroMQControlResponseCode code, final String message) {
-        final ZMsg response = new ZMsg();
+        final var response = new ZMsg();
         (code == null ? UNKNOWN_ERROR : code).pushResponseCode(response);
         response.addLast(message.getBytes(CHARSET));
         return response;
     }
 
     public static ZMsg exceptionError(final Logger logger, final Exception ex) {
-        final ZMsg response = exceptionError(logger, EXCEPTION, ex);
+        final var response = exceptionError(logger, EXCEPTION, ex);
         return response;
     }
 
     public static ZMsg exceptionError(final Logger logger, final JeroMQControlResponseCode code, final Exception ex) {
 
         logger.error("Exception processing request.", ex);
-        final ZMsg response = new ZMsg();
+        final var response = new ZMsg();
 
         code.pushResponseCode(response);
         response.addLast(ex.getMessage().getBytes(CHARSET));
@@ -143,7 +165,10 @@ public class JeroMQRoutingServer implements AutoCloseable {
     }
 
     public static Logger getLogger(final Class<?> componentClass, final InstanceId instanceId) {
-        return LoggerFactory.getLogger(format("%s.%s", componentClass.getSimpleName(), instanceId.asString()));
+        return LoggerFactory.getLogger(format("%s.%s.%s",
+            JeroMQRoutingServer.class.getSimpleName(),
+            componentClass.getSimpleName(),
+            instanceId.asString()));
     }
 
 }

@@ -12,6 +12,8 @@ import org.zeromq.ZMsg;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
@@ -22,7 +24,6 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServe
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toSet;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZMQ.Poller.POLLERR;
@@ -31,6 +32,8 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 public class JeroMQMultiplexRouter {
 
     private final Logger logger;
+
+    private final Stats stats;
 
     private final ZContext zContext;
 
@@ -50,6 +53,7 @@ public class JeroMQMultiplexRouter {
         this.logger = JeroMQRoutingServer.getLogger(getClass(), instanceId);
         this.poller = poller;
         this.zContext = zContext;
+        this.stats = new Stats();
     }
 
     public void poll() {
@@ -96,21 +100,24 @@ public class JeroMQMultiplexRouter {
     }
 
     private void respondWithFailure(final ZMsg zMsg, final ZMsg identity, final JeroMQControlResponseCode code) {
+        try {
+            final var messageFrame = zMsg.removeFirst();
+            final var exceptionCauseFrame = zMsg.removeFirst();
+            final var nodeIdHeader = zMsg.removeFirst();
 
-        final var messageFrame = zMsg.removeFirst();
-        final var exceptionCauseFrame = zMsg.removeFirst();
-        final var nodeIdHeader = zMsg.removeFirst();
+            final var nodeId = nodeIdFromBytes(nodeIdHeader.getData());
+            final var frontend = getFrontend(nodeId);
 
-        final var nodeId = nodeIdFromBytes(nodeIdHeader.getData());
-        final var frontend = getFrontend(nodeId);
+            zMsg.addFirst(nodeIdHeader);
+            zMsg.addFirst(exceptionCauseFrame);
+            zMsg.addFirst(messageFrame);
+            code.pushResponseCode(zMsg);
+            pushIdentity(zMsg, identity);
+            zMsg.send(frontend);
 
-        zMsg.addFirst(nodeIdHeader);
-        zMsg.addFirst(exceptionCauseFrame);
-        zMsg.addFirst(messageFrame);
-        code.pushResponseCode(zMsg);
-        pushIdentity(zMsg, identity);
-        zMsg.send(frontend);
-
+        } finally {
+            stats.error();
+        }
     }
 
     private ZMQ.Socket getFrontend(final NodeId nodeId) {
@@ -170,10 +177,12 @@ public class JeroMQMultiplexRouter {
 
             final var frontendIndex = poller.register(frontend, POLLIN | POLLERR);
             frontends.put(nodeId, frontendIndex);
+            stats.addRoute(nodeId, localBindAddress);
 
             backends.computeIfAbsent(nodeId.getInstanceId(), instanceId -> {
                 final ZMQ.Socket backend = zContext.createSocket(DEALER);
                 backend.connect(instanceInvokerAddress);
+                stats.addRoute(instanceId, instanceInvokerAddress);
                 return poller.register(backend, POLLIN | POLLERR);
             });
 
@@ -227,13 +236,21 @@ public class JeroMQMultiplexRouter {
     }
 
     private void doCloseFrontend(final NodeId nodeId) {
-        final var frontendIndex = frontends.remove(nodeId);
-        doClose(frontendIndex, format("Node %s", nodeId));
+        try {
+            final var frontendIndex = frontends.remove(nodeId);
+            doClose(frontendIndex, format("Node %s", nodeId));
+        } finally {
+            stats.removeRoute(nodeId);
+        }
     }
 
     private void doCloseBackend(final InstanceId instanceId) {
-        final var backendIndex = backends.remove(instanceId);
-        doClose(backendIndex, format("Instance %s", instanceId));
+        try {
+            final var backendIndex = backends.remove(instanceId);
+            doClose(backendIndex, format("Instance %s", instanceId));
+        } finally {
+            stats.removeRoute(instanceId);
+        }
     }
 
     private void doClose(final Integer index, final Object objectId) {
@@ -241,16 +258,18 @@ public class JeroMQMultiplexRouter {
         if (index == null) {
             logger.error("No socket for index {} {}", index, objectId);
         } else {
+
+            final ZMQ.Socket socket = poller.getSocket(index);
+
             logger.info("Closing socket for sockets[{}] for {}", index, objectId);
-        }
+            poller.unregister(socket);
 
-        final ZMQ.Socket socket = poller.getSocket(index);
-        poller.unregister(socket);
+            try {
+                socket.close();
+            } catch (Exception ex) {
+                logger.error("Error closing socket for {}", objectId, ex);
+            }
 
-        try {
-            socket.close();
-        } catch (Exception ex) {
-            logger.error("Error closing socket for {}", objectId, ex);
         }
 
     }
@@ -259,4 +278,61 @@ public class JeroMQMultiplexRouter {
         return format("inproc://mux/%s?%s", nodeId.asString(), randomUUID());
     }
 
+    public void log() {
+        stats.log();
+    }
+
+    private class Stats {
+
+        private final SortedMap<NodeId, String> fRoutes = new TreeMap<>();
+
+        private final SortedMap<InstanceId, String> bRoutes = new TreeMap<>();
+
+        private final JeroMQDebugCounter errorCounter = new JeroMQDebugCounter();
+
+        private final Runnable log = logger.isDebugEnabled() ? this::doLog : () -> {};
+
+        private void doLog() {
+
+            // Logs all the stats
+            logger.debug("Multiplexer Stats:");
+            logger.debug("  Errors {}", errorCounter);
+            logger.debug("  Backend Total Routes: {}", bRoutes.size());
+            logger.debug("  Frontend Total Routes: {}", fRoutes.size());
+
+            logger.debug("  Backend Routes:");
+            bRoutes.forEach((iid, addr) -> logger.debug("  Instance {} -> {} @{})", iid, addr, backends.get(iid)));
+
+            logger.debug("  Frontend Routes:");
+            fRoutes.forEach((nid, addr) -> logger.debug("  Node {} -> {} @{})", nid, addr, frontends.get(nid)));
+
+        }
+
+        public void log() {
+            log.run();
+        }
+
+        public void error() {
+            errorCounter.increment();
+        }
+
+        public void addRoute(final NodeId nodeId, final String nodeBindAddress) {
+            fRoutes.put(nodeId, nodeBindAddress);
+        }
+
+        public void addRoute(final InstanceId instanceId, final String instanceConnectAddress) {
+            bRoutes.put(instanceId, instanceConnectAddress);
+        }
+
+        public void removeRoute(final NodeId nodeId) {
+            fRoutes.remove(nodeId);
+        }
+
+        public void removeRoute(final InstanceId instanceId) {
+            bRoutes.remove(instanceId);
+        }
+
+    }
+
 }
+

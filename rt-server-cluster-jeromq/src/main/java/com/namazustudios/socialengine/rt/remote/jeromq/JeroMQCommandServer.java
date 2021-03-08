@@ -7,6 +7,9 @@ import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.Map;
+import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
@@ -29,6 +32,8 @@ public class JeroMQCommandServer {
 
     private final JeroMQDemultiplexRouter demultiplex;
 
+    private final Stats stats;
+
     public JeroMQCommandServer(final InstanceId instanceId,
                                final ZMQ.Poller poller, final int frontend,
                                final JeroMQMultiplexRouter multiplex,
@@ -39,6 +44,7 @@ public class JeroMQCommandServer {
         this.frontend = frontend;
         this.multiplex = multiplex;
         this.demultiplex = demultiplex;
+        this.stats = new Stats();
     }
 
     public void poll() {
@@ -55,10 +61,12 @@ public class JeroMQCommandServer {
 
         try {
             command = JeroMQRoutingCommand.stripCommand(zMsg);
+            stats.increment(command);
         } catch (Exception ex) {
             final ZMsg response = exceptionError(logger, ex);
             pushIdentity(response, identity);
             response.send(socket);
+            stats.error();
             return;
         }
 
@@ -175,6 +183,44 @@ public class JeroMQCommandServer {
         logger.info("Closed routes via instance {}.", instanceId);
         OK.pushResponseCode(response);
         return response;
+    }
+
+    public void log() {
+        stats.log();
+    }
+
+    private class Stats {
+
+        private final JeroMQDebugCounter errorCounter = new JeroMQDebugCounter();
+
+        private final Map<JeroMQRoutingCommand, JeroMQDebugCounter> counters = new EnumMap<>(JeroMQRoutingCommand.class);
+
+        private final Runnable error = logger.isDebugEnabled() ? errorCounter::increment : () -> {};
+
+        private final Consumer<JeroMQRoutingCommand> increment = logger.isDebugEnabled()
+            ? command -> counters.computeIfAbsent(command, c -> new JeroMQDebugCounter()).increment()
+            : command -> {};
+
+        private final Runnable log = logger.isDebugEnabled() ? this::doLog : () -> {};
+
+        private void doLog() {
+            logger.debug("Command Server Stats:");
+            logger.debug("  Errors {}", errorCounter);
+            counters.forEach((k, v) -> logger.debug("  Processed {} {}", k, v));
+        }
+
+        public void log() {
+            log.run();
+        }
+
+        public void error() {
+            error.run();
+        }
+
+        public void increment(final JeroMQRoutingCommand command) {
+            this.increment.accept(command);
+        }
+
     }
 
 }

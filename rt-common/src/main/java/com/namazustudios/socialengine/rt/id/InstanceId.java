@@ -17,7 +17,7 @@ import static java.nio.file.Files.move;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
-public class InstanceId implements Serializable {
+public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;
 
@@ -103,6 +103,11 @@ public class InstanceId implements Serializable {
 
     public byte[] asBytes() {
         return (bytes == null ? (bytes = v1CompoundId.asBytes(INSTANCE)) : bytes).clone();
+    }
+
+    @Override
+    public V1CompoundId getId() {
+        return v1CompoundId;
     }
 
     @Override

@@ -13,11 +13,11 @@ DOCKER_LOGIN=docker login
 MAVEN_PROJECT_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
 WEB_UI_DIR=target/lib/dist
-ELEMENTS_CLASSPATH=target/lib/*.jar
+APPLICATION_LIBS=target/lib/*.jar
 
 define DOCKER_BUILD_TAG
 	$(DOCKER_BUILD) $(1) \
-		--build-arg ELEMENTS_CLASSPATH=target/lib/*.jar \
+		--build-arg APPLICATION_LIBS=target/lib/*.jar \
 		--tag $(1):$(TAG) \
 		--tag docker.namazustudios.net/$(1):$(TAG) \
 		--tag docker.namazustudios.net/$(1):$(TAG_SHORT)
@@ -25,7 +25,7 @@ endef
 
 define DOCKER_BUILD_LATEST
 	$(DOCKER_BUILD) $(1) \
-		--build-arg ELEMENTS_CLASSPATH=target/lib/*.jar \
+		--build-arg APPLICATION_LIBS=target/lib/*.jar \
 		--tag $(1):latest \
 		--tag docker.namazustudios.net/$(1):latest
 endef
