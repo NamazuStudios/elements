@@ -1,3 +1,4 @@
+
 FROM openjdk:11.0-jdk
 
 ENV DOCKERIZE_VERSION v0.6.1
@@ -5,7 +6,7 @@ ENV DOCKERIZE_VERSION v0.6.1
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
 
-# Su    b Directories
+# Sub Directories
 
 # Application Directories. Used by the deployment scripts.
 # - ELEMENTS_BIN holds any binaries the application may need. Added to the OS PATH
@@ -40,16 +41,16 @@ RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSI
 
 ENV PATH $ELEMENTS_BIN:$PATH
 
-RUN mkdir -p "$ELEMENTS_CP" && \
-    mkdir -p "$ELEMENTS_BIN" && \
+RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_LIB" && \
     mkdir -p "$ELEMENTS_CONF" && \
+    mkdir -p "$ELEMENTS_CLASSPATH" && \
     mkdir -p "$ELEMENTS_CDN_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_STORAGE" && \
-    useradd elements && \
-    chown -R elements:elements "$ELEMENTS_HOME"
-
-USER elements:elements
+    useradd elements && chown -R elements:elements "$ELEMENTS_HOME"
 
 WORKDIR $ELEMENTS_HOME
+USER elements:elements
+
+COPY --chown=elements:elements src/main/resources/* $ELEMENTS_CLASSPATH/

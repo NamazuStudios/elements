@@ -33,6 +33,8 @@ public class JeroMQMultiplexRouter {
 
     private final Logger logger;
 
+    private final Stats stats;
+
     private final ZContext zContext;
 
     private final ZMQ.Poller poller;
@@ -47,12 +49,11 @@ public class JeroMQMultiplexRouter {
 
     private final BiMap<Integer, InstanceId> rBackends = backends.inverse();
 
-    private final Stats stats = new Stats();
-
     public JeroMQMultiplexRouter(final InstanceId instanceId, final ZContext zContext, final ZMQ.Poller poller) {
         this.logger = JeroMQRoutingServer.getLogger(getClass(), instanceId);
         this.poller = poller;
         this.zContext = zContext;
+        this.stats = new Stats();
     }
 
     public void poll() {

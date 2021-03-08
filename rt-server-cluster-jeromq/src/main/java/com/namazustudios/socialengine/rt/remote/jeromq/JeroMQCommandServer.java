@@ -32,7 +32,7 @@ public class JeroMQCommandServer {
 
     private final JeroMQDemultiplexRouter demultiplex;
 
-    private final Stats stats = new Stats();
+    private final Stats stats;
 
     public JeroMQCommandServer(final InstanceId instanceId,
                                final ZMQ.Poller poller, final int frontend,
@@ -44,6 +44,7 @@ public class JeroMQCommandServer {
         this.frontend = frontend;
         this.multiplex = multiplex;
         this.demultiplex = demultiplex;
+        this.stats = new Stats();
     }
 
     public void poll() {

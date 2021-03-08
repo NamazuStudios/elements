@@ -27,6 +27,8 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQDemultiplexRouter {
 
+    private final Stats stats;
+
     private final Logger logger;
 
     private final ZContext zContext;
@@ -39,8 +41,6 @@ public class JeroMQDemultiplexRouter {
 
     private final BiMap<Integer, NodeId> rBackends = backends.inverse();
 
-    private final Stats stats = new Stats();
-
     public JeroMQDemultiplexRouter(final InstanceId instanceId,
                                    final ZContext zContext,
                                    final ZMQ.Poller poller,
@@ -49,6 +49,7 @@ public class JeroMQDemultiplexRouter {
         this.zContext = zContext;
         this.poller = poller;
         this.frontend = frontend;
+        this.stats = new Stats();
     }
 
     public void poll() {
