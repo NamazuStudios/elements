@@ -7,7 +7,6 @@ import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
@@ -17,7 +16,6 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -41,8 +39,6 @@ import static com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventor
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.lang.Integer.max;
 import static java.util.UUID.randomUUID;
-import static dev.morphia.query.experimental.filters.Filters.and;
-import static dev.morphia.query.experimental.filters.Filters.eq;
 
 @Singleton
 public class MongoInventoryItemDao implements InventoryItemDao {
