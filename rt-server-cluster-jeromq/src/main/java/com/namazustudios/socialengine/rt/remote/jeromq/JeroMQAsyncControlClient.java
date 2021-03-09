@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 import com.namazustudios.socialengine.rt.AsyncConnectionPool;
 import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.Connection;
+import com.namazustudios.socialengine.rt.exception.BaseException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
@@ -15,6 +16,7 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -185,6 +187,10 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
         final var pending = new AtomicBoolean(true);
 
+        final var stack = logger.isDebugEnabled()
+            ? new Throwable().getStackTrace() :
+            new StackTraceElement[]{};
+
         pool.acquireNextAvailableConnection(c -> {
 
             c.setEvents(WRITE, ERROR, READ);
@@ -196,7 +202,7 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
                         final int errno = _c.socket().errno();
 
                         responseConsumer.accept(_c, () -> {
-                            throw new InternalException("ZMQ Errno: " + errno);
+                            throw remap(stack, () -> new InternalException("ZMQ Errno: " + errno));
                         });
 
                     }
@@ -207,13 +213,17 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
             c.onClose(_c -> {
                 if (pending.compareAndSet(true, false)) {
-                    responseConsumer.accept(_c, () -> { throw new InternalException("Connection closed."); });
+                    responseConsumer.accept(_c, () -> {
+                        throw remap(stack, () -> new InternalException("Connection closed."));
+                    });
                 }
             });
 
             c.onRecycle(_c -> {
                 if (pending.compareAndSet(true, false)) {
-                    responseConsumer.accept(_c, () -> { throw new InternalException("Connection recycled."); });
+                    responseConsumer.accept(_c, () -> {
+                        throw remap(stack, () -> new InternalException("Connection recycled."));
+                    });
                 }
             });
 
@@ -223,10 +233,12 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
                         try {
                             final ZMsg zMsg = JeroMQControlClient.recv(_c.socket());
                             responseConsumer.accept(_c, () -> zMsg);
+                        } catch (BaseException ex) {
+                            responseConsumer.accept(_c, () -> { throw remap(stack, ex); });
+                        } catch (JeroMQControlException ex) {
+                            responseConsumer.accept(_c, () -> { throw remap(stack, ex); });
                         } catch (Exception ex) {
-                            ex.fillInStackTrace();
-                            responseConsumer.accept(_c, () -> { throw ex; } );
-                            throw ex;
+                            responseConsumer.accept(_c, () -> { throw remap(stack, ex); });
                         }
                     } else {
                         logger.info("Dropping message that was canceled.");
@@ -249,6 +261,45 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
         return () -> pending.set(false);
 
+    }
+
+    private InternalException remap(final StackTraceElement[] stack, final Exception cause) {
+        return remap(stack, () -> new InternalException(cause));
+    }
+
+    private RuntimeException remap(final StackTraceElement[] stack, final JeroMQControlException cause) {
+        return remap(stack, () -> {
+            try {
+                return cause
+                    .getClass()
+                    .getConstructor(cause.getClass())
+                    .newInstance(cause);
+            } catch (IllegalAccessException | InstantiationException |
+                     InvocationTargetException | NoSuchMethodException e) {
+                return remap(stack, () -> new InternalException(e));
+            }
+        });
+    }
+
+    private BaseException remap(final StackTraceElement[] stack, final BaseException cause) {
+        return remap(stack, () -> {
+            try {
+                return cause
+                        .getClass()
+                        .getConstructor(Throwable.class)
+                        .newInstance(cause);
+            } catch (IllegalAccessException | InstantiationException |
+                    InvocationTargetException | NoSuchMethodException e) {
+                return remap(stack, () -> new InternalException(e));
+            }
+        });
+    }
+
+    private <T extends RuntimeException> T remap(final StackTraceElement[] stack,
+                                              final Supplier<T> baseExceptionSupplier) {
+        final var remapped = baseExceptionSupplier.get();
+        remapped.setStackTrace(stack);
+        return remapped;
     }
 
     @Override

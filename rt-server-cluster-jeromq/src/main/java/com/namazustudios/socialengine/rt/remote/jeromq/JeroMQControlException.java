@@ -18,6 +18,11 @@ public class JeroMQControlException extends RuntimeException {
 
     private final JeroMQControlResponseCode code;
 
+    public JeroMQControlException(final JeroMQControlException cause) {
+        super(cause);
+        this.code = cause.getCode();
+    }
+
     public JeroMQControlException(final JeroMQControlResponseCode code) {
         super(code == null ? UNKNOWN_ERROR.toString() : code.toString());
         this.code = code;

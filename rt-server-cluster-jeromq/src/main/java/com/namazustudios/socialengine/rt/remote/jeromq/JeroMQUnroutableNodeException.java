@@ -11,6 +11,11 @@ public class JeroMQUnroutableNodeException extends JeroMQControlException {
 
     private final NodeId nodeId;
 
+    public JeroMQUnroutableNodeException(final JeroMQUnroutableNodeException cause) {
+        super(cause);
+        this.nodeId = cause.nodeId;
+    }
+
     public JeroMQUnroutableNodeException(final NodeId nodeId) {
         super(NO_SUCH_NODE_ROUTE);
         this.nodeId = nodeId;

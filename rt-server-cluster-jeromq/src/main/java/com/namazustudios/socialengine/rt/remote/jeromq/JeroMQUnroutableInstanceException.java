@@ -11,6 +11,11 @@ public class JeroMQUnroutableInstanceException extends JeroMQControlException {
 
     private final InstanceId instanceId;
 
+    public JeroMQUnroutableInstanceException(final JeroMQUnroutableInstanceException cause) {
+        super(cause);
+        this.instanceId = cause.instanceId;
+    }
+
     public JeroMQUnroutableInstanceException(final InstanceId instanceId) {
         super(NO_SUCH_INSTANCE);
         this.instanceId = instanceId;

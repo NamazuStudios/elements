@@ -123,70 +123,7 @@ public interface AsyncControlClient extends AutoCloseable {
         });
 
     }
-
-    /**
-     * Adds error tracing to the underlying {@link AsyncControlClient} at the expense of some performance. Before each
-     * call, the calling thread generates a stack trace which will be routed to any exception thrown by
-     * {@link Response#get()}.
-     *
-     * @return a remapped {@link AsyncControlClient}
-     */
-    default AsyncControlClient withErrorTracing() {
-
-        final var th = new Throwable();
-        final var trace = th.getStackTrace();
-
-        final var classLoader = getClass().getClassLoader();
-        final var interfaces = new Class<?>[]{AsyncControlClient.class};
-
-        return (AsyncControlClient) Proxy.newProxyInstance(classLoader, interfaces, (proxy, method, args) -> {
-
-            if (Request.class.isAssignableFrom(method.getReturnType())) {
-
-                final Function<Object, Object> remapper = arg -> {
-                    if (arg instanceof ResponseConsumer) {
-
-                        final ResponseConsumer original = (ResponseConsumer) arg;
-
-                        return (ResponseConsumer) response -> {
-                            try {
-                                final var result = response.get();
-                                original.accept(() -> result);
-                            } catch (BaseException ex) {
-                                try {
-                                    final var remapped = (Exception) ex.getClass().getConstructor().newInstance();
-                                    remapped.initCause(ex);
-                                    remapped.setStackTrace(trace);
-                                } catch (NoSuchMethodException | InvocationTargetException |
-                                        IllegalAccessException | InstantiationException e) {
-                                    final var remapped = new InternalException(ex);
-                                    remapped.setStackTrace(trace);
-                                    original.accept(() -> { throw remapped; });
-                                }
-                            } catch (Exception ex) {
-                                final var remapped = new InternalException(ex);
-                                remapped.setStackTrace(trace);
-                                original.accept(() -> { throw remapped; });
-                            }
-
-                        };
-
-                    } else {
-                        return arg;
-                    }
-                };
-
-                final var remapped = Stream.of(args).map(remapper).toArray();
-                return method.invoke(this, remapped);
-
-            } else {
-                return method.invoke(this, args);
-            }
-
-        });
-
-    }
-
+    
     /**
      * Closes this instance of {@link AsyncControlClient}. Any pending tasks will be failed with a callback to any
      * pending responses.
