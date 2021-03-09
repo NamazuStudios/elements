@@ -263,11 +263,11 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
     }
 
-    private InternalException remap(final StackTraceElement[] stack, final Exception cause) {
+    private static InternalException remap(final StackTraceElement[] stack, final Exception cause) {
         return remap(stack, () -> new InternalException(cause));
     }
 
-    private RuntimeException remap(final StackTraceElement[] stack, final JeroMQControlException cause) {
+    private static RuntimeException remap(final StackTraceElement[] stack, final JeroMQControlException cause) {
         return remap(stack, () -> {
             try {
                 return cause
@@ -281,7 +281,7 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
         });
     }
 
-    private BaseException remap(final StackTraceElement[] stack, final BaseException cause) {
+    private static BaseException remap(final StackTraceElement[] stack, final BaseException cause) {
         return remap(stack, () -> {
             try {
                 return cause
@@ -295,8 +295,8 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
         });
     }
 
-    private <T extends RuntimeException> T remap(final StackTraceElement[] stack,
-                                              final Supplier<T> baseExceptionSupplier) {
+    private static <T extends RuntimeException> T remap(final StackTraceElement[] stack,
+                                                        final Supplier<T> baseExceptionSupplier) {
         final var remapped = baseExceptionSupplier.get();
         remapped.setStackTrace(stack);
         return remapped;
