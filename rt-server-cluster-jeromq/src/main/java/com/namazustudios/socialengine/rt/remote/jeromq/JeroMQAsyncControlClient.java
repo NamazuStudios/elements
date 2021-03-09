@@ -10,11 +10,13 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.AsyncControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import com.namazustudios.socialengine.rt.remote.InstanceStatus;
+import com.sun.nio.sctp.PeerAddressChangeNotification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
+import zmq.ZError;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -24,6 +26,8 @@ import java.util.function.Supplier;
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
+import static javax.security.auth.callback.ConfirmationCallback.OK;
+import static zmq.ZError.EAGAIN;
 
 public class JeroMQAsyncControlClient implements AsyncControlClient {
 
@@ -188,8 +192,8 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
         final var pending = new AtomicBoolean(true);
 
         final var stack = logger.isDebugEnabled()
-            ? new Throwable().getStackTrace() :
-            new StackTraceElement[]{};
+            ? new Throwable().getStackTrace()
+            : new StackTraceElement[]{};
 
         pool.acquireNextAvailableConnection(c -> {
 
@@ -250,8 +254,13 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
 
             c.onWrite(_c -> {
                 if (pending.get()) {
+
                     final var request = outgoingSupplier.get();
-                    JeroMQControlClient.send(request, _c.socket());
+
+                    if (JeroMQControlClient.send(request, _c.socket())) {
+                        _c.setEvents(READ, ERROR);
+                    }
+
                 } else {
                     _c.recycle();
                 }

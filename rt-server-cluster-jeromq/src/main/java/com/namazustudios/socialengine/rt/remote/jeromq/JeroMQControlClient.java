@@ -173,9 +173,9 @@ public class JeroMQControlClient implements ControlClient {
      * @param zMsg the {@link ZMsg} to send
      * @param socket the {@link Socket} to use to send the request
      */
-    public static void send(final ZMsg zMsg, final Socket socket) {
+    public static boolean send(final ZMsg zMsg, final Socket socket) {
         zMsg.addFirst(EMPTY_DELIMITER);
-        zMsg.send(socket);
+        return zMsg.send(socket);
     }
 
     private ZMsg recv() {
