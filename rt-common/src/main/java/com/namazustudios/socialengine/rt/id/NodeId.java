@@ -156,6 +156,17 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     }
 
     /**
+     * Returns true if this {@link NodeId} represents the master node.
+     *
+     * @return
+     */
+    public boolean isMaster() {
+        final var i = v1CompoundId.getComponent(INSTANCE).getValue();
+        final var n = v1CompoundId.getComponent(APPLICATION).getValue();
+        return i.equals(n);
+    }
+
+    /**
      * Generates a completely random {@link NodeId}.  Used mostly for testing.
      *
      * @return a newly constructued {@link NodeId}

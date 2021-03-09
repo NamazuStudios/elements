@@ -153,7 +153,10 @@ public class JeroMQDemultiplexRouter {
             logger.debug("  Errors {}", errorCounter);
             logger.debug("  Total Routes: {}", routes.size());
             logger.debug("  Routes:");
-            routes.forEach((nid, addr) -> logger.debug("  Node {} -> {} @{})", nid, addr, backends.get(nid)));
+            routes.forEach((nid, addr) -> logger.debug("  Node {} (master:{}) -> {} @{})",
+                nid, nid.isMaster(),
+                addr, backends.get(nid))
+            );
         }
 
         public void log() {
