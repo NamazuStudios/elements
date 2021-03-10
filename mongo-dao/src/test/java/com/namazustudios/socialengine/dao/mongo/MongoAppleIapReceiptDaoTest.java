@@ -24,13 +24,11 @@ public class MongoAppleIapReceiptDaoTest {
 
     private User testUser;
 
+    private UserTestFactory userTestFactory;
+
     @BeforeClass
     public void createTestUser() {
-        testUser = new User();
-        testUser.setName("testy.mctesterson.5");
-        testUser.setEmail("testy.mctesterson.5@example.com");
-        testUser.setLevel(USER);
-        testUser = getUserDao().createOrReactivateUser(testUser);
+        testUser = getUserTestFactory().createTestUser();
     }
 
     @Test(invocationCount = INVOCATION_COUNT)
@@ -138,6 +136,15 @@ public class MongoAppleIapReceiptDaoTest {
     @Inject
     public void setAppleIapReceiptDao(AppleIapReceiptDao appleIapReceiptDao) {
         this.appleIapReceiptDao = appleIapReceiptDao;
+    }
+
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
     }
 
 }
