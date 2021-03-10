@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.user.User;
 
+import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.model.user.User.Level.USER;
@@ -27,7 +28,9 @@ public class UserTestFactory {
         return userDao;
     }
 
+    @Inject
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
     }
+
 }
