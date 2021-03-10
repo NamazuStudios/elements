@@ -65,6 +65,8 @@ public class IntegrationTestModule extends AbstractModule {
             }
         });
 
+        bind(UserTestFactory.class).asEagerSingleton();
+
         install(new MongoCoreModule());
         install(new MongoSearchModule());
         install(new ValidationModule());
