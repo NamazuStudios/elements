@@ -40,7 +40,6 @@ import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.lang.Integer.max;
 import static java.util.UUID.randomUUID;
 
-@Singleton
 public class MongoInventoryItemDao implements InventoryItemDao {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MongoInventoryItemDao.class);
@@ -88,8 +87,10 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
         final var objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
 
-        final MongoInventoryItem item = getDatastore().find(MongoInventoryItem.class)
-                .filter(Filters.eq("_id", objectId)).first();
+        final MongoInventoryItem item = getDatastore()
+            .find(MongoInventoryItem.class)
+            .filter(Filters.eq("_id", objectId))
+            .first();
 
         if (item == null) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId + " for user " + user.getId());

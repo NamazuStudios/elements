@@ -96,7 +96,6 @@
         <jersey.version>2.32</jersey.version>
         <javax.validation.version>2.0.1.Final</javax.validation.version>
         <lucene.version>7.2.0</lucene.version>
-        <mongo.java.driver.version>3.4.0</mongo.java.driver.version>
         <testng.version>6.13.1</testng.version>
         <test.groups>unit</test.groups>
         <surefire.version>3.0.0-M5</surefire.version>

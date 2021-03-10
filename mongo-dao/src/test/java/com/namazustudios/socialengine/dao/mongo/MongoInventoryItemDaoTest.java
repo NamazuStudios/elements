@@ -139,7 +139,7 @@ public class MongoInventoryItemDaoTest {
         final InventoryItem inserted = new InventoryItem();
         inserted.setUser(user);
         inserted.setItem(testItemA);
-        inserted.setPriority(0);
+        inserted.setPriority(priority);
         inserted.setQuantity(100);
         getInventoryItemDao().createInventoryItem(inserted);
         fail("expected exception by this point.");
