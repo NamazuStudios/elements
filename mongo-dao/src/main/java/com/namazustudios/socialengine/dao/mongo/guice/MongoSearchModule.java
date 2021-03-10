@@ -1,12 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.guice;
 
 import com.google.inject.PrivateModule;
-import com.namazustudios.elements.fts.concurrent.Condition;
-import com.namazustudios.socialengine.dao.mongo.provider.*;
 import com.namazustudios.elements.fts.ObjectIndex;
-import org.apache.lucene.analysis.Analyzer;
-import org.apache.lucene.store.Directory;
-import org.apache.lucene.store.LockFactory;
+import com.namazustudios.socialengine.dao.mongo.provider.NullObjectIndexProvider;
 
 /**
  * Sets up and configures the {@link ObjectIndex} using the Mongo Lucene drivers
@@ -19,11 +15,7 @@ public class MongoSearchModule extends PrivateModule {
 
     @Override
     protected void configure() {
-// This is disabled for now
-//        bind(Analyzer.class).toProvider(MongoStandardAnalyzerProvider.class);
-//        bind(Directory.class).toProvider(MongoDirectoryProvider.class).asEagerSingleton();
-//        bind(Condition.class).toProvider(JeroMQConditionProvider.class).asEagerSingleton();
-//        bind(LockFactory.class).toProvider(MongoLockFactoryProvider.class).asEagerSingleton();
+        // Searching is disabled for now
         bind(ObjectIndex.class).toProvider(NullObjectIndexProvider.class).asEagerSingleton();
         expose(ObjectIndex.class);
     }

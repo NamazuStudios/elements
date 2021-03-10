@@ -43,11 +43,6 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.namazustudios.elements</groupId>
-            <artifactId>mongo-lucene</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
             <groupId>javax.inject</groupId>
             <artifactId>javax.inject</artifactId>
             <version>${javax.inject.version}</version>

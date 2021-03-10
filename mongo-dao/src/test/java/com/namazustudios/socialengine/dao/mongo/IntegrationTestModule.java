@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
-import com.sun.jna.platform.unix.X11;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -22,7 +21,6 @@ import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
-import static com.namazustudios.socialengine.dao.mongo.provider.MongoLockFactoryProvider.LOCK_TIMEOUT;
 import static de.flapdoodle.embed.mongo.MongodStarter.getDefaultInstance;
 import static de.flapdoodle.embed.process.runtime.Network.localhostIsIPv6;
 import static java.lang.String.format;
@@ -55,7 +53,6 @@ public class IntegrationTestModule extends AbstractModule {
 
         install(new ConfigurationModule(() -> {
             final Properties properties = defaultConfigurationSupplier.get();
-            properties.put(LOCK_TIMEOUT, format("%d", 120000));
             properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
             return properties;
         }));
