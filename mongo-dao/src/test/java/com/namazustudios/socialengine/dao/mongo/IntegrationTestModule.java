@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
+import com.sun.jna.platform.unix.X11;
 import de.flapdoodle.embed.mongo.MongodExecutable;
 import de.flapdoodle.embed.mongo.MongodProcess;
 import de.flapdoodle.embed.mongo.MongodStarter;
@@ -18,6 +19,7 @@ import ru.vyarus.guice.validator.ValidationModule;
 
 import java.io.IOException;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.dao.mongo.provider.MongoClientProvider.MONGO_CLIENT_URI;
 import static com.namazustudios.socialengine.dao.mongo.provider.MongoLockFactoryProvider.LOCK_TIMEOUT;
@@ -27,7 +29,7 @@ import static java.lang.String.format;
 
 public class IntegrationTestModule extends AbstractModule {
 
-    private static final int TEST_MONGO_PORT = 45000;
+    private static final AtomicInteger TEST_MONGO_PORT = new AtomicInteger(45000);
 
     private static final String TEST_BIND_IP = "localhost";
 
@@ -36,8 +38,10 @@ public class IntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
+        final int port = TEST_MONGO_PORT.getAndIncrement();
+
         try {
-            final var executable = mongodExecutable();
+            final var executable = mongodExecutable(port);
             bind(MongodExecutable.class).toInstance(executable);
             bind(MongodProcess.class).toInstance(executable.start());
             hooks.add(this, executable::stop);
@@ -52,7 +56,7 @@ public class IntegrationTestModule extends AbstractModule {
         install(new ConfigurationModule(() -> {
             final Properties properties = defaultConfigurationSupplier.get();
             properties.put(LOCK_TIMEOUT, format("%d", 120000));
-            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
             return properties;
         }));
 
@@ -70,11 +74,11 @@ public class IntegrationTestModule extends AbstractModule {
 
     }
 
-    public MongodExecutable mongodExecutable() throws IOException {
+    public MongodExecutable mongodExecutable(final int port) throws IOException {
 
         final MongodConfig config = MongodConfig.builder()
             .version(Version.V3_4_5)
-            .net(new Net(TEST_BIND_IP, TEST_MONGO_PORT, localhostIsIPv6()))
+            .net(new Net(TEST_BIND_IP, port, localhostIsIPv6()))
             .build();
 
         final MongodStarter starter = getDefaultInstance();
