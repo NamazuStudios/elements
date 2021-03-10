@@ -30,7 +30,6 @@ public class MongoAppleIapReceiptDaoTest {
         testUser.setName("testy.mctesterson.5");
         testUser.setEmail("testy.mctesterson.5@example.com");
         testUser.setLevel(USER);
-
         testUser = getUserDao().createOrReactivateUser(testUser);
     }
 
