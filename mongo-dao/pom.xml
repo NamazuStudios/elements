@@ -17,7 +17,7 @@
     <name>mongo-dao</name>
 
     <properties>
-        <morphia.version>2.1.3</morphia.version>
+        <morphia.version>2.1.4</morphia.version>
         <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
     </properties>
 
