@@ -114,8 +114,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         }
 
         final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
-        final MongoUser mongoUser = getDozerMapper().map(user, MongoUser.class);
-        query.filter(Filters.eq("user.$id", mongoUser.getObjectId()));
+
+        query.filter(Filters.eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
