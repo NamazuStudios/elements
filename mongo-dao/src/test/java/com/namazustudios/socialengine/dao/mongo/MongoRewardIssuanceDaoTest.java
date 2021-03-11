@@ -48,13 +48,12 @@ public class MongoRewardIssuanceDaoTest {
 
     private Item testItem;
 
+    private UserTestFactory userTestFactory;
+
     @BeforeClass
     public void createTestItems() {
 
-        testUser = new User();
-        testUser.setName("testy.mctesterson.5");
-        testUser.setEmail("testy.mctesterson.5@example.com");
-        testUser.setLevel(USER);
+        testUser = userTestFactory.createTestUser();
 
         testItem = new Item();
         testItem.setName("item_d");
@@ -563,4 +562,12 @@ public class MongoRewardIssuanceDaoTest {
         this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
 }

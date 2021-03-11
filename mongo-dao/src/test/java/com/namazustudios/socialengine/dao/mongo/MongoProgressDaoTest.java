@@ -64,10 +64,12 @@ public class MongoProgressDaoTest  {
 
     private Mission testRepeatingMission;
 
+    private UserTestFactory userTestFactory;
+
     @BeforeClass
     public void setupTestMission() {
         testApplication = makeTestApplication();
-        testUser = buildTestUser();
+        testUser = getUserTestFactory().createTestUser();
         testProfile = buildTestProfile();
         testFiniteItem = buildFiniteTestItem();
         testRepeatItem = buildRepeatTestItem();
@@ -80,14 +82,6 @@ public class MongoProgressDaoTest  {
         application.setName("mock");
         application.setDescription("A mock application.");
         return getApplicationDao().createOrUpdateInactiveApplication(application);
-    }
-
-    private User buildTestUser() {
-        final User testUser = new User();
-        testUser.setName("testy.mctesterson.4");
-        testUser.setEmail("testy.mctesterson.4@example.com");
-        testUser.setLevel(USER);
-        return getUserDao().createOrReactivateUser(testUser);
     }
 
     private Profile buildTestProfile() {
@@ -487,4 +481,12 @@ public class MongoProgressDaoTest  {
         this.rewardIssuanceDao = rewardIssuanceDao;
     }
 
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
 }

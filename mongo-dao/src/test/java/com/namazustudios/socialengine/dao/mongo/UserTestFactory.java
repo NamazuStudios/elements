@@ -5,6 +5,8 @@ import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
@@ -16,12 +18,34 @@ public class UserTestFactory {
     private UserDao userDao;
 
     public User createTestUser() {
+        return createTestUser(null, true);
+    }
+
+    public User createTestUser(boolean addToDB) {
+        return createTestUser(null, addToDB);
+    }
+
+    public User createTestUser(Consumer<User> precreateConsumer) {
+        return createTestUser(precreateConsumer, true);
+    }
+
+    public User createTestUser(Consumer<User> precreateConsumer, boolean addToDB) {
         final var testUser = new User();
         final var userName = format("testy.mctesterson.%d", suffix.getAndIncrement());
         testUser.setName(userName);
         testUser.setEmail(format("%s@example.com", userName));
         testUser.setLevel(USER);
-        return getUserDao().createOrReactivateUser(testUser);
+        testUser.setActive(true);
+
+        if(precreateConsumer != null) {
+            precreateConsumer.accept(testUser);
+        }
+
+        if(addToDB) {
+            return getUserDao().createOrReactivateUser(testUser);
+        }
+
+        return testUser;
     }
 
     public UserDao getUserDao() {

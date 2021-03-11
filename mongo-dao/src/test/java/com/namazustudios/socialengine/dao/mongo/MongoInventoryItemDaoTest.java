@@ -43,18 +43,10 @@ public class MongoInventoryItemDaoTest {
 
     private Item testItemInsertOnUpdateQuantity;
 
+    private UserTestFactory userTestFactory;
+
     @BeforeClass
     public void setupTestItems() {
-
-        testUserA = new User();
-        testUserA.setName("testy.mctesterson.2");
-        testUserA.setEmail("testy.mctesterson.2@example.com");
-        testUserA.setLevel(USER);
-
-        testUserB = new User();
-        testUserB.setName("testy.mctesterson.3");
-        testUserB.setEmail("testy.mctesterson.3@example.com");
-        testUserB.setLevel(USER);
 
         testItemA = new Item();
         testItemA.setName("item_a");
@@ -80,8 +72,9 @@ public class MongoInventoryItemDaoTest {
         testItemA = getItemDao().createItem(testItemA);
         testItemB = getItemDao().createItem(testItemB);
         testItemInsertOnUpdateQuantity = getItemDao().createItem(testItemInsertOnUpdateQuantity);
-        testUserA = getUserDao().createOrReactivateUser(testUserA);
-        testUserB = getUserDao().createOrReactivateUser(testUserB);
+
+        testUserA = getUserTestFactory().createTestUser();
+        testUserB = getUserTestFactory().createTestUser();
     }
 
     @DataProvider
@@ -245,4 +238,12 @@ public class MongoInventoryItemDaoTest {
         this.inventoryItemDao = inventoryItemDao;
     }
 
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
 }

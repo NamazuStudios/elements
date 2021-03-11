@@ -24,56 +24,42 @@ public class MongoAppleSignInUserDaoTest {
 
     private AppleSignInUserDao applappleSignInUserDao;
 
-    private static final String TEST_USER_0 = "testy.mctestersen.apple.0";
-
-    private static final String TEST_EMAIL_0 = format("%s@example.com", TEST_USER_0);
-
-    private static final String TEST_EMAIL_ALTERNATE_0 = format("%s@gmail.com", TEST_USER_0);
-
-    private static final String TEST_USER_1 = "testy.mctestersen.apple.1";
-
-    private static final String TEST_EMAIL_1 = format("%s@example.com", TEST_USER_1);
-
     private static final String TEST_APPLE_SIGNIN_ID_0 = "000425.f984e387f8704c48bd634900b356c615.0240";
 
     private static final String TEST_APPLE_SIGNIN_ID_1 = "000425.f984e387f8704c48bd634900b356c615.0241";
 
     private static final String TEST_BOGUS_APPLE_SIGNIN_ID = "000425.f984e387f8704c48bd634900b356c615.0242";
 
+    private UserTestFactory userTestFactory;
+
+    private User testUserA;
+    private User testUserB;
 
     @BeforeClass
-    public void seedOtherUsers() {
+    public void createTestUsers() {
+        //Seeds random users
         for (int i = 0; i < 50; ++i) {
-            final User user = new User();
-            user.setLevel(USER);
-            user.setActive(true);
-            user.setName(format("test%s", randomUUID()));
-            user.setEmail(format("test%s@example.com", randomUUID()));
-            getUserDao().createUserStrict(user);
+            userTestFactory.createTestUser();
         }
+
+        testUserA = userTestFactory.createTestUser(false);
+        testUserB = userTestFactory.createTestUser();
     }
 
     @Test
     public void testCreateOrRefreshWithNoExistingUser() {
 
-        final User user = new User();
-        user.setLevel(USER);
-        user.setActive(true);
-        user.setAppleSignInId(TEST_APPLE_SIGNIN_ID_0);
-        user.setName(TEST_USER_0);
-        user.setEmail(TEST_EMAIL_0);
-
-        final User result = getApplappleSignInUserDao().createReactivateOrUpdateUser(user);
+        testUserA.setAppleSignInId(TEST_APPLE_SIGNIN_ID_0);
+        final User result = getApplappleSignInUserDao().createReactivateOrUpdateUser(testUserA);
 
         assertNotNull(result.getId());
         assertTrue(ObjectId.isValid(result.getId()));
 
         assertEquals(result.getAppleSignInId(), TEST_APPLE_SIGNIN_ID_0);
         assertTrue(result.isActive());
-        assertEquals(result.getName(), TEST_USER_0);
-        assertEquals(result.getEmail(), TEST_EMAIL_0);
+        assertEquals(result.getName(), testUserA.getName());
+        assertEquals(result.getEmail(), testUserA.getEmail());
         assertEquals(result.getLevel(), USER);
-
     }
 
     @Test(dependsOnMethods = "testCreateOrRefreshWithNoExistingUser")
@@ -84,11 +70,11 @@ public class MongoAppleSignInUserDaoTest {
     @Test(dependsOnMethods = "testCreateOrRefreshWithExistingUser")
     public void testReactivatesInactiveUser() {
 
-        final User user = getUserDao().getActiveUserByNameOrEmail(TEST_EMAIL_0);
+        final User user = getUserDao().getActiveUserByNameOrEmail(testUserA.getEmail());
         getUserDao().softDeleteUser(user.getId());
 
         try {
-            getUserDao().getActiveUserByNameOrEmail(TEST_EMAIL_0);
+            getUserDao().getActiveUserByNameOrEmail(testUserA.getEmail());
         } catch (UserNotFoundException expected) {
             // Expected exception.  Continue test.
             testCreateOrRefreshWithExistingUser();
@@ -125,21 +111,15 @@ public class MongoAppleSignInUserDaoTest {
     @Test
     public void testConnectIfNecessaryUnconnected() {
 
-        final User user = new User();
-        user.setLevel(USER);
-        user.setActive(true);
-        user.setName(TEST_USER_1);
-        user.setEmail(TEST_EMAIL_1);
-
-        final User inserted = getUserDao().createUserWithPasswordStrict(user, "Testy's Dog Named Fido");
+        final User inserted = getUserDao().createUserWithPasswordStrict(testUserB, "Testy's Dog Named Fido");
 
         assertNotNull(inserted.getId());
         assertTrue(ObjectId.isValid(inserted.getId()));
 
         assertNull(inserted.getAppleSignInId());
         assertTrue(inserted.isActive());
-        assertEquals(inserted.getName(), TEST_USER_1);
-        assertEquals(inserted.getEmail(), TEST_EMAIL_1);
+        assertEquals(inserted.getName(), testUserB.getName());
+        assertEquals(inserted.getEmail(), testUserB.getEmail());
         assertEquals(inserted.getLevel(), USER);
 
         inserted.setAppleSignInId(TEST_APPLE_SIGNIN_ID_1);
@@ -150,16 +130,17 @@ public class MongoAppleSignInUserDaoTest {
 
         assertTrue(connected.isActive());
         assertEquals(connected.getAppleSignInId(), TEST_APPLE_SIGNIN_ID_1);
-        assertEquals(connected.getName(), TEST_USER_1);
-        assertEquals(connected.getEmail(), TEST_EMAIL_1);
+        assertEquals(connected.getName(), testUserB.getName());
+        assertEquals(connected.getEmail(), testUserB.getEmail());
         assertEquals(connected.getLevel(), USER);
 
+        testUserB = connected;
     }
 
     @Test(dependsOnMethods = "testConnectIfNecessaryUnconnected")
     public void testConnectingSameUserHasNoSideEffects() {
 
-        final User user = getUserDao().getActiveUserByNameOrEmail(TEST_EMAIL_1);
+        final User user = getUserDao().getActiveUserByNameOrEmail(testUserB.getEmail());
         final User connected = getApplappleSignInUserDao().connectActiveAppleUserIfNecessary(user);
 
         assertNotNull(connected.getId());
@@ -167,15 +148,15 @@ public class MongoAppleSignInUserDaoTest {
 
         assertTrue(connected.isActive());
         assertEquals(connected.getAppleSignInId(), TEST_APPLE_SIGNIN_ID_1);
-        assertEquals(connected.getName(), TEST_USER_1);
-        assertEquals(connected.getEmail(), TEST_EMAIL_1);
+        assertEquals(connected.getName(), testUserB.getName());
+        assertEquals(connected.getEmail(), testUserB.getEmail());
         assertEquals(connected.getLevel(), USER);
 
     }
 
     @Test(dependsOnMethods = "testConnectingSameUserHasNoSideEffects", expectedExceptions = DuplicateException.class)
     public void testConnectingAppleSignInIdFails() {
-        final User user = getUserDao().getActiveUserByNameOrEmail(TEST_EMAIL_1);
+        final User user = getUserDao().getActiveUserByNameOrEmail(testUserB.getEmail());
         user.setAppleSignInId(TEST_BOGUS_APPLE_SIGNIN_ID);
         getApplappleSignInUserDao().connectActiveAppleUserIfNecessary(user);
     }
@@ -198,4 +179,12 @@ public class MongoAppleSignInUserDaoTest {
         this.applappleSignInUserDao = applappleSignInUserDao;
     }
 
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
 }

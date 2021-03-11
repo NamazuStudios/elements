@@ -42,10 +42,12 @@ public class MongoAppleSignInSessionDaoTest {
 
     private EmbeddedMongo embeddedMongo;
 
+    private UserTestFactory userTestFactory;
+
     @BeforeClass
     public void setup() {
         testApplication = makeTestApplication();
-        testUser = buildTestUser();
+        testUser = getUserTestFactory().createTestUser();
         testProfile = buildTestProfile();
     }
 
@@ -56,16 +58,8 @@ public class MongoAppleSignInSessionDaoTest {
         return getApplicationDao().createOrUpdateInactiveApplication(application);
     }
 
-    private User buildTestUser() {
-        final User testUser = new User();
-        testUser.setName("testy.mctesterson.4");
-        testUser.setEmail("testy.mctesterson.4@example.com");
-        testUser.setLevel(USER);
-        return getUserDao().createOrReactivateUser(testUser);
-    }
-
     private Profile buildTestProfile() {
-        final Profile profile =  new Profile();
+        final Profile profile = new Profile();
         profile.setUser(testUser);
         profile.setApplication(testApplication);
         profile.setDisplayName(format("display-name-%s", testUser.getName()));
@@ -150,4 +144,12 @@ public class MongoAppleSignInSessionDaoTest {
         getEmbeddedMongo().stop();
     }
 
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
 }

@@ -14,12 +14,13 @@ import javax.inject.Inject;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
 
+@Test(enabled = false)
 @Guice(modules = IntegrationTestModule.class)
 public class MongoMatchDaoCreateDeleteIntegrationTest {
 
     private MatchDao matchDao;
 
-    private EmbeddedMongo embeddedMongo;
+//    private EmbeddedMongo embeddedMongo;
 
     private Datastore Datastore;
 
@@ -46,15 +47,15 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
         return match;
     }
 
-    @BeforeClass
-    public void dropDatabase() {
-        getEmbeddedMongo().getMongoDatabase().drop();
-    }
-
-    @AfterSuite
-    public void killProcess() {
-        getEmbeddedMongo().stop();
-    }
+//    @BeforeClass
+//    public void dropDatabase() {
+//        getEmbeddedMongo().getMongoDatabase().drop();
+//    }
+//
+//    @AfterSuite
+//    public void killProcess() {
+//        getEmbeddedMongo().stop();
+//    }
 
     public MatchDao getMatchDao() {
         return matchDao;
@@ -65,14 +66,14 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
         this.matchDao = matchDao;
     }
 
-    public EmbeddedMongo getEmbeddedMongo() {
-        return embeddedMongo;
-    }
-
-    @Inject
-    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
-        this.embeddedMongo = embeddedMongo;
-    }
+//    public EmbeddedMongo getEmbeddedMongo() {
+//        return embeddedMongo;
+//    }
+//
+//    @Inject
+//    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
+//        this.embeddedMongo = embeddedMongo;
+//    }
 
     public Datastore getDatastore() {
         return Datastore;

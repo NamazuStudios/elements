@@ -25,6 +25,10 @@ public class MongoFacebookUserDaoTest {
 
     private FacebookUserDao facebookUserDao;
 
+    private UserTestFactory userTestFactory;
+
+    private User currentUser;
+
     @BeforeClass
     public void seedOtherUsers() {
         for (int i = 0; i < 50; ++i) {
@@ -38,37 +42,38 @@ public class MongoFacebookUserDaoTest {
     }
 
     @Test
-    public void testCreateOrRefreshWitnNoExistingUser() {
+    public void testCreateOrRefreshWithNoExistingUser() {
 
-        final User user = new User();
-        user.setLevel(USER);
-        user.setActive(true);
-        user.setFacebookId("1234567890");
-        user.setName("testy.mctestersen.0");
-        user.setEmail("testy.mctestersen.0@example.com");
+        final String facebookId = "1234567890";
 
-        final User result = getFacebookUserDao().createReactivateOrUpdateUser(user);
+        currentUser = getUserTestFactory().createTestUser(user -> user.setFacebookId(facebookId));
+        final String userName = currentUser.getName();
+        final String email = currentUser.getEmail();
+
+        currentUser.setFacebookId(facebookId);
+
+        final User result = getFacebookUserDao().createReactivateOrUpdateUser(currentUser);
 
         assertNotNull(result.getId());
         assertTrue(ObjectId.isValid(result.getId()));
 
-        assertEquals(result.getFacebookId(), "1234567890");
+        assertEquals(result.getFacebookId(), facebookId);
         assertTrue(result.isActive());
-        assertEquals(result.getName(), "testy.mctestersen.0");
-        assertEquals(result.getEmail(), "testy.mctestersen.0@example.com");
+        assertEquals(result.getName(), userName);
+        assertEquals(result.getEmail(), email);
         assertEquals(result.getLevel(), USER);
 
     }
 
-    @Test(dependsOnMethods = "testCreateOrRefreshWitnNoExistingUser")
+    @Test(dependsOnMethods = "testCreateOrRefreshWithNoExistingUser")
     public void testCreateOrRefreshWithExistingUser() {
-        testCreateOrRefreshWitnNoExistingUser();
+        testCreateOrRefreshWithNoExistingUser();
     }
 
     @Test(dependsOnMethods = "testCreateOrRefreshWithExistingUser")
     public void testReactivatesInactiveUser() {
 
-        final User user = getUserDao().getActiveUserByNameOrEmail("testy.mctestersen.0@example.com");
+        final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
         getUserDao().softDeleteUser(user.getId());
 
         try {
@@ -86,21 +91,19 @@ public class MongoFacebookUserDaoTest {
     @Test(dependsOnMethods = "testReactivatesInactiveUser")
     public void testUserChangedEmailAddress() {
 
-        final User user = new User();
-        user.setLevel(USER);
-        user.setActive(true);
-        user.setFacebookId("1234567890");
-        user.setName("testy.mctestersen.0");
-        user.setEmail("testy.mctestersen.0@gmail.com");
+        final String facebookId = "1234567890";
+        final User user = getUserTestFactory().createTestUser(u -> u.setFacebookId(facebookId));
+        final String userName = user.getName();
+        final String email = user.getEmail();
 
         final User result = getFacebookUserDao().createReactivateOrUpdateUser(user);
 
         assertNotNull(result.getId());
         assertTrue(ObjectId.isValid(result.getId()));
 
-        assertEquals(result.getFacebookId(), "1234567890");
+        assertEquals(result.getFacebookId(), facebookId);
         assertTrue(result.isActive());
-        assertEquals(result.getEmail(), "testy.mctestersen.0@example.com");
+        assertEquals(result.getEmail(), email);
         assertEquals(result.getLevel(), USER);
 
     }
@@ -108,11 +111,9 @@ public class MongoFacebookUserDaoTest {
     @Test
     public void testConnectIfNecessaryUnconnected() {
 
-        final User user = new User();
-        user.setLevel(USER);
-        user.setActive(true);
-        user.setName("testy.mctesterson.1");
-        user.setEmail("testy.mctesterson.1@example.com");
+        final User user = getUserTestFactory().createTestUser();
+        final String userName = user.getName();
+        final String email = user.getEmail();
 
         final User inserted = getUserDao().createUserWithPasswordStrict(user, "Testy's Dog Named Fido");
 
@@ -121,44 +122,47 @@ public class MongoFacebookUserDaoTest {
 
         assertNull(inserted.getFacebookId());
         assertTrue(inserted.isActive());
-        assertEquals(inserted.getName(), "testy.mctesterson.1");
-        assertEquals(inserted.getEmail(), "testy.mctesterson.1@example.com");
+        assertEquals(inserted.getName(), userName);
+        assertEquals(inserted.getEmail(), email);
         assertEquals(inserted.getLevel(), USER);
 
-        inserted.setFacebookId("0987654321");
+        final String facebookId = "0987654321";
+        inserted.setFacebookId(facebookId);
+
         final User connected = getFacebookUserDao().connectActiveFacebookUserIfNecessary(inserted);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
 
         assertTrue(connected.isActive());
-        assertEquals(connected.getFacebookId(), "0987654321");
-        assertEquals(connected.getName(), "testy.mctesterson.1");
-        assertEquals(connected.getEmail(), "testy.mctesterson.1@example.com");
+        assertEquals(connected.getFacebookId(), facebookId);
+        assertEquals(inserted.getName(), userName);
+        assertEquals(inserted.getEmail(), email);
         assertEquals(connected.getLevel(), USER);
 
+        currentUser = user;
     }
 
     @Test(dependsOnMethods = "testConnectIfNecessaryUnconnected")
     public void testConnectingSameUserHasNoSideEffects() {
 
-        final User user = getUserDao().getActiveUserByNameOrEmail("testy.mctesterson.1@example.com");
+        final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
         final User connected = getFacebookUserDao().connectActiveFacebookUserIfNecessary(user);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
 
         assertTrue(connected.isActive());
-        assertEquals(connected.getFacebookId(), "0987654321");
-        assertEquals(connected.getName(), "testy.mctesterson.1");
-        assertEquals(connected.getEmail(), "testy.mctesterson.1@example.com");
+        assertEquals(connected.getFacebookId(), currentUser.getFacebookId());
+        assertEquals(connected.getName(), currentUser.getName());
+        assertEquals(connected.getEmail(), currentUser.getEmail());
         assertEquals(connected.getLevel(), USER);
 
     }
 
     @Test(dependsOnMethods = "testConnectingSameUserHasNoSideEffects", expectedExceptions = DuplicateException.class)
     public void testConnectingFacebookIdFails() {
-        final User user = getUserDao().getActiveUserByNameOrEmail("testy.mctesterson.1@example.com");
+        final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
         user.setFacebookId("1245");
         getFacebookUserDao().connectActiveFacebookUserIfNecessary(user);
     }
@@ -181,4 +185,12 @@ public class MongoFacebookUserDaoTest {
         this.facebookUserDao = facebookUserDao;
     }
 
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
 }

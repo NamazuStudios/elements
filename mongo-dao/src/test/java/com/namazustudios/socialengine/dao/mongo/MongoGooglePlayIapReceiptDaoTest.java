@@ -27,12 +27,11 @@ public class MongoGooglePlayIapReceiptDaoTest {
 
     private User testUser;
 
+    private UserTestFactory userTestFactory;
+
     @BeforeClass
     public void createTestUser() {
-        testUser = new User();
-        testUser.setName("testy.mctesterson.5");
-        testUser.setEmail("testy.mctesterson.5@example.com");
-        testUser.setLevel(USER);
+        testUser = getUserTestFactory().createTestUser();
 
         testUser = getUserDao().createOrReactivateUser(testUser);
         testUser = getUserDao().createOrReactivateUser(testUser);
@@ -160,5 +159,14 @@ public class MongoGooglePlayIapReceiptDaoTest {
     @Inject
     public void setGooglePlayIapReceiptDao(GooglePlayIapReceiptDao googlePlayIapReceiptDao) {
         this.googlePlayIapReceiptDao = googlePlayIapReceiptDao;
+    }
+
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
     }
 }

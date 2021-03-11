@@ -42,6 +42,8 @@ public class MongoFollowerDaoTest {
 
     private Profile testProfileB;
 
+    private UserTestFactory userTestFactory;
+
     @BeforeClass
     public void setupTestItems() {
         makeTestApplication();
@@ -105,15 +107,8 @@ public class MongoFollowerDaoTest {
     }
 
     private void makeTestUsers(){
-        testUserA = new User();
-        testUserA.setName("testy.mctesterson.2");
-        testUserA.setEmail("testy.mctesterson.2@example.com");
-        testUserA.setLevel(USER);
-
-        testUserB = new User();
-        testUserB.setName("testy.mctesterson.3");
-        testUserB.setEmail("testy.mctesterson.3@example.com");
-        testUserB.setLevel(USER);
+        testUserA = getUserTestFactory().createTestUser();
+        testUserB = getUserTestFactory().createTestUser();
 
         testUserA = getUserDao().createOrReactivateUser(testUserA);
         testUserB = getUserDao().createOrReactivateUser(testUserB);
@@ -172,4 +167,12 @@ public class MongoFollowerDaoTest {
         this.applicationDao = applicationDao;
     }
 
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
+    }
 }
