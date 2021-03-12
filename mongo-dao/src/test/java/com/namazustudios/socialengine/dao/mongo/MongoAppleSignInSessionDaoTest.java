@@ -141,7 +141,7 @@ public class MongoAppleSignInSessionDaoTest {
 
     @AfterSuite
     public void killProcess() {
-        getEmbeddedMongo().stop();
+//        getEmbeddedMongo().stop();
     }
 
     public UserTestFactory getUserTestFactory() {

@@ -232,6 +232,6 @@ public class MongoItemDaoIntegrationTest {
 
     @AfterSuite
     public void killProcess() {
-        getEmbeddedMongo().stop();
+//        getEmbeddedMongo().stop();
     }
 }

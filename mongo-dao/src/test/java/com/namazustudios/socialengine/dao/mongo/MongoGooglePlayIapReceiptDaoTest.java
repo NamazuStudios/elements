@@ -32,9 +32,6 @@ public class MongoGooglePlayIapReceiptDaoTest {
     @BeforeClass
     public void createTestUser() {
         testUser = getUserTestFactory().createTestUser();
-
-        testUser = getUserDao().createOrReactivateUser(testUser);
-        testUser = getUserDao().createOrReactivateUser(testUser);
     }
 
     @Test(invocationCount = INVOCATION_COUNT)

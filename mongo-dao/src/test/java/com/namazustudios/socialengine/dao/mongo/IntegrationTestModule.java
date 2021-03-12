@@ -36,7 +36,7 @@ public class IntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        final int port = TEST_MONGO_PORT.getAndIncrement();
+        final int port = 45000;
 
         try {
             final var executable = mongodExecutable(port);
