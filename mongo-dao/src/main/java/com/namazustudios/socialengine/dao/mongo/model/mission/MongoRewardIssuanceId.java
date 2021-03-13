@@ -15,7 +15,11 @@ import java.util.Objects;
 
 import static java.lang.System.arraycopy;
 
+<<<<<<< Updated upstream
 @Embedded
+=======
+@Embedded(useDiscriminator = true)
+>>>>>>> Stashed changes
 public class MongoRewardIssuanceId {
 
     private static final int USER_ID_LENGTH = 12;
