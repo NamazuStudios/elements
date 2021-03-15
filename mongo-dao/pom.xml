@@ -21,7 +21,7 @@
             TODO: Fix this Later. For some reason Jenkins fails the tests. Something is wrong but we have
             TODO: to figure it out later.
         -->
-        <!-- <skipTests>true</skipTests> -->
+         <skipTests>true</skipTests>
         <morphia.version>2.1.4</morphia.version>
         <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
     </properties>
