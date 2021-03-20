@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.appserve;
 
 import com.google.inject.Injector;
 import com.google.inject.Key;
+
 import com.namazustudios.socialengine.appserve.guice.AppServeDispatcherModule;
 import com.namazustudios.socialengine.appserve.guice.RemoteInvocationDispatcherModule;
 import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
@@ -27,22 +28,25 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.servlet.DispatcherType;
 import java.util.EnumSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
 import static java.lang.String.format;
+import static java.util.UUID.randomUUID;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
-    private static final String PATH_PREFIX = "app-serve";
-    private static final String VERSION_PREFIX = "app-serve-version";
-    private static final String VERSION_ORIGIN_ID = "31a020f2-1df1-4b1a-8bc1-a50d2cabd823"; // TODO: do we need to worry abt uniqueness across instances?
+    public static final String VERSION_ENDPOINT = "com.namazustudios.socialengine.http.appserve.version.endpoint";
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
+
+    private final String versionOriginId = randomUUID().toString();
 
     private final ConcurrentMap<String, Injector> applicationInjectorMap = new ConcurrentHashMap<>();
 
@@ -54,18 +58,23 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private ApplicationService applicationService;
 
+    private String versionEndpoint;
+
+    private String applicationPathPrefix;
+
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
-        switch (app.getOriginId()) {
-            case VERSION_ORIGIN_ID: return createContextHandlerForVersion(app);
-            default:                return createContextHandlerForApplication(app);
+        if (versionOriginId.equals(app.getOriginId())) {
+            return createContextHandlerForVersion(app);
+        } else {
+            return createContextHandlerForApplication(app);
         }
     }
 
     public ContextHandler createContextHandlerForVersion(final App app) {
 
-        if (!VERSION_ORIGIN_ID.equals(app.getOriginId())) {
-            throw new IllegalArgumentException("App must have origin ID: " + VERSION_ORIGIN_ID);
+        if (!versionOriginId.equals(app.getOriginId())) {
+            throw new IllegalArgumentException("App must have origin ID: " + versionOriginId);
         }
 
         final Injector injector = getInjector().createChildInjector(new VersionServletModule());
@@ -74,7 +83,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath("/");
-        servletContextHandler.addServlet(new ServletHolder(versionServlet), format("/%s/*", VERSION_PREFIX));
+        servletContextHandler.addServlet(new ServletHolder(versionServlet), getVersionEndpoint());
         return servletContextHandler;
 
     }
@@ -85,7 +94,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final var injector = injectorFor(application);
 
-        final var path = format("/%s/%s", PATH_PREFIX, application.getName());
+        final var path = format("/%s/%s", getApplicationPathPrefix(), application.getName());
         final var dispatcherServlet = injector.getInstance(DispatcherServlet.class);
         final var sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
@@ -122,9 +131,9 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         getInstance().start();
 
-        final var version = new App(getDeploymentManager(), this, VERSION_ORIGIN_ID);
-        getDeploymentManager().addApp(version);
+        final var version = new App(getDeploymentManager(), this, versionOriginId);
 
+        getDeploymentManager().addApp(version);
         getApplicationService().getApplications().getObjects().forEach(this::deploy);
 
     }
@@ -140,12 +149,15 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     @Override
     protected void doStop() throws Exception {
+
         applicationInjectorMap
             .values()
             .stream()
             .map(i -> i.getInstance(Context.class))
             .forEach(this::shutdown);
+
         getInstance().close();
+
     }
 
     private void shutdown(final Context context) {
@@ -191,5 +203,28 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     public void setInstance(Instance instance) {
         this.instance = instance;
     }
+
+    public String getVersionEndpoint() {
+        return versionEndpoint;
+    }
+
+    @Inject
+    public void setVersionEndpoint(@Named(VERSION_ENDPOINT) String versionEndpoint) {
+        this.versionEndpoint = versionEndpoint.startsWith("/")
+            ? versionEndpoint
+            : "/" + versionEndpoint;
+    }
+
+    public String getApplicationPathPrefix() {
+        return applicationPathPrefix;
+    }
+
+    @Inject
+    public void setApplicationPathPrefix(@Named(HTTP_PATH_PREFIX) String applicationPathPrefix) {
+        this.applicationPathPrefix = applicationPathPrefix.startsWith("/")
+            ? applicationPathPrefix
+            : "/" + applicationPathPrefix;
+    }
+
 
 }

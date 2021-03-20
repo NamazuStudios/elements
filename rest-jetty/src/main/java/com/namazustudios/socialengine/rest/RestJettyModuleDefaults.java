@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 
+import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
 import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.rest.RestAPIMain.*;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
@@ -24,9 +25,8 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties properties = new Properties();
-        properties.put(HTTP_BIND_ADDRESS, DEFAULT_BIND_ADDRESS);
         properties.put(HTTP_PORT, Integer.toString(DEFAULT_PORT));
-        properties.put(API_CONTEXT, DEFAULT_API_CONTEXT);
+        properties.put(HTTP_PATH_PREFIX, DEFAULT_API_CONTEXT);
         properties.put(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.put(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.put(STATIC_HOST_INFO, "tcp://localhost:28883");

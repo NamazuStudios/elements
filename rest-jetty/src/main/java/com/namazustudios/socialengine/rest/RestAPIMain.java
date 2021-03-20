@@ -10,30 +10,23 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Singleton;
 import javax.servlet.DispatcherType;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
-import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.rest.guice.GuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 import static java.util.EnumSet.allOf;
-import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
 import static org.eclipse.jetty.util.Loader.getResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
@@ -44,35 +37,11 @@ public class RestAPIMain implements Callable<Void>, Runnable {
 
     private static final OptionParser optionParser = new OptionParser();
 
-    public static final String HTTP_BIND_ADDRESS = "com.namazustudios.socialengine.rest.api.bind.address";
-
-    public static final String API_CONTEXT = "com.namazustudios.socialengine.rest.api.context";
-
-    public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
-
     public static final int DEFAULT_PORT = 8081;
 
     public static final Stage DEFAULT_STAGE = DEVELOPMENT;
 
-    public static final String DEFAULT_API_CONTEXT = "/api";
-
-    private static final OptionSpec<String> bindOptionSpec = optionParser
-            .accepts("bind", "The bind address.")
-            .withOptionalArg()
-            .ofType(String.class)
-            .defaultsTo(DEFAULT_BIND_ADDRESS);
-
-    private static final OptionSpec<Integer> portOptionSpec = optionParser
-            .accepts("port", "The TCP Port upon which to bind.")
-            .withOptionalArg()
-            .ofType(Integer.class)
-            .defaultsTo(DEFAULT_PORT);
-
-    private static final OptionSpec<String> apiContextOptionsSpec = optionParser
-            .accepts("api-context", "The context upon which to run the api.")
-            .withOptionalArg()
-            .ofType(String.class)
-            .defaultsTo(DEFAULT_API_CONTEXT);
+    public static final String DEFAULT_API_CONTEXT = "api";
 
     private static final OptionSpec<Stage> stageOptionSpec = optionParser
             .accepts("stage", "Is this running in development or production?")
@@ -84,9 +53,9 @@ public class RestAPIMain implements Callable<Void>, Runnable {
             .accepts("help", "Displays the help message.")
             .forHelp();
 
-    private final Instance instance;
+    private final Server server;
 
-    private final Server server = new Server();
+    private final Instance instance;
 
     /**
      * Args style constructor.
@@ -96,9 +65,6 @@ public class RestAPIMain implements Callable<Void>, Runnable {
      */
     public RestAPIMain(final String[] args) throws ProgramArgumentException {
 
-        int port;
-        String bind;
-        String apiContext;
         Stage stage;
 
         try {
@@ -109,11 +75,6 @@ public class RestAPIMain implements Callable<Void>, Runnable {
                 throw new HelpRequestedException();
             }
 
-            bind = options.valueOf(bindOptionSpec);
-            port = options.valueOf(portOptionSpec);
-            apiContext = options.valueOf(apiContextOptionsSpec);
-            apiContext = apiContext.startsWith("/") ? apiContext : "/" + apiContext;
-
             stage = options.valueOf(stageOptionSpec);
 
         } catch (OptionException ex) {
@@ -121,70 +82,48 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         }
 
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-        final var injector = createInjector(stage, new RestAPIModule(defaultConfigurationSupplier));
 
-        final ServerConnector connector = new ServerConnector(server);
-        connector.setHost(bind);
-        connector.setPort(port);
+        final var injector = createInjector(stage,
+            new RestAPIServerModule(),
+            new RestAPIModule(defaultConfigurationSupplier));
 
-        final HandlerCollection handlerCollection = new HandlerCollection();
+        final var guiceFilter = injector.getInstance(GuiceFilter.class);
+        final var servletHandler = injector.getInstance(ServletContextHandler.class);
 
-        final ServletContextHandler servletHandler = new ServletContextHandler(SESSIONS);
-        servletHandler.setContextPath(apiContext);
-
-        servletHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
-
-        final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
-        servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
-
-        final Map<String, String> defaultInitParameters = new HashMap<>();
-        defaultInitParameters.put("dirAllowed", "false");
-        defaultInitParameters.put("resourceBase", getResource("swagger").toString());
-
-        final ServletHolder defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
-        defaultServletHolder.setInitParameters(defaultInitParameters);
-
-        handlerCollection.addHandler(servletHandler);
-
-        server.setHandler(handlerCollection);
-        server.setConnectors(new Connector[]{connector});
-        instance = injector.getInstance(Instance.class);
+        this.server = injector.getInstance(Server.class);
+        this.instance = injector.getInstance(Instance.class);
+        doInit(injector, guiceFilter, servletHandler);
 
     }
 
     @Inject
-    private RestAPIMain(final Instance instance,
+    private RestAPIMain(final Server server,
+                        final Instance instance,
                         final Injector injector,
-                        @Named(HTTP_PORT) final int port,
-                        @Named(HTTP_BIND_ADDRESS) final String bind,
-                        @Named(API_CONTEXT) final String apiContext) {
+                        final GuiceFilter guiceFilter,
+                        final ServletContextHandler servletHandler) {
+        this.server = server;
+        this.instance = instance;
+        doInit(injector, guiceFilter, servletHandler);
+    }
 
-        final ServerConnector connector = new ServerConnector(server);
-        connector.setHost(bind);
-        connector.setPort(port);
-
-        final HandlerCollection handlerCollection = new HandlerCollection();
-
-        final ServletContextHandler servletHandler = new ServletContextHandler(SESSIONS);
-        servletHandler.setContextPath(apiContext);
+    private void doInit(final Injector injector,
+                        final GuiceFilter guiceFilter,
+                        final ServletContextHandler servletHandler) {
 
         servletHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
-
-        final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
         servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
 
-        final Map<String, String> defaultInitParameters = new HashMap<>();
+        final var defaultInitParameters = new HashMap<String, String>();
         defaultInitParameters.put("dirAllowed", "false");
         defaultInitParameters.put("resourceBase", getResource("swagger").toString());
 
-        final ServletHolder defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
+        final var defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
         defaultServletHolder.setInitParameters(defaultInitParameters);
 
+        final var handlerCollection = new HandlerCollection();
         handlerCollection.addHandler(servletHandler);
-
         server.setHandler(handlerCollection);
-        server.setConnectors(new Connector[]{connector});
-        this.instance = instance;
 
     }
 
@@ -250,7 +189,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
      * Thrown by the {@link RestAPIMain#run()} method.  The value of {@link #getCause()} will always be the exact
      * cause of the underlying exception.
      */
-    public class ServerRuntimeException extends RuntimeException {
+    public static class ServerRuntimeException extends RuntimeException {
         public ServerRuntimeException(final Throwable ex) {
             super(ex);
         }
@@ -260,7 +199,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
      * Thrown when bad arguments are passed to the {@link RestAPIMain#RestAPIMain(String[])} constructor or the
      * arguments supplied cannot be used to creat the server.
      */
-    public class ProgramArgumentException extends IllegalArgumentException {
+    public static class ProgramArgumentException extends IllegalArgumentException {
 
         public ProgramArgumentException() {}
 
@@ -273,7 +212,7 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     /**
      * Thrown when the options specified a request for help.
      */
-    public class HelpRequestedException extends ProgramArgumentException {}
+    public static class HelpRequestedException extends ProgramArgumentException {}
 
     public static void main(final String[] args) throws Exception {
         try {

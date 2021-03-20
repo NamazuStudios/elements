@@ -12,9 +12,11 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 
-public class ServerProvider implements Provider<Server> {
+import static com.namazustudios.socialengine.Constants.HTTP_BIND_ADDRESS;
 
-    private Provider<Integer> serverPortProvider;
+public class DynamicServerProvider implements Provider<Server> {
+
+    private SimpleServerProvider serverProvider;
 
     private Provider<AppProvider> appProviderProvider;
 
@@ -23,11 +25,9 @@ public class ServerProvider implements Provider<Server> {
     @Override
     public Server get() {
 
-        final int port = getServerPortProvider().get();
-
-        final Server server = new Server(port);
-        final AppProvider dispatcherAppProvider = getAppProviderProvider().get();
-        final DeploymentManager deploymentManager = getDeploymentManagerProvider().get();
+        final var server = getServerProvider().get();
+        final var dispatcherAppProvider = getAppProviderProvider().get();
+        final var deploymentManager = getDeploymentManagerProvider().get();
 
         final HandlerCollection mainHandler = new HandlerCollection();
         mainHandler.addHandler(new RequestLogHandler());
@@ -42,13 +42,13 @@ public class ServerProvider implements Provider<Server> {
         return server;
     }
 
-    public Provider<Integer> getServerPortProvider() {
-        return serverPortProvider;
+    public SimpleServerProvider getServerProvider() {
+        return serverProvider;
     }
 
     @Inject
-    public void setServerPortProvider(@Named(Constants.HTTP_PORT) Provider<Integer> serverPortProvider) {
-        this.serverPortProvider = serverPortProvider;
+    public void setServerProvider(SimpleServerProvider serverProvider) {
+        this.serverProvider = serverProvider;
     }
 
     public Provider<DeploymentManager> getDeploymentManagerProvider() {
