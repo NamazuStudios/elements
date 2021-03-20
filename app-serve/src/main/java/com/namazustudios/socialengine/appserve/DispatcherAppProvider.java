@@ -94,7 +94,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final var injector = injectorFor(application);
 
-        final var path = format("/%s/%s", getApplicationPathPrefix(), application.getName());
+        final var path = format("%s/%s", getApplicationPathPrefix(), application.getName()).replace("(//+)", "/");
         final var dispatcherServlet = injector.getInstance(DispatcherServlet.class);
         final var sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
