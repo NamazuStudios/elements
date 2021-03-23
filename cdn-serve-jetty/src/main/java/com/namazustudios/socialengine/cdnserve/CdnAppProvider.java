@@ -31,16 +31,25 @@ import javax.servlet.DispatcherType;
 
 import java.io.IOException;
 
+import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
 import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
 
 public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
-    public static final String GIT_CONTEXT = "/cdn/git";
+    public static final String GIT_CONTEXT_FORMAT = "%s/git";
 
-    public static final String MANAGE_CONTEXT = "/cdn/manage";
+    public static final String MANAGE_CONTEXT_FORMAT = "%s/manage";
 
-    public static final String STATIC_ORIGIN_CONTEXT = "/cdn/static";
+    public static final String STATIC_ORIGIN_CONTEXT_FORMAT = "%s/static";
+
+    private String pathPrefix;
+
+    private String gitContext;
+
+    private String manageContext;
+
+    private String staticOriginContext;
 
     private String contentDirectory;
 
@@ -63,16 +72,22 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
-        switch (app.getOriginId()) {
-            case GIT_CONTEXT:    return createGitContext(app);
-            case MANAGE_CONTEXT: return createManageContext(app);
-            default:             return createCdnContext(app);
+
+        final var originId = app.getOriginId();
+
+        if (originId.equals(getGitContext())) {
+            return createGitContext(app);
+        } else if (originId.equals(getManageContext())) {
+            return createManageContext(app);
+        } else {
+            return createCdnContext(app);
         }
     }
 
     private ContextHandler createGitContext(final App app) {
-        if (!GIT_CONTEXT.equals(app.getOriginId())) {
-            throw new IllegalArgumentException("App must have origin ID: " + GIT_CONTEXT);
+
+        if (!getGitContext().equals(app.getOriginId())) {
+            throw new IllegalArgumentException("App must have origin ID: " + getGitContext());
         }
 
         final Injector injector = getInjector().createChildInjector(new GitServletModule(), new GitSecurityModule());
@@ -82,7 +97,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         final HttpServletBasicAuthFilter authFilter = injector.getInstance(HttpServletBasicAuthFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(GIT_CONTEXT);
+        servletContextHandler.setContextPath(getGitContext());
         servletContextHandler.addFilter(new FilterHolder(authFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addServlet(new ServletHolder(versionServlet), "/version");
@@ -92,8 +107,8 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private ContextHandler createManageContext(final App app) {
 
-        if (!MANAGE_CONTEXT.equals(app.getOriginId())) {
-            throw new IllegalArgumentException("App must have origin ID: " + MANAGE_CONTEXT);
+        if (!getManageContext().equals(app.getOriginId())) {
+            throw new IllegalArgumentException("App must have origin ID: " + getManageContext());
         }
 
         final var injector = getInjector().createChildInjector(new CdnJerseyModule(), new CdnServeSecurityModule());
@@ -101,7 +116,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         final var authFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(MANAGE_CONTEXT);
+        servletContextHandler.setContextPath(getManageContext());
         servletContextHandler.addFilter(new FilterHolder(authFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
         servletContextHandler.setAttribute(CdnGuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME, injector);
@@ -113,7 +128,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     private ContextHandler createCdnContext(final App app) throws IOException {
 
         final ServletContextHandler ctx = new ServletContextHandler();
-        ctx.setContextPath(format("%s/%s/%s", STATIC_ORIGIN_CONTEXT, app.getOriginId(), getServeEndpoint()));
+        ctx.setContextPath(format("%s/%s/%s", getStaticOriginContext(), app.getOriginId(), getServeEndpoint()));
 
         final DefaultServlet defaultServlet = new DefaultServlet();
         ServletHolder holderPwd = new ServletHolder("default", defaultServlet);
@@ -132,12 +147,12 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private void startGitApp() {
-        final App app = new App(getDeploymentManager(), this, GIT_CONTEXT);
+        final App app = new App(getDeploymentManager(), this, getGitContext());
         getDeploymentManager().addApp(app);
     }
 
     private void startManageApp() {
-        final App app = new App(getDeploymentManager(), this, MANAGE_CONTEXT);
+        final App app = new App(getDeploymentManager(), this, getManageContext());
         getDeploymentManager().addApp(app);
     }
 
@@ -189,4 +204,44 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
     public void setApplicationService(ApplicationService applicationService) {
         this.applicationService = applicationService;
     }
+
+    public String getPathPrefix() {
+        return pathPrefix;
+    }
+
+    @Inject
+    public void setPathPrefix(@Named(HTTP_PATH_PREFIX) String pathPrefix) {
+
+        this.pathPrefix = pathPrefix;
+
+        this.gitContext = format(GIT_CONTEXT_FORMAT, getPathPrefix());
+        this.manageContext = format(MANAGE_CONTEXT_FORMAT, getPathPrefix());
+        this.staticOriginContext =format(STATIC_ORIGIN_CONTEXT_FORMAT, getPathPrefix());
+
+        this.gitContext = this.gitContext.startsWith("/")
+            ? this.gitContext
+            : "/" + this.gitContext;
+
+        this.manageContext = this.manageContext.startsWith("/")
+            ? this.manageContext
+            : "/" + this.manageContext;
+
+        this.staticOriginContext = this.staticOriginContext.startsWith("/")
+            ? this.staticOriginContext
+            : "/" + this.staticOriginContext;
+
+    }
+
+    public String getGitContext() {
+        return gitContext;
+    }
+
+    public String getManageContext() {
+        return manageContext;
+    }
+
+    public String getStaticOriginContext() {
+        return staticOriginContext;
+    }
+
 }

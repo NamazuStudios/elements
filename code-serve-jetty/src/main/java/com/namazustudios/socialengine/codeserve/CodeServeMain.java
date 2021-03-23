@@ -27,6 +27,7 @@ import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
 import static java.util.EnumSet.allOf;
 import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
+import static org.eclipse.jetty.util.Loader.getResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class CodeServeMain implements Callable<Void>, Runnable {
@@ -35,31 +36,7 @@ public class CodeServeMain implements Callable<Void>, Runnable {
 
     private static final OptionParser optionParser = new OptionParser();
 
-    public static final String DEFAULT_BIND_ADDRESS = "0.0.0.0";
-
-    public static final int DEFAULT_PORT = 8082;
-
     public static final Stage DEFAULT_STAGE = DEVELOPMENT;
-
-    public static final String DEFAULT_API_CONTEXT = "/code-serve";
-
-    private static final OptionSpec<String> bindOptionSpec = optionParser
-            .accepts("bind", "The bind address.")
-            .withOptionalArg()
-            .ofType(String.class)
-            .defaultsTo(DEFAULT_BIND_ADDRESS);
-
-    private static final OptionSpec<Integer> portOptionSpec = optionParser
-            .accepts("port", "The TCP Port upon which to bind.")
-            .withOptionalArg()
-            .ofType(Integer.class)
-            .defaultsTo(DEFAULT_PORT);
-
-    private static final OptionSpec<String> apiContextOptionsSpec = optionParser
-            .accepts("api-context", "The context upon which to run the api.")
-            .withOptionalArg()
-            .ofType(String.class)
-            .defaultsTo(DEFAULT_API_CONTEXT);
 
     private static final OptionSpec<Stage> stageOptionSpec = optionParser
             .accepts("stage", "Is this running in development or production?")
@@ -71,9 +48,7 @@ public class CodeServeMain implements Callable<Void>, Runnable {
             .accepts("help", "Displays the help message.")
             .forHelp();
 
-    private final Injector injector;
-
-    private final Server server = new Server();
+    private final Server server;
 
     /**
      * Args style constructor.
@@ -83,9 +58,6 @@ public class CodeServeMain implements Callable<Void>, Runnable {
      */
     public CodeServeMain(final String[] args) throws ProgramArgumentException {
 
-        int port;
-        String bind;
-        String apiContext;
         Stage stage;
 
         try {
@@ -96,11 +68,6 @@ public class CodeServeMain implements Callable<Void>, Runnable {
                 throw new HelpRequestedException();
             }
 
-            bind = options.valueOf(bindOptionSpec);
-            port = options.valueOf(portOptionSpec);
-            apiContext = options.valueOf(apiContextOptionsSpec);
-            apiContext = apiContext.startsWith("/") ? apiContext : "/" + apiContext;
-
             stage = options.valueOf(stageOptionSpec);
 
         } catch (OptionException ex) {
@@ -109,35 +76,35 @@ public class CodeServeMain implements Callable<Void>, Runnable {
 
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
-        injector = createInjector(stage,
-                new GitServletModule(),
-                new GitSecurityModule(),
-                new LuaBootstrapResourcesModule(),
-                new CodeServeModule((defaultConfigurationSupplier))
+        final var injector = createInjector(stage,
+            new GitServletModule(),
+            new GitSecurityModule(),
+            new CodeServeServerModule(),
+            new LuaBootstrapResourcesModule(),
+            new CodeServeModule((defaultConfigurationSupplier))
         );
 
-        final ServerConnector connector = new ServerConnector(server);
-        connector.setHost(bind);
-        connector.setPort(port);
+        final var guiceFilter = injector.getInstance(GuiceFilter.class);
+        final var servletHandler = injector.getInstance(ServletContextHandler.class);
+        this.server = injector.getInstance(Server.class);
+        doInit(guiceFilter, servletHandler);
 
-        final HandlerCollection handlerCollection = new HandlerCollection();
+    }
 
-        final ServletContextHandler servletHandler = new ServletContextHandler(SESSIONS);
-        servletHandler.setContextPath(apiContext);
+    private void doInit(final GuiceFilter guiceFilter,
+                        final ServletContextHandler servletHandler) {
 
-        final GuiceFilter guiceFilter = injector.getInstance(GuiceFilter.class);
         servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
 
-        final Map<String, String> defaultInitParameters = new HashMap<>();
+        final var defaultInitParameters = new HashMap<String, String>();
         defaultInitParameters.put("dirAllowed", "false");
 
-        final ServletHolder defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
+        final var defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
         defaultServletHolder.setInitParameters(defaultInitParameters);
 
+        final var handlerCollection = new HandlerCollection();
         handlerCollection.addHandler(servletHandler);
-
         server.setHandler(handlerCollection);
-        server.setConnectors(new Connector[]{connector});
 
     }
 

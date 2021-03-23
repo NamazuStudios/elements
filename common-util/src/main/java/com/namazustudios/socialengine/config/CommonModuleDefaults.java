@@ -12,6 +12,7 @@ public class CommonModuleDefaults implements ModuleDefaults {
     @Override
     public Properties get() {
         final Properties defaultProperties = new Properties();
+        defaultProperties.setProperty(Constants.HTTP_BIND_ADDRESS, "0.0.0.0");
         defaultProperties.setProperty(Constants.SHORT_LINK_BASE, "http://localhost:8888/l");
         defaultProperties.setProperty(Constants.QUERY_MAX_RESULTS, Integer.valueOf(100).toString());
         defaultProperties.setProperty(Constants.PASSWORD_DIGEST_ALGORITHM, "SHA-256");

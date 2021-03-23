@@ -133,6 +133,7 @@ public class UnixFSEmbeddedRestApiIntegrationTestModule extends AbstractModule {
 
         }).in(SINGLETON);
 
+        install(new RestAPIServerModule());
         install(new RestAPIModule(configurationSupplier));
 
         bind(RestAPIMain.class).asEagerSingleton();

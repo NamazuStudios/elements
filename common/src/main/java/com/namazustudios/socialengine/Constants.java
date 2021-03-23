@@ -116,6 +116,16 @@ public interface Constants {
     String HTTP_PORT = "com.namazustudios.socialengine.http.port";
 
     /**
+     * The http bind address.
+     */
+    String HTTP_BIND_ADDRESS = "com.namazustudios.socialengine.http.bind.address";
+
+    /**
+     * Used to specify the port that the http service will use when binding.
+     */
+    String HTTP_PATH_PREFIX = "com.namazustudios.socialengine.http.path.prefix";
+
+    /**
      * Used to specify the session timeout, in seconds
      */
     String SESSION_TIMEOUT_SECONDS = "com.namazustudios.socialengine.session.timeout.seconds";

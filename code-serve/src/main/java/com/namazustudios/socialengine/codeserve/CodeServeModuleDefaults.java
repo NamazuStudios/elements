@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 
+import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
+import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.rt.git.Constants.GIT_STORAGE_DIRECTORY;
 
 /**
@@ -15,8 +17,10 @@ public class CodeServeModuleDefaults implements ModuleDefaults {
 
     @Override
     public Properties get() {
-        final Properties properties = new Properties();
-        properties.setProperty(GIT_STORAGE_DIRECTORY, "script-repos/git");
+        final var properties = new Properties();
+        properties.put(HTTP_PORT, "8082");
+        properties.put(HTTP_PATH_PREFIX, "code-serve");
+        properties.put(GIT_STORAGE_DIRECTORY, "script-repos/git");
         return properties;
     }
 
