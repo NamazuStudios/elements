@@ -55,21 +55,21 @@ push:
 	$(call DOCKER_PUSH_ALL,cdn-serve)
 
 revision: login
-#	$(DOCKER_BUILD) namazu-socialengine-base \
-#		--tag namazu-elements-base:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-elements-base:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-elements-base:$(TAG_SHORT) \
-#		--tag namazu-socialengine-base:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG_SHORT)
-#	$(DOCKER_BUILD) namazu-socialengine-ui \
-#		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
-#		--tag namazu-elements-ui:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG_SHORT) \
-#		--tag namazu-socialengine-ui:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG) \
-#		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG_SHORT)
+	$(DOCKER_BUILD) namazu-socialengine-base \
+		--tag namazu-elements-base:$(TAG) \
+		--tag docker.namazustudios.net/namazu-elements-base:$(TAG) \
+		--tag docker.namazustudios.net/namazu-elements-base:$(TAG_SHORT) \
+		--tag namazu-socialengine-base:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG_SHORT)
+	$(DOCKER_BUILD) namazu-socialengine-ui \
+		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
+		--tag namazu-elements-ui:$(TAG) \
+		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG) \
+		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG_SHORT) \
+		--tag namazu-socialengine-ui:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG_SHORT)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-api,api)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-node,app-node)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-serve,app-serve)
@@ -89,12 +89,12 @@ latest: login
 		--tag docker.namazustudios.net/namazu-elements-ui:latest \
 		--tag namazu-socialengine-ui:latest \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:latest
-	$(call DOCKER_BUILD_LATEST,namazu-socialengine-api, api)
-	$(call DOCKER_BUILD_LATEST,namazu-socialengine-app-node, app-node)
-	$(call DOCKER_BUILD_LATEST,namazu-socialengine-app-serve, app-serve)
-	$(call DOCKER_BUILD_LATEST,namazu-socialengine-code-serve, code-serve)
-	$(call DOCKER_BUILD_LATEST,namazu-socialengine-setup, setup)
-	$(call DOCKER_BUILD_LATEST,namazu-socialengine-cdn-serve, cdn-serve)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-api,api)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-app-node,app-node)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-app-serve,app-serve)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-code-serve,code-serve)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-setup,setup)
+	$(call DOCKER_BUILD_LATEST,namazu-socialengine-cdn-serve,cdn-serve)
 
 login:
 	- echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net
