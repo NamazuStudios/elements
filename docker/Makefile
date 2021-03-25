@@ -78,10 +78,14 @@ revision: login
 
 latest: login
 	$(DOCKER_BUILD) namazu-socialengine-base \
+		--tag namazu-elements-base:latest \
+		--tag docker.namazustudios.net/namazu-elements-base:latest \
 		--tag namazu-socialengine-base:latest \
 		--tag docker.namazustudios.net/namazu-socialengine-base:latest
 	$(DOCKER_BUILD) namazu-socialengine-ui \
 		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
+		--tag namazu-elements-ui:latest \
+		--tag docker.namazustudios.net/namazu-elements-ui:latest \
 		--tag namazu-socialengine-ui:latest \
 		--tag docker.namazustudios.net/namazu-socialengine-ui:latest
 	$(call DOCKER_BUILD_LATEST,api)
