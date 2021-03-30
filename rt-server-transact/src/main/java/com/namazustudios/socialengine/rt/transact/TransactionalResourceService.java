@@ -185,12 +185,12 @@ public class TransactionalResourceService implements ResourceService {
             final Path normalized = normalize(path);
             final ResourceId resourceId = txn.getResourceId(normalized);
 
-            try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
+            try {
 
                 final Unlink unlink = txn.unlinkPath(normalized);
 
                 if (unlink.isRemoved()) {
-                    final Resource resource = getResourceLoader().load(rbc);
+                    final Resource resource = acm.acquire(resourceId);
                     removed.accept(resource);
                 }
 
@@ -200,8 +200,6 @@ public class TransactionalResourceService implements ResourceService {
                 final Unlink unlink = txn.unlinkPath(normalized);
                 if (unlink.isRemoved()) acm.evict(resourceId, removed);
                 return unlink;
-            } catch (IOException ex) {
-                throw new InternalException(ex);
             }
 
         });
