@@ -10,6 +10,7 @@ local util = require "namazu.util"
 local index = require "namazu.index"
 local resource = require "namazu.resource"
 local responsecode = require "namazu.response.code"
+local coroutine = require "coroutine"
 
 local test_index = {}
 
@@ -92,6 +93,9 @@ function test_index.test_unlink()
     original_rid, path, code = make_resource("test");
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
+    response, code = resource.invoke_path(path, "save_resource")
+    assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+
     index.link(original_rid, "alias" .. "/" .. util.uuid())
 
     rid, removed, code = index.unlink(path)
@@ -112,7 +116,11 @@ function test_index.test_unlink_and_destroy()
     original_rid, path, code = make_resource("test");
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
+    response, code = resource.invoke_path(path, "save_resource")
+    assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+
     rid, removed, code = index.unlink(path)
+
     assert(original_rid == rid, "Expected resource id match")
     assert(removed, "Expected resource was removed.  It wasn't.")
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))

@@ -6,6 +6,7 @@
 -- To change this template use File | Settings | File Templates.
 --
 
+local coroutine = require "coroutine"
 local helloworld = {}
 
 function helloworld.knock_knock()
@@ -42,6 +43,12 @@ function helloworld.full_joke_array()
     array[#array + 1] = "Who's There?"
     array[#array + 1] = "Interrupting Cow - Moo!"
     return array
+end
+
+
+function helloworld.save_resource()
+    print("Saving resource!")
+    coroutine.yield("COMMIT")
 end
 
 return helloworld
