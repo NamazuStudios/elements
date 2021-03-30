@@ -21,6 +21,7 @@ import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
 import static com.namazustudios.socialengine.Headers.*;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.AUTH_BEARER;
 import static io.swagger.models.Scheme.forValue;
 import static java.util.Arrays.asList;
 
@@ -30,6 +31,14 @@ import static java.util.Arrays.asList;
 @SwaggerDefinition(
     securityDefinition = @SecurityDefinition(
         apiKeyAuthDefinitions = {
+            @ApiKeyAuthDefinition(
+                name = AUTH_BEARER,
+                description = "Uses a server-assigned session key which is generated from various POST /session and " +
+                              "POST /facebook_session endpoints in the API. " +
+                              "Authorization: Bearer {SessionSecret}",
+                in = ApiKeyAuthDefinition.ApiKeyLocation.HEADER,
+                key = EnhancedApiListingResource.AUTH_BEARER
+            ),
             @ApiKeyAuthDefinition(
                 name = SESSION_SECRET,
                 description = "Uses a server-assigned session key which is generated from various POST /session and " +
@@ -51,6 +60,8 @@ import static java.util.Arrays.asList;
 public class EnhancedApiListingResource extends ApiListingResource {
 
     public static final String PROFILE_ID = "profile_id";
+
+    public static final String AUTH_BEARER = "auth_bearer";
 
     public static final String SESSION_SECRET = "session_secret";
 

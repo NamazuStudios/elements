@@ -1,35 +1,32 @@
 package com.namazustudios.socialengine.rest.security;
 
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
-import com.namazustudios.socialengine.security.SessionSecretHeader;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.SessionService;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
-import javax.ws.rs.container.PreMatching;
-import javax.ws.rs.ext.Provider;
 
-import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
+import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 
-@Provider
-@PreMatching
-public class SessionIdAuthenticationContainerRequestFilter implements ContainerRequestFilter {
+/**
+ * Defers to the {@link SessionService} in order to verify a session ID.
+ */
+public abstract class SessionIdAuthenticationContainerRequestFilter implements ContainerRequestFilter {
 
     private SessionService sessionService;
 
-    @Override
-    public void filter(final ContainerRequestContext requestContext) {
-        SessionSecretHeader.withValueSupplier(requestContext::getHeaderString)
-            .getSessionSecret()
-            .ifPresent(sessionId -> checkSessionAndSetAttributes(requestContext, sessionId));
-    }
-
-    private void checkSessionAndSetAttributes(final ContainerRequestContext requestContext, final String sessionId) {
+    /**
+     * Checks the session and sets the appropraite attributes to the {@link ContainerRequestContext}.
+     *
+     * @param requestContext the {@link ContainerRequestContext}
+     * @param sessionId the session ID.
+     */
+    protected void checkSessionAndSetAttributes(final ContainerRequestContext requestContext, final String sessionId) {
 
         final Session session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
 

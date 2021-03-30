@@ -25,8 +25,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 import static java.lang.Math.min;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
@@ -44,7 +43,7 @@ import static javax.ws.rs.core.Response.Status.NOT_FOUND;
                   "game.  Note, this API only provides matching.  The players must separately create a game " +
                   "from the match.  A match only provides a token which can be used to create a game which will " +
                   "be private among the two players involved.",
-    authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("match")
 public class MatchResource {
 

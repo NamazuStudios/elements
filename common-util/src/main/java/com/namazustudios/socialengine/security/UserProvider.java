@@ -26,12 +26,11 @@ public class UserProvider implements Provider<User> {
     @Override
     public User get() {
 
-        for (final UserAuthenticationMethod method : getSupportedAuthenticationMethods()) {
+        for (final var method : getSupportedAuthenticationMethods()) {
             try {
                 return method.attempt();
             } catch (ForbiddenException ex) {
                 logger.debug("Failed authentication method {}", method, ex);
-                continue;
             }
         }
 

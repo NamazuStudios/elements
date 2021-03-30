@@ -144,7 +144,7 @@ public class AppleSignInAuthServiceOperations {
                                      final AppleSignInConfiguration appleSignInConfiguration) {
         try {
 
-            final JWTVerifier verifier = JWT
+            final var verifier = JWT
                 .require(algorithm)
                 .withIssuer(TOKEN_ISSUER)
                 .withAudience(appleSignInConfiguration.getClientId())

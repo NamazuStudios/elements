@@ -15,7 +15,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 
 @Api(value = "Deployment",
         description = "Manages content deployments for an app in the server.",
-        authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("deployment/{applicationId}")
 public class DeploymentResource {
 

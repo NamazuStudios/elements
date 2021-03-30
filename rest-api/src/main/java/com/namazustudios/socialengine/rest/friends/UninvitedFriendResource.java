@@ -14,14 +14,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
 import static com.namazustudios.socialengine.Headers.FACEBOOK_OAUTH_TOKEN;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("friend_uninvited")
 @Api(value = "Friends",
      description = "Provides access to Friends who are available, but not invited to the current application." +
                       "This is useful for sending invites and cross-promotion of applications.",
-     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 public class UninvitedFriendResource {
 
     private FacebookFriendService facebookFriendService;

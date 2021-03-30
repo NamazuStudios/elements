@@ -19,8 +19,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 /**
  * Created by patricktwohig on 7/13/15.
@@ -30,7 +29,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
                    "application metadata for a particular configuration of deployment.  For example, " +
                    "an application may be deployed on both Android and iOS.  One application profile" +
                    "each for Android and iOS would be required.",
-    authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration")
 public class ApplicationConfigurationResource {
 
