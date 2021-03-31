@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceService;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
@@ -72,7 +73,7 @@ public class XodusResourceServiceLinkingUnitTest extends AbstractResourceService
 
             final var resourceLoader = mock(ResourceLoader.class);
 
-            doAnswer(a -> {
+            final Answer<Resource> loadAnswer = a -> {
 
                 final ReadableByteChannel rbc = a.getArgument(0);
                 final ByteBuffer byteBuffer = ByteBuffer.allocate(ResourceId.getSizeInBytes());
@@ -82,7 +83,10 @@ public class XodusResourceServiceLinkingUnitTest extends AbstractResourceService
                 final ResourceId resourceId = ResourceId.resourceIdFromByteBuffer(byteBuffer);
                 return doGetMockResource(resourceId);
 
-            }).when(resourceLoader).load(any(ReadableByteChannel.class));
+            };
+
+            doAnswer(loadAnswer).when(resourceLoader).load(any(ReadableByteChannel.class));
+            doAnswer(loadAnswer).when(resourceLoader).load(any(ReadableByteChannel.class), anyBoolean());
 
             bind(ResourceLoader.class).toInstance(resourceLoader);
 

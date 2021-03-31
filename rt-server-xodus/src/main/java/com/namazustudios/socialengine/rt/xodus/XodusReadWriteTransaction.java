@@ -226,7 +226,8 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
              var reversePathsCursor = getXodusResourceStores().getReversePaths().openCursor(getTransaction())) {
 
             final var resourceIdKey = pathsCursor.getSearchKey(pathKey);
-            if (resourceIdKey == null) throw new ResourceNotFoundException("No resource exists for path: " + qualified);
+            if (resourceIdKey == null)
+                throw new ResourceNotFoundException("No resource exists for path: " + qualified);
 
             final var resourceId = XodusUtil.resourceId(resourceIdKey);
 
