@@ -79,6 +79,7 @@
         <module>rest-api-test</module>
         <module>setup-sshd</module>
         <module>rt-server-testkit</module>
+        <module>service-test</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

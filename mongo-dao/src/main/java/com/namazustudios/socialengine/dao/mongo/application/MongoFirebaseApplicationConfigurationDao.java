@@ -6,13 +6,12 @@ import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.dao.mongo.model.application.MongoFirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.application.FirebaseApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.model.application.ConfigurationCategory;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
@@ -95,7 +94,7 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
         final var mongoFirebaseApplicationConfiguration = query.first();
 
         if (mongoFirebaseApplicationConfiguration == null) {
-            throw new NotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
+            throw new FirebaseApplicationConfigurationNotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
         }
 
         return getBeanMapper().map(mongoFirebaseApplicationConfiguration, FirebaseApplicationConfiguration.class);
@@ -127,7 +126,7 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
         final var mongoFirebaseApplicationConfiguration = query.first();
 
         if (mongoFirebaseApplicationConfiguration == null) {
-            throw new NotFoundException("application profile " + applicationConfigurationNameOrId + " not found.");
+            throw new FirebaseApplicationConfigurationNotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
         }
 
         return getBeanMapper().map(mongoFirebaseApplicationConfiguration, FirebaseApplicationConfiguration.class);
@@ -171,7 +170,7 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
         );
 
         if (mongoFirebaseApplicationConfiguration == null) {
-            throw new NotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
+            throw new FirebaseApplicationConfigurationNotFoundException("application configuration " + applicationConfigurationNameOrId + " not found.");
         }
 
         getObjectIndex().index(mongoFirebaseApplicationConfiguration);
@@ -208,7 +207,7 @@ public class MongoFirebaseApplicationConfigurationDao extends MongoApplicationCo
         );
 
         if (mongoFirebaseApplicationProfile == null) {
-            throw new NotFoundException("profile with ID not found: " + mongoFirebaseApplicationProfile.getObjectId());
+            throw new FirebaseApplicationConfigurationNotFoundException("profile with ID not found: " + applicationConfigurationNameOrId);
         }
 
         getObjectIndex().index(mongoFirebaseApplicationProfile);
