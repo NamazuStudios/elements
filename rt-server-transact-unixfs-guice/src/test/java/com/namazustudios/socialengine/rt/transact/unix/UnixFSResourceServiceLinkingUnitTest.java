@@ -14,6 +14,7 @@ import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceSe
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceService;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
 import org.mockito.Mockito;
+import org.mockito.stubbing.Answer;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
@@ -39,8 +40,8 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
     @Factory
     public static Object[] getTests() {
         return new Object[] {
-            withGarbageCollectionEnabled(),
-            withGarbageCollectionDisabled()
+                withGarbageCollectionEnabled(),
+                withGarbageCollectionDisabled()
         };
     }
 
@@ -115,7 +116,7 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
 
             final ResourceLoader resourceLoader = mock(ResourceLoader.class);
 
-            doAnswer(a -> {
+            final Answer<Resource> loadAnswer = a -> {
 
                 final ReadableByteChannel rbc = a.getArgument(0);
                 final ByteBuffer byteBuffer = ByteBuffer.allocate(ResourceId.getSizeInBytes());
@@ -125,7 +126,10 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
                 final ResourceId resourceId = ResourceId.resourceIdFromByteBuffer(byteBuffer);
                 return doGetMockResource(resourceId);
 
-            }).when(resourceLoader).load(any(ReadableByteChannel.class));
+            };
+
+            doAnswer(loadAnswer).when(resourceLoader).load(any(ReadableByteChannel.class));
+            doAnswer(loadAnswer).when(resourceLoader).load(any(ReadableByteChannel.class), anyBoolean());
 
             bind(ResourceLoader.class).toInstance(resourceLoader);
 
