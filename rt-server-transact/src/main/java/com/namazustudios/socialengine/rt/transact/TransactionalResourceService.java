@@ -185,9 +185,9 @@ public class TransactionalResourceService implements ResourceService {
             final Path normalized = normalize(path);
             final ResourceId resourceId = txn.getResourceId(normalized);
 
-            try {
+            final Unlink unlink = txn.unlinkPath(normalized);
 
-                final Unlink unlink = txn.unlinkPath(normalized);
+            try {
 
                 if (unlink.isRemoved()) {
                     final Resource resource = acm.acquire(resourceId);
@@ -197,7 +197,6 @@ public class TransactionalResourceService implements ResourceService {
                 return unlink;
 
             } catch (NullResourceException ex) {
-                final Unlink unlink = txn.unlinkPath(normalized);
                 if (unlink.isRemoved()) acm.evict(resourceId, removed);
                 return unlink;
             }

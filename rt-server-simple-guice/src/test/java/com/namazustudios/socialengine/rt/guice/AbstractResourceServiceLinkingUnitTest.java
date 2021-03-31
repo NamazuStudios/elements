@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -29,6 +31,8 @@ import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.FileAssert.fail;
 
 public abstract class AbstractResourceServiceLinkingUnitTest {
+
+    private static final Logger logger = LoggerFactory.getLogger(AbstractResourceServiceLinkingUnitTest.class);
 
     private final List<Object[]> intermediates = new CopyOnWriteArrayList<>();
 
@@ -78,12 +82,9 @@ public abstract class AbstractResourceServiceLinkingUnitTest {
 
     @Test(dependsOnMethods = "testAdd", dataProvider = "intermediateDataProvider")
     public void testRemoveAllAliases(final ResourceId resourceId, final Path path, final Path alias, final Resource resource) {
-        final AtomicBoolean removed = new AtomicBoolean();
 
         final ResourceService.Unlink first = getResourceService().unlinkPath(path, r -> fail("Unexpected removal."));
-        final ResourceService.Unlink second = getResourceService().unlinkPath(alias, r -> removed.set(true));
-
-        assertTrue(removed.get(), "Resource was not removed.");
+        final ResourceService.Unlink second = getResourceService().unlinkPath(alias, r -> logger.info("Removed resource{} ", r.getId()));
 
         assertFalse(first.isRemoved(), "Resource should not have been removed on first call.");
         assertTrue(second.isRemoved(), "Resource shoudl have been removed on second call.");
