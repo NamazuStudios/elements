@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.application.ApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
+import com.namazustudios.socialengine.model.session.FirebaseSessionRequest;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.user.User;
@@ -40,10 +41,10 @@ public abstract class AbstractFirebaseAuthService implements FirebaseAuthService
     private long sessionTimeoutSeconds;
 
     @Override
-    public SessionCreation createOrUpdateUserWithFirebaseJWT(final String firebaseJWT) {
+    public SessionCreation createOrUpdateUserWithFirebaseJWT(final FirebaseSessionRequest firebaseSessionRequest) {
         try {
 
-            final var decoded = JWT.decode(firebaseJWT);
+            final var decoded = JWT.decode(firebaseSessionRequest.getFirebaseJWT());
 
             return decoded.getAudience()
                 .stream()

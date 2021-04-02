@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.model.session.FirebaseSessionRequest;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 
@@ -23,6 +24,6 @@ public interface FirebaseAuthService {
      * @param firebaseJWT the session secret
      * @return an {@link Optional<Session>} which will contain a valid session if applicable.
      */
-    SessionCreation createOrUpdateUserWithFirebaseJWT(String firebaseJWT);
+    SessionCreation createOrUpdateUserWithFirebaseJWT(FirebaseSessionRequest firebaseSessionRequest);
 
 }

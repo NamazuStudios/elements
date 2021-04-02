@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.dao.FirebaseUserDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
+import com.namazustudios.socialengine.model.session.FirebaseSessionRequest;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.user.User;
@@ -182,7 +183,9 @@ public class FirebaseAuthServiceTest {
 
         });
 
-        final var creation = firebaseAuthService.createOrUpdateUserWithFirebaseJWT(signinResult.getIdToken());
+        final var request = new FirebaseSessionRequest();
+        request.setFirebaseJWT(signinResult.getIdToken());
+        final var creation = firebaseAuthService.createOrUpdateUserWithFirebaseJWT(request);
 
         assertNotNull(creation);
         assertEquals(creation.getSessionSecret(), sessionSecret);
