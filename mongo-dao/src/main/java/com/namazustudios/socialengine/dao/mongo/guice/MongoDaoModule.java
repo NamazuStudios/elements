@@ -103,7 +103,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MatchmakingApplicationConfigurationDao.class);
         expose(FirebaseApplicationConfigurationDao.class);
         expose(GameOnApplicationConfigurationDao.class);
-        expose(MongoFirebaseUserDao.class);
+        expose(FirebaseUserDao.class);
         expose(MatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);

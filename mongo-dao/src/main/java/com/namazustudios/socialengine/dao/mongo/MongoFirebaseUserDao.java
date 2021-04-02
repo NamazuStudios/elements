@@ -62,12 +62,12 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
             eq("active", true),
             or(
                 exists("firebaseId").not(),
-                eq("firebaseId", user.getFacebookId())
+                eq("firebaseId", user.getFirebaseId())
             )
         );
 
         final var mongoUser = getMongoDBUtils().perform(ds ->
-            query.modify(set("firebaseId", user.getFacebookId()))
+            query.modify(set("firebaseId", user.getFirebaseId()))
                  .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
@@ -97,7 +97,7 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
 
         query.filter(
             or(
-                eq("facebookId", user.getFacebookId()),
+                eq("firebaseId", user.getFirebaseId()),
                 and(
                     exists("firebaseId"),
                     eq("email", user.getEmail())
@@ -108,7 +108,7 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
         insertMap.put("email", user.getEmail());
         insertMap.put("name", user.getName());
         insertMap.put("level", user.getLevel());
-        insertMap.put("firebaseId", user.getFacebookId());
+        insertMap.put("firebaseId", user.getFirebaseId());
         getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
 
         // We only reactivate the existing user, all other fields are left untouched if the user exists.
@@ -135,15 +135,15 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
             throw new InvalidDataException("User must not be null.");
         }
 
-        if (user.getFacebookId() == null || user.getFacebookId().trim().isEmpty()) {
-            throw new InvalidDataException("User must specify Facebook ID.");
+        if (user.getFirebaseId() == null || user.getFirebaseId().trim().isEmpty()) {
+            throw new InvalidDataException("User must specify Firebase ID.");
         }
 
         getValidationHelper().validateModel(user);
 
         user.setEmail(nullToEmpty(user.getEmail()).trim());
         user.setName(nullToEmpty(user.getName()).trim());
-        user.setFacebookId(emptyToNull(nullToEmpty(user.getFacebookId()).trim()));
+        user.setFirebaseId(emptyToNull(nullToEmpty(user.getFirebaseId()).trim()));
 
     }
 

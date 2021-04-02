@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.namazustudios.socialengine.dao.FacebookUserDao;
+import com.namazustudios.socialengine.dao.FirebaseUserDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
@@ -16,13 +16,14 @@ import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
+import static org.testng.Assert.assertEquals;
 
 @Guice(modules = IntegrationTestModule.class)
-public class MongoFacebookUserDaoTest {
-
+public class MongoFirebaseUserDaoTest {
+    
     private UserDao userDao;
 
-    private FacebookUserDao facebookUserDao;
+    private FirebaseUserDao firebaseUserDao;
 
     private UserTestFactory userTestFactory;
 
@@ -43,20 +44,20 @@ public class MongoFacebookUserDaoTest {
     @Test
     public void testCreateOrRefreshWithNoExistingUser() {
 
-        final String facebookId = "1234567890";
+        final String firebaseId = "1234567890";
 
-        currentUser = getUserTestFactory().createTestUser(user -> user.setFacebookId(facebookId));
+        currentUser = getUserTestFactory().createTestUser(user -> user.setFirebaseId(firebaseId));
         final String userName = currentUser.getName();
         final String email = currentUser.getEmail();
 
-        currentUser.setFacebookId(facebookId);
+        currentUser.setFirebaseId(firebaseId);
 
-        final User result = getFacebookUserDao().createReactivateOrUpdateUser(currentUser);
+        final User result = getFirebaseUserDao().createReactivateOrUpdateUser(currentUser);
 
         assertNotNull(result.getId());
         assertTrue(ObjectId.isValid(result.getId()));
 
-        assertEquals(result.getFacebookId(), facebookId);
+        assertEquals(result.getFirebaseId(), firebaseId);
         assertTrue(result.isActive());
         assertEquals(result.getName(), userName);
         assertEquals(result.getEmail(), email);
@@ -90,17 +91,17 @@ public class MongoFacebookUserDaoTest {
     @Test(dependsOnMethods = "testReactivatesInactiveUser")
     public void testUserChangedEmailAddress() {
 
-        final String facebookId = "1234567890";
-        final User user = getUserTestFactory().createTestUser(u -> u.setFacebookId(facebookId));
+        final String firebaseId = "1234567890";
+        final User user = getUserTestFactory().createTestUser(u -> u.setFirebaseId(firebaseId));
         final String userName = user.getName();
         final String email = user.getEmail();
 
-        final User result = getFacebookUserDao().createReactivateOrUpdateUser(user);
+        final User result = getFirebaseUserDao().createReactivateOrUpdateUser(user);
 
         assertNotNull(result.getId());
         assertTrue(ObjectId.isValid(result.getId()));
 
-        assertEquals(result.getFacebookId(), facebookId);
+        assertEquals(result.getFirebaseId(), firebaseId);
         assertTrue(result.isActive());
         assertEquals(result.getEmail(), email);
         assertEquals(result.getLevel(), USER);
@@ -119,22 +120,22 @@ public class MongoFacebookUserDaoTest {
         assertNotNull(inserted.getId());
         assertTrue(ObjectId.isValid(inserted.getId()));
 
-        assertNull(inserted.getFacebookId());
+        assertNull(inserted.getFirebaseId());
         assertTrue(inserted.isActive());
         assertEquals(inserted.getName(), userName);
         assertEquals(inserted.getEmail(), email);
         assertEquals(inserted.getLevel(), USER);
 
-        final String facebookId = "0987654321";
-        inserted.setFacebookId(facebookId);
+        final String firebaseId = "0987654321asdf";
+        inserted.setFirebaseId(firebaseId);
 
-        final User connected = getFacebookUserDao().connectActiveUserIfNecessary(inserted);
+        final User connected = getFirebaseUserDao().connectActiveUserIfNecessary(inserted);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
 
         assertTrue(connected.isActive());
-        assertEquals(connected.getFacebookId(), facebookId);
+        assertEquals(connected.getFirebaseId(), firebaseId);
         assertEquals(inserted.getName(), userName);
         assertEquals(inserted.getEmail(), email);
         assertEquals(connected.getLevel(), USER);
@@ -146,13 +147,13 @@ public class MongoFacebookUserDaoTest {
     public void testConnectingSameUserHasNoSideEffects() {
 
         final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
-        final User connected = getFacebookUserDao().connectActiveUserIfNecessary(user);
+        final User connected = getFirebaseUserDao().connectActiveUserIfNecessary(user);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
 
         assertTrue(connected.isActive());
-        assertEquals(connected.getFacebookId(), currentUser.getFacebookId());
+        assertEquals(connected.getFirebaseId(), currentUser.getFirebaseId());
         assertEquals(connected.getName(), currentUser.getName());
         assertEquals(connected.getEmail(), currentUser.getEmail());
         assertEquals(connected.getLevel(), USER);
@@ -160,10 +161,10 @@ public class MongoFacebookUserDaoTest {
     }
 
     @Test(dependsOnMethods = "testConnectingSameUserHasNoSideEffects", expectedExceptions = DuplicateException.class)
-    public void testConnectingFacebookIdFails() {
+    public void testConnectingFirebaseIdFails() {
         final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
-        user.setFacebookId("1245");
-        getFacebookUserDao().connectActiveUserIfNecessary(user);
+        user.setFirebaseId("1245");
+        getFirebaseUserDao().connectActiveUserIfNecessary(user);
     }
 
     public UserDao getUserDao() {
@@ -175,13 +176,13 @@ public class MongoFacebookUserDaoTest {
         this.userDao = userDao;
     }
 
-    public FacebookUserDao getFacebookUserDao() {
-        return facebookUserDao;
+    public FirebaseUserDao getFirebaseUserDao() {
+        return firebaseUserDao;
     }
 
     @Inject
-    public void setFacebookUserDao(FacebookUserDao facebookUserDao) {
-        this.facebookUserDao = facebookUserDao;
+    public void setFirebaseUserDao(FirebaseUserDao firebaseUserDao) {
+        this.firebaseUserDao = firebaseUserDao;
     }
 
     public UserTestFactory getUserTestFactory() {
