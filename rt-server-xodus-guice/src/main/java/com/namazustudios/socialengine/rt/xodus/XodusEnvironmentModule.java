@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
 import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider;
 import com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider;
 import jetbrains.exodus.env.Environment;
@@ -55,7 +56,7 @@ public class XodusEnvironmentModule extends AbstractModule {
 
     public XodusEnvironmentModule withTempResourceEnvironment() {
         try {
-            final var dir = createTempDirectory("resource-xodus");
+            final var dir = TestTemporaryFiles.getDefaultInstance().createTempDirectory("resource-xodus");
             return withResourceEnvironmentPath(dir.toAbsolutePath().toString());
         } catch (IOException e) {
             throw new InternalException(e);
@@ -64,7 +65,7 @@ public class XodusEnvironmentModule extends AbstractModule {
 
     public XodusEnvironmentModule withTempSchedulerEnvironment() {
         try {
-            final var dir = createTempDirectory("scheduler-xodus");
+            final var dir = TestTemporaryFiles.getDefaultInstance().createTempDirectory("scheduler-xodus");
             return withSchedulerEnvironmentPath(dir.toAbsolutePath().toString());
         } catch (IOException e) {
             throw new InternalException(e);

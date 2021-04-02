@@ -35,7 +35,7 @@ public class UserAppleSignInAuthService implements AppleSignInAuthService {
                 user.setAppleSignInId(appleIdentityToken.getClaim(Claim.USER_ID.value).asString());
                 user.setEmail(getUser().getEmail());
                 user.setName(getUser().getName());
-                return getAppleSignInUserDao().connectActiveAppleUserIfNecessary(user);
+                return getAppleSignInUserDao().connectActiveUserIfNecessary(user);
             }
         );
     }

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.mongodb.MongoException;
 import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.socialengine.exception.*;
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.FacebookUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
@@ -80,7 +81,7 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     }
 
     @Override
-    public User connectActiveFacebookUserIfNecessary(final User user) {
+    public User connectActiveUserIfNecessary(final User user) {
 
         validate(user);
 
@@ -105,6 +106,10 @@ public class MongoFacebookUserDao implements FacebookUserDao {
             query.modify(set("facebookId", user.getFacebookId()))
                  .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
+
+        if (mongoUser == null) {
+            throw new UserNotFoundException("No matching user found.");
+        }
 
         getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
@@ -149,6 +154,10 @@ public class MongoFacebookUserDao implements FacebookUserDao {
                 setOnInsert(insertMap)
             ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
+
+        if (mongoUser == null) {
+            throw new UserNotFoundException("No matching user found.");
+        }
 
         getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
@@ -263,4 +272,5 @@ public class MongoFacebookUserDao implements FacebookUserDao {
     public void setMongoUserDao(MongoUserDao mongoUserDao) {
         this.mongoUserDao = mongoUserDao;
     }
+
 }

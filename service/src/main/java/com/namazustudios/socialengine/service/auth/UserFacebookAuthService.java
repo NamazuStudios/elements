@@ -46,7 +46,7 @@ public class UserFacebookAuthService extends AnonFacebookAuthService implements 
                 user.setFacebookId(fbUser.getId());
                 user.setEmail(getUser().getEmail());
                 user.setName(getUser().getName());
-                return getFacebookUserDao().connectActiveFacebookUserIfNecessary(user);
+                return getFacebookUserDao().connectActiveUserIfNecessary(user);
             }
         );
     }

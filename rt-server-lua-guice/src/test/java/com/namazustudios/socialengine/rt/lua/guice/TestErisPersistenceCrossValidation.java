@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.ResourceLoader;
+import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
@@ -25,7 +26,7 @@ public class TestErisPersistenceCrossValidation {
 
     private static final Logger logger = LoggerFactory.getLogger(TestErisPersistenceCrossValidation.class);
 
-    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles();
+    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles(TestErisPersistenceCrossValidation.class);
 
     private ResourceLoader resourceLoader;
 

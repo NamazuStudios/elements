@@ -14,7 +14,6 @@ import javax.inject.Inject;
 
 import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -123,7 +122,7 @@ public class MongoAppleSignInUserDaoTest {
         assertEquals(inserted.getLevel(), USER);
 
         inserted.setAppleSignInId(TEST_APPLE_SIGNIN_ID_1);
-        final User connected = getApplappleSignInUserDao().connectActiveAppleUserIfNecessary(inserted);
+        final User connected = getApplappleSignInUserDao().connectActiveUserIfNecessary(inserted);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
@@ -141,7 +140,7 @@ public class MongoAppleSignInUserDaoTest {
     public void testConnectingSameUserHasNoSideEffects() {
 
         final User user = getUserDao().getActiveUserByNameOrEmail(testUserB.getEmail());
-        final User connected = getApplappleSignInUserDao().connectActiveAppleUserIfNecessary(user);
+        final User connected = getApplappleSignInUserDao().connectActiveUserIfNecessary(user);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
@@ -158,7 +157,7 @@ public class MongoAppleSignInUserDaoTest {
     public void testConnectingAppleSignInIdFails() {
         final User user = getUserDao().getActiveUserByNameOrEmail(testUserB.getEmail());
         user.setAppleSignInId(TEST_BOGUS_APPLE_SIGNIN_ID);
-        getApplappleSignInUserDao().connectActiveAppleUserIfNecessary(user);
+        getApplappleSignInUserDao().connectActiveUserIfNecessary(user);
     }
 
     public UserDao getUserDao() {

@@ -129,7 +129,7 @@ public class MongoFacebookUserDaoTest {
         final String facebookId = "0987654321";
         inserted.setFacebookId(facebookId);
 
-        final User connected = getFacebookUserDao().connectActiveFacebookUserIfNecessary(inserted);
+        final User connected = getFacebookUserDao().connectActiveUserIfNecessary(inserted);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
@@ -147,7 +147,7 @@ public class MongoFacebookUserDaoTest {
     public void testConnectingSameUserHasNoSideEffects() {
 
         final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
-        final User connected = getFacebookUserDao().connectActiveFacebookUserIfNecessary(user);
+        final User connected = getFacebookUserDao().connectActiveUserIfNecessary(user);
 
         assertNotNull(connected.getId());
         assertTrue(ObjectId.isValid(connected.getId()));
@@ -164,7 +164,7 @@ public class MongoFacebookUserDaoTest {
     public void testConnectingFacebookIdFails() {
         final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
         user.setFacebookId("1245");
-        getFacebookUserDao().connectActiveFacebookUserIfNecessary(user);
+        getFacebookUserDao().connectActiveUserIfNecessary(user);
     }
 
     public UserDao getUserDao() {

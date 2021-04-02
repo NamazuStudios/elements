@@ -1,11 +1,9 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.*;
-import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
-import com.namazustudios.socialengine.rt.guice.SimpleContextModule;
 import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.util.ClasspathHelper;
@@ -17,7 +15,6 @@ import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
-import javax.ws.rs.client.Client;
 import java.io.*;
 import java.util.Objects;
 import java.util.Set;
@@ -25,9 +22,6 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
-import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
-import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
@@ -37,7 +31,7 @@ public class TestCoreErisPersistenceStreams {
 
     private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistenceStreams.class);
 
-    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles();
+    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles(TestCoreErisPersistenceStreams.class);
 
     private ResourceLoader resourceLoader;
 

@@ -69,6 +69,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(RewardIssuanceDao.class).to(MongoRewardIssuanceDao.class);
         bind(AppleIapReceiptDao.class).to(MongoAppleIapReceiptDao.class);
         bind(GooglePlayIapReceiptDao.class).to(MongoGooglePlayIapReceiptDao.class);
+        bind(FirebaseUserDao.class).to(MongoFirebaseUserDao.class);
         bind(AppleSignInUserDao.class).to(MongoAppleSignInUserDao.class);
         bind(AppleSignInSessionDao.class).to(MongoAppleSignInSessionDao.class);
         bind(FollowerDao.class).to(MongoFollowerDao.class);
@@ -102,6 +103,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(MatchmakingApplicationConfigurationDao.class);
         expose(FirebaseApplicationConfigurationDao.class);
         expose(GameOnApplicationConfigurationDao.class);
+        expose(MongoFirebaseUserDao.class);
         expose(MatchDao.class);
         expose(FCMRegistrationDao.class);
         expose(SessionDao.class);

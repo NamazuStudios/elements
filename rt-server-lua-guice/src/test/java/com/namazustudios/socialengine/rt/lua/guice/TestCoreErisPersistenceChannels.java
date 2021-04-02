@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.TaskId;
+import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
@@ -38,7 +39,7 @@ public class TestCoreErisPersistenceChannels {
 
     private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistenceChannels.class);
 
-    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles();
+    private static final TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles(TestCoreErisPersistenceChannels.class);
 
     private ResourceLoader resourceLoader;
 

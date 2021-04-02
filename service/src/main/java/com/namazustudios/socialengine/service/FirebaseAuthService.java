@@ -2,13 +2,14 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.session.SessionCreation;
 
 import java.util.Optional;
 
 /**
  * Drives support for Firebase backed {@link Session} instances.
  */
-public interface FirebaseSessionService {
+public interface FirebaseAuthService {
 
     /**
      * Attempts to verify the supplied session secret supplied directly by Firebase. This should be a JWT token which
@@ -19,9 +20,9 @@ public interface FirebaseSessionService {
      * {@link ForbiddenException}. However if the token is not parseable, or this service can detect it is not a JWT
      * token for Firebase this will fail quietly as to allow subsequent means to verify the token.
      *
-     * @param sessionSecret the session secret
+     * @param firebaseJWT the session secret
      * @return an {@link Optional<Session>} which will contain a valid session if applicable.
      */
-    Optional<Session> attemptVerification(String sessionSecret);
+    SessionCreation createOrUpdateUserWithFirebaseJWT(String firebaseJWT);
 
 }

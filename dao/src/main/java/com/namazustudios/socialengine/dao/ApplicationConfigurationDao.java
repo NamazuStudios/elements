@@ -51,27 +51,29 @@ public interface ApplicationConfigurationDao {
      */
     default <T extends ApplicationConfiguration> T getDefaultApplicationConfigurationForApplication(
             final String applicationNameOrId,
-            ConfigurationCategory configurationCategory,
-            Class<T> type) {
-        final List<T> applicationConfigurationList;
-        applicationConfigurationList =
-                getApplicationConfigurationsForApplication(applicationNameOrId, configurationCategory, type);
+            final ConfigurationCategory configurationCategory,
+            final Class<T> type) {
+
+        final var applicationConfigurationList = getApplicationConfigurationsForApplication(applicationNameOrId, configurationCategory, type);
 
         if (applicationConfigurationList.isEmpty()) {
-            throw new ApplicationConfigurationNotFoundException("No " + configurationCategory.toString() + " configuration for application name/id: " + applicationNameOrId);
+            throw new ApplicationConfigurationNotFoundException(
+                "No " + configurationCategory.toString() +
+                " configuration for application name/id: " + applicationNameOrId);
         } else if (applicationConfigurationList.size() > 1) {
             throw new NotificationConfigurationException(
-                    applicationConfigurationList.size() + " " + configurationCategory.toString() +
-                            " configurations for " + applicationNameOrId);
+                applicationConfigurationList.size() + " " + configurationCategory.toString() +
+                " configurations for " + applicationNameOrId);
         } else {
             return type.cast(applicationConfigurationList.get(0));
         }
+
     }
 
     /**
      * Returns all {@link ApplicationConfiguration} instances for the supplied {@link Application} id and category.
      *
-     * @param applicationNameOrId
+     * @param applicationNameOrId the application name or id
      * @return a {@link List <FirebaseApplicationConfiguration>} associated with the {@link Application}
      */
     <T extends ApplicationConfiguration> List<T> getApplicationConfigurationsForApplication(
@@ -82,11 +84,11 @@ public interface ApplicationConfigurationDao {
     /**
      * Sets the ProductBundle for the given application configuration id.
      *
-     * @param applicationConfigurationId
-     * @param productBundle
+     * @param applicationConfigurationId the application name or id
+     * @param productBundle the product bundle
      * @return
      */
     ApplicationConfiguration updateProductBundles(final String applicationConfigurationId,
-                                                 final List<ProductBundle> productBundle);
+                                                  final List<ProductBundle> productBundle);
 
 }

@@ -1,31 +1,20 @@
-package com.namazustudios.socialengine.dao.mongo.applesignin;
+package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.MongoException;
-import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.socialengine.dao.AppleSignInUserDao;
-import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
-import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
-import com.namazustudios.socialengine.dao.mongo.MongoPasswordUtils;
-import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
+import com.namazustudios.socialengine.dao.FirebaseUserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
-import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
+import dev.morphia.query.Query;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 
 import javax.inject.Inject;
-
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,7 +26,7 @@ import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
 
-public class MongoAppleSignInUserDao implements AppleSignInUserDao {
+public class MongoFirebaseUserDao implements FirebaseUserDao {
 
     private Datastore datastore;
 
@@ -56,41 +45,35 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
     private MongoUserDao mongoUserDao;
 
     @Override
-    public User createReactivateOrUpdateUser(final User user) {
+    public User connectActiveUserIfNecessary(final User user) {
 
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class);
-        final var insertMap = new HashMap<String, Object>();
 
         if (user.getId() == null) {
-            insertMap.put("_id", new ObjectId());
-        } else {
-            final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
-            query.filter(eq("_id", objectId));
+            throw new IllegalArgumentException("User must have user id.");
         }
 
-        query.filter(or(
-            eq("appleSignInId", user.getAppleSignInId()),
-            and(
-                exists("appleSignInId").not(),
-                eq("email", user.getEmail())
-            )
-        ));
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
 
-        // We only reactivate the existing user, all other fields are left untouched if the user exists.
-        insertMap.put("email", user.getEmail());
-        insertMap.put("name", user.getName());
-        insertMap.put("level", user.getLevel());
-        insertMap.put("appleSignInId", user.getAppleSignInId());
-        getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
+        query.filter(
+            eq("_id", objectId),
+            eq("active", true),
+            or(
+                exists("firebaseId").not(),
+                eq("firebaseId", user.getFacebookId())
+            )
+        );
 
         final var mongoUser = getMongoDBUtils().perform(ds ->
-            query.modify(
-                set("active", true),
-                setOnInsert(insertMap)
-            ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+            query.modify(set("firebaseId", user.getFacebookId()))
+                 .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
+
+        if (mongoUser == null) {
+            throw new UserNotFoundException("No matching user found.");
+        }
 
         getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
@@ -98,36 +81,53 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
     }
 
     @Override
-    public User connectActiveUserIfNecessary(final User user) {
+    public User createReactivateOrUpdateUser(final User user) {
 
         validate(user);
 
         final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        final Map<String, Object> insertMap = new HashMap<>(Collections.emptyMap());
 
         if (user.getId() == null) {
-            throw new IllegalArgumentException("User must have user id.");
+            insertMap.put("_id", new ObjectId());
+        } else {
+            final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
+            query.filter(eq("_id", objectId));
         }
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrow(user.getId(), UserNotFoundException::new);
-
-        query.filter(eq("_id", objectId));
-        query.filter(eq("active", true));
-
-        query.filter(or(
-                exists("appleSignInId").not(),
-                eq("appleSignInId", user.getAppleSignInId())
+        query.filter(
+            or(
+                eq("facebookId", user.getFacebookId()),
+                and(
+                    exists("firebaseId"),
+                    eq("email", user.getEmail())
+                )
             )
         );
 
-        final var mongoUser = getMongoDBUtils().perform(ds ->
-            query.modify(set("appleSignInId", user.getAppleSignInId()))
-                 .execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+        insertMap.put("email", user.getEmail());
+        insertMap.put("name", user.getName());
+        insertMap.put("level", user.getLevel());
+        insertMap.put("firebaseId", user.getFacebookId());
+        getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
+
+        // We only reactivate the existing user, all other fields are left untouched if the user exists.
+
+        final var mongoUser = getMongoDBUtils().perform(db -> query.modify(
+                set("active", true),
+                setOnInsert(insertMap)
+                ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
+
+        if (mongoUser == null) {
+            throw new UserNotFoundException("No matching user found.");
+        }
 
         getObjectIndex().index(mongoUser);
         return getDozerMapper().map(mongoUser, User.class);
 
     }
+
 
     public void validate(final User user) {
 
@@ -135,15 +135,15 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
             throw new InvalidDataException("User must not be null.");
         }
 
-        if (user.getAppleSignInId() == null || user.getAppleSignInId().trim().isEmpty()) {
-            throw new InvalidDataException("User must specify Apple Sign-In ID.");
+        if (user.getFacebookId() == null || user.getFacebookId().trim().isEmpty()) {
+            throw new InvalidDataException("User must specify Facebook ID.");
         }
 
         getValidationHelper().validateModel(user);
 
         user.setEmail(nullToEmpty(user.getEmail()).trim());
         user.setName(nullToEmpty(user.getName()).trim());
-        user.setAppleSignInId(emptyToNull(nullToEmpty(user.getAppleSignInId()).trim()));
+        user.setFacebookId(emptyToNull(nullToEmpty(user.getFacebookId()).trim()));
 
     }
 
