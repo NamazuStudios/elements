@@ -85,38 +85,29 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-        final Map<String, Object> insertMap = new HashMap<>(Collections.emptyMap());
-
-        if (user.getId() == null) {
-            insertMap.put("_id", new ObjectId());
-        } else {
-            final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
-            query.filter(eq("_id", objectId));
-        }
+        final var query = getDatastore().find(MongoUser.class);
 
         query.filter(
             or(
-                eq("firebaseId", user.getFirebaseId()),
-                and(
-                    exists("firebaseId"),
-                    eq("email", user.getEmail())
-                )
+                eq("email", user.getEmail()),
+                eq("firebaseId", user.getFirebaseId())
             )
         );
 
-        insertMap.put("email", user.getEmail());
+        final var insertMap = getMongoPasswordUtils().scramblePasswordOnInsert();
+
+        insertMap.put("_id", new ObjectId());
         insertMap.put("name", user.getName());
+        insertMap.put("email", user.getEmail());
         insertMap.put("level", user.getLevel());
-        insertMap.put("firebaseId", user.getFirebaseId());
-        getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
 
         // We only reactivate the existing user, all other fields are left untouched if the user exists.
 
         final var mongoUser = getMongoDBUtils().perform(db -> query.modify(
                 set("active", true),
+                set("firebaseId", user.getFirebaseId()),
                 setOnInsert(insertMap)
-                ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
+            ).execute(new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
         if (mongoUser == null) {
@@ -127,7 +118,6 @@ public class MongoFirebaseUserDao implements FirebaseUserDao {
         return getDozerMapper().map(mongoUser, User.class);
 
     }
-
 
     public void validate(final User user) {
 

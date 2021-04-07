@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.*;
 import com.namazustudios.socialengine.dao.FirebaseApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.FirebaseUserDao;
 import com.namazustudios.socialengine.dao.SessionDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.model.session.FirebaseSessionRequest;
@@ -128,7 +129,7 @@ public class FirebaseAuthServiceTest {
 
     }
 
-    @Test // (dependsOnMethods = "testVerifyAnon")
+    @Test(dependsOnMethods = "testVerifyAnon")
     public void testVerifyUser() {
 
         when(firebaseUserDao.connectActiveUserIfNecessary(any(User.class))).then(i ->{
@@ -200,6 +201,23 @@ public class FirebaseAuthServiceTest {
         assertEquals(session.getApplication(), app);
         assertTrue(session.getExpiry() > currentTimeMillis(), "Session future expiry.");
 
+    }
+
+    @DataProvider
+    public Object[][] allAuthServices() {
+        return new Object[][] {
+            { anonFirebaseAuthServiceProvider.get() },
+            { userFirebaseAuthServiceProvider.get() }
+        };
+    }
+
+    @Test(dependsOnMethods = "testVerifyUser",
+          dataProvider = "allAuthServices",
+          expectedExceptions = ForbiddenException.class)
+    public void testExpiredToken(final FirebaseAuthService firebaseAuthService) {
+        final FirebaseSessionRequest req = new FirebaseSessionRequest();
+        req.setFirebaseJWT(EXPIRED_FIREBASE_TOKEN);
+        firebaseAuthService.createOrUpdateUserWithFirebaseJWT(req);
     }
 
     @AfterClass

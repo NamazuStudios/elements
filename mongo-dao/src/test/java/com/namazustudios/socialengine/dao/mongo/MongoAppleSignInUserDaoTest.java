@@ -32,6 +32,7 @@ public class MongoAppleSignInUserDaoTest {
     private UserTestFactory userTestFactory;
 
     private User testUserA;
+
     private User testUserB;
 
     @BeforeClass

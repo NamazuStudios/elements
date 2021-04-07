@@ -121,31 +121,22 @@ public class MongoFacebookUserDao implements FacebookUserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-        final Map<String, Object> insertMap = new HashMap<>(Collections.emptyMap());
+        final var query = getDatastore().find(MongoUser.class);
 
-        if (user.getId() == null) {
-            insertMap.put("_id", new ObjectId());
-        } else {
-            final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(user.getId());
-            query.filter(eq("_id", objectId));
-        }
-        
         query.filter(
             or(
-                eq("facebookId", user.getFacebookId()),
-                and(
-                    exists("facebookId"),
-                    eq("email", user.getEmail())
-                )
+                eq("email", user.getEmail()),
+                eq("facebookId", user.getFacebookId())
             )
         );
 
-        insertMap.put("email", user.getEmail());
+        final var insertMap = getMongoPasswordUtils().scramblePasswordOnInsert();
+
+        insertMap.put("_id", new ObjectId());
         insertMap.put("name", user.getName());
-        insertMap.put("level", user.getLevel());
+        insertMap.put("email", user.getEmail());
         insertMap.put("facebookId", user.getFacebookId());
-        getMongoPasswordUtils().scramblePasswordOnInsert(insertMap);
+        insertMap.put("level", user.getLevel());
 
         // We only reactivate the existing user, all other fields are left untouched if the user exists.
 

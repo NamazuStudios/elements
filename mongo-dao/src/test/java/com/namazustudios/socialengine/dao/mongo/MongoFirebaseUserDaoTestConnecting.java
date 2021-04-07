@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.FirebaseUserDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import org.bson.types.ObjectId;
 import org.testng.annotations.BeforeClass;
@@ -13,14 +12,15 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 
 import static com.namazustudios.socialengine.model.user.User.Level.USER;
-import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 @Guice(modules = IntegrationTestModule.class)
-public class MongoFirebaseUserDaoTest {
-    
+public class MongoFirebaseUserDaoTestConnecting {
+
+    private static final String FIREBASE_ID = "4CaxZ9JhjbZpKv9vsPCQL1I6Kyk1";
+
+    private static final String BOGUS_FIREBASE_ID = "G3xPvlZPTXUTeh2CD9R4DpPH7Ny2";
+
     private UserDao userDao;
 
     private FirebaseUserDao firebaseUserDao;
@@ -32,80 +32,8 @@ public class MongoFirebaseUserDaoTest {
     @BeforeClass
     public void seedOtherUsers() {
         for (int i = 0; i < 50; ++i) {
-            final User user = new User();
-            user.setLevel(USER);
-            user.setActive(true);
-            user.setName(format("test%s", randomUUID()));
-            user.setEmail(format("test%s@example.com", randomUUID()));
-            getUserDao().createUserStrict(user);
+            getUserTestFactory().createTestUser();
         }
-    }
-
-    @Test
-    public void testCreateOrRefreshWithNoExistingUser() {
-
-        final String firebaseId = "1234567890";
-
-        currentUser = getUserTestFactory().createTestUser(user -> user.setFirebaseId(firebaseId));
-        final String userName = currentUser.getName();
-        final String email = currentUser.getEmail();
-
-        currentUser.setFirebaseId(firebaseId);
-
-        final User result = getFirebaseUserDao().createReactivateOrUpdateUser(currentUser);
-
-        assertNotNull(result.getId());
-        assertTrue(ObjectId.isValid(result.getId()));
-
-        assertEquals(result.getFirebaseId(), firebaseId);
-        assertTrue(result.isActive());
-        assertEquals(result.getName(), userName);
-        assertEquals(result.getEmail(), email);
-        assertEquals(result.getLevel(), USER);
-
-    }
-
-    @Test(dependsOnMethods = "testCreateOrRefreshWithNoExistingUser")
-    public void testCreateOrRefreshWithExistingUser() {
-        testCreateOrRefreshWithNoExistingUser();
-    }
-
-    @Test(dependsOnMethods = "testCreateOrRefreshWithExistingUser")
-    public void testReactivatesInactiveUser() {
-
-        final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
-        getUserDao().softDeleteUser(user.getId());
-
-        try {
-            getUserDao().getActiveUserByNameOrEmail("testy.mctestersen.0@example.com");
-        } catch (UserNotFoundException expected) {
-            // Expected exception.  Continue test.
-            testCreateOrRefreshWithExistingUser();
-            return;
-        }
-
-        fail("Did not hit expected exception.");
-
-    }
-
-    @Test(dependsOnMethods = "testReactivatesInactiveUser")
-    public void testUserChangedEmailAddress() {
-
-        final String firebaseId = "1234567890";
-        final User user = getUserTestFactory().createTestUser(u -> u.setFirebaseId(firebaseId));
-        final String userName = user.getName();
-        final String email = user.getEmail();
-
-        final User result = getFirebaseUserDao().createReactivateOrUpdateUser(user);
-
-        assertNotNull(result.getId());
-        assertTrue(ObjectId.isValid(result.getId()));
-
-        assertEquals(result.getFirebaseId(), firebaseId);
-        assertTrue(result.isActive());
-        assertEquals(result.getEmail(), email);
-        assertEquals(result.getLevel(), USER);
-
     }
 
     @Test
@@ -126,8 +54,7 @@ public class MongoFirebaseUserDaoTest {
         assertEquals(inserted.getEmail(), email);
         assertEquals(inserted.getLevel(), USER);
 
-        final String firebaseId = "0987654321asdf";
-        inserted.setFirebaseId(firebaseId);
+        inserted.setFirebaseId(FIREBASE_ID);
 
         final User connected = getFirebaseUserDao().connectActiveUserIfNecessary(inserted);
 
@@ -135,12 +62,13 @@ public class MongoFirebaseUserDaoTest {
         assertTrue(ObjectId.isValid(connected.getId()));
 
         assertTrue(connected.isActive());
-        assertEquals(connected.getFirebaseId(), firebaseId);
+        assertEquals(connected.getFirebaseId(), FIREBASE_ID);
         assertEquals(inserted.getName(), userName);
         assertEquals(inserted.getEmail(), email);
         assertEquals(connected.getLevel(), USER);
 
-        currentUser = user;
+        currentUser = connected;
+
     }
 
     @Test(dependsOnMethods = "testConnectIfNecessaryUnconnected")
@@ -163,7 +91,7 @@ public class MongoFirebaseUserDaoTest {
     @Test(dependsOnMethods = "testConnectingSameUserHasNoSideEffects", expectedExceptions = DuplicateException.class)
     public void testConnectingFirebaseIdFails() {
         final User user = getUserDao().getActiveUserByNameOrEmail(currentUser.getEmail());
-        user.setFirebaseId("1245");
+        user.setFirebaseId(BOGUS_FIREBASE_ID);
         getFirebaseUserDao().connectActiveUserIfNecessary(user);
     }
 
