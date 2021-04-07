@@ -8,20 +8,28 @@ import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.application.ApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
+import com.namazustudios.socialengine.rt.util.ReadWriteGuard;
+import com.namazustudios.socialengine.rt.util.ReentrantReadWriteGuard;
 
 import javax.inject.Inject;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+
+import static java.lang.String.format;
 
 public class CachingFirebaseAppFactory implements FirebaseAppFactory {
 
     private FirebaseApplicationConfigurationDao firebaseApplicationConfigurationDao;
 
-    private final ConcurrentMap<String, FirebaseApp> firebaseAppCache = new ConcurrentHashMap<>();
+    private final Map<String, FirebaseApp> firebaseAppCache = new HashMap<>();
+
+    private final ReadWriteGuard readWriteGuard = new ReentrantReadWriteGuard();
 
     @Override
     public FirebaseApp fromApplication(final Application application) {
@@ -37,24 +45,19 @@ public class CachingFirebaseAppFactory implements FirebaseAppFactory {
     @Override
     public FirebaseApp fromConfiguration(final FirebaseApplicationConfiguration firebaseApplicationConfiguration) {
 
-        final var loaded = new ArrayList<FirebaseApp>();
+        final var parent = firebaseApplicationConfiguration.getParent();
+        final var key = format("%s-%s", parent.getName(), parent.getId());
 
-        final var result = firebaseAppCache.computeIfAbsent(
-            firebaseApplicationConfiguration.getId(), applicationConfigurationId -> {
-                final var app = loadCredentialsAndReturnApp(firebaseApplicationConfiguration);
-                loaded.add(app);
-                return app;
-            }
-        );
+        final var app = readWriteGuard.computeRO(c -> firebaseAppCache.get(key));
 
-        loaded.remove(result);
-        loaded.forEach(FirebaseApp::delete);
-
-        return result;
+        return app == null
+            ? readWriteGuard.computeRW(c -> loadCredentialsAndReturnApp(firebaseApplicationConfiguration, key))
+            : app;
 
     }
 
-    private FirebaseApp loadCredentialsAndReturnApp(final FirebaseApplicationConfiguration firebaseApplicationConfiguration) {
+    private FirebaseApp loadCredentialsAndReturnApp(final FirebaseApplicationConfiguration firebaseApplicationConfiguration,
+                                                    final String key) {
 
         final var credentials = firebaseApplicationConfiguration.getServiceAccountCredentials();
 
@@ -68,7 +71,7 @@ public class CachingFirebaseAppFactory implements FirebaseAppFactory {
             throw new InternalException(e);
         }
 
-        return FirebaseApp.initializeApp(firebaseOptions, firebaseApplicationConfiguration.getParent().getName());
+        return firebaseAppCache.computeIfAbsent(key, k -> FirebaseApp.initializeApp(firebaseOptions, key));
 
     }
 

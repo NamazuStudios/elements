@@ -39,7 +39,7 @@ public class AuthorizationHeader {
     private final String credentials;
 
     public static <T> Optional<AuthorizationHeader> withValueSupplier(final Function<String, T> valueSupplier) {
-        return withOptionalValueSupplier(headerName -> Optional.of(valueSupplier.apply(headerName)));
+        return withOptionalValueSupplier(headerName -> Optional.ofNullable(valueSupplier.apply(headerName)));
     }
 
     /**

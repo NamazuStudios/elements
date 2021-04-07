@@ -24,8 +24,6 @@ import org.testng.annotations.*;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
@@ -158,7 +156,7 @@ public class FirebaseAuthServiceTest {
 
              final var conf = new FirebaseApplicationConfiguration();
              conf.setId(configurationId);
-             conf.setServiceAccountCredentials(loadServiceAccountCredentials());
+             conf.setServiceAccountCredentials(FirebaseServiceAccountCredentials.loadServiceAccountCredentials());
              conf.setProjectId("elements-integration-test");
              conf.setParent(app);
 
@@ -226,16 +224,6 @@ public class FirebaseAuthServiceTest {
         request.setIdToken(signinResult.getIdToken());
         ftc.deleteAccount(request);
         logger.info("Successfully deleted account.");
-    }
-
-    private String loadServiceAccountCredentials() {
-        try (var is = FirebaseAuthServiceTest.class.getResourceAsStream("/service-account-credentials.json")) {
-            final byte[] bytes = is.readAllBytes();
-            return new String(bytes, StandardCharsets.UTF_8);
-        } catch (IOException ex) {
-            fail("Failed", ex);
-            return null;
-        }
     }
 
     private User getSignedInUser() {

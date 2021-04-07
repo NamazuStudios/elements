@@ -22,6 +22,7 @@ import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;
+import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 import de.flapdoodle.embed.mongo.MongodExecutable;
@@ -176,6 +177,7 @@ public class XodusEmbeddedRestApiIntegrationTestModule extends AbstractModule {
                 modules.add(new MongoDaoModule());
                 modules.add(new MongoSearchModule());
                 modules.add(new AppNodeServicesModule());
+                modules.add(new FirebaseAppFactoryModule());
                 modules.add(new ClasspathAssetLoaderModule().withDefaultPackageRoot());
                 modules.add(new AppNodeSecurityModule());
                 modules.add(new ConfigurationModule(() -> properties));

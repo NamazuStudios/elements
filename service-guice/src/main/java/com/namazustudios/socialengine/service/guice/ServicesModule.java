@@ -239,6 +239,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(FacebookAuthServiceProvider.class)
             .in(scope);
 
+        bind(FirebaseAuthService.class)
+            .toProvider(FirebaseAuthServiceProvider.class)
+            .in(scope);
+
         bind(RewardIssuanceService.class)
             .toProvider(RewardIssuanceServiceProvider.class)
             .in(scope);
@@ -374,6 +378,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(AnonFacebookAuthService.class);
 
+        bind(FirebaseAuthService.class)
+            .annotatedWith(Unscoped.class)
+            .to(AnonFirebaseAuthService.class);
+
         bind(VersionService.class)
             .annotatedWith(Unscoped.class)
             .to(BuildPropertiesVersionService.class);
@@ -433,6 +441,7 @@ public class ServicesModule extends PrivateModule {
         expose(MissionService.class);
         expose(ProgressService.class);
         expose(FacebookAuthService.class);
+        expose(FirebaseAuthService.class);
         expose(VersionService.class);
         expose(SessionService.class);
         expose(RewardIssuanceService.class);
@@ -468,6 +477,7 @@ public class ServicesModule extends PrivateModule {
         expose(MissionService.class).annotatedWith(Unscoped.class);
         expose(ProgressService.class).annotatedWith(Unscoped.class);
         expose(FacebookAuthService.class).annotatedWith(Unscoped.class);
+        expose(FirebaseAuthService.class).annotatedWith(Unscoped.class);
         expose(VersionService.class).annotatedWith(Unscoped.class);
         expose(SessionService.class).annotatedWith(Unscoped.class);
         expose(AdvancementService.class).annotatedWith(Unscoped.class);

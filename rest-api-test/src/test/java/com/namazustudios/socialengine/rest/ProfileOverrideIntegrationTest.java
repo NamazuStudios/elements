@@ -1,7 +1,10 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.profile.Profile;
-import org.testng.annotations.*;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
+import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -12,7 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.*;
-import static com.namazustudios.socialengine.rest.TestUtils.*;
+import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
@@ -22,8 +25,8 @@ public class ProfileOverrideIntegrationTest {
     @Factory
     public Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(ProfileOverrideIntegrationTest.class),
-                TestUtils.getInstance().getUnixFSTest(ProfileOverrideIntegrationTest.class)
+            TestUtils.getInstance().getXodusTest(ProfileOverrideIntegrationTest.class),
+            TestUtils.getInstance().getUnixFSTest(ProfileOverrideIntegrationTest.class)
         };
     }
 
@@ -45,8 +48,8 @@ public class ProfileOverrideIntegrationTest {
     @DataProvider
     public Object[][] getAuthHeader() {
         return new Object[][] {
-                new Object[] { SESSION_SECRET },
-                new Object[] { SOCIALENGINE_SESSION_SECRET }
+            new Object[] { SESSION_SECRET },
+            new Object[] { SOCIALENGINE_SESSION_SECRET }
         };
     }
 
@@ -66,7 +69,7 @@ public class ProfileOverrideIntegrationTest {
                   .header(authHeader, clientContext.getSessionSecret())
                   .buildGet()
                   .submit(Profile.class)
-                  .get();
+              .get();
         } catch (ExecutionException ex) {
             assertTrue(ex.getCause() instanceof NotFoundException, "Expected " + NotFoundException.class.getName());
         }
@@ -88,15 +91,16 @@ public class ProfileOverrideIntegrationTest {
     }
 
     @Test(dataProvider = "provideProfiles", dependsOnMethods = "testOverrideProfileFailure")
-    public void testOverrideProfileProfileIdHeader(final Profile profile, final String authHeader) throws Exception {
+    public void testOverrideProfileProfileIdHeader(final Profile profile,
+                                                   final String authHeader) throws Exception {
 
         final Profile current = client
-            .target(apiRoot + "/profile/current")
-            .request()
-            .header(authHeader, clientContext.getSessionSecret())
-            .header(PROFILE_ID, profile.getId())
-            .buildGet()
-            .submit(Profile.class)
+                .target(apiRoot + "/profile/current")
+                .request()
+                .header(authHeader, clientContext.getSessionSecret())
+                .header(PROFILE_ID, profile.getId())
+                .buildGet()
+                .submit(Profile.class)
             .get();
 
         assertEquals(current.getId(), profile.getId());
@@ -104,7 +108,8 @@ public class ProfileOverrideIntegrationTest {
     }
 
     @Test(dataProvider = "provideProfiles", dependsOnMethods = "testOverrideProfileFailure")
-    public void testOverrideProfileSessionSecretHeader(final Profile profile, final String authHeader) throws Exception {
+    public void testOverrideProfileSessionSecretHeader(final Profile profile,
+                                                       final String authHeader) throws Exception {
 
         final String sessionSecretHeader = format("%s p%s", clientContext.getSessionSecret(), profile.getId());
 
@@ -114,7 +119,7 @@ public class ProfileOverrideIntegrationTest {
                 .header(authHeader, sessionSecretHeader)
                 .buildGet()
                 .submit(Profile.class)
-                .get();
+            .get();
 
         assertEquals(current.getId(), profile.getId());
 

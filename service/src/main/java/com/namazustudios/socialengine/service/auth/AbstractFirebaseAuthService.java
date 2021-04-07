@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.dao.FirebaseUserDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.application.ApplicationConfigurationNotFoundException;
+import com.namazustudios.socialengine.exception.application.FirebaseApplicationConfigurationNotFoundException;
 import com.namazustudios.socialengine.model.application.FirebaseApplicationConfiguration;
 import com.namazustudios.socialengine.model.session.FirebaseSessionRequest;
 import com.namazustudios.socialengine.model.session.Session;
@@ -54,7 +55,7 @@ public abstract class AbstractFirebaseAuthService implements FirebaseAuthService
                 .findFirst()
                 .orElseThrow(ForbiddenException::new);
 
-        } catch (JWTDecodeException | ApplicationConfigurationNotFoundException ex) {
+        } catch (JWTDecodeException | FirebaseApplicationConfigurationNotFoundException | ApplicationConfigurationNotFoundException ex) {
             throw new ForbiddenException(ex);
         }
     }
