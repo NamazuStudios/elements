@@ -10,6 +10,7 @@ import javax.inject.Provider;
 import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
+import java.util.HashMap;
 import java.util.Map;
 
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
@@ -90,8 +91,16 @@ public class MongoPasswordUtils {
     }
 
     /**
-     * Scrambles both the salt and the password.  This effectively wipes out the account's
-     * password making it inaccessible.
+     * Scrambles both the salt and the password.
+     *
+     * @return a map with scrambled password added to it
+     */
+    public Map<String, Object> scramblePasswordOnInsert() {
+        return scramblePasswordOnInsert(new HashMap<>());
+    }
+
+    /**
+     * Scrambles both the salt and the password.
      *
      * @param insertMap the map of objects to set on insert
      * @return a map with scrambled password added to it

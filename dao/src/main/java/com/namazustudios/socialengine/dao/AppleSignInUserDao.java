@@ -9,12 +9,12 @@ import com.namazustudios.socialengine.model.user.User;
 public interface AppleSignInUserDao {
 
     /**
-     * Connects the supplied user to facebook, if not already done so.
+     * Connects the supplied user to Apple Sign-In, if not already done so.
      *
      * @param user the user
      * @return the User, as written to the database
      */
-    User connectActiveAppleUserIfNecessary(User user);
+    User connectActiveUserIfNecessary(User user);
 
     /**
      * Creates, reactivates, or updates a user.  Unlike the operations in {@link UserDao}, this queries for user based

@@ -22,8 +22,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 import static com.namazustudios.socialengine.service.profile.UserProfileService.PROFILE_CREATED_EVENT;
 
 /**
@@ -33,7 +32,7 @@ import static com.namazustudios.socialengine.service.profile.UserProfileService.
      description = "Allows for the manipulation of Profile objects.  Profile objects store the " +
                    "basic information for the users in the system as they are associated with " +
                    "Applications.",
-     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("profile")
 public class ProfileResource {
 

@@ -237,22 +237,16 @@ public class MongoUserDao implements UserDao {
 
         final var builder = new UpdateBuilder();
 
-        if (user.getFacebookId() != null) {
-            builder.with(
-                set("facebookId", user.getFacebookId()),
-                set("active", true),
-                set("name", user.getName()),
-                set("email", user.getEmail()),
-                set("level", user.getLevel())
-            );
-        } else {
-            builder.with(
-                set("active", true),
-                set("name", user.getName()),
-                set("email", user.getEmail()),
-                set("level", user.getLevel())
-            );
-        }
+        builder.with(
+            set("active", true),
+            set("name", user.getName()),
+            set("email", user.getEmail()),
+            set("level", user.getLevel())
+        );
+
+        if (user.getFacebookId() != null) builder.with(set("facebookId", user.getFacebookId()));
+        if (user.getFirebaseId() != null) builder.with(set("firebaseId", user.getFacebookId()));
+        if (user.getAppleSignInId() != null) builder.with(set("appleSignInId", user.getFacebookId()));
 
         getMongoPasswordUtils().addPasswordToBuilder(builder, password);
 

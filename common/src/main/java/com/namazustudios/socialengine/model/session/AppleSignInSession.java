@@ -5,7 +5,6 @@ import java.util.Objects;
 
 public class AppleSignInSession extends Session {
 
-
     private String refreshToken;
 
     private Timestamp refreshTime;

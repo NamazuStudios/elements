@@ -14,7 +14,7 @@ public class FirebaseMessagingFactoryProvider implements Provider<FirebaseMessag
     @Override
     public FirebaseMessagingFactory get() {
         return application -> {
-            final FirebaseApp firebaseApp = getFirebaseAppFactoryProvider().get().apply(application);
+            final FirebaseApp firebaseApp = getFirebaseAppFactoryProvider().get().fromApplication(application);
             return FirebaseMessaging.getInstance(firebaseApp);
         };
     }
@@ -24,7 +24,7 @@ public class FirebaseMessagingFactoryProvider implements Provider<FirebaseMessag
     }
 
     @Inject
-    public void setFirebaseAppFactoryProvider(Provider<FirebaseAppFactory> firebaseAppFactoryProvider) {
+    public void setFirebaseAppFactoryProvider(final Provider<FirebaseAppFactory> firebaseAppFactoryProvider) {
         this.firebaseAppFactoryProvider = firebaseAppFactoryProvider;
     }
 

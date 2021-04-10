@@ -12,8 +12,7 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 /**
  * Handles the management of {@link IosApplicationConfiguration} instances.
@@ -23,7 +22,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 @Api(
     value = "iOS Application Configuration",
     description = "Operations for the management of ApplicationConfigurations for iOS Applications.",
-    authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+    authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/configuration/ios")
 public class IosApplicationConfigurationResource {
 

@@ -16,14 +16,13 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 @Api(value = "Mock Sessions",
      description = "Creates mock sessions for running tests against the server.  This will generate valid sessions, " +
                    "profiles, and users which can be used for testing.  The system may opt to delete or destroy test " +
                    "users automatically after they have been generated.",
-     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("mock_session")
 public class MockSessionResource {
 

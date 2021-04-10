@@ -98,7 +98,7 @@ public class MongoAppleSignInUserDao implements AppleSignInUserDao {
     }
 
     @Override
-    public User connectActiveAppleUserIfNecessary(final User user) {
+    public User connectActiveUserIfNecessary(final User user) {
 
         validate(user);
 

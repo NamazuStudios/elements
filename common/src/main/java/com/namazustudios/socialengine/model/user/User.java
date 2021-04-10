@@ -35,6 +35,8 @@ public class User implements Serializable {
 
     private String facebookId;
 
+    private String firebaseId;
+
     private String appleSignInId;
 
     private static final User UNPRIVILIGED = new User() {
@@ -57,6 +59,11 @@ public class User implements Serializable {
         @Override
         public boolean isActive() {
             return false;
+        }
+
+        @Override
+        public String getFirebaseId() {
+            return null;
         }
 
         @Override
@@ -181,6 +188,24 @@ public class User implements Serializable {
     }
 
     /**
+     * Gets the user's firebase ID.
+     *
+     * @return the user's firebase ID.
+     */
+    public String getFirebaseId() {
+        return firebaseId;
+    }
+
+    /**
+     * Sets the user's firebase ID.
+     *
+     * @param firebaseId
+     */
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
+    }
+
+    /**
      * Gets the Apple sign-in ID.
      *
      * @return the apple sign-in id
@@ -198,35 +223,31 @@ public class User implements Serializable {
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("User{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", email='").append(email).append('\'');
+        sb.append(", level=").append(level);
+        sb.append(", active=").append(active);
+        sb.append(", facebookId='").append(facebookId).append('\'');
+        sb.append(", firebaseId='").append(firebaseId).append('\'');
+        sb.append(", appleSignInId='").append(appleSignInId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         User user = (User) o;
-        return isActive() == user.isActive() &&
-                Objects.equals(getId(), user.getId()) &&
-                Objects.equals(getName(), user.getName()) &&
-                Objects.equals(getEmail(), user.getEmail()) &&
-                getLevel() == user.getLevel() &&
-                Objects.equals(getFacebookId(), user.getFacebookId()) &&
-                Objects.equals(getAppleSignInId(), user.getAppleSignInId());
+        return isActive() == user.isActive() && Objects.equals(getId(), user.getId()) && Objects.equals(getName(), user.getName()) && Objects.equals(getEmail(), user.getEmail()) && getLevel() == user.getLevel() && Objects.equals(getFacebookId(), user.getFacebookId()) && Objects.equals(getFirebaseId(), user.getFirebaseId()) && Objects.equals(getAppleSignInId(), user.getAppleSignInId());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getAppleSignInId());
-    }
-
-    @Override
-    public String toString() {
-        return "User{" +
-                "id='" + id + '\'' +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", level=" + level +
-                ", active=" + active +
-                ", facebookId='" + facebookId + '\'' +
-                ", appleSignInId='" + appleSignInId + '\'' +
-                '}';
+        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getFirebaseId(), getAppleSignInId());
     }
 
     /**

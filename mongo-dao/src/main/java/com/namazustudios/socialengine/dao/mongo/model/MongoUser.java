@@ -64,6 +64,10 @@ public class MongoUser {
 
     @Property
     @Indexed(options = @IndexOptions(unique = true, sparse = true))
+    private String firebaseId;
+
+    @Property
+    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String facebookId;
 
     @Property
@@ -134,6 +138,14 @@ public class MongoUser {
         this.active = active;
     }
 
+    public String getFirebaseId() {
+        return firebaseId;
+    }
+
+    public void setFirebaseId(String firebaseId) {
+        this.firebaseId = firebaseId;
+    }
+
     public String getFacebookId() {
         return facebookId;
     }
@@ -151,43 +163,36 @@ public class MongoUser {
     }
 
     @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("MongoUser{");
+        sb.append("objectId=").append(objectId);
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", email='").append(email).append('\'');
+        sb.append(", hashAlgorithm='").append(hashAlgorithm).append('\'');
+        sb.append(", salt=").append(Arrays.toString(salt));
+        sb.append(", level=").append(level);
+        sb.append(", active=").append(active);
+        sb.append(", firebaseId='").append(firebaseId).append('\'');
+        sb.append(", facebookId='").append(facebookId).append('\'');
+        sb.append(", appleSignInId='").append(appleSignInId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
+    @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         MongoUser mongoUser = (MongoUser) o;
-        return isActive() == mongoUser.isActive() &&
-                Objects.equals(getObjectId(), mongoUser.getObjectId()) &&
-                Objects.equals(getName(), mongoUser.getName()) &&
-                Objects.equals(getEmail(), mongoUser.getEmail()) &&
-                Objects.equals(getHashAlgorithm(), mongoUser.getHashAlgorithm()) &&
-                Arrays.equals(getSalt(), mongoUser.getSalt()) &&
-                Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash()) &&
-                getLevel() == mongoUser.getLevel() &&
-                Objects.equals(getFacebookId(), mongoUser.getFacebookId()) &&
-                Objects.equals(getAppleSignInId(), mongoUser.getAppleSignInId());
+        return isActive() == mongoUser.isActive() && Objects.equals(getObjectId(), mongoUser.getObjectId()) && Objects.equals(getName(), mongoUser.getName()) && Objects.equals(getEmail(), mongoUser.getEmail()) && Objects.equals(getHashAlgorithm(), mongoUser.getHashAlgorithm()) && Arrays.equals(getSalt(), mongoUser.getSalt()) && Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash()) && getLevel() == mongoUser.getLevel() && Objects.equals(getFirebaseId(), mongoUser.getFirebaseId()) && Objects.equals(getFacebookId(), mongoUser.getFacebookId()) && Objects.equals(getAppleSignInId(), mongoUser.getAppleSignInId());
     }
 
     @Override
     public int hashCode() {
-        int result = Objects.hash(getObjectId(), getName(), getEmail(), getHashAlgorithm(), getLevel(), isActive(), getFacebookId(), getAppleSignInId());
+        int result = Objects.hash(getObjectId(), getName(), getEmail(), getHashAlgorithm(), getLevel(), isActive(), getFirebaseId(), getFacebookId(), getAppleSignInId());
         result = 31 * result + Arrays.hashCode(getSalt());
         result = 31 * result + Arrays.hashCode(getPasswordHash());
         return result;
-    }
-
-    @Override
-    public String toString() {
-        return "MongoUser{" +
-                "objectId=" + objectId +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", hashAlgorithm='" + hashAlgorithm + '\'' +
-                ", salt=" + Arrays.toString(salt) +
-                ", passwordHash=" + Arrays.toString(passwordHash) +
-                ", level=" + level +
-                ", active=" + active +
-                ", facebookId='" + facebookId + '\'' +
-                '}';
     }
 
 }

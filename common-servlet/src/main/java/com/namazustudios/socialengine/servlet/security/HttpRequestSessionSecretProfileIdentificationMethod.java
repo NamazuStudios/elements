@@ -5,8 +5,6 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.security.ProfileIdentificationMethod;
 import com.namazustudios.socialengine.security.SessionSecretHeader;
 import com.namazustudios.socialengine.service.ProfileOverrideService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.servlet.http.HttpServletRequest;
@@ -22,11 +20,11 @@ public class HttpRequestSessionSecretProfileIdentificationMethod implements Prof
 
         final String overrideProfileId = SessionSecretHeader.withValueSupplier(getHttpServletRequest()::getHeader)
             .getOverrideProfileId()
-            .orElseThrow(() -> new UnidentifiedProfileException());
+            .orElseThrow(UnidentifiedProfileException::new);
 
         return getProfileOverrideService()
             .findOverrideProfile(overrideProfileId)
-            .orElseThrow(() -> new UnidentifiedProfileException());
+            .orElseThrow(UnidentifiedProfileException::new);
 
     }
 

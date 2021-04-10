@@ -46,6 +46,7 @@ public class MongoApplicationConfiguration {
     @Reference("parent")
     private MongoApplication parent;
 
+    @Property("productBundles")
     private List<MongoProductBundle> productBundles = new ArrayList<>();
 
     @Indexed

@@ -35,8 +35,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Functions.identity;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 import static io.swagger.models.Scheme.forValue;
 import static io.swagger.models.auth.In.HEADER;
 import static java.util.Arrays.asList;
@@ -50,7 +49,7 @@ import static java.util.Collections.emptyList;
                 "Manages application documentation.  This generates Swagger JSON from the application's configured " +
                 "manifest such that it may be used to generate client side code or simply browse and test the " +
                 "application's endpoints.",
-        authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+        authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("application/{applicationNameOrId}/swagger.json")
 public class ApplicationDocumentationResource {
 

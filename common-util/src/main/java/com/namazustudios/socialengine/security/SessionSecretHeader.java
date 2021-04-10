@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.model.session.SessionCreation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Iterator;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.regex.Pattern;
@@ -21,6 +20,7 @@ import static java.util.regex.Pattern.compile;
 /**
  * Parses the value in the session secret header specified in {@link Headers#SESSION_SECRET}.
  */
+@SuppressWarnings("OptionalUsedAsFieldOrParameterType")
 public class SessionSecretHeader {
 
     private static final Logger logger = LoggerFactory.getLogger(SessionSecretHeader.class);
@@ -43,12 +43,12 @@ public class SessionSecretHeader {
         return new SessionSecretHeader(getSessionSecretHeader(tValueSupplier));
     }
 
-    public static final <T> SessionSecretHeader withOptionalValueSupplier(final OptionalSupplier<T> tOptionalSupplier) {
+    public static final <T> SessionSecretHeader withOptionalValueSupplier(final HeaderOptionalSupplier<T> tOptionalSupplier) {
         return new SessionSecretHeader(getOptionalSessionSecretHeader(tOptionalSupplier));
     }
 
     @SuppressWarnings("deprecated") // This is here to provide backwards compatibility.
-    private static <T> Optional<String> getOptionalSessionSecretHeader(final OptionalSupplier<T> tOptionalSupplier) {
+    private static <T> Optional<String> getOptionalSessionSecretHeader(final HeaderOptionalSupplier<T> tOptionalSupplier) {
         final Optional<String> secret = tOptionalSupplier.asString(SESSION_SECRET);
         return secret.isPresent() ? secret : tOptionalSupplier.asString(SOCIALENGINE_SESSION_SECRET);
     }
@@ -75,16 +75,17 @@ public class SessionSecretHeader {
      *
      * @param header the header value, may be null
      */
+
     private SessionSecretHeader(final Optional<String> header) {
 
-        if (!header.isPresent()) {
+        if (header.isEmpty()) {
             sessionSecret = Optional.empty();
             overrideUserId = Optional.empty();
             overrideProfileId = Optional.empty();
             return;
         }
 
-        final Iterator<String> tokens = Splitter.on(SEPARATOR)
+        final var tokens = Splitter.on(SEPARATOR)
                 .trimResults()
                 .omitEmptyStrings()
                 .split(header.get())
@@ -102,7 +103,7 @@ public class SessionSecretHeader {
 
             boolean matches = false;
 
-            final String token = tokens.next();
+            final var token = tokens.next();
 
             if (OVERRIDE_USER_ID_PATTERN.matcher(token).find()) {
                 matches = true;
@@ -150,35 +151,6 @@ public class SessionSecretHeader {
      */
     public Optional<String> getOverrideProfileId() {
         return overrideProfileId;
-    }
-
-    /**
-     * Supplies an {@link Optional} for a header type.
-     *
-     * @param <T>
-     */
-    @FunctionalInterface
-    public interface OptionalSupplier<T> {
-
-        Optional<T> get(String name);
-
-        /**
-         * Converts the value to a string.
-         *
-         * @param name the header name
-         * @return the value, or null
-         */
-        default Optional<String> asString(final String name) {
-            return get(name).map(value -> {
-                try {
-                    return String.class.cast(value);
-                } catch (ClassCastException ex) {
-                    logger.warn("Fetched non-string value for header {}", name);
-                    return null;
-                }
-            });
-        }
-
     }
 
 }

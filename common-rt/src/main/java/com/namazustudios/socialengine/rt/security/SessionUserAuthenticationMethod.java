@@ -17,7 +17,7 @@ public class SessionUserAuthenticationMethod implements UserAuthenticationMethod
     public User attempt() throws ForbiddenException {
         return getOptionalSessionProvider()
             .get()
-            .map(session -> session.getUser())
+            .map(Session::getUser)
             .orElseThrow(ForbiddenException::new);
     }
 

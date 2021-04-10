@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
@@ -20,19 +19,20 @@ import javax.ws.rs.core.Response;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.TestUtils.*;
+import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
+import static com.namazustudios.socialengine.security.AuthorizationHeader.AUTH_HEADER;
+import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
-import static org.testng.Assert.assertEquals;
 
 public class SignupUserTest {
 
     @Factory
     public Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(SignupUserTest.class),
-                TestUtils.getInstance().getUnixFSTest(SignupUserTest.class)
+            TestUtils.getInstance().getXodusTest(SignupUserTest.class),
+            TestUtils.getInstance().getUnixFSTest(SignupUserTest.class)
         };
     }
 
@@ -61,8 +61,10 @@ public class SignupUserTest {
     @DataProvider
     public Object[][] getAuthHeader() {
         return new Object[][] {
-                new Object[] { SESSION_SECRET },
-                new Object[] { SOCIALENGINE_SESSION_SECRET }
+            new Object[] { AUTH_HEADER, "%s" },
+            new Object[] { AUTH_HEADER, "Bearer %s" },
+            new Object[] { SESSION_SECRET, "%s" },
+            new Object[] { SOCIALENGINE_SESSION_SECRET, "%s" }
         };
     }
 
@@ -78,7 +80,7 @@ public class SignupUserTest {
                 .target(apiRoot + "/signup")
                 .request()
                 .post(Entity.entity(toCreate, APPLICATION_JSON))
-                .readEntity(User.class);
+            .readEntity(User.class);
 
         assertNotNull(user);
         assertNotNull(user.getId());
@@ -140,19 +142,20 @@ public class SignupUserTest {
     }
 
     @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
-    public void createForUserHappy(final String authHeader) {
+    public void createForUserHappy(final String authHeader, final String authHeaderFormat) {
 
-        final CreateProfileRequest toCreate = new CreateProfileRequest();
+        final var toCreate = new CreateProfileRequest();
+        final var authHeaderValue = format(authHeaderFormat, sessionCreation.getSessionSecret());
 
         toCreate.setUserId(user.getId());
         toCreate.setDisplayName("Paddy O' Furniture");
         toCreate.setApplicationId(clientContext.getApplication().getId());
 
-        final Response response = client
-                .target(apiRoot + "/profile")
-                .request()
-                .header(authHeader, sessionCreation.getSessionSecret())
-                .post(Entity.entity(toCreate, APPLICATION_JSON));
+        final var response = client
+            .target(apiRoot + "/profile")
+            .request()
+            .header(authHeader, authHeaderValue)
+            .post(Entity.entity(toCreate, APPLICATION_JSON));
 
         profile = response.readEntity(Profile.class);
 
@@ -163,9 +166,10 @@ public class SignupUserTest {
     }
 
     @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
-    public void createForBogusUser(final String authHeader) {
+    public void createForBogusUser(final String authHeader, final String authHeaderFormat) {
 
-        final CreateProfileRequest toCreate = new CreateProfileRequest();
+        final var toCreate = new CreateProfileRequest();
+        final var authHeaderValue = format(authHeaderFormat, sessionCreation.getSessionSecret());
 
         // We want to test that the system will reject the bogus user
 
@@ -173,11 +177,11 @@ public class SignupUserTest {
         toCreate.setDisplayName("Paddy O' Furniture");
         toCreate.setApplicationId(clientContext.getApplication().getId());
 
-        final Response response = client
-                .target(apiRoot + "/profile")
-                .request()
-                .header(authHeader, sessionCreation.getSessionSecret())
-                .post(Entity.entity(toCreate, APPLICATION_JSON));
+        final var response = client
+            .target(apiRoot + "/profile")
+            .request()
+            .header(authHeader, authHeaderValue)
+            .post(Entity.entity(toCreate, APPLICATION_JSON));
 
         assertEquals(response.getStatus(), 400);
 

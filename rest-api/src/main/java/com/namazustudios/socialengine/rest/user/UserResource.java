@@ -1,17 +1,13 @@
 package com.namazustudios.socialengine.rest.user;
 
-import com.google.common.base.Strings;
-import com.namazustudios.socialengine.model.user.UserCreateRequest;
-import com.namazustudios.socialengine.model.user.UserUpdateRequest;
-import com.namazustudios.socialengine.service.Unscoped;
-import com.namazustudios.socialengine.service.user.SuperuserUserService;
-import com.namazustudios.socialengine.util.ValidationHelper;
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.service.UserService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -22,8 +18,7 @@ import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 /**
  * Created by patricktwohig on 3/25/15.
@@ -31,7 +26,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 @Api(value = "Users",
      description = "Manages users in the server.  Users are single-end users typically associated " +
                    "with a login name or email address.",
-     authorizations = {@Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
+     authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("user")
 public class UserResource {
 

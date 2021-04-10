@@ -68,23 +68,17 @@ public class HttpServletBasicAuthFilter implements Filter {
 
     private HttpServletRequest authorize(final HttpServletRequest httpServletRequest) {
 
-        final String authHeaderValue = httpServletRequest.getHeader(AuthorizationHeader.AUTH_HEADER);
+        final var authHeaderValue = httpServletRequest.getHeader(AuthorizationHeader.AUTH_HEADER);
 
         if (authHeaderValue == null) {
             throw new UnauthorizedException();
         }
 
-        final AuthorizationHeader authorizationHeader;
-        final BasicAuthorizationHeader basicAuthHeader;
+        final var authorizationHeader = new AuthorizationHeader(authHeaderValue);
+        final var basicAuthHeader = authorizationHeader
+            .asBasicHeader(httpServletRequest.getCharacterEncoding());
 
-        try {
-            authorizationHeader = new AuthorizationHeader(authHeaderValue);
-            basicAuthHeader = authorizationHeader.asBasicHeader(httpServletRequest.getCharacterEncoding());
-        } catch (AuthorizationHeaderParseException ex) {
-            throw new ForbiddenException(ex);
-        }
-
-        final User user = getUsernamePasswordAuthService().loginUser(basicAuthHeader.getUsername(), basicAuthHeader.getPassword());
+        final var user = getUsernamePasswordAuthService().loginUser(basicAuthHeader.getUsername(), basicAuthHeader.getPassword());
         httpServletRequest.setAttribute(User.USER_ATTRIBUTE, user);
 
         return new AuthenticatedRequest(httpServletRequest, authorizationHeader);
