@@ -19,6 +19,7 @@ import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.JacksonHttpClientModule;
 import com.namazustudios.socialengine.service.guice.OctetStreamJsonMessageBodyReader;
+import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
 import org.eclipse.jetty.server.Server;
 import org.slf4j.Logger;
@@ -112,6 +113,7 @@ public class AppServeMain implements Runnable {
             new SimpleRemoteInvokerRegistryModule(),
             new FSTPayloadReaderWriterModule(),
             new RandomInstanceIdModule(),
+            new FirebaseAppFactoryModule(),
             new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
             new AbstractModule() {
                 @Override
