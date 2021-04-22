@@ -20,10 +20,11 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
-import static com.namazustudios.socialengine.Headers.*;
-import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.AUTH_BEARER;
+import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
+import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static io.swagger.models.Scheme.forValue;
 import static java.util.Arrays.asList;
+import static javax.ws.rs.core.HttpHeaders.AUTHORIZATION;
 
 /**
  * Created by patricktwohig on 7/14/17.
@@ -32,7 +33,7 @@ import static java.util.Arrays.asList;
     securityDefinition = @SecurityDefinition(
         apiKeyAuthDefinitions = {
             @ApiKeyAuthDefinition(
-                name = AUTH_BEARER,
+                name = AUTHORIZATION,
                 description = "Uses a server-assigned session key which is generated from various POST /session and " +
                               "POST /facebook_session endpoints in the API. " +
                               "Authorization: Bearer {SessionSecret}",
