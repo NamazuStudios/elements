@@ -46,7 +46,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     public static final String VERSION_ENDPOINT = "com.namazustudios.socialengine.http.appserve.version.endpoint";
 
-    private static final String APP_PREFIX_FORMAT = "%s/rest/%s";
+    private static final String APP_PREFIX_FORMAT = "%s/%s/rest";
 
     private static final String LEGACY_APP_PREFIX_FORMAT = "%s/%s";
 
