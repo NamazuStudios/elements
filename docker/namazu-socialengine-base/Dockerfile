@@ -53,4 +53,6 @@ RUN mkdir -p "$ELEMENTS_BIN" && \
 WORKDIR $ELEMENTS_HOME
 USER elements:elements
 
+VOLUME ["${ELEMENTS_CDN_REPOS}", "${ELEMENTS_SCRIPT_REPOS}", "${ELEMENTS_SCRIPT_STORAGE}"]
+
 COPY --chown=elements:elements src/main/resources/* $ELEMENTS_CLASSPATH/
