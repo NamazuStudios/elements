@@ -42,7 +42,13 @@ import static java.util.UUID.randomUUID;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
+    public static final String LEGACY_ENDPOINT = "com.namazustudios.socialengine.http.appserve.legacy.endpoint";
+
     public static final String VERSION_ENDPOINT = "com.namazustudios.socialengine.http.appserve.version.endpoint";
+
+    private static final String APP_PREFIX_FORMAT = "%s/%s/rest";
+
+    private static final String LEGACY_APP_PREFIX_FORMAT = "%s/%s";
 
     private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
 
@@ -61,6 +67,8 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
     private String versionEndpoint;
 
     private String applicationPathPrefix;
+
+    private boolean useLegacyPrefix;
 
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
@@ -82,8 +90,11 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         final VersionServlet versionServlet = injector.getInstance(VersionServlet.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath("/");
+
+        final var path = isUseLegacyPrefix() ? "/" : format("%s", getApplicationPathPrefix());
+        servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));
         servletContextHandler.addServlet(new ServletHolder(versionServlet), getVersionEndpoint());
+
         return servletContextHandler;
 
     }
@@ -94,12 +105,13 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final var injector = injectorFor(application);
 
-        final var path = format("%s/%s", getApplicationPathPrefix(), application.getName()).replace("(//+)", "/");
+        final var fmt = isUseLegacyPrefix() ? LEGACY_APP_PREFIX_FORMAT : APP_PREFIX_FORMAT;
+        final var path = format(fmt, getApplicationPathPrefix(), application.getName());
         final var dispatcherServlet = injector.getInstance(DispatcherServlet.class);
         final var sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
         final var servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(path);
+        servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));
         servletContextHandler.addServlet(new ServletHolder(dispatcherServlet), "/*");
         servletContextHandler.addFilter(new FilterHolder(sessionIdAuthenticationFilter), "/*", EnumSet.allOf(DispatcherType.class));
 
@@ -226,5 +238,13 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
             : "/" + applicationPathPrefix;
     }
 
+    public boolean isUseLegacyPrefix() {
+        return useLegacyPrefix;
+    }
+
+    @Inject
+    public void setUseLegacyPrefix(@Named(LEGACY_ENDPOINT) boolean useLegacyPrefix) {
+        this.useLegacyPrefix = useLegacyPrefix;
+    }
 
 }
