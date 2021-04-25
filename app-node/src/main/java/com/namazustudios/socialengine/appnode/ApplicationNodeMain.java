@@ -21,7 +21,8 @@ public class ApplicationNodeMain {
     private static final OptionSpec<String> STATUS_CHECK_OPTION = OPTION_PARSER
         .accepts("status-check", "Performs a status check against the specified host.")
         .withOptionalArg()
-        .ofType(String.class);
+        .ofType(String.class)
+        .defaultsTo("tcp://localhost:28883");
 
     private static final OptionSpec<ApplicationNode.StorageDriver> STORAGE_DRIVER_OPTION = OPTION_PARSER
         .accepts("storage-driver", "Runs with the UnixFS Storage Driver")
