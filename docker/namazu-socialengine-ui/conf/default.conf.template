@@ -1,17 +1,17 @@
 server {
 
-    listen	8080;
-    server_name  localhost;
+    listen	${com_namazustudios_socialengine_http_port};
+    server_name  ${com_namazustudios_socialengine_dns_name};
 
     #charset koi8-r;
     #access_log  /var/log/nginx/host.access.log  main;
 
-    location = /web-ui/ui/version {
+    location = /${com_namazustudios_socialengine_http_path_prefix}/ui/version {
         add_header Content-Type text/plain;
         return 200 'angular:1.0';
     }
 
-    location ~ ^/web-ui(?:/(.*))?$ {
+    location ~ ^/${com_namazustudios_socialengine_http_path_prefix}(?:/(.*))?$ {
         alias   /usr/share/nginx/html/$1;
         index  index.html;
     }

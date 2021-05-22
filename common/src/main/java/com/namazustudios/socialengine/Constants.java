@@ -74,6 +74,11 @@ public interface Constants {
     String DEFAULT_PROPERTIES_FILE_OLD = "socialengine-configuration.properties";
 
     /**
+     * The DNS Name for the running instance of the application.
+     */
+    String DNS_NAME = "com.namazustudios.socialengine.dns.name";
+
+    /**
      * The web API prefix.  This is the location from which all API requests are served relative to
      * the context root.  Leaving this unspecified will serve the API out of the context root.
      */
@@ -88,6 +93,11 @@ public interface Constants {
      * The web API root.  This is the full outside URL of the API endpoint.
      */
     String DOC_OUTSIDE_URL = "com.namazustudios.socialengine.doc.url";
+
+    /**
+     * The outside CDN URL For the app
+     */
+    String CDN_OUTSIDE_URL = "com.namazustudios.socialengine.cdn.url";
 
     /**
      * The allowed CORS origins for the request.
