@@ -1,0 +1,5 @@
+{
+  "api": {
+    "url": "${com_namazustudios_socialengine_api_url}"
+  }
+}

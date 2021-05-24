@@ -21,6 +21,7 @@ COPY $WEB_UI_DIR /usr/share/nginx/html
 EXPOSE 8080
 
 COPY bin/nginx.sh "$ELEMENTS_BIN"
+COPY conf/config.json.template "$ELEMENTS_CONF"
 COPY conf/default.conf.template "$ELEMENTS_CONF"
 
 RUN sed 's#<base href="/web-ui/">#<base href="/\${com_namazustudios_socialengine_http_path_prefix}/">#' \
@@ -30,7 +31,8 @@ RUN sed 's#<base href="/web-ui/">#<base href="/\${com_namazustudios_socialengine
 # Default values for the environment variables. Containers may optionally override these values
 ENV com_namazustudios_socialengine_http_port 8080
 ENV com_namazustudios_socialengine_http_path_prefix admin
-ENV com_namazustudios_socialengine_dns_name localhost
+ENV com_namazustudios_socialengine_dns_name localhost:8080
+ENV com_namazustudios_socialengine_api_url http://localhost:8080/api/rest
 
 WORKDIR $ELEMENTS_HOME
 

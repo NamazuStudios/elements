@@ -16,7 +16,7 @@ done < <(env)
 
 envsubst < "$ELEMENTS_CONF/index.html.template" > /usr/share/nginx/html/index.html
 envsubst < "$ELEMENTS_CONF/default.conf.template" > /etc/nginx/conf.d/default.conf
+envsubst < "$ELEMENTS_CONF/config.json.template" > /usr/share/nginx/html/assets/config.json
 
 # Actually runs NGINX
-
 nginx -g "daemon off;"
