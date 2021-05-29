@@ -29,10 +29,10 @@ RUN sed 's#<base href="/web-ui/">#<base href="/\${com_namazustudios_socialengine
         "$ELEMENTS_CONF/index.html.template"
 
 # Default values for the environment variables. Containers may optionally override these values
-ENV com_namazustudios_socialengine_http_port 8080
-ENV com_namazustudios_socialengine_http_path_prefix web-ui
-ENV com_namazustudios_socialengine_dns_name localhost:8080
-ENV com_namazustudios_socialengine_api_url http://localhost:8080/api/rest
+ENV com.namazustudios.socialengine.http.port 8080
+ENV com.namazustudios.socialengine.http.path.prefix web-ui
+ENV com.namazustudios.socialengine.dns.name localhost:8080
+ENV com.namazustudios.socialengine.api.url http://localhost:8080/api/rest
 
 WORKDIR $ELEMENTS_HOME
 
