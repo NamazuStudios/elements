@@ -28,12 +28,6 @@ RUN sed 's#<base href="/web-ui/">#<base href="/\${com_namazustudios_socialengine
         "/usr/share/nginx/html/index.html" > \
         "$ELEMENTS_CONF/index.html.template"
 
-# Default values for the environment variables. Containers may optionally override these values
-ENV com.namazustudios.socialengine.http.port 8080
-ENV com.namazustudios.socialengine.http.path.prefix web-ui
-ENV com.namazustudios.socialengine.dns.name localhost:8080
-ENV com.namazustudios.socialengine.api.url http://localhost:8080/api/rest
-
 WORKDIR $ELEMENTS_HOME
 
 CMD $ELEMENTS_BIN/nginx.sh
