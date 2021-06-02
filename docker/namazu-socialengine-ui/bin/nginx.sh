@@ -7,6 +7,11 @@ index_html="/usr/share/nginx/html/index.html"
 default_conf="/etc/nginx/conf.d/default.conf"
 config_json="/usr/share/nginx/html/assets/config.json"
 
+echo "Original Environment"
+echo ""
+env
+echo ""
+
 while IFS='=' read -r name value ; do
   if [[ $name == 'com.namazustudios'* ]]; then
     remapped="$(echo "$name" | tr . _)"
@@ -18,6 +23,7 @@ done < <(env)
 echo "Remapped Environment Variables. Current environment: "
 echo ""
 env
+echo ""
 
 # Just-in-time, we write the files to the appropriate location on disk where nginx will serve the assets
 # in the UI properly as well as configure the port and server names.
