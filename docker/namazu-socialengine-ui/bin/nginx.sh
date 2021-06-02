@@ -6,9 +6,9 @@
 # Default values for the environment variables.
 # shellcheck disable=SC2034
 export com_namazustudios_socialengine_http_port=8080
-export com_namazustudios_socialengine_http_path_prefix web-ui
-export com_namazustudios_socialengine_dns_name localhost:8080
-export com_namazustudios_socialengine_api_url http://localhost:8080/api/rest
+export com_namazustudios_socialengine_http_path_prefix=web-ui
+export com_namazustudios_socialengine_dns_name=localhost:8080
+export com_namazustudios_socialengine_api_url=http://localhost:8080/api/rest
 
 index_html="/usr/share/nginx/html/index.html"
 default_conf="/etc/nginx/conf.d/default.conf"
