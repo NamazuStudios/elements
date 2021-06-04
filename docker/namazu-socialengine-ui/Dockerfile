@@ -16,7 +16,8 @@ ENV ELEMENTS_CONF "$ELEMENTS_HOME/conf"
 RUN mkdir -p $ELEMENTS_BIN && \
     mkdir -p $ELEMENTS_CONF && \
     apt-get update && \
-    apt-get install -y nginx-light=1.18.0-0ubuntu1.2
+    apt-get install -y nginx-light=1.18.0-0ubuntu1.2 && \
+    apt-get install -y gettext=0.19.8.1-10build1
 
 ARG WEB_UI_DIR
 COPY $WEB_UI_DIR /usr/share/nginx/html
@@ -29,7 +30,8 @@ COPY conf/default.conf.template "$ELEMENTS_CONF"
 
 RUN sed 's#<base href="/web-ui/">#<base href="/\${com_namazustudios_socialengine_http_path_prefix}/">#' \
         "/usr/share/nginx/html/index.html" > \
-        "$ELEMENTS_CONF/index.html.template"
+        "$ELEMENTS_CONF/index.html.template" && \
+    chmod ugo+x "$ELEMENTS_BIN/nginx.sh"
 
 WORKDIR $ELEMENTS_HOME
 
