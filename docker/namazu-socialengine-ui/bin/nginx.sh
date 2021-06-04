@@ -1,4 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
+
+# Before all else, we ensure we're running in a proper environment.
+
+echo "Original Environment"
+echo ""
+env
+echo ""
 
 # Converts the dot-environment variable syntax to the ENVIRONMENT_VARIABLE convention. This honors only
 # those environment variables which start with com.namazustudios
@@ -14,11 +21,6 @@ export com_namazustudios_socialengine_api_url=http://localhost:8080/api/rest
 index_html="/usr/share/nginx/html/index.html"
 default_conf="/etc/nginx/conf.d/default.conf"
 config_json="/usr/share/nginx/html/assets/config.json"
-
-echo "Original Environment"
-echo ""
-env
-echo ""
 
 while IFS='=' read -r name value ; do
   if [[ $name == 'com.namazustudios'* ]]; then
