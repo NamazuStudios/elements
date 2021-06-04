@@ -1,7 +1,8 @@
-FROM nginx:1.15.5
+FROM ubuntu:20.04
 
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
+ENV NGINX_VERSION 1.18.0-0ubuntu1.2
 
 # Sub Directories
 
@@ -13,7 +14,9 @@ ENV ELEMENTS_BIN "$ELEMENTS_HOME/bin"
 ENV ELEMENTS_CONF "$ELEMENTS_HOME/conf"
 
 RUN mkdir -p $ELEMENTS_BIN && \
-    mkdir -p $ELEMENTS_CONF
+    mkdir -p $ELEMENTS_CONF && \
+    apt-get update && \
+    apt-get install -y nginx-light=1.18.0-0ubuntu1.2
 
 ARG WEB_UI_DIR
 COPY $WEB_UI_DIR /usr/share/nginx/html
