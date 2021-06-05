@@ -35,4 +35,4 @@ RUN sed 's#<base href="/web-ui/">#<base href="/\${com_namazustudios_socialengine
 
 WORKDIR $ELEMENTS_HOME
 
-ENTRYPOINT [ "sh", "-c", "$ELEMENTS_BIN/nginx.sh"]
+ENTRYPOINT [ "sh", "-c", "/opt/elements/bin/nginx.sh"]
