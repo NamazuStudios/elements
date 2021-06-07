@@ -13,6 +13,7 @@ echo ""
 # Default values for the environment variables.
 # shellcheck disable=SC2034
 
+export com_namazustudios_socialengine_dollar='$'
 export com_namazustudios_socialengine_http_port=8080
 export com_namazustudios_socialengine_http_path_prefix=web-ui
 export com_namazustudios_socialengine_dns_name=localhost:8080
