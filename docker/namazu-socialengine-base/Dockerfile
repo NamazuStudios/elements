@@ -1,5 +1,9 @@
 
-FROM openjdk:11.0-jdk
+FROM ubuntu:20.04
+
+RUN apt-get update && \
+    apt-get -y install openjdk-11-jdk="11.0.11+9-0ubuntu2~20.04" && \
+    apt-get -y install wget="1.20.3-1ubuntu1"
 
 ENV DOCKERIZE_VERSION v0.6.1
 
@@ -11,7 +15,7 @@ ENV ELEMENTS_HOME "/opt/elements"
 # Application Directories. Used by the deployment scripts.
 # - ELEMENTS_BIN holds any binaries the application may need. Added to the OS PATH
 # - ELEMENTS_LIB holds any number of jar files to be included on the Java classpath
-# - ELEMETNS_CONF houes any configuration files used by the service (Including elements.properties)
+# - ELEMETNS_CONF houes any configuration fciles used by the service (Including elements.properties)
 # - ELEMETNS_CLASSPATH a directory which is added to the Java classpath (eg Logging Configuration)
 
 ENV ELEMENTS_BIN "$ELEMENTS_HOME/bin"
@@ -48,7 +52,8 @@ RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_CDN_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_STORAGE" && \
-    useradd elements && chown -R elements:elements "$ELEMENTS_HOME"
+    useradd elements -M --shell /usr/bin/bash --base-dir /opt --home "$ELEMENTS_HOME" && \
+    chown -R elements:elements "$ELEMENTS_HOME"
 
 WORKDIR $ELEMENTS_HOME
 USER elements:elements

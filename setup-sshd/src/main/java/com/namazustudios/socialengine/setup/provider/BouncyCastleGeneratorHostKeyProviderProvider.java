@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.setup.provider;
 
+import org.apache.sshd.common.keyprovider.FileKeyPairProvider;
 import org.apache.sshd.common.keyprovider.KeyPairProvider;
 import org.apache.sshd.common.util.security.bouncycastle.BouncyCastleGeneratorHostKeyProvider;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 
 import static com.namazustudios.socialengine.setup.SetupSSHD.HOST_KEY;
@@ -15,9 +17,11 @@ public class BouncyCastleGeneratorHostKeyProviderProvider implements Provider<Ke
     private Provider<String> hostKeyPairPathProvider;
 
     @Override
-    public BouncyCastleGeneratorHostKeyProvider get() {
+    public KeyPairProvider get() {
         final var path = Paths.get(getHostKeyPairPathProvider().get());
-        return new BouncyCastleGeneratorHostKeyProvider(path);
+        final var provider = new BouncyCastleGeneratorHostKeyProvider(path);
+        provider.setOverwriteAllowed(false);
+        return provider;
     }
 
     public Provider<String> getHostKeyPairPathProvider() {

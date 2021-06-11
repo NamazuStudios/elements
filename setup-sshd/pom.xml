@@ -7,7 +7,7 @@
 
     <properties>
         <jline.version>3.19.0</jline.version>
-        <apache.sshd.version>2.6.0</apache.sshd.version>
+        <apache.sshd.version>2.7.0</apache.sshd.version>
         <bouncycastle.version>1.68</bouncycastle.version>
         <eddsa.version>0.3.0</eddsa.version>
     </properties>

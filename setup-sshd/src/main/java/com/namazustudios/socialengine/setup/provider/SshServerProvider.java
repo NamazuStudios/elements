@@ -50,12 +50,12 @@ public class SshServerProvider implements Provider<SshServer> {
         server.setPort(getSshPortProvider().get());
         server.setShellFactory(getShellFactoryProvider().get());
         server.setKeyPairProvider(getKeyPairProviderProvider().get());
-        server.setHostKeyCertificateProvider(getHostKeyCertificateProviderProvider().get());
+//        server.setHostKeyCertificateProvider(getHostKeyCertificateProviderProvider().get());
         server.setPublickeyAuthenticator(getPublickeyAuthenticatorProvider().get());
 
-        final var deny = new Deny();
-        server.setPasswordAuthenticator(deny);
-        server.setKeyboardInteractiveAuthenticator(deny);
+//        final var deny = new Deny();
+//        server.setPasswordAuthenticator(deny);
+//        server.setKeyboardInteractiveAuthenticator(deny);
 
         server.setSessionHeartbeat(IGNORE, SECONDS, 15);
         return server;
