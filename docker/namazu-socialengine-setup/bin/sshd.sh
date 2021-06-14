@@ -22,5 +22,8 @@ env | grep 'com\.namazustudios.*' >> "$pam_env_conf"
 echo "PAM Environment."
 cat "$pam_env_conf"
 
+chown root:root "$ELEMENTS_CONF/authorized_keys"
+chmod 644 "$ELEMENTS_CONF/authorized_keys"
+
 /usr/sbin/sshd -D -e -f "$ELEMENTS_CONF/sshd_config"
 rm -f "$sshd_pid"

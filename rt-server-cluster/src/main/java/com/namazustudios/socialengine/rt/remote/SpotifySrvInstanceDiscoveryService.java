@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.util.HostList;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.xbill.DNS.DClass;
 import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
 import org.xbill.DNS.Type;
@@ -50,6 +51,11 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
     private String srvServers;
 
     private final AtomicReference<SrvDiscoveryContext> context = new AtomicReference<>();
+
+    static {
+        Lookup.getDefaultCache(DClass.IN).setMaxCache(0);
+        Lookup.getDefaultCache(DClass.IN).setMaxNCache(0);
+    }
 
     @Override
     public void start() {
