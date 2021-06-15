@@ -1,11 +1,11 @@
 package com.namazustudios.socialengine.service.guice;
 
-import com.google.inject.Key;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
-import com.namazustudios.socialengine.exception.NotImplementedException;
-import com.namazustudios.socialengine.model.user.User;
+import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.dao.DatabaseHealthStatusDao;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
@@ -25,6 +25,7 @@ import com.namazustudios.socialengine.service.goods.ItemServiceProvider;
 import com.namazustudios.socialengine.service.goods.SuperuserItemService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
+import com.namazustudios.socialengine.service.health.DefaultHealthStatusService;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemService;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemServiceProvider;
 import com.namazustudios.socialengine.service.inventory.SuperUserSimpleInventoryItemService;
@@ -61,6 +62,7 @@ import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 import org.dozer.Mapper;
 
 import javax.inject.Provider;
+import java.util.Set;
 
 /**
  * Configures all of the services, using a {@link Scope} for {@link User}, {@link Profile} injections.
@@ -86,6 +88,8 @@ public class ServicesModule extends PrivateModule {
 
     @Override
     protected void configure() {
+
+        install(new DatabaseHealthStatusDaoAggregator());
 
         bind(Mapper.class)
             .toProvider(ServicesDozerMapperProvider.class)
@@ -128,8 +132,8 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(FollowerService.class)
-                .toProvider(FollowerServiceProvider.class)
-                .in(scope);
+            .toProvider(FollowerServiceProvider.class)
+            .in(scope);
 
         bind(MatchService.class)
             .toProvider(MatchServiceProvider.class)
@@ -261,6 +265,10 @@ public class ServicesModule extends PrivateModule {
 
         bind(AppleSignInAuthService.class)
             .toProvider(AppleSignInAuthServiceProvider.class)
+            .in(scope);
+
+        bind(HealthStatusService.class)
+            .to(DefaultHealthStatusService.class)
             .in(scope);
 
         bind(NameService.class)
@@ -403,6 +411,11 @@ public class ServicesModule extends PrivateModule {
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
 
+        bind(HealthStatusService.class)
+            .annotatedWith(Unscoped.class)
+            .to(DefaultHealthStatusService.class)
+            .asEagerSingleton();
+
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
@@ -450,6 +463,7 @@ public class ServicesModule extends PrivateModule {
         expose(AdvancementService.class);
         expose(AppleSignInAuthService.class);
         expose(NameService.class);
+        expose(HealthStatusService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -483,6 +497,7 @@ public class ServicesModule extends PrivateModule {
         expose(AdvancementService.class).annotatedWith(Unscoped.class);
         expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
         expose(NameService.class).annotatedWith(Unscoped.class);
+        expose(HealthStatusService.class).annotatedWith(Unscoped.class);
 
     }
 

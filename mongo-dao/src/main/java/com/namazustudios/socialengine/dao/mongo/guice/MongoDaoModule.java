@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInUser
 import com.namazustudios.socialengine.dao.mongo.application.*;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
+import com.namazustudios.socialengine.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import com.namazustudios.socialengine.dao.mongo.match.MongoMatchDao;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
@@ -74,6 +75,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(AppleSignInSessionDao.class).to(MongoAppleSignInSessionDao.class);
         bind(FollowerDao.class).to(MongoFollowerDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
+        bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -125,6 +127,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(AppleSignInSessionDao.class);
         expose(FollowerDao.class);
         expose(DeploymentDao.class);
+        expose(DatabaseHealthStatusDao.class);
 
     }
 

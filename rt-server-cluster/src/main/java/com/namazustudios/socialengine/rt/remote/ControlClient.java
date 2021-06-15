@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 
+import java.util.concurrent.TimeUnit;
+
 public interface ControlClient extends AutoCloseable {
 
     /**
@@ -53,6 +55,14 @@ public interface ControlClient extends AutoCloseable {
      * @param nodeId
      */
     void closeBinding(NodeId nodeId);
+
+    /**
+     * Allows for the adjustment of this {@link ControlClient}'s receive timeout.
+     *
+     * @param timeout the timeout
+     * @param timeUnit the {@link TimeUnit}
+     */
+    void setReceiveTimeout(final long timeout, final TimeUnit timeUnit);
 
     /**
      * Closes this instance of {@link ControlClient}

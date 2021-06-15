@@ -63,7 +63,7 @@ public class JeroMQControlClient implements ControlClient {
         this.socket = open(shadowContext);
         this.socket.connect(instanceConnectAddress);
         this.instanceConnectAddress = instanceConnectAddress;
-        this.socket.setReceiveTimeOut((int) MILLISECONDS.convert(timeout, timeUnit));
+        setReceiveTimeout(timeout, timeUnit);
     }
 
     /**
@@ -160,6 +160,12 @@ public class JeroMQControlClient implements ControlClient {
         send(request);
         recv();
 
+    }
+
+    @Override
+    public void setReceiveTimeout(long timeout, TimeUnit timeUnit) {
+        final var to = (int) MILLISECONDS.convert(timeout, timeUnit);
+        this.socket.setReceiveTimeOut(to);
     }
 
     private void send(final ZMsg zMsg) {
