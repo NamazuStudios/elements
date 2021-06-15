@@ -1,14 +1,12 @@
 package com.namazustudios.socialengine.appserve;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
-import com.namazustudios.socialengine.rt.Constants;
 
 import java.util.Properties;
 
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
 import static com.namazustudios.socialengine.Constants.HTTP_PORT;
-import static com.namazustudios.socialengine.appserve.DispatcherAppProvider.LEGACY_ENDPOINT;
-import static com.namazustudios.socialengine.appserve.DispatcherAppProvider.VERSION_ENDPOINT;
+import static com.namazustudios.socialengine.appserve.DispatcherAppProvider.*;
 import static com.namazustudios.socialengine.rt.Constants.HTTP_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
@@ -29,8 +27,8 @@ public class AppServeModuleDefaults implements ModuleDefaults {
     public Properties get() {
         final var properties = new Properties();
         properties.setProperty(HTTP_PORT, "8083");
-        properties.setProperty(HTTP_PATH_PREFIX, "app-serve");
-        properties.setProperty(LEGACY_ENDPOINT, Boolean.TRUE.toString());
+        properties.setProperty(HTTP_PATH_PREFIX, "app");
+        properties.setProperty(HEALTH_ENDPOINT, "health");
         properties.setProperty(VERSION_ENDPOINT, "version");
         properties.setProperty(HTTP_TIMEOUT_MSEC, "180000");
         properties.setProperty(MAX_SOCKETS, "500000");

@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 
 import com.namazustudios.socialengine.appserve.guice.AppServeDispatcherModule;
+import com.namazustudios.socialengine.appserve.guice.HealthServletModule;
 import com.namazustudios.socialengine.appserve.guice.RemoteInvocationDispatcherModule;
 import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
 import com.namazustudios.socialengine.model.application.Application;
@@ -14,6 +15,7 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQContextModule
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.Unscoped;
+import com.namazustudios.socialengine.servlet.security.HealthServlet;
 import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
@@ -42,17 +44,15 @@ import static java.util.UUID.randomUUID;
 
 public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvider {
 
-    public static final String LEGACY_ENDPOINT = "com.namazustudios.socialengine.http.appserve.legacy.endpoint";
+    public static final String HEALTH_ENDPOINT = "com.namazustudios.socialengine.http.appserve.health.endpoint";
 
     public static final String VERSION_ENDPOINT = "com.namazustudios.socialengine.http.appserve.version.endpoint";
 
     private static final String APP_PREFIX_FORMAT = "%s/%s/rest";
 
-    private static final String LEGACY_APP_PREFIX_FORMAT = "%s/%s";
-
     private static final Logger logger = LoggerFactory.getLogger(DispatcherAppProvider.class);
 
-    private final String versionOriginId = randomUUID().toString();
+    private final String metadataOriginId = randomUUID().toString();
 
     private final ConcurrentMap<String, Injector> applicationInjectorMap = new ConcurrentHashMap<>();
 
@@ -64,15 +64,15 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     private ApplicationService applicationService;
 
+    private String healthEndpoint;
+
     private String versionEndpoint;
 
     private String applicationPathPrefix;
 
-    private boolean useLegacyPrefix;
-
     @Override
     public ContextHandler createContextHandler(final App app) throws Exception {
-        if (versionOriginId.equals(app.getOriginId())) {
+        if (metadataOriginId.equals(app.getOriginId())) {
             return createContextHandlerForVersion(app);
         } else {
             return createContextHandlerForApplication(app);
@@ -81,18 +81,23 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
     public ContextHandler createContextHandlerForVersion(final App app) {
 
-        if (!versionOriginId.equals(app.getOriginId())) {
-            throw new IllegalArgumentException("App must have origin ID: " + versionOriginId);
+        if (!metadataOriginId.equals(app.getOriginId())) {
+            throw new IllegalArgumentException("App must have origin ID: " + metadataOriginId);
         }
 
-        final Injector injector = getInjector().createChildInjector(new VersionServletModule());
+        final Injector injector = getInjector().createChildInjector(
+            new HealthServletModule(),
+            new VersionServletModule()
+        );
 
-        final VersionServlet versionServlet = injector.getInstance(VersionServlet.class);
+        final var healthServlet = injector.getInstance(HealthServlet.class);
+        final var versionServlet = injector.getInstance(VersionServlet.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
 
-        final var path = isUseLegacyPrefix() ? "/" : format("%s", getApplicationPathPrefix());
+        final var path = getApplicationPathPrefix();
         servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));
+        servletContextHandler.addServlet(new ServletHolder(healthServlet), getHealthEndpoint());
         servletContextHandler.addServlet(new ServletHolder(versionServlet), getVersionEndpoint());
 
         return servletContextHandler;
@@ -105,8 +110,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final var injector = injectorFor(application);
 
-        final var fmt = isUseLegacyPrefix() ? LEGACY_APP_PREFIX_FORMAT : APP_PREFIX_FORMAT;
-        final var path = format(fmt, getApplicationPathPrefix(), application.getName());
+        final var path = format(APP_PREFIX_FORMAT, getApplicationPathPrefix(), application.getName());
         final var dispatcherServlet = injector.getInstance(DispatcherServlet.class);
         final var sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
@@ -143,9 +147,9 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         getInstance().start();
 
-        final var version = new App(getDeploymentManager(), this, versionOriginId);
-
+        final var version = new App(getDeploymentManager(), this, metadataOriginId);
         getDeploymentManager().addApp(version);
+
         getApplicationService().getApplications().getObjects().forEach(this::deploy);
 
     }
@@ -216,6 +220,17 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.instance = instance;
     }
 
+    public String getHealthEndpoint() {
+        return healthEndpoint;
+    }
+
+    @Inject
+    public void setHealthEndpoint(@Named(HEALTH_ENDPOINT) String versionEndpoint) {
+        this.healthEndpoint = versionEndpoint.startsWith("/")
+            ? versionEndpoint
+            : "/" + versionEndpoint;
+    }
+
     public String getVersionEndpoint() {
         return versionEndpoint;
     }
@@ -236,15 +251,6 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         this.applicationPathPrefix = applicationPathPrefix.startsWith("/")
             ? applicationPathPrefix
             : "/" + applicationPathPrefix;
-    }
-
-    public boolean isUseLegacyPrefix() {
-        return useLegacyPrefix;
-    }
-
-    @Inject
-    public void setUseLegacyPrefix(@Named(LEGACY_ENDPOINT) boolean useLegacyPrefix) {
-        this.useLegacyPrefix = useLegacyPrefix;
     }
 
 }

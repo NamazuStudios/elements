@@ -82,6 +82,7 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
         } else {
             return createCdnContext(app);
         }
+
     }
 
     private ContextHandler createGitContext(final App app) {

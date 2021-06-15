@@ -81,8 +81,7 @@ public class AppServeMain implements Runnable {
         main.join();
     }
 
-    private static final Server createServer(final String[] args) {
-
+    private static Server createServer(final String[] args) {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
