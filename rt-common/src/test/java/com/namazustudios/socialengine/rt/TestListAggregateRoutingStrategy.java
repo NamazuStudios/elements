@@ -176,7 +176,7 @@ public class TestListAggregateRoutingStrategy extends BaseRoutingStrategyTest {
             final int remoteInvokerIndex = j;
             final RemoteInvoker ri = mockRemoteInvokers.get(j);
 
-            when(ri.invokeAsync(eq(invocation), any(), any())).thenAnswer(inv -> {
+            when(ri.invokeAsyncV(eq(invocation), any(), any())).thenAnswer(inv -> {
 
                 final AtomicInteger consumerIndex = new AtomicInteger();
                 final List<Consumer<InvocationResult>> arg1 = inv.getArgument(1);
@@ -198,7 +198,7 @@ public class TestListAggregateRoutingStrategy extends BaseRoutingStrategyTest {
                 .getAllRemoteInvokers(eq(getApplicationId())))
                 .thenReturn(mockRemoteInvokers);
 
-        final Object result = getRoutingStrategy().invokeAsync(
+        final Object result = getRoutingStrategy().invokeAsyncV(
                 address,
                 invocation,
                 asyncConsumers,
@@ -208,7 +208,7 @@ public class TestListAggregateRoutingStrategy extends BaseRoutingStrategyTest {
         verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokers(eq(getApplicationId()));
 
         for (final RemoteInvoker ri : mockRemoteInvokers) {
-            verify(ri, times(1)).invokeAsync(
+            verify(ri, times(1)).invokeAsyncV(
                     eq(invocation),
                     any(),
                     any()

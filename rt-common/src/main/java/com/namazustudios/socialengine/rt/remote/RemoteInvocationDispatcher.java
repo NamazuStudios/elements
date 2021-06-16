@@ -25,10 +25,22 @@ public interface RemoteInvocationDispatcher {
     default void stop() {}
 
     /**
+     * Invokes {@link #invokeAsyncV(Route, Invocation, List, InvocationErrorConsumer)}, ignoring the returned
+     * {@link AsyncOperation}.
+     */
+    default Void invokeAsyncV(Route route,
+                              Invocation invocation,
+                              List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                              InvocationErrorConsumer asyncInvocationErrorConsumer) {
+        invokeAsync(route, invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+        return null;
+    }
+
+    /**
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
      * {@link Consumer< InvocationError >} will relay all encountered errors.
      *
-     * Typically this is used with the {@link Dispatch.Type#CONSUMER}.
+     * Typically this is used with the {@link Dispatch.Type#ASYNCHRONOUS}.
      *
      * This returns the generic Void type to clarify the intention of the method that the underlying {@link Future}
      * is discarded, but since is is intended to be used with reflections code, this allows for the method to be easily
@@ -40,10 +52,10 @@ public interface RemoteInvocationDispatcher {
      * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
      * @return a null {@link Void}, for the sake of clarity
      */
-    Void invokeAsync(Route route,
-                     Invocation invocation,
-                     List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                     InvocationErrorConsumer asyncInvocationErrorConsumer);
+    AsyncOperation invokeAsync(Route route,
+                               Invocation invocation,
+                               List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                               InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied

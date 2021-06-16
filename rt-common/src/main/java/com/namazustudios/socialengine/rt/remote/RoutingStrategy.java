@@ -28,9 +28,7 @@ public interface RoutingStrategy {
             InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
-     * Invokes the method returning a {@link Void} (ie null) for the value.
-     *
-     * Corresponds to {@link RemoteInvoker#invokeFuture(Invocation, List, InvocationErrorConsumer)}.
+     * Invokes the method asynchronously returning a {@link Void} (ie null) for the value.
      *
      * @param address the address
      * @param invocation the {@link Invocation}
@@ -39,10 +37,29 @@ public interface RoutingStrategy {
      *
      * @return null
      */
-    Void invokeAsync(
+    default Void invokeAsyncV(
             List<Object> address,
             Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-            InvocationErrorConsumer asyncInvocationErrorConsumer);
+            InvocationErrorConsumer asyncInvocationErrorConsumer) {
+        invokeAsync(address, invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+        return null;
+    }
+
+    /**
+     * Invokes the method returning a {@link AsyncOperation} for the value.
+     *
+     *
+     * @param address the address
+     * @param invocation the {@link Invocation}
+     * @param asyncInvocationResultConsumerList the list of {@link Consumer<InvocationResult>} instances
+     * @param asyncInvocationErrorConsumer the {@link InvocationErrorConsumer} to receive the error of the invocation
+     *
+     * @return an instance of {@link AsyncOperation}
+     */
+    AsyncOperation invokeAsync(
+        List<Object> address,
+        Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+        InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
      * Invokes the method, blocking until it returns on the remote end.

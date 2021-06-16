@@ -18,12 +18,14 @@ class PriorityRemoteInvoker implements RemoteInvoker, Comparable<PriorityRemoteI
     }
 
     @Override
-    public void start(String connectAddress) {
+    public void start(final String connectAddress) {
         delegate.start(connectAddress);
     }
 
     @Override
-    public void start(String connectAddress, long timeout, TimeUnit timeoutTimeUnit) {
+    public void start(final String connectAddress,
+                      final long timeout,
+                      final TimeUnit timeoutTimeUnit) {
         delegate.start(connectAddress, timeout, timeoutTimeUnit);
     }
 
@@ -34,32 +36,55 @@ class PriorityRemoteInvoker implements RemoteInvoker, Comparable<PriorityRemoteI
 
     @Override
     @Deprecated
-    public Future<Object> invoke(Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public Future<Object> invoke(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
         return delegate.invoke(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
     }
 
     @Override
-    public Void invokeAsync(Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public Void invokeAsyncV(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+        return delegate.invokeAsyncV(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+    }
+
+    @Override
+    public AsyncOperation invokeAsync(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
         return delegate.invokeAsync(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
     }
 
     @Override
-    public Future<Object> invokeFuture(Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public Future<Object> invokeFuture(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
         return delegate.invokeFuture(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
     }
 
     @Override
-    public CompletionStage<Object> invokeCompletionStage(Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public CompletionStage<Object> invokeCompletionStage(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
         return delegate.invokeCompletionStage(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
     }
 
     @Override
-    public Object invokeSync(Invocation invocation, List<Consumer<InvocationResult>> asyncInvocationResultConsumerList, InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
+    public Object invokeSync(
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) throws Exception {
         return delegate.invokeSync(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
     }
 
     @Override
-    public int compareTo(PriorityRemoteInvoker other) {
+    public int compareTo(final PriorityRemoteInvoker other) {
         return Double.compare(priority, other.priority);
     }
 

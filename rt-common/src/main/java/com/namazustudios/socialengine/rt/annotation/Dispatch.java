@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.annotation;
 
+import com.namazustudios.socialengine.rt.remote.AsyncOperation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +70,7 @@ public @interface Dispatch {
         /**
          * This is a type of method that doesn't exactly fit in the other categories.  Depending on the context, a
          * method of this type may pick one of the other strategies to do the invocation.  Underlying connection
-         * details may affect the actual behavior of the method.  However, the following
+         * details may affect the actual behavior of the method.
          */
         HYBRID,
 
@@ -102,11 +103,11 @@ public @interface Dispatch {
             final int errorCount = count.apply(ErrorHandler.class);
             final int resultCount = count.apply(ResultHandler.class);
 
-            if (Future.class.isAssignableFrom(method.getReturnType())) {
+            if (Future.class.isAssignableFrom(rType)) {
                 return FUTURE;
             } if (errorCount == 0 && resultCount == 0) {
                 return SYNCHRONOUS;
-            } else if (void.class.equals(rType) || Void.class.equals(rType)) {
+            } else if (isAsync(rType)) {
                 return ASYNCHRONOUS;
             } else if (errorCount != 1) {
                 final String msg = String.format("Only one of %s can be specified for %s", ErrorHandler.class.getSimpleName(), format(method));
@@ -115,6 +116,12 @@ public @interface Dispatch {
                 return HYBRID;
             }
 
+        }
+
+        private static boolean isAsync(final Class<?> rType) {
+            return void.class.equals(rType) ||
+                   Void.class.equals(rType) ||
+                   AsyncOperation.class.isAssignableFrom(rType);
         }
 
     }

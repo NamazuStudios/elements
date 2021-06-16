@@ -126,7 +126,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
         final List<InvocationResult> invocationResultList = new ArrayList<>();
 
         for(final RemoteInvoker ri : mockRemoteInvokers) {
-            when(ri.invokeAsync(eq(invocation), any(), any())).thenAnswer(i -> {
+            when(ri.invokeAsyncV(eq(invocation), any(), any())).thenAnswer(i -> {
                 final List<Consumer<InvocationResult>> arg1 = i.getArgument(1);
                 arg1.forEach(c -> {
                     final InvocationResult ir = new InvocationResult();
@@ -141,7 +141,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
                 .getAllRemoteInvokers(eq(getApplicationId())))
                 .thenReturn(mockRemoteInvokers);
 
-        final Object result = getRoutingStrategy().invokeAsync(
+        final Object result = getRoutingStrategy().invokeAsyncV(
                 address,
                 invocation,
                 asyncConsumers,
@@ -151,7 +151,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
         verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokers(eq(getApplicationId()));
 
         for (final RemoteInvoker ri : mockRemoteInvokers) {
-            verify(ri, times(1)).invokeAsync(
+            verify(ri, times(1)).invokeAsyncV(
                     eq(invocation),
                     any(),
                     any()

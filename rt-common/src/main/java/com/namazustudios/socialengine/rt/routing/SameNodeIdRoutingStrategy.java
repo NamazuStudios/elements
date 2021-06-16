@@ -36,7 +36,7 @@ public class SameNodeIdRoutingStrategy implements RoutingStrategy {
     }
 
     @Override
-    public Void invokeAsync(
+    public AsyncOperation invokeAsync(
             final List<Object> address,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,

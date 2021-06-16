@@ -28,10 +28,10 @@ public class SimpleRemoteInvocationDispatcher implements RemoteInvocationDispatc
     }
 
     @Override
-    public Void invokeAsync(final Route route,
-                            final Invocation invocation,
-                            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public AsyncOperation invokeAsync(final Route route,
+                             final Invocation invocation,
+                             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final RoutingStrategy routingStrategy = getRoutingStrategy(route);
 

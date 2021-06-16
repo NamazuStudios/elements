@@ -93,15 +93,15 @@ public class TestDefaultRoutingStrategy extends BaseRoutingStrategyTest {
 
         doNothing()
             .when(mockRemoteInvoker)
-            .invokeAsync(invocation, asyncConsumers, invocationErrorConsumer);
+            .invokeAsyncV(invocation, asyncConsumers, invocationErrorConsumer);
 
         final Void result = getRoutingStrategy()
-            .invokeAsync(address, invocation, asyncConsumers, invocationErrorConsumer);
+            .invokeAsyncV(address, invocation, asyncConsumers, invocationErrorConsumer);
 
         assertNull(result);
 
         verify(mockRemoteInvoker, times(1))
-            .invokeAsync(eq(invocation), eq(asyncConsumers), eq(invocationErrorConsumer));
+            .invokeAsyncV(eq(invocation), eq(asyncConsumers), eq(invocationErrorConsumer));
 
     }
 

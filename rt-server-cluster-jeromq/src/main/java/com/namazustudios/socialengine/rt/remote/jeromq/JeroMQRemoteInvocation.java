@@ -35,6 +35,8 @@ public class JeroMQRemoteInvocation {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvocation.class);
 
+    private final JeroMQAsyncOperation asyncOperation;
+
     private final PayloadReader payloadReader;
 
     private final PayloadWriter payloadWriter;
@@ -63,7 +65,8 @@ public class JeroMQRemoteInvocation {
 
     private final Subscription subscriptions;
 
-    public JeroMQRemoteInvocation(final AsyncConnection<ZContext, ZMQ.Socket> connection,
+    public JeroMQRemoteInvocation(final JeroMQAsyncOperation asyncOperation,
+                                  final AsyncConnection<ZContext, ZMQ.Socket> connection,
                                   final Invocation invocation,
                                   final PayloadReader payloadReader,
                                   final PayloadWriter payloadWriter,
@@ -74,6 +77,7 @@ public class JeroMQRemoteInvocation {
                                   final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         // Immutable
+        this.asyncOperation = asyncOperation;
         this.mdcContext = mdcContext;
         this.payloadReader = payloadReader;
         this.payloadWriter = payloadWriter;
@@ -111,7 +115,7 @@ public class JeroMQRemoteInvocation {
 
             if (asyncCompleted && syncCompleted) {
                 logger.debug("Finished Invocation.");
-                connection.recycle();
+                asyncOperation.finish();
                 logger.debug("Recycled Connection.");
                 subscriptions.unsubscribe();
                 logger.debug("Unsubscribed Events.");
@@ -337,7 +341,7 @@ public class JeroMQRemoteInvocation {
         final InvocationError invocationError = new InvocationError();
         invocationError.setThrowable(ex);
         asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
-        connection.recycle();
+        asyncOperation.finish();
         subscriptions.unsubscribe();
 
     }
