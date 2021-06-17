@@ -13,6 +13,7 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQAsyncOperation.State.*;
 import static java.lang.Runtime.getRuntime;
 
 public class JeroMQAsyncOperation implements AsyncOperation {
@@ -25,27 +26,35 @@ public class JeroMQAsyncOperation implements AsyncOperation {
 
     private final AsyncConnectionPool<ZContext, ZMQ.Socket> pool;
 
-    private final AtomicReference<ConnectionState> state = new AtomicReference<>(State.CONNECTION_PENDING);
+    private final AtomicReference<ConnectionState> state = new AtomicReference<>(new ConnectionState());
 
     public JeroMQAsyncOperation(AsyncConnectionPool<ZContext, ZMQ.Socket> pool) {
         this.pool = pool;
     }
 
-    public void finish() {
+    public boolean finish() {
 
     }
 
     @Override
     public void cancel() {
-        state.getAndUpdate(current -> {
+        state.updateAndGet(current -> {
             switch (current.state) {
                 case FINISHED:
                 case CANCELED:
+                    // These states indicate that the connection has already finished and no actions
+                    // are necessary. The connection state will simply do nothing when it is processed
+                    return current;
                 case CONNECTION_PENDING:
-                    return current.clear();
+                    // We haven't even gotten to acquiring a connection. When a connection is acquired, it will
+                    // be the responsibility of the caller to recycle the connection before it has been acaquired.
+                    return current.update(CANCELED);
                 case CONNECTION_ACQUIRED:
-                    return current.cancel();
+                    // The connection was accquired and we are waiting on a response. This means that the connection
+                    // is now in an undefined state. Therefore the connection must be destroyed.
+                    return current.update(CANCELLATION_PENDING);
                 default:
+                    // This is here for future proofing.
                     throw new IllegalStateException("Invalid state: " + current);
             }
         }).process();
@@ -56,8 +65,18 @@ public class JeroMQAsyncOperation implements AsyncOperation {
         cancelTimer.schedule(this::cancel, time, timeUnit);
     }
 
+    /**
+     * Called when the connection is acquired. If the operation is still in a suitable state, this will return true
+     * incicating that the operation may proceed. This is only valid if the current state is
+     * {@link State#CONNECTION_PENDING}. For any other state, this will return false indicating that the connection
+     * has already finished or is in the process of being canceled.
+     *
+     * @param connection the connection that was acquired
+     * @return true if the operation may proceed.
+     */
     public boolean acquire(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
-        return state.compareAndSet(State.CONNECTION_PENDING, State.CONNECTION_ACQUIRED);
+        final var pending = new ConnectionState(CONNECTION_PENDING, null);
+        return state.compareAndSet(pending, pending.update(CONNECTION_ACQUIRED, connection));
     }
 
     public enum State {
@@ -68,24 +87,25 @@ public class JeroMQAsyncOperation implements AsyncOperation {
         CONNECTION_PENDING,
 
         /**
-         * Indicates that the operation is acquiring a
+         * Indicates that the operation has acquired a connection and we are waiting for the operation to finish.
          */
         CONNECTION_ACQUIRED,
 
         /**
-         * Indicates that the operation is pending cancelation.
+         * Indicates that the operation is pending cancellation, but the cancellation has not taken place.
          */
-        CANCEL_PENDING,
+        CANCELLATION_PENDING,
 
         /**
-         * Indicates that the invocation has been canceled successfully.
+         * Indicates that the invocation has been canceled successfully. This is a terminal state. Once in this state
+         * no other state changes may happen.
          */
         CANCELED,
 
         /**
-         * Indicates that the invocation has finished with or without errors.
+         * Indicates that the invocation has finished and the connection has been returned to the connection pool.
          */
-        FINISHED,
+        FINISHED
 
     }
 
@@ -105,22 +125,52 @@ public class JeroMQAsyncOperation implements AsyncOperation {
             this.connection = connection;
         }
 
-        private ConnectionState clear() {
-            return new ConnectionState(state, null);
-        }
-
         private ConnectionState update(final State state) {
             return new ConnectionState(state, connection);
         }
 
-        public ConnectionState cancel() {
-            return new ConnectionState(State.CANCELED, connection);
+        private ConnectionState update(final State state, final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            return new ConnectionState(state, connection);
         }
 
-        public void process() {
-
+        private void process() {
+            switch (state) {
+                case FINISHED:
+                    break;
+                case CANCELLATION_PENDING:
+                    destroy();
+                    break;
+                default:
+                    logger.debug("No action needed for state {}", state);
+            }
         }
-                                    
+
+        private void destroy() {
+            connection.signal(zContextSocketAsyncConnection -> {
+
+                final var expected = new ConnectionState(CANCELLATION_PENDING, null);
+
+                if (!JeroMQAsyncOperation.this.state.compareAndSet(expected, expected.update(CANCELED))) {
+                    logger.error("Expected state {} but got {} instead.", CANCELLATION_PENDING, CANCELED);
+                }
+
+                zContextSocketAsyncConnection.close();
+
+            });
+        }
+
+        public boolean equals(Object object) {
+            if (this == object) return true;
+            if (object == null || getClass() != object.getClass()) return false;
+            if (!super.equals(object)) return false;
+            ConnectionState that = (ConnectionState) object;
+            return state == that.state;
+        }
+
+        public int hashCode() {
+            return java.util.Objects.hash(super.hashCode(), state);
+        }
+
     }
 
 }
