@@ -9,7 +9,9 @@ import com.namazustudios.socialengine.rt.transact.PessimisticLocking;
 import com.namazustudios.socialengine.rt.transact.TransactionConflictException;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Transaction;
+import jetbrains.exodus.vfs.VirtualFileSystem;
 
+import java.io.IOException;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.ArrayList;
@@ -30,6 +32,7 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
             final NodeId nodeId,
             final long blockSize,
             final XodusResourceStores stores,
+            final VirtualFileSystem virtualFileSystem,
             final Transaction transaction,
             final PessimisticLocking pessimisticLocking) {
 
@@ -42,6 +45,7 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
             nodeId,
             blockSize,
             stores,
+            virtualFileSystem,
             transaction,
             pessimisticLocking);
 
@@ -73,12 +77,12 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
     }
 
     @Override
-    public WritableByteChannel saveNewResource(Path path, ResourceId resourceId) throws TransactionConflictException {
+    public WritableByteChannel saveNewResource(Path path, ResourceId resourceId) throws TransactionConflictException, IOException {
         return getXodusReadWriteTransaction().saveNewResource(path, resourceId);
     }
 
     @Override
-    public WritableByteChannel updateResource(ResourceId resourceId) throws TransactionConflictException {
+    public WritableByteChannel updateResource(ResourceId resourceId) throws TransactionConflictException, IOException {
         return getXodusReadWriteTransaction().updateResource(resourceId);
     }
 

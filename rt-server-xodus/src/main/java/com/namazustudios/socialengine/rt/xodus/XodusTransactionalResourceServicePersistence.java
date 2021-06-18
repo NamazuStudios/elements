@@ -1,23 +1,18 @@
 package com.namazustudios.socialengine.rt.xodus;
-
 import com.namazustudios.socialengine.rt.Persistence;
-import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.*;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Transaction;
+import jetbrains.exodus.vfs.VirtualFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
-
-import static com.namazustudios.socialengine.rt.xodus.XodusResourceStores.create;
 
 public class XodusTransactionalResourceServicePersistence implements Persistence, TransactionalResourceServicePersistence {
 
@@ -33,18 +28,16 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
 
     private long blockSize;
 
-    private String resourceEnvironmentPath;
-
     private Provider<Environment> environmentProvider;
 
     private PessimisticLockingMaster pessimisticLockingMaster;
 
-    private final AtomicReference<Environment> environment = new AtomicReference<>();
+    private final AtomicReference<EnvironmentContext> environment = new AtomicReference<>();
 
     @Override
     public void start() {
 
-        final var environment = getEnvironmentProvider().get();
+        final var environment = new EnvironmentContext();
 
         if (this.environment.compareAndSet(null, environment)) {
             logger.info("Started Environment");
@@ -56,8 +49,8 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
 
     }
 
-    private void setup(final Environment environment) {
-        environment.executeInExclusiveTransaction(XodusResourceStores::create);
+    private void setup(final EnvironmentContext environmentContext) {
+        environmentContext.environment.executeInExclusiveTransaction(XodusResourceStores::create);
     }
 
     @Override
@@ -76,33 +69,45 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
 
     @Override
     public ReadOnlyTransaction openRO(final NodeId nodeId) {
-        final var environment = getEnvironment();
+
+        final var environmentContext = getEnvironmentContext();
+        final var environment = environmentContext.environment;
+
         return open(environment::beginReadonlyTransaction, txn -> {
-            final var stores = new XodusResourceStores(txn, environment);
-            return new XodusReadOnlyTransaction(nodeId, stores, txn);
+
+            final var stores = new XodusResourceStores(txn, environmentContext.environment);
+
+            return new XodusReadOnlyTransaction(nodeId, stores, environmentContext.virtualFileSystem, txn);
         });
     }
 
     @Override
     public ReadWriteTransaction openRW(final NodeId nodeId) {
-        final var environment = getEnvironment();
+
+        final var environment = getEnvironmentContext().environment;
+
         return open(environment::beginTransaction, txn -> {
-            final var stores = new XodusResourceStores(txn, environment);
+
+            final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
             final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
-            return new XodusReadWriteTransaction(nodeId, getBlockSize(), stores, txn, pessimisticLocking);
+
+            return new XodusReadWriteTransaction(nodeId, getBlockSize(), stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
         });
     }
-
     @Override
     public ExclusiveReadWriteTransaction openExclusiveRW(NodeId nodeId) {
-        final var environment = getEnvironment();
+
+        final var environment = getEnvironmentContext().environment;
+
         return open(environment::beginExclusiveTransaction, txn -> {
-            final var stores = new XodusResourceStores(txn, environment);
+
+            final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
             final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
-            return new XodusExclusiveReadWriteTransaction(nodeId, getBlockSize(), stores, txn, pessimisticLocking);
+
+            return new XodusExclusiveReadWriteTransaction(nodeId, getBlockSize(), stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
+
         });
     }
-
     private <T extends ReadOnlyTransaction> T open(final Supplier<Transaction> xodusTransactionSupplier,
                                                    final Function<Transaction, T> persistenceTransactionSupplier) {
 
@@ -115,17 +120,19 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
             logger.error("Could not open transaction.", ex);
             throw ex;
         }
-
     }
 
     public long getBlockSize() {
         return blockSize;
     }
 
-    private Environment getEnvironment() {
-        final var environment = this.environment.get();
-        if (environment == null) throw new IllegalStateException("Persistence not running.");
-        return environment;
+    private EnvironmentContext getEnvironmentContext() {
+
+        final var environmentContext = this.environment.get();
+
+        if (environmentContext == null) throw new IllegalStateException("Persistence not running.");
+
+        return environmentContext;
     }
 
     @Inject
@@ -142,7 +149,6 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
         this.environmentProvider = environmentProvider;
     }
 
-
     public PessimisticLockingMaster getPessimisticLockingMaster() {
         return pessimisticLockingMaster;
     }
@@ -152,4 +158,16 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
         this.pessimisticLockingMaster = pessimisticLockingMaster;
     }
 
+    private class EnvironmentContext implements AutoCloseable {
+
+        private final Environment environment = getEnvironmentProvider().get();
+
+        private final VirtualFileSystem virtualFileSystem = new VirtualFileSystem(environment);
+
+        @Override
+        public void close() {
+            virtualFileSystem.shutdown();
+            environment.close();
+        }
+    }
 }

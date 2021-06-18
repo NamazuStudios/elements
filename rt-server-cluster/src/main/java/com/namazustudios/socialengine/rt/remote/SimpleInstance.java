@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.AsyncConnectionService;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,8 @@ import java.util.List;
 import java.util.function.Consumer;
 
 public class SimpleInstance implements Instance {
+
+    private static final ShutdownHooks hooks = new ShutdownHooks(SimpleInstance.class);
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleInstance.class);
 
@@ -29,6 +32,8 @@ public class SimpleInstance implements Instance {
     public void start() {
 
         final List<Exception> exceptionList = new ArrayList<>();
+
+        hooks.add(this::close);
 
         try {
             logger.debug("Starting async connection service. Instance ID {}", instanceId);
