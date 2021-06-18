@@ -101,7 +101,7 @@ public class TestDefaultRoutingStrategy extends BaseRoutingStrategyTest {
         assertNull(result);
 
         verify(mockRemoteInvoker, times(1))
-            .invokeAsyncV(eq(invocation), eq(asyncConsumers), eq(invocationErrorConsumer));
+            .invokeAsync(eq(invocation), eq(asyncConsumers), eq(invocationErrorConsumer));
 
     }
 
