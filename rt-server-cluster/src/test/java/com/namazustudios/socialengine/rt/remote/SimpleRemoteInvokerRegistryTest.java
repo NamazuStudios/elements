@@ -157,19 +157,18 @@ public class SimpleRemoteInvokerRegistryTest {
         // the remote invoker only knows based on connect address, we ensure that the remotes invoker was connected
         // to the correct address based on our own mock addressing scheme.
         mockApplicationIds.forEach(a -> {
-            final NodeId nodeId = forInstanceAndApplication(best, a);
-            final String addr = prefix + nodeId.asString();
-            final PriorityRemoteInvoker priorityRemoteInvoker = (PriorityRemoteInvoker) getRemoteInvokerRegistry().getBestRemoteInvoker(a);
-            verify(priorityRemoteInvoker.getDelegate(), times(1)).start(eq(addr));
+            final var nodeId = forInstanceAndApplication(best, a);
+            final var addr = prefix + nodeId.asString();
+            final var remoteInvoker = getRemoteInvokerRegistry().getBestRemoteInvoker(a);
+            verify(remoteInvoker, times(1)).start(eq(addr));
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
         mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokers(aid).forEach(ri -> {
 
             final NodeId nodeId = forInstanceAndApplication(iid, aid);
-            final RemoteInvoker mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
-            final PriorityRemoteInvoker priorityRemoteInvoker = (PriorityRemoteInvoker)ri;
-            if (priorityRemoteInvoker.getDelegate() != mockRemoteInvoker) return;
+            final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
+            if (ri != mockRemoteInvoker) return;
 
             final String addr = prefix + nodeId.asString();
             verify(mockRemoteInvoker, times(1)).start(eq(addr));
@@ -319,19 +318,19 @@ public class SimpleRemoteInvokerRegistryTest {
         // the remote invoker only knows based on connect address, we ensure that the remotes invoker was connected
         // to the correct address based on our own mock addressing scheme.
         mockApplicationIds.forEach(a -> {
-            final NodeId nodeId = forInstanceAndApplication(best, a);
-            final String addr = prefix + nodeId.asString();
-            final PriorityRemoteInvoker priorityRemoteInvoker = (PriorityRemoteInvoker) getRemoteInvokerRegistry().getBestRemoteInvoker(a);
-            verify(priorityRemoteInvoker.getDelegate(), times(1)).start(eq(addr));
+            final var nodeId = forInstanceAndApplication(best, a);
+            final var addr = prefix + nodeId.asString();
+            final var remoteInvoker = getRemoteInvokerRegistry().getBestRemoteInvoker(a);
+            verify(remoteInvoker, times(1)).start(eq(addr));
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
         mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokers(aid).forEach(ri -> {
 
-            final NodeId nodeId = forInstanceAndApplication(iid, aid);
-            final RemoteInvoker mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
-            final PriorityRemoteInvoker priorityRemoteInvoker = (PriorityRemoteInvoker)ri;
-            if (priorityRemoteInvoker.getDelegate() != mockRemoteInvoker) return;
+            final var nodeId = forInstanceAndApplication(iid, aid);
+            final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
+            final var remoteInvoker = ri;
+            if (remoteInvoker != mockRemoteInvoker) return;
 
             final String addr = prefix + nodeId.asString();
             verify(mockRemoteInvoker, times(1)).start(eq(addr));
@@ -478,19 +477,19 @@ public class SimpleRemoteInvokerRegistryTest {
         // the remote invoker only knows based on connect address, we ensure that the remotes invoker was connected
         // to the correct address based on our own mock addressing scheme.
         mockApplicationIds.forEach(a -> {
-            final NodeId nodeId = forInstanceAndApplication(best, a);
-            final String addr = prefix + nodeId.asString();
-            final PriorityRemoteInvoker priorityRemoteInvoker = (PriorityRemoteInvoker) getRemoteInvokerRegistry().getBestRemoteInvoker(a);
-            verify(priorityRemoteInvoker.getDelegate(), times(1)).start(eq(addr));
+            final var nodeId = forInstanceAndApplication(best, a);
+            final var addr = prefix + nodeId.asString();
+            final var remoteInvoker = getRemoteInvokerRegistry().getBestRemoteInvoker(a);
+            verify(remoteInvoker, times(1)).start(eq(addr));
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
         mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokers(aid).forEach(ri -> {
 
-            final NodeId nodeId = forInstanceAndApplication(iid, aid);
-            final RemoteInvoker mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
-            final PriorityRemoteInvoker priorityRemoteInvoker = (PriorityRemoteInvoker)ri;
-            if (priorityRemoteInvoker.getDelegate() != mockRemoteInvoker) return;
+            final var nodeId = forInstanceAndApplication(iid, aid);
+            final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
+            final var remoteInvoker = ri;
+            if (remoteInvoker != mockRemoteInvoker) return;
 
             final String addr = prefix + nodeId.asString();
             verify(mockRemoteInvoker, times(1)).start(eq(addr));
