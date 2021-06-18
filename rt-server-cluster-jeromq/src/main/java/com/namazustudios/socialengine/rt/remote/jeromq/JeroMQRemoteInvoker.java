@@ -14,12 +14,14 @@ import org.zeromq.ZMQ;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQAsyncOperation.State.CONNECTION_ACQUIRED;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.zeromq.SocketType.DEALER;
@@ -87,13 +89,17 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final var asyncOperation = new JeroMQAsyncOperation(getPool());
+        final var asyncOperation = new JeroMQAsyncOperation();
 
         final var mdcContext = MDC.getCopyOfContextMap();
 
         getPool().acquireNextAvailableConnection(connection -> {
 
-            if (asyncOperation.acquire(connection)) {
+            final var cs = asyncOperation.acquire(connection);
+
+            if (CONNECTION_ACQUIRED.equals(cs.getState())) {
+
+                // We proceed because the operation still indicates we should acquire the connection.
 
                 final var jeroMQInvocation = new JeroMQRemoteInvocation(
                         asyncOperation,
@@ -111,8 +117,14 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
                 logger.debug("Sending {} asynchronously.", jeroMQInvocation);
 
             } else {
-                logger.debug("Canceled {} before connection assignment. Recycling.", invocation);
+
+                // We put it back in the pool because we were requested a cancellation before the connection was ever
+                // assigned to to this invocation.
+
                 connection.recycle();
+                asyncInvocationErrorConsumer.accept(cs.getInvocationError());
+                logger.debug("Canceled {} before connection assignment. Recycling.", invocation);
+
             }
 
         });
@@ -128,34 +140,54 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         final var ref = new AtomicReference<>();
-        final var asyncOperation = new JeroMQAsyncOperation(getPool());
+        final var asyncOperation = new JeroMQAsyncOperation();
 
         final var mdcContext = MDC.getCopyOfContextMap();
         final var completableFuture = new CompletableFuture<>() {
+
             @Override
             public String toString() {
                 return format("%s<Object> {%s}", CompletableFuture.class.getSimpleName(), ref.get());
             }
-        };
+
+        }.exceptionally(throwable -> {
+
+            if (throwable instanceof CancellationException) {
+                asyncOperation.cancel();
+            }
+
+            return throwable;
+
+        });
 
         getPool().acquireNextAvailableConnection(connection -> {
 
             ref.set(connection);
 
-            final var jeroMQInvocation = new JeroMQRemoteInvocation(
-                asyncOperation,
-                connection,
-                invocation,
-                getPayloadReader(),
-                getPayloadWriter(),
-                mdcContext,
-                completableFuture::complete,
-                completableFuture::completeExceptionally,
-                asyncInvocationResultConsumerList,
-                asyncInvocationErrorConsumer
-            );
+            final var cs = asyncOperation.acquire(connection);
 
-            logger.debug("Sending {} asynchronously.", jeroMQInvocation);
+            if (CONNECTION_ACQUIRED.equals(cs.getState())) {
+
+                final var jeroMQInvocation = new JeroMQRemoteInvocation(
+                        asyncOperation,
+                        connection,
+                        invocation,
+                        getPayloadReader(),
+                        getPayloadWriter(),
+                        mdcContext,
+                        completableFuture::complete,
+                        completableFuture::completeExceptionally,
+                        asyncInvocationResultConsumerList,
+                        asyncInvocationErrorConsumer
+                );
+
+                logger.debug("Sending {} asynchronously.", jeroMQInvocation);
+
+            } else {
+                connection.recycle();
+                logger.debug("Canceled {} before connection assignment. Recycling.", invocation);
+                completableFuture.completeExceptionally(cs.getError());
+            }
 
         });
 

@@ -52,6 +52,11 @@
             <artifactId>xodus-environment</artifactId>
             <version>${xodus.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.jetbrains.xodus</groupId>
+            <artifactId>xodus-vfs</artifactId>
+            <version>${xodus.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

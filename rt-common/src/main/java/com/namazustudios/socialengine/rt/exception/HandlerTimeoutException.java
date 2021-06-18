@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.exception;
 
 import com.namazustudios.socialengine.rt.ResponseCode;
 
+import static com.namazustudios.socialengine.rt.ResponseCode.HANDLER_TIMEOUT;
+
 public class HandlerTimeoutException extends BaseException {
 
     public HandlerTimeoutException() {}
@@ -24,6 +26,7 @@ public class HandlerTimeoutException extends BaseException {
 
     @Override
     public ResponseCode getResponseCode() {
-        return null;
+        return HANDLER_TIMEOUT;
     }
+
 }

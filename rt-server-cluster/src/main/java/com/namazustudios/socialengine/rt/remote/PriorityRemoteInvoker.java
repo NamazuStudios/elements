@@ -88,6 +88,15 @@ class PriorityRemoteInvoker implements RemoteInvoker, Comparable<PriorityRemoteI
         return Double.compare(priority, other.priority);
     }
 
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("PriorityRemoteInvoker{");
+        sb.append("priority=").append(priority);
+        sb.append(", delegate=").append(delegate);
+        sb.append('}');
+        return sb.toString();
+    }
+
     public RemoteInvoker getDelegate() {
         return delegate;
     }

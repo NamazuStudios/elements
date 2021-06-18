@@ -24,9 +24,21 @@ public interface AsyncOperation {
     /**
      * Sets the operation to automatically cancel after the supplied time has elapsed.
      *
-     * @param time
-     * @param timeUnit
+     * @param time the time to wait
+     * @param timeUnit the time unit to wait
      */
     void timeout(long time, TimeUnit timeUnit);
+
+    /**
+     * Used as a default return value when implementing methods that return an instance of {@link AsyncOperation}.
+     */
+    AsyncOperation DEFAULT = new AsyncOperation() {
+
+        @Override
+        public void cancel() {}
+
+        @Override
+        public void timeout(long time, TimeUnit timeUnit) {}
+    };
 
 }

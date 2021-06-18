@@ -27,6 +27,7 @@ import java.util.function.Consumer;
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQAsyncOperation.State.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.stripCode;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static org.zeromq.ZMQ.SNDMORE;
@@ -97,6 +98,7 @@ public class JeroMQRemoteInvocation {
 
         subscriptions = Subscription.begin()
             .chain(connection.onRead(this::handleRead))
+            .chain(connection.onClose(this::handleClose))
             .chain(connection.onError(this::handleSocketError))
             .chain(connection.onWrite(this::handleWrite));
 
@@ -114,11 +116,31 @@ public class JeroMQRemoteInvocation {
             handleResponse(msg);
 
             if (asyncCompleted && syncCompleted) {
-                logger.debug("Finished Invocation.");
-                asyncOperation.finish();
+
+                final var cs = asyncOperation.requestFinish();
+
+                if (FINISH_PENDING.equals(cs.getState())) {
+                    // We finished with the happy path. The connection is finished and we will simply.
+                    // set the state and ignore any potential errors at this point
+                    logger.debug("Finished Invocation.");
+                    asyncOperation.finish();
+                } else {
+                    // We did not successfully finish the connection because a cancellation request beat us
+                    // to the punch. Therefore we send the cancellation error. However, as the connection has
+                    // completed we just drive the error on our end.
+                    logger.debug("Invocation cancelled at finish time.");
+                    asyncInvocationErrorConsumer.accept(cs.getInvocationError());
+                }
+
+                // In any case the connection is in a valid state and we can return it to the pool. The remote
+                // end did its job and this invocation is finished and can be unsubscribed and returned to the
+                // pool without any issues.
+
+                connection.recycle();
                 logger.debug("Recycled Connection.");
                 subscriptions.unsubscribe();
                 logger.debug("Unsubscribed Events.");
+
             }
 
         } catch (Exception ex) {
@@ -131,12 +153,32 @@ public class JeroMQRemoteInvocation {
 
             logger.error("Caught error running remote invocation.", ex);
 
-            final InvocationError invocationError = new InvocationError();
-            invocationError.setThrowable(ex);
+            final var cs = asyncOperation.requestFinish();
 
-            // We drive the exception to both places appropriately.
-            syncErrorConsumer.accept(ex);
-            asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
+            if (FINISH_PENDING.equals(cs.getState())) {
+
+                // We finished with the happy path. The connection is finished and we will simply.
+                // set the state and ignore any potential errors at this point
+
+                final InvocationError invocationError = new InvocationError();
+                invocationError.setThrowable(ex);
+
+                // We drive the exception to both places appropriately.
+                syncErrorConsumer.accept(ex);
+                asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
+
+                asyncOperation.finish();
+
+            } else {
+
+                // We did not successfully finish the connection because a cancellation request beat us
+                // to the punch. Therefore we send the cancellation error. However, as the connection has
+                // completed we just drive the error on our end.
+
+                syncErrorConsumer.accept(cs.getError());
+                asyncInvocationErrorConsumer.acceptAndLogError(logger, cs.getInvocationError());
+
+            }
 
             // Cautiously we should nuke this connection because it could be placed into an undefined state.
             subscriptions.unsubscribe();
@@ -332,15 +374,38 @@ public class JeroMQRemoteInvocation {
         }
     }
 
+    private void handleClose(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+
+        if (mdcContext != null) MDC.setContextMap(mdcContext);
+
+        final var cs = asyncOperation.finishCancellation();
+
+        if (CANCELED.equals(cs.getState())) {
+            syncErrorConsumer.accept(cs.getError());
+            asyncInvocationErrorConsumer.acceptAndLogError(logger, cs.getInvocationError());
+        }
+
+    }
+
     private void handleSocketError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
 
         if (mdcContext != null) MDC.setContextMap(mdcContext);
 
-        final int errno = connection.socket().errno();
-        final InternalException ex = new InternalException("Socket error - errno " + errno);
-        final InvocationError invocationError = new InvocationError();
-        invocationError.setThrowable(ex);
-        asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
+        final var cs = asyncOperation.requestFinish();
+
+        if (CANCELED.equals(cs.getState()) || CANCELLATION_PENDING.equals(cs.getState())) {
+            // We know the operation was canceled.
+            syncErrorConsumer.accept(cs.getError());
+            asyncInvocationErrorConsumer.acceptAndLogError(logger, cs.getInvocationError());
+        } else {
+            final int errno = connection.socket().errno();
+            final var ex = new InternalException("Socket error - errno " + errno);
+            final var invocationError = new InvocationError();
+            invocationError.setThrowable(ex);
+            syncErrorConsumer.accept(ex);
+            asyncInvocationErrorConsumer.acceptAndLogError(logger, invocationError);
+        }
+
         asyncOperation.finish();
         subscriptions.unsubscribe();
 

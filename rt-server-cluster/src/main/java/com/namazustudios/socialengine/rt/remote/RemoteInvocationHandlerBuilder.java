@@ -214,12 +214,14 @@ public class RemoteInvocationHandlerBuilder {
             case SYNCHRONOUS:
                 return (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
             case ASYNCHRONOUS:
-                return (r, i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae);
+                return isAsyncMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
+                                         (r, i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae);
             case FUTURE:
                 return (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae);
             case HYBRID:
             case CONSUMER:
-                return isVoidMethod()   ? (r, i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae) :
+                return isAsyncMethod() ?  (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae)  :
+                       isVoidMethod()   ? (r, i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae) :
                        isFutureMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae) :
                                           (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
             default:
@@ -236,7 +238,8 @@ public class RemoteInvocationHandlerBuilder {
             case SYNCHRONOUS:
                 return remoteInvocationDispatcher::invokeSync;
             case ASYNCHRONOUS:
-                return remoteInvocationDispatcher::invokeAsyncV;
+                return isAsyncMethod() ? remoteInvocationDispatcher::invokeAsync :
+                                         remoteInvocationDispatcher::invokeAsyncV;
             case FUTURE:
                 return remoteInvocationDispatcher::invokeFuture;
             case HYBRID:

@@ -68,6 +68,19 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
+    public Map<NodeId, RemoteInvoker> getInvokersByNode() {
+
+        final var lock = readWriteLock.readLock();
+
+        try {
+            lock.lock();
+            return new TreeMap<>(storage.invokersByNode);
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
     public void clear() {
 
         final Storage old;
