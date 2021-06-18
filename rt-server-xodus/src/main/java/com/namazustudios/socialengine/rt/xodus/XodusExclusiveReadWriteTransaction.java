@@ -30,7 +30,6 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
 
     public XodusExclusiveReadWriteTransaction(
             final NodeId nodeId,
-            final long blockSize,
             final XodusResourceStores stores,
             final VirtualFileSystem virtualFileSystem,
             final Transaction transaction,
@@ -43,7 +42,6 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
         this.xodusResourceStores = stores;
         this.xodusReadWriteTransaction = new XodusReadWriteTransaction(
             nodeId,
-            blockSize,
             stores,
             virtualFileSystem,
             transaction,

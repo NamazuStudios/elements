@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.util.*;
@@ -579,7 +578,6 @@ public class TransactionalResourceService implements ResourceService {
         }
 
         private TransactionalResource loadTransactionalResource(final ResourceId resourceId) {
-
             try (final ReadableByteChannel rbc = txn.loadResourceContents(resourceId)) {
 
                 final Resource resource = getResourceLoader().load(rbc, false);

@@ -26,8 +26,6 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
 
     public static final long DEFAULT_RESOURCE_BLOCK_SIZE = 4096L;
 
-    private long blockSize;
-
     private Provider<Environment> environmentProvider;
 
     private PessimisticLockingMaster pessimisticLockingMaster;
@@ -91,7 +89,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
             final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
             final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
 
-            return new XodusReadWriteTransaction(nodeId, getBlockSize(), stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
+            return new XodusReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
         });
     }
     @Override
@@ -104,7 +102,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
             final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
             final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
 
-            return new XodusExclusiveReadWriteTransaction(nodeId, getBlockSize(), stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
+            return new XodusExclusiveReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
 
         });
     }
@@ -122,10 +120,6 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
         }
     }
 
-    public long getBlockSize() {
-        return blockSize;
-    }
-
     private EnvironmentContext getEnvironmentContext() {
 
         final var environmentContext = this.environment.get();
@@ -133,11 +127,6 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
         if (environmentContext == null) throw new IllegalStateException("Persistence not running.");
 
         return environmentContext;
-    }
-
-    @Inject
-    public void setBlockSize(@Named(RESOURCE_BLOCK_SIZE) long blockSize) {
-        this.blockSize = blockSize;
     }
 
     public Provider<Environment> getEnvironmentProvider() {

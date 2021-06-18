@@ -48,7 +48,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
     public XodusReadWriteTransaction(
             final NodeId nodeId,
-            final long blockSize,
             final XodusResourceStores stores,
             final VirtualFileSystem virtualFileSystem,
             final Transaction transaction,
@@ -96,14 +95,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         }
 
         getPessimisticLocking().lock(resourceId);
-
-//        final var deletedFile = virtualFileSystem.deleteFile(getTransaction(), resourceId.toString());
-//
-//        if (deletedFile != null) {
-//            logger.debug("Deleted file for {}", resourceId);
-//        } else {
-//            logger.debug("No file found when deleting {}", resourceId);
-//        }
 
         return new BlockWritableChannel(resourceId);
 
