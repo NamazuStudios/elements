@@ -217,10 +217,10 @@ class RemoteInvokerRegistrySnapshot {
 
         private void remove(final NodeId nodeId) {
 
-            final RemoteInvoker removed = invokersByNode.remove(nodeId);
+            final var removed = invokersByNode.remove(nodeId);
 
             if (removed != null) {
-                final List<RemoteInvoker> remoteInvokers = invokersByApplication.get(nodeId.getApplicationId());
+                final var remoteInvokers = invokersByApplication.get(nodeId.getApplicationId());
                 remoteInvokers.removeIf(ri -> ((PriorityRemoteInvoker)ri).getDelegate() == removed);
             }
 

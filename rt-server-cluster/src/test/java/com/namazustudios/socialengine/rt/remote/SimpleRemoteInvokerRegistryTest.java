@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.rt.InstanceMetadata;
 import com.namazustudios.socialengine.rt.InstanceMetadataContext;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -14,6 +15,7 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import java.util.*;
 import java.util.concurrent.CountDownLatch;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
@@ -95,8 +97,19 @@ public class SimpleRemoteInvokerRegistryTest {
             when(mockInstanceConnection.getInstanceId()).thenReturn(instanceId);
             when(mockInstanceConnection.getInstanceMetadataContext()).thenReturn(mockInstanceMetadataContext);
 
+            when(mockInstanceMetadataContext.getInstanceMetadataAsync(any(), any())).thenAnswer(i -> {
+                final Consumer<InstanceMetadata> instanceMetadataConsumer = i.getArgument(0);
+                final Consumer<Throwable> failure = i.getArgument(0);
+                final InstanceMetadata instanceMetadata = new InstanceMetadata();
+                instanceMetadata.setQuality(load);
+                instanceMetadata.setNodeIds(nodeIdSet);
+                instanceMetadataConsumer.accept(instanceMetadata);
+                return mock(AsyncOperation.class);
+            });
+
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
             when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
+
             nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
 
             mockLoadMap.put(instanceId, load);
@@ -187,8 +200,7 @@ public class SimpleRemoteInvokerRegistryTest {
 
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getNodeIds();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceQuality();
+            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceMetadataAsync(any(), any());
 
             mockApplicationIds.forEach(a -> {
                 final NodeId nodeId = forInstanceAndApplication(instanceId, a);
@@ -269,6 +281,16 @@ public class SimpleRemoteInvokerRegistryTest {
             when(mockInstanceConnection.getInstanceId()).thenReturn(instanceId);
             when(mockInstanceConnection.getInstanceMetadataContext()).thenReturn(mockInstanceMetadataContext);
 
+            when(mockInstanceMetadataContext.getInstanceMetadataAsync(any(), any())).thenAnswer(inv -> {
+                final Consumer<InstanceMetadata> instanceMetadataConsumer = inv.getArgument(0);
+                final Consumer<Throwable> failure = inv.getArgument(0);
+                final InstanceMetadata instanceMetadata = new InstanceMetadata();
+                instanceMetadata.setQuality(load);
+                instanceMetadata.setNodeIds(nodeIdSet);
+                instanceMetadataConsumer.accept(instanceMetadata);
+                return mock(AsyncOperation.class);
+            });
+
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
             when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
             nodeIdSet.forEach(nid -> when(mockInstanceConnection.openRouteToNode(eq(nid))).thenReturn(prefix + nid.asString()));
@@ -338,8 +360,7 @@ public class SimpleRemoteInvokerRegistryTest {
 
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getNodeIds();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceQuality();
+            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceMetadataAsync(any(), any());
 
             mockApplicationIds.forEach(a -> {
                 final NodeId nodeId = forInstanceAndApplication(instanceId, a);
@@ -395,6 +416,16 @@ public class SimpleRemoteInvokerRegistryTest {
 
             when(mockInstanceConnection.getInstanceId()).thenReturn(instanceId);
             when(mockInstanceConnection.getInstanceMetadataContext()).thenReturn(mockInstanceMetadataContext);
+
+            when(mockInstanceMetadataContext.getInstanceMetadataAsync(any(), any())).thenAnswer(inv -> {
+                final Consumer<InstanceMetadata> instanceMetadataConsumer = inv.getArgument(0);
+                final Consumer<Throwable> failure = inv.getArgument(0);
+                final InstanceMetadata instanceMetadata = new InstanceMetadata();
+                instanceMetadata.setQuality(load);
+                instanceMetadata.setNodeIds(nodeIdSet);
+                instanceMetadataConsumer.accept(instanceMetadata);
+                return mock(AsyncOperation.class);
+            });
 
             when(mockInstanceMetadataContext.getNodeIds()).thenReturn(nodeIdSet);
             when(mockInstanceMetadataContext.getInstanceQuality()).thenReturn(load);
@@ -498,8 +529,7 @@ public class SimpleRemoteInvokerRegistryTest {
 
             verify(c, atLeastOnce()).getInstanceId();
             verify(c, atLeastOnce()).getInstanceMetadataContext();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getNodeIds();
-            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceQuality();
+            verify(c.getInstanceMetadataContext(), atLeastOnce()).getInstanceMetadataAsync(any(), any());
 
             mockApplicationIds.forEach(a -> {
                 final NodeId nodeId = forInstanceAndApplication(instanceId, a);
