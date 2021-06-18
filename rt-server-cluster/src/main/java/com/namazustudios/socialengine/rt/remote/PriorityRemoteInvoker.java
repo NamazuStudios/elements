@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.id.NodeId;
+
 import java.util.List;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
@@ -8,11 +10,14 @@ import java.util.function.Consumer;
 
 class PriorityRemoteInvoker implements RemoteInvoker, Comparable<PriorityRemoteInvoker> {
 
+    private final NodeId nodeId;
+
     private final double priority;
 
     private final RemoteInvoker delegate;
 
-    public PriorityRemoteInvoker(final RemoteInvoker delegate, final double priority) {
+    public PriorityRemoteInvoker(final RemoteInvoker delegate, final NodeId nodeId, final double priority) {
+        this.nodeId = nodeId;
         this.priority = priority;
         this.delegate = delegate;
     }
@@ -97,8 +102,24 @@ class PriorityRemoteInvoker implements RemoteInvoker, Comparable<PriorityRemoteI
         return sb.toString();
     }
 
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+
+    public double getPriority() {
+        return priority;
+    }
+
     public RemoteInvoker getDelegate() {
         return delegate;
+    }
+
+    public boolean isSameDelegate(final PriorityRemoteInvoker other) {
+        return delegate == other.delegate;
+    }
+
+    public PriorityRemoteInvoker reprioritize(final double quality) {
+        return new PriorityRemoteInvoker(delegate, nodeId, quality);
     }
 
 }

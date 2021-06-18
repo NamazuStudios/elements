@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.google.common.collect.Comparators;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -44,7 +43,7 @@ class RemoteInvokerRegistrySnapshot {
 
         try {
             lock.lock();
-            final List<RemoteInvoker> byLoad = storage.invokersByApplication.get(applicationId);
+            final List<PriorityRemoteInvoker> byLoad = storage.invokersByApplication.get(applicationId);
             if (byLoad == null || byLoad.isEmpty()) throw new NodeNotFoundException("Unknown Application: " + applicationId);
             return byLoad.get(0);
         } finally {
@@ -59,7 +58,7 @@ class RemoteInvokerRegistrySnapshot {
 
         try {
             lock.lock();
-            final List<RemoteInvoker> byLoad = storage.invokersByApplication.get(applicationId);
+            final List<PriorityRemoteInvoker> byLoad = storage.invokersByApplication.get(applicationId);
             if (byLoad == null || byLoad.isEmpty()) throw new NodeNotFoundException("Unknown Application: " + applicationId);
             return Collections.unmodifiableList(byLoad);
         } finally {
@@ -185,46 +184,43 @@ class RemoteInvokerRegistrySnapshot {
 
         private final Set<RemoteInvoker> invokersToPurge = new HashSet<>();
 
-        private final Map<NodeId, RemoteInvoker> invokersByNode = new HashMap<>();
+        private final Map<NodeId, PriorityRemoteInvoker> invokersByNode = new HashMap<>();
 
-        private final Map<ApplicationId, List<RemoteInvoker>> invokersByApplication = new HashMap<>();
+        private final Map<ApplicationId, List<PriorityRemoteInvoker>> invokersByApplication = new HashMap<>();
 
-        private void add(final NodeId nodeId, final double load,
+        private void add(final NodeId nodeId, final double quality,
                          final Supplier<RemoteInvoker> remoteInvokerSupplier) {
 
-            RemoteInvoker invoker = invokersByNode.get(nodeId);
-
-            if (invoker == null) {
-                invoker = remoteInvokerSupplier.get();
-                invokersByNode.put(nodeId, invoker);
-            }
-
-            final ApplicationId applicationId = nodeId.getApplicationId();
-
-            final List<RemoteInvoker> remoteInvokerList = invokersByApplication
-                .computeIfAbsent(applicationId, nid -> new ArrayList<>());
-
-            final PriorityRemoteInvoker update = new PriorityRemoteInvoker(invoker, load);
-
-            remoteInvokerList.removeIf(ri -> {
-                final PriorityRemoteInvoker pri = (PriorityRemoteInvoker)ri;
-                return pri.getDelegate() == update.getDelegate();
+            final var invoker = invokersByNode.compute(nodeId, (nid, pri) -> {
+                if (pri == null) {
+                    return new PriorityRemoteInvoker(remoteInvokerSupplier.get(), nodeId, quality);
+                } else {
+                    return pri.reprioritize(quality);
+                }
             });
 
-            remoteInvokerList.add(update);
+            final var applicationId = nodeId.getApplicationId();
+            final var remoteInvokerList = invokersByApplication.computeIfAbsent(applicationId, nid -> new ArrayList<>());
+
+            remoteInvokerList.add(invoker);
+            remoteInvokerList.removeIf(priorityRemoteInvoker -> priorityRemoteInvoker.isSameDelegate(invoker));
 
         }
 
         private void remove(final NodeId nodeId) {
 
             final var removed = invokersByNode.remove(nodeId);
+            invokersToPurge.add(removed.getDelegate());
 
-            if (removed != null) {
-                final var remoteInvokers = invokersByApplication.get(nodeId.getApplicationId());
-                remoteInvokers.removeIf(ri -> ((PriorityRemoteInvoker)ri).getDelegate() == removed);
+            final var iterator = invokersByApplication
+                .values()
+                .iterator();
+
+            while (iterator.hasNext()) {
+                final var invokers = iterator.next();
+                invokers.removeIf(pri -> pri.getNodeId().equals(nodeId));
+                if (invokers.isEmpty()) iterator.remove();
             }
-
-            invokersToPurge.add(removed);
 
         }
 
