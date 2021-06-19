@@ -82,7 +82,7 @@ public interface RemoteInvoker {
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
      * {@link Consumer< InvocationError >} will relay all encountered errors.
      *
-     * Typically this is used with the {@link Type#CONSUMER}.
+     * Typically this is used with the {@link Type#ASYNCHRONOUS}.
      *
      * This returns the generic Void type to clarify the intention of the method that the underlying {@link Future}
      * is discarded, but since is is intended to be used with reflections code, this allows for the method to be easily
@@ -91,14 +91,33 @@ public interface RemoteInvoker {
      * @param invocation the outgoing {@link Invocation}
      * @param asyncInvocationResultConsumerList a {@link List<Consumer<InvocationResult>>} to capture all async results
      * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
-     * @return a null {@link Void}, for the sake of clarity
+     * @return a null {@link Void}, for the sake of clarity and ease of integration with Reflections
      */
-    default Void invokeAsync(Invocation invocation,
-                             List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                             InvocationErrorConsumer asyncInvocationErrorConsumer) {
-        invokeFuture(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
+    default Void invokeAsyncV(Invocation invocation,
+                      List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                      InvocationErrorConsumer asyncInvocationErrorConsumer) {
+        invokeAsync(invocation, asyncInvocationResultConsumerList, asyncInvocationErrorConsumer);
         return null;
     }
+
+    /**
+     * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied
+     * {@link Consumer< InvocationError >} will relay all encountered errors.
+     *
+     * Typically this is used with the {@link Type#ASYNCHRONOUS}.
+     *
+     * This returns the generic Void type to clarify the intention of the method that the underlying {@link Future}
+     * is discarded, but since is is intended to be used with reflections code, this allows for the method to be easily
+     * adapted as such.
+     *
+     * @param invocation the outgoing {@link Invocation}
+     * @param asyncInvocationResultConsumerList a {@link List<Consumer<InvocationResult>>} to capture all async results
+     * @param asyncInvocationErrorConsumer a {@link Consumer<InvocationError>} to receive async errors
+     * @return an instance of {@link AsyncOperation}
+     */
+    AsyncOperation invokeAsync(Invocation invocation,
+                               List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+                               InvocationErrorConsumer asyncInvocationErrorConsumer);
 
     /**
      * Sends the {@link Invocation} to the remote service and waits for the {@link InvocationResult}.  The supplied

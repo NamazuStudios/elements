@@ -198,7 +198,7 @@ public class TestListAggregateRoutingStrategy extends BaseRoutingStrategyTest {
                 .getAllRemoteInvokers(eq(getApplicationId())))
                 .thenReturn(mockRemoteInvokers);
 
-        final Object result = getRoutingStrategy().invokeAsync(
+        final Object result = getRoutingStrategy().invokeAsyncV(
                 address,
                 invocation,
                 asyncConsumers,

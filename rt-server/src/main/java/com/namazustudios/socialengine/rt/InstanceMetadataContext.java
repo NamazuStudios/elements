@@ -1,10 +1,15 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.annotation.ErrorHandler;
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
+import com.namazustudios.socialengine.rt.annotation.ResultHandler;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.remote.AsyncOperation;
 
 import java.util.Set;
+import java.util.function.Consumer;
 
 /**
  * Provides data for an Instance, which is representative of the physical machine running one or more nodes.  Each
@@ -41,5 +46,16 @@ public interface InstanceMetadataContext {
      */
     @RemotelyInvokable
     double getInstanceQuality();
+
+    /**
+     * Asynchronous method to fetch the
+     *
+     * @param success
+     * @param failure
+     * @return
+     */
+    @RemotelyInvokable
+    AsyncOperation getInstanceMetadataAsync(@ResultHandler final Consumer<InstanceMetadata> success,
+                                            @ErrorHandler final Consumer<Throwable> failure);
 
 }

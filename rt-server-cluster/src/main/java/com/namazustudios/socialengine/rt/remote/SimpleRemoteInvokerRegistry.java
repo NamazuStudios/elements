@@ -1,26 +1,28 @@
 package com.namazustudios.socialengine.rt.remote;
 
+import com.namazustudios.socialengine.rt.InstanceMetadata;
 import com.namazustudios.socialengine.rt.Subscription;
-import com.namazustudios.socialengine.rt.exception.InstanceNotFoundException;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceConnection;
+import com.namazustudios.socialengine.rt.util.ContextLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
-import java.util.*;
-import java.util.concurrent.CountDownLatch;
+import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
-import static com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistrySnapshot.*;
+import static com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistrySnapshot.RefreshBuilder;
 import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -29,13 +31,19 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleRemoteInvokerRegistry.class);
 
-    private static final long REFRESH_RATE = 30;
+    private static final long REFRESH_RATE = 5;
 
     private static final TimeUnit REFRESH_UNITS = SECONDS;
 
     private static final long SHUTDOWN_TIMEOUT = 1;
 
     private static final TimeUnit SHUTDOWN_UNITS = MINUTES;
+
+    private static final long REFRESH_TIMEOUT = 1;
+
+    private static final TimeUnit REFRESH_TIMEOUT_TIMEUNIT = SECONDS;
+
+    private static final long REPORT_INTERVAL_SECONDS = 15;
 
     private InstanceId instanceId;
 
@@ -48,7 +56,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     @Override
     public void start() {
 
-        final RegistryContext context = new RegistryContext();
+        final var context = new RegistryContext();
 
         if (this.context.compareAndSet(null, context)) {
             context.start();
@@ -146,8 +154,6 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private ScheduledExecutorService scheduledExecutorService;
 
-        private final CountDownLatch latch = new CountDownLatch(1);
-
         private final RemoteInvokerRegistrySnapshot snapshot = new RemoteInvokerRegistrySnapshot();
 
         private void start() {
@@ -160,16 +166,19 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                 return thread;
             });
 
-            refreshScheduledFuture = scheduledExecutorService.scheduleAtFixedRate(this::doRefresh, 0, REFRESH_RATE, REFRESH_UNITS);
+            scheduledExecutorService.scheduleAtFixedRate(this::logInvokers, 0, REPORT_INTERVAL_SECONDS, SECONDS);
+            refreshScheduledFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
+                try {
+                    refresh();
+                } catch (Exception ex) {
+                    logger.error("Could not refresh invoker registry.", ex);
+                }
+            }, 0, REFRESH_RATE, REFRESH_UNITS);
 
             connect = getInstanceConnectionService().subscribeToConnect(this::add);
             disconnect = getInstanceConnectionService().subscribeToDisconnect(this::remove);
 
-            try {
-                latch.await();
-            } catch (InterruptedException e) {
-                throw new InternalException(e);
-            }
+            refresh();
 
         }
 
@@ -191,24 +200,56 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         }
 
         private void add(final InstanceConnection connection) {
-            final RefreshBuilder builder = snapshot.refresh();
-            add(builder, connection).commit((ri, ex) -> {
 
-                if (ex == null) {
-                    logger.info("Cleaning up {}", ri);
-                } else {
-                    logger.error("Cleaning up {}", ri, ex);
-                }
+            // We schedule the async result to be on the scheduler thread to avoid blocking hte main.
 
-                if (ri != null) ri.stop();
+            final var op = connection
+                .getInstanceMetadataContext()
+                .getInstanceMetadataAsync(
+                    im -> scheduledExecutorService.submit(() -> add(connection, im)),
+                    th -> logger.error("Failed to get instance metadata for {}", connection.getInstanceId(), th)
+                );
 
-            });
+            op.timeout(REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT);
+
+        }
+
+        private void add(final InstanceConnection connection, final InstanceMetadata instanceMetadata) {
+            final var builder = snapshot.refresh();
+            add(connection, instanceMetadata, builder).commit(this::cleanup);
+        }
+
+        private void cleanup(final RemoteInvoker ri, final Exception ex) {
+
+            if (ex == null) {
+                logger.info("Cleaning up {}", ri);
+            } else {
+                logger.error("Cleaning up {}", ri, ex);
+            }
+
+            if (ri != null) ri.stop();
+
+        }
+
+        private RefreshBuilder add(final InstanceConnection connection,
+                                   final InstanceMetadata instanceMetadata,
+                                   final RefreshBuilder builder) {
+
+            final var quality = instanceMetadata.getQuality();
+            final var nodeIdSet = instanceMetadata.getNodeIds();
+
+            for (final NodeId nodeId : nodeIdSet) {
+                builder.add(nodeId, quality, () -> establishNewConnection(nodeId, connection));
+            }
+
+            return builder;
+
         }
 
         private void remove(final InstanceConnection connection) {
 
-            final RefreshBuilder builder = snapshot.refresh();
-            final InstanceId instanceId = connection.getInstanceId();
+            final var builder = snapshot.refresh();
+            final var instanceId = connection.getInstanceId();
 
             builder.remove(instanceId).commit((ri, ex) -> {
 
@@ -226,85 +267,37 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
         private void refresh() {
 
-            final var latch = new CountDownLatch(1);
-            scheduledExecutorService.submit(() -> doRefresh(latch));
+            final var operations = new ConcurrentLinkedQueue<Consumer<RefreshBuilder>>();
+            final var connections = getInstanceConnectionService().getActiveConnections();
+            final var latch = new ContextLatch(connections);
+
+            for (final var connection : connections) {
+
+                final var op = connection.getInstanceMetadataContext().getInstanceMetadataAsync(
+                    im -> {
+                        operations.add(b -> add(connection, im, b));
+                        latch.finish(connection);
+                    }, throwable -> {
+                        operations.add(b -> b.remove(connection.getInstanceId()));
+                        latch.finish(connection);
+                    }
+                );
+
+                op.timeout(REFRESH_TIMEOUT, SECONDS);
+
+            }
 
             try {
-                latch.await();
+                if (latch.awaitFinish(REFRESH_TIMEOUT, SECONDS)) {
+                    final var builder = snapshot.refresh();
+                    for (var op : operations) op.accept(builder);
+                    builder.prune().commit(this::cleanup);
+                } else {
+                    logger.info("Timed out. Skipping refresh this cycle.");
+                }
             } catch (InterruptedException ex) {
                 throw new InternalException(ex);
             }
-
-        }
-
-        private void doRefresh() {
-            doRefresh(latch);
-        }
-
-        private void doRefresh(final CountDownLatch latch) {
-            try {
-
-                final var builder = snapshot.refresh();
-                final var connections = getInstanceConnectionService().getActiveConnections();
-
-                for (final InstanceConnection connection : connections) {
-                    add(builder, connection);
-                }
-
-                builder.prune().commit((ri, ex) -> {
-
-                    if (ex == null) {
-                        logger.info("Cleaning up {}", ri);
-                    } else {
-                        logger.error("Cleaning up {}", ri, ex);
-                    }
-
-                    if (ri != null) ri.stop();
-
-                });
-
-            } catch (Exception ex) {
-                logger.error("Caught error refreshing instances.", ex);
-            } finally {
-                latch.countDown();
-            }
-        }
-
-        private RefreshBuilder add(final RefreshBuilder builder, final InstanceConnection connection) {
-
-            final double quality;
-            final Set<NodeId> nodeIdSet;
-            final InstanceId instanceId = connection.getInstanceId();
-
-            try {
-                logger.debug("Establishing quality for {}", connection.getInstanceId());
-                quality = connection.getInstanceMetadataContext().getInstanceQuality();
-                logger.debug("Established quality for {} as {}", connection.getInstanceId(), quality);
-            } catch (InstanceNotFoundException | NodeNotFoundException ex) {
-                logger.debug("Instance or node not found.", ex);
-                return builder;
-            } catch (Exception ex) {
-                logger.error("Could not determine load average for instance {}", instanceId, ex);
-                return builder;
-            }
-
-            try {
-                logger.debug("Finding nodes for {}", connection.getInstanceId());
-                nodeIdSet = connection.getInstanceMetadataContext().getNodeIds();
-                logger.debug("Found nodes for {} as {}", connection.getInstanceId(), nodeIdSet);
-            } catch (InstanceNotFoundException | NodeNotFoundException ex) {
-                logger.debug("Instance or node not found.", ex);
-                return builder;
-            } catch (Exception ex) {
-                logger.error("Could not node id set for instance {}", instanceId, ex);
-                return builder;
-            }
-
-            for (final NodeId nodeId : nodeIdSet) {
-                builder.add(nodeId, quality, () -> establishNewConnection(nodeId, connection));
-            }
-
-            return builder;
 
         }
 
@@ -314,6 +307,28 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             logger.info("Connecting to node {} via address {}", nodeId, addr);
             remoteInvoker.start(addr);
             return remoteInvoker;
+        }
+
+        private void logInvokers() {
+            if (logger.isInfoEnabled()) {
+
+                final var sb = new StringBuilder();
+                final var invokers = snapshot.getInvokersByNode();
+
+                sb.append("\nInvocation Table");
+
+                for (var entry : invokers.entrySet()) {
+                    sb.append("\n")
+                      .append("    ")
+                      .append(entry.getKey())
+                      .append("->")
+                      .append(entry.getValue());
+                }
+
+                logger.info("{}", sb);
+
+            }
+
         }
 
     }

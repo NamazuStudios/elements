@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.google.common.collect.Comparators;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -14,7 +13,9 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static java.util.Comparator.reverseOrder;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 class RemoteInvokerRegistrySnapshot {
 
@@ -28,10 +29,9 @@ class RemoteInvokerRegistrySnapshot {
 
         try {
             lock.lock();
-            final RemoteInvoker remoteInvoker = storage.invokersByNode.get(nodeId);
-            if (remoteInvoker == null)
-                throw new NodeNotFoundException(nodeId);
-            return remoteInvoker;
+            final var remoteInvoker = storage.invokersByNode.get(nodeId);
+            if (remoteInvoker == null) throw new NodeNotFoundException(nodeId);
+            return remoteInvoker.getInvoker();
         } finally {
             lock.unlock();
         }
@@ -44,9 +44,9 @@ class RemoteInvokerRegistrySnapshot {
 
         try {
             lock.lock();
-            final List<RemoteInvoker> byLoad = storage.invokersByApplication.get(applicationId);
+            final List<SnapshotEntry> byLoad = storage.invokersByApplication.get(applicationId);
             if (byLoad == null || byLoad.isEmpty()) throw new NodeNotFoundException("Unknown Application: " + applicationId);
-            return byLoad.get(0);
+            return byLoad.get(0).getInvoker();
         } finally {
             lock.unlock();
         }
@@ -59,9 +59,28 @@ class RemoteInvokerRegistrySnapshot {
 
         try {
             lock.lock();
-            final List<RemoteInvoker> byLoad = storage.invokersByApplication.get(applicationId);
+            final List<SnapshotEntry> byLoad = storage.invokersByApplication.get(applicationId);
             if (byLoad == null || byLoad.isEmpty()) throw new NodeNotFoundException("Unknown Application: " + applicationId);
-            return Collections.unmodifiableList(byLoad);
+            return byLoad.stream().map(SnapshotEntry::getInvoker).collect(toList());
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
+    public Map<NodeId, RemoteInvoker> getInvokersByNode() {
+
+        final var lock = readWriteLock.readLock();
+
+        try {
+
+            lock.lock();
+
+            return storage.invokersByNode
+                .entrySet()
+                .stream()
+                .collect(toMap(Map.Entry::getKey, e -> e.getValue().getInvoker()));
+
         } finally {
             lock.unlock();
         }
@@ -172,46 +191,43 @@ class RemoteInvokerRegistrySnapshot {
 
         private final Set<RemoteInvoker> invokersToPurge = new HashSet<>();
 
-        private final Map<NodeId, RemoteInvoker> invokersByNode = new HashMap<>();
+        private final Map<NodeId, SnapshotEntry> invokersByNode = new HashMap<>();
 
-        private final Map<ApplicationId, List<RemoteInvoker>> invokersByApplication = new HashMap<>();
+        private final Map<ApplicationId, List<SnapshotEntry>> invokersByApplication = new HashMap<>();
 
-        private void add(final NodeId nodeId, final double load,
+        private void add(final NodeId nodeId, final double quality,
                          final Supplier<RemoteInvoker> remoteInvokerSupplier) {
 
-            RemoteInvoker invoker = invokersByNode.get(nodeId);
-
-            if (invoker == null) {
-                invoker = remoteInvokerSupplier.get();
-                invokersByNode.put(nodeId, invoker);
-            }
-
-            final ApplicationId applicationId = nodeId.getApplicationId();
-
-            final List<RemoteInvoker> remoteInvokerList = invokersByApplication
-                .computeIfAbsent(applicationId, nid -> new ArrayList<>());
-
-            final PriorityRemoteInvoker update = new PriorityRemoteInvoker(invoker, load);
-
-            remoteInvokerList.removeIf(ri -> {
-                final PriorityRemoteInvoker pri = (PriorityRemoteInvoker)ri;
-                return pri.getDelegate() == update.getDelegate();
+            final var entry = invokersByNode.compute(nodeId, (nid, pri) -> {
+                if (pri == null) {
+                    return new SnapshotEntry(remoteInvokerSupplier.get(), nodeId, quality);
+                } else {
+                    return pri.reprioritize(quality);
+                }
             });
 
-            remoteInvokerList.add(update);
+            final var applicationId = nodeId.getApplicationId();
+            final var remoteInvokerList = invokersByApplication.computeIfAbsent(applicationId, nid -> new ArrayList<>());
+
+            remoteInvokerList.removeIf(pri -> pri.isSameInvoker(entry));
+            remoteInvokerList.add(entry);
 
         }
 
         private void remove(final NodeId nodeId) {
 
-            final RemoteInvoker removed = invokersByNode.remove(nodeId);
+            final var removed = invokersByNode.remove(nodeId);
+            if (removed != null) invokersToPurge.add(removed.getInvoker());
 
-            if (removed != null) {
-                final List<RemoteInvoker> remoteInvokers = invokersByApplication.get(nodeId.getApplicationId());
-                remoteInvokers.removeIf(ri -> ((PriorityRemoteInvoker)ri).getDelegate() == removed);
+            final var iterator = invokersByApplication
+                .values()
+                .iterator();
+
+            while (iterator.hasNext()) {
+                final var invokers = iterator.next();
+                invokers.removeIf(pri -> pri.getNodeId().equals(nodeId));
+                if (invokers.isEmpty()) iterator.remove();
             }
-
-            invokersToPurge.add(removed);
 
         }
 
@@ -245,23 +261,15 @@ class RemoteInvokerRegistrySnapshot {
         }
 
         private void sort() {
-
-            final Comparator<RemoteInvoker> cmp = (o1, o2) -> {
-                final var po1 = (PriorityRemoteInvoker) o1;
-                final var po2 = (PriorityRemoteInvoker) o2;
-                return po1.compareTo(po2);
-            };
-
-            invokersByApplication.forEach((id, invokers) -> invokers.sort(cmp.reversed()));
-
+            invokersByApplication.forEach((id, invokers) -> invokers.sort(reverseOrder()));
         }
 
         private void clear() {
-            invokersByNode.forEach((nid, ri) -> {
+            invokersByNode.forEach((nid, entry) -> {
                 try {
-                    cleanup.accept(ri, null);
+                    cleanup.accept(entry.getInvoker(), null);
                 } catch (Exception ex) {
-                    cleanup.accept(ri, ex);
+                    cleanup.accept(entry.getInvoker(), ex);
                 }
             });
         }
@@ -322,6 +330,49 @@ class RemoteInvokerRegistrySnapshot {
          * @return this instance
          */
         RefreshBuilder prune();
+
+    }
+
+    private static class SnapshotEntry implements Comparable<SnapshotEntry> {
+
+        private final NodeId nodeId;
+
+        private final double priority;
+
+        private final RemoteInvoker invoker;
+
+        private SnapshotEntry(final RemoteInvoker invoker,
+                              final NodeId nodeId,
+                              final double priority) {
+            this.nodeId = nodeId;
+            this.priority = priority;
+            this.invoker = invoker;
+        }
+
+        public NodeId getNodeId() {
+            return nodeId;
+        }
+
+        public double getPriority() {
+            return priority;
+        }
+
+        public RemoteInvoker getInvoker() {
+            return invoker;
+        }
+
+        public boolean isSameInvoker(final SnapshotEntry other) {
+            return invoker == other.invoker;
+        }
+
+        public SnapshotEntry reprioritize(final double quality) {
+            return new SnapshotEntry(invoker, nodeId, quality);
+        }
+
+        @Override
+        public int compareTo(final SnapshotEntry other) {
+            return Double.compare(priority, other.priority);
+        }
 
     }
 

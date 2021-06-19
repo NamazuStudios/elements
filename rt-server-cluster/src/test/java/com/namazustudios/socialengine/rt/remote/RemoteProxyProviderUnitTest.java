@@ -143,7 +143,7 @@ public class RemoteProxyProviderUnitTest {
         final InvocationResult expectedInvocationResult = new InvocationResult();
         expectedInvocationResult.setResult("Why, hello to you as well!");
 
-        verify(getMockRemoteInvocationDispatcher()).invokeAsync(
+        verify(getMockRemoteInvocationDispatcher()).invokeAsyncV(
             eq(route),
             argThat(i -> i.equals(invocation)),
             argThat(cl -> {
