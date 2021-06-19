@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.remote.guice;
 import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
+import com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService;
 
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -45,6 +46,8 @@ public class InstanceDiscoveryServiceModule extends PrivateModule {
     public enum DiscoveryType {
 
         STATIC(StaticInstanceDiscoveryServiceModule::new),
+
+        JNDI_SRV(JndiSrvInstanceDiscoveryServiceModule::new),
 
         SPOTIFY_SRV(SpotifySrvInstanceDiscoveryServiceModule::new);
 

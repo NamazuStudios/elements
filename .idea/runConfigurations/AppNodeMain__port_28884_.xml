@@ -1,9 +1,0 @@
-<component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="AppNodeMain (port 28884)" type="Application" factoryName="Application">
-    <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appnode.ApplicationNodeMain" />
-    <module name="app-node" />
-    <method v="2">
-      <option name="Make" enabled="true" />
-    </method>
-  </configuration>
-</component>

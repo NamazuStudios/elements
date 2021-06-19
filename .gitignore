@@ -28,6 +28,7 @@ node_modules
 .idea/dbnavigator.xml
 .idea/jarRepositories.xml
 .idea/dictionaries
+^.idea/runConfigurations/*
 
 # Files typically created by running the local applicatio in the IDE
 

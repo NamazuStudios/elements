@@ -237,6 +237,10 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
                 toAdd.forEach(onDisovery::publishAsync);
                 toRemove.forEach(onUndiscovery::publishAsync);
 
+                logger.info("Discovery Update:\n  Update: {} -> {}\n  Added: {}  \nRemoved: {}\n",
+                    lookupResultSet, update,
+                    toAdd, toRemove);
+
                 lookupResultSet = update;
 
             } finally {

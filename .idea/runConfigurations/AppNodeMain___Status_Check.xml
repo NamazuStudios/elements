@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="AppNodeMain (status check)" type="Application" factoryName="Application">
+  <configuration default="false" name="AppNodeMain - Status Check" type="Application" factoryName="Application">
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appnode.ApplicationNodeMain" />
     <module name="app-node" />
