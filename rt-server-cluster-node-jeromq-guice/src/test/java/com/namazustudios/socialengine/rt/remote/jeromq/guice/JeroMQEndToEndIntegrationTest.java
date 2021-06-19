@@ -3,10 +3,7 @@ package com.namazustudios.socialengine.rt.remote.jeromq.guice;
 import com.google.inject.*;
 import com.google.inject.name.Named;
 import com.namazustudios.socialengine.remote.jeromq.JeroMQNode;
-import com.namazustudios.socialengine.rt.AsyncConnectionService;
-import com.namazustudios.socialengine.rt.InstanceMetadataContext;
-import com.namazustudios.socialengine.rt.Persistence;
-import com.namazustudios.socialengine.rt.SharedAsyncConnectionService;
+import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
@@ -24,7 +21,10 @@ import org.testng.annotations.Test;
 import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
-import java.util.*;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -37,11 +37,10 @@ import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplicat
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.UUID.randomUUID;
-import static java.util.concurrent.Executors.newCachedThreadPool;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
@@ -441,6 +440,22 @@ public class JeroMQEndToEndIntegrationTest {
                 final double quality = threadLocalRandom.nextDouble();
                 logger.info("Reporting quality {} for instance {}", quality, instanceId);
                 return quality;
+            });
+
+            when(mock.getInstanceMetadataAsync(any(), any())).thenAnswer(i -> {
+
+                final Consumer<InstanceMetadata> success = i.getArgument(0);
+
+                final double quality = threadLocalRandom.nextDouble();
+                final Set<NodeId> nodeIdSet = singleton(nodeId);
+
+                final var metadata = new InstanceMetadata();
+                metadata.setQuality(quality);
+                metadata.setNodeIds(nodeIdSet);
+                success.accept(metadata);
+
+                return AsyncOperation.DEFAULT;
+
             });
 
             bind(NodeLifecycle.class).toInstance(new NodeLifecycle() {

@@ -271,7 +271,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             final var connections = getInstanceConnectionService().getActiveConnections();
             final var latch = new ContextLatch(connections);
 
-            for (final var connection : getInstanceConnectionService().getActiveConnections()) {
+            for (final var connection : connections) {
 
                 final var op = connection.getInstanceMetadataContext().getInstanceMetadataAsync(
                     im -> {

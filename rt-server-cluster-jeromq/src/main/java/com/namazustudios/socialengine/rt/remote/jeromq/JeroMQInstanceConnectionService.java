@@ -312,7 +312,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             getInstanceDiscoveryService()
                 .getKnownHosts()
                 .stream()
-//                .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
+                .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
                 .forEach(this::createNewConnectionIfAbsent);
 
         }
@@ -523,7 +523,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 final var local = new SimpleInstanceHostInfo(getInternalBindAddress());
 
                 concat(of(local), known.stream())
-//                     .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
+                     .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
                      .filter(not(nfo -> pending.containsKey(nfo) || active.containsKey(nfo)))
                      .forEach(this::createNewConnection);
 

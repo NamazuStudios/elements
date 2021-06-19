@@ -53,11 +53,12 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
     @Override
     public AsyncOperation getInstanceMetadataAsync(final Consumer<InstanceMetadata> success,
                                                    final Consumer<Throwable> failure) {
+
         try {
 
             final double quality = getLoadMonitorService().getInstanceQuality();
             final Set<NodeId> nodeIdSet = getWorker().getActiveNodeIds();
-            logger.debug("Reporting instance load {} - {}", instanceId, quality);
+            logger.debug("Reporting instance quality {} - {}", instanceId, quality);
             logger.debug("Returning active node IDs for instance {} - {}", instanceId, nodeIdSet);
 
             final var metadata = new InstanceMetadata();
