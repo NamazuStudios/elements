@@ -38,10 +38,11 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
     }
 
     @Override
-    public Void invokeAsync(final List<Object> address,
-                            final Invocation invocation,
-                            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
-                            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
+    public AsyncOperation invokeAsync(
+            final List<Object> address,
+            final Invocation invocation,
+            final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
+            final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
 
@@ -49,6 +50,7 @@ public class DefaultRoutingStrategy implements RoutingStrategy {
             invocation,
             asyncInvocationResultConsumerList,
             asyncInvocationErrorConsumer);
+
     }
 
     @Override

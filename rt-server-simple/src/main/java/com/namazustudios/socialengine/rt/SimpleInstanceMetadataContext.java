@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.remote.AsyncOperation;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Set;
+import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toSet;
 
@@ -38,15 +41,38 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
     @Override
     public Set<NodeId> getNodeIds() {
         final Set<NodeId> nodeIdSet = getWorker().getActiveNodeIds();
-        logger.debug("Returning active node IDs for instance {} - {}", instanceId, nodeIdSet);
         return nodeIdSet;
     }
 
     @Override
     public double getInstanceQuality() {
         final double load = getLoadMonitorService().getInstanceQuality();
-        logger.debug("Reporting instance load {} - {}", instanceId, load);
         return load;
+    }
+
+    @Override
+    public AsyncOperation getInstanceMetadataAsync(final Consumer<InstanceMetadata> success,
+                                                   final Consumer<Throwable> failure) {
+
+        try {
+
+            final double quality = getLoadMonitorService().getInstanceQuality();
+            final Set<NodeId> nodeIdSet = getWorker().getActiveNodeIds();
+            logger.debug("Reporting instance quality {} - {}", instanceId, quality);
+            logger.debug("Returning active node IDs for instance {} - {}", instanceId, nodeIdSet);
+
+            final var metadata = new InstanceMetadata();
+            metadata.setQuality(quality);
+            metadata.setNodeIds(nodeIdSet);
+            success.accept(metadata);
+
+            return AsyncOperation.DEFAULT;
+
+        } catch (Exception ex) {
+            failure.accept(ex);
+            logger.error("Caught exception getting instance metadata.", ex);
+            return AsyncOperation.DEFAULT;
+        }
     }
 
     public Worker getWorker() {

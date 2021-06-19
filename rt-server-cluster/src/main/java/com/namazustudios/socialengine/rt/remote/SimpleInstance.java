@@ -32,6 +32,7 @@ public class SimpleInstance implements Instance {
     public void start() {
 
         final List<Exception> exceptionList = new ArrayList<>();
+        hooks.add(this::close);
 
         hooks.add(this::close);
 

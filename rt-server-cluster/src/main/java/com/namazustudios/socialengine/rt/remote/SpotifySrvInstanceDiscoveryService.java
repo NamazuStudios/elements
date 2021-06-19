@@ -8,28 +8,23 @@ import com.spotify.dns.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.xbill.DNS.DClass;
-import org.xbill.DNS.ExtendedResolver;
 import org.xbill.DNS.Lookup;
-import org.xbill.DNS.Type;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.io.IOException;
-import java.util.*;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
-import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.Collections.unmodifiableSet;
-import static java.util.concurrent.Executors.newSingleThreadScheduledExecutor;
-import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
 public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryService {

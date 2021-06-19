@@ -9,7 +9,6 @@ import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.Future;
@@ -215,12 +214,14 @@ public class RemoteInvocationHandlerBuilder {
             case SYNCHRONOUS:
                 return (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
             case ASYNCHRONOUS:
-                return (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae);
+                return isAsyncMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
+                                         (r, i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae);
             case FUTURE:
                 return (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae);
             case HYBRID:
             case CONSUMER:
-                return isVoidMethod()   ? (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae) :
+                return isAsyncMethod() ?  (r, i, ai, ae) -> remoteInvoker.invokeAsync(i, ai, ae)  :
+                       isVoidMethod()   ? (r, i, ai, ae) -> remoteInvoker.invokeAsyncV(i, ai, ae) :
                        isFutureMethod() ? (r, i, ai, ae) -> remoteInvoker.invokeFuture(i, ai, ae) :
                                           (r, i, ai, ae) -> remoteInvoker.invokeSync(i, ai, ae);
             default:
@@ -237,12 +238,14 @@ public class RemoteInvocationHandlerBuilder {
             case SYNCHRONOUS:
                 return remoteInvocationDispatcher::invokeSync;
             case ASYNCHRONOUS:
-                return remoteInvocationDispatcher::invokeAsync;
+                return isAsyncMethod() ? remoteInvocationDispatcher::invokeAsync :
+                                         remoteInvocationDispatcher::invokeAsyncV;
             case FUTURE:
                 return remoteInvocationDispatcher::invokeFuture;
             case HYBRID:
             case CONSUMER:
-                return isVoidMethod()   ? remoteInvocationDispatcher::invokeAsync :
+                return isVoidMethod()   ? remoteInvocationDispatcher::invokeAsyncV :
+                       isAsyncMethod()  ? remoteInvocationDispatcher::invokeAsync  :
                        isFutureMethod() ? remoteInvocationDispatcher::invokeFuture :
                                           remoteInvocationDispatcher::invokeSync;
             default:
@@ -254,6 +257,11 @@ public class RemoteInvocationHandlerBuilder {
     private boolean isVoidMethod() {
         final Class<?> rType = getMethod().getReturnType();
         return void.class.equals(rType) || Void.class.equals(rType);
+    }
+
+    private boolean isAsyncMethod() {
+        final Class<?> rType = getMethod().getReturnType();
+        return AsyncOperation.class.isAssignableFrom(rType);
     }
 
     private boolean isFutureMethod() {

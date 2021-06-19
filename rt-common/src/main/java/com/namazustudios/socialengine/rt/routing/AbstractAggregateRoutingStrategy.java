@@ -6,14 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.util.List;
-import java.util.UUID;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -60,13 +58,13 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
     }
 
     @Override
-    public Void invokeAsync(
+    public AsyncOperation invokeAsync(
             final List<Object> address,
             final Invocation invocation,
             final List<Consumer<InvocationResult>> asyncInvocationResultConsumerList,
             final InvocationErrorConsumer asyncInvocationErrorConsumer) {
 
-        final List<RemoteInvoker> invokers = getRemoteInvokers(address);
+        final var invokers = getRemoteInvokers(address);
         final int count = invokers.size();
 
         final List<Consumer<InvocationResult>> aggregateResultConsumerList = asyncInvocationResultConsumerList
@@ -74,11 +72,14 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
             .map(c -> new AggregateConsumer<>(c, count, this::newInitialInvocationResult, this::combine))
             .collect(toList());
 
-        final InvocationErrorConsumer firstInvocationErrorConsumer;
-        firstInvocationErrorConsumer = new FirstInvocationErrorConsumer(asyncInvocationErrorConsumer);
-        invokers.forEach(ri -> ri.invokeAsync(invocation, aggregateResultConsumerList, firstInvocationErrorConsumer));
+        final var firstInvocationErrorConsumer = new FirstInvocationErrorConsumer(asyncInvocationErrorConsumer);
 
-        return null;
+        final var operations = invokers
+            .stream()
+            .map(ri -> ri.invokeAsync(invocation, aggregateResultConsumerList, firstInvocationErrorConsumer))
+            .collect(Collectors.toList());
+
+        return new AggregateAsyncOperation(operations);
 
     }
 
