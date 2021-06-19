@@ -10,9 +10,11 @@ import org.slf4j.LoggerFactory;
 import org.zeromq.*;
 import org.zeromq.ZMQ.Socket;
 
+import java.nio.charset.StandardCharsets;
 import java.util.concurrent.TimeUnit;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQCommandServer.TRACE_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.PROTOCOL_ERROR;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.SOCKET_ERROR;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.*;
@@ -169,7 +171,14 @@ public class JeroMQControlClient implements ControlClient {
     }
 
     private void send(final ZMsg zMsg) {
+        trace(zMsg);
         send(zMsg, socket);
+    }
+
+    private void trace(final ZMsg zMsg) {
+        if (logger.isDebugEnabled()) {
+            trace(zMsg, new Throwable().fillInStackTrace().getStackTrace());
+        }
     }
 
     /**
@@ -182,6 +191,20 @@ public class JeroMQControlClient implements ControlClient {
     public static boolean send(final ZMsg zMsg, final Socket socket) {
         zMsg.addFirst(EMPTY_DELIMITER);
         return zMsg.send(socket);
+    }
+
+    /**
+     * Embeds the supplied stack trace in the supplied {@link ZMsg}. The remote end will ignore the trace, however it
+     * will be visible in the debugger so it is possible to know where in the client code the message originated.
+     *
+     * @param trace the trace
+     * @param zMsg the message
+     */
+    public static void trace(final ZMsg zMsg, final StackTraceElement[] trace) {
+        if (trace != null && trace.length > 0) {
+            zMsg.addLast(TRACE_DELIMITER.getBytes(CHARSET));
+            for (var element : trace) zMsg.addLast(element.toString());
+        }
     }
 
     private ZMsg recv() {

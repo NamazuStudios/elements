@@ -4,7 +4,11 @@
       <env name="com.namazustudios.socialengine.rt.instance.discovery.service" value="JNDI_SRV" />
       <env name="com.namazustudios.socialengine.rt.remote.jeromq.bind.addr" value="tcp://localhost:28884" />
       <env name="com.namazustudios.socialengine.rt.srv.servers" value="dns://127.0.0.1:5353" />
+      <env name="com.namazustudios.socialengine.rt.xodus.environment.path" value="script-storage-28884/storage.xodus.resources" />
+      <env name="com.namazustudios.socialengine.rt.xodus.scheduler.path" value="script-storage-28884/storage.xodus.scheduler" />
+      <env name="com.namazustudios.socialengine.rt.id.instance.id.file" value="script-storage-28884/instance-id.txt" />
     </envs>
+    <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appnode.ApplicationNodeMain" />
     <module name="app-node" />
     <method v="2" />

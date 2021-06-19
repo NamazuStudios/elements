@@ -24,6 +24,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlClient.trace;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.*;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static javax.security.auth.callback.ConfirmationCallback.OK;
@@ -256,6 +257,8 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
                 if (pending.get()) {
 
                     final var request = outgoingSupplier.get();
+
+                    trace(request, stack);
 
                     if (JeroMQControlClient.send(request, _c.socket())) {
                         _c.setEvents(READ, ERROR);

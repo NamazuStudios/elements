@@ -263,12 +263,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 throw new InternalException(ex);
             }
 
-            refreshScheduledFuture = scheduler.scheduleWithFixedDelay(
-                this::bgRefresh,
-                0,
-                getRefreshIntervalInSeconds(),
-                SECONDS);
-
             scheduler.scheduleWithFixedDelay(
                 this::logStatus,
                 0,
@@ -304,16 +298,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 logger.info("\nKnown Hosts [{}]\nPending[{}]\nActive [{}]", known, pending, active);
 
             }
-
-        }
-
-        private void bgRefresh() {
-
-            getInstanceDiscoveryService()
-                .getKnownHosts()
-                .stream()
-                .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
-                .forEach(this::createNewConnectionIfAbsent);
 
         }
 
@@ -399,7 +383,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             // to the instance. This opens up the route to the node such that this instance may see it and other clients
             // may connect to the master node to interrogate it for information on the hosted nodes.
 
-            final var request = localControlClient.openRouteToNode(masterNodeId, instanceConnectAddress, response -> {
+            final var request = localControlClient.openRouteToNode(
+                    masterNodeId,
+                    instanceConnectAddress,
+                    response -> {
 
                 final String masterNodeConnectAddress;
 
@@ -408,19 +395,19 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     // connection through this server.
                     masterNodeConnectAddress = response.get();
                     logger.info("Obtained master node connect address {}", masterNodeConnectAddress);
+
+                    // Finally, we take what was processed, and we add it to the internal collection pool.
+                    addInstanceConnection(instanceHostInfo, instanceStatus, masterNodeConnectAddress);
+
                 } catch (Exception ex) {
                     logger.warn("Failed to open route to master node {} -> {}", masterNodeId, instanceConnectAddress);
                     rwGuard.rw(condition -> pending.remove(instanceHostInfo));
-                    return;
                 } finally {
                     // Regardless, the remote client we made to do the direct connection is no longer needed, so we
                     // close it out. Future connections will be made via the internal routing server so this connection
                     // is not really needed anymore.
                     rClient.close();
                 }
-
-                // Finally, we take what was processed, and we add it to the internal collection pool.
-                addInstanceConnection(instanceHostInfo, instanceStatus, masterNodeConnectAddress);
 
             });
 
@@ -531,7 +518,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     while (!pending.isEmpty()) condition.await();
                 } catch (InterruptedException e) {
                     logger.info("Interrupted refreshing.", e);
-                    return;
                 }
 
             });

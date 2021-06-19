@@ -3,8 +3,10 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
+import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
+import zmq.Command;
 
 import java.util.Collection;
 import java.util.EnumMap;
@@ -19,6 +21,10 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlRespo
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.*;
 
 public class JeroMQCommandServer {
+
+    public static final String TRACE_DELIMITER = "<Client Stack Trace>";
+
+    private static final ZFrame TRACE_DELIMITER_FRAME = new ZFrame(TRACE_DELIMITER.getBytes(CHARSET));
 
     private final Logger logger;
 
@@ -67,6 +73,7 @@ public class JeroMQCommandServer {
             pushIdentity(response, identity);
             response.send(socket);
             stats.error();
+            logTrace(null, zMsg);
             return;
         }
 
@@ -123,6 +130,27 @@ public class JeroMQCommandServer {
             pushIdentity(response, identity);
             response.send(socket);
         }
+
+        logTrace(command, zMsg);
+
+    }
+
+    private void logTrace(final JeroMQRoutingCommand command, final ZMsg zMsg) {
+
+        if (!logger.isDebugEnabled()) return;
+
+        final var iterator = zMsg.iterator();
+        while (iterator.hasNext() && !iterator.next().hasSameData(TRACE_DELIMITER_FRAME));
+
+        final var sb = new StringBuffer();
+        sb.append("\nCommand '").append(command).append("' stack Trace:");
+
+        while (iterator.hasNext()) {
+            final var element = iterator.next().getString(CHARSET);
+            sb.append("\n    ").append(element);
+        }
+
+        logger.debug("{}", sb);
 
     }
 
