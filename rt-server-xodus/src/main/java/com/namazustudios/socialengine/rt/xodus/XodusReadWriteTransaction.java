@@ -97,7 +97,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         getPessimisticLocking().lock(resourceId);
 
         return new BlockWritableChannel(resourceId);
-
     }
 
     private boolean deleteFile(final ResourceId resourceId) {
