@@ -73,14 +73,6 @@ public class XodusResourceServiceAcquiringUnitTest extends AbstractResourceServi
                 return null;
             }).when(resourceLoader).load(any(InputStream.class));
 
-            doAnswer(a -> {
-                final var rbc = (ReadableByteChannel) a.getArgument(0);
-                final var buffer = ByteBuffer.allocate(4096);
-                rbc.read(buffer);
-                fail("No attempt to load resource should be made for this test.");
-                return null;
-            }).when(resourceLoader).load(any(ReadableByteChannel.class));
-
             bind(ResourceLoader.class).toInstance(resourceLoader);
 
         }
