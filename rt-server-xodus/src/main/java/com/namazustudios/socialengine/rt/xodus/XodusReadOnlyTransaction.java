@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.rt.transact.ReadOnlyTransaction;
 import jetbrains.exodus.ArrayByteIterable;
 import jetbrains.exodus.ByteIterable;
 import jetbrains.exodus.env.Transaction;
+import jetbrains.exodus.vfs.VirtualFileSystem;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +32,8 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
     private final NodeId nodeId;
 
+    private final VirtualFileSystem virtualFileSystem;
+
     private final XodusResourceStores stores;
 
     private final Transaction transaction;
@@ -39,9 +42,11 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
     public XodusReadOnlyTransaction(final NodeId nodeId,
                                     final XodusResourceStores stores,
+                                    final VirtualFileSystem virtualFileSystem,
                                     final Transaction transaction) {
         this.nodeId = nodeId;
         this.stores = stores;
+        this.virtualFileSystem = virtualFileSystem;
         this.transaction = transaction;
         onClose(rot -> logger.debug("Closing {}", rot));
         onClose(rot -> open = false);
@@ -140,67 +145,29 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
 
         check(resourceId);
 
-        final var resourceIdKey = XodusUtil.resourceIdKey(resourceId);
-        final var cursor = getStores().getResourceBlocks().openCursor(getTransaction());
+        final var resourceFile = virtualFileSystem.openFile(getTransaction(), resourceId.toString(), false);
 
-        final var first = cursor.getSearchKeyRange(resourceIdKey);
-        if (first == null) throw new NullResourceException();
+        if (resourceFile == null) throw new NullResourceException();
 
-        final var onCloseSubscription = onClose(t -> cursor.close());
+        final var inputStream = virtualFileSystem.readFile(getTransaction(), resourceFile);
 
         return new ReadableByteChannel() {
 
             boolean open = true;
-
-            ByteBuffer current = XodusUtil.byteBuffer(first);
 
             @Override
             public int read(final ByteBuffer dst) {
 
                 if (!open) throw new IllegalStateException();
 
-                long sequence = -1;
-                final var blockResourceIdKey = cursor.getKey();
-                final var blockResourceId = XodusUtil.resourceId(blockResourceIdKey);
+                byte[] bytes = new byte[dst.remaining()];
+                int readBytes = inputStream.read(bytes, 0, bytes.length);
 
-                if (resourceId.equals(blockResourceId)) {
-                    if (logger.isDebugEnabled()) {
-
-                        final var keyBuf = XodusUtil
-                            .byteBuffer(blockResourceIdKey)
-                            .position(ResourceId.getSizeInBytes());
-
-                        sequence = keyBuf.getInt() & 0x00000000FFFFFFFFL;
-                        logger.debug("Loading from block {} ({})", resourceId, sequence);
-
-                    }
-                } else {
-                    logger.error("Detected corrupt block {} != {}", resourceId, blockResourceId);
+                if(readBytes > 0) {
+                    dst.put(bytes, 0, readBytes);
                 }
 
-                if (current == null) {
-                    return -1;
-                } else if (!current.hasRemaining()) {
-                    if (cursor.getNext() && XodusUtil.isMatchingBlockKey(resourceIdKey, cursor.getKey())) {
-                        current = XodusUtil.byteBuffer(cursor.getValue());
-                    } else {
-                        current = null;
-                        return -1;
-                    }
-                }
-
-                final var initial = current.remaining();
-                final var oldLimit = current.limit();
-                final var newLimit = current.position() + min(initial, dst.remaining());
-
-                try {
-                    dst.put(current.limit(newLimit));
-                } finally {
-                    current.limit(oldLimit);
-                }
-
-                return initial - current.remaining();
-
+                return readBytes;
             }
 
             @Override
@@ -212,8 +179,7 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
             public void close() {
                 if (open) {
                     open = false;
-                    cursor.close();
-                    onCloseSubscription.unsubscribe();
+                    inputStream.close();
                 }
             }
 
@@ -244,4 +210,13 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
         return transaction;
     }
 
+    private void dumpBlocksForResourceId() {
+        var cursor = getStores().getResourceBlocks().openCursor(getTransaction());
+        while(cursor.getNext()) {
+            final var key = cursor.getKey();
+            final var value = cursor.getValue().subIterable(0, 10);
+            logger.info(String.format("%s : key = %s value = %s", "READ", key, value));
+        }
+        cursor.close();
+    }
 }
