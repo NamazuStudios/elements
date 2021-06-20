@@ -26,20 +26,12 @@ public interface ControlClient extends AutoCloseable {
     String openRouteToNode(NodeId nodeId, String instanceInvokerAddress);
 
     /**
-     * Close the route to the {@link NodeId}.  If the route is not known, then nothing happens.
-     *
-     * @param nodeId the {@link NodeId}
-     *
-     */
-    void closeRouteToNode(NodeId nodeId);
-
-    /**
      * Close the routes via the {@link InstanceId}.  If no routes are known, then nothing happens.
      *
      * @param instanceId the {@link InstanceId}
      *
      */
-    void closeRoutesViaInstance(InstanceId instanceId);
+    void closeRoutesViaInstance(InstanceId instanceId, String instanceConnectAddress);
 
     /**
      * Opens an {@link InstanceBinding} provided the {@link NodeId} and returns the {@link InstanceBinding}.

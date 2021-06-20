@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.remote.jeromq;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
+import com.google.common.collect.SortedSetMultimap;
+import com.google.common.collect.TreeMultimap;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
@@ -18,11 +20,11 @@ import java.util.TreeMap;
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
-import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.stripCode;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingCommand.FORWARD;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.exceptionError;
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.SocketType.ROUTER;
@@ -30,6 +32,8 @@ import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQMultiplexRouter {
+
+    private final InstanceId instanceId;
 
     private final Logger logger;
 
@@ -39,7 +43,7 @@ public class JeroMQMultiplexRouter {
 
     private final ZMQ.Poller poller;
 
-    private final Map<NodeId, String> localBindAddresses = new HashMap<>();
+//    private final BiMap<NodeId, String> bindAddrs = HashBiMap.create();
 
     private final BiMap<NodeId, Integer> frontends = HashBiMap.create();
 
@@ -49,7 +53,10 @@ public class JeroMQMultiplexRouter {
 
     private final BiMap<Integer, InstanceId> rBackends = backends.inverse();
 
+    private final SortedSetMultimap<NodeId, JeroMQInstanceConnectionId> routingTable = TreeMultimap.create();
+
     public JeroMQMultiplexRouter(final InstanceId instanceId, final ZContext zContext, final ZMQ.Poller poller) {
+        this.instanceId = instanceId;
         this.logger = JeroMQRoutingServer.getLogger(getClass(), instanceId);
         this.poller = poller;
         this.zContext = zContext;
@@ -165,61 +172,43 @@ public class JeroMQMultiplexRouter {
         return poller.getSocket(index);
     }
 
-    public String openRouteToNode(final NodeId nodeId, final String instanceInvokerAddress) {
+    public String openRouteToNode(final NodeId nodeId, final String instanceConnectAddress) {
 
-        logger.info("Opening route to node {}", nodeId);
+        final var connectionId = new JeroMQInstanceConnectionId(instanceConnectAddress);
 
-        return localBindAddresses.computeIfAbsent(nodeId, n -> {
+        logger.info("Opening route to node {} via {}", nodeId, connectionId);
 
+        final var frontendIndex = frontends.computeIfAbsent(nodeId, nid -> {
             final var frontend = zContext.createSocket(ROUTER);
-            final var localBindAddress = getLocalBindAddress(nodeId);
-            frontend.bind(localBindAddress);
+            return poller.register(frontend, POLLIN | POLLERR);
+        });
 
-            final var frontendIndex = poller.register(frontend, POLLIN | POLLERR);
-            frontends.put(nodeId, frontendIndex);
-            stats.addRoute(nodeId, localBindAddress);
+        final var frontend = poller.getSocket(frontendIndex);
+        final var localBindAddress = getLocalBindAddress(nodeId, connectionId);
 
-            backends.computeIfAbsent(nodeId.getInstanceId(), instanceId -> {
+
+        if (routingTable.put(nodeId, connectionId)) {
+
+            final var backendIndex = backends.computeIfAbsent(nodeId.getInstanceId(), iid -> {
                 final ZMQ.Socket backend = zContext.createSocket(DEALER);
-                backend.connect(instanceInvokerAddress);
-                stats.addRoute(instanceId, instanceInvokerAddress);
+                stats.addRoute(iid, connectionId);
                 return poller.register(backend, POLLIN | POLLERR);
             });
 
-            return localBindAddress;
-
-        });
-
-    }
-
-    public void closeRouteToNode(final NodeId nodeId) {
-
-        logger.info("Closing route to node {}", nodeId);
-
-        if (localBindAddresses.remove(nodeId) == null) {
-            logger.warn("Node not found {}. Nothing to close.", nodeId);
-        } else {
-
-            doCloseFrontend(nodeId);
-
-            final var instanceId = nodeId.getInstanceId();
-
-            final var instanceIdPresent = frontends
-                .keySet()
-                .stream()
-                .anyMatch(nid -> nid.getInstanceId().equals(instanceId));
-
-            if (!instanceIdPresent) {
-                logger.info("Closing all routes to instance {} because no nodes exist.", nodeId);
-                doCloseBackend(instanceId);
-            } else {
-                logger.debug("Instance {} has remaining connections. Skipping close.", instanceId);
-            }
+            final var backend = poller.getSocket(backendIndex);
+            backend.connect(instanceConnectAddress);
+            frontend.bind(localBindAddress);
+            stats.addRoute(nodeId);
 
         }
+
+        return localBindAddress;
+
     }
 
-    public void closeRoutesViaInstance(final InstanceId instanceId) {
+    public void closeRoutesViaInstance(final InstanceId instanceId, final String instanceConnectAddress) {
+
+        final var connectionId = new JeroMQInstanceConnectionId(instanceConnectAddress);
 
         final var nodeIdList = frontends.keySet()
             .stream()
@@ -229,19 +218,49 @@ public class JeroMQMultiplexRouter {
         if (nodeIdList.isEmpty()) {
             logger.warn("No nodes found for instance {}. Nothing to close.", instanceId);
         } else {
-            nodeIdList.forEach(this::doCloseFrontend);
-            doCloseBackend(instanceId);
+
+            final var close = nodeIdList
+                .stream()
+                .map(nodeId -> doCloseFrontend(nodeId, connectionId))
+                .reduce(true, (a, b) -> a && b);
+
+            if (close) {
+                doCloseBackend(instanceId);
+            }
+
         }
 
     }
 
-    private void doCloseFrontend(final NodeId nodeId) {
-        try {
-            final var frontendIndex = frontends.remove(nodeId);
-            doClose(frontendIndex, format("Node %s", nodeId));
-        } finally {
-            stats.removeRoute(nodeId);
-        }
+    private boolean doCloseFrontend(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {
+
+        frontends.compute(nodeId, (nid,  idx) -> {
+
+            if (idx == null) {
+                logger.warn("No route to node {} via {}", nodeId, connectionId);
+            } else if (routingTable.remove(nodeId, connectionId)) {
+
+                if (routingTable.containsKey(nodeId)) {
+                    final var socket = poller.getSocket(idx);
+                    final var localBindAddress = getLocalBindAddress(nodeId, connectionId);
+                    socket.unbind(localBindAddress);
+                    logger.debug("Other routes exist for {}. Deferring removal. Unbinding {}", nodeId, localBindAddress);
+                } else {
+                    logger.debug("Removing {}.", nodeId);
+                    doClose(idx, format("Node %s", nodeId));
+                    stats.removeRoute(nodeId);
+                }
+
+            } else {
+                logger.warn("No route to node {} via {}", nodeId, connectionId);
+            }
+
+            return null;
+
+        });
+
+        return !routingTable.containsKey(nodeId);
+
     }
 
     private void doCloseBackend(final InstanceId instanceId) {
@@ -274,8 +293,14 @@ public class JeroMQMultiplexRouter {
 
     }
 
-    public static String getLocalBindAddress(final NodeId nodeId) {
-        return format("inproc://mux/%s?%s", nodeId.asString(), randomUUID());
+    public static String[] getHostAndConnectionId(final String instanceConnectAddress) {
+        return instanceConnectAddress.contains("#") ?
+            instanceConnectAddress.split("#") :
+            new String[] {instanceConnectAddress, ""};
+    }
+
+    public static String getLocalBindAddress(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {
+        return format("inproc://mux/%s?%s", nodeId.asString(), connectionId);
     }
 
     public void log() {
@@ -284,9 +309,9 @@ public class JeroMQMultiplexRouter {
 
     private class Stats {
 
-        private final SortedMap<NodeId, String> fRoutes = new TreeMap<>();
+        private final SortedMap<NodeId, InstanceId> fRoutes = new TreeMap<>();
 
-        private final SortedMap<InstanceId, String> bRoutes = new TreeMap<>();
+        private final SortedMap<InstanceId, JeroMQInstanceConnectionId> bRoutes = new TreeMap<>();
 
         private final JeroMQDebugCounter errorCounter = new JeroMQDebugCounter();
 
@@ -295,16 +320,46 @@ public class JeroMQMultiplexRouter {
         private void doLog() {
 
             // Logs all the stats
-            logger.debug("Multiplexer Stats:");
-            logger.debug("  Errors {}", errorCounter);
-            logger.debug("  Backend Total Routes: {}", bRoutes.size());
-            logger.debug("  Frontend Total Routes: {}", fRoutes.size());
+            final var sb = new StringBuilder();
 
-            logger.debug("  Backend Routes:");
-            bRoutes.forEach((iid, addr) -> logger.debug("  Instance {} -> {} @{})", iid, addr, backends.get(iid)));
+            sb.append("\nMultiplexer Stats for ").append(instanceId).append(":");
+            sb.append("\n  Errors: ").append(errorCounter);
+            sb.append("\n  Total Routes: ").append(routingTable.size());
+            sb.append("\n  Backend Logical Routes: ").append(bRoutes.size());
+            sb.append("\n  Frontend Logical Routes: ").append(fRoutes.size());
 
-            logger.debug("  Frontend Routes:");
-            fRoutes.forEach((nid, addr) -> logger.debug("  Node {} -> {} @{})", nid, addr, frontends.get(nid)));
+            sb.append("\n  Frontend Routes:");
+
+            fRoutes.forEach((nid, iid) ->
+                sb.append("\n    ")
+                  .append(instanceId.equals(nid.getInstanceId()) ? "L" : "R")
+                  .append(nid.isMaster() ? "M: " : "W: ")
+                  .append(nid)
+                  .append(" -> ")
+                  .append(iid)
+            );
+
+            sb.append("\n  Backend Routes:");
+
+            bRoutes.forEach((iid, addr) ->
+                sb.append("\n    ")
+                  .append(instanceId.equals(iid) ? "L: " : "R: ")
+                  .append(iid).append(" -> ")
+                  .append(addr)
+            );
+
+            sb.append("\n  Full Routing Table:");
+
+            routingTable.forEach((nid, addr) -> sb
+                .append("\n    ")
+                .append(instanceId.equals(nid.getInstanceId()) ? "L" : "R")
+                .append(nid.isMaster() ? "M: " : "W: ")
+                .append(nid.getInstanceId()).append(" -> ")
+                .append(nid).append(" -> ")
+                .append(addr)
+            );
+
+            logger.debug("{}", sb);
 
         }
 
@@ -316,12 +371,12 @@ public class JeroMQMultiplexRouter {
             errorCounter.increment();
         }
 
-        public void addRoute(final NodeId nodeId, final String nodeBindAddress) {
-            fRoutes.put(nodeId, nodeBindAddress);
+        public void addRoute(final NodeId nodeId) {
+            fRoutes.put(nodeId, nodeId.getInstanceId());
         }
 
-        public void addRoute(final InstanceId instanceId, final String instanceConnectAddress) {
-            bRoutes.put(instanceId, instanceConnectAddress);
+        public void addRoute(final InstanceId instanceId, final JeroMQInstanceConnectionId connectionId) {
+            bRoutes.put(instanceId, connectionId);
         }
 
         public void removeRoute(final NodeId nodeId) {

@@ -64,7 +64,7 @@ public class JeroMQDemultiplexRouter {
 
         final ZMQ.Socket socket = zContext.createSocket(DEALER);
         final int index = poller.register(socket, POLLIN | POLLERR);
-        final String localConnectAddress = getLocalConnectAddress(nodeId);
+        final String localConnectAddress = getLocalBindAddress(nodeId);
 
         socket.connect(localConnectAddress);
         stats.addRoute(nodeId, localConnectAddress);
@@ -132,7 +132,7 @@ public class JeroMQDemultiplexRouter {
         return unmodifiableCollection(backends.keySet());
     }
 
-    public static String getLocalConnectAddress(final NodeId nodeId) {
+    public static String getLocalBindAddress(final NodeId nodeId) {
         return format("inproc://demux/%s?%s", nodeId.asString(), randomUUID());
     }
 

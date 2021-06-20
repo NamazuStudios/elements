@@ -91,9 +91,6 @@ public class JeroMQCommandServer {
                 case OPEN_ROUTE_TO_NODE:
                     response = processOpenRouteToNode(zMsg);
                     break;
-                case CLOSE_ROUTE_TO_NODE:
-                    response = processCloseRouteToNode(zMsg);
-                    break;
                 case OPEN_BINDING_FOR_NODE:
                     response = processOpenBindingForNode(zMsg);
                     break;
@@ -195,19 +192,11 @@ public class JeroMQCommandServer {
         return response;
     }
 
-    private ZMsg processCloseRouteToNode(final ZMsg zMsg) {
-        final var response = new ZMsg();
-        final var nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
-        multiplex.closeRouteToNode(nodeId);
-        logger.info("Closed route to {}.", nodeId);
-        OK.pushResponseCode(response);
-        return response;
-    }
-
     private ZMsg processCloseRoutesViaInstance(final ZMsg zMsg) {
-        final ZMsg response = new ZMsg();
-        final InstanceId instanceId = new InstanceId(zMsg.removeFirst().getData());
-        multiplex.closeRoutesViaInstance(instanceId);
+        final var response = new ZMsg();
+        final var instanceId = new InstanceId(zMsg.removeFirst().getData());
+        final var instanceConnectAddress = zMsg.removeFirst().getString(CHARSET);
+        multiplex.closeRoutesViaInstance(instanceId, instanceConnectAddress);
         logger.info("Closed routes via instance {}.", instanceId);
         OK.pushResponseCode(response);
         return response;

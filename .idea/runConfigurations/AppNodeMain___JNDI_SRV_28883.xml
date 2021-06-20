@@ -6,8 +6,8 @@
       <env name="com.namazustudios.socialengine.rt.srv.servers" value="dns://127.0.0.1:5353" />
     </envs>
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
-    <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appserve.AppServeMain" />
-    <module name="app-serve" />
+    <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.appnode.ApplicationNodeMain" />
+    <module name="app-node" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.namazustudios.socialengine.rt.security.*" />

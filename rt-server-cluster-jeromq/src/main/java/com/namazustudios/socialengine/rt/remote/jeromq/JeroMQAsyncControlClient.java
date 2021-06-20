@@ -104,24 +104,9 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
     }
 
     @Override
-    public Request closeRouteToNode(final NodeId nodeId,
-                                    final ResponseConsumer<Void> responseConsumer) {
-
-        logger.debug("Closing route to node {}", nodeId);
-
-        return dispatch(() -> {
-                final var request = new ZMsg();
-                CLOSE_ROUTE_TO_NODE.pushCommand(request);
-                request.add(nodeId.asBytes());
-                return request;
-            },
-            zMsgResponse -> responseConsumer.accept(zMsgResponse.map(zMsg -> null))
-        );
-
-    }
-
-    @Override
-    public Request closeRoutesViaInstance(InstanceId instanceId, ResponseConsumer<Void> responseConsumer) {
+    public Request closeRoutesViaInstance(final InstanceId instanceId,
+                                          final String instanceConnectAddress,
+                                          final ResponseConsumer<Void> responseConsumer) {
 
         logger.debug("Closing all routes for instance {}", instanceId);
 
@@ -129,6 +114,7 @@ public class JeroMQAsyncControlClient implements AsyncControlClient {
                 final var request = new ZMsg();
                 CLOSE_ROUTES_VIA_INSTANCE.pushCommand(request);
                 request.add(instanceId.asBytes());
+                request.add(instanceConnectAddress.getBytes(CHARSET));
                 return request;
             },
             zMsgResponse -> {

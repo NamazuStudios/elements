@@ -33,20 +33,14 @@ public interface AsyncControlClient extends AutoCloseable {
     Request openRouteToNode(NodeId nodeId, String instanceInvokerAddress, ResponseConsumer<String> responseConsumer);
 
     /**
-     * Close the route to the {@link NodeId}.  If the route is not known, then nothing happens.
-     *
-     * @param nodeId the {@link NodeId}
-     *
-     */
-    Request closeRouteToNode(NodeId nodeId, ResponseConsumer<Void> responseConsumer);
-
-    /**
      * Close the routes via the {@link InstanceId}.  If no routes are known, then nothing happens.
      *
      * @param instanceId the {@link InstanceId}
      *
      */
-    Request closeRoutesViaInstance(InstanceId instanceId, ResponseConsumer<Void> responseConsumer);
+    Request closeRoutesViaInstance(InstanceId instanceId,
+                                   String instanceConnectAddress,
+                                   ResponseConsumer<Void> responseConsumer);
 
     /**
      * Opens an {@link InstanceBinding} provided the {@link NodeId} and returns the

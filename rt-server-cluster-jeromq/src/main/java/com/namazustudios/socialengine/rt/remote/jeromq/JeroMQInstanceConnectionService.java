@@ -488,7 +488,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
                 // Finds all unknown hosts and disconnects them.
 
-                final var toRemove = new HashSet<>();
+                final var toRemove = new HashSet<InstanceHostInfo>();
                 final var known = getInstanceDiscoveryService().getKnownHosts();
 
                 toRemove.addAll(active.keySet());
@@ -503,6 +503,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
                     localControlClient.closeRoutesViaInstance(
                         connection.getInstanceId(),
+                        nfo.getConnectAddress(),
                         response -> logger.info("Closed routes via {}", instanceId));
 
                 });
@@ -581,23 +582,23 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
                 final var c = active.remove(instanceHostInfo);
 
-                pending.compute(instanceHostInfo, (nfo, existing) -> {
+                if (c == null) {
+                    logger.debug("Connection not active. Removing.");
+                } else {
+                    localControlClient.closeRoutesViaInstance(
+                        c.getInstanceId(),
+                        instanceHostInfo.getConnectAddress(),
+                        response -> logger.info("Closed routes via {}", instanceId)
+                    );
+                }
 
-                    // Cancels any pending request, this ensures that the pending request will just die in place and we
-                    // will create a new request that simply disconnects the routes through the instance.
-                    if (existing != null) existing.cancel();
+                final var request = pending.remove(instanceHostInfo);
 
-                    // Finally, if there was a connection associated with the host info, we must then use the local
-                    // client to remove the instance id from the table of routable nodes.
-
-                    return c == null ?
-                        null :
-                        localControlClient.closeRoutesViaInstance(
-                            c.getInstanceId(),
-                            response -> logger.info("Closed routes via {}", instanceId)
-                        );
-
-                });
+                if (request == null) {
+                    logger.debug("No pending request for {}. Skipping.", instanceHostInfo);
+                } else {
+                    request.cancel();
+                }
 
                 return c;
 
@@ -625,23 +626,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 final var instanceHostInfo = rActiveConnections.remove(connection);
                 if (instanceHostInfo == null) return false;
 
-                pending.compute(instanceHostInfo, (nfo, existing) -> {
-
-                    // Cancels any pending request, this ensures that the pending request will just die in place and we
-                    // will create a new request that simply disconnects the routes through the instance.
-                    if (existing != null) existing.cancel();
-
-                    // Finally, if there was a connection associated with the host info, we must then use the local
-                    // client to remove the instance id from the table of routable nodes.
-
-                    return connection == null ?
-                        null :
-                        localControlClient.closeRoutesViaInstance(
-                            connection.getInstanceId(),
-                            response -> logger.info("Closed routes via {}", instanceId)
-                        );
-
-                });
+                localControlClient.closeRoutesViaInstance(
+                    connection.getInstanceId(),
+                    instanceHostInfo.getConnectAddress(),
+                    response -> logger.info("Closed routes via {}", instanceId)
+                );
 
                 return true;
 

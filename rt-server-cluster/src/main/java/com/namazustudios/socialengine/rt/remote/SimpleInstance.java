@@ -34,8 +34,6 @@ public class SimpleInstance implements Instance {
         final List<Exception> exceptionList = new ArrayList<>();
         hooks.add(this::close);
 
-        hooks.add(this::close);
-
         try {
             logger.debug("Starting async connection service. Instance ID {}", instanceId);
             getAsyncConnectionService().start();

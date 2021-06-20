@@ -28,12 +28,6 @@ public enum JeroMQRoutingCommand {
      * Closes a route to a node by specifying the {@link NodeId}.  If the route does not exist the appropriate error
      * is returned.
      */
-    CLOSE_ROUTE_TO_NODE,
-
-    /**
-     * Closes a route to a node by specifying the {@link NodeId}.  If the route does not exist the appropriate error
-     * is returned.
-     */
     CLOSE_ROUTES_VIA_INSTANCE,
 
     /**

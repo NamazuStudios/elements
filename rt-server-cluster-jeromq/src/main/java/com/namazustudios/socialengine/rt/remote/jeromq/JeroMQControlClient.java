@@ -109,26 +109,14 @@ public class JeroMQControlClient implements ControlClient {
     }
 
     @Override
-    public void closeRouteToNode(final NodeId nodeId) {
-
-        logger.debug("Closing route to node {}", nodeId);
-
-        final ZMsg request = new ZMsg();
-        CLOSE_ROUTE_TO_NODE.pushCommand(request);
-        request.add(nodeId.asBytes());
-        send(request);
-        recv();
-
-    }
-
-    @Override
-    public void closeRoutesViaInstance(final InstanceId instanceId) {
+    public void closeRoutesViaInstance(final InstanceId instanceId, final String instanceConnectAddress) {
 
         logger.debug("Closing all routes for instance {}", instanceId);
 
         final ZMsg request = new ZMsg();
         CLOSE_ROUTES_VIA_INSTANCE.pushCommand(request);
         request.add(instanceId.asBytes());
+        request.add(instanceConnectAddress.getBytes(CHARSET));
         send(request);
         recv();
 

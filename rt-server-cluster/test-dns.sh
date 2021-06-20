@@ -37,6 +37,7 @@ do
 
   done
 
+  echo
   echo "Using SRV Records:"
 
   for record in "${records[@]}"
@@ -44,7 +45,11 @@ do
     echo "  ${record}"
   done
 
-  dnsmasq --port=5353 --no-daemon -q "${params[@]}" &
+  dnsmasq -d --port=5353 "${params[@]}" &
   last_pid=$!
+  
+  echo
+  echo "Launched with pid ${last_pid}"
 
 done
+
