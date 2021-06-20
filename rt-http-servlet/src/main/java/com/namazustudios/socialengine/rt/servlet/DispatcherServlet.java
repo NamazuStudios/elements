@@ -115,11 +115,13 @@ public class DispatcherServlet extends HttpServlet {
 
     private void mapRequestAndPerformAsync(final HttpServletRequest httpServletRequest,
                                            final HttpServletResponse httpServletResponse) {
+
+        final var asyncContext = httpServletRequest.startAsync();
+
         getExceptionMapperResolver().performExceptionSafe(
             r -> assembleAndWrite(httpServletRequest, r, httpServletResponse),
             () -> {
 
-                final var asyncContext = httpServletRequest.startAsync();
                 asyncContext.setTimeout(getAsyncTimeoutMillisecoinds());
 
                 final var session = getHttpSessionService().getSession(httpServletRequest);
@@ -184,8 +186,10 @@ public class DispatcherServlet extends HttpServlet {
     private void assembleAndWrite(final HttpServletRequest httpServletRequest,
                                   final Response response,
                                   final HttpServletResponse httpServletResponse) {
+
         try {
             getHttpResponseService().write(httpServletRequest, response, httpServletResponse);
+
         } catch (Exception ex) {
 
             logger.error("Caught exception writing normal response.", ex);
@@ -196,6 +200,11 @@ public class DispatcherServlet extends HttpServlet {
                 logger.error("Caught exception sending error response.", ex);
             }
 
+        } finally {
+            if (httpServletRequest.isAsyncStarted()) {
+                final var asyncContext = httpServletRequest.getAsyncContext();
+                asyncContext.complete();
+            }
         }
 
     }

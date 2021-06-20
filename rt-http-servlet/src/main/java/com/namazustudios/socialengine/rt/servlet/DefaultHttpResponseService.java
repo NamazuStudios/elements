@@ -91,10 +91,6 @@ public class DefaultHttpResponseService implements HttpResponseService {
         setStatusCode(toWrite, destination, payload);
 
         if (payload != null) {
-            if (payloadWriter == null) {
-
-            }
-
             payloadWriter.write(payload, destination.getOutputStream());
         }
 
