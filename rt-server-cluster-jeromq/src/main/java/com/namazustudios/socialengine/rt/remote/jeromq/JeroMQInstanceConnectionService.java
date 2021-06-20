@@ -20,10 +20,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.*;
-import java.util.concurrent.Exchanger;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.ScheduledFuture;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -47,6 +44,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
         "com.namazustudios.socialengine.rt.remote.jeromq.connection.service.refresh.interval.sec";
 
     private static final long REPORT_INTERVAL_SECONDS = 15;
+
+    private static final long REFRESH_INTERVAL_SECONDS = 5;
+
+    private static final long DEFAULT_REFRESH_TIME_OUT_SECONDS = 5;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
@@ -95,7 +96,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     @Override
     public void refresh() {
         final var context = getContext();
-        context.refresh();
+        context.refresh(DEFAULT_REFRESH_TIME_OUT_SECONDS, SECONDS);
     }
 
     @Override
@@ -253,6 +254,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
             server.setName(JeroMQInstanceConnectionService.class.getSimpleName() + " server.");
             server.setUncaughtExceptionHandler((t, ex) -> logger.error("Error running InstanceConnectionService", ex));
             server.start();
+
+            refreshScheduledFuture = scheduler.scheduleAtFixedRate(this::refreshAsync, 0, REFRESH_INTERVAL_SECONDS, SECONDS);
 
             try {
                 final Exception ex = exchangeException(null);
@@ -461,8 +464,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             onDiscover.unsubscribe();
             onUndiscover.unsubscribe();
-// TODO: Disabled for now
-//            refreshScheduledFuture.cancel(true);
+            refreshScheduledFuture.cancel(true);
             drain();
 
             localControlClient.close();
@@ -484,21 +486,18 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
         }
 
-        public void refresh() {
+        public void refresh(final long time, final TimeUnit timeUnit) {
             rwGuard.rw(condition -> {
 
                 // Finds all unknown hosts and disconnects them.
 
-                final var known = getInstanceDiscoveryService().getKnownHosts();
-                final var toAdd = new HashSet<>(known);
-
-                toAdd.removeAll(active.keySet());
-                toAdd.removeAll(pending.keySet());
-                toAdd.forEach(this::createNewConnection);
+                final var known = refreshAsync();
 
                 try {
                     while (!active.keySet().containsAll(known)) {
-                        condition.await();
+                        if (!condition.await(time, timeUnit)) {
+                            throw new InternalException("Timed out after " + time + " " + timeUnit);
+                        }
                     }
                 } catch (InterruptedException e) {
                     logger.info("Interrupted refreshing.", e);
@@ -506,6 +505,19 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
                 logger.info("Refreshed successfully.");
 
+            });
+        }
+
+        public Collection<InstanceHostInfo> refreshAsync() {
+            return rwGuard.computeRW(condition -> {
+                final var known = getInstanceDiscoveryService().getKnownHosts();
+                final var toAdd = new HashSet<>(known);
+
+                toAdd.removeAll(active.keySet());
+                toAdd.removeAll(pending.keySet());
+                toAdd.forEach(this::createNewConnection);
+
+                return known;
             });
         }
 
