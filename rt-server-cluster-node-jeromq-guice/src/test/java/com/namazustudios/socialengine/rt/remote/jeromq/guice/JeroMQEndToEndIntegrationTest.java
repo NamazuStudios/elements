@@ -45,9 +45,10 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 
+@Test(enabled = false)
 public class JeroMQEndToEndIntegrationTest {
 
-    private static final int TEST_NODE_COUNT = 4;
+    private static final int TEST_NODE_COUNT = 2;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQEndToEndIntegrationTest.class);
 
