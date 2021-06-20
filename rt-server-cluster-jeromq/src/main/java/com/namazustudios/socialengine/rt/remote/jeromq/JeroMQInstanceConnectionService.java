@@ -461,7 +461,8 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
             onDiscover.unsubscribe();
             onUndiscover.unsubscribe();
-            refreshScheduledFuture.cancel(true);
+// TODO: Disabled for now
+//            refreshScheduledFuture.cancel(true);
             drain();
 
             localControlClient.close();
@@ -488,38 +489,22 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
                 // Finds all unknown hosts and disconnects them.
 
-                final var toRemove = new HashSet<InstanceHostInfo>();
                 final var known = getInstanceDiscoveryService().getKnownHosts();
+                final var toAdd = new HashSet<>(known);
 
-                toRemove.addAll(active.keySet());
-                toRemove.addAll(pending.keySet());
-                toRemove.removeAll(known);
-                toRemove.forEach(nfo -> {
-
-                    final var request = pending.remove(nfo);
-                    final var connection = active.remove(nfo);
-
-                    if (request != null) request.cancel();
-
-                    localControlClient.closeRoutesViaInstance(
-                        connection.getInstanceId(),
-                        nfo.getConnectAddress(),
-                        response -> logger.info("Closed routes via {}", instanceId));
-
-                });
-
-                final var local = new SimpleInstanceHostInfo(getInternalBindAddress());
-
-                concat(of(local), known.stream())
-                     .filter(nfo -> !getBindAddress().equals(nfo.getConnectAddress()))
-                     .filter(not(nfo -> pending.containsKey(nfo) || active.containsKey(nfo)))
-                     .forEach(this::createNewConnection);
+                toAdd.removeAll(active.keySet());
+                toAdd.removeAll(pending.keySet());
+                toAdd.forEach(this::createNewConnection);
 
                 try {
-                    while (!pending.isEmpty()) condition.await();
+                    while (!active.keySet().containsAll(known)) {
+                        condition.await();
+                    }
                 } catch (InterruptedException e) {
                     logger.info("Interrupted refreshing.", e);
                 }
+
+                logger.info("Refreshed successfully.");
 
             });
         }

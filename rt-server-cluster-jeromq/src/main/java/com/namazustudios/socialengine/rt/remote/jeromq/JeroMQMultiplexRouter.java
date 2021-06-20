@@ -43,8 +43,6 @@ public class JeroMQMultiplexRouter {
 
     private final ZMQ.Poller poller;
 
-//    private final BiMap<NodeId, String> bindAddrs = HashBiMap.create();
-
     private final BiMap<NodeId, Integer> frontends = HashBiMap.create();
 
     private final BiMap<Integer, NodeId> rFrontends = frontends.inverse();
@@ -299,8 +297,8 @@ public class JeroMQMultiplexRouter {
             new String[] {instanceConnectAddress, ""};
     }
 
-    public static String getLocalBindAddress(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {
-        return format("inproc://mux/%s?%s", nodeId.asString(), connectionId);
+    public String getLocalBindAddress(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {
+        return format("inproc://%s/mux/%s?%s", instanceId, nodeId.asString(), connectionId);
     }
 
     public void log() {
