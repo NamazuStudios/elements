@@ -2,12 +2,12 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.AsyncPublisher;
 import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
+import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.util.HostList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.xbill.DNS.DClass;
-import org.xbill.DNS.Lookup;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -24,10 +24,12 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
-import static java.util.Collections.emptySortedSet;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
 
 public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService {
 
@@ -37,20 +39,15 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
 
     private static final TimeUnit DNS_LOOKUP_POLLING_RATE_UNITS = SECONDS;
 
-    public static final String SRV_QUERY = "com.namazustudios.socialengine.rt.srv.query";
-
-    public static final String SRV_SERVERS = "com.namazustudios.socialengine.rt.srv.servers";
+    public static final String SRV_AUTHORITATIVE = "com.namazustudios.socialengine.rt.srv.authoritative";
 
     private String srvQuery;
 
     private String srvServers;
 
-    private final AtomicReference<JndiSrvInstanceDiscoveryService.SrvDiscoveryContext> context = new AtomicReference<>();
+    private boolean authoritative;
 
-    static {
-        Lookup.getDefaultCache(DClass.IN).setMaxCache(0);
-        Lookup.getDefaultCache(DClass.IN).setMaxNCache(0);
-    }
+    private final AtomicReference<JndiSrvInstanceDiscoveryService.SrvDiscoveryContext> context = new AtomicReference<>();
 
     @Override
     public void start() {
@@ -107,7 +104,7 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
     }
 
     @Inject
-    public void setSrvQuery(@Named(SRV_QUERY) String srvQuery) {
+    public void setSrvQuery(@Named(Constants.SRV_QUERY) String srvQuery) {
         this.srvQuery = srvQuery;
     }
 
@@ -116,8 +113,17 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
     }
 
     @Inject
-    public void setSrvServers(@Named(SRV_SERVERS) String srvServers) {
+    public void setSrvServers(@Named(Constants.SRV_SERVERS) String srvServers) {
         this.srvServers = srvServers;
+    }
+
+    public boolean isAuthoritative() {
+        return authoritative;
+    }
+
+    @Inject
+    public void setAuthoritative(@Named(SRV_AUTHORITATIVE) boolean authoritative) {
+        this.authoritative = authoritative;
     }
 
     private class SrvDiscoveryContext {
@@ -130,7 +136,7 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
             return thread;
         });
 
-        private DirContext dirContext;
+        private List<DirContext> dirContexts;
 
         private Set<JndiInstanceHostInfo> lookupResultSet = new HashSet<>();
 
@@ -144,19 +150,38 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
 
             logger.info("Using SRV FQDN {} querying servers {}", getSrvQuery(), getSrvServers());
 
-            final var env = new Hashtable<>();
-            env.put(Context.AUTHORITATIVE, "true");
+            dirContexts = new HostList()
+                .with(getSrvServers())
+                .get()
+                .map(hosts -> hosts.stream().map(host -> {
 
-            final var servers = getSrvServers().trim();
-            if (!servers.isEmpty()) env.put(Context.PROVIDER_URL, getSrvServers());
+                    final var env = new Hashtable<>();
+                    env.put("networkaddress.cache.ttl", "-1");
+                    env.put(Context.AUTHORITATIVE, Boolean.toString(isAuthoritative()));
+                    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+                    env.put(Context.PROVIDER_URL, host);
 
-            env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+                    try {
+                        return (DirContext) new InitialDirContext(env);
+                    } catch (NamingException ex) {
+                        throw new InternalException(ex);
+                    }
 
-            try {
-                dirContext = new InitialDirContext(env);
-            } catch (NamingException e) {
-                throw new InternalException(e);
-            }
+                })
+                .collect(toList()))
+                .orElseGet(() -> {
+
+                    final var env = new Hashtable<>();
+                    env.put(Context.AUTHORITATIVE, Boolean.toString(isAuthoritative()));
+                    env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
+
+                    try {
+                        return List.of((DirContext) new InitialDirContext(env));
+                    } catch (NamingException ex) {
+                        throw new InternalException(ex);
+                    }
+
+                });
 
             scheduler.scheduleAtFixedRate(
                 this::refresh,
@@ -171,26 +196,30 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
                 lock.lock();
                 final var nfos = query();
                 update(nfos);
-            } catch (NameNotFoundException ex) {
-
-                logger.info("Query '{}' returned zero no results.", getSrvQuery());
-
-                if (!lookupResultSet.isEmpty()) {
-                    logger.info("Removing all known hosts.");
-                    lookupResultSet.forEach(onUndiscovery::publishAsync);
-                    lookupResultSet = emptySortedSet();
-                }
-
-            } catch (Exception ex) {
-                logger.error("Error querying SRV records.", ex);
             } finally {
                 lock.unlock();
             }
         }
 
-        private SortedSet<JndiInstanceHostInfo> query() throws NamingException {
-            final var attributes = dirContext.getAttributes(getSrvQuery(), new String[]{"SRV"});
-            return JndiInstanceHostInfo.parse("tcp", attributes.get("srv"));
+        private SortedSet<JndiInstanceHostInfo> query() {
+            return dirContexts
+                .stream()
+                .flatMap(dirContext -> {
+
+                    Stream<JndiInstanceHostInfo> s = Stream.empty();
+
+                    try {
+                        final var attributes = dirContext.getAttributes(getSrvQuery(), new String[]{"SRV"});
+                        s = JndiInstanceHostInfo.parse("tcp", attributes.get("srv")).stream();
+                    }  catch (NameNotFoundException ex) {
+                        logger.info("No hosts found for record.", ex);
+                    } catch (Exception ex) {
+                        logger.error("Error querying SRV records.", ex);
+                    }
+
+                    return s;
+
+                }).collect(toCollection(TreeSet::new));
         }
 
         private void update(final SortedSet<JndiInstanceHostInfo> update) {
@@ -233,37 +262,19 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
                 logger.error("Interrupted while shutting down.", ex);
             }
 
-            try {
-                dirContext.close();
-            } catch (NamingException e) {
-                logger.error("Could not stop JDNI context.", e);
-            }
+            dirContexts.forEach(dirContext -> {
+                try {
+                    dirContext.close();
+                } catch (NamingException e) {
+                    logger.error("Could not stop JDNI context.", e);
+                }
+            });
 
         }
 
         public Collection<InstanceHostInfo> getRemoteConnections() {
             return unmodifiableSet(lookupResultSet);
         }
-
-    }
-
-    public static void main(final String[] args) throws NamingException {
-
-        final var env = new Hashtable<>();
-        env.put(Context.AUTHORITATIVE, "true");
-        env.put(Context.PROVIDER_URL, "dns://127.0.0.1:5353");
-        env.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.dns.DnsContextFactory");
-
-        final var context = new InitialDirContext(env);
-
-        for (int i = 0; i < 100; ++i) {
-            final var result = context.getAttributes("_elements._tcp.internal", new String[]{"SRV"});
-            final var attributes = result.get("srv");
-            final var nfos = JndiInstanceHostInfo.parse("tcp", attributes);
-            System.out.println("Host Info: " + nfos);
-        }
-
-        System.out.println("Done!");
 
     }
 
