@@ -212,7 +212,7 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
                         final var attributes = dirContext.getAttributes(getSrvQuery(), new String[]{"SRV"});
                         s = JndiInstanceHostInfo.parse("tcp", attributes.get("srv")).stream();
                     }  catch (NameNotFoundException ex) {
-                        logger.info("No hosts found for record.", ex);
+                        logger.info("No hosts found for record {}", getSrvQuery());
                     } catch (Exception ex) {
                         logger.error("Error querying SRV records.", ex);
                     }
