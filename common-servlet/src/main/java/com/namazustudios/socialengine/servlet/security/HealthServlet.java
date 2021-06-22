@@ -11,6 +11,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.namazustudios.socialengine.model.health.HealthStatus.HEALTHY_THRESHOLD;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 public class HealthServlet extends HttpServlet {
@@ -23,10 +25,9 @@ public class HealthServlet extends HttpServlet {
     protected void doGet(final HttpServletRequest req,
                          final HttpServletResponse resp) throws ServletException, IOException {
         final var status = getHealthStatusService().checkHealthStatus();
-        resp.setStatus(SC_OK);
+        resp.setStatus(status.getOverallHealth() < HEALTHY_THRESHOLD ? SC_INTERNAL_SERVER_ERROR : SC_OK);
         resp.setContentType("application/json");
         getObjectMapper().writeValue(resp.getOutputStream(), status);
-        super.doGet(req, resp);
     }
 
     public ObjectMapper getObjectMapper() {

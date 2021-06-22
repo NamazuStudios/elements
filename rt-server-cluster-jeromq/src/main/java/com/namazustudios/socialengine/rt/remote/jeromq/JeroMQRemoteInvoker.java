@@ -45,6 +45,11 @@ public class JeroMQRemoteInvoker implements RemoteInvoker {
     private final AtomicReference<AsyncConnectionPool<ZContext, ZMQ.Socket>> pool = new AtomicReference<>();
 
     @Override
+    public String getConnectAddress() {
+        return connectAddress;
+    }
+
+    @Override
     public void start(final String connectAddress, final long timeout, final TimeUnit timeoutTimeUnit) {
 
         final long timeoutMillis = MILLISECONDS.convert(timeout, timeoutTimeUnit);

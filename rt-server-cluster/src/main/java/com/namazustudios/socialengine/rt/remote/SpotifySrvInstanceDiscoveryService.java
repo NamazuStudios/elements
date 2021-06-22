@@ -280,7 +280,7 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         @Override
         public String toString() {
-            return format("SRV Record %s:%d %d %d",
+            return format("SRV (Spotify/XBill) Record %s:%d %d %d",
                 lookupResult.host(),
                 lookupResult.port(),
                 lookupResult.priority(),

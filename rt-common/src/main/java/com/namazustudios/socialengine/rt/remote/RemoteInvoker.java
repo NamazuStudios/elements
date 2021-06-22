@@ -38,6 +38,14 @@ public interface RemoteInvoker {
     String REMOTE_INVOKER_MAX_CONNECTIONS = "com.namazustudios.socialengine.rt.remote.RemoteInvoker.maxConnections";
 
     /**
+     * Gets the connection address for this {@link RemoteInvoker}. This should be the last value passed to
+     * {@link #start(String)} or {@link #start(String, long, TimeUnit)}.
+     *
+     * @return the connect address
+     */
+    String getConnectAddress();
+
+    /**
      * Starts this {@link RemoteInvoker} and connects to the supplied address.
      *
      * @param connectAddress the connect address

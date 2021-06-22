@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.ControlClient;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService;
 import com.namazustudios.socialengine.rt.remote.InstanceStatus;
+import com.namazustudios.socialengine.rt.remote.RoutingStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.*;
@@ -76,6 +77,20 @@ public class JeroMQControlClient implements ControlClient {
      */
     public static Socket open(final ZContext zContext) {
         return zContext.createSocket(DEALER);
+    }
+
+    @Override
+    public RoutingStatus getRoutingStatus() {
+
+        logger.debug("Getting routing status.");
+
+        final ZMsg request = new ZMsg();
+        GET_ROUTING_STATUS.pushCommand(request);
+        send(request);
+
+        final ZMsg response = recv();
+        return new JeroMQRoutingStatus(response);
+
     }
 
     @Override

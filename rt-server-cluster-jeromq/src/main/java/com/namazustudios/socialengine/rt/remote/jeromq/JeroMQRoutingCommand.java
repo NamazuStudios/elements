@@ -13,6 +13,13 @@ public enum JeroMQRoutingCommand {
     FORWARD,
 
     /**
+     * Returns the routing information for the service. This includes a listing of current routes. The response contains
+     * a set of frame pairs. The first of each in the pair includes the NodeID and the second contains the string
+     * representation of the destination route.
+     */
+    GET_ROUTING_STATUS,
+
+    /**
      * Gets the instance status.  The instance status returns the instance ID, a listing of nodes IDs and ports
      * currently serving on the instance.
      */
@@ -38,7 +45,12 @@ public enum JeroMQRoutingCommand {
     /**
      * Closes a binding for a node by specifying the {@link NodeId}.
      */
-    CLOSE_BINDING_FOR_NODE;
+    CLOSE_BINDING_FOR_NODE,
+
+    /**
+     * Causes the instance to perform a health check.
+     */
+    HEALTH_CHECK;
 
     private static final JeroMQRoutingCommand VALUES[] = values();
 

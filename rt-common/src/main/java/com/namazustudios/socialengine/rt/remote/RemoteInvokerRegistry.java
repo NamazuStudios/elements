@@ -24,6 +24,13 @@ public interface RemoteInvokerRegistry {
     void refresh();
 
     /**
+     * Gets all {@link RemoteInvoker} instances across all applications.
+     *
+     * @return the {@link List<RemoteInvoker>}
+     */
+    List<RemoteInvoker> getAllRemoteInvokers();
+
+    /**
      * Returns a {@link RemoteInvoker} by arbitrary selection.  The underlying {@link RemoteInvokerRegistry} may employ
      * heuristics to determine the most suitable {@link RemoteInvoker} to return.  However, this defers entirely to the
      * underlying implementation to make that determination.

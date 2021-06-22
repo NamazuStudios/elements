@@ -23,6 +23,23 @@ class RemoteInvokerRegistrySnapshot {
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
+    public List<RemoteInvoker> getAllRemoteInvokers() {
+
+        final Lock lock = readWriteLock.readLock();
+
+        try {
+            lock.lock();
+            return storage.invokersByNode
+                .values()
+                .stream()
+                .map(SnapshotEntry::getInvoker)
+                .collect(toList());
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
     public RemoteInvoker getRemoteInvoker(final NodeId nodeId) {
 
         final Lock lock = readWriteLock.readLock();
@@ -191,9 +208,9 @@ class RemoteInvokerRegistrySnapshot {
 
         private final Set<RemoteInvoker> invokersToPurge = new HashSet<>();
 
-        private final Map<NodeId, SnapshotEntry> invokersByNode = new HashMap<>();
+        private final Map<NodeId, SnapshotEntry> invokersByNode = new LinkedHashMap<>();
 
-        private final Map<ApplicationId, List<SnapshotEntry>> invokersByApplication = new HashMap<>();
+        private final Map<ApplicationId, List<SnapshotEntry>> invokersByApplication = new LinkedHashMap<>();
 
         private void add(final NodeId nodeId, final double quality,
                          final Supplier<RemoteInvoker> remoteInvokerSupplier) {

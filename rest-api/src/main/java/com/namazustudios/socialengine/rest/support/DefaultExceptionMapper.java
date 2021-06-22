@@ -2,12 +2,10 @@ package com.namazustudios.socialengine.rest.support;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Maps;
-import com.namazustudios.socialengine.exception.BaseException;
-import com.namazustudios.socialengine.exception.ErrorCode;
-import com.namazustudios.socialengine.exception.UnauthorizedException;
-import com.namazustudios.socialengine.exception.ValidationFailureException;
+import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.ValidationErrorResponse;
+import com.namazustudios.socialengine.model.health.HealthErrorResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,8 +67,21 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
                 .collect(toList()));
 
             return Response.status(getStatusForCode(ex.getCode()))
-                           .entity(errorResponse)
-                           .build();
+                .entity(errorResponse)
+                .build();
+
+        } catch (UnhealthyException ex) {
+
+            LOG.info("Caught validation failure exception while processing request.", ex);
+
+            final var errorResponse = new HealthErrorResponse();
+            errorResponse.setHealthStatus(ex.getHealthStatus());
+            errorResponse.setCode(ex.getCode().toString());
+            errorResponse.setMessage(ex.getMessage());
+
+            return Response.status(getStatusForCode(ex.getCode()))
+                .entity(errorResponse)
+                .build();
 
         } catch (UnauthorizedException ex) {
 

@@ -26,8 +26,8 @@ public class SimpleInstanceHostInfo implements InstanceHostInfo {
     @Override
     public String toString() {
         return "SimpleInstanceHostInfo{" +
-                "connectAddress='" + connectAddress + '\'' +
-                '}';
+            "connectAddress='" + connectAddress + '\'' +
+            '}';
     }
 
 }

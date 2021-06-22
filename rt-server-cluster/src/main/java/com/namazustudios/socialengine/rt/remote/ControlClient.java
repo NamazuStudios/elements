@@ -9,6 +9,13 @@ import java.util.concurrent.TimeUnit;
 public interface ControlClient extends AutoCloseable {
 
     /**
+     * Gets the routing status for the system.
+     *
+     * @return the routing status.
+     */
+    RoutingStatus getRoutingStatus();
+
+    /**
      * Gets the {@link InstanceId} for the remote instance.
      *
      * @return the {@link InstanceStatus}

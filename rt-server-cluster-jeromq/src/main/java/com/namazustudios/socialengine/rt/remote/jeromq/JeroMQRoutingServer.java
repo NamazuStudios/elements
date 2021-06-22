@@ -132,8 +132,7 @@ public class JeroMQRoutingServer implements AutoCloseable {
     }
 
     public static ZMsg exceptionError(final Logger logger, final Exception ex) {
-        final var response = exceptionError(logger, EXCEPTION, ex);
-        return response;
+        return exceptionError(logger, EXCEPTION, ex);
     }
 
     public static ZMsg exceptionError(final Logger logger, final JeroMQControlResponseCode code, final Exception ex) {
