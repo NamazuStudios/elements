@@ -25,4 +25,16 @@ public interface Constants {
      */
     String INSTANCE_DISCOVERY_SERVICE = "com.namazustudios.socialengine.rt.instance.discovery.service";
 
+    /**
+     * When using SRV based discovery of instances this defines the actual SRV query to use when discovering instances.
+     * This feature is implementation specific and may require different configuration depending on the configuration.
+     */
+    String SRV_QUERY = "com.namazustudios.socialengine.rt.srv.query";
+
+    /**
+     * When using SRV based discovery of instances this defines the actual DNS Servers against which to run queries.
+     * This feature is implementation specific and may require different configuration depending on the configuration.
+     */
+    String SRV_SERVERS = "com.namazustudios.socialengine.rt.srv.servers";
+
 }

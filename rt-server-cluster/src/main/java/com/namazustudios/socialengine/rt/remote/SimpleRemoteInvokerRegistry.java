@@ -39,7 +39,9 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
     private static final TimeUnit SHUTDOWN_UNITS = MINUTES;
 
-    private static final long REFRESH_TIMEOUT = 1;
+    private static final long TOTAL_REFRESH_TIMEOUT = 3;
+
+    private static final long METADATA_REFRESH_TIMEOUT = 1;
 
     private static final TimeUnit REFRESH_TIMEOUT_TIMEUNIT = SECONDS;
 
@@ -86,13 +88,19 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     }
 
     @Override
+    public List<RemoteInvokerStatus> getAllRemoteInvokerStatus() {
+        final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
+        return snapshot.getAllRemoteInvokers();
+    }
+
+    @Override
     public RemoteInvoker getBestRemoteInvoker(final ApplicationId applicationId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
         return snapshot.getBestInvokerForApplication(applicationId);
     }
 
     @Override
-    public List<RemoteInvoker> getAllRemoteInvokers(final ApplicationId applicationId) {
+    public List<RemoteInvoker> getAllRemoteInvokerStatus(final ApplicationId applicationId) {
         final RemoteInvokerRegistrySnapshot snapshot = getSnapshot();
         return snapshot.getAllRemoteInvokersForApplication(applicationId);
     }
@@ -210,7 +218,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                     th -> logger.error("Failed to get instance metadata for {}", connection.getInstanceId(), th)
                 );
 
-            op.timeout(REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT);
+            op.timeout(METADATA_REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT);
 
         }
 
@@ -283,12 +291,12 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                     }
                 );
 
-                op.timeout(REFRESH_TIMEOUT, SECONDS);
+                op.timeout(METADATA_REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT);
 
             }
 
             try {
-                if (latch.awaitFinish(REFRESH_TIMEOUT, SECONDS)) {
+                if (latch.awaitFinish(TOTAL_REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT)) {
                     final var builder = snapshot.refresh();
                     for (var op : operations) op.accept(builder);
                     builder.prune().commit(this::cleanup);

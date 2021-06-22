@@ -17,7 +17,7 @@ public class HostList {
         requireNonNull(hosts, "hosts");
 
         Stream.of(hosts.trim().split("[\\s,;]+"))
-              .map(host -> host.trim())
+              .map(String::trim)
               .filter(host -> !host.isBlank())
               .forEach(this.hosts::add);
 

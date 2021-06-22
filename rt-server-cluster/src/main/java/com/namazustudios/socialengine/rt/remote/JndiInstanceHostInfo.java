@@ -39,14 +39,7 @@ public class JndiInstanceHostInfo implements InstanceHostInfo, Comparable<JndiIn
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("JndiInstanceHostInfo{");
-        sb.append("SRV priority=").append(priority);
-        sb.append(", weight=").append(weight);
-        sb.append(", port=").append(port);
-        sb.append(", target=").append(target);
-        sb.append(", connectAddress=").append(target);
-        sb.append('}');
-        return sb.toString();
+        return format("SRV (JNDI) Record %s:%d %d %d", target, port, priority, weight);
     }
 
     @Override

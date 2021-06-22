@@ -22,6 +22,8 @@ import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.Constants.SRV_QUERY;
+import static com.namazustudios.socialengine.rt.Constants.SRV_SERVERS;
 import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static java.util.Collections.unmodifiableSet;
@@ -36,10 +38,6 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
     private static final long DNS_LOOKUP_POLLING_RATE = 1;
 
     private static final TimeUnit DNS_LOOKUP_POLLING_RATE_UNITS = TimeUnit.SECONDS;
-
-    public static final String SRV_QUERY = "com.namazustudios.socialengine.rt.srv.query";
-
-    public static final String SRV_SERVERS = "com.namazustudios.socialengine.rt.srv.servers";
 
     private String srvQuery;
 
@@ -282,7 +280,7 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
         @Override
         public String toString() {
-            return format("SRV Record %s:%d %d %d",
+            return format("SRV (Spotify/XBill) Record %s:%d %d %d",
                 lookupResult.host(),
                 lookupResult.port(),
                 lookupResult.priority(),

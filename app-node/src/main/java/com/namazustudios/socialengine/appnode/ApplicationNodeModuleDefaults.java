@@ -6,17 +6,15 @@ import java.util.Properties;
 
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.JEROMQ_NODE_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.JEROMQ_NODE_MIN_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
-import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
+import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.git.Constants.GIT_STORAGE_DIRECTORY;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
+import static com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService.SRV_AUTHORITATIVE;
 import static com.namazustudios.socialengine.rt.remote.PersistentInstanceIdProvider.INSTANCE_ID_FILE;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
-import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_QUERY;
-import static com.namazustudios.socialengine.rt.remote.SpotifySrvInstanceDiscoveryService.SRV_SERVERS;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
@@ -58,6 +56,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(GIT_STORAGE_DIRECTORY, "script-repos/git");
         properties.setProperty(SRV_QUERY, "_elements._tcp.internal");
         properties.setProperty(SRV_SERVERS, "");
+        properties.setProperty(SRV_AUTHORITATIVE, "false");
         return properties;
     }
 

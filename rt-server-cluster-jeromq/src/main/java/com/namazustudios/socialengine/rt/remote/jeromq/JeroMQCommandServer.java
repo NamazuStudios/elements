@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import com.google.common.collect.SortedSetMultimap;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
@@ -85,6 +86,9 @@ public class JeroMQCommandServer {
                 case FORWARD:
                     demultiplex.forward(zMsg, identity);
                     return;
+                case GET_ROUTING_STATUS:
+                    response = processRoutingStatus(zMsg);
+                    break;
                 case GET_INSTANCE_STATUS:
                     response = processInstanceStatus(zMsg);
                     break;
@@ -170,10 +174,26 @@ public class JeroMQCommandServer {
         return response;
     }
 
+    private ZMsg processRoutingStatus(final ZMsg zMsg) {
+
+        final var response = new ZMsg();
+
+        logger.debug("Got routing table.");
+        OK.pushResponseCode(response);
+
+        response.addLast(instanceId.asBytes());
+        multiplex.getRoutingTable().forEach((nid, conn) -> {
+            response.addLast(nid.asBytes());
+            response.addLast(conn.toString());
+        });
+
+        return response;
+
+    }
+
     private ZMsg processInstanceStatus(final ZMsg zMsg) {
         final ZMsg response = new ZMsg();
         final Collection<NodeId> nodeIds = demultiplex.getConnectedNodeIds();
-        if (!zMsg.isEmpty()) logger.warn("Unexpected frames in status request: {}", zMsg);
         logger.debug("Got instance status.");
         OK.pushResponseCode(response);
         response.addLast(instanceId.asBytes());

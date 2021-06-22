@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.SortedSetMultimap;
-import com.google.common.collect.TreeMultimap;
+import com.google.common.collect.*;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
@@ -17,6 +14,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import static com.google.common.collect.Multimaps.unmodifiableSortedSetMultimap;
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushIdentity;
@@ -42,8 +40,6 @@ public class JeroMQMultiplexRouter {
     private final ZContext zContext;
 
     private final ZMQ.Poller poller;
-
-//    private final BiMap<NodeId, String> bindAddrs = HashBiMap.create();
 
     private final BiMap<NodeId, Integer> frontends = HashBiMap.create();
 
@@ -299,12 +295,16 @@ public class JeroMQMultiplexRouter {
             new String[] {instanceConnectAddress, ""};
     }
 
-    public static String getLocalBindAddress(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {
-        return format("inproc://mux/%s?%s", nodeId.asString(), connectionId);
+    public String getLocalBindAddress(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {
+        return format("inproc://%s/mux/%s?%s", instanceId, nodeId.asString(), connectionId);
     }
 
     public void log() {
         stats.log();
+    }
+
+    public SortedSetMultimap<NodeId, JeroMQInstanceConnectionId> getRoutingTable() {
+        return unmodifiableSortedSetMultimap(routingTable);
     }
 
     private class Stats {

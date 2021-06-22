@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.rt.routing.RoutingUtility.reduceAddressToNodeIds;
 import static java.util.Collections.emptyList;
@@ -30,7 +29,7 @@ public class ListAggregateRoutingStrategy extends AbstractAggregateRoutingStrate
         final Set<NodeId> nodeIdSet = reduceAddressToNodeIds(address);
 
         // Ensures that if anywhere a NodeId is left blank (wildcard) it will route to all remote invokers
-        if (nodeIdSet.contains(null)) return getRemoteInvokerRegistry().getAllRemoteInvokers(getApplicationId());
+        if (nodeIdSet.contains(null)) return getRemoteInvokerRegistry().getAllRemoteInvokerStatus(getApplicationId());
 
         // Collects the NodeIds to a list of RemoteInvoker
         return nodeIdSet

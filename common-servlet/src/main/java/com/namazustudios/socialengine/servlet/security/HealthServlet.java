@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.servlet.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namazustudios.socialengine.exception.ErrorCode;
+import com.namazustudios.socialengine.model.health.HealthErrorResponse;
 import com.namazustudios.socialengine.service.HealthStatusService;
 import com.namazustudios.socialengine.service.Unscoped;
 
@@ -11,6 +13,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 
+import static com.namazustudios.socialengine.model.health.HealthStatus.HEALTHY_THRESHOLD;
+import static javax.servlet.http.HttpServletResponse.SC_INTERNAL_SERVER_ERROR;
 import static javax.servlet.http.HttpServletResponse.SC_OK;
 
 public class HealthServlet extends HttpServlet {
@@ -22,11 +26,22 @@ public class HealthServlet extends HttpServlet {
     @Override
     protected void doGet(final HttpServletRequest req,
                          final HttpServletResponse resp) throws ServletException, IOException {
+
         final var status = getHealthStatusService().checkHealthStatus();
-        resp.setStatus(SC_OK);
         resp.setContentType("application/json");
-        getObjectMapper().writeValue(resp.getOutputStream(), status);
-        super.doGet(req, resp);
+
+        if (status.getOverallHealth() < HEALTHY_THRESHOLD) {
+            final var errorResponse = new HealthErrorResponse();
+            errorResponse.setMessage("Instance is Unhealthy.");
+            errorResponse.setCode(ErrorCode.UNHEALTHY.toString());
+            errorResponse.setHealthStatus(status);
+            resp.setStatus(SC_INTERNAL_SERVER_ERROR);
+            getObjectMapper().writeValue(resp.getOutputStream(), errorResponse);
+        } else {
+            resp.setStatus(SC_OK);
+            getObjectMapper().writeValue(resp.getOutputStream(), status);
+        }
+
     }
 
     public ObjectMapper getObjectMapper() {

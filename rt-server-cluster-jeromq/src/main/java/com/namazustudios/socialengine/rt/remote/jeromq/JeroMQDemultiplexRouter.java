@@ -27,6 +27,8 @@ import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQDemultiplexRouter {
 
+    private final InstanceId instanceId;
+
     private final Stats stats;
 
     private final Logger logger;
@@ -45,6 +47,7 @@ public class JeroMQDemultiplexRouter {
                                    final ZContext zContext,
                                    final ZMQ.Poller poller,
                                    final int frontend) {
+        this.instanceId = instanceId;
         this.logger = JeroMQRoutingServer.getLogger(getClass(), instanceId);
         this.zContext = zContext;
         this.poller = poller;
@@ -132,8 +135,8 @@ public class JeroMQDemultiplexRouter {
         return unmodifiableCollection(backends.keySet());
     }
 
-    public static String getLocalBindAddress(final NodeId nodeId) {
-        return format("inproc://demux/%s?%s", nodeId.asString(), randomUUID());
+    public String getLocalBindAddress(final NodeId nodeId) {
+        return format("inproc://demux/%s/%s?%s", instanceId, nodeId.asString(), randomUUID());
     }
 
     public void log() {

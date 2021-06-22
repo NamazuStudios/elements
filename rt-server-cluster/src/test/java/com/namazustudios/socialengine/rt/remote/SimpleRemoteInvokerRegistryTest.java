@@ -164,7 +164,7 @@ public class SimpleRemoteInvokerRegistryTest {
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
-        mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokers(aid).forEach(ri -> {
+        mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokerStatus(aid).forEach(ri -> {
 
             final NodeId nodeId = forInstanceAndApplication(iid, aid);
             final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
@@ -325,7 +325,7 @@ public class SimpleRemoteInvokerRegistryTest {
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
-        mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokers(aid).forEach(ri -> {
+        mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokerStatus(aid).forEach(ri -> {
 
             final var nodeId = forInstanceAndApplication(iid, aid);
             final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);
@@ -484,7 +484,7 @@ public class SimpleRemoteInvokerRegistryTest {
         });
 
         // Verify that the requested remote invoker was connected to the correct node id
-        mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokers(aid).forEach(ri -> {
+        mockInstanceIds.forEach(iid -> mockApplicationIds.forEach(aid -> getRemoteInvokerRegistry().getAllRemoteInvokerStatus(aid).forEach(ri -> {
 
             final var nodeId = forInstanceAndApplication(iid, aid);
             final var mockRemoteInvoker = mockRemoteInvokerMap.get(nodeId);

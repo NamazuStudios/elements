@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rest;
 
+import com.namazustudios.socialengine.exception.UnhealthyException;
 import com.namazustudios.socialengine.model.health.HealthStatus;
 import com.namazustudios.socialengine.service.HealthStatusService;
 import io.swagger.annotations.Api;
@@ -10,6 +11,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
+
+import static com.namazustudios.socialengine.model.health.HealthStatus.HEALTHY_THRESHOLD;
 
 @Api(hidden = true,
      value = "Service Health",
@@ -30,7 +33,15 @@ public class HealthResource {
                           "service is capable of servicing requests. Any unsuccessful error codes should indicate " +
                           "that the instance has internal issues and should be taken offline.")
     public HealthStatus getServerHealth() {
-        return getHealthStatusService().checkHealthStatus();
+
+        final var healthStatus = getHealthStatusService().checkHealthStatus();
+
+        if (healthStatus.getOverallHealth() < HEALTHY_THRESHOLD) {
+            throw new UnhealthyException(healthStatus);
+        }
+
+        return healthStatus;
+
     }
 
     public HealthStatusService getHealthStatusService() {

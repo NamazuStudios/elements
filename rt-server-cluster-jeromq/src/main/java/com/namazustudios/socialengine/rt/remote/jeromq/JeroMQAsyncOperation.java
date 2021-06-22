@@ -65,9 +65,16 @@ public class JeroMQAsyncOperation implements AsyncOperation {
 
     @Override
     public void timeout(final long time, final TimeUnit timeUnit) {
+
+        final var trace = logger.isDebugEnabled() ?
+            new Throwable().fillInStackTrace().getStackTrace() :
+            new StackTraceElement[] {};
+
         cancelTimer.schedule(() -> doCancel(() -> {
             final var msg = format("Timeout after %s %s", time, timeUnit);
-            return new AsyncOperationCanceledException(msg);
+            final var exception = new AsyncOperationCanceledException(msg);
+            if (logger.isDebugEnabled()) exception.setStackTrace(trace);
+            return exception;
         }), time, timeUnit);
     }
 
