@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.DatabaseHealthStatusDao;
 import com.namazustudios.socialengine.model.health.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.remote.*;
+import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry.RemoteInvokerStatus;
 import com.namazustudios.socialengine.service.HealthStatusService;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
@@ -104,7 +105,11 @@ public class DefaultHealthStatusService implements HealthStatusService {
         final var priorities = getRemoteInvokerRegistry()
             .getAllRemoteInvokerStatus()
             .stream()
-            .sorted()
+            .sorted((s0, s1) -> {
+                final var nodeIdCmp = s0.getNodeId().compareTo(s1.getNodeId());
+                if (nodeIdCmp != 0) return nodeIdCmp;
+                return Double.compare(s1.getPriority(), s0.getPriority());
+            })
             .map(s -> format("%s %s: %s", s.getNodeId(), s.getInvoker().getConnectAddress(), s.getPriority()))
             .collect(toList());
 

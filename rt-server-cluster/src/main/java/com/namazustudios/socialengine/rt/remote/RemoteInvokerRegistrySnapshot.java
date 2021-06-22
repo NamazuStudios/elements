@@ -14,7 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-import static java.util.Comparator.reverseOrder;
+import static java.util.Comparator.comparingDouble;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
@@ -30,7 +30,7 @@ class RemoteInvokerRegistrySnapshot {
 
         try {
             lock.lock();
-            return new ArrayList<>(storage.invokersByNode.values());
+            return new ArrayList<RemoteInvokerStatus>(storage.invokersByNode.values());
         } finally {
             lock.unlock();
         }
@@ -275,7 +275,8 @@ class RemoteInvokerRegistrySnapshot {
         }
 
         private void sort() {
-            invokersByApplication.forEach((id, invokers) -> invokers.sort(reverseOrder()));
+            final Comparator<SnapshotEntry> comparator = comparingDouble(SnapshotEntry::getPriority);
+            invokersByApplication.forEach((id, invokers) -> invokers.sort(comparator.reversed()));
         }
 
         private void clear() {
@@ -363,14 +364,17 @@ class RemoteInvokerRegistrySnapshot {
             this.invoker = invoker;
         }
 
+        @Override
         public NodeId getNodeId() {
             return nodeId;
         }
 
+        @Override
         public double getPriority() {
             return priority;
         }
 
+        @Override
         public RemoteInvoker getInvoker() {
             return invoker;
         }
@@ -381,17 +385,6 @@ class RemoteInvokerRegistrySnapshot {
 
         public SnapshotEntry reprioritize(final double quality) {
             return new SnapshotEntry(invoker, nodeId, quality);
-        }
-
-        @Override
-        public int compareTo(final RemoteInvokerStatus other) {
-
-            int cmp;
-
-            return (cmp = nodeId.compareTo(other.getNodeId())) != 0
-                ? cmp
-                : Double.compare(getPriority(), other.getPriority());
-
         }
 
     }

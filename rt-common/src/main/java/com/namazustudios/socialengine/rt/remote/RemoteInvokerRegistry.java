@@ -55,7 +55,7 @@ public interface RemoteInvokerRegistry {
      */
     RemoteInvoker getRemoteInvoker(NodeId nodeId);
 
-    interface RemoteInvokerStatus extends  Comparable<RemoteInvokerStatus> {
+    interface RemoteInvokerStatus {
 
         NodeId getNodeId();
 
