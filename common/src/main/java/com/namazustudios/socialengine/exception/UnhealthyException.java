@@ -15,4 +15,9 @@ public class UnhealthyException extends InternalException {
         return healthStatus;
     }
 
+    @Override
+    public ErrorCode getCode() {
+        return ErrorCode.UNHEALTHY;
+    }
+
 }

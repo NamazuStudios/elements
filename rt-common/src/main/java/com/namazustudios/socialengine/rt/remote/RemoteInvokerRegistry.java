@@ -28,7 +28,7 @@ public interface RemoteInvokerRegistry {
      *
      * @return the {@link List<RemoteInvoker>}
      */
-    List<RemoteInvoker> getAllRemoteInvokers();
+    List<RemoteInvokerStatus> getAllRemoteInvokerStatus();
 
     /**
      * Returns a {@link RemoteInvoker} by arbitrary selection.  The underlying {@link RemoteInvokerRegistry} may employ
@@ -45,7 +45,7 @@ public interface RemoteInvokerRegistry {
      * @return a {@link List<RemoteInvoker>}
      * @param applicationId
      */
-    List<RemoteInvoker> getAllRemoteInvokers(ApplicationId applicationId);
+    List<RemoteInvoker> getAllRemoteInvokerStatus(ApplicationId applicationId);
 
     /**
      * Returns the {@link RemoteInvoker} registered under the given NodeId.
@@ -54,5 +54,15 @@ public interface RemoteInvokerRegistry {
      * @return a RemoteInvoker for the given nodeId, or null if not found.
      */
     RemoteInvoker getRemoteInvoker(NodeId nodeId);
+
+    interface RemoteInvokerStatus extends  Comparable<RemoteInvokerStatus> {
+
+        NodeId getNodeId();
+
+        double getPriority();
+
+        RemoteInvoker getInvoker();
+
+    }
 
 }

@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry.RemoteInvokerStatus;
 
 import java.util.*;
 import java.util.concurrent.locks.Lock;
@@ -23,17 +24,13 @@ class RemoteInvokerRegistrySnapshot {
 
     private final ReadWriteLock readWriteLock = new ReentrantReadWriteLock();
 
-    public List<RemoteInvoker> getAllRemoteInvokers() {
+    public List<RemoteInvokerStatus> getAllRemoteInvokers() {
 
         final Lock lock = readWriteLock.readLock();
 
         try {
             lock.lock();
-            return storage.invokersByNode
-                .values()
-                .stream()
-                .map(SnapshotEntry::getInvoker)
-                .collect(toList());
+            return new ArrayList<>(storage.invokersByNode.values());
         } finally {
             lock.unlock();
         }
@@ -350,7 +347,7 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
-    private static class SnapshotEntry implements Comparable<SnapshotEntry> {
+    private static class SnapshotEntry implements RemoteInvokerStatus {
 
         private final NodeId nodeId;
 
@@ -387,8 +384,14 @@ class RemoteInvokerRegistrySnapshot {
         }
 
         @Override
-        public int compareTo(final SnapshotEntry other) {
-            return Double.compare(priority, other.priority);
+        public int compareTo(final RemoteInvokerStatus other) {
+
+            int cmp;
+
+            return (cmp = nodeId.compareTo(other.getNodeId())) != 0
+                ? cmp
+                : Double.compare(getPriority(), other.getPriority());
+
         }
 
     }

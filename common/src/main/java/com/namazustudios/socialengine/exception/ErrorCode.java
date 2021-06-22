@@ -58,7 +58,13 @@ public enum  ErrorCode {
     EXTERNAL_RESOURCE_FAILED,
 
     /**
+     * Healths checks failed.
+     */
+    UNHEALTHY,
+
+    /**
      * Some other exception.
      */
     UNKNOWN
+
 }

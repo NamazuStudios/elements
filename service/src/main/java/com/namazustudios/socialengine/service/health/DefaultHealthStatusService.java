@@ -14,6 +14,7 @@ import javax.inject.Provider;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 
 public class DefaultHealthStatusService implements HealthStatusService {
@@ -100,14 +101,23 @@ public class DefaultHealthStatusService implements HealthStatusService {
 
     private void checkRemoteInvokerStatus(final HealthChecklist healthChecklist) {
 
-        final var connectedPeers = getRemoteInvokerRegistry()
-            .getAllRemoteInvokers()
+        final var priorities = getRemoteInvokerRegistry()
+            .getAllRemoteInvokerStatus()
             .stream()
-            .map(RemoteInvoker::getConnectAddress)
+            .sorted()
+            .map(s -> format("%s %s: %s", s.getNodeId(), s.getInvoker().getConnectAddress(), s.getPriority()))
+            .collect(toList());
+
+        final var connectedPeers = getRemoteInvokerRegistry()
+            .getAllRemoteInvokerStatus()
+            .stream()
+            .map(s -> s.getInvoker().getConnectAddress())
             .collect(toList());
 
         final var healthStatus = healthChecklist.getHealthStatus();
         final var invokerHealthStatus = new InvokerHealthStatus();
+
+        invokerHealthStatus.setPriorities(priorities);
         invokerHealthStatus.setConnectedPeers(connectedPeers);
 
         healthStatus
@@ -122,8 +132,6 @@ public class DefaultHealthStatusService implements HealthStatusService {
         healthStatus.setInvokerHealthStatus(invokerHealthStatus);
 
     }
-
-
 
     public Mapper getMapper() {
         return mapper;

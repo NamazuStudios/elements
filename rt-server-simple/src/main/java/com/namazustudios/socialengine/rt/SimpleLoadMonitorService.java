@@ -119,9 +119,9 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
         }
 
         private double getMemoryUsage() {
-            long total = getRuntime().totalMemory();
-            long inuse = total - getRuntime().freeMemory();
-            return (double) (inuse/total);
+            final double total = getRuntime().totalMemory();
+            final double inuse = total - getRuntime().freeMemory();
+            return inuse/total;
         }
 
     }
