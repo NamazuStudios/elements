@@ -30,7 +30,7 @@ class RemoteInvokerRegistrySnapshot {
 
         try {
             lock.lock();
-            return new ArrayList<RemoteInvokerStatus>(storage.invokersByNode.values());
+            return new ArrayList<>(storage.invokersByNode.values());
         } finally {
             lock.unlock();
         }
@@ -275,8 +275,8 @@ class RemoteInvokerRegistrySnapshot {
         }
 
         private void sort() {
-            final Comparator<SnapshotEntry> comparator = comparingDouble(SnapshotEntry::getPriority);
-            invokersByApplication.forEach((id, invokers) -> invokers.sort(comparator.reversed()));
+            final Comparator<SnapshotEntry> comparator = comparingDouble(SnapshotEntry::getPriority).reversed();
+            invokersByApplication.forEach((id, invokers) -> invokers.sort(comparator));
         }
 
         private void clear() {

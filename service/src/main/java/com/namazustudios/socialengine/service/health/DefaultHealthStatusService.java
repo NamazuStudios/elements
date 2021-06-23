@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.health;
 
+import com.google.common.collect.Comparators;
 import com.namazustudios.socialengine.dao.DatabaseHealthStatusDao;
 import com.namazustudios.socialengine.model.health.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -16,6 +17,7 @@ import java.util.*;
 import java.util.function.Consumer;
 
 import static java.lang.String.format;
+import static java.util.Comparator.comparingDouble;
 import static java.util.stream.Collectors.toList;
 
 public class DefaultHealthStatusService implements HealthStatusService {
@@ -102,15 +104,17 @@ public class DefaultHealthStatusService implements HealthStatusService {
 
     private void checkRemoteInvokerStatus(final HealthChecklist healthChecklist) {
 
+        final var priorityComparator = comparingDouble(RemoteInvokerStatus::getPriority).reversed();
+
         final var priorities = getRemoteInvokerRegistry()
             .getAllRemoteInvokerStatus()
             .stream()
             .sorted((s0, s1) -> {
                 final var nodeIdCmp = s0.getNodeId().compareTo(s1.getNodeId());
                 if (nodeIdCmp != 0) return nodeIdCmp;
-                return Double.compare(s1.getPriority(), s0.getPriority());
+                return priorityComparator.compare(s0, s1);
             })
-            .map(s -> format("%s %s: %s", s.getNodeId(), s.getInvoker().getConnectAddress(), s.getPriority()))
+            .map(s -> format("%s %s: %.2f%%", s.getNodeId(), s.getInvoker().getConnectAddress(), s.getPriority()))
             .collect(toList());
 
         final var connectedPeers = getRemoteInvokerRegistry()

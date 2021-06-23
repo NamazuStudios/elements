@@ -154,8 +154,8 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
             if (loadAverage < 0) return memoryUsage;
 
             // Otherwise, we average the two values.
-            final var load = calculateLoadPercentage() * LOAD_AVERAGE_WEIGHT;
-            final var memory = memoryUsage * MEMORY_USAGE_WEIGHT;
+            final var load = loadQuality() * LOAD_AVERAGE_WEIGHT;
+            final var memory = memoryQuality() * MEMORY_USAGE_WEIGHT;
 
             if (Double.isNaN(load)) return memoryUsage;
             if (Double.isNaN(memory)) return loadAverage;
@@ -164,9 +164,13 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
 
         }
 
-        private double calculateLoadPercentage() {
+        private double loadQuality() {
             final double systemCpuCores = getRuntime().availableProcessors();
-            return loadAverage / systemCpuCores;
+            return Double.isNaN(loadAverage) ? Double.NaN : 1.0 - (loadAverage / systemCpuCores);
+        }
+
+        private double memoryQuality() {
+            return Double.isNaN(memoryUsage) ? Double.NaN : 1.0 - memoryUsage;
         }
 
     }
