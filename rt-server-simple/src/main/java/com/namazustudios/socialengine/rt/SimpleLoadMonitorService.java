@@ -18,6 +18,8 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
 
     public static final LoadValues UNKNOWN = new LoadValues();
 
+    private static double QUALITY_SCALE = 100;
+
     private static final long REFRESH_RATE = 1;
 
     private static final TimeUnit REFRESH_UNITS = SECONDS;
@@ -143,7 +145,7 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
         }
 
         public double getInstanceQuality() {
-            return -getWeightedAverage();
+            return QUALITY_SCALE * getWeightedAverage();
         }
 
         private double getWeightedAverage() {
@@ -152,7 +154,7 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
             if (loadAverage < 0) return memoryUsage;
 
             // Otherwise, we average the two values.
-            final var load = loadAverage * LOAD_AVERAGE_WEIGHT;
+            final var load = calculateLoadPercentage() * LOAD_AVERAGE_WEIGHT;
             final var memory = memoryUsage * MEMORY_USAGE_WEIGHT;
 
             if (Double.isNaN(load)) return memoryUsage;
@@ -160,6 +162,11 @@ public class SimpleLoadMonitorService implements LoadMonitorService {
 
             return (load + memory) / 2;
 
+        }
+
+        private double calculateLoadPercentage() {
+            final double systemCpuCores = getRuntime().availableProcessors();
+            return loadAverage / systemCpuCores;
         }
 
     }
