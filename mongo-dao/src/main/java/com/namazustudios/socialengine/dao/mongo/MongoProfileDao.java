@@ -100,9 +100,9 @@ public class MongoProfileDao implements ProfileDao {
             final Long lowerBoundTimestamp, final Long upperBoundTimestamp) {
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
-        query.filter(and(
+        query.filter(
                 eq("active", true)
-        ));
+        );
 
         if (lowerBoundTimestamp != null && upperBoundTimestamp != null && lowerBoundTimestamp > upperBoundTimestamp) {
             throw new IllegalArgumentException("Invalid range: upper bound should be less than or " +
@@ -119,9 +119,9 @@ public class MongoProfileDao implements ProfileDao {
                 lowerBoundDate = new Date(0);
             }
 
-            query.filter(and(
+            query.filter(
                     Filters.gte("lastLogin", lowerBoundDate)
-            ));
+            );
         }
 
         if (upperBoundTimestamp != null) {
@@ -134,9 +134,9 @@ public class MongoProfileDao implements ProfileDao {
                 upperBoundDate = new Date();
             }
 
-            query.filter(and(
+            query.filter(
                     Filters.lte("lastLogin", upperBoundDate)
-            ));
+            );
 
         }
 
@@ -144,17 +144,17 @@ public class MongoProfileDao implements ProfileDao {
             final MongoApplication mongoApplication;
             mongoApplication = getMongoApplicationDao().findActiveMongoApplication(applicationNameOrId);
             if (mongoApplication == null) return new Pagination<>();
-            query.filter(and(
+            query.filter(
                     eq("application", mongoApplication)
-            ));
+            );
         }
 
         if (userId != null) {
             final MongoUser mongoUser = getMongoUserDao().findActiveMongoUser(userId);
             if (mongoUser == null) return new Pagination<>();
-            query.filter(and(
+            query.filter(
                     eq("user", mongoUser)
-            ));
+            );
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
@@ -469,6 +469,23 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         getObjectIndex().index(mongoProfile);
+
+    }
+
+    public void softDeleteProfilesForUser(MongoUser mongoUser) {
+
+        final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
+
+        query.filter(and(
+                eq("user", mongoUser),
+                eq("active", true)
+        ));
+
+        final var builder = new UpdateBuilder().with(set("active", false));
+
+        getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false))
+        );
 
     }
 
