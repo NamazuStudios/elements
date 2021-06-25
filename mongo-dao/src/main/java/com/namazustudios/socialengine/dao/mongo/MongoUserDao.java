@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
@@ -58,6 +59,8 @@ public class MongoUserDao implements UserDao {
     private Mapper dozerMapper;
 
     private MongoPasswordUtils mongoPasswordUtils;
+
+    private MongoProfileDao mongoProfileDao;
 
     @Override
     public User getActiveUser(final String userId) {
@@ -506,6 +509,7 @@ public class MongoUserDao implements UserDao {
             throw new NotFoundException("User with userid does not exist:" + userId);
         }
 
+        getMongoProfileDao().softDeleteProfilesForUser(mongoUser);
     }
 
     public void validate(final User user) {
@@ -656,4 +660,12 @@ public class MongoUserDao implements UserDao {
         this.mongoPasswordUtils = mongoPasswordUtils;
     }
 
+    public MongoProfileDao getMongoProfileDao() {
+        return mongoProfileDao;
+    }
+
+    @Inject
+    public void setMongoProfileDao(MongoProfileDao mongoProfileDao) {
+        this.mongoProfileDao = mongoProfileDao;
+    }
 }
