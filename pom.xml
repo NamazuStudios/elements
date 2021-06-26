@@ -80,6 +80,7 @@
         <module>setup-sshd</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
+        <module>doc-serve</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
@@ -126,7 +127,6 @@
         <spotify.dns.version>3.2.2</spotify.dns.version>
         <annotations.version>2.11.3</annotations.version>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
