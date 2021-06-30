@@ -78,7 +78,7 @@ public class PSNApplicationConfigurationResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a PSN ApplicationConfiguration",
                   notes = "Updates an existing PSN Application profile if it is known to the server.")
-    public PSNApplicationConfiguration updateApplicationConfiguration(
+    public PSNApplicationConfiguration updatePSNApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final PSNApplicationConfiguration psnApplicationConfiguration) {

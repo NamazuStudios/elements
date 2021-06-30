@@ -28,7 +28,7 @@ public class GameOnTournamentResource {
                   notes = "Gets all availble tournaments that the player can enter.  This automatically filters out " +
                           "any tournaments that the player has not alrady entered.  " +
                           "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#get-tournaments")
-    public List<GameOnTournamentSummary> getTournaments(
+    public List<GameOnTournamentSummary> getGameOnTournaments(
 
             @QueryParam("os")
             @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
@@ -72,7 +72,7 @@ public class GameOnTournamentResource {
     @ApiOperation(value = "Gets a single available tournament.",
                   notes = "Gets a single available tournament, specified by the identifier.  " +
                           "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#get-tournament-details")
-    public GameOnTournamentDetail getTournament(
+    public GameOnTournamentDetail getTournamentDetail(
 
             @PathParam("tournamentId")
             @ApiParam("The player tournamet ID.")

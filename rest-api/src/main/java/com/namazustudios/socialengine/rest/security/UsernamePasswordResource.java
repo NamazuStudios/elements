@@ -38,7 +38,7 @@ public class UsernamePasswordResource {
                           "completion of this call, the user will be added to the current HTTP session.  If " +
                           "the session expires, the user will have to reestablish the session by supplying " +
                           "credentials again.  This is most useful for applications delivered in a web page.")
-    public SessionCreation createSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
+    public SessionCreation createUsernamePasswordSession(final UsernamePasswordSessionRequest usernamePasswordSessionRequest) {
 
         getValidationHelper().validateModel(usernamePasswordSessionRequest);
 

@@ -59,7 +59,7 @@ public class FriendResource {
     @ApiOperation(
             value = "Gets a Specific Friend",
             notes = "Gets a specific friend using the ID of the friend.")
-    public Friend getUser(@PathParam("friendId") final String friendId) {
+    public Friend getFriend(@PathParam("friendId") final String friendId) {
         return getFriendService().getFriend(friendId);
     }
 
@@ -69,7 +69,7 @@ public class FriendResource {
     @ApiOperation(
             value = "Deletes a Friend",
             notes = "Once a friend is deleted, re-creating a friend will set the friendship status to outgoing.")
-    public void deleteRegistration(
+    public void deleteFriendRegistration(
             @PathParam("friendId")
             final String friendId) {
         getFriendService().deleteFriend(friendId);

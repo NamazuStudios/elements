@@ -99,7 +99,7 @@ public class GameOnSessionResource {
                     "one GameOnSession may exist per Profile.  However a user may see several " +
                     "GameOnSession instances for their User.  " +
                     "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#authenticate-player")
-    public GameOnSession createSession(final GameOnSession gameOnSession) {
+    public GameOnSession createGameOnSession(final GameOnSession gameOnSession) {
 
         getValidationHelper().validateModel(gameOnSession, Create.class);
 

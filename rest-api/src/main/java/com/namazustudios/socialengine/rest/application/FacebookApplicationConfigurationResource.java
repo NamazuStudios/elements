@@ -93,7 +93,7 @@ public class FacebookApplicationConfigurationResource {
             value = "Updates a Facebook ApplicationConfiguration",
             notes = "Updates an existing Facebook Application profile if it is known to the server.",
             authorizations = {@Authorization(SESSION_SECRET)})
-    public FacebookApplicationConfiguration updateApplicationConfiguration(
+    public FacebookApplicationConfiguration updateFacebookApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final FacebookApplicationConfiguration facebookApplicationConfiguration) {
