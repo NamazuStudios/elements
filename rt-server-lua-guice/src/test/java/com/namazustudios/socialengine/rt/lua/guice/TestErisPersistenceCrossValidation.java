@@ -42,7 +42,7 @@ public class TestErisPersistenceCrossValidation {
 
     private final List<Object[]> intermediates = new ArrayList<>();
 
-    @Test(dataProvider = "allLuaResources", invocationCount = 10)
+    @Test(dataProvider = "allLuaResources", invocationCount = 2)
     public void testStreamAndFileProduceIdenticalOutput(final String moduleName) throws IOException {
 
         logger.debug("Testing Persistence for {}", moduleName);
@@ -86,7 +86,7 @@ public class TestErisPersistenceCrossValidation {
         return intermediates.toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "intermediateFiles", dependsOnMethods = "testStreamAndFileProduceIdenticalOutput", invocationCount = 10)
+    @Test(dataProvider = "intermediateFiles", dependsOnMethods = "testStreamAndFileProduceIdenticalOutput", invocationCount = 2)
     public void testReadStream(final String source, final Path file, final boolean verbose) throws IOException {
 
         logger.debug("Loading file {} written by {} using InputStream", file, source);
