@@ -4,20 +4,23 @@ import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Properties;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Constants.*;
 import static java.lang.String.format;
 import static java.lang.System.getProperties;
 import static java.lang.System.getenv;
+import static java.util.stream.Collectors.toMap;
 
 /**
  * Implements the default configuration scheme.  In addition to providing a set of {@link Properties}
@@ -30,7 +33,13 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfigurationSupplier.class);
 
+    private static final char PROPERTY_SEPARATOR = '.';
+
+    private static final char ENVIRONMENT_SEPARATOR = '_';
+
     private static final String PROPERTY_PREFIX = "com.namazustudios";
+
+    private static final String ENVIRONMENT_PROPERTY_PREFIX = PROPERTY_PREFIX.replace(PROPERTY_SEPARATOR, ENVIRONMENT_SEPARATOR);
 
     private static final String ENVIRONMENT_PREFIX = "ELEMENTS";
 
@@ -83,7 +92,12 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
         // The priority of the following is really important.
 
-        final var env = getenv();
+        final var env = getenv()
+            .entrySet()
+            .stream()
+            .filter(DefaultConfigurationSupplier::shouldKeepEnvironmentVariable)
+            .collect(toMap(DefaultConfigurationSupplier::remapEnvironmentVariable, Entry::getValue));
+
         final var properties = new Properties();
 
         properties.putAll(env);
@@ -104,6 +118,26 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
             Paths.get(properties.getProperty(PROPERTIES_FILE, DEFAULT_PROPERTIES_FILE))
 
         );
+
+    }
+
+    private static boolean shouldKeepEnvironmentVariable(final Entry<String, String> stringStringEntry) {
+
+        final var name = stringStringEntry.getKey();
+
+        return name.startsWith(ENVIRONMENT_PREFIX) ||
+               name.toLowerCase().startsWith(PROPERTY_PREFIX) ||
+               name.toLowerCase().startsWith(ENVIRONMENT_PROPERTY_PREFIX);
+
+    }
+
+    private static String remapEnvironmentVariable(final Entry<String, String> environmentEntry) {
+
+        final var original = environmentEntry.getKey();
+
+        return original.startsWith(ENVIRONMENT_PROPERTY_PREFIX)
+            ? original.toLowerCase().replace(ENVIRONMENT_SEPARATOR, PROPERTY_SEPARATOR)
+            : original;
 
     }
 
@@ -167,7 +201,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
         final var sb = new StringBuilder();
 
-        final Predicate<Map.Entry<Object, Object>> filter = e ->
+        final Predicate<Entry<Object, Object>> filter = e ->
             e.getKey().toString().startsWith(PROPERTY_PREFIX) ||
             e.getKey().toString().startsWith(ENVIRONMENT_PREFIX);
 
