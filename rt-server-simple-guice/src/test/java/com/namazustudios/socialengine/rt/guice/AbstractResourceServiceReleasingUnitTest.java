@@ -13,6 +13,7 @@ import org.testng.annotations.Test;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.id.ResourceId.randomResourceIdForNode;
@@ -28,9 +29,9 @@ import static org.testng.AssertJUnit.fail;
 
 public abstract class AbstractResourceServiceReleasingUnitTest {
 
-    private final List<Object[]> intermediates = new ArrayList<>();
+    private final List<Object[]> intermediates = new CopyOnWriteArrayList<>();
 
-    private final List<Object[]> linkedIntermediates = new ArrayList<>();
+    private final List<Object[]> linkedIntermediates = new CopyOnWriteArrayList<>();
 
     @Inject
     private NodeId nodeId;
