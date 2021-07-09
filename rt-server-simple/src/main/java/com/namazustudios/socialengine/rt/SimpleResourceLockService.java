@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static java.lang.Thread.interrupted;
@@ -133,9 +134,14 @@ public class SimpleResourceLockService implements ResourceLockService {
         private final ReentrantLock lock = new ReentrantLock();
 
         @Override
-        public Monitor lock() {
+        public Monitor acquireMonitor() {
             lock.lock();
             return lock::unlock;
+        }
+
+        @Override
+        public Lock getLock() {
+            return lock;
         }
 
     }

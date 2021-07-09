@@ -116,6 +116,8 @@ public class LuaResource implements Resource {
             this.erisPersistence = new ErisPersistence(this, this::getScriptLog);
             this.builtinManager = new BuiltinManager(this::getLuaState, this::getScriptLog, erisPersistence);
 
+            this.luaState.setLock(lock.getLock());
+
             openLibs();
             setupFunctionOverrides();
             getBuiltinManager().installBuiltin(new JavaObjectBuiltin<>(RESOURCE_BUILTIN, this));
@@ -207,7 +209,7 @@ public class LuaResource implements Resource {
         final var luaState = getLuaState();
         final var modulePath = fromPathString(moduleName, ".").appendExtension(Constants.LUA_FILE_EXT);
 
-        try (var mon = lock.lock();
+        try (var mon = lock.acquireMonitor();
              var is = assetLoader.open(modulePath);
              var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
 
@@ -247,7 +249,7 @@ public class LuaResource implements Resource {
 
     @Override
     public void setVerbose(boolean verbose) {
-        try (var mon = lock.lock();
+        try (var mon = lock.acquireMonitor();
              var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
             luaState.pushBoolean(verbose);
             luaState.setPersistenceSetting("path", -1);
@@ -256,7 +258,7 @@ public class LuaResource implements Resource {
 
     @Override
     public boolean isVerbose() {
-        try (var mon = lock.lock();
+        try (var mon = lock.acquireMonitor();
              var fa = FinallyAction.begin(logger).then(() -> luaState.setTop(0))) {
             luaState.getPersistenceSetting("debug");
             return luaState.toBoolean(-1);
@@ -267,25 +269,30 @@ public class LuaResource implements Resource {
 
     @Override
     public void serialize(final OutputStream os) throws IOException {
-        try (var mon = lock.lock()) {
+        try (var mon = lock.acquireMonitor()) {
             getErisPersistence().serialize(os);
         }
     }
 
     @Override
     public void deserialize(final InputStream is) throws IOException {
+
+        final var original = resourceId;
+
         getErisPersistence().deserialize(is, sh -> {
-            final var original = resourceId;
             attributes = new SimpleAttributes.Builder().from(sh.getAttributes()).build();
             resourceId = sh.getResourceId();
-            lock = resourceLockService.getLock(resourceId);
-            resourceLockService.delete(original);
         });
+
+        lock = resourceLockService.getLock(resourceId);
+        resourceLockService.delete(original);
+        luaState.setLock(lock.getLock());
+
     }
 
     @Override
     public Set<TaskId> getTasks() {
-        try (var mon = lock.lock()) {
+        try (var mon = lock.acquireMonitor()) {
 
             luaState.pushJavaFunction(l -> {
 
@@ -341,7 +348,7 @@ public class LuaResource implements Resource {
     @Override
     public void close() {
 
-        try(var mon = lock.lock()) {
+        try(var mon = lock.acquireMonitor()) {
 
             getTasks().forEach(taskId -> {
                 final var resourceDestroyedException = new ResourceDestroyedException(getId());
@@ -358,7 +365,7 @@ public class LuaResource implements Resource {
 
     @Override
     public void unload() {
-        try (var mon = lock.lock()) {
+        try (var mon = lock.acquireMonitor()) {
             getLuaState().close();
         }
     }
@@ -369,7 +376,7 @@ public class LuaResource implements Resource {
 
             final LuaState luaState = getLuaState();
 
-            try (var mon = lock.lock();
+            try (var mon = lock.acquireMonitor();
                  var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
                 luaState.getGlobal(REQUIRE);
@@ -427,12 +434,28 @@ public class LuaResource implements Resource {
         }
     }
 
+    public static void main(final String[] args) throws Exception {
+
+        class Mon implements AutoCloseable {
+            @Override
+            public void close() throws Exception {
+                System.out.println("Closed Mon");
+            }
+        }
+
+        try (var mon = new Mon();
+             var faa = FinallyAction.begin(logger).then(() -> System.out.println("Executed Finally Action."))) {
+            System.out.println("Critical Section.");
+        }
+
+    }
+
     @Override
     public void resume(final TaskId taskId, final Object ... results) {
 
-        final LuaState luaState = getLuaState();
+        final var luaState = getLuaState();
 
-        try (var mon = lock.lock();
+        try (var mon = lock.acquireMonitor();
              var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
 
             luaState.getGlobal(REQUIRE);

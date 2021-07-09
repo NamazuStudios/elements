@@ -10,6 +10,7 @@ import org.testng.annotations.Test;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import static com.namazustudios.socialengine.rt.SimpleResourceLockService.getOrphanCount;
 import static java.util.stream.Stream.generate;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertSame;
@@ -42,7 +43,6 @@ public class SimpleResourceLockServiceTest {
         assertSame(returned, existing, "Expected same lock.");
     }
 
-
     @Test(dependsOnMethods = "stressTest")
     public void deleteAll() {
         System.gc();
@@ -52,7 +52,7 @@ public class SimpleResourceLockServiceTest {
 
     @Test(dependsOnMethods = "deleteAll")
     public void checkOrphans() {
-        assertEquals(SimpleResourceLockService.getOrphanCount(), 0);
+        assertEquals(getOrphanCount(), 0);
     }
 
 }
