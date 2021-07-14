@@ -1,4 +1,5 @@
 package com.namazustudios.socialengine.service.guice;
+        assertEquals("Expected no locks to exist.", 0,
 
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.service.RedissonClientProvider;

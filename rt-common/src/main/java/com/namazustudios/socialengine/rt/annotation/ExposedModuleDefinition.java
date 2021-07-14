@@ -20,17 +20,17 @@ public @interface ExposedModuleDefinition {
     String value();
 
     /**
-     * Indicates that importing this particular module is deprecated.
-     *
-     * @return true if deprecated, false otherwise
-     */
-    DeprecationDefinition deprecated() default @DeprecationDefinition(deprecated = false);
-
-    /**
      * Specifies the binding {@link Annotation} for the module.
      *
      * @return the {@link ExposedBindingAnnotation}
      */
     ExposedBindingAnnotation annotation() default @ExposedBindingAnnotation();
+
+    /**
+     * Indicates that importing this particular module is deprecated.
+     *
+     * @return true if deprecated, false otherwise
+     */
+    DeprecationDefinition deprecated() default @DeprecationDefinition(deprecated = false);
 
 }
