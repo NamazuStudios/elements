@@ -456,7 +456,7 @@ public class LuaResource implements Resource {
         final var luaState = getLuaState();
 
         try (var mon = lock.acquireMonitor();
-             var faa = FinallyAction.begin(logger).then(luaState::clearStack)) {
+             var faa = FinallyAction.begin(logger).then(luaState::tryClearStack)) {
 
             luaState.getGlobal(REQUIRE);
             luaState.pushString(CoroutineBuiltin.MODULE_NAME);
@@ -492,9 +492,14 @@ public class LuaResource implements Resource {
         } catch (NoSuchTaskException ex) {
             throw ex;
         } catch (Exception ex) {
-            getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
-            getLocalContext().getTaskContext().finishWithError(taskId, ex);
-            throw ex;
+            if (getLocalContext().getTaskContext().finishWithError(taskId, ex)) {
+                getScriptLog().error("Caught exception resuming task {}.", taskId, ex);
+                throw ex;
+            } else {
+                // We presume that the task was actually finished and nothing else was waiting on the task while
+                // we were waiting.
+                logger.debug("Caught exception but task already finished. Ignoring exception.");
+            }
         }
 
     }
