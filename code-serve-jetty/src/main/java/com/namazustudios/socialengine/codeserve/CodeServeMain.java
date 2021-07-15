@@ -4,6 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.servlet.security.HappyServlet;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -104,6 +105,14 @@ public class CodeServeMain implements Callable<Void>, Runnable {
 
         final var handlerCollection = new HandlerCollection();
         handlerCollection.addHandler(servletHandler);
+
+        if (!"/".equals(servletHandler.getContextPath())) {
+            final var rootServletHandler = new ServletContextHandler();
+            rootServletHandler.setContextPath("/");
+            rootServletHandler.addServlet(HappyServlet.class, "/");
+            handlerCollection.addHandler(rootServletHandler);
+        }
+
         server.setHandler(handlerCollection);
 
     }
