@@ -11,6 +11,10 @@ public interface RoutingStatus {
 
     List<Route> getRoutingTable();
 
+    List<Route> getMasterNodeRoutingTable();
+
+    List<Route> getApplicationNodeRoutingTable();
+
     interface Route {
 
         boolean isLocal();
