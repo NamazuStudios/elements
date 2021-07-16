@@ -1,18 +1,16 @@
 package com.namazustudios.socialengine.jetty;
 
-import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.servlet.security.HappyServlet;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandlerCollection;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.server.handler.RequestLogHandler;
+import org.eclipse.jetty.servlet.ServletContextHandler;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import javax.inject.Provider;
-
-import static com.namazustudios.socialengine.Constants.HTTP_BIND_ADDRESS;
 
 public class DynamicServerProvider implements Provider<Server> {
 
@@ -29,16 +27,21 @@ public class DynamicServerProvider implements Provider<Server> {
         final var dispatcherAppProvider = getAppProviderProvider().get();
         final var deploymentManager = getDeploymentManagerProvider().get();
 
-        final HandlerCollection mainHandler = new HandlerCollection();
-        mainHandler.addHandler(new RequestLogHandler());
+        final HandlerCollection handlerCollection = new HandlerCollection();
+        handlerCollection.addHandler(new RequestLogHandler());
 
         final ContextHandlerCollection contextHandlerCollection = new ContextHandlerCollection();
         deploymentManager.setContexts(contextHandlerCollection);
-        mainHandler.addHandler(contextHandlerCollection);
+        handlerCollection.addHandler(contextHandlerCollection);
+
+        final var rootServletHandler = new ServletContextHandler();
+        rootServletHandler.setContextPath("/");
+        rootServletHandler.addServlet(HappyServlet.class, "/");
+        handlerCollection.addHandler(rootServletHandler);
 
         deploymentManager.addAppProvider(dispatcherAppProvider);
         server.addBean(deploymentManager);
-        server.setHandler(mainHandler);
+        server.setHandler(handlerCollection);
         return server;
     }
 
