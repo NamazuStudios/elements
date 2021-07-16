@@ -28,7 +28,7 @@ public class SignupResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Sign Up a User",
             notes = "Supplying the user create request object, this will create a new user.")
-    public User createUser(final UserCreateRequest userCreateRequest) {
+    public User signUpUser(final UserCreateRequest userCreateRequest) {
         getValidationHelper().validateModel(userCreateRequest, ValidationGroups.Create.class);
         return getUserService().createUser(userCreateRequest);
     }

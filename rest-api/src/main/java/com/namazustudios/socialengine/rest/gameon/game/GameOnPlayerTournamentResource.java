@@ -33,7 +33,7 @@ public class GameOnPlayerTournamentResource {
         notes = "Gets all availble tournaments that the player can enter.  This automatically filters out " +
                 "any tournaments that the player has not alrady entered.  " +
                 "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-player-tournaments")
-    public List<GameOnTournamentSummary> getTournaments(
+    public List<GameOnTournamentSummary> getGameOnPlayerTournaments(
 
             @QueryParam("os")
             @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
@@ -69,7 +69,7 @@ public class GameOnPlayerTournamentResource {
                   notes = "Gets a single available tournament, specified by the identifier.  This will return 404 if " +
                           "the player is not eligible to because they have already entered.  " +
                           "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#get-player-tournament-details")
-    public GameOnTournamentDetail getTournament(
+    public GameOnTournamentDetail getPlayerTournamentDetail(
 
             @PathParam("tournamentId")
             @ApiParam("The player tournamet ID.")
@@ -103,7 +103,7 @@ public class GameOnPlayerTournamentResource {
     @ApiOperation(
         value = "Enters a Player Tournament",
         notes = "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-player-tournament")
-    public GameOnPlayerTournamentEnterResponse enterTournament(
+    public GameOnPlayerTournamentEnterResponse enterGameOnPlayerTournament(
             @PathParam("tournamentId") final String tournamentId,
             final GameOnPlayerTournamentEnterRequest gameOnPlayerTournamentEnterRequest) {
         return getGameOnPlayerTournamentService().enterTournament(tournamentId, gameOnPlayerTournamentEnterRequest);

@@ -39,7 +39,7 @@ public class FacebookAuthResource {
             notes = "Begins a session by accepting a Facebook OAuth token, SocialEngine Application ID, and the " +
                     "configuration ID for the application.  This will generate a Session instance and return the " +
                     "result to the client.")
-    public FacebookSessionCreation createSession(final FacebookSessionRequest facebookSessionRequest) {
+    public FacebookSessionCreation createFacebookSession(final FacebookSessionRequest facebookSessionRequest) {
 
         getValidationHelper().validateModel(facebookSessionRequest);
 

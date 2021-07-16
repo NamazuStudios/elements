@@ -58,7 +58,7 @@ public class ProgressResource {
     @ApiOperation(value = "Updates a single Progress",
             notes = "Supplying a progress, this will update the Progress identified by the ID in the path with contents " +
                     "from the passed in request body. ")
-    public Progress updateItem(final Progress updatedProgress,
+    public Progress updateProgress(final Progress updatedProgress,
                               @PathParam("progressId") String progressId) {
         return getProgressService().updateProgress(updatedProgress);
     }

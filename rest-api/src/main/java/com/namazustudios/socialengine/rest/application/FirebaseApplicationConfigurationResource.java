@@ -90,7 +90,7 @@ public class FirebaseApplicationConfigurationResource {
     @ApiOperation(
             value = "Updates a Firebase ApplicationConfiguration",
             notes = "Updates an existing Firebase Application profile if it is known to the server.")
-    public FirebaseApplicationConfiguration updateApplicationConfiguration(
+    public FirebaseApplicationConfiguration updateFirebaseApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final FirebaseApplicationConfiguration firebaseApplicationConfiguration) {

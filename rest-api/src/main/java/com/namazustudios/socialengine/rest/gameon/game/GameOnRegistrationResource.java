@@ -92,7 +92,7 @@ public class GameOnRegistrationResource {
                     "one GameOnRegistration may exist per Profile.  However a user may see several " +
                     "GameOnRegistration instances for their User.  " +
                     "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#register-player")
-    public GameOnRegistration createRegistration(final GameOnRegistration gameOnRegistration) {
+    public GameOnRegistration createGameOnRegistration(final GameOnRegistration gameOnRegistration) {
 
         getValidationHelper().validateModel(gameOnRegistration, ValidationGroups.Create.class);
 
@@ -107,7 +107,7 @@ public class GameOnRegistrationResource {
     @DELETE
     @Path("{gameOnRegistrationId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteRegistration(
+    public void deleteGameOnRegistration(
             @PathParam("gameOnRegistrationId")
             final String gameOnRegistrationId) {
         getGameOnRegistrationService().deleteRegistration(gameOnRegistrationId);
