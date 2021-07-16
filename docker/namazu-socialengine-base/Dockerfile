@@ -53,7 +53,8 @@ RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_SCRIPT_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_STORAGE" && \
     useradd elements -M --shell /usr/bin/bash --base-dir /opt --home "$ELEMENTS_HOME" && \
-    chown -R elements:elements "$ELEMENTS_HOME"
+    chown -R elements:elements "$ELEMENTS_HOME" && \
+    apt-get update && apt-get -y install dnsutils curl
 
 WORKDIR $ELEMENTS_HOME
 USER elements:elements
