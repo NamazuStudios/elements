@@ -40,7 +40,7 @@ public class FirebaseAuthResource {
                     "identifier for the application. Therefore, Elements will use Firebase's server-to-server APIs " +
                     "in order determine the application configuration to use. Just like other session APIs, if the " +
                     "session specifies a user, then this will link the existing account to the supplied firebase ID.")
-    public SessionCreation createSession(final FirebaseSessionRequest firebaseSessionRequest) {
+    public SessionCreation createFirebaseSession(final FirebaseSessionRequest firebaseSessionRequest) {
         getValidationHelper().validateModel(firebaseSessionRequest);
         return getFirebaseAuthService().createOrUpdateUserWithFirebaseJWT(firebaseSessionRequest);
     }

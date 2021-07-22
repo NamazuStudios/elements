@@ -9,6 +9,10 @@ public class RoutingHealthStatus {
 
     private List<String> routingTable;
 
+    private List<String> masterNodeRoutingTable;
+
+    private List<String> applicationNodeRoutingTable;
+
     public String getInstanceId() {
         return instanceId;
     }
@@ -23,6 +27,22 @@ public class RoutingHealthStatus {
 
     public void setRoutingTable(List<String> routingTable) {
         this.routingTable = routingTable;
+    }
+
+    public List<String> getMasterNodeRoutingTable() {
+        return masterNodeRoutingTable;
+    }
+
+    public void setMasterNodeRoutingTable(List<String> masterNodeRoutingTable) {
+        this.masterNodeRoutingTable = masterNodeRoutingTable;
+    }
+
+    public List<String> getApplicationNodeRoutingTable() {
+        return applicationNodeRoutingTable;
+    }
+
+    public void setApplicationNodeRoutingTable(List<String> applicationNodeRoutingTable) {
+        this.applicationNodeRoutingTable = applicationNodeRoutingTable;
     }
 
     @Override
@@ -43,6 +63,8 @@ public class RoutingHealthStatus {
         final StringBuilder sb = new StringBuilder("RoutingHealthStatus{");
         sb.append("instanceId='").append(instanceId).append('\'');
         sb.append(", routingTable=").append(routingTable);
+        sb.append(", masterRoutingTable=").append(masterNodeRoutingTable);
+        sb.append(", applicationNodeRoutingTable=").append(applicationNodeRoutingTable);
         sb.append('}');
         return sb.toString();
     }

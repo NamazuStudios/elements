@@ -33,7 +33,7 @@ public class FCMRegistrationResource {
         notes = "Supplying FCM registration token, this will create a new token based on the information supplied to " +
                 "the endpoint.  The response will contain the token as it was written to the database.  Clients may " +
                 "subsequently update the token string with new values as they are issued by Firebase.")
-    public FCMRegistration createRegistration(final FCMRegistration fcmRegistration) {
+    public FCMRegistration createFCMRegistration(final FCMRegistration fcmRegistration) {
 
         getValidationHelper().validateModel(fcmRegistration);
 
@@ -73,7 +73,7 @@ public class FCMRegistrationResource {
     @DELETE
     @Path("{fcmRegistrationId}")
     @Produces(MediaType.APPLICATION_JSON)
-    public void deleteRegistration(
+    public void deleteFCMRegistration(
             @PathParam("fcmRegistrationId")
             final String fcmRegistrationId) {
         getFcmRegistrationService().deleteRegistration(fcmRegistrationId);

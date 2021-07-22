@@ -81,7 +81,7 @@ public class GooglePlayApplicationConfigurationResource {
     @ApiOperation(
             value = "Updates a Google Play ApplicationConfiguration",
             notes = "Updates an existing Google Play Application profile if it is known to the server.")
-    public GooglePlayApplicationConfiguration updateApplicationConfiguration(
+    public GooglePlayApplicationConfiguration updateGooglePlayApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final GooglePlayApplicationConfiguration googlePlayApplicationConfiguration) {

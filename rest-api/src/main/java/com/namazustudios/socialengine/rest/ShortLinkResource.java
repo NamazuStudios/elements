@@ -73,7 +73,7 @@ public class ShortLinkResource {
     @ApiOperation(value = "Creates a ShortLink",
                   notes = "Creates a new ShortLink in the system, and returns the information needed to " +
                           "refer to the link later.")
-    public ShortLink create(final ShortLink shortLink) {
+    public ShortLink createShortLink(final ShortLink shortLink) {
         return shortLinkService.create(shortLink);
     }
 
@@ -82,7 +82,7 @@ public class ShortLinkResource {
     @ApiOperation(value = "Deletes a short link.",
                   notes = "Deletes a short link known to the server.  LazyValue delete, a short link will " +
                           "no longer resolve to its address an will be gone from the server permanently.")
-    public void delete(@PathParam("id") final String id) {
+    public void deleteShortLink(@PathParam("id") final String id) {
         shortLinkService.deleteShortLink(id);
     }
 

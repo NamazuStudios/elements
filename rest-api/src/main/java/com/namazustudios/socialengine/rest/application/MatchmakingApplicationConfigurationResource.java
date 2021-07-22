@@ -80,7 +80,7 @@ public class MatchmakingApplicationConfigurationResource {
     @ApiOperation(
             value = "Updates a iOS ApplicationConfiguration",
             notes = "Updates an existing iOS Application profile if it is known to the server.")
-    public MatchmakingApplicationConfiguration updateApplicationConfiguration(
+    public MatchmakingApplicationConfiguration updateMatchmakingApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final MatchmakingApplicationConfiguration matchmakingApplicationConfiguration) {
