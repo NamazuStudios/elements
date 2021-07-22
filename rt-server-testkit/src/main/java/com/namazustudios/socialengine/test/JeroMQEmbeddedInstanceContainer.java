@@ -25,7 +25,10 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
+import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
+import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.*;
+import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.DEFAULT_TOTAL_REFRESH_TIMEOUT;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static org.zeromq.ZContext.shadow;
@@ -235,6 +238,18 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
             install(new JeroMQAsyncConnectionServiceModule());
 
             instanceModules.forEach(this::install);
+
+            bind(Long.class)
+                .annotatedWith(named(REFRESH_RATE_SECONDS))
+                .toInstance(10L);
+
+            bind(Long.class)
+                .annotatedWith(named(REFRESH_TIMEOUT_SECONDS))
+                .toInstance(15L);
+
+            bind(Long.class)
+                .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
+                .toInstance(20L);
 
         }
     }

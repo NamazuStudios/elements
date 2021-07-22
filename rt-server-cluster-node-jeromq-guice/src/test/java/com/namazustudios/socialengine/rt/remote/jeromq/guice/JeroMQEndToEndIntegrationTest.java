@@ -34,6 +34,8 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
+import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.*;
+import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.DEFAULT_TOTAL_REFRESH_TIMEOUT;
 import static java.lang.String.format;
 import static java.util.Collections.singleton;
 import static java.util.UUID.randomUUID;
@@ -361,6 +363,18 @@ public class JeroMQEndToEndIntegrationTest {
             instanceIdList.forEach(i -> install(new NodeModule(i, instanceIdList, applicationId)));
             instanceIdList.forEach(i -> expose(Instance.class).annotatedWith(named(i.asString())));
 
+            bind(Long.class)
+                .annotatedWith(named(REFRESH_RATE_SECONDS))
+                .toInstance(DEFAULT_REFRESH_RATE);
+
+            bind(Long.class)
+                .annotatedWith(named(REFRESH_TIMEOUT_SECONDS))
+                .toInstance(DEFAULT_REFRESH_TIMEOUT);
+
+            bind(Long.class)
+                .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
+                .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
+
         }
 
     }
@@ -550,6 +564,18 @@ public class JeroMQEndToEndIntegrationTest {
 
             bind(String.class).annotatedWith(named(RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS)).toInstance("5");
             bind(String.class).annotatedWith(named(RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS)).toInstance("25");
+
+            bind(Long.class)
+                    .annotatedWith(named(REFRESH_RATE_SECONDS))
+                    .toInstance(DEFAULT_REFRESH_RATE);
+
+            bind(Long.class)
+                    .annotatedWith(named(REFRESH_TIMEOUT_SECONDS))
+                    .toInstance(DEFAULT_REFRESH_TIMEOUT);
+
+            bind(Long.class)
+                    .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
+                    .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
 
         }
 

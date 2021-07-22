@@ -67,6 +67,7 @@ public class TestApplicationNodeModule extends PrivateModule {
             .withSchedulerContextModules(new XodusSchedulerContextModule())
         );
 
+
     }
 
 }

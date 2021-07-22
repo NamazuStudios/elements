@@ -47,8 +47,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     private static final long REFRESH_INTERVAL_SECONDS = 5;
 
-    private static final long DEFAULT_REFRESH_TIME_OUT_SECONDS = 5;
-
     private static final Logger logger = LoggerFactory.getLogger(JeroMQInstanceConnectionService.class);
 
     private InstanceId instanceId;
@@ -96,7 +94,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     @Override
     public void refresh() {
         final var context = getContext();
-        context.refresh(DEFAULT_REFRESH_TIME_OUT_SECONDS, SECONDS);
+        context.refresh(getRefreshIntervalInSeconds(), SECONDS);
     }
 
     @Override
