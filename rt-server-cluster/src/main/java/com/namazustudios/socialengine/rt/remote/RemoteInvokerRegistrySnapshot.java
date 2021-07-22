@@ -44,7 +44,8 @@ class RemoteInvokerRegistrySnapshot {
         try {
             lock.lock();
             final var remoteInvoker = storage.invokersByNode.get(nodeId);
-            if (remoteInvoker == null) throw new NodeNotFoundException(nodeId);
+            if (remoteInvoker == null)
+                throw new NodeNotFoundException(nodeId);
             return remoteInvoker.getInvoker();
         } finally {
             lock.unlock();
