@@ -560,17 +560,6 @@ public class LuaResource implements Resource {
     }
 
     /**
-     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
-     * hasn't been specified then this will return the value of {@link #getRemoteContext()}.
-     *
-     * @param hasNodeId the {@link HasNodeId} instance to test
-     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
-     */
-    public Context getRemoteContextOrContextFor(final HasNodeId hasNodeId) {
-        return getContextFor(hasNodeId, this::getRemoteContext);
-    }
-
-    /**
      * Gets the {@link Context} for the supplied {@link HasNodeId} and if unable to determine the NodeId it will return
      * the {@link Context} returned by the.
      *
