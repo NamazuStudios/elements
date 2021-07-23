@@ -19,9 +19,11 @@ import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
 
+import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.*;
+import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
 import static java.util.stream.Collectors.toList;
@@ -584,6 +586,18 @@ public class SimpleRemoteInvokerRegistryTest {
 
             bind(MockInstanceConnectionService.class).toInstance(spy(MockInstanceConnectionService.class));
             bind(InstanceConnectionService.class).to(MockInstanceConnectionService.class);
+
+            bind(Long.class)
+                .annotatedWith(named(REFRESH_RATE_SECONDS))
+                .toInstance(DEFAULT_REFRESH_RATE);
+
+            bind(Long.class)
+                .annotatedWith(named(REFRESH_TIMEOUT_SECONDS))
+                .toInstance(DEFAULT_REFRESH_TIMEOUT);
+
+            bind(Long.class)
+                .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
+                .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
 
         }
 

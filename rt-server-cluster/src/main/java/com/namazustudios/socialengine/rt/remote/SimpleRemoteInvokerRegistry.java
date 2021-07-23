@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -31,21 +32,21 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
 
     private static final Logger logger = LoggerFactory.getLogger(SimpleRemoteInvokerRegistry.class);
 
-    private static final long REFRESH_RATE = 5;
-
-    private static final TimeUnit REFRESH_UNITS = SECONDS;
-
     private static final long SHUTDOWN_TIMEOUT = 1;
 
     private static final TimeUnit SHUTDOWN_UNITS = MINUTES;
 
-    private static final long TOTAL_REFRESH_TIMEOUT = 3;
+    public static final String REFRESH_RATE_SECONDS = "com.namazustudios.socialengine.rt.remote.invoker.registry.report.refresh.rate.seconds";
 
-    private static final long METADATA_REFRESH_TIMEOUT = 1;
+    public static final String REFRESH_TIMEOUT_SECONDS = "com.namazustudios.socialengine.rt.remote.invoker.registry.report.refresh.timeout.seconds";
 
-    private static final TimeUnit REFRESH_TIMEOUT_TIMEUNIT = SECONDS;
+    public static final String TOTAL_REFRESH_TIMEOUT_SECONDS = "com.namazustudios.socialengine.rt.remote.invoker.registry.report.total.refresh.timeout.seconds";
 
-    private static final long REPORT_INTERVAL_SECONDS = 15;
+    public static final long DEFAULT_REFRESH_RATE = 5;
+
+    public static final long DEFAULT_REFRESH_TIMEOUT = 1;
+
+    public static final long DEFAULT_TOTAL_REFRESH_TIMEOUT = 3;
 
     private InstanceId instanceId;
 
@@ -54,6 +55,12 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
     private InstanceConnectionService instanceConnectionService;
 
     private final AtomicReference<RegistryContext> context = new AtomicReference<>();
+
+    private long refreshRateSeconds;
+
+    private long refreshTimeoutSeconds;
+
+    private long totalRefreshTimeoutSeconds;
 
     @Override
     public void start() {
@@ -152,6 +159,33 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
         this.remoteInvokerProvider = remoteInvokerProvider;
     }
 
+    public long getRefreshRateSeconds() {
+        return refreshRateSeconds;
+    }
+
+    @Inject
+    public void setRefreshRateSeconds(@Named(REFRESH_RATE_SECONDS) long refreshRateSeconds) {
+        this.refreshRateSeconds = refreshRateSeconds;
+    }
+
+    public long getRefreshTimeoutSeconds() {
+        return refreshTimeoutSeconds;
+    }
+
+    @Inject
+    public void setRefreshTimeoutSeconds(@Named(REFRESH_TIMEOUT_SECONDS) long refreshTimeoutSeconds) {
+        this.refreshTimeoutSeconds = refreshTimeoutSeconds;
+    }
+
+    public long getTotalRefreshTimeoutSeconds() {
+        return totalRefreshTimeoutSeconds;
+    }
+
+    @Inject
+    public void setTotalRefreshTimeoutSeconds(@Named(TOTAL_REFRESH_TIMEOUT_SECONDS) long totalRefreshTimeoutSeconds) {
+        this.totalRefreshTimeoutSeconds = totalRefreshTimeoutSeconds;
+    }
+
     private class RegistryContext {
 
         private Subscription connect;
@@ -174,14 +208,13 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                 return thread;
             });
 
-            scheduledExecutorService.scheduleAtFixedRate(this::logInvokers, 0, REPORT_INTERVAL_SECONDS, SECONDS);
             refreshScheduledFuture = scheduledExecutorService.scheduleAtFixedRate(() -> {
                 try {
                     refresh();
                 } catch (Exception ex) {
                     logger.error("Could not refresh invoker registry.", ex);
                 }
-            }, 0, REFRESH_RATE, REFRESH_UNITS);
+            }, 0, getRefreshRateSeconds(), SECONDS);
 
             connect = getInstanceConnectionService().subscribeToConnect(this::add);
             disconnect = getInstanceConnectionService().subscribeToDisconnect(this::remove);
@@ -218,7 +251,7 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                     th -> logger.error("Failed to get instance metadata for {}", connection.getInstanceId(), th)
                 );
 
-            op.timeout(METADATA_REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT);
+            op.timeout(getRefreshTimeoutSeconds(), SECONDS);
 
         }
 
@@ -291,12 +324,12 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
                     }
                 );
 
-                op.timeout(METADATA_REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT);
+                op.timeout(getRefreshTimeoutSeconds(), SECONDS);
 
             }
 
             try {
-                if (latch.awaitFinish(TOTAL_REFRESH_TIMEOUT, REFRESH_TIMEOUT_TIMEUNIT)) {
+                if (latch.awaitFinish(getTotalRefreshTimeoutSeconds(), SECONDS)) {
                     final var builder = snapshot.refresh();
                     for (var op : operations) op.accept(builder);
                     builder.prune().commit(this::cleanup);
@@ -315,28 +348,6 @@ public class SimpleRemoteInvokerRegistry implements RemoteInvokerRegistry {
             logger.info("Connecting to node {} via address {}", nodeId, addr);
             remoteInvoker.start(addr);
             return remoteInvoker;
-        }
-
-        private void logInvokers() {
-            if (logger.isInfoEnabled()) {
-
-                final var sb = new StringBuilder();
-                final var invokers = snapshot.getInvokersByNode();
-
-                sb.append("\nInvocation Table");
-
-                for (var entry : invokers.entrySet()) {
-                    sb.append("\n")
-                      .append("    ")
-                      .append(entry.getKey())
-                      .append("->")
-                      .append(entry.getValue());
-                }
-
-                logger.info("{}", sb);
-
-            }
-
         }
 
     }
