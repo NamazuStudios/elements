@@ -14,6 +14,7 @@
     <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>rest-api</artifactId>
     <name>rest-api</name>
+    <version>1.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

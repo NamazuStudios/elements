@@ -49,12 +49,12 @@ public class JavaObjectModuleBuiltin implements Builtin {
 
     public <T> JavaObjectModuleBuiltin(final String moduleName,
                                        final Provider<T> tProvider) {
-        this(fromModuleName(moduleName), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
+        this(fromModuleName(moduleName), tProvider, in -> LOWER_CAMEL.to(LOWER_UNDERSCORE, in));
     }
 
     public <T> JavaObjectModuleBuiltin(final ExposedModuleDefinition definition,
                                        final Provider<T> tProvider) {
-        this(fromDefinition(definition), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
+        this(fromDefinition(definition), tProvider, in -> LOWER_CAMEL.to(definition.style().methodCaseFormat(), in));
     }
 
     public <T> JavaObjectModuleBuiltin(final BuiltinDefinition builtinDefinition,

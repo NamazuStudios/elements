@@ -12,6 +12,8 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import java.util.Objects;
 
 /**
+ * Service to access Users in the system.
+ *
  * Created by patricktwohig on 3/19/15.
  */
 @Expose({

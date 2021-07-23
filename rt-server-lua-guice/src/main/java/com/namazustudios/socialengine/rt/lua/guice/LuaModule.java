@@ -23,10 +23,8 @@ import javax.inject.Provider;
 import javax.ws.rs.client.Client;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.reducing;
 import static java.util.stream.Collectors.toMap;
 
 /**
@@ -216,7 +214,7 @@ public class LuaModule extends PrivateModule {
                     }
 
                     visitors.accept(definition, cls);
-                    builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(moduleName, provider));
+                    builtinMultibinder.addBinding().toProvider(() -> new JavaObjectModuleBuiltin(definition, provider));
 
                 }
 

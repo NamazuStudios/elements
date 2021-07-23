@@ -81,6 +81,7 @@
         <module>rt-server-testkit</module>
         <module>service-test</module>
         <module>doc-serve</module>
+        <module>doclet</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
@@ -90,7 +91,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javax.servlet.api.version>3.1.0</javax.servlet.api.version>
         <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <slf4j.version>1.7.31</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <guava.version>21.0</guava.version>
         <commons.lang.version>3.3.2</commons.lang.version>
@@ -132,6 +133,7 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>
             <version>${slf4j.version}</version>
+<!--            <version>2.0.0-alpha1</version>-->
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
@@ -206,6 +208,19 @@
                         --illegal-access=permit
                     </argLine>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <version>3.2.0</version>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar-no-fork</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>
