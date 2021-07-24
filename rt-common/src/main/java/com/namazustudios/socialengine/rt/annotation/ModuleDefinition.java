@@ -1,19 +1,13 @@
 package com.namazustudios.socialengine.rt.annotation;
 
-import com.google.common.base.CaseFormat;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-
 import java.lang.annotation.*;
-import java.lang.reflect.InvocationTargetException;
-
-import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 
 /**
  * Defines an exposed module. Used within the {@link Expose} annotation.
  */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface ExposedModuleDefinition {
+public @interface ModuleDefinition {
 
     /**
      * The name of the module to expose.
@@ -28,7 +22,7 @@ public @interface ExposedModuleDefinition {
      *
      * @return the method case format
      */
-    ExposedCodeStyle style() default @ExposedCodeStyle();
+    CodeStyle style() default @CodeStyle();
 
     /**
      * Specifies the binding {@link Annotation} for the module.

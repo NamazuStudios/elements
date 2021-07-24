@@ -11,7 +11,7 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation.Undefined;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.rt.lua.LuaManifestLoader;
 import com.namazustudios.socialengine.rt.lua.LuaResourceLoader;
 import com.namazustudios.socialengine.rt.lua.builtin.Builtin;
@@ -36,7 +36,7 @@ public class LuaModule extends PrivateModule {
 
     private BiConsumer<String, Class<?>> legacyVisitors = (s, t) -> {};
 
-    private BiConsumer<ExposedModuleDefinition, Class<?>>  visitors = (e, t) -> {};
+    private BiConsumer<ModuleDefinition, Class<?>>  visitors = (e, t) -> {};
 
     @Override
     protected final void configure() {
@@ -141,7 +141,7 @@ public class LuaModule extends PrivateModule {
         enumClassSet.stream()
             .filter(cls -> cls.getAnnotation(ExposeEnum.class) != null)
             .collect(toMap(cls -> cls.getAnnotation(ExposeEnum.class), identity()))
-            .forEach((exposeEnum, type) -> bindEnumModuleBuiltin(type).toModulesNamed(exposeEnum.modules()));
+            .forEach((exposeEnum, type) -> bindEnumModuleBuiltin(type).toModules(exposeEnum.value()));
 
         return this;
 
@@ -153,7 +153,7 @@ public class LuaModule extends PrivateModule {
      * @param visitor the visitor
      * @return this instance
      */
-    public LuaModule visitDiscoveredModule(final BiConsumer<ExposedModuleDefinition, Class<?>> visitor) {
+    public LuaModule visitDiscoveredModule(final BiConsumer<ModuleDefinition, Class<?>> visitor) {
         visitors = visitors.andThen(visitor);
         return this;
     }
@@ -198,7 +198,7 @@ public class LuaModule extends PrivateModule {
             }
 
             @Override
-            public LuaModule toModulesWithDefinitions(final ExposedModuleDefinition[] moduleDefinitions) {
+            public LuaModule toModulesWithDefinitions(final ModuleDefinition[] moduleDefinitions) {
 
                 for (final var definition : moduleDefinitions) {
                     final String moduleName = definition.value();
@@ -228,14 +228,31 @@ public class LuaModule extends PrivateModule {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public EnumModuleBinding bindEnumModuleBuiltin(final Class cls) {
-        return moduleNames -> {
+        return new EnumModuleBinding() {
 
-            for (final String moduleName : moduleNames) {
-                legacyVisitors.accept(moduleName, (Class<Object>) cls);
-                builtinMultibinder.addBinding().toProvider(() -> new EnumModuleBuiltin<>(cls, moduleName));
+            @Override
+            public LuaModule toModules(ModuleDefinition[] moduleDefinitions) {
+
+                for (final var moduleDefinition : moduleDefinitions) {
+                    visitors.accept(moduleDefinition, (Class<Object>) cls);
+                    builtinMultibinder.addBinding().toProvider(() -> new EnumModuleBuiltin<>(cls, moduleDefinition));
+                }
+
+                return LuaModule.this;
+
             }
 
-            return this;
+            @Override
+            public LuaModule toModulesNamed(String[] moduleNames) {
+
+                for (final var moduleName : moduleNames) {
+                    legacyVisitors.accept(moduleName, (Class<Object>) cls);
+                    builtinMultibinder.addBinding().toProvider(() -> new EnumModuleBuiltin<>(cls, moduleName));
+                }
+
+                return LuaModule.this;
+
+            }
 
         };
     }
@@ -257,12 +274,18 @@ public class LuaModule extends PrivateModule {
          *
          * @param moduleDefinitions the module name.
          */
-        LuaModule toModulesWithDefinitions(ExposedModuleDefinition[] moduleDefinitions);
+        LuaModule toModulesWithDefinitions(ModuleDefinition[] moduleDefinitions);
 
     }
 
-    @FunctionalInterface
     public interface EnumModuleBinding {
+
+        /**
+         * Specifies the module.
+         *
+         * @param moduleDefinitions the module name.
+         */
+        LuaModule toModules(ModuleDefinition[] moduleDefinitions);
 
         /**
          * Specifies the module.

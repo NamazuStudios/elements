@@ -1,19 +1,18 @@
 package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 
 /**
  * Manages instances of {@link GameOnApplicationConfiguration}.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration.gameon"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.application.configuration.gameon"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.application.configuration.gameon",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

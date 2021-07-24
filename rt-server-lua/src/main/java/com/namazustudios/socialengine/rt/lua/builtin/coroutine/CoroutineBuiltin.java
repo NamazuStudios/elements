@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.CurrentResource;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
+import com.namazustudios.socialengine.rt.annotation.Intrinsic;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;

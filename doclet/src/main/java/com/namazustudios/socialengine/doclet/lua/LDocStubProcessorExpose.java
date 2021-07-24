@@ -3,50 +3,59 @@ package com.namazustudios.socialengine.doclet.lua;
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.sun.source.doctree.ParamTree;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.lang.model.element.*;
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
-import static java.util.Collections.emptyList;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.ElementKind.METHOD;
+import static javax.lang.model.element.ElementKind.*;
 
-public class LDocStubProcessorExpose implements AutoCloseable {
+public class LDocStubProcessorExpose implements LDocProcessor<LDocStubModule> {
 
     private static final Logger logger = LoggerFactory.getLogger(LDocStubProcessorExpose.class);
 
-    private final Expose expose;
+    private final ModuleDefinition[] moduleDefinitions;
 
     private final DocContext docContext;
 
     private final TypeElement typeElement;
 
-    private List<LDocStubModule> stubs = emptyList();
+    private final Set<ElementKind> exposedKinds;
 
     public LDocStubProcessorExpose(final DocContext docContext,
                                    final TypeElement typeElement,
                                    final Expose expose) {
         this.docContext = docContext;
         this.typeElement = typeElement;
-        this.expose = expose;
+        this.moduleDefinitions = expose.value();
+        this.exposedKinds = new HashSet<>(asList(METHOD, FIELD));
     }
 
-    @Override
-    public void close() throws IOException {
-        // TODO Write to Disk.
+    public LDocStubProcessorExpose(final DocContext docContext,
+                                   final TypeElement typeElement,
+                                   final ExposeEnum exposeEnum) {
+        this.docContext = docContext;
+        this.typeElement = typeElement;
+        this.moduleDefinitions = exposeEnum.value();
+        this.exposedKinds = new HashSet<>(singletonList(ENUM_CONSTANT));
     }
 
     public List<LDocStubModule> process() {
 
-        final var stubs = Arrays.stream(expose.value())
+        final var stubs = Arrays.stream(moduleDefinitions)
             .map(LDocStubModule::new)
             .collect(toList());
 
@@ -56,7 +65,12 @@ public class LDocStubProcessorExpose implements AutoCloseable {
                 .getDocTrees()
                 .getDocCommentTree(typeElement);
 
-            final var body = comments.getBody()
+            final var body = comments.getFullBody()
+                .stream()
+                .map(DocCommentTags::getText)
+                .collect(Collectors.joining());
+
+            final var summary = comments.getFirstSentence()
                 .stream()
                 .map(DocCommentTags::getText)
                 .collect(Collectors.joining());
@@ -68,15 +82,51 @@ public class LDocStubProcessorExpose implements AutoCloseable {
                 .flatMap(Collection::stream)
                 .forEach(stub.getHeader()::addAuthor);
 
+            stub.getHeader().setSummary(summary);
             stub.getHeader().setDescription(body);
 
             for (var enclosed : typeElement.getEnclosedElements()) {
-                if (METHOD.equals(enclosed.getKind())) processMethod(stub, (ExecutableElement) enclosed);
+
+                if (!exposedKinds.contains(enclosed.getKind())) continue;
+                if (!docContext.getEnvironment().isIncluded(enclosed)) continue;
+
+                switch (enclosed.getKind()) {
+                    case FIELD:
+                    case ENUM_CONSTANT:
+                        processField(stub, (VariableElement) enclosed);
+                        break;
+                    case METHOD:
+                        processMethod(stub, (ExecutableElement) enclosed);
+                        break;
+                }
             }
 
         }
 
         return stubs;
+
+    }
+
+    private void processField(final LDocStubModule stub, final VariableElement enclosed) {
+
+        final var comments = docContext.getDocTrees().getDocCommentTree(enclosed);
+
+        final var name = enclosed.getSimpleName();
+
+        final var body = comments.getFullBody()
+            .stream()
+            .map(DocCommentTags::getText)
+            .collect(Collectors.joining());
+
+        final var modifiers = enclosed.getModifiers();
+        final var constantValue = enclosed.getConstantValue();
+        final var typeDescription = LDocTypes.getTypeDescription(enclosed.asType());
+
+        if (modifiers.contains(Modifier.STATIC) && modifiers.contains(Modifier.FINAL)) {
+            stub.getHeader().addField(UPPER_UNDERSCORE, typeDescription, name.toString(), body, constantValue);
+        } else {
+            stub.getHeader().addField(LOWER_CAMEL, typeDescription, name.toString(), body, constantValue);
+        }
 
     }
 

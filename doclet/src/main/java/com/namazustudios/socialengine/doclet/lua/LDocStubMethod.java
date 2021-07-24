@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.google.common.base.CaseFormat;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,11 +14,11 @@ public class LDocStubMethod {
 
     private final List<LDocTParameter> parameters = new ArrayList<>();
 
-    private final ExposedModuleDefinition exposedModuleDefinition;
+    private final ModuleDefinition moduleDefinition;
 
-    public LDocStubMethod(final ExposedModuleDefinition exposedModuleDefinition, final String name) {
-        final var format = exposedModuleDefinition.style().methodCaseFormat();
-        this.exposedModuleDefinition = exposedModuleDefinition;
+    public LDocStubMethod(final ModuleDefinition moduleDefinition, final String name) {
+        final var format = moduleDefinition.style().methodCaseFormat();
+        this.moduleDefinition = moduleDefinition;
         this.name = CaseFormat.LOWER_CAMEL.to(format, name);
     }
 
@@ -40,7 +40,7 @@ public class LDocStubMethod {
     }
 
     public LDocTParameter addParameter(final String name) {
-        final var param = new LDocTParameter(exposedModuleDefinition, name);
+        final var param = new LDocTParameter(moduleDefinition, name);
         parameters.add(param);
         return param;
     }
@@ -58,7 +58,7 @@ public class LDocStubMethod {
         sb.append("name='").append(name).append('\'');
         sb.append(", returnValues=").append(returnValues);
         sb.append(", parameters=").append(parameters);
-        sb.append(", exposedModuleDefinition=").append(exposedModuleDefinition);
+        sb.append(", exposedModuleDefinition=").append(moduleDefinition);
         sb.append('}');
         return sb.toString();
     }

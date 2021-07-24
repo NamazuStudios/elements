@@ -1,8 +1,14 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
+import com.google.common.base.CaseFormat;
 import com.namazustudios.socialengine.jnlua.JavaFunction;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromDefinition;
+import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
 
 public class EnumModuleBuiltin<T extends Enum<T>> implements Builtin {
 
@@ -10,16 +16,22 @@ public class EnumModuleBuiltin<T extends Enum<T>> implements Builtin {
 
     private final Class<T> enumClass;
 
-    private final String moduleName;
+    private final BuiltinDefinition builtinDefinition;
 
     public EnumModuleBuiltin(Class<T> enumClass, final String moduleName) {
         this.enumClass = enumClass;
-        this.moduleName = moduleName;
+        this.builtinDefinition = fromModuleName(moduleName);
+    }
+
+    public EnumModuleBuiltin(Class<T> enumClass, final ModuleDefinition moduleDefinition) {
+        this.enumClass = enumClass;
+        this.builtinDefinition = fromDefinition(moduleDefinition);
     }
 
     @Override
     public Module getModuleNamed(final String moduleName) {
-        final String enumModuleName = this.moduleName;
+
+        final var enumModuleName = this.builtinDefinition.getModuleName();
 
         return new Module() {
 
@@ -34,6 +46,7 @@ public class EnumModuleBuiltin<T extends Enum<T>> implements Builtin {
             }
 
         };
+
     }
 
     @Override
@@ -49,9 +62,15 @@ public class EnumModuleBuiltin<T extends Enum<T>> implements Builtin {
             luaState.newTable();
 
             for (final Enum<T> enumValue : enumClass.getEnumConstants()) {
-                final String enumValueString = enumValue.toString();
+
+                final var enumValueString = UPPER_UNDERSCORE.to(
+                    builtinDefinition.getConstantCaseFormat(),
+                    enumValue.toString()
+                );
+
                 luaState.pushJavaObject(enumValue);
                 luaState.setField(-2, enumValueString);
+
             }
 
             return 1;

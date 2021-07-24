@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Manages instances of {@link Profile}.
@@ -15,8 +15,8 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Created by patricktwohig on 6/27/17.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.profile"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.profile"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.profile",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

@@ -1,31 +1,36 @@
 package com.namazustudios.socialengine.doclet.lua;
 
+import com.google.common.base.CaseFormat;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class LDocStubHeader {
 
+    private String summary;
+
     private String description;
 
     private final List<String> authors = new ArrayList<>();
 
-    private final ExposedModuleDefinition exposedModuleDefinition;
+    private final List<LDocStubField> fields = new ArrayList<>();
 
-    public LDocStubHeader(final ExposedModuleDefinition exposedModuleDefinition) {
-        this.exposedModuleDefinition = exposedModuleDefinition;
+    private final ModuleDefinition moduleDefinition;
+
+    public LDocStubHeader(final ModuleDefinition moduleDefinition) {
+        this.moduleDefinition = moduleDefinition;
     }
 
-    public String getTitle() {
+    public String getMetadata() {
 
         final var sb = new StringBuilder();
 
-        final var deprecated = exposedModuleDefinition.deprecated();
-        final var annotation = exposedModuleDefinition.annotation().value();
+        final var deprecated = moduleDefinition.deprecated();
+        final var annotation = moduleDefinition.annotation().value();
 
-        sb.append("Module ").append(exposedModuleDefinition.value());
+        sb.append("Module ").append(moduleDefinition.value());
 
         if (!annotation.isAssignableFrom(ExposedBindingAnnotation.Undefined.class)) {
             sb.append(" ").append(annotation);
@@ -40,7 +45,15 @@ public class LDocStubHeader {
     }
 
     public String getModule() {
-        return exposedModuleDefinition.value();
+        return moduleDefinition.value();
+    }
+
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
     }
 
     public String getDescription() {
@@ -59,12 +72,36 @@ public class LDocStubHeader {
         authors.add(author);
     }
 
+    public LDocStubField addField(final CaseFormat caseFormat, final String name) {
+        final var field = new LDocStubField(caseFormat, moduleDefinition, name);
+        fields.add(field);
+        return field;
+    }
+
+    public LDocStubField addField(final CaseFormat caseFormat,
+                                  final String typeDescription,
+                                  final String name,
+                                  final String comment,
+                                  final Object constantValue) {
+
+        final var field = addField(caseFormat, name);
+
+        field.setComment(comment);
+        field.setType(typeDescription);
+
+        if (constantValue != null) {
+            field.setComment(constantValue.toString());
+        }
+
+        return field;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("LDocStubHeader{");
         sb.append("description='").append(description).append('\'');
         sb.append(", authors=").append(authors);
-        sb.append(", exposedModuleDefinition=").append(exposedModuleDefinition);
+        sb.append(", exposedModuleDefinition=").append(moduleDefinition);
         sb.append('}');
         return sb.toString();
     }

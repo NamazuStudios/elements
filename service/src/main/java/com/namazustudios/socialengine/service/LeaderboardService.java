@@ -4,15 +4,15 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Manages instances of {@link Leaderboard}.
  * 
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.leaderboard"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.leaderboard"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.leaderboard",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

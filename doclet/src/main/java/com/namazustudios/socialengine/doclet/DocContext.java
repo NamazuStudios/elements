@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.doclet;
 
-import com.sun.source.doctree.DocTree;
+import com.namazustudios.socialengine.rt.annotation.Private;
 import com.sun.source.util.DocTrees;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
@@ -10,6 +10,7 @@ import javax.lang.model.util.ElementFilter;
 import java.util.Locale;
 import java.util.Set;
 
+@Private
 public interface DocContext {
 
     Locale getLocale();

@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.Objects;
 
@@ -17,8 +17,8 @@ import java.util.Objects;
  * Created by patricktwohig on 3/19/15.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.user"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.user"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.user",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

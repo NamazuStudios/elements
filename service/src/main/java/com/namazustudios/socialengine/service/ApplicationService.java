@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Manages the lifecycle of the {@link Application} instance.
@@ -12,8 +12,8 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Created by patricktwohig on 7/10/15.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.application"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.application"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.application",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

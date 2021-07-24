@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.doclet.lua;
 
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 
@@ -12,11 +12,11 @@ public class LDocTParameter {
 
     private final String name;
 
-    private final ExposedModuleDefinition exposedModuleDefinition;
+    private final ModuleDefinition moduleDefinition;
 
-    public LDocTParameter(final ExposedModuleDefinition exposedModuleDefinition, final String name) {
-        this.exposedModuleDefinition = exposedModuleDefinition;
-        this.name = LOWER_CAMEL.to(exposedModuleDefinition.style().parameterCaseFormat(), name);
+    public LDocTParameter(final ModuleDefinition moduleDefinition, final String name) {
+        this.moduleDefinition = moduleDefinition;
+        this.name = LOWER_CAMEL.to(moduleDefinition.style().parameterCaseFormat(), name);
     }
 
     public String getName() {
@@ -45,7 +45,7 @@ public class LDocTParameter {
         sb.append("type='").append(type).append('\'');
         sb.append(", comment='").append(comment).append('\'');
         sb.append(", name='").append(name).append('\'');
-        sb.append(", exposedModuleDefinition=").append(exposedModuleDefinition);
+        sb.append(", exposedModuleDefinition=").append(moduleDefinition);
         sb.append('}');
         return sb.toString();
     }

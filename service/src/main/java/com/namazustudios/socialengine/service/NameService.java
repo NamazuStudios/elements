@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
@@ -13,8 +13,8 @@ import static java.lang.String.format;
  * Generates names based on the system configuration.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.name"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.name"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.name",
         annotation = @ExposedBindingAnnotation(Unscoped.class))
 })

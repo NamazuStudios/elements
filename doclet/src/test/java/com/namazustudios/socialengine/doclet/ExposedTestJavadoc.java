@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.doclet;
 
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.List;
 import java.util.Map;
@@ -14,11 +14,16 @@ import java.util.Map;
  * @author sneakypete
  */
 @Expose({
-    @ExposedModuleDefinition("test.javadoc.foo"),
-    @ExposedModuleDefinition("test.javadoc.bar"),
-    @ExposedModuleDefinition(value = "test.javadoc.deprecated", deprecated = @DeprecationDefinition(deprecated = true))
+    @ModuleDefinition("test.javadoc.foo"),
+    @ModuleDefinition("test.javadoc.bar"),
+    @ModuleDefinition(value = "test.javadoc.deprecated", deprecated = @DeprecationDefinition(deprecated = true))
 })
-public interface TestJavadoc {
+public interface ExposedTestJavadoc {
+
+    /**
+     * The Answer.
+     */
+    int FORTY_TWO = 42;
 
     /**
      * A simple test method.
@@ -79,7 +84,7 @@ public interface TestJavadoc {
     /**
      * Returns this object.
      */
-    default TestJavadoc getThis() {
+    default ExposedTestJavadoc getThis() {
         return this;
     }
 

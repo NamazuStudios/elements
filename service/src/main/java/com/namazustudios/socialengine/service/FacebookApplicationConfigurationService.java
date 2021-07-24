@@ -5,14 +5,14 @@ import com.namazustudios.socialengine.model.application.ApplicationConfiguration
 import com.namazustudios.socialengine.model.application.FacebookApplicationConfiguration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by patricktwohig on 6/14/17.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.application.configuration.facebook"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.application.configuration.facebook"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.application.configuration.facebook",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

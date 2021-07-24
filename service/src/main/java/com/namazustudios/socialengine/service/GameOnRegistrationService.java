@@ -4,14 +4,13 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Manages instances of {@link GameOnRegistration}.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.registration")
+    @ModuleDefinition(value = "namazu.elements.service.gameon.registration")
 })
 public interface GameOnRegistrationService {
 

@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
-import com.namazustudios.socialengine.rt.annotation.Expose;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
@@ -9,13 +8,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
-import java.io.IOException;
+import javax.tools.Diagnostic;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
 import static java.util.Collections.emptySet;
-import static javax.tools.Diagnostic.Kind.ERROR;
 
 public class LDocStubDoclet implements Doclet {
 
@@ -67,27 +65,19 @@ public class LDocStubDoclet implements Doclet {
         };
 
         for (var type : cxt.getIncludedElements()) {
-            logger.info("Processing {}", type);
-            final var expose = type.getAnnotation(Expose.class);
-            if (expose != null) {
-                documentExposedType(cxt, expose, type);
+            for (var processor : LDocProcessor.get(cxt, type)) {
+                final var stubs = processor.process();
+                write(stubs);
             }
         }
 
         return true;
+
     }
 
-    private void documentExposedType(final DocContext cxt,
-                                     final Expose expose,
-                                     final TypeElement type) {
-        try (var processor = new LDocStubProcessorExpose(cxt, type, expose)) {
-            final var pages = processor.process();
-            for (var page : pages) {
-                logger.info("Page:" + page);
-            }
-        } catch (IOException ex) {
-            reporter.print(ERROR, "Unable to write page for " + type.getQualifiedName() + ": " + ex.getMessage());
-        }
+    private void write(List<? extends LDocStub> stubs) {
+        // TODO: Dump stubs out to disk later
+        reporter.print(Diagnostic.Kind.NOTE, "Processed stub: " + stubs);
     }
 
 }
