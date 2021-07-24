@@ -7,18 +7,18 @@ import java.util.List;
 
 public class LDocStubModule implements LDocStub {
 
-    private final LDocStubHeader header;
+    private final LDocStubModuleHeader header;
 
     private final List<LDocStubMethod> methods = new ArrayList<>();
 
     private final ModuleDefinition moduleDefinition;
 
     public LDocStubModule(final ModuleDefinition moduleDefinition) {
-        header = new LDocStubHeader(moduleDefinition);
+        header = new LDocStubModuleHeader(moduleDefinition);
         this.moduleDefinition = moduleDefinition;
     }
 
-    public LDocStubHeader getHeader() {
+    public LDocStubModuleHeader getHeader() {
         return header;
     }
 

@@ -40,11 +40,44 @@ import static java.util.concurrent.TimeUnit.MILLISECONDS;
         @MethodDefinition(
             value = "start",
             summary = "Starts a system-managed coroutine.",
-            description = "Starts the coroutine and assigns it a task id. The system will manage this courtine until " +
-                          "it fails with an error, exits, is explicitly killed, or its associated resource is " +
-                          "destroyed.",
-            parameters = {},
-            returns = {}
+            description =
+                "Starts the coroutine and assigns it a task id. The system will manage this coroutine until " +
+                "it fails with an error, exits, is explicitly killed, or its associated resource is " +
+                "destroyed.",
+            parameters = {
+                @ParameterDefinition(value="coroutine", type = "thread", comment = "The coroutine to start.")
+            },
+            returns = {
+                @ReturnDefinition(comment = "the status (yield or exit).", type = "string"),
+                @ReturnDefinition(comment = "the system-assigned task ID.", type = "string"),
+                @ReturnDefinition(comment = "if the coroutine finished, all remaining execution results.", type = "..."),
+            }
+        ),
+        @MethodDefinition(
+            value = "resume",
+            summary = "Resumes a system-managed coroutine.",
+            description =
+                "Starts the coroutine and assigns it a task id. The system will manage this coroutine until " +
+                "it fails with an error, exits, is explicitly killed, or its associated resource is " +
+                "destroyed.",
+            parameters = {
+                @ParameterDefinition(value="task_id", type = "string", comment = "The system-managed task ID to resume.")
+            },
+            returns = {
+                @ReturnDefinition(comment = "the status (yield or exit).", type = "string"),
+                @ReturnDefinition(comment = "the system-assigned task ID.", type = "string"),
+                @ReturnDefinition(comment = "if the coroutine finished, all remaining execution results.", type = "..."),
+            }
+        ),
+        @MethodDefinition(
+            value = "current_task_id",
+            summary = "Returns the current Task ID.",
+            description =
+                "The currently executing Task ID. This is always set by the system. All executions must be happening" +
+                "within the scope of a Task ID, except for the initial startup and loading of the script.",
+            parameters = {
+                @ParameterDefinition(value="task_id", type = "string", comment = "The system-managed task ID to resume.")
+            }
         )
     }
 )

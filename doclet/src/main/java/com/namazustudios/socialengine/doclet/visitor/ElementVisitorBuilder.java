@@ -6,10 +6,33 @@ import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 public class ElementVisitorBuilder<R, P> {
 
+    private static
+            <ReturnT, FirstT, SecondT>
+            BiFunction<FirstT, SecondT, ReturnT> pass(final Supplier<ReturnT> rSupplier) {
+        return (element, rType) -> rSupplier.get();
+    }
+
     private final List<Consumer<FunctionalElementVisitor<R,P>>> operations = new ArrayList<>();
+
+    public ElementVisitorBuilder<R, P> passingAll() {
+        return passingAll(() -> null);
+    }
+
+    public ElementVisitorBuilder<R, P> passingAll(final Supplier<R> rSupplier) {
+        return withVisit(v -> rSupplier.get())
+            .withVisitPackage(pass(rSupplier))
+            .withVisitType(pass(rSupplier))
+            .withVisitVariable(pass(rSupplier))
+            .withVisitModule(pass(rSupplier))
+            .withVisitExecutable(pass(rSupplier))
+            .withVisitTypeParameter(pass(rSupplier))
+            .withVisitUnknown(pass(rSupplier))
+            .withVisitModule(pass(rSupplier));
+    }
 
     public ElementVisitorBuilder<R, P> withVisit(final Function<Element, R> visit) {
         operations.add(v -> v.setVisit(visit));

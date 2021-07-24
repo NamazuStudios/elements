@@ -7,6 +7,8 @@ import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.namazustudios.socialengine.doclet.DocAnnotations.*;
+
 /**
  * Used to process javadoc and annotations and generate instances of {@link LDocStub}.
  *
@@ -32,16 +34,37 @@ public interface LDocProcessor<StubT extends LDocStub> {
 
         final List<LDocProcessor<?>> processors = new ArrayList<>();
 
-        final var expose = DocAnnotations.getExposed(typeElement);
-        final var exposeEnum = DocAnnotations.getExposedEnum(typeElement);
-        final var intrinsic = DocAnnotations.getIntrinsic(typeElement);
+        final var expose = getExposed(typeElement);
+        final var exposeEnum = getExposedEnum(typeElement);
+        final var intrinsic = getIntrinsic(typeElement);
 
-        if (expose != null) processors.add(new LDocStubProcessorExpose(cxt, typeElement, expose));
-        if (exposeEnum != null) processors.add(new LDocStubProcessorExpose(cxt, typeElement, exposeEnum));
-        if (intrinsic != null) processors.add(new LDocStubProcessorIntrinsic(cxt, intrinsic, typeElement));
+        if (expose != null)
+            processors.add(new LDocStubProcessorExpose(cxt, typeElement, expose));
+
+        if (exposeEnum != null)
+            processors.add(new LDocStubProcessorExpose(cxt, typeElement, exposeEnum));
+
+        if (intrinsic != null)
+            processors.add(new LDocStubProcessorIntrinsic(cxt, intrinsic, typeElement));
+
+        if (expose != null && exposeEnum != null && intrinsic != null && isPrivate(typeElement))
+            processors.add(new LDocStubProcessorStandard(cxt, typeElement));
+
+        for (var enclosed : typeElement.getEnclosedElements()) {
+            switch (enclosed.getKind()) {
+                case ENUM:
+                case CLASS:
+                case INTERFACE:
+                    final var subProcessors = get(cxt, (TypeElement) enclosed);
+                    processors.addAll(subProcessors);
+                    break;
+            }
+        }
 
         return processors;
 
     }
+
+
 
 }
