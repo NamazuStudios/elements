@@ -30,7 +30,7 @@ public @interface Intrinsic {
      *
      * @return the summary
      */
-    String summary();
+    String summary() default "";
 
     /**
      * The description for htis {@link Intrinsic}
@@ -42,13 +42,13 @@ public @interface Intrinsic {
      *
      * @return the methods
      */
-    MethodDefinition[] methods();
+    MethodDefinition[] methods() default {};
 
     /**
      * The constants defined by this value.
      *
      * @return the constants
      */
-    FieldDefinition[] constants();
+    FieldDefinition[] constants() default {};
 
 }

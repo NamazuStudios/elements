@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.CurrentResource;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
-import com.namazustudios.socialengine.rt.annotation.Intrinsic;
+import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
@@ -29,6 +29,25 @@ import static java.lang.StrictMath.round;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+@Intrinsic(
+    value = @ModuleDefinition("namazu.coroutine"),
+    authors = "ptwohig",
+    summary = "System-managed Coroutines.",
+    description = "This API controls the managed coroutines used by the system allowing hte caller to create, " +
+                  "manage, and schedule tasks modeled as coroutines. Coroutines in this module have special yield " +
+                  "semantics enabling the system to manage the lifecycle of the VMs contained in the cluster.",
+    methods = {
+        @MethodDefinition(
+            value = "start",
+            summary = "Starts a system-managed coroutine.",
+            description = "Starts the coroutine and assigns it a task id. The system will manage this courtine until " +
+                          "it fails with an error, exits, is explicitly killed, or its associated resource is " +
+                          "destroyed.",
+            parameters = {},
+            returns = {}
+        )
+    }
+)
 public class CoroutineBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(CoroutineBuiltin.class);
