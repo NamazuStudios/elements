@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.appnode;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
+import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry;
 
 import java.util.Properties;
 
@@ -15,6 +16,8 @@ import static com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryS
 import static com.namazustudios.socialengine.rt.remote.PersistentInstanceIdProvider.INSTANCE_ID_FILE;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS;
 import static com.namazustudios.socialengine.rt.remote.RemoteInvoker.REMOTE_INVOKER_MIN_CONNECTIONS;
+import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.*;
+import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.REFRESH_RATE_SECONDS;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
 import static com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule.DiscoveryType.STATIC;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
@@ -57,6 +60,9 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(SRV_QUERY, "_elements._tcp.internal");
         properties.setProperty(SRV_SERVERS, "");
         properties.setProperty(SRV_AUTHORITATIVE, "false");
+        properties.setProperty(REFRESH_RATE_SECONDS, String.valueOf(DEFAULT_REFRESH_RATE));
+        properties.setProperty(REFRESH_TIMEOUT_SECONDS, String.valueOf(DEFAULT_REFRESH_TIMEOUT));
+        properties.setProperty(TOTAL_REFRESH_TIMEOUT_SECONDS, String.valueOf(DEFAULT_TOTAL_REFRESH_TIMEOUT));
         return properties;
     }
 

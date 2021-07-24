@@ -76,7 +76,7 @@ public class UserResource {
                   notes = "A special endpoint used to get the current user for the request.  The current " +
                           "user is typically associated with the session but may be derived any other way.  This " +
                           "is essentially an alias for using GET /user/myUserId")
-    public User getUser() {
+    public User getCurrentUser() {
         return getUserService().getCurrentUser();
     }
 

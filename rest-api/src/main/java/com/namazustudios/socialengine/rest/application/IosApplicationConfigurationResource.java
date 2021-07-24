@@ -87,7 +87,7 @@ public class IosApplicationConfigurationResource {
     @ApiOperation(
             value = "Updates a iOS ApplicationConfiguration",
             notes = "Updates an existing iOS Application profile if it is known to the server.")
-    public IosApplicationConfiguration updateApplicationConfiguration(
+    public IosApplicationConfiguration updateIosApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final IosApplicationConfiguration iosApplicationConfiguration) {

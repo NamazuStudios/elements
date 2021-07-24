@@ -35,7 +35,7 @@ public class GameOnTournamentEntryResource {
                     "one GameOnRegistration may exist per Profile.  However a user may see several " +
                     "GameOnRegistration instances for their User.  " +
                     "See:  https://developer.amazon.com/docs/gameon/game-api-ref.html#enter-tournament")
-    public GameOnTournamentEnterResponse enterTournament(
+    public GameOnTournamentEnterResponse createGameOnEntry(
             @PathParam("tournamentId") final String tournamentId,
             final GameOnTournamentEnterRequest gameOnTournamentEnterRequest) {
         return getGameOnTournamentService().enterTournament(tournamentId, gameOnTournamentEnterRequest);

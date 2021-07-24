@@ -29,7 +29,7 @@ public class GameOnMatchResource {
     @ApiOperation(
             value = "Gets all matches.",
             notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-matches")
-    public GameOnMatchesAggregate getMatches(
+    public GameOnMatchesAggregate getGameOnMatches(
 
             @QueryParam("os")
             @DefaultValue(DeviceOSType.DEFAULT_TYPE_STRING)
@@ -63,7 +63,7 @@ public class GameOnMatchResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a single match.",
                   notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-match-details")
-    public GameOnMatchDetail getMatch(
+    public GameOnMatchDetail getGameOnMatch(
 
             @PathParam("matchId")
             @ApiParam("The match ID.")
@@ -109,7 +109,7 @@ public class GameOnMatchResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Displays the match leaderboard",
                   notes = "See: https://developer.amazon.com/docs/gameon/game-api-ref.html#get-leaderboard")
-    public GameOnGetMatchLeaderboardResponse getLeaderboard(
+    public GameOnGetMatchLeaderboardResponse getGameOnMatchLeaderboard(
 
             @PathParam("matchId")
             @ApiParam("The match ID.")

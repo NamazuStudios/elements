@@ -104,6 +104,10 @@ public class DefaultHealthStatusService implements HealthStatusService {
 
     private void checkRemoteInvokerStatus(final HealthChecklist healthChecklist) {
 
+        if (healthChecklist.getHealthStatus().getRoutingHealthStatus().getApplicationNodeRoutingTable().isEmpty()) {
+            return;
+        }
+
         final var priorityComparator = comparingDouble(RemoteInvokerStatus::getPriority).reversed();
 
         final var priorities = getRemoteInvokerRegistry()

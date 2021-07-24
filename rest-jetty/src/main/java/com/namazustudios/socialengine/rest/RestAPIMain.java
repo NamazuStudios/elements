@@ -6,6 +6,7 @@ import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.rest.guice.RestAPIModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.servlet.security.HappyServlet;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
@@ -15,6 +16,7 @@ import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.servlet.ServletHandler;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -111,6 +113,8 @@ public class RestAPIMain implements Callable<Void>, Runnable {
                         final GuiceFilter guiceFilter,
                         final ServletContextHandler servletHandler) {
 
+        final var handlerCollection = new HandlerCollection();
+
         servletHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
         servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
 
@@ -121,8 +125,15 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         final var defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
         defaultServletHolder.setInitParameters(defaultInitParameters);
 
-        final var handlerCollection = new HandlerCollection();
         handlerCollection.addHandler(servletHandler);
+
+        if (!"/".equals(servletHandler.getContextPath())) {
+            final var rootServletHandler = new ServletContextHandler();
+            rootServletHandler.setContextPath("/");
+            rootServletHandler.addServlet(HappyServlet.class, "/");
+            handlerCollection.addHandler(rootServletHandler);
+        }
+
         server.setHandler(handlerCollection);
 
     }

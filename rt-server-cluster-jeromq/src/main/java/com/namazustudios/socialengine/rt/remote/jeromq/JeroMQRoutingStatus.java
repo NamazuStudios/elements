@@ -11,10 +11,15 @@ import java.util.List;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRoutingServer.CHARSET;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toUnmodifiableList;
 
 public class JeroMQRoutingStatus implements RoutingStatus {
 
-    private List<Route> routingTable;
+    private final List<Route> routingTable;
+
+    private final List<Route> masterRoutingTable;
+
+    private final List<Route> applicationNodeRoutingTable;
 
     private final InstanceId instanceId;
 
@@ -26,6 +31,16 @@ public class JeroMQRoutingStatus implements RoutingStatus {
         while (!zMsg.isEmpty()) routingTable.add(new JeroMQRoute(zMsg));
         this.routingTable = unmodifiableList(routingTable);
 
+        this.masterRoutingTable = routingTable
+            .stream()
+            .filter(r -> r.getNodeId().isMaster())
+            .collect(toUnmodifiableList());
+
+        this.applicationNodeRoutingTable = routingTable
+            .stream()
+            .filter(r -> !r.getNodeId().isMaster())
+            .collect(toUnmodifiableList());
+
     }
 
     @Override
@@ -36,6 +51,16 @@ public class JeroMQRoutingStatus implements RoutingStatus {
     @Override
     public List<Route> getRoutingTable() {
         return routingTable;
+    }
+
+    @Override
+    public List<Route> getMasterNodeRoutingTable() {
+        return masterRoutingTable;
+    }
+
+    @Override
+    public List<Route> getApplicationNodeRoutingTable() {
+        return applicationNodeRoutingTable;
     }
 
     private class JeroMQRoute implements Route {

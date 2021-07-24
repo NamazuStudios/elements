@@ -92,7 +92,7 @@ public class GameOnApplicationConfigurationResource {
             value = "Updates a GameOn ApplicationConfiguration",
             notes = "Updates an existing GameOn Application profile if it is known to the server.",
             authorizations = {@Authorization(SESSION_SECRET)})
-    public GameOnApplicationConfiguration updateApplicationConfiguration(
+    public GameOnApplicationConfiguration updateGameOnApplicationConfiguration(
             @PathParam("applicationNameOrId") final String applicationNameOrId,
             @PathParam("applicationConfigurationNameOrId") final String applicationConfigurationNameOrId,
             final GameOnApplicationConfiguration gameOnApplicationConfiguration) {
