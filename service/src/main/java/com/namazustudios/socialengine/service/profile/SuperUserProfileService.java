@@ -10,7 +10,10 @@ import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
+import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.service.ProfileService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -26,6 +29,8 @@ import static com.namazustudios.socialengine.service.profile.UserProfileService.
  * Created by patricktwohig on 6/28/17.
  */
 public class SuperUserProfileService implements ProfileService {
+
+    private static final Logger logger = LoggerFactory.getLogger(SuperUserProfileService.class);
 
     private ProfileDao profileDao;
 
@@ -97,7 +102,13 @@ public class SuperUserProfileService implements ProfileService {
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
 
-        eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
+
+        try {
+            eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
+        } catch (NodeNotFoundException ex) {
+            logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
+        }
+
         return createdProfile;
 
     }

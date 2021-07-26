@@ -15,8 +15,11 @@ import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.EventContext;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
+import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -28,6 +31,8 @@ import java.util.function.Supplier;
  * Created by patricktwohig on 6/29/17.
  */
 public class UserProfileService implements ProfileService {
+
+    private static final Logger logger = LoggerFactory.getLogger(UserProfileService.class);
 
     private User user;
 
@@ -116,7 +121,13 @@ public class UserProfileService implements ProfileService {
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
                 .build();
-        eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
+
+        try {
+            eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
+        } catch (NodeNotFoundException ex) {
+            logger.warn("Unable to dispatch the {} event handler.", PROFILE_CREATED_EVENT, ex);
+        }
+
         return createdProfile;
     }
 
