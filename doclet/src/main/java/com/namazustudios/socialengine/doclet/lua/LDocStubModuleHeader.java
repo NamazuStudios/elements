@@ -33,7 +33,7 @@ public class LDocStubModuleHeader {
             sb.append("Module ").append(moduleDefinition.value());
 
             if (!annotation.isAssignableFrom(ExposedBindingAnnotation.Undefined.class)) {
-                sb.append(" ").append(annotation);
+                sb.append(" ").append(annotation.getSimpleName());
             }
 
             if (deprecated.deprecated()) {

@@ -47,7 +47,7 @@ public interface LDocProcessor<StubT extends LDocStub> {
         if (intrinsic != null)
             processors.add(new LDocStubProcessorIntrinsic(cxt, intrinsic, typeElement));
 
-        if (expose != null && exposeEnum != null && intrinsic != null && isPrivate(typeElement))
+        if (isStandard(typeElement))
             processors.add(new LDocStubProcessorStandard(cxt, typeElement));
 
         for (var enclosed : typeElement.getEnclosedElements()) {

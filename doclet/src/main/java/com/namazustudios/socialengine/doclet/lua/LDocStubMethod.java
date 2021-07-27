@@ -16,6 +16,15 @@ public class LDocStubMethod {
 
     private final ModuleDefinition moduleDefinition;
 
+    private String summary;
+
+    private String description;
+
+    public LDocStubMethod(final String name) {
+        this.name = name;
+        this.moduleDefinition = null;
+    }
+
     public LDocStubMethod(final ModuleDefinition moduleDefinition, final String name) {
         final var format = moduleDefinition.style().methodCaseFormat();
         this.moduleDefinition = moduleDefinition;
@@ -52,13 +61,31 @@ public class LDocStubMethod {
         return param;
     }
 
+    public String getSummary() {
+        return summary;
+    }
+
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("LDocStubMethod{");
         sb.append("name='").append(name).append('\'');
         sb.append(", returnValues=").append(returnValues);
         sb.append(", parameters=").append(parameters);
-        sb.append(", exposedModuleDefinition=").append(moduleDefinition);
+        sb.append(", moduleDefinition=").append(moduleDefinition);
+        sb.append(", summary='").append(summary).append('\'');
+        sb.append(", description='").append(description).append('\'');
         sb.append('}');
         return sb.toString();
     }

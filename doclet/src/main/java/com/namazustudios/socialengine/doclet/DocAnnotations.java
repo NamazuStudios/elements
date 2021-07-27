@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.doclet;
 
+import com.namazustudios.socialengine.doclet.lua.LDocStubProcessorStandard;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import com.namazustudios.socialengine.rt.annotation.Intrinsic;
@@ -13,6 +14,8 @@ import javax.lang.model.element.TypeElement;
  */
 @Private
 public class DocAnnotations {
+
+    private DocAnnotations() {}
 
     /**
      * Tests if the specified type is flagged as {@link Private}
@@ -38,6 +41,23 @@ public class DocAnnotations {
             case MODULE:
             case PACKAGE:
                 return true;
+            default:
+                return false;
+        }
+    }
+
+    /**
+     * Tests if the supplied {@link TypeElement} should be handled by the {@link LDocStubProcessorStandard},
+     *
+     * @param typeElement the {@link TypeElement} to test
+     * @return true if the standard processor applies, false otherwise.
+     */
+    public static boolean isStandard(final TypeElement typeElement) {
+        switch (typeElement.getKind()) {
+            case ENUM:
+            case CLASS:
+            case INTERFACE:
+                return !isPrivate(typeElement);
             default:
                 return false;
         }
