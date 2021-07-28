@@ -25,7 +25,7 @@ public class UpdateUser extends AbstractUserSetupCommand {
 
     @Override
     protected User readOptions(final OptionSet optionSet) {
-        final User user = super.readOptions(optionSet);
+        final var user = super.readOptions(optionSet);
         user.setId(optionSet.valueOf(getUserIdOptionSpec()));
         return user;
     }
@@ -33,26 +33,25 @@ public class UpdateUser extends AbstractUserSetupCommand {
     @Override
     protected void writeUserToDatabase(OptionSet optionSet) {
 
-        final boolean strict = optionSet.has(getStrictOptionSpec());
-        final boolean hasPassword = optionSet.has(getPasswordOptionSpec());
+        final var strict = optionSet.has(getStrictOptionSpec());
 
-        if (hasPassword) {
+        if (hasPassword()) {
             if (strict) {
-                userDao.updateUserStrict(getUser(), getPassword());
+                getUserDao().updateUserStrict(getUser(), getPassword());
             } else {
-                userDao.updateActiveUser(getUser(), getPassword());
+                getUserDao().updateActiveUser(getUser(), getPassword());
             }
         } else {
             if (strict) {
-                userDao.updateUserStrict(getUser());
+                getUserDao().updateUserStrict(getUser());
             } else {
-                userDao.updateActiveUser(getUser());
+                getUserDao().updateActiveUser(getUser());
             }
         }
 
         // Validate that we can get both the username and password
-        userDao.validateActiveUserPassword(getUser().getName(), getPassword());
-        userDao.validateActiveUserPassword(getUser().getEmail(), getPassword());
+        getUserDao().validateActiveUserPassword(getUser().getName(), getPassword());
+        getUserDao().validateActiveUserPassword(getUser().getEmail(), getPassword());
 
     }
 
