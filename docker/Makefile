@@ -51,6 +51,7 @@ push:
 
 revision: login
 	$(DOCKER_BUILD) namazu-socialengine-base \
+		--tag namazu-elements-base \
 		--tag namazu-elements-base:$(TAG) \
 		--tag docker.namazustudios.net/namazu-elements-base:$(TAG) \
 		--tag docker.namazustudios.net/namazu-elements-base:$(TAG_SHORT) \
@@ -59,6 +60,7 @@ revision: login
 		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG_SHORT)
 	$(DOCKER_BUILD) namazu-socialengine-ui \
 		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
+		--tag namazu-elements-ui \
 		--tag namazu-elements-ui:$(TAG) \
 		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG) \
 		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG_SHORT) \
