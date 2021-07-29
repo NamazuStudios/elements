@@ -41,6 +41,7 @@ public class SimpleManifestContext implements ManifestContext {
             runStartupManifest();
 
         } catch (Exception ex) {
+            logger.error("Caught exception starting up.", ex);
             loader.close();
         }
 
