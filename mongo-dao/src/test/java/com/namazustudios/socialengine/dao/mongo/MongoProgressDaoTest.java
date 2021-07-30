@@ -79,8 +79,8 @@ public class MongoProgressDaoTest  {
 
     public Application makeTestApplication() {
         final Application application = new Application();
-        application.setName("mock");
-        application.setDescription("A mock application.");
+        application.setName("mock_progress");
+        application.setDescription("A mock application for testing Progress.");
         return getApplicationDao().createOrUpdateInactiveApplication(application);
     }
 

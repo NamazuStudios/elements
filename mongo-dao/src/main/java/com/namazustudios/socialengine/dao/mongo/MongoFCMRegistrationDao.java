@@ -48,8 +48,7 @@ public class MongoFCMRegistrationDao implements FCMRegistrationDao {
 
         validate(fcmRegistration);
 
-        final MongoProfile mongoProfile;
-        mongoProfile = getMongoProfileDao().getActiveMongoProfile(fcmRegistration.getProfile());
+        final var mongoProfile= getMongoProfileDao().getActiveMongoProfile(fcmRegistration.getProfile());
 
         final MongoFCMRegistration mongoFCMRegistration = new MongoFCMRegistration();
         mongoFCMRegistration.setProfile(mongoProfile);

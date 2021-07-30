@@ -266,14 +266,14 @@ public class MongoUserDao implements UserDao {
 
         validate(user);
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-
-        query.filter(or(
-            eq("name", user.getName()),
-            eq("email", user.getEmail())
-        )).filter(and(
-            eq("active", false)
-        ));
+        final var query = getDatastore().find(MongoUser.class)
+            .filter(and(
+                eq("active", false),
+                or(
+                    eq("name", user.getName()),
+                    eq("email", user.getEmail())
+                )
+            ));
 
         final var builder = new UpdateBuilder()
             .with(

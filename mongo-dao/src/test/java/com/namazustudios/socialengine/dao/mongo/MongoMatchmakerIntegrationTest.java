@@ -70,8 +70,8 @@ public class MongoMatchmakerIntegrationTest {
 
         final Application application = getMatchingMockObjects().makeMockApplication();
 
-        final User usera = getMatchingMockObjects().makeMockUser("test-user-a");
-        final User userb = getMatchingMockObjects().makeMockUser("test-user-b");
+        final User usera = getMatchingMockObjects().makeMockUser();
+        final User userb = getMatchingMockObjects().makeMockUser();
 
         final Profile profilea = getMatchingMockObjects().makeMockProfile(usera, application);
         final Profile profileb = getMatchingMockObjects().makeMockProfile(userb, application);

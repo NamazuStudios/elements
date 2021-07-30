@@ -101,17 +101,14 @@ public class MongoFollowerDaoTest {
 
     private void makeTestApplication() {
         final Application application = new Application();
-        application.setName("mock");
-        application.setDescription("A mock application.");
+        application.setName("mock_follower");
+        application.setDescription("A mock application for testing followers.");
         testApplication = getApplicationDao().createOrUpdateInactiveApplication(application);
     }
 
     private void makeTestUsers(){
         testUserA = getUserTestFactory().createTestUser();
         testUserB = getUserTestFactory().createTestUser();
-
-        testUserA = getUserDao().createOrReactivateUser(testUserA);
-        testUserB = getUserDao().createOrReactivateUser(testUserB);
     }
 
     private void makeTestProfiles(){

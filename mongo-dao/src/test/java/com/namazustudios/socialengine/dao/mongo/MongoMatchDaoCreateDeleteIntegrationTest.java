@@ -29,7 +29,7 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
     @Test(expectedExceptions = NotFoundException.class)
     public void performTest() {
 
-        final User user = getMatchingMockObjects().makeMockUser("test-user");
+        final User user = getMatchingMockObjects().makeMockUser();
         final Application application = getMatchingMockObjects().makeMockApplication();
 
         final Profile profile = getMatchingMockObjects().makeMockProfile(user, application);

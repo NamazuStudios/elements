@@ -63,8 +63,7 @@ public class MongoRewardIssuanceDaoTest {
         testItem.addMetadata("key", "a");
 
         testItem = getItemDao().createItem(testItem);
-        testUser = getUserDao().createOrReactivateUser(testUser);
-        testUser = getUserDao().createOrReactivateUser(testUser);
+
     }
 
     //@Test()

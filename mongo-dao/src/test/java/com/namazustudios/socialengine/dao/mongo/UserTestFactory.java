@@ -13,7 +13,7 @@ import static java.lang.String.format;
 
 public class UserTestFactory {
 
-    private final AtomicInteger suffix = new AtomicInteger();
+    private static final AtomicInteger suffix = new AtomicInteger();
 
     private UserDao userDao;
 

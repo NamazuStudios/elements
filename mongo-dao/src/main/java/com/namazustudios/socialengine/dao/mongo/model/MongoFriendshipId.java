@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import com.namazustudios.socialengine.dao.mongo.MongoConstants;
+import dev.morphia.annotations.Embedded;
+import dev.morphia.annotations.Entity;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
@@ -15,6 +17,7 @@ import static java.lang.System.arraycopy;
  * Represents a unique id between two {@link MongoUser} instances, forming a {@link MongoFriendship}.  This derives the
  * ID value itself as a compound value
  */
+@Embedded(useDiscriminator = false)
 public class MongoFriendshipId {
 
     public static final int VERSION = 0;
