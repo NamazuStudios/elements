@@ -32,18 +32,23 @@ import static dev.morphia.utils.IndexType.TEXT;
 })
 
 @Entity(value = "user", useDiscriminator = false)
-@Indexes(@Index(fields = {@Field(value = "name", type = TEXT), @Field(value = "email", type = TEXT)}))
+@Indexes({
+    @Index(fields = {
+        @Field(value = "name", type = TEXT),
+        @Field(value = "email", type = TEXT)
+    }),
+    @Index(fields = @Field(value = "name", type = TEXT), options = @IndexOptions(unique = true)),
+    @Index(fields = @Field(value = "email", type = TEXT), options = @IndexOptions(unique = true))
+})
 public class MongoUser {
 
     @Id
     private ObjectId objectId;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true))
     private String name;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true))
     private String email;
 
     @Property

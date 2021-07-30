@@ -13,15 +13,11 @@ import org.jline.reader.impl.DefaultHighlighter;
 import org.jline.reader.impl.DefaultParser;
 import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
-import org.jline.terminal.TerminalBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Named;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
@@ -32,7 +28,7 @@ import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
 import static org.jline.reader.LineReader.Option.*;
 
-public class SetupShell implements SetupCommand, SecureReader {
+public class SetupShell implements SetupCommand {
 
     private static final Logger logger = LoggerFactory.getLogger(SetupShell.class);
 
@@ -40,7 +36,7 @@ public class SetupShell implements SetupCommand, SecureReader {
 
     private final Terminal terminal;
 
-    private final LineReader reader;
+    private final LineReader lineReader;
 
     @Inject
     private Root root;
@@ -50,33 +46,9 @@ public class SetupShell implements SetupCommand, SecureReader {
     private VersionService versionService;
 
     @Inject
-    public SetupShell(@Named(STDIN) final InputStream stdin,
-                      @Named(STDOUT) final OutputStream stdout) throws IOException {
-
-        final var attributes = new Attributes();
-
-        terminal = TerminalBuilder.builder()
-                .attributes(attributes)
-                .name("Elements Setup Terminal")
-                .system(false)
-                .streams(stdin, stdout)
-            .build();
-
-        final var parser = new DefaultParser();
-        final var completer = new ShellCompleter();
-        final var highlighter = new DefaultHighlighter();
-
-        reader = LineReaderBuilder.builder()
-                .terminal(terminal)
-                .parser(parser)
-                .completer(completer)
-                .highlighter(highlighter)
-                .option(EMPTY_WORD_OPTIONS, true)
-                .option(INSERT_TAB, true)
-                .option(DISABLE_EVENT_EXPANSION, true)
-                .appName("Elements Setup Terminal")
-            .build();
-
+    public SetupShell(final Terminal terminal, final LineReader lineReader) throws IOException {
+        this.terminal = terminal;
+        this.lineReader = lineReader;
     }
 
     public CompletionStage<Integer> start() {
@@ -115,12 +87,6 @@ public class SetupShell implements SetupCommand, SecureReader {
             throw (Exception) ex.getCause();
         }
 
-    }
-
-    @Override
-    public String reads(final String fmt, final Object... args) {
-        final var prompt = format("%%{%s%%}", format(fmt, args));
-        return reader.readLine(prompt, '*');
     }
 
     public void close() throws Exception {
@@ -163,7 +129,7 @@ public class SetupShell implements SetupCommand, SecureReader {
 
     private void processCommand() throws Exception {
 
-        final var line = reader.readLine("%{Setup $ %}");
+        final var line = lineReader.readLine("%{Setup $ %}");
         final var args = Stream.of(line.split("\\s+")).map(String::trim).toArray(String[]::new);
 
         if (args.length > 0 && SetupCommands.SHELL.commandName.equals(args[0])) {

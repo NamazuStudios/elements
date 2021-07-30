@@ -2,10 +2,13 @@ package com.namazustudios.socialengine.setup.commands;
 
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.setup.SecureReader;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import javax.inject.Inject;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 /**
  * Created by patricktwohig on 5/8/15.
@@ -14,6 +17,9 @@ public class UpdateUser extends AbstractUserSetupCommand {
 
     @Inject
     private UserDao userDao;
+
+    @Inject
+    private SecureReader secureReader;
 
     private final OptionSpec<String> userIdOptionSpec;
 
@@ -25,9 +31,45 @@ public class UpdateUser extends AbstractUserSetupCommand {
 
     @Override
     protected User readOptions(final OptionSet optionSet) {
+
         final var user = super.readOptions(optionSet);
         user.setId(optionSet.valueOf(getUserIdOptionSpec()));
+
+        while (isNullOrEmpty(user.getId())) {
+
+            var found = userDao.findActiveUserByNameOrEmail(user.getName());
+
+            if (found.isEmpty()) {
+                found = userDao.findActiveUserByNameOrEmail(user.getName());
+            }
+
+            if (found.isPresent()) {
+
+                final var input = secureReader.read("Confirm update to user %s %s<%s>: (Y/n)",
+                    found.get().getId(),
+                    found.get().getName(),
+                    found.get().getEmail()
+                ).trim();
+
+                if (isNullOrEmpty(input) || input.toLowerCase().startsWith("y")) {
+                    user.setId(found.get().getId());
+                }
+
+            } else {
+
+                final var input = secureReader.read("No user exists for %s %s<%s>. Please supply ID: ",
+                    found.get().getName(),
+                    found.get().getEmail()
+                ).trim();
+
+                user.setId(input);
+
+            }
+
+        }
+
         return user;
+
     }
 
     @Override

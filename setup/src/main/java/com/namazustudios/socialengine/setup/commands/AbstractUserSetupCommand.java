@@ -1,25 +1,24 @@
 package com.namazustudios.socialengine.setup.commands;
 
-import com.google.common.base.Strings;
+import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.ValidationFailureException;
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.setup.ConsoleException;
 import com.namazustudios.socialengine.setup.SecureReader;
 import com.namazustudios.socialengine.setup.SetupCommand;
-import com.namazustudios.socialengine.exception.ValidationFailureException;
-import com.namazustudios.socialengine.model.user.User;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.jline.terminal.Terminal;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.validation.ConstraintViolation;
-
 import java.io.PrintWriter;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static java.util.Arrays.asList;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
@@ -29,8 +28,7 @@ import static java.util.stream.Collectors.joining;
 public abstract class AbstractUserSetupCommand implements SetupCommand {
 
     @Inject
-    @Named(STDOUT)
-    private PrintWriter stdout;
+    private Terminal terminal;
 
     @Inject
     private SecureReader secureReader;
@@ -112,7 +110,7 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
     }
 
     public boolean hasPassword() {
-        return isNullOrEmpty(password);
+        return !isNullOrEmpty(password);
     }
 
     public void run(String[] args) throws Exception {
@@ -123,12 +121,12 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
             optionSet = optionParser.parse(args);
             user = readOptions(optionSet);
         } catch (OptionException ex) {
-            stdout.println("Invalid option: " + ex.getMessage());
-            optionParser.printHelpOn(stdout);
+            terminal.writer().println("Invalid option: " + ex.getMessage());
+            optionParser.printHelpOn(terminal.writer());
             return;
         } catch (ConsoleException ex) {
-            stdout.printf("\nFailed to Read Input: %s\n\n", ex.getMessage());
-            optionParser.printHelpOn(stdout);
+            terminal.writer().printf("\nFailed to Read Input: %s\n\n", ex.getMessage());
+            optionParser.printHelpOn(terminal.writer());
             return;
         }
 
@@ -136,14 +134,17 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
             writeUserToDatabase(optionSet);
         } catch (ValidationFailureException ex) {
 
-            stdout.println("Encountered validation failures: " + ex.getMessage());
+            terminal.writer().println("Encountered validation failures: " + ex.getMessage());
 
             for (final var failure : ex.getConstraintViolations()) {
-                stdout.println(failure.getPropertyPath() + " - " + failure.getMessage());
+                terminal.writer().println(failure.getPropertyPath() + " - " + failure.getMessage());
             }
 
+        } catch (ForbiddenException ex) {
+            terminal.writer().printf("Failed check user credentials after adding user: %s\n", ex.getMessage());
         } catch (Exception ex) {
-            optionParser.printHelpOn(stdout);
+            terminal.writer().printf("Failed to add user: %s\n", ex.getMessage());
+            optionParser.printHelpOn(terminal.writer());
             throw ex;
         }
 
@@ -166,31 +167,31 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
         user.setActive(true);
 
         while (isNullOrEmpty(user.getName())) {
-            final var name = secureReader.read("Enter Username:");
+            final var name = secureReader.read("Enter Username: ");
             user.setName(name);
         }
 
         while (isNullOrEmpty(user.getEmail())) {
-            final var email = secureReader.read("Enter Email for %s:", user.getName());
+            final var email = secureReader.read("Enter Email for %s: ", user.getName());
             user.setEmail(email);
         }
 
-        while (user.getLevel() == null) {
+        final var levels = Stream.of(User.Level.values())
+            .map(User.Level::toString)
+            .collect(joining(","));
 
-            final var levels = Stream.of(User.Level.values())
-                .map(User.Level::toString)
-                .collect(joining(","));
+        while (user.getLevel() == null) {
 
             final var input = secureReader.read("User Level for \"%s\" <%s> [%s]: ",
                 user.getName(),
                 user.getEmail(),
-                levels);
+                levels).toUpperCase();
 
             try {
                 final var level = User.Level.valueOf(input);
                 user.setLevel(level);
             } catch (IllegalArgumentException ex) {
-                stdout.println("Invalid User Level: " + input);
+                terminal.writer().println("Invalid User Level: " + input);
             }
 
         }

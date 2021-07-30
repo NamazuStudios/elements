@@ -28,6 +28,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.util.Arrays;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -102,7 +103,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User getActiveUserByNameOrEmail(final String userNameOrEmail) {
+    public Optional<User> findActiveUserByNameOrEmail(String userNameOrEmail) {
 
         final String trimmedUserNameOrEmail = nullToEmpty(userNameOrEmail).trim();
 
@@ -121,11 +122,9 @@ public class MongoUserDao implements UserDao {
 
         final MongoUser mongoUser = query.first();
 
-        if (mongoUser == null) {
-            throw new UserNotFoundException("User " + trimmedUserNameOrEmail + " not found.");
-        }
-
-        return getDozerMapper().map(mongoUser, User.class);
+        return mongoUser == null
+            ? Optional.empty()
+            : Optional.of(getDozerMapper().map(mongoUser, User.class));
 
     }
 
@@ -230,12 +229,12 @@ public class MongoUserDao implements UserDao {
         validate(user);
 
         final var query = getDatastore().find(MongoUser.class)
-            .filter(or(
-                eq("name", user.getName()),
-                eq("email", user.getEmail())
-            ))
             .filter(and(
-                eq("active", false)
+                eq("active", false),
+                or(
+                    eq("name", user.getName()),
+                    eq("email", user.getEmail())
+                )
             ));
 
         final var builder = new UpdateBuilder();

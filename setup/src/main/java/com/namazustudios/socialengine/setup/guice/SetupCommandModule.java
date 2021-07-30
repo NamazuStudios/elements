@@ -1,8 +1,14 @@
 package com.namazustudios.socialengine.setup.guice;
 
 import com.google.inject.PrivateModule;
+import com.namazustudios.socialengine.setup.LineReaderSecureReader;
 import com.namazustudios.socialengine.setup.SecureReader;
 import com.namazustudios.socialengine.setup.commands.Root;
+import com.namazustudios.socialengine.setup.provider.LineReaderProvider;
+import com.namazustudios.socialengine.setup.provider.TerminalProvider;
+import org.jline.reader.LineReader;
+import org.jline.terminal.Terminal;
+import org.jline.terminal.TerminalBuilder;
 
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -36,6 +42,10 @@ public class SetupCommandModule extends PrivateModule {
         // Print Writers
         bind(PrintWriter.class).annotatedWith(named(STDOUT)).toInstance(new PrintWriter(stdout));
         bind(PrintWriter.class).annotatedWith(named(STDERR)).toInstance(new PrintWriter(stderr));
+
+        bind(Terminal.class).toProvider(TerminalProvider.class).asEagerSingleton();
+        bind(LineReader.class).toProvider(LineReaderProvider.class).asEagerSingleton();
+        bind(SecureReader.class).to(LineReaderSecureReader.class).asEagerSingleton();
 
         expose(Root.class);
 
