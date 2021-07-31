@@ -1,43 +1,33 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.google.common.collect.Sets;
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
+import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bson.types.ObjectId;
-import dev.morphia.Datastore;
 import org.testng.annotations.*;
 import org.testng.collections.Lists;
 
 import javax.inject.Inject;
-
 import java.util.*;
-
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
-import static org.testng.Assert.fail;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoItemDaoIntegrationTest {
 
     private ItemDao itemDao;
 
-    private EmbeddedMongo embeddedMongo;
-
     private Datastore Datastore;
 
     private MatchingMockObjects matchingMockObjects;
-
-    private int itemCount = 0;
 
     @Test
     public void testCreateAndRead() {
@@ -196,15 +186,6 @@ public class MongoItemDaoIntegrationTest {
     @Inject
     public void setItemDao(ItemDao itemDao) {
         this.itemDao = itemDao;
-    }
-
-    public EmbeddedMongo getEmbeddedMongo() {
-        return embeddedMongo;
-    }
-
-    @Inject
-    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
-        this.embeddedMongo = embeddedMongo;
     }
 
     public Datastore getDatastore() {

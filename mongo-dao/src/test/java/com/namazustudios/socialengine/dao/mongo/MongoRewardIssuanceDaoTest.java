@@ -34,6 +34,7 @@ import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRewardIssuanceDaoTest {
+
     private static final int INVOCATION_COUNT = 10;
 
     private UserDao userDao;

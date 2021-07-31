@@ -6,19 +6,16 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.applesignin.TokenResponse;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.AppleSignInSessionCreation;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
-import org.testng.annotations.AfterSuite;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -39,8 +36,6 @@ public class MongoAppleSignInSessionDaoTest {
     private User testUser;
 
     private Profile testProfile;
-
-    private EmbeddedMongo embeddedMongo;
 
     private UserTestFactory userTestFactory;
 
@@ -128,20 +123,6 @@ public class MongoAppleSignInSessionDaoTest {
     @Inject
     public void setProfileDao(ProfileDao profileDao) {
         this.profileDao = profileDao;
-    }
-
-    public EmbeddedMongo getEmbeddedMongo() {
-        return embeddedMongo;
-    }
-
-    @Inject
-    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
-        this.embeddedMongo = embeddedMongo;
-    }
-
-    @AfterSuite
-    public void killProcess() {
-//        getEmbeddedMongo().stop();
     }
 
     public UserTestFactory getUserTestFactory() {
