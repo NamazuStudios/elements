@@ -93,7 +93,11 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             .first();
 
         if (item == null) {
-            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId + " for user " + user.getId());
+            throw new NotFoundException(
+                "Unable to find item with an id of " + itemNameOrId +
+                " for user " + user.getId() +
+                " and priority " + priority
+            );
         }
 
         return getDozerMapper().map(item, InventoryItem.class);
