@@ -27,7 +27,7 @@ public class IntegrationTestModule extends AbstractModule {
 
     private static final int TEST_MONGO_PORT = 45000;
 
-    private static final String TEST_MONGO_VERSION = "4.1.1";
+    private static final String TEST_MONGO_VERSION = "3.4.5";
 
     private static final String TEST_BIND_IP = "localhost";
 
@@ -38,20 +38,20 @@ public class IntegrationTestModule extends AbstractModule {
 
         try {
 
+            logger.info("Starting test mongo process via Docker.");
+
             final var uuid = format("%s_%s", getClass().getSimpleName(), randomUUID());
 
-            final var args = new String[] {
-                "docker",
-                "run",
-                "--name",
-                uuid,
-                "--rm",
-                format("-p%d:27017", TEST_MONGO_PORT),
-                format("mongo:%s", TEST_MONGO_VERSION)
-            };
-
             final var process = new ProcessBuilder()
-                .command(args)
+                .command(
+                    "docker",
+                    "run",
+                    "--name",
+                    uuid,
+                    "--rm",
+                    format("-p%d:27017", TEST_MONGO_PORT),
+                    format("mongo:%s", TEST_MONGO_VERSION)
+                )
                 .start();
 
             final var stdout = new Thread(log(process::getInputStream, m -> logger.info("mongod {}", m)));
@@ -101,6 +101,7 @@ public class IntegrationTestModule extends AbstractModule {
             try (var r = new InputStreamReader(inputStreamSupplier.get());
                  var br = new BufferedReader(r)) {
                 final var line = br.readLine();
+                messageConsumer.accept(line);
             } catch (EOFException ex) {
                 logger.trace("Hit end of stream.");
             }catch (IOException ex) {
