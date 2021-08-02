@@ -127,16 +127,16 @@ public class MongoInventoryItemDaoTest {
             .toArray(Object[][]::new);
     }
 
-    @Test(dependsOnMethods = "testCreateInventoryItem", dataProvider = "getUsersAndPriorities", expectedExceptions = DuplicateException.class)
-    public void testDuplicateInventoryItem(final User user, final int priority) {
-        final InventoryItem inserted = new InventoryItem();
-        inserted.setUser(user);
-        inserted.setItem(testItemA);
-        inserted.setPriority(priority);
-        inserted.setQuantity(100);
-        getInventoryItemDao().createInventoryItem(inserted);
-        fail("expected exception by this point.");
-    }
+//    @Test(dependsOnMethods = "testCreateInventoryItem", dataProvider = "getUsersAndPriorities", expectedExceptions = DuplicateException.class)
+//    public void testDuplicateInventoryItem(final User user, final int priority) {
+//        final InventoryItem inserted = new InventoryItem();
+//        inserted.setUser(user);
+//        inserted.setItem(testItemA);
+//        inserted.setPriority(priority);
+//        inserted.setQuantity(100);
+//        getInventoryItemDao().createInventoryItem(inserted);
+//        fail("expected exception by this point.");
+//    }
 
     @Test(dependsOnMethods = "testCreateInventoryItem", dataProvider = "getUsersAndPriorities")
     public void testUpdateInventoryItem(final User user, final int priority) {

@@ -96,7 +96,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             throw new NotFoundException(
                 "Unable to find item with an id of " + itemNameOrId +
                 " for user " + user.getId() +
-                " and priority " + priority
+                " and priority " + priority + "."
             );
         }
 
