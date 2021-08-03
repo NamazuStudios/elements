@@ -17,11 +17,6 @@
     <name>mongo-dao</name>
 
     <properties>
-        <!--
-            TODO: Fix this Later. For some reason Jenkins fails the tests. Something is wrong but we have
-            TODO: to figure it out later.
-        -->
-        <skipTests>true</skipTests>
         <morphia.version>2.1.4</morphia.version>
         <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
     </properties>
@@ -110,12 +105,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>de.flapdoodle.embed</groupId>
-            <artifactId>de.flapdoodle.embed.mongo</artifactId>
-            <version>${flapdoodle.mongo.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>guice</artifactId>
             <version>${project.version}</version>
@@ -147,6 +136,11 @@
             <groupId>javax.xml.bind</groupId>
             <artifactId>jaxb-api</artifactId>
             <version>${javax.xml.bind.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.reflections</groupId>
+            <artifactId>reflections</artifactId>
+            <version>${reflections.version}</version>
         </dependency>
     </dependencies>
 

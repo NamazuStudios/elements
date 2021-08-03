@@ -1,14 +1,13 @@
 package com.namazustudios.socialengine.setup;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.namazustudios.socialengine.setup.commands.Root;
-import com.namazustudios.socialengine.setup.guice.ConsoleSecureReaderModule;
 import com.namazustudios.socialengine.setup.guice.SetupCommandModule;
 import com.namazustudios.socialengine.setup.guice.SetupCommonModule;
 
 import java.util.Properties;
 
+import static com.namazustudios.socialengine.setup.SetupCommands.streamShellCommands;
 import static org.slf4j.impl.SimpleLogger.DEFAULT_LOG_LEVEL_KEY;
 
 /**
@@ -28,7 +27,7 @@ public class Setup {
      *
      * @throws Exception in case something goes wrong.
      */
-    public void run(final String args[]) throws Exception {
+    public void run(final String[] args) throws Exception {
 
         final Properties systemProperties = System.getProperties();
 
@@ -38,8 +37,7 @@ public class Setup {
 
         final var injector = Guice.createInjector(
             new SetupCommonModule(),
-            new SetupCommandModule(),
-            new ConsoleSecureReaderModule());
+            new SetupCommandModule());
 
         try (var root = injector.getInstance(Root.class)) {
             root.run(args);

@@ -20,8 +20,6 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
 
     private MatchDao matchDao;
 
-    private EmbeddedMongo embeddedMongo;
-
     private Datastore Datastore;
 
     private MatchingMockObjects matchingMockObjects;
@@ -29,7 +27,7 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
     @Test(expectedExceptions = NotFoundException.class)
     public void performTest() {
 
-        final User user = getMatchingMockObjects().makeMockUser("test-user");
+        final User user = getMatchingMockObjects().makeMockUser();
         final Application application = getMatchingMockObjects().makeMockApplication();
 
         final Profile profile = getMatchingMockObjects().makeMockProfile(user, application);
@@ -47,16 +45,6 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
         return match;
     }
 
-    @BeforeClass
-    public void dropDatabase() {
-        getEmbeddedMongo().getMongoDatabase().drop();
-    }
-
-    @AfterSuite
-    public void killProcess() {
-        getEmbeddedMongo().stop();
-    }
-
     public MatchDao getMatchDao() {
         return matchDao;
     }
@@ -64,15 +52,6 @@ public class MongoMatchDaoCreateDeleteIntegrationTest {
     @Inject
     public void setMatchDao(MatchDao matchDao) {
         this.matchDao = matchDao;
-    }
-
-    public EmbeddedMongo getEmbeddedMongo() {
-        return embeddedMongo;
-    }
-
-    @Inject
-    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
-        this.embeddedMongo = embeddedMongo;
     }
 
     public Datastore getDatastore() {

@@ -2,11 +2,11 @@ package com.namazustudios.socialengine.dao.mongo.model.gameon;
 
 import com.namazustudios.elements.fts.*;
 import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
+import dev.morphia.annotations.*;
 import org.apache.lucene.document.Document;
 import org.bson.types.ObjectId;
 import org.dozer.CustomConverter;
 import org.dozer.MappingException;
-import dev.morphia.annotations.Property;
 
 import java.util.Base64;
 import java.util.Objects;
@@ -14,6 +14,10 @@ import java.util.Objects;
 import static com.namazustudios.socialengine.dao.mongo.MongoConstants.OID_LENGTH_BYTES;
 import static java.lang.System.arraycopy;
 
+@Embedded(useDiscriminator = false)
+@Indexes({
+    @Index(fields = @Field("deviceOSType"))
+})
 public class MongoGameOnSessionId {
 
     public static final byte VERSION = 0;

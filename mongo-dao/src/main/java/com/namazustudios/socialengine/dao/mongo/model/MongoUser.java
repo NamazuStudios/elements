@@ -9,6 +9,7 @@ import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.Objects;
 
 import static dev.morphia.utils.IndexType.TEXT;
@@ -32,18 +33,43 @@ import static dev.morphia.utils.IndexType.TEXT;
 })
 
 @Entity(value = "user", useDiscriminator = false)
-@Indexes(@Index(fields = {@Field(value = "name", type = TEXT), @Field(value = "email", type = TEXT)}))
+@Indexes({
+    @Index(
+        fields = {
+            @Field(value = "name", type = TEXT),
+            @Field(value = "email", type = TEXT)
+        }
+    ),
+    @Index(
+        fields = @Field(value = "name"),
+        options = @IndexOptions(unique = true, collation = @Collation(locale = "en_US"))
+    ),
+    @Index(
+        fields = @Field(value = "email"),
+        options = @IndexOptions(unique = true, collation = @Collation(locale = "en_US"))
+    ),
+    @Index(
+        fields = @Field(value = "firebaseId"),
+        options = @IndexOptions(unique = true, sparse = true)
+    ),
+    @Index(
+        fields = @Field(value = "facebookId"),
+        options = @IndexOptions(unique = true, sparse = true)
+    ),
+    @Index(
+        fields = @Field(value = "appleSignInId"),
+        options = @IndexOptions(unique = true, sparse = true)
+    )
+})
 public class MongoUser {
 
     @Id
     private ObjectId objectId;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true))
     private String name;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true))
     private String email;
 
     @Property
@@ -63,15 +89,12 @@ public class MongoUser {
     private boolean active;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String firebaseId;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String facebookId;
 
     @Property
-    @Indexed(options = @IndexOptions(unique = true, sparse = true))
     private String appleSignInId;
 
     public ObjectId getObjectId() {
