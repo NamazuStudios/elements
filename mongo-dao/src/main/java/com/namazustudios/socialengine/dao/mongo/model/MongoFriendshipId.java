@@ -17,7 +17,7 @@ import static java.lang.System.arraycopy;
  * Represents a unique id between two {@link MongoUser} instances, forming a {@link MongoFriendship}.  This derives the
  * ID value itself as a compound value
  */
-@Embedded(useDiscriminator = false)
+@Embedded
 public class MongoFriendshipId {
 
     public static final int VERSION = 0;

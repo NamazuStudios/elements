@@ -13,8 +13,8 @@ import dev.morphia.annotations.*;
         processors = MongoFriendIdProcessor.class))
 @SearchableDocument()
 @Indexes({
-//    @Index(fields = @Field("_id.lesser")),
-//    @Index(fields = @Field("_id.greater")),
+    @Index(fields = @Field("_id.lesser")),
+    @Index(fields = @Field("_id.greater")),
     @Index(fields = @Field("lesserAccepted")),
     @Index(fields = @Field("greaterAccepted"))
 })
