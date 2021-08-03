@@ -17,7 +17,7 @@ chmod go-rwx "$run_sshd"
 
 echo "CLASSPATH=$CLASSPATH" > "$pam_env_conf"
 env | grep "ELEMENTS_*" >> "$pam_env_conf"
-env | grep 'com\.namazustudios.*' >> "$pam_env_conf"
+env | grep '^com[\._]namazustudios[\._].*' >> "$pam_env_conf"
 
 echo "PAM Environment."
 cat "$pam_env_conf"
