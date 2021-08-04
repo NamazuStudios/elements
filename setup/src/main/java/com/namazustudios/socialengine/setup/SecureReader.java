@@ -6,6 +6,17 @@ package com.namazustudios.socialengine.setup;
 public interface SecureReader {
 
     /**
+     * Reads a line from the console, insecurely.
+     *
+     * @param fmt the format
+     * @param args thea arguments
+     * @return the value read from the console
+     */
+    default String read(String fmt, Object ... args) {
+        return reads(fmt, args);
+    }
+
+    /**
      * Reads a single line from the terminal. Providing hte supplied prompt.
      *
      * {@see {@link String#format(String, Object...)}}

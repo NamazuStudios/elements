@@ -40,8 +40,6 @@ public class MongoMatchmakerIntegrationTest {
 
     private static final Logger logger = LoggerFactory.getLogger(MongoMatchmakerIntegrationTest.class);
 
-    private EmbeddedMongo embeddedMongo;
-
     private MatchingMockObjects matchingMockObjects;
 
     private MatchDao matchDao;
@@ -70,8 +68,8 @@ public class MongoMatchmakerIntegrationTest {
 
         final Application application = getMatchingMockObjects().makeMockApplication();
 
-        final User usera = getMatchingMockObjects().makeMockUser("test-user-a");
-        final User userb = getMatchingMockObjects().makeMockUser("test-user-b");
+        final User usera = getMatchingMockObjects().makeMockUser();
+        final User userb = getMatchingMockObjects().makeMockUser();
 
         final Profile profilea = getMatchingMockObjects().makeMockProfile(usera, application);
         final Profile profileb = getMatchingMockObjects().makeMockProfile(userb, application);
@@ -198,16 +196,6 @@ public class MongoMatchmakerIntegrationTest {
         }
     }
 
-    @BeforeClass
-    public void dropDatabase() {
-        getEmbeddedMongo().getMongoDatabase().drop();
-    }
-
-    @AfterSuite
-    public void killProcess() {
-        getEmbeddedMongo().stop();
-    }
-
     public MatchingMockObjects getMatchingMockObjects() {
         return matchingMockObjects;
     }
@@ -233,15 +221,6 @@ public class MongoMatchmakerIntegrationTest {
     @Inject
     public void setDatastore(Datastore Datastore) {
         this.Datastore = Datastore;
-    }
-
-    public EmbeddedMongo getEmbeddedMongo() {
-        return embeddedMongo;
-    }
-
-    @Inject
-    public void setEmbeddedMongo(EmbeddedMongo embeddedMongo) {
-        this.embeddedMongo = embeddedMongo;
     }
 
 }

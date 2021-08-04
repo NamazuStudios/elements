@@ -2,8 +2,9 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 
 import com.mongodb.client.MongoClient;
 import dev.morphia.Datastore;
-import dev.morphia.Datastore;
 import dev.morphia.Morphia;
+import dev.morphia.annotations.Entity;
+import org.reflections.Reflections;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
@@ -21,14 +22,17 @@ public class MongoDatastoreProvider implements Provider<Datastore> {
     @Override
     public Datastore get() {
 
-        final MongoClient mongoClient = mongoProvider.get();
+        final var client = mongoProvider.get();
+        final var datastore = Morphia.createDatastore(client, "elements");
 
-        final Datastore datastore;
-        datastore = Morphia.createDatastore(mongoClient, "elements");
-        datastore.getMapper().mapPackage("com.namazustudios.socialengine.dao.mongo");
+        new Reflections("com.namazustudios.socialengine.dao.mongo")
+            .getTypesAnnotatedWith(Entity.class)
+            .forEach(datastore.getMapper()::map);
+
         datastore.ensureIndexes();
         return datastore;
 
     }
+
 
 }

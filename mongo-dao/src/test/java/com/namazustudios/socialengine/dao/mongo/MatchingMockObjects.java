@@ -3,12 +3,13 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 
 import javax.inject.Inject;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
@@ -21,19 +22,19 @@ public class MatchingMockObjects {
 
     private ApplicationDao applicationDao;
 
+    private UserTestFactory userTestFactory;
+
+    private static final AtomicInteger applicationCount = new AtomicInteger();
+
     public Application makeMockApplication() {
         final Application application = new Application();
-        application.setName("mock");
-        application.setDescription("A mock application.");
+        application.setName(format("match_%d", applicationCount.getAndIncrement()));
+        application.setDescription("A mock application for matchmaking tests.");
         return getApplicationDao().createOrUpdateInactiveApplication(application);
     }
 
-    public User makeMockUser(final String name) {
-        final User user = new User();
-        user.setName(name);
-        user.setEmail(format("%s@example.com", name));
-        user.setLevel(USER);
-        return getUserDao().createOrReactivateUser(user);
+    public User makeMockUser() {
+        return getUserTestFactory().createTestUser();
     }
 
     public Profile makeMockProfile(final User user, final Application application) {
@@ -70,6 +71,15 @@ public class MatchingMockObjects {
     @Inject
     public void setApplicationDao(ApplicationDao applicationDao) {
         this.applicationDao = applicationDao;
+    }
+
+    public UserTestFactory getUserTestFactory() {
+        return userTestFactory;
+    }
+
+    @Inject
+    public void setUserTestFactory(UserTestFactory userTestFactory) {
+        this.userTestFactory = userTestFactory;
     }
 
 }

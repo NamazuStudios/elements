@@ -234,8 +234,8 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
 
     private Properties scanForDefaults(final ClassLoader classLoader) {
 
-        final Reflections reflections = new Reflections("com.namazustudios", classLoader);
-        final Set<Class<? extends ModuleDefaults>> classSet = reflections.getSubTypesOf(ModuleDefaults.class);
+        final var reflections = new Reflections("com.namazustudios", classLoader);
+        final var classSet = reflections.getSubTypesOf(ModuleDefaults.class);
 
         final Properties defaultProperties = new Properties();
 

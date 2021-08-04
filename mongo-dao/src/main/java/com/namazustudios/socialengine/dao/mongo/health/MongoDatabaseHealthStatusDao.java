@@ -7,6 +7,8 @@ import org.bson.Document;
 
 import javax.inject.Inject;
 
+import java.util.Locale;
+
 import static java.lang.String.format;
 
 public class MongoDatabaseHealthStatusDao implements DatabaseHealthStatusDao {

@@ -34,6 +34,7 @@ import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoRewardIssuanceDaoTest {
+
     private static final int INVOCATION_COUNT = 10;
 
     private UserDao userDao;
@@ -63,8 +64,7 @@ public class MongoRewardIssuanceDaoTest {
         testItem.addMetadata("key", "a");
 
         testItem = getItemDao().createItem(testItem);
-        testUser = getUserDao().createOrReactivateUser(testUser);
-        testUser = getUserDao().createOrReactivateUser(testUser);
+
     }
 
     //@Test()

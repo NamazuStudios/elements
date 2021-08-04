@@ -1,10 +1,15 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+
+import java.util.Optional;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 /**
  * This is the UserDao which is used to update users in the database.  Since users
@@ -36,13 +41,27 @@ public interface UserDao {
     User getActiveUser(String userId);
 
     /**
+     * Finds a user either by email or name.
+     *
+     * @param userNameOrEmail the username or email
+     *
+     * @return an {@link Optional<User>}
+     */
+    Optional<User> findActiveUserByNameOrEmail(String userNameOrEmail);
+
+    /**
      * Gets the user with the user name or email address.  If the user is not active, then this method will behave as
      * if the user does not exist.
      *
      * @param userNameOrEmail the username or email
      * @return the active user
      */
-    User getActiveUserByNameOrEmail(String userNameOrEmail);
+    default User getActiveUserByNameOrEmail(final String userNameOrEmail) {
+        return findActiveUserByNameOrEmail(userNameOrEmail).orElseThrow(() -> {
+            final String trimmedUserNameOrEmail = nullToEmpty(userNameOrEmail).trim();
+            return new UserNotFoundException("User \"" + trimmedUserNameOrEmail + "\" not found.");
+        });
+    }
 
     /**
      * Gets a listing of all users given the offset, and count.  Additionally, the user requested must be active.  Users

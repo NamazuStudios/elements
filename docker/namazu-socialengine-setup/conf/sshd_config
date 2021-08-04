@@ -17,6 +17,7 @@ X11Forwarding no
 PermitRootLogin no
 PermitEmptyPasswords no
 PasswordAuthentication no
+AllowTcpForwarding yes
 
 # We force SSH to run the elements setup program instead of a normal shell.
 ForceCommand java com.namazustudios.socialengine.setup.Setup shell

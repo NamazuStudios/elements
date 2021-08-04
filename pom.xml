@@ -77,7 +77,6 @@
         <module>common-lua</module>
         <module>web-ui-angular</module>
         <module>rest-api-test</module>
-        <module>setup-sshd</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
         <module>doc-serve</module>

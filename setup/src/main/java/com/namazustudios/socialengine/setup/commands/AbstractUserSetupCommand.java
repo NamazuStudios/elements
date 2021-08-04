@@ -1,22 +1,24 @@
 package com.namazustudios.socialengine.setup.commands;
 
-import com.google.common.base.Strings;
+import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.ValidationFailureException;
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.setup.ConsoleException;
 import com.namazustudios.socialengine.setup.SecureReader;
 import com.namazustudios.socialengine.setup.SetupCommand;
-import com.namazustudios.socialengine.exception.ValidationFailureException;
-import com.namazustudios.socialengine.model.user.User;
 import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
+import org.jline.terminal.Terminal;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.validation.ConstraintViolation;
-
 import java.io.PrintWriter;
+import java.util.stream.Stream;
 
+import static com.google.common.base.Strings.isNullOrEmpty;
 import static java.util.Arrays.stream;
 import static java.util.stream.Collectors.joining;
 
@@ -26,8 +28,7 @@ import static java.util.stream.Collectors.joining;
 public abstract class AbstractUserSetupCommand implements SetupCommand {
 
     @Inject
-    @Named(STDOUT)
-    private PrintWriter stdout;
+    private Terminal terminal;
 
     @Inject
     private SecureReader secureReader;
@@ -63,7 +64,7 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
                 .ofType(String.class);
 
         final String levelDescription = "The user level one of: " + stream(User.Level.values())
-                .map(l -> l.toString())
+                .map(Enum::toString)
                 .collect(joining());
 
         levelOptionSpec = getOptionParser().accepts("level", levelDescription)
@@ -108,6 +109,10 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
         return password;
     }
 
+    public boolean hasPassword() {
+        return !isNullOrEmpty(password);
+    }
+
     public void run(String[] args) throws Exception {
 
         final OptionSet optionSet;
@@ -116,23 +121,30 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
             optionSet = optionParser.parse(args);
             user = readOptions(optionSet);
         } catch (OptionException ex) {
-            optionParser.printHelpOn(stdout);
+            terminal.writer().println("Invalid option: " + ex.getMessage());
+            optionParser.printHelpOn(terminal.writer());
             return;
         } catch (ConsoleException ex) {
-            stdout.printf("\nFailed to Read Input: %s\n\n", ex.getMessage());
-            optionParser.printHelpOn(stdout);
+            terminal.writer().printf("\nFailed to Read Input: %s\n\n", ex.getMessage());
+            optionParser.printHelpOn(terminal.writer());
             return;
         }
 
         try {
             writeUserToDatabase(optionSet);
         } catch (ValidationFailureException ex) {
-            stdout.println("Encountered validation failures.");
-            for (final ConstraintViolation<?> failure : ex.getConstraintViolations()) {
-                stdout.println(failure.getPropertyPath() + " - " + failure.getMessage());
+
+            terminal.writer().println("Encountered validation failures: " + ex.getMessage());
+
+            for (final var failure : ex.getConstraintViolations()) {
+                terminal.writer().println(failure.getPropertyPath() + " - " + failure.getMessage());
             }
+
+        } catch (ForbiddenException ex) {
+            terminal.writer().printf("Failed check user credentials after adding user: %s\n", ex.getMessage());
         } catch (Exception ex) {
-            optionParser.printHelpOn(stdout);
+            terminal.writer().printf("Failed to add user: %s\n", ex.getMessage());
+            optionParser.printHelpOn(terminal.writer());
             throw ex;
         }
 
@@ -147,23 +159,56 @@ public abstract class AbstractUserSetupCommand implements SetupCommand {
      */
     protected User readOptions(final OptionSet optionSet) {
 
-        final User user = new User();
+        final var user = new User();
 
         user.setName(optionSet.valueOf(usernameOptionSpec));
         user.setEmail(optionSet.valueOf(emailOptionSpec));
         user.setLevel(optionSet.valueOf(levelOptionSpec));
         user.setActive(true);
 
-        if (optionSet.has(passwordOptionSpec)) {
-            password = optionSet.valueOf(passwordOptionSpec);
+        while (isNullOrEmpty(user.getName())) {
+            final var name = secureReader.read("Enter Username: ");
+            user.setName(name);
         }
 
-        if (Strings.isNullOrEmpty(password)) {
-            final String prompt = String.format("Please enter password for user %s: ", user.getEmail());
-            password = secureReader.reads(prompt);
+        while (isNullOrEmpty(user.getEmail())) {
+            final var email = secureReader.read("Enter Email for %s: ", user.getName());
+            user.setEmail(email);
+        }
+
+        final var levels = Stream.of(User.Level.values())
+            .map(User.Level::toString)
+            .collect(joining(","));
+
+        while (user.getLevel() == null) {
+
+            final var input = secureReader.read("User Level for \"%s\" <%s> [%s]: ",
+                user.getName(),
+                user.getEmail(),
+                levels).toUpperCase();
+
+            try {
+                final var level = User.Level.valueOf(input);
+                user.setLevel(level);
+            } catch (IllegalArgumentException ex) {
+                terminal.writer().println("Invalid User Level: " + input);
+            }
+
+        }
+
+        if (optionSet.has(passwordOptionSpec)) {
+            password = optionSet.valueOf(passwordOptionSpec).trim();
+        }
+
+        if (!hasPassword()) {
+            password = secureReader.reads("Please enter password for user \"%s\" <%s> (blank for no update): ",
+                user.getName(),
+                user.getEmail()
+            ).trim();
         }
 
         return user;
+
     }
 
     /**

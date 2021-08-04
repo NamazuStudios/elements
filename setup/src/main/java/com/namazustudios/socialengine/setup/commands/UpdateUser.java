@@ -2,10 +2,13 @@ package com.namazustudios.socialengine.setup.commands;
 
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.setup.SecureReader;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
 
 import javax.inject.Inject;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
 
 /**
  * Created by patricktwohig on 5/8/15.
@@ -14,6 +17,9 @@ public class UpdateUser extends AbstractUserSetupCommand {
 
     @Inject
     private UserDao userDao;
+
+    @Inject
+    private SecureReader secureReader;
 
     private final OptionSpec<String> userIdOptionSpec;
 
@@ -25,34 +31,69 @@ public class UpdateUser extends AbstractUserSetupCommand {
 
     @Override
     protected User readOptions(final OptionSet optionSet) {
-        final User user = super.readOptions(optionSet);
+
+        final var user = super.readOptions(optionSet);
         user.setId(optionSet.valueOf(getUserIdOptionSpec()));
+
+        while (isNullOrEmpty(user.getId())) {
+
+            var found = userDao.findActiveUserByNameOrEmail(user.getName());
+
+            if (found.isEmpty()) {
+                found = userDao.findActiveUserByNameOrEmail(user.getName());
+            }
+
+            if (found.isPresent()) {
+
+                final var input = secureReader.read("Confirm update to user %s %s<%s>: (Y/n)",
+                    found.get().getId(),
+                    found.get().getName(),
+                    found.get().getEmail()
+                ).trim();
+
+                if (isNullOrEmpty(input) || input.toLowerCase().startsWith("y")) {
+                    user.setId(found.get().getId());
+                }
+
+            } else {
+
+                final var input = secureReader.read("No user exists for %s %s<%s>. Please supply ID: ",
+                    found.get().getName(),
+                    found.get().getEmail()
+                ).trim();
+
+                user.setId(input);
+
+            }
+
+        }
+
         return user;
+
     }
 
     @Override
     protected void writeUserToDatabase(OptionSet optionSet) {
 
-        final boolean strict = optionSet.has(getStrictOptionSpec());
-        final boolean hasPassword = optionSet.has(getPasswordOptionSpec());
+        final var strict = optionSet.has(getStrictOptionSpec());
 
-        if (hasPassword) {
+        if (hasPassword()) {
             if (strict) {
-                userDao.updateUserStrict(getUser(), getPassword());
+                getUserDao().updateUserStrict(getUser(), getPassword());
             } else {
-                userDao.updateActiveUser(getUser(), getPassword());
+                getUserDao().updateActiveUser(getUser(), getPassword());
             }
         } else {
             if (strict) {
-                userDao.updateUserStrict(getUser());
+                getUserDao().updateUserStrict(getUser());
             } else {
-                userDao.updateActiveUser(getUser());
+                getUserDao().updateActiveUser(getUser());
             }
         }
 
         // Validate that we can get both the username and password
-        userDao.validateActiveUserPassword(getUser().getName(), getPassword());
-        userDao.validateActiveUserPassword(getUser().getEmail(), getPassword());
+        getUserDao().validateActiveUserPassword(getUser().getName(), getPassword());
+        getUserDao().validateActiveUserPassword(getUser().getEmail(), getPassword());
 
     }
 

@@ -5,18 +5,16 @@ import dev.morphia.annotations.*;
 
 @Entity(value = "fcm_registration", useDiscriminator = false)
 @Indexes({
-    @Index(fields = {@Field("user"), @Field("application")}, options = @IndexOptions(unique = true))
+    @Index(fields = @Field("profile"), options = @IndexOptions(unique = true))
 })
 public class MongoFCMRegistration {
 
     @Id
     private ObjectId objectId;
 
-    @Indexed
     @Reference
     private MongoProfile profile;
 
-    @Indexed
     @Property
     private String registrationToken;
 

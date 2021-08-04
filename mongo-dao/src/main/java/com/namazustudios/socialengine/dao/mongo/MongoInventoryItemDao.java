@@ -36,6 +36,7 @@ import javax.inject.Inject;
 import javax.inject.Singleton;
 
 import static com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
+import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.lang.Integer.max;
 import static java.util.UUID.randomUUID;
@@ -68,12 +69,12 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final MongoInventoryItemId objectId = parseOrThrowNotFoundException(inventoryItemId);
         final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
 
-        query.filter(Filters.eq("_id", objectId));
+        query.filter(eq("_id", objectId));
 
         final MongoInventoryItem item = query.first();
 
         if (item == null) {
-            throw new NotFoundException("Unable to find inventory item with an id of " + inventoryItemId);
+            throw new NotFoundException("Unable to find item with an id of " + inventoryItemId);
         }
 
         return getDozerMapper().map(item, InventoryItem.class);
@@ -94,8 +95,9 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         if (item == null) {
             throw new NotFoundException(
-                "Unable to find inventory item with an id of " + itemNameOrId + " " +
-                "for user " + user.getId()
+                "Unable to find item with an id of " + itemNameOrId +
+                " for user " + user.getId() +
+                " and priority " + priority + "."
             );
         }
 

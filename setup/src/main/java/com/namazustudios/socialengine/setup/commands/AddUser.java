@@ -10,33 +10,40 @@ import javax.inject.Inject;
  */
 public class AddUser extends AbstractUserSetupCommand {
 
-    @Inject
     private UserDao userDao;
 
     @Override
-    protected void writeUserToDatabase(OptionSet optionSet) {
+    protected void writeUserToDatabase(final OptionSet optionSet) {
 
         final boolean strict = optionSet.has(getStrictOptionSpec());
-        final boolean hasPassword = optionSet.has(getPasswordOptionSpec());
 
-        if (hasPassword) {
+        if (hasPassword()) {
             if (strict) {
-                userDao.createUserWithPasswordStrict(getUser(), getPassword());
+                getUserDao().createUserWithPasswordStrict(getUser(), getPassword());
             } else {
-                userDao.createOrReactivateUserWithPassword(getUser(), getPassword());
+                getUserDao().createOrReactivateUserWithPassword(getUser(), getPassword());
             }
         } else {
             if (strict) {
-                userDao.createUserStrict(getUser());
+                getUserDao().createUserStrict(getUser());
             } else {
-                userDao.createOrReactivateUser(getUser());
+                getUserDao().createOrReactivateUser(getUser());
             }
         }
 
         // Validate that we can get both the username and password
-        userDao.validateActiveUserPassword(getUser().getName(), getPassword());
-        userDao.validateActiveUserPassword(getUser().getEmail(), getPassword());
+        getUserDao().validateActiveUserPassword(getUser().getName(), getPassword());
+        getUserDao().validateActiveUserPassword(getUser().getEmail(), getPassword());
 
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(final UserDao userDao) {
+        this.userDao = userDao;
     }
 
 }

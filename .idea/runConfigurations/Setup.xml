@@ -2,8 +2,7 @@
   <configuration default="false" name="Setup" type="Application" factoryName="Application">
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.setup.Setup" />
     <module name="setup" />
-    <option name="PROGRAM_PARAMETERS" value="add-user -email=root@namazustudios.net -user=root -password=root -level=SUPERUSER" />
-    <option name="WORKING_DIRECTORY" value="file://$PROJECT_DIR$" />
+    <option name="PROGRAM_PARAMETERS" value="shell" />
     <method v="2">
       <option name="Make" enabled="true" />
     </method>

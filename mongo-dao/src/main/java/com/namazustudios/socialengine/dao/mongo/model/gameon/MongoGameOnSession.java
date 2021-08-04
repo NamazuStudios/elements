@@ -29,9 +29,6 @@ import java.util.Objects;
         @SearchableField(name = "displayName", path = "/profile/displayName")
     })
 @Entity(value = "game_on_session")
-@Indexes({
-    @Index(fields = @Field("_id.deviceOSType"))
-})
 public class MongoGameOnSession {
 
     @Id
