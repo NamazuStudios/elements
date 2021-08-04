@@ -6,14 +6,19 @@ import com.namazustudios.socialengine.doclet.DocRootWriter;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.util.List.copyOf;
+
 public class LDocRootStubClass implements DocRoot {
+
+    private final List<String> relativePath;
 
     private final LDocStubClassHeader header;
 
     private final List<LDocStubMethod> methods = new ArrayList<>();
 
-    public LDocRootStubClass(final String name) {
+    public LDocRootStubClass(final String name, final List<String> relativePath) {
         header = new LDocStubClassHeader(name);
+        this.relativePath = copyOf(relativePath);
     }
 
     public LDocStubClassHeader getHeader() {
@@ -28,6 +33,11 @@ public class LDocRootStubClass implements DocRoot {
         final var method = new LDocStubMethod(name);
         getMethods().add(method);
         return method;
+    }
+
+    @Override
+    public List<String> getRelativePath() {
+        return relativePath;
     }
 
     @Override

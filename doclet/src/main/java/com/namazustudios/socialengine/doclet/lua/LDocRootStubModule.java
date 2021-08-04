@@ -6,6 +6,10 @@ import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
+
+import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 
 public class LDocRootStubModule implements DocRoot {
 
@@ -35,8 +39,23 @@ public class LDocRootStubModule implements DocRoot {
     }
 
     @Override
-    public void write(final DocRootWriter writer) {
+    public List<String> getRelativePath() {
 
+        final var components = Stream
+          .of(moduleDefinition.value().split("\\."))
+          .collect(toList());
+
+        final var file = format("%s.lua", components.remove(components.size() - 1));
+        components.add(file);
+
+        return components;
+
+    }
+
+    @Override
+    public void write(final DocRootWriter writer) {
+        getHeader().write(writer);
+        getMethods().forEach(m -> m.write(writer));
     }
 
     @Override

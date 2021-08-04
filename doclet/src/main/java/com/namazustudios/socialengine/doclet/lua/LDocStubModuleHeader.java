@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Strings;
+import com.namazustudios.socialengine.doclet.DocRootWriter;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
@@ -15,15 +17,18 @@ public class LDocStubModuleHeader {
 
     private final List<String> authors = new ArrayList<>();
 
+    private final List<String> metadata = new ArrayList<>();
+
     private final List<LDocStubField> fields = new ArrayList<>();
 
     private final ModuleDefinition moduleDefinition;
 
     public LDocStubModuleHeader(final ModuleDefinition moduleDefinition) {
         this.moduleDefinition = moduleDefinition;
+        addMetadata(buildMetadataForDefinition());
     }
 
-    public String getMetadata() {
+    private String buildMetadataForDefinition() {
 
         final var sb = new StringBuilder();
 
@@ -42,6 +47,14 @@ public class LDocStubModuleHeader {
 
         return sb.toString();
 
+    }
+
+    public List<String> getMetadata() {
+        return metadata;
+    }
+
+    public void addMetadata(final String metadata) {
+        this.metadata.add(metadata);
     }
 
     public String getModule() {
@@ -72,6 +85,10 @@ public class LDocStubModuleHeader {
         authors.add(author);
     }
 
+    public List<LDocStubField> getFields() {
+        return fields;
+    }
+
     public LDocStubField addField(final String name, final CaseFormat source) {
         final var field = new LDocStubField(source, moduleDefinition.style().constantCaseFormat(), name);
         fields.add(field);
@@ -86,6 +103,26 @@ public class LDocStubModuleHeader {
         sb.append(", exposedModuleDefinition=").append(moduleDefinition);
         sb.append('}');
         return sb.toString();
+    }
+
+    public void write(final DocRootWriter writer) {
+
+        writer.printlnf("--- %s", getSummary())
+              .println("--")
+              .printBlock("-- ", getDescription())
+              .println("--");
+
+        getMetadata()
+            .stream()
+            .filter(s -> !Strings.isNullOrEmpty(s))
+            .forEach(s -> writer.printlnf("-- %s", s));
+
+        writer.println("--");
+
+        getFields().forEach(f -> f.write(writer));
+        getAuthors().forEach(a -> writer.printlnf("-- @author %s", a));
+        writer.println();
+
     }
 
 }

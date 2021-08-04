@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.google.common.base.CaseFormat;
+import com.namazustudios.socialengine.doclet.DocRootWriter;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.ArrayList;
@@ -90,4 +91,7 @@ public class LDocStubMethod {
         return sb.toString();
     }
 
+    public void write(final DocRootWriter writer) {
+
+    }
 }

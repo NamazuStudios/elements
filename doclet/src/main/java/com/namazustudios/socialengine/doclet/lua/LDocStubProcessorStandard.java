@@ -12,11 +12,13 @@ import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
+import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PROTECTED;
@@ -43,7 +45,15 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
     private void process(final ArrayList<LDocRootStubClass> classes, final TypeElement typeElement) {
 
         final var docTree = docContext.getDocTrees().getDocCommentTree(typeElement);
-        final var stubClass = new LDocRootStubClass(typeElement.getQualifiedName().toString());
+
+        final var relative = Stream
+            .of(typeElement.getQualifiedName().toString().split("\\."))
+            .collect(toList());
+
+        final var file = format("%s.moon", relative.remove(relative.size() - 1));
+        relative.add(file);
+
+        final var stubClass = new LDocRootStubClass(typeElement.getQualifiedName().toString(), relative);
 
         final var summary = docTree.getFirstSentence()
             .stream()

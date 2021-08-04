@@ -1,6 +1,10 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.google.common.base.CaseFormat;
+import com.namazustudios.socialengine.doclet.DocRootWriter;
+
+import static com.google.common.base.Strings.isNullOrEmpty;
+import static com.google.common.base.Strings.nullToEmpty;
 
 public class LDocStubField {
 
@@ -29,7 +33,7 @@ public class LDocStubField {
     }
 
     public void setType(String type) {
-        this.type = type;
+        this.type = nullToEmpty(type).trim();
     }
 
     public String getName() {
@@ -40,8 +44,8 @@ public class LDocStubField {
         return summary;
     }
 
-    public void setSummary(String summary) {
-        this.summary = summary;
+    public void setSummary(final String summary) {
+        this.summary = nullToEmpty(summary).trim();
     }
 
     public String getDescription() {
@@ -49,7 +53,7 @@ public class LDocStubField {
     }
 
     public void setDescription(String description) {
-        this.description = description;
+        this.description = nullToEmpty(description).trim();
     }
 
     public String getConstantValue() {
@@ -57,7 +61,18 @@ public class LDocStubField {
     }
 
     public void setConstantValue(String constantValue) {
-        this.constantValue = constantValue;
+        this.constantValue = nullToEmpty(constantValue).trim();
+    }
+
+    public void write(final DocRootWriter writer) {
+        if (!isNullOrEmpty(getName())) {
+            final var sb = new StringBuilder("-- @field ").append(getName());
+            if (!isNullOrEmpty(getType())) sb.append(" ").append(getType()).append(".");
+            if (!isNullOrEmpty(getConstantValue())) sb.append(" \"").append(getConstantValue()).append("\".");
+            if (!isNullOrEmpty(getSummary())) sb.append(" ").append(getSummary());
+            if (!isNullOrEmpty(getDescription())) sb.append(" ").append(getSummary());
+            writer.println(sb);
+        }
     }
 
 }
