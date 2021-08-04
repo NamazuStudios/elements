@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.doclet.lua;
 
+import com.namazustudios.socialengine.doclet.DocRoot;
+import com.namazustudios.socialengine.doclet.DocRootWriter;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class LDocStubModule implements LDocStub {
+public class LDocRootStubModule implements DocRoot {
 
     private final LDocStubModuleHeader header;
 
@@ -13,7 +15,7 @@ public class LDocStubModule implements LDocStub {
 
     private final ModuleDefinition moduleDefinition;
 
-    public LDocStubModule(final ModuleDefinition moduleDefinition) {
+    public LDocRootStubModule(final ModuleDefinition moduleDefinition) {
         header = new LDocStubModuleHeader(moduleDefinition);
         this.moduleDefinition = moduleDefinition;
     }
@@ -27,9 +29,14 @@ public class LDocStubModule implements LDocStub {
     }
 
     public LDocStubMethod addMethod(final String name) {
-        final var method = new LDocStubMethod(moduleDefinition, name);
+        final var method = new LDocStubMethod(name, moduleDefinition);
         getMethods().add(method);
         return method;
+    }
+
+    @Override
+    public void write(final DocRootWriter writer) {
+
     }
 
     @Override

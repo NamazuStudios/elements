@@ -9,101 +9,83 @@ import java.util.List;
 
 public class LDocStubModuleHeader {
 
-        private String summary;
+    private String summary;
 
-        private String description;
+    private String description;
 
-        private final List<String> authors = new ArrayList<>();
+    private final List<String> authors = new ArrayList<>();
 
-        private final List<LDocStubField> fields = new ArrayList<>();
+    private final List<LDocStubField> fields = new ArrayList<>();
 
-        private final ModuleDefinition moduleDefinition;
+    private final ModuleDefinition moduleDefinition;
 
-        public LDocStubModuleHeader(final ModuleDefinition moduleDefinition) {
-            this.moduleDefinition = moduleDefinition;
+    public LDocStubModuleHeader(final ModuleDefinition moduleDefinition) {
+        this.moduleDefinition = moduleDefinition;
+    }
+
+    public String getMetadata() {
+
+        final var sb = new StringBuilder();
+
+        final var deprecated = moduleDefinition.deprecated();
+        final var annotation = moduleDefinition.annotation().value();
+
+        sb.append("Module ").append(moduleDefinition.value());
+
+        if (!annotation.isAssignableFrom(ExposedBindingAnnotation.Undefined.class)) {
+            sb.append(" ").append(annotation.getSimpleName());
         }
 
-        public String getMetadata() {
-
-            final var sb = new StringBuilder();
-
-            final var deprecated = moduleDefinition.deprecated();
-            final var annotation = moduleDefinition.annotation().value();
-
-            sb.append("Module ").append(moduleDefinition.value());
-
-            if (!annotation.isAssignableFrom(ExposedBindingAnnotation.Undefined.class)) {
-                sb.append(" ").append(annotation.getSimpleName());
-            }
-
-            if (deprecated.deprecated()) {
-                sb.append(" ").append(deprecated.value());
-            }
-
-            return sb.toString();
-
+        if (deprecated.deprecated()) {
+            sb.append(" ").append(deprecated.value());
         }
 
-        public String getModule() {
-            return moduleDefinition.value();
-        }
+        return sb.toString();
 
-        public String getSummary() {
-            return summary;
-        }
+    }
 
-        public void setSummary(String summary) {
-            this.summary = summary;
-        }
+    public String getModule() {
+        return moduleDefinition.value();
+    }
 
-        public String getDescription() {
-            return description;
-        }
+    public String getSummary() {
+        return summary;
+    }
 
-        public void setDescription(String description) {
-            this.description = description;
-        }
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
 
-        public List<String> getAuthors() {
-            return authors;
-        }
+    public String getDescription() {
+        return description;
+    }
 
-        public void addAuthor(final String author) {
-            authors.add(author);
-        }
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-        public LDocStubField addField(final CaseFormat caseFormat, final String name) {
-            final var field = new LDocStubField(caseFormat, moduleDefinition, name);
-            fields.add(field);
-            return field;
-        }
+    public List<String> getAuthors() {
+        return authors;
+    }
 
-        public LDocStubField addField(final CaseFormat caseFormat,
-                                      final String typeDescription,
-                                      final String name,
-                                      final String comment,
-                                      final Object constantValue) {
+    public void addAuthor(final String author) {
+        authors.add(author);
+    }
 
-            final var field = addField(caseFormat, name);
+    public LDocStubField addField(final String name, final CaseFormat source) {
+        final var field = new LDocStubField(source, moduleDefinition.style().constantCaseFormat(), name);
+        fields.add(field);
+        return field;
+    }
 
-            field.setComment(comment);
-            field.setType(typeDescription);
-
-            if (constantValue != null) {
-                field.setComment(constantValue.toString());
-            }
-
-            return field;
-        }
-
-        @Override
-        public String toString() {
-            final StringBuilder sb = new StringBuilder("LDocStubHeader{");
-            sb.append("description='").append(description).append('\'');
-            sb.append(", authors=").append(authors);
-            sb.append(", exposedModuleDefinition=").append(moduleDefinition);
-            sb.append('}');
-            return sb.toString();
-        }
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("LDocStubHeader{");
+        sb.append("description='").append(description).append('\'');
+        sb.append(", authors=").append(authors);
+        sb.append(", exposedModuleDefinition=").append(moduleDefinition);
+        sb.append('}');
+        return sb.toString();
+    }
 
 }

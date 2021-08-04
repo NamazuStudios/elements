@@ -1,7 +1,9 @@
-package com.namazustudios.socialengine.doclet.lua;
+package com.namazustudios.socialengine.doclet;
 
-import com.namazustudios.socialengine.doclet.DocAnnotations;
-import com.namazustudios.socialengine.doclet.DocContext;
+import com.namazustudios.socialengine.doclet.lua.LDocStubProcessorExpose;
+import com.namazustudios.socialengine.doclet.lua.LDocStubProcessorIntrinsic;
+import com.namazustudios.socialengine.doclet.lua.LDocStubProcessorStandard;
+import com.namazustudios.socialengine.rt.annotation.Private;
 
 import javax.lang.model.element.TypeElement;
 import java.util.ArrayList;
@@ -10,29 +12,30 @@ import java.util.List;
 import static com.namazustudios.socialengine.doclet.DocAnnotations.*;
 
 /**
- * Used to process javadoc and annotations and generate instances of {@link LDocStub}.
+ * Used to process javadoc and annotations and generate instances of {@link DocRoot}.
  *
  * @param <StubT>
  */
-public interface LDocProcessor<StubT extends LDocStub> {
+@Private
+public interface DocProcessor<StubT extends DocRoot> {
 
     /**
-     * Generates zero or more {@link LDocStub} instances.
+     * Generates zero or more {@link DocRoot} instances.
      *
      * @return the {@link List<StubT>} instances.
      */
     List<StubT> process();
 
     /**
-     * Gets one or more {@link LDocProcessor<?>} instances given the context and {@link TypeElement}
+     * Gets one or more {@link DocProcessor <?>} instances given the context and {@link TypeElement}
      *
      * @param cxt the context
      * @param typeElement the {@link TypeElement}
-     * @return zero or more {@link LDocProcessor<?>} instances
+     * @return zero or more {@link DocProcessor <?>} instances
      */
-    static List<LDocProcessor<?>> get(final DocContext cxt, final TypeElement typeElement) {
+    static List<DocProcessor<?>> get(final DocContext cxt, final TypeElement typeElement) {
 
-        final List<LDocProcessor<?>> processors = new ArrayList<>();
+        final List<DocProcessor<?>> processors = new ArrayList<>();
 
         final var expose = getExposed(typeElement);
         final var exposeEnum = getExposedEnum(typeElement);

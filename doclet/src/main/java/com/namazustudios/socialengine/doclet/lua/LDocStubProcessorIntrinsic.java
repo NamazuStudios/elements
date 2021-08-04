@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
+import com.namazustudios.socialengine.doclet.DocProcessor;
 import com.namazustudios.socialengine.rt.annotation.Intrinsic;
-import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import javax.lang.model.element.TypeElement;
 import java.util.Arrays;
@@ -11,7 +11,7 @@ import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toList;
 
-public class LDocStubProcessorIntrinsic implements LDocProcessor<LDocStubModule> {
+public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModule> {
 
     private final DocContext docContext;
 
@@ -28,10 +28,10 @@ public class LDocStubProcessorIntrinsic implements LDocProcessor<LDocStubModule>
     }
 
     @Override
-    public List<LDocStubModule> process() {
+    public List<LDocRootStubModule> process() {
 
         final var stubs = Arrays.stream(intrinsic.value())
-            .map(LDocStubModule::new)
+            .map(LDocRootStubModule::new)
             .collect(toList());
 
         for (var stub : stubs) {
@@ -43,9 +43,9 @@ public class LDocStubProcessorIntrinsic implements LDocProcessor<LDocStubModule>
             Stream.of(intrinsic.authors()).forEach(header::addAuthor);
 
             for (var constant : intrinsic.constants()) {
-                final var field = header.addField(constant.sourceCaseFormat(), constant.value());
+                final var field = header.addField(constant.value(), constant.sourceCaseFormat());
                 field.setType(constant.type());
-                field.setComment(constant.description());
+                field.setDescription(constant.description());
                 field.setConstantValue(constant.literal());
             }
 

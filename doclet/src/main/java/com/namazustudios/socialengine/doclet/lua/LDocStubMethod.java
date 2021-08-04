@@ -8,24 +8,24 @@ import java.util.List;
 
 public class LDocStubMethod {
 
+    private String summary;
+
+    private String description;
+
     private final String name;
+
+    private final ModuleDefinition moduleDefinition;
 
     private final List<LDocTReturn> returnValues = new ArrayList<>();
 
     private final List<LDocTParameter> parameters = new ArrayList<>();
-
-    private final ModuleDefinition moduleDefinition;
-
-    private String summary;
-
-    private String description;
 
     public LDocStubMethod(final String name) {
         this.name = name;
         this.moduleDefinition = null;
     }
 
-    public LDocStubMethod(final ModuleDefinition moduleDefinition, final String name) {
+    public LDocStubMethod(final String name, final ModuleDefinition moduleDefinition) {
         final var format = moduleDefinition.style().methodCaseFormat();
         this.moduleDefinition = moduleDefinition;
         this.name = CaseFormat.LOWER_CAMEL.to(format, name);
@@ -41,10 +41,10 @@ public class LDocStubMethod {
         return ret;
     }
 
-    public LDocTReturn addReturnValue(final String type, final String comment) {
+    public LDocTReturn addReturnValue(final String type, final String description) {
         final var ret = addReturnValue();
         ret.setType(type);
-        ret.setComment(comment);
+        ret.setDescription(description);
         return ret;
     }
 
@@ -57,7 +57,7 @@ public class LDocStubMethod {
     public LDocTParameter addParameter(final String name, final String typeDescription, final String comment) {
         final var param = addParameter(name);
         param.setType(typeDescription);
-        param.setComment(comment);
+        param.setDescription(comment);
         return param;
     }
 

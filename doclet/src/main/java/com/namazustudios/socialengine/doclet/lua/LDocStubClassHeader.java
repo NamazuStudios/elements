@@ -1,7 +1,11 @@
 package com.namazustudios.socialengine.doclet.lua;
 
+import com.google.common.base.CaseFormat;
+
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.String.format;
 
 public class LDocStubClassHeader {
 
@@ -13,6 +17,8 @@ public class LDocStubClassHeader {
 
     private final List<String> authors = new ArrayList<>();
 
+    private final List<LDocStubField> fields = new ArrayList<>();
+
     public LDocStubClassHeader(final String name) {
         this.name = name;
     }
@@ -23,6 +29,10 @@ public class LDocStubClassHeader {
 
     public List<String> getAuthors() {
         return authors;
+    }
+
+    public void addAuthor(final String author) {
+        authors.add(author);
     }
 
     public String getSummary() {
@@ -37,12 +47,31 @@ public class LDocStubClassHeader {
         return description;
     }
 
-    public void setDescription(String description) {
+    public void setDescription(final String description) {
         this.description = description;
     }
 
-    public void addAuthor(final String author) {
-        authors.add(author);
+    public void addExtraDescription(final String extraDescription) {
+        if (getDescription() == null) {
+            setDescription(extraDescription);
+        } else {
+            setDescription(format("%s\n%s", getDescription(), extraDescription));
+        }
+    }
+
+    public void addExtraDescriptionFormat(final String extraDescriptionFmt, final Object ... args) {
+        final var extra = format(extraDescriptionFmt, args);
+        addExtraDescription(extra);
+    }
+
+    public List<LDocStubField> getFields() {
+        return fields;
+    }
+
+    public LDocStubField addField(final String name) {
+        final var field = new LDocStubField(name);
+        fields.add(field);
+        return field;
     }
 
 }

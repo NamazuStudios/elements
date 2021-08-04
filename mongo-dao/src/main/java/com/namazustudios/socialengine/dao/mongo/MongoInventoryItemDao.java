@@ -73,7 +73,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final MongoInventoryItem item = query.first();
 
         if (item == null) {
-            throw new NotFoundException("Unable to find item with an id of " + inventoryItemId);
+            throw new NotFoundException("Unable to find inventory item with an id of " + inventoryItemId);
         }
 
         return getDozerMapper().map(item, InventoryItem.class);
@@ -93,7 +93,10 @@ public class MongoInventoryItemDao implements InventoryItemDao {
             .first();
 
         if (item == null) {
-            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId + " for user " + user.getId());
+            throw new NotFoundException(
+                "Unable to find inventory item with an id of " + itemNameOrId + " " +
+                "for user " + user.getId()
+            );
         }
 
         return getDozerMapper().map(item, InventoryItem.class);

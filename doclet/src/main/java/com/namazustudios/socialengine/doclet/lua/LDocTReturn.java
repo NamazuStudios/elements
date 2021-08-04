@@ -4,7 +4,7 @@ public class LDocTReturn {
 
     private String type;
 
-    private String comment;
+    private String description;
 
     public String getType() {
         return type;
@@ -14,19 +14,19 @@ public class LDocTReturn {
         this.type = type;
     }
 
-    public String getComment() {
-        return comment;
+    public String getDescription() {
+        return description;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("LDocTReturn{");
         sb.append("type='").append(type).append('\'');
-        sb.append(", comment='").append(comment).append('\'');
+        sb.append(", description='").append(description).append('\'');
         sb.append('}');
         return sb.toString();
     }

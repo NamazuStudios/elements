@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.google.common.base.CaseFormat;
-import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 public class LDocStubField {
 
@@ -9,15 +8,20 @@ public class LDocStubField {
 
     private String type = "";
 
-    private String comment = "";
+    private String summary = "";
+
+    private String description = "";
 
     private String constantValue = "";
 
-    public LDocStubField(final CaseFormat caseFormat,
-                         final ModuleDefinition moduleDefinition,
+    public LDocStubField(final String name) {
+        this.name = name;
+    }
+
+    public LDocStubField(final CaseFormat source,
+                         final CaseFormat destination,
                          final String name) {
-        final var format = moduleDefinition.style().constantCaseFormat();
-        this.name = caseFormat.to(format, name);
+        this (source.to(destination, name));
     }
 
     public String getType() {
@@ -32,12 +36,20 @@ public class LDocStubField {
         return name;
     }
 
-    public String getComment() {
-        return comment;
+    public String getSummary() {
+        return summary;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setSummary(String summary) {
+        this.summary = summary;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     public String getConstantValue() {

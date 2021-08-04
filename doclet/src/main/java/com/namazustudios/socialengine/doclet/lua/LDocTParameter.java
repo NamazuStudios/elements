@@ -8,7 +8,7 @@ public class LDocTParameter {
 
     private String type;
 
-    private String comment;
+    private String description;
 
     private final String name;
 
@@ -31,19 +31,19 @@ public class LDocTParameter {
         this.type = type;
     }
 
-    public String getComment() {
-        return comment;
+    public String getDescription() {
+        return description;
     }
 
-    public void setComment(String comment) {
-        this.comment = comment;
+    public void setDescription(String description) {
+        this.description = description;
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("LDocTParameter{");
         sb.append("type='").append(type).append('\'');
-        sb.append(", comment='").append(comment).append('\'');
+        sb.append(", comment='").append(description).append('\'');
         sb.append(", name='").append(name).append('\'');
         sb.append(", exposedModuleDefinition=").append(moduleDefinition);
         sb.append('}');

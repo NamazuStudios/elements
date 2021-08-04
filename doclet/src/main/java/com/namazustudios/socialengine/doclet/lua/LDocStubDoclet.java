@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
+import com.namazustudios.socialengine.doclet.DocProcessor;
+import com.namazustudios.socialengine.doclet.DocRoot;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
@@ -65,7 +67,7 @@ public class LDocStubDoclet implements Doclet {
         };
 
         for (var type : cxt.getIncludedElements()) {
-            for (var processor : LDocProcessor.get(cxt, type)) {
+            for (var processor : DocProcessor.get(cxt, type)) {
                 final var stubs = processor.process();
                 write(stubs);
             }
@@ -75,7 +77,7 @@ public class LDocStubDoclet implements Doclet {
 
     }
 
-    private void write(List<? extends LDocStub> stubs) {
+    private void write(final List<? extends DocRoot> stubs) {
         // TODO: Dump stubs out to disk later
         reporter.print(Diagnostic.Kind.NOTE, "Processed stub: " + stubs);
     }

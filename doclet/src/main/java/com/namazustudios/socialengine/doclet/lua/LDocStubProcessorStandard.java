@@ -1,19 +1,28 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
+import com.namazustudios.socialengine.doclet.DocProcessor;
 import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
+import com.sun.source.doctree.ParamTree;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.sun.source.doctree.DocTree.Kind.PARAM;
+import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.Modifier.PROTECTED;
 import static javax.lang.model.element.Modifier.PUBLIC;
 
-public class LDocStubProcessorStandard implements LDocProcessor<LDocStubClass> {
+public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass> {
 
     private final DocContext docContext;
 
@@ -25,16 +34,16 @@ public class LDocStubProcessorStandard implements LDocProcessor<LDocStubClass> {
     }
 
     @Override
-    public List<LDocStubClass> process() {
-        final var classes = new ArrayList<LDocStubClass>();
+    public List<LDocRootStubClass> process() {
+        final var classes = new ArrayList<LDocRootStubClass>();
         process(classes, typeElement);
         return classes;
     }
 
-    private void process(final ArrayList<LDocStubClass> classes, final TypeElement typeElement) {
+    private void process(final ArrayList<LDocRootStubClass> classes, final TypeElement typeElement) {
 
         final var docTree = docContext.getDocTrees().getDocCommentTree(typeElement);
-        final var stubClass = new LDocStubClass(typeElement.getQualifiedName().toString());
+        final var stubClass = new LDocRootStubClass(typeElement.getQualifiedName().toString());
 
         final var summary = docTree.getFirstSentence()
             .stream()
@@ -47,8 +56,13 @@ public class LDocStubProcessorStandard implements LDocProcessor<LDocStubClass> {
             .collect(joining());
 
         final var header = stubClass.getHeader();
+
         header.setSummary(summary);
         header.setDescription(description);
+
+        header.addExtraDescriptionFormat(
+            "Note: Instantiate with java.require\"%s\"",
+            typeElement.getQualifiedName());
 
         for (var enclosed : typeElement.getEnclosedElements()) {
 
@@ -57,13 +71,11 @@ public class LDocStubProcessorStandard implements LDocProcessor<LDocStubClass> {
             if (modifiers.contains(PUBLIC) || modifiers.contains(PROTECTED)) {
                 switch (enclosed.getKind()) {
                     case FIELD:
-                        processField(stubClass, (VariableElement) enclosed);
-                        break;
                     case ENUM_CONSTANT:
                         processField(stubClass, (VariableElement) enclosed);
                         break;
                     case METHOD:
-                        processExecutable(stubClass, (ExecutableElement) enclosed);
+                        processMethod(stubClass, (ExecutableElement) enclosed);
                         break;
                 }
             }
@@ -72,11 +84,11 @@ public class LDocStubProcessorStandard implements LDocProcessor<LDocStubClass> {
 
     }
 
-    private void processField(final LDocStubClass stubClass, final VariableElement enclosed) {
+    private void processField(final LDocRootStubClass stub, final VariableElement enclosed) {
+
         final var docTree = docContext.getDocTrees().getDocCommentTree(enclosed);
 
         final var name = enclosed.getSimpleName();
-        final var method = stubClass.addMethod(name.toString());
 
         final var summary = docTree.getFirstSentence()
             .stream()
@@ -88,10 +100,64 @@ public class LDocStubProcessorStandard implements LDocProcessor<LDocStubClass> {
             .map(DocCommentTags::getText)
             .collect(joining());
 
+        final var constantValue = enclosed.getConstantValue();
+        final var typeDescription = LDocTypes.getTypeDescription(enclosed.asType());
+
+        final var field = stub.getHeader().addField(name.toString());
+        field.setType(typeDescription);
+        field.setSummary(summary);
+        field.setDescription(description);
+        field.setConstantValue(constantValue.toString());
+
     }
 
+    private void processMethod(final LDocRootStubClass stub, final ExecutableElement enclosed) {
 
-    private void processExecutable(final LDocStubClass stubClass, final ExecutableElement enclosed) {
+        final var comments = docContext.getDocTrees().getDocCommentTree(enclosed);
+
+        final var name = enclosed.getSimpleName();
+        final var returnType = enclosed.getReturnType();
+        final var returnTypeDescription = LDocTypes.getTypeDescription(returnType);
+
+        final var returnComment = comments
+            .getBlockTags()
+            .stream()
+            .filter(dt -> RETURN.equals(dt.getKind()))
+            .map(DocCommentTags::getReturnComment)
+            .findFirst()
+            .orElse("");
+
+        final var method = stub.addMethod(name.toString());
+
+        final var docTreeParameters = comments.getBlockTags()
+            .stream()
+            .filter(dt -> PARAM.equals(dt.getKind()))
+            .map(ParamTree.class::cast)
+            .collect(toList());
+
+        method.addReturnValue(returnTypeDescription, returnComment);
+        processParameters(enclosed.getParameters(), method, docTreeParameters);
+
+    }
+
+    private void processParameters(final List<? extends VariableElement> parameters,
+                                   final LDocStubMethod method,
+                                   final List<ParamTree> docTreeParameters) {
+        for (var param : parameters) {
+
+            final var name = param.getSimpleName();
+            final var type = LDocTypes.getTypeDescription(param.asType());
+            final var comment = docTreeParameters
+                .stream()
+                .filter(pt -> name.equals(pt.getName().getName()))
+                .map(ParamTree::getDescription)
+                .flatMap(Collection::stream)
+                .map(DocCommentTags::getText)
+                .collect(joining());
+
+            method.addParameter(name.toString(), type, comment);
+
+        }
     }
 
 }

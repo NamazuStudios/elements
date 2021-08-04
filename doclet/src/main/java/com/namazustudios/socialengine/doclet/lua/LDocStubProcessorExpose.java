@@ -1,13 +1,12 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
+import com.namazustudios.socialengine.doclet.DocProcessor;
 import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.sun.source.doctree.ParamTree;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.lang.model.element.*;
 import java.util.*;
@@ -23,9 +22,7 @@ import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static javax.lang.model.element.ElementKind.*;
 
-public class LDocStubProcessorExpose implements LDocProcessor<LDocStubModule> {
-
-    private static final Logger logger = LoggerFactory.getLogger(LDocStubProcessorExpose.class);
+public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule> {
 
     private final ModuleDefinition[] moduleDefinitions;
 
@@ -53,10 +50,10 @@ public class LDocStubProcessorExpose implements LDocProcessor<LDocStubModule> {
         this.exposedKinds = new HashSet<>(singletonList(ENUM_CONSTANT));
     }
 
-    public List<LDocStubModule> process() {
+    public List<LDocRootStubModule> process() {
 
         final var stubs = Arrays.stream(moduleDefinitions)
-            .map(LDocStubModule::new)
+            .map(LDocRootStubModule::new)
             .collect(toList());
 
         for (final var stub : stubs) {
@@ -107,13 +104,18 @@ public class LDocStubProcessorExpose implements LDocProcessor<LDocStubModule> {
 
     }
 
-    private void processField(final LDocStubModule stub, final VariableElement enclosed) {
+    private void processField(final LDocRootStubModule stub, final VariableElement enclosed) {
 
         final var comments = docContext.getDocTrees().getDocCommentTree(enclosed);
 
         final var name = enclosed.getSimpleName();
 
-        final var body = comments.getFullBody()
+        final var summary = comments.getFirstSentence()
+            .stream()
+            .map(DocCommentTags::getText)
+            .collect(Collectors.joining());
+
+        final var description = comments.getBody()
             .stream()
             .map(DocCommentTags::getText)
             .collect(Collectors.joining());
@@ -122,15 +124,22 @@ public class LDocStubProcessorExpose implements LDocProcessor<LDocStubModule> {
         final var constantValue = enclosed.getConstantValue();
         final var typeDescription = LDocTypes.getTypeDescription(enclosed.asType());
 
+        final LDocStubField field;
+
         if (modifiers.contains(Modifier.STATIC) && modifiers.contains(Modifier.FINAL)) {
-            stub.getHeader().addField(UPPER_UNDERSCORE, typeDescription, name.toString(), body, constantValue);
+            field = stub.getHeader().addField(name.toString(), UPPER_UNDERSCORE);
         } else {
-            stub.getHeader().addField(LOWER_CAMEL, typeDescription, name.toString(), body, constantValue);
+            field = stub.getHeader().addField(name.toString(), LOWER_CAMEL);
         }
+
+        field.setType(typeDescription);
+        field.setSummary(summary);
+        field.setDescription(description);
+        field.setConstantValue(constantValue.toString());
 
     }
 
-    private void processMethod(final LDocStubModule stub, final ExecutableElement enclosed) {
+    private void processMethod(final LDocRootStubModule stub, final ExecutableElement enclosed) {
 
         final var comments = docContext.getDocTrees().getDocCommentTree(enclosed);
 
@@ -144,7 +153,7 @@ public class LDocStubProcessorExpose implements LDocProcessor<LDocStubModule> {
             .filter(dt -> RETURN.equals(dt.getKind()))
             .map(DocCommentTags::getReturnComment)
             .findFirst()
-            .orElse(null);
+            .orElse("");
 
         final var method = stub.addMethod(name.toString());
 

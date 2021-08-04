@@ -16,6 +16,10 @@ import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.joining;
 import static javax.lang.model.type.TypeKind.*;
 
+/**
+ * Maps Java types to descriptions of Lua types. This supports all generic types and will recurse into for all generic
+ * types found in Java types.
+ */
 public class LDocTypes {
 
     private static final Map<TypeKind, Function<TypeMirror, String>> TYPE_KINDS;

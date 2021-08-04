@@ -1,0 +1,23 @@
+package com.namazustudios.socialengine.doclet;
+
+import com.namazustudios.socialengine.rt.annotation.Private;
+
+import java.io.IOException;
+
+/**
+ * Opens a {@link DocWriter}.
+ */
+@Private
+public interface DocWriter {
+
+    /**
+     * Opens a {@link DocRootWriter} used to write the contents of the supplied {@link DocRoot}. Once finished, the
+     * returned {@link DocRootWriter} must be closed by a call to {@link AutoCloseable#close()}.
+     *
+     * @param docRoot the {@link DocRoot}
+     * @return the {@link DocRootWriter}
+     * @throws IOException if there is a problem opening the {@link DocRootWriter}.
+     */
+    DocRootWriter open(final DocRoot docRoot) throws IOException;
+
+}
