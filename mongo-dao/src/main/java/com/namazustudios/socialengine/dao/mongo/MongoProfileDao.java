@@ -63,15 +63,15 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public Optional<Profile> findActiveProfile(final String profileId) {
 
-        final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
-        if (!ObjectId.isValid(profileId)) throw new ProfileNotFoundException();
+        final var query = getDatastore().find(MongoProfile.class);
+        if (!ObjectId.isValid(profileId)) return Optional.empty();
 
         query.filter(and(
                 eq("_id", new ObjectId(profileId)),
                 eq("active", true)
                 ));
 
-        final MongoProfile mongoProfile = query.first();
+        final var mongoProfile = query.first();
         return mongoProfile == null ? Optional.empty() : Optional.of(transform(mongoProfile));
 
     }
@@ -79,8 +79,10 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public Optional<Profile> findActiveProfileForUser(final String profileId, final String userId) {
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
+        if (!ObjectId.isValid(profileId)) return Optional.empty();
+
+        final var objectId = getMongoDBUtils().parseOrReturnNull(profileId);
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(userId);
 
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
