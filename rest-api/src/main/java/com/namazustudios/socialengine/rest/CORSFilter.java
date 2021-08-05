@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.Headers;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,29 +24,13 @@ public class CORSFilter implements ContainerResponseFilter {
 
     public static final Logger logger = LoggerFactory.getLogger(CORSFilter.class);
 
-    public static final String ORIGIN = "Origin";
-
-    public static final String AC_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
-
-    public static final String AC_ALLOW_HEADERS = "Access-Control-Allow-Headers";
-
-    public static final String AC_ALLOW_HEADERS_VALUE = "X-HTTP-Method-Override, Content-Type, SocialEngine-SessionSecret, Elements-SessionSecret";
-
-    public static final String AC_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
-
-    public static final String AC_ALLOW_CREDENTIALS_VALUE = "true";
-
-    public static final String AC_ALLOW_ALLOW_METHODS = "Access-Control-Allow-Methods";
-
-    public static final String AC_ALLOW_ALLOW_METHODS_VALUE = "GET, POST, PUT, PATCH, DELETE";
-
     private Set<URI> allowedOrigins;
 
     @Override
     public void filter(final ContainerRequestContext requestContext,
                        final ContainerResponseContext responseContext) throws IOException {
 
-        final String originHeader = requestContext.getHeaderString(ORIGIN);
+        final var originHeader = requestContext.getHeaderString(Headers.ORIGIN);
 
         if (originHeader == null) {
             return;
@@ -60,13 +45,17 @@ public class CORSFilter implements ContainerResponseFilter {
             return;
         }
 
-        if (getAllowedOrigins().contains(origin)) {
-            responseContext.getHeaders().add(AC_ALLOW_ORIGIN, originHeader);
-            responseContext.getHeaders().add(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
-            responseContext.getHeaders().add(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
-            responseContext.getHeaders().add(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
+        if (isWildcard() || getAllowedOrigins().contains(origin)) {
+            responseContext.getHeaders().add(Headers.AC_ALLOW_ORIGIN, originHeader);
+            responseContext.getHeaders().add(Headers.AC_ALLOW_HEADERS, Headers.AC_ALLOW_HEADERS_VALUE);
+            responseContext.getHeaders().add(Headers.AC_ALLOW_CREDENTIALS, Headers.AC_ALLOW_CREDENTIALS_VALUE);
+            responseContext.getHeaders().add(Headers.AC_ALLOW_ALLOW_METHODS, Headers.AC_ALLOW_ALLOW_METHODS_VALUE);
         }
 
+    }
+
+    private boolean isWildcard() {
+        return getAllowedOrigins().stream().anyMatch(origin -> "*".equals(origin.toString()));
     }
 
     public Set<URI> getAllowedOrigins() {

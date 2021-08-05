@@ -4,8 +4,7 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
-import static com.namazustudios.socialengine.Constants.HTTP_PORT;
+import static com.namazustudios.socialengine.Constants.*;
 import static com.namazustudios.socialengine.appserve.DispatcherAppProvider.*;
 import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
@@ -45,6 +44,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(REFRESH_RATE_SECONDS, String.valueOf(DEFAULT_REFRESH_RATE));
         properties.setProperty(REFRESH_TIMEOUT_SECONDS, String.valueOf(DEFAULT_REFRESH_TIMEOUT));
         properties.setProperty(TOTAL_REFRESH_TIMEOUT_SECONDS, String.valueOf(DEFAULT_TOTAL_REFRESH_TIMEOUT));
+        properties.setProperty(CORS_ALLOWED_ORIGINS, "*");
         return properties;
     }
 

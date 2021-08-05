@@ -16,6 +16,7 @@ import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.Unscoped;
 import com.namazustudios.socialengine.servlet.security.HealthServlet;
+import com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter;
 import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
 import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
@@ -92,6 +93,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final var healthServlet = injector.getInstance(HealthServlet.class);
         final var versionServlet = injector.getInstance(VersionServlet.class);
+        final var corsFilter = injector.getInstance(HttpServletCORSFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
 
@@ -99,6 +101,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));
         servletContextHandler.addServlet(new ServletHolder(healthServlet), getHealthEndpoint());
         servletContextHandler.addServlet(new ServletHolder(versionServlet), getVersionEndpoint());
+        servletContextHandler.addFilter(new FilterHolder(corsFilter), "/*", EnumSet.allOf(DispatcherType.class));
 
         return servletContextHandler;
 
@@ -112,11 +115,15 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final var path = format(APP_PREFIX_FORMAT, getApplicationPathPrefix(), application.getName());
         final var dispatcherServlet = injector.getInstance(DispatcherServlet.class);
+
+        // Filters
+        final var corsFilter = injector.getInstance(HttpServletCORSFilter.class);
         final var sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
 
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));
         servletContextHandler.addServlet(new ServletHolder(dispatcherServlet), "/*");
+        servletContextHandler.addFilter(new FilterHolder(corsFilter), "/*", EnumSet.allOf(DispatcherType.class));
         servletContextHandler.addFilter(new FilterHolder(sessionIdAuthenticationFilter), "/*", EnumSet.allOf(DispatcherType.class));
 
         return servletContextHandler;
