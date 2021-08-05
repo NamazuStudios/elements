@@ -36,24 +36,24 @@ public class HttpServletCORSFilter implements Filter {
         final var originHeader = httpServletRequest.getHeader(ORIGIN);
 
         if (originHeader == null) {
-            return;
-        }
 
-        final URI origin;
+            final URI origin;
 
-        try {
-            origin = new URI(originHeader);
-        } catch (URISyntaxException e) {
-            logger.info("Caught bad Origin header {}", originHeader, e);
-            chain.doFilter(servletRequest,servletResponse);
-            return;
-        }
+            try {
+                origin = new URI(originHeader);
+            } catch (URISyntaxException e) {
+                logger.info("Caught bad Origin header {}", originHeader, e);
+                chain.doFilter(servletRequest,servletResponse);
+                return;
+            }
 
-        if (isWildcard() || getAllowedOrigins().contains(origin)) {
-            httpServletResponse.addHeader(AC_ALLOW_ORIGIN, originHeader);
-            httpServletResponse.addHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
-            httpServletResponse.addHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
-            httpServletResponse.addHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
+            if (isWildcard() || getAllowedOrigins().contains(origin)) {
+                httpServletResponse.addHeader(AC_ALLOW_ORIGIN, originHeader);
+                httpServletResponse.addHeader(AC_ALLOW_HEADERS, AC_ALLOW_HEADERS_VALUE);
+                httpServletResponse.addHeader(AC_ALLOW_CREDENTIALS, AC_ALLOW_CREDENTIALS_VALUE);
+                httpServletResponse.addHeader(AC_ALLOW_ALLOW_METHODS, AC_ALLOW_ALLOW_METHODS_VALUE);
+            }
+
         }
 
         chain.doFilter(servletRequest, servletResponse);
