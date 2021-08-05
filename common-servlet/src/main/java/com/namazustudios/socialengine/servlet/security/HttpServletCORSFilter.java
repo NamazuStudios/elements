@@ -35,7 +35,7 @@ public class HttpServletCORSFilter implements Filter {
 
         final var originHeader = httpServletRequest.getHeader(ORIGIN);
 
-        if (originHeader == null) {
+        if (originHeader != null) {
 
             final URI origin;
 
