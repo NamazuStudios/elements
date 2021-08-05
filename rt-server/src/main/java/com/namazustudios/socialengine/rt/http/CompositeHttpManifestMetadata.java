@@ -100,7 +100,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
         return httpRequest
             .getHeader()
             .getHeader(CONTENT_TYPE)
-            .map(header -> toString())
+            .map(Object::toString)
             .map(header -> {
                 try {
                     return parse(header);
