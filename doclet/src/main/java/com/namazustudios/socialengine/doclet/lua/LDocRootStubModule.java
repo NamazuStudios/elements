@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class LDocRootStubModule implements DocRoot {
@@ -54,8 +55,37 @@ public class LDocRootStubModule implements DocRoot {
 
     @Override
     public void write(final DocRootWriter writer) {
+
         getHeader().write(writer);
-        getMethods().forEach(m -> m.write(writer));
+
+        final var table = moduleDefinition.value().replaceAll("\\.", "_");
+
+        writer.printlnf("local %s = {}", table);
+
+        getMethods().forEach(m -> {
+            m.writeCommentHeader(writer);
+            writeMethodStub(table, m, writer);
+        });
+
+        writer.printlnf("return %s", table);
+
+    }
+
+    private void writeMethodStub(final String table,
+                                 final LDocStubMethod method,
+                                 final DocRootWriter writer) {
+
+        final var name = method.getName();
+
+        final var params = method.getParameters()
+            .stream()
+            .map(LDocParameter::getName)
+            .collect(joining(","));
+
+        writer.printlnf("function %s.%s(%s)", table, name, params);
+        writer.println("-- Stub ");
+        writer.println("end");
+
     }
 
     @Override

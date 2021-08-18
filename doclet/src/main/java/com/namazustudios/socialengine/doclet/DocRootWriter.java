@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.annotation.Private;
 import java.io.PrintStream;
 
 import static com.namazustudios.socialengine.doclet.DocFormatting.*;
-import static java.lang.String.format;
 
 /**
  * Writes a {@link DocRoot} to persistent storage.
@@ -22,6 +21,20 @@ public interface DocRootWriter extends AutoCloseable {
     PrintStream ps();
 
     /**
+     * Opens a new level of indentation, returning the instance of {@link Indentation}.
+     *
+     * @return the {@link Indentation}
+     */
+    Indentation indent();
+
+    /**
+     * Gets the current {@link Indentation}.
+     *
+     * @return the indentation prefix
+     */
+    Indentation getIndent();
+
+    /**
      * Gets the maximum number of columns to print per line, where possible.
      *
      * @return the max columns to print per line.
@@ -36,15 +49,30 @@ public interface DocRootWriter extends AutoCloseable {
     String getNewline();
 
     /**
+     * Prints the copyright notice and other standard metadata.
+     *
+     * @param prefix the prefix for the copyright notice.
+     */
+    void printCopyrightNotice(String prefix);
+
+    /**
      * Prints a line of text.
      *
      * @param line the line to print
      * @return this instance
      */
     default DocRootWriter println(final Object line) {
-        ps().print(line.toString());
+
+        final var str = line.toString().trim();
+
+        if (!str.isEmpty()) {
+            ps().print(getIndent().getPrefix());
+            ps().print(line.toString());
+        }
+
         ps().print(getNewline());
         return this;
+
     }
 
     /**
@@ -56,6 +84,7 @@ public interface DocRootWriter extends AutoCloseable {
      * @return this instance
      */
     default DocRootWriter printlnf(final String fmt, final Object ... args) {
+        ps().print(getIndent().getPrefix());
         ps().printf(fmt, args).print(getNewline());
         return this;
     }
@@ -69,7 +98,7 @@ public interface DocRootWriter extends AutoCloseable {
      * @return this instance
      */
     default DocRootWriter printBlock(final String prefix, final String block) {
-        split(block, getMaxColumns(), prefix).forEach(this::println);
+        split(block, getMaxColumns(), getIndent().getPrefix() + prefix).forEach(this::println);
         return this;
     }
 
@@ -78,6 +107,28 @@ public interface DocRootWriter extends AutoCloseable {
      */
     default void println() {
         ps().print(getNewline());
+    }
+
+    /**
+     * Represents the current indentation of the associated {@link DocRootWriter}
+     */
+    interface Indentation extends AutoCloseable {
+
+        void close();
+
+        String getPrefix();
+
+        Indentation DEFAULT = new Indentation() {
+
+            @Override
+            public void close() {}
+
+            @Override
+            public String getPrefix() {
+                return "";
+            }
+
+        };
     }
 
 }

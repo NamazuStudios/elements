@@ -8,6 +8,10 @@ import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Stream;
+
+import static com.google.common.base.Strings.*;
 
 public class LDocStubModuleHeader {
 
@@ -25,7 +29,7 @@ public class LDocStubModuleHeader {
 
     public LDocStubModuleHeader(final ModuleDefinition moduleDefinition) {
         this.moduleDefinition = moduleDefinition;
-        addMetadata(buildMetadataForDefinition());
+        addMetadata(moduleDefinition.toString());
     }
 
     private String buildMetadataForDefinition() {
@@ -107,20 +111,35 @@ public class LDocStubModuleHeader {
 
     public void write(final DocRootWriter writer) {
 
-        writer.printlnf("--- %s", getSummary())
+        writer.printlnf("--- %s", nullToEmpty(getSummary()).trim())
               .println("--")
-              .printBlock("-- ", getDescription())
+              .printBlock("-- ", nullToEmpty(getDescription()).trim())
               .println("--");
 
         getMetadata()
             .stream()
-            .filter(s -> !Strings.isNullOrEmpty(s))
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(s -> !isNullOrEmpty(s))
             .forEach(s -> writer.printlnf("-- %s", s));
 
-        writer.println("--");
+        var module = Stream.of(moduleDefinition.value().split("\\."))
+            .reduce((first, second) -> second)
+            .stream()
+            .findFirst()
+            .get();
+
+        writer.printlnf("-- @module %s", module);
 
         getFields().forEach(f -> f.write(writer));
-        getAuthors().forEach(a -> writer.printlnf("-- @author %s", a));
+
+        getAuthors()
+            .stream()
+            .filter(Objects::nonNull)
+            .map(String::trim)
+            .filter(s -> !isNullOrEmpty(s))
+            .forEach(a -> writer.printlnf("-- @author %s", a));
+
         writer.println();
 
     }

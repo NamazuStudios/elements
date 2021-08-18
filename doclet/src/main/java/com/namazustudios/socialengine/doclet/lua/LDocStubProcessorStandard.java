@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
 import com.sun.source.doctree.ParamTree;
 
 import javax.lang.model.element.ExecutableElement;
-import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
@@ -14,8 +13,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.lang.String.format;
@@ -86,6 +83,9 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
                         break;
                     case METHOD:
                         processMethod(stubClass, (ExecutableElement) enclosed);
+                        break;
+                    case CONSTRUCTOR:
+                        processConstructor(stubClass, (ExecutableElement) enclosed);
                         break;
                 }
             }
@@ -166,6 +166,42 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
                 .collect(joining());
 
             method.addParameter(name.toString(), type, comment);
+
+        }
+    }
+
+    private void processConstructor(final LDocRootStubClass stub,
+                                    final ExecutableElement enclosed) {
+
+        final var ctor = stub.addConstructor();
+        final var comments = docContext.getDocTrees().getDocCommentTree(enclosed);
+
+        final var docTreeParameters = comments.getBlockTags()
+                .stream()
+                .filter(dt -> PARAM.equals(dt.getKind()))
+                .map(ParamTree.class::cast)
+                .collect(toList());
+
+        processParameters(enclosed.getParameters(), ctor, docTreeParameters);
+
+    }
+
+    private void processParameters(final List<? extends VariableElement> parameters,
+                                   final LDocConstructor ctor,
+                                   final List<ParamTree> docTreeParameters) {
+        for (var param : parameters) {
+
+            final var name = param.getSimpleName();
+            final var type = LDocTypes.getTypeDescription(param.asType());
+            final var comment = docTreeParameters
+                    .stream()
+                    .filter(pt -> name.equals(pt.getName().getName()))
+                    .map(ParamTree::getDescription)
+                    .flatMap(Collection::stream)
+                    .map(DocCommentTags::getText)
+                    .collect(joining());
+
+            ctor.addParameter(name.toString(), type, comment);
 
         }
     }

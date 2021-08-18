@@ -1,6 +1,11 @@
 package com.namazustudios.socialengine.doclet.lua;
 
-public class LDocTReturn {
+import com.namazustudios.socialengine.doclet.DocRootWriter;
+
+import static com.google.common.base.Strings.nullToEmpty;
+import static java.lang.String.format;
+
+public class LDocReturn {
 
     private String type;
 
@@ -29,6 +34,19 @@ public class LDocTReturn {
         sb.append(", description='").append(description).append('\'');
         sb.append('}');
         return sb.toString();
+    }
+
+    public void write(final DocRootWriter writer) {
+
+        final var sb = new StringBuilder("-- @return");
+        final var type = nullToEmpty(getType()).trim();
+        final var description = nullToEmpty(getDescription()).trim();
+
+        if (!type.isEmpty()) sb.append(" ").append(type);
+        if (!description.isEmpty()) sb.append(" ").append(description);
+
+        writer.println(sb);
+
     }
 
 }

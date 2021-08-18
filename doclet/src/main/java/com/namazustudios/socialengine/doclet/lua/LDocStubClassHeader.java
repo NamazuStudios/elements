@@ -1,10 +1,13 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.google.common.base.CaseFormat;
+import com.google.common.base.Strings;
+import com.namazustudios.socialengine.doclet.DocRootWriter;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.String.format;
 
 public class LDocStubClassHeader {
@@ -72,6 +75,12 @@ public class LDocStubClassHeader {
         final var field = new LDocStubField(name);
         fields.add(field);
         return field;
+    }
+
+    public void write(final DocRootWriter writer) {
+        writer.printlnf("--- %s", nullToEmpty(getSummary()).trim());
+        writer.println();
+
     }
 
 }
