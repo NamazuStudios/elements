@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.doclet;
+package com.namazustudios.socialengine.testsources;
 
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;

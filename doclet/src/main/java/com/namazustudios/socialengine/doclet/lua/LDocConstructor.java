@@ -103,6 +103,8 @@ public class LDocConstructor {
     }
 
     public void writeSingleConstructor(final DocRootWriter writer) {
+        writer.printlnf("--- %s", getSummary());
+        writer.println("--");
 
     }
 

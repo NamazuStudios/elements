@@ -1,4 +1,4 @@
 @Private
-package com.namazustudios.socialengine.doclet.lua;
+package com.namazustudios.socialengine.doclet;
 
 import com.namazustudios.socialengine.rt.annotation.Private;

@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.doclet;
+package com.namazustudios.socialengine.testsources;
 
 /**
  * A standard type to expose.

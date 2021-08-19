@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.doclet;
 
 import com.namazustudios.socialengine.rt.annotation.Private;
 
+import java.io.IOException;
 import java.io.PrintStream;
 
 import static com.namazustudios.socialengine.doclet.DocFormatting.*;
@@ -49,11 +50,21 @@ public interface DocRootWriter extends AutoCloseable {
     String getNewline();
 
     /**
+     * Gets the copyright notice which is configured for this {@link DocRootWriter}.
+     *
+     * @return the copyright notice
+     */
+    String getCopyrightNotice();
+
+    /**
      * Prints the copyright notice and other standard metadata.
      *
      * @param prefix the prefix for the copyright notice.
      */
-    void printCopyrightNotice(String prefix);
+    default void printCopyrightNotice(String prefix) {
+        printBlock(prefix, getCopyrightNotice());
+    }
+
 
     /**
      * Prints a line of text.
@@ -98,8 +109,14 @@ public interface DocRootWriter extends AutoCloseable {
      * @return this instance
      */
     default DocRootWriter printBlock(final String prefix, final String block) {
-        split(block, getMaxColumns(), getIndent().getPrefix() + prefix).forEach(this::println);
+
+        split(block, getMaxColumns(), getIndent().getPrefix() + prefix).forEach(line -> {
+            ps().print(line);
+            ps().print(getNewline());
+        });
+
         return this;
+
     }
 
     /**
@@ -108,6 +125,9 @@ public interface DocRootWriter extends AutoCloseable {
     default void println() {
         ps().print(getNewline());
     }
+
+    @Override
+    default void close() throws IOException {}
 
     /**
      * Represents the current indentation of the associated {@link DocRootWriter}

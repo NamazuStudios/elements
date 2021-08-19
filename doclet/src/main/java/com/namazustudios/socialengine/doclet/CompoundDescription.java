@@ -3,8 +3,9 @@ package com.namazustudios.socialengine.doclet;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.Iterator;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static java.util.stream.Collectors.joining;
 
 /**
  * A type which represents a compound description. Parts of the description can be
@@ -46,7 +47,7 @@ public class CompoundDescription implements Iterable<String> {
      * @return the description
      */
     public String getDescription(final String separator) {
-        return components.stream().collect(Collectors.joining(separator));
+        return components.stream().collect(joining(separator));
     }
 
     /**
