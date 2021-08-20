@@ -135,7 +135,7 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
         field.setType(typeDescription);
         field.setSummary(summary);
         field.setDescription(description);
-        field.setConstantValue(constantValue.toString());
+        field.setConstantValue(constantValue);
 
     }
 

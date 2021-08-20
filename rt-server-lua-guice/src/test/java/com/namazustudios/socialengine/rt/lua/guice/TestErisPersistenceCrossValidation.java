@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.ResourceLoader;
-import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
@@ -26,13 +26,13 @@ public class TestErisPersistenceCrossValidation {
 
     private static final Logger logger = LoggerFactory.getLogger(TestErisPersistenceCrossValidation.class);
 
-    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles(TestErisPersistenceCrossValidation.class);
+    private static TemporaryFiles temporaryFiles = new TemporaryFiles(TestErisPersistenceCrossValidation.class);
 
     private ResourceLoader resourceLoader;
 
     @AfterSuite
     public static void deleteTempFiles() {
-        testTemporaryFiles.deleteTempFiles();
+        temporaryFiles.deleteTempFilesAndDirectories();
     }
 
     @DataProvider
@@ -47,8 +47,8 @@ public class TestErisPersistenceCrossValidation {
 
         logger.debug("Testing Persistence for {}", moduleName);
 
-        final var streamFile = testTemporaryFiles.createTempFile();
-        final var channelFile = testTemporaryFiles.createTempFile();
+        final var streamFile = temporaryFiles.createTempFile();
+        final var channelFile = temporaryFiles.createTempFile();
 
         try (final var fos = new FileOutputStream(streamFile.toFile());
              final var bos = new BufferedOutputStream(fos);

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine;
 
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.Test;
@@ -21,6 +22,8 @@ import static org.testng.Assert.fail;
 
 public class DefaultConfigurationSupplierTest {
 
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(DefaultConfigurationSupplierTest.class);
+
     private static final Logger logger = LoggerFactory.getLogger(DefaultConfigurationSupplierTest.class);
 
     @Test
@@ -40,7 +43,7 @@ public class DefaultConfigurationSupplierTest {
                 properties.put(key, val);
             }
 
-            final var tmp = Files.createTempFile("DefaultConfigurationSupplierTest", ".properties");
+            final var tmp = temporaryFiles.createTempFile(".properties");
 
             try (var fos = new FileOutputStream(tmp.toFile())) {
                 properties.store(fos, format("Test Iteration %d", i));

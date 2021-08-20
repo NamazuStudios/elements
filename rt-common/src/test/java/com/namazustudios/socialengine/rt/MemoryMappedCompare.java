@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
+
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -13,6 +15,8 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class MemoryMappedCompare {
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(MemoryMappedCompare.class);
 
     private static final int BUF_SIZE = 8192;
 
@@ -80,10 +84,10 @@ public class MemoryMappedCompare {
 
     public static void main(final String[] args) throws IOException {
 
-        final Path matchedA = Files.createTempFile("matched", "garbage");
-        final Path matchedB = Files.createTempFile("matched", "garbage");
-        final Path unmatchedA = Files.createTempFile("unmatched", "garbage");
-        final Path unmatchedB = Files.createTempFile("unmmatched", "garbage");
+        final Path matchedA = temporaryFiles.createTempFile("matched", "garbage");
+        final Path matchedB = temporaryFiles.createTempFile("matched", "garbage");
+        final Path unmatchedA = temporaryFiles.createTempFile("unmatched", "garbage");
+        final Path unmatchedB = temporaryFiles.createTempFile("unmmatched", "garbage");
 
         fillWithGarbage(unmatchedA);
         fillWithGarbage(unmatchedB);

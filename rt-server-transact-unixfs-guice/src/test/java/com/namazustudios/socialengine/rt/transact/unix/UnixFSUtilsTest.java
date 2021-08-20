@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
@@ -33,6 +34,8 @@ import static org.testng.Assert.assertEquals;
 @Guice(modules = {UnixFSUtilsTest.Module.class})
 public class UnixFSUtilsTest {
 
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(UnixFSUtilsTest.class);
+
     private static final ShutdownHooks hooks = new ShutdownHooks(UnixFSUtilsTest.class);
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSUtilsTest.class);
@@ -50,7 +53,7 @@ public class UnixFSUtilsTest {
     @Test
     public void testList() throws Exception {
 
-        final var tmp = createTempDirectory("unixfs-utils-test-list");
+        final var tmp = temporaryFiles.createTempDirectory("unixfs-utils-test-list");
         garbage.add(tmp);
 
         populate(tmp);
@@ -73,7 +76,7 @@ public class UnixFSUtilsTest {
     @Test
     public void testListCompareJavaNioFilesList() throws Exception {
 
-        final var tmp = createTempDirectory("unixfs-utils-test-list-java-nio-files-list");
+        final var tmp = temporaryFiles.createTempDirectory("unixfs-utils-test-list-java-nio-files-list");
         garbage.add(tmp);
 
         populate(tmp);
@@ -93,7 +96,7 @@ public class UnixFSUtilsTest {
     @Test
     public void testWalk() throws Exception {
 
-        final var tmp = createTempDirectory("unixfs-utils-test-walk");
+        final var tmp = temporaryFiles.createTempDirectory("unixfs-utils-test-walk");
         garbage.add(tmp);
 
         final var expected = populate(tmp);
@@ -111,7 +114,7 @@ public class UnixFSUtilsTest {
     @Test
     public void testListCompareJavaNioFilesWalk() throws Exception {
 
-        final var tmp = createTempDirectory("unixfs-utils-test-list-java-nio-files-walk");
+        final var tmp = temporaryFiles.createTempDirectory("unixfs-utils-test-list-java-nio-files-walk");
         garbage.add(tmp);
 
         populate(tmp);
@@ -180,16 +183,9 @@ public class UnixFSUtilsTest {
 
         @Override
         protected void configure() {
-
-            try {
-                final var tmp = createTempDirectory("unixfs-utils-test");
-                bind(Path.class).annotatedWith(named(UnixFSUtils.UNIXFS_STORAGE_ROOT_DIRECTORY)).toInstance(tmp);
-            } catch (IOException e) {
-                addError(e);
-            }
-
+            final var tmp = temporaryFiles.createTempDirectory("unixfs-utils-test");
+            bind(Path.class).annotatedWith(named(UnixFSUtils.UNIXFS_STORAGE_ROOT_DIRECTORY)).toInstance(tmp);
             bind(Revision.Factory.class).toInstance(mock(Revision.Factory.class));
-
         }
 
     }

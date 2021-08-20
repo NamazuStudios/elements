@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.lua.guice;
 import com.google.inject.Inject;
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.id.TaskId;
-import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.util.ClasspathHelper;
@@ -31,13 +31,13 @@ public class TestCoreErisPersistenceStreams {
 
     private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistenceStreams.class);
 
-    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles(TestCoreErisPersistenceStreams.class);
+    private static TemporaryFiles temporaryFiles = new TemporaryFiles(TestCoreErisPersistenceStreams.class);
 
     private ResourceLoader resourceLoader;
 
     @AfterSuite
     public static void deleteTempFiles() {
-        testTemporaryFiles.deleteTempFiles();
+        temporaryFiles.deleteTempFilesAndDirectories();
     }
 
     @DataProvider

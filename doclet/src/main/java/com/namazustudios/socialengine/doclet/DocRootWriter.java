@@ -61,10 +61,10 @@ public interface DocRootWriter extends AutoCloseable {
      *
      * @param prefix the prefix for the copyright notice.
      */
-    default void printCopyrightNotice(String prefix) {
-        printBlock(prefix, getCopyrightNotice());
+    default void printCopyrightNotice(final String prefix) {
+        final var notice = getCopyrightNotice();
+        if (!notice.isEmpty()) printBlock(prefix, notice);
     }
-
 
     /**
      * Prints a line of text.
@@ -126,18 +126,35 @@ public interface DocRootWriter extends AutoCloseable {
         ps().print(getNewline());
     }
 
+    /**
+     * Closes this {@link DocRootWriter}.
+     *
+     * @throws IOException if an exception occurred closing the stream
+     */
     @Override
-    default void close() throws IOException {}
+    default void close() throws IOException {
+        ps().close();
+    }
 
     /**
      * Represents the current indentation of the associated {@link DocRootWriter}
      */
     interface Indentation extends AutoCloseable {
 
+        /**
+         * Closes this {@link Indentation} and removes the indentation state from the {@link DocRootWriter}
+         */
         void close();
 
+        /**
+         * Gets the index, or throws {@link IllegalStateException} if this {@link Indentation} has been closed.
+         * @return the prefix
+         */
         String getPrefix();
 
+        /**
+         * The default indentation.
+         */
         Indentation DEFAULT = new Indentation() {
 
             @Override
@@ -149,6 +166,7 @@ public interface DocRootWriter extends AutoCloseable {
             }
 
         };
+
     }
 
 }

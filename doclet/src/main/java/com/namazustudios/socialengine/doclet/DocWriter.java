@@ -2,13 +2,14 @@ package com.namazustudios.socialengine.doclet;
 
 import com.namazustudios.socialengine.rt.annotation.Private;
 
+import java.io.Closeable;
 import java.io.IOException;
 
 /**
  * Opens a {@link DocWriter}.
  */
 @Private
-public interface DocWriter {
+public interface DocWriter extends Closeable {
 
     /**
      * Opens a {@link DocRootWriter} used to write the contents of the supplied {@link DocRoot}. Once finished, the
@@ -19,5 +20,8 @@ public interface DocWriter {
      * @throws IOException if there is a problem opening the {@link DocRootWriter}.
      */
     DocRootWriter open(final DocRoot docRoot) throws IOException;
+
+    @Override
+    default void close() throws IOException {}
 
 }

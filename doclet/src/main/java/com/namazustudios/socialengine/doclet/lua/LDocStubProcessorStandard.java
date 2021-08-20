@@ -10,6 +10,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -117,7 +118,7 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
         field.setType(typeDescription);
         field.setSummary(summary);
         field.setDescription(description);
-        field.setConstantValue(constantValue.toString());
+        field.setConstantValue(constantValue);
 
     }
 
@@ -129,21 +130,23 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
         final var returnType = enclosed.getReturnType();
         final var returnTypeDescription = LDocTypes.getTypeDescription(returnType);
 
-        final var returnComment = comments
-            .getBlockTags()
-            .stream()
-            .filter(dt -> RETURN.equals(dt.getKind()))
-            .map(DocCommentTags::getReturnComment)
-            .findFirst()
-            .orElse("");
+        final var returnComment = comments == null ? "" : comments
+                .getBlockTags()
+                .stream()
+                .filter(dt -> RETURN.equals(dt.getKind()))
+                .map(DocCommentTags::getReturnComment)
+                .findFirst()
+                .orElse("");
 
         final var method = stub.addMethod(name.toString());
 
-        final var docTreeParameters = comments.getBlockTags()
-            .stream()
-            .filter(dt -> PARAM.equals(dt.getKind()))
-            .map(ParamTree.class::cast)
-            .collect(toList());
+        final var docTreeParameters = comments == null
+            ? Collections.<ParamTree>emptyList()
+            : comments.getBlockTags()
+                .stream()
+                .filter(dt -> PARAM.equals(dt.getKind()))
+                .map(ParamTree.class::cast)
+                .collect(toList());
 
         method.addReturnValue(returnTypeDescription, returnComment);
         processParameters(enclosed.getParameters(), method, docTreeParameters);
@@ -176,7 +179,9 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
         final var ctor = stub.addConstructor();
         final var comments = docContext.getDocTrees().getDocCommentTree(enclosed);
 
-        final var docTreeParameters = comments.getBlockTags()
+        final var docTreeParameters = comments == null
+            ? Collections.<ParamTree>emptyList()
+            : comments.getBlockTags()
                 .stream()
                 .filter(dt -> PARAM.equals(dt.getKind()))
                 .map(ParamTree.class::cast)

@@ -59,6 +59,8 @@ public class LDocRootStubClass implements DocRoot {
     public void write(final DocRootWriter writer) {
 
         getHeader().write(writer);
+        writer.printCopyrightNotice("--");
+
         writer.println();
 
         writer.printlnf("class %s", getHeader().getName());

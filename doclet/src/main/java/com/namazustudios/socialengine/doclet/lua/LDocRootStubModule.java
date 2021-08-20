@@ -57,6 +57,9 @@ public class LDocRootStubModule implements DocRoot {
     public void write(final DocRootWriter writer) {
 
         getHeader().write(writer);
+        writer.printCopyrightNotice("--");
+
+        writer.println();
 
         final var table = moduleDefinition.value().replaceAll("\\.", "_");
 

@@ -63,6 +63,10 @@ public class StreamDocRootWriter implements DocRootWriter {
     @Override
     public Indentation indent() {
 
+        final var prefix = range(0, indentations.size() + 1)
+            .mapToObj(i -> StreamDocRootWriter.this.indentation)
+            .collect(joining());
+
         final var indentation = new Indentation() {
 
             boolean open = true;
@@ -84,9 +88,8 @@ public class StreamDocRootWriter implements DocRootWriter {
 
             @Override
             public String getPrefix() {
-                return range(0, indentations.size())
-                    .mapToObj(i -> StreamDocRootWriter.this.indentation)
-                    .collect(joining());
+                if (!open) throw new IllegalStateException("Not indented.");
+                return prefix;
             }
 
             @Override
@@ -119,11 +122,6 @@ public class StreamDocRootWriter implements DocRootWriter {
     @Override
     public String getCopyrightNotice() {
         return copyrightNotice;
-    }
-
-    @Override
-    public void close() {
-        ps().close();
     }
 
 }

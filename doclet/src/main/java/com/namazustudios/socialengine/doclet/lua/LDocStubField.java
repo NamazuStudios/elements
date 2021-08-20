@@ -60,7 +60,11 @@ public class LDocStubField {
         return constantValue;
     }
 
-    public void setConstantValue(String constantValue) {
+    public void setConstantValue(final Object constantValue) {
+        this.constantValue = constantValue == null ? "" : constantValue.toString();
+    }
+
+    public void setConstantValue(final String constantValue) {
         this.constantValue = nullToEmpty(constantValue).trim();
     }
 

@@ -35,16 +35,6 @@ public interface Constants {
     /**
      * The ELEMENTS_HOME environment variable.
      */
-    String ELEMENTS_HOME = "ELEMENTS_HOME";
-
-    /**
-     * The default elements configuration directory.
-     */
-    String ELEMENTS_HOME_DEFAULT = "/opt/elements";
-
-    /**
-     * The ELEMENTS_HOME environment variable.
-     */
     String CONFIGURATION_DIRECTORY = "conf";
 
     /**

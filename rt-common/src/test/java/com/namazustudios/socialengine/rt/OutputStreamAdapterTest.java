@@ -1,44 +1,35 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
-import java.io.OutputStream;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.WritableByteChannel;
-import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.Deque;
 import java.util.Random;
-import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.stream.IntStream;
 
-import static com.namazustudios.socialengine.rt.util.OutputStreamAdapter.FLUSH;
 import static java.lang.String.format;
 import static java.nio.ByteBuffer.allocateDirect;
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
-import static java.nio.file.Files.createTempFile;
-import static java.nio.file.Files.deleteIfExists;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 public class OutputStreamAdapterTest {
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(OutputStreamAdapterTest.class);
 
     private static final int BLOCKS_TO_WRITE = 1024;
 
     private static final int WRITE_OPERATIONS = 1024 * 8;
-
-    private static final Deque<java.nio.file.Path> paths = new ConcurrentLinkedDeque<>();
 
     private final BiFunction<WritableByteChannel, ByteBuffer, OutputStreamAdapter> supplier;
 
@@ -56,21 +47,14 @@ public class OutputStreamAdapterTest {
 
     @AfterClass
     public static void cleanup() {
-        paths.forEach(p -> {
-            try {
-                deleteIfExists(p);
-            } catch (IOException ex) {
-                fail("Failed to clean up.", ex);
-            }
-        });
+        temporaryFiles.deleteTempFilesAndDirectories();
     }
-
 
     @Test
     public void testWriteSingleByte() throws IOException {
 
-        final java.nio.file.Path testFilePath = createTemporary();
-        final java.nio.file.Path referenceFilePath = createTemporary();
+        final java.nio.file.Path testFilePath = temporaryFiles.createTempFile();
+        final java.nio.file.Path referenceFilePath = temporaryFiles.createTempFile();
 
         final Random random = ThreadLocalRandom.current();
         final ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[4096]);
@@ -99,8 +83,8 @@ public class OutputStreamAdapterTest {
     @Test
     public void testWriteBufferArray() throws IOException {
 
-        final java.nio.file.Path testFilePath = createTemporary();
-        final java.nio.file.Path referenceFilePath = createTemporary();
+        final java.nio.file.Path testFilePath = temporaryFiles.createTempFile();
+        final java.nio.file.Path referenceFilePath = temporaryFiles.createTempFile();
 
         final Random random = ThreadLocalRandom.current();
         final ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[4096]);
@@ -128,8 +112,8 @@ public class OutputStreamAdapterTest {
     @Test(invocationCount = 10, threadPoolSize = 10)
     public void testMixedWrites() throws IOException {
 
-        final java.nio.file.Path testFilePath = createTemporary();
-        final java.nio.file.Path referenceFilePath = createTemporary();
+        final java.nio.file.Path testFilePath = temporaryFiles.createTempFile();
+        final java.nio.file.Path referenceFilePath = temporaryFiles.createTempFile();
 
         final Random random = ThreadLocalRandom.current();
         final ByteBuffer byteBuffer = ByteBuffer.wrap(new byte[1024 * 8]);
@@ -187,12 +171,6 @@ public class OutputStreamAdapterTest {
             assertEquals(mba, mbb, format("File contents must match %s != %s", a, b));
 
         }
-    }
-
-    private static java.nio.file.Path createTemporary() throws IOException {
-        final java.nio.file.Path path = createTempFile(OutputStreamAdapterTest.class.getSimpleName(), "garbage");
-        paths.add(path);
-        return path;
     }
 
 }

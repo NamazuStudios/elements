@@ -1,12 +1,13 @@
 package com.namazustudios.socialengine.doclet;
 
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
+
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.regex.Pattern;
 
-import static java.nio.file.Files.createTempDirectory;
+import static java.nio.file.Files.createDirectories;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.StreamSupport.stream;
@@ -15,6 +16,8 @@ import static java.util.stream.StreamSupport.stream;
  * Writes docs toa  directory
  */
 public class DirectoryDocWriter implements DocWriter {
+
+    private static final TemporaryFiles tempFiles = new TemporaryFiles(DirectoryDocWriter.class);
 
     private final Path root;
 
@@ -31,7 +34,7 @@ public class DirectoryDocWriter implements DocWriter {
                               final String indentation,
                               final String newline,
                               final String copyrightNotice) {
-        this.root = root;
+        this.root = root.toAbsolutePath();
         this.maxColumns = maxColumns;
         this.indentation = indentation;
         this.newline = newline;
@@ -40,13 +43,20 @@ public class DirectoryDocWriter implements DocWriter {
 
     @Override
     public DocRootWriter open(final DocRoot docRoot) throws IOException {
-        final var separator = root.getFileSystem().getSeparator();
-        final var rootStream = stream(root.spliterator(), false).map(Path::toString);
+
+        // Builds the Path
+        final var separator = getRoot().getFileSystem().getSeparator();
+        final var rootStream = stream(getRoot().spliterator(), false).map(Path::toString);
         final var relativeStream = docRoot.getRelativePath().stream();
-        final var filePathString = concat(rootStream, relativeStream).collect(joining(separator));
+        final var filePathString = separator + concat(rootStream, relativeStream).collect(joining(separator));
         final var filePath = Paths.get(filePathString);
+        createDirectories(filePath.getParent());
+
+        // Creates the writer
         final var fos = new FileOutputStream(filePath.toFile());
-        return new StreamDocRootWriter(fos, maxColumns, indentation, newline, copyrightNotice);
+        final var writer = new StreamDocRootWriter(fos, maxColumns, indentation, newline, copyrightNotice);
+        return writer;
+
     }
 
     /**
@@ -59,8 +69,6 @@ public class DirectoryDocWriter implements DocWriter {
     }
 
     public static class Builder {
-
-        private static final Pattern INDENTATION = Pattern.compile("\\s+");
 
         private Path root;
 
@@ -85,15 +93,11 @@ public class DirectoryDocWriter implements DocWriter {
         }
 
         public Builder withTemporaryDirectory() throws IOException {
-            this.root = createTempDirectory(DirectoryDocWriter.class.getSimpleName());
+            this.root = tempFiles.createTempDirectory();
             return this;
         }
 
         public Builder withIndentation(final String indentation) {
-
-            if (!INDENTATION.matcher(indentation).matches())
-                throw new IllegalArgumentException("Invalid indentation: " + indentation);
-
             this.indentation = indentation;
             return this;
         }
@@ -109,6 +113,9 @@ public class DirectoryDocWriter implements DocWriter {
         }
 
         public DirectoryDocWriter build() {
+
+            if (root == null) throw new IllegalStateException("Directory root not specified.");
+
             return new DirectoryDocWriter(
                 root,
                 maxColumns,
@@ -116,6 +123,7 @@ public class DirectoryDocWriter implements DocWriter {
                 newline,
                 copyrightNotice
             );
+
         }
 
     }
