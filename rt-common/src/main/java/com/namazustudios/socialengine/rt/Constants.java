@@ -48,7 +48,7 @@ public interface Constants {
     String ELEMENTS_TEMP_PURGE = "ELEMENTS_TEMP_PURGE";
 
     /**
-     * Default for {@link #ELEMENTS_TEMP_PURGE}
+     * Default for {@link #ELEMENTS_TEMP_PURGE}.
      */
     String ELEMENTS_TEMP_PURGE_DEFAULT = "true";
 
