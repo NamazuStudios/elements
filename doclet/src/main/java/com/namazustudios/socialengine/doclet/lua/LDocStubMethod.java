@@ -12,9 +12,9 @@ import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 
 public class LDocStubMethod {
 
-    private String summary;
+    private String summary = "";
 
-    private String description;
+    private String description = "";
 
     private final String name;
 
