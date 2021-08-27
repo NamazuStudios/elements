@@ -41,17 +41,27 @@ public interface DocProcessor<StubT extends DocRoot> {
         final var exposeEnum = getExposedEnum(typeElement);
         final var intrinsic = getIntrinsic(typeElement);
 
-        if (expose != null)
+        boolean skipStandardProcessing = false;
+
+        if (expose != null) {
+            skipStandardProcessing = true;
             processors.add(new LDocStubProcessorExpose(cxt, typeElement, expose));
+        }
 
-        if (exposeEnum != null)
+
+        if (exposeEnum != null) {
+            skipStandardProcessing = true;
             processors.add(new LDocStubProcessorExpose(cxt, typeElement, exposeEnum));
+        }
 
-        if (intrinsic != null)
+        if (intrinsic != null) {
+            skipStandardProcessing = true;
             processors.add(new LDocStubProcessorIntrinsic(cxt, intrinsic, typeElement));
+        }
 
-        if (isStandard(typeElement))
+        if (!skipStandardProcessing && isStandard(typeElement)) {
             processors.add(new LDocStubProcessorStandard(cxt, typeElement));
+        }
 
         for (var enclosed : typeElement.getEnclosedElements()) {
             switch (enclosed.getKind()) {

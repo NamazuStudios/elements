@@ -8,7 +8,7 @@ import java.util.function.Supplier;
  *
  * @param <T>
  */
-public class LazyValue<T> {
+public class LazyValue<T> implements Supplier<T> {
 
     private static final Object UNASSIGNED = new Object() {
         @Override

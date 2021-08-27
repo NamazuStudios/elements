@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.DocProcessor;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
@@ -10,7 +11,6 @@ import com.sun.source.doctree.ParamTree;
 
 import javax.lang.model.element.*;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
@@ -53,6 +53,7 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
     public List<LDocRootStubModule> process() {
 
         final var stubs = Arrays.stream(moduleDefinitions)
+            .map(ModuleDefinitionMetadata::fromAnnotation)
             .map(LDocRootStubModule::new)
             .collect(toList());
 
@@ -65,12 +66,12 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
             final var body = comments.getFullBody()
                 .stream()
                 .map(DocCommentTags::getText)
-                .collect(Collectors.joining());
+                .collect(joining());
 
             final var summary = comments.getFirstSentence()
                 .stream()
                 .map(DocCommentTags::getText)
-                .collect(Collectors.joining());
+                .collect(joining());
 
             comments
                 .getBlockTags()
@@ -110,15 +111,15 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
 
         final var name = enclosed.getSimpleName();
 
-        final var summary = comments.getFirstSentence()
+        final var summary = comments == null ? "" : comments.getFirstSentence()
             .stream()
             .map(DocCommentTags::getText)
-            .collect(Collectors.joining());
+            .collect(joining());
 
-        final var description = comments.getBody()
+        final var description = comments == null ? "" : comments.getBody()
             .stream()
             .map(DocCommentTags::getText)
-            .collect(Collectors.joining());
+            .collect(joining());
 
         final var modifiers = enclosed.getModifiers();
         final var constantValue = enclosed.getConstantValue();
@@ -147,7 +148,19 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
         final var returnType = enclosed.getReturnType();
         final var returnTypeDescription = LDocTypes.getTypeDescription(returnType);
 
-        final var returnComment = comments
+        final var summary = comments == null ? "" : comments
+            .getFirstSentence()
+            .stream()
+            .map(DocCommentTags::getText)
+            .collect(joining());
+
+        final var description = comments == null ? "" : comments
+            .getBody()
+            .stream()
+            .map(DocCommentTags::getText)
+            .collect(joining());
+
+        final var returnComment = comments == null ? "" : comments
             .getBlockTags()
             .stream()
             .filter(dt -> RETURN.equals(dt.getKind()))
@@ -156,12 +169,15 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
             .orElse("");
 
         final var method = stub.addMethod(name.toString());
+        method.setSummary(summary);
+        method.setDescription(description);
 
-        final var docTreeParameters = comments.getBlockTags()
-            .stream()
-            .filter(dt -> PARAM.equals(dt.getKind()))
-            .map(ParamTree.class::cast)
-            .collect(toList());
+        final var docTreeParameters =
+            comments == null ? Collections.<ParamTree>emptyList() : comments.getBlockTags()
+                .stream()
+                .filter(dt -> PARAM.equals(dt.getKind()))
+                .map(ParamTree.class::cast)
+                .collect(toList());
 
         method.addReturnValue(returnTypeDescription, returnComment);
         processParameters(enclosed.getParameters(), method, docTreeParameters);

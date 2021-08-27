@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Strings;
+import com.namazustudios.socialengine.doclet.CompoundDescription;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
-import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -12,6 +11,7 @@ import java.util.Objects;
 import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.*;
+import static java.lang.String.format;
 
 public class LDocStubModuleHeader {
 
@@ -21,48 +21,35 @@ public class LDocStubModuleHeader {
 
     private final List<String> authors = new ArrayList<>();
 
-    private final List<String> metadata = new ArrayList<>();
+    private final CompoundDescription metadata = new CompoundDescription("\n");
 
     private final List<LDocStubField> fields = new ArrayList<>();
 
-    private final ModuleDefinition moduleDefinition;
+    private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
-    public LDocStubModuleHeader(final ModuleDefinition moduleDefinition) {
-        this.moduleDefinition = moduleDefinition;
-        addMetadata(moduleDefinition.toString());
-    }
+    public LDocStubModuleHeader(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
 
-    private String buildMetadataForDefinition() {
+        this.moduleDefinitionMetadata = moduleDefinitionMetadata;
 
-        final var sb = new StringBuilder();
+        final var deprecation = moduleDefinitionMetadata.getDeprecationMetadata();
 
-        final var deprecated = moduleDefinition.deprecated();
-        final var annotation = moduleDefinition.annotation().value();
-
-        sb.append("Module ").append(moduleDefinition.value());
-
-        if (!annotation.isAssignableFrom(ExposedBindingAnnotation.Undefined.class)) {
-            sb.append(" ").append(annotation.getSimpleName());
+        if (deprecation.isDeprecated()) {
+            final var message = format("Deprecated: %s", deprecation.getDeprecationMessage());
+            getMetadata().appendDescription(message);
         }
-
-        if (deprecated.deprecated()) {
-            sb.append(" ").append(deprecated.value());
-        }
-
-        return sb.toString();
 
     }
 
-    public List<String> getMetadata() {
+    public CompoundDescription getMetadata() {
         return metadata;
     }
 
     public void addMetadata(final String metadata) {
-        this.metadata.add(metadata);
+        this.metadata.appendDescription(metadata);
     }
 
     public String getModule() {
-        return moduleDefinition.value();
+        return moduleDefinitionMetadata.getName();
     }
 
     public String getSummary() {
@@ -94,9 +81,16 @@ public class LDocStubModuleHeader {
     }
 
     public LDocStubField addField(final String name, final CaseFormat source) {
-        final var field = new LDocStubField(source, moduleDefinition.style().constantCaseFormat(), name);
+
+        final var constantCaseFormat = moduleDefinitionMetadata
+            .getOutputCodeStyle()
+            .getConstantCaseFormat();
+
+        final var field = new LDocStubField(source, constantCaseFormat, name);
         fields.add(field);
+
         return field;
+
     }
 
     @Override
@@ -104,7 +98,7 @@ public class LDocStubModuleHeader {
         final StringBuilder sb = new StringBuilder("LDocStubHeader{");
         sb.append("description='").append(description).append('\'');
         sb.append(", authors=").append(authors);
-        sb.append(", exposedModuleDefinition=").append(moduleDefinition);
+        sb.append(", exposedModuleDefinition=").append(moduleDefinitionMetadata);
         sb.append('}');
         return sb.toString();
     }
@@ -123,13 +117,7 @@ public class LDocStubModuleHeader {
             .filter(s -> !isNullOrEmpty(s))
             .forEach(s -> writer.printlnf("-- %s", s));
 
-        var module = Stream.of(moduleDefinition.value().split("\\."))
-            .reduce((first, second) -> second)
-            .stream()
-            .findFirst()
-            .get();
-
-        writer.printlnf("-- @module %s", module);
+        writer.printlnf("-- @module %s", moduleDefinitionMetadata.getName());
 
         getFields().forEach(f -> f.write(writer));
 

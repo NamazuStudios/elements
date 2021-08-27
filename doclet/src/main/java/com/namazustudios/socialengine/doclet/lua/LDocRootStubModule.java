@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocRoot;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
-import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,11 +18,11 @@ public class LDocRootStubModule implements DocRoot {
 
     private final List<LDocStubMethod> methods = new ArrayList<>();
 
-    private final ModuleDefinition moduleDefinition;
+    private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
-    public LDocRootStubModule(final ModuleDefinition moduleDefinition) {
-        header = new LDocStubModuleHeader(moduleDefinition);
-        this.moduleDefinition = moduleDefinition;
+    public LDocRootStubModule(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
+        header = new LDocStubModuleHeader(moduleDefinitionMetadata);
+        this.moduleDefinitionMetadata = moduleDefinitionMetadata;
     }
 
     public LDocStubModuleHeader getHeader() {
@@ -34,7 +34,7 @@ public class LDocRootStubModule implements DocRoot {
     }
 
     public LDocStubMethod addMethod(final String name) {
-        final var method = new LDocStubMethod(name, moduleDefinition);
+        final var method = new LDocStubMethod(name, moduleDefinitionMetadata);
         getMethods().add(method);
         return method;
     }
@@ -43,7 +43,7 @@ public class LDocRootStubModule implements DocRoot {
     public List<String> getRelativePath() {
 
         final var components = Stream
-          .of(moduleDefinition.value().split("\\."))
+          .of(moduleDefinitionMetadata.getName().split("\\."))
           .collect(toList());
 
         final var file = format("%s.lua", components.remove(components.size() - 1));
@@ -61,8 +61,9 @@ public class LDocRootStubModule implements DocRoot {
 
         writer.println();
 
-        final var table = moduleDefinition.value().replaceAll("\\.", "_");
+        final var table = moduleDefinitionMetadata.getName().replaceAll("\\.", "_");
 
+        writer.println();
         writer.printlnf("local %s = {}", table);
 
         getMethods().forEach(m -> {
@@ -86,8 +87,13 @@ public class LDocRootStubModule implements DocRoot {
             .collect(joining(","));
 
         writer.printlnf("function %s.%s(%s)", table, name, params);
-        writer.println("-- Stub ");
+
+        try (var indent = writer.indent()) {
+            writer.println("-- Stub ");
+        }
+
         writer.println("end");
+        writer.println();
 
     }
 
@@ -96,7 +102,6 @@ public class LDocRootStubModule implements DocRoot {
         final StringBuilder sb = new StringBuilder("LDocStubModule{");
         sb.append("header=").append(header);
         sb.append(", methods=").append(methods);
-        sb.append(", exposedModuleDefinition=").append(moduleDefinition);
         sb.append('}');
         return sb.toString();
     }

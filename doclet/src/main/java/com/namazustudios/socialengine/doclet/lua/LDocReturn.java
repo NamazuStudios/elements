@@ -42,7 +42,7 @@ public class LDocReturn {
         final var type = nullToEmpty(getType()).trim();
         final var description = nullToEmpty(getDescription()).trim();
 
-        if (!type.isEmpty()) sb.append(" ").append(type);
+        if (!type.isEmpty()) sb.append("[type=").append(type).append(("]"));
         if (!description.isEmpty()) sb.append(" ").append(description);
 
         writer.println(sb);

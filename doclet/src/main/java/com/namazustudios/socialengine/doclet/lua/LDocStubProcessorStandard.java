@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.DocProcessor;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
 import com.sun.source.doctree.ParamTree;
 
@@ -14,6 +15,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Stream;
 
+import static com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata.fromJavaClassName;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.lang.String.format;
@@ -44,21 +46,17 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
 
         final var docTree = docContext.getDocTrees().getDocCommentTree(typeElement);
 
-        final var relative = Stream
-            .of(typeElement.getQualifiedName().toString().split("\\."))
-            .collect(toList());
+        final var deprecated = typeElement.getAnnotation(Deprecated.class);
+        final var moduleDefinitionMetadata = fromJavaClassName(typeElement.getQualifiedName().toString(), deprecated);
 
-        final var file = format("%s.moon", relative.remove(relative.size() - 1));
-        relative.add(file);
-
-        final var stubClass = new LDocRootStubClass(typeElement.getQualifiedName().toString(), relative);
+        final var stubClass = new LDocRootStubClass(moduleDefinitionMetadata);
 
         final var summary = docTree.getFirstSentence()
             .stream()
             .map(DocCommentTags::getText)
             .collect(joining());
 
-        final var description = docTree.getFullBody()
+        final var description = docTree.getBody()
             .stream()
             .map(DocCommentTags::getText)
             .collect(joining());
@@ -78,6 +76,9 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
 
             if (modifiers.contains(PUBLIC) || modifiers.contains(PROTECTED)) {
                 switch (enclosed.getKind()) {
+                    case CLASS:
+                        process(classes, (TypeElement) enclosed);
+                        break;
                     case FIELD:
                     case ENUM_CONSTANT:
                         processField(stubClass, (VariableElement) enclosed);
@@ -92,6 +93,8 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
             }
 
         }
+
+        classes.add(stubClass);
 
     }
 
@@ -130,15 +133,27 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
         final var returnType = enclosed.getReturnType();
         final var returnTypeDescription = LDocTypes.getTypeDescription(returnType);
 
+        final var summary = comments == null ? "" : comments.getFirstSentence()
+            .stream()
+            .map(DocCommentTags::getText)
+            .collect(joining());
+
+        final var description = comments == null ? "" : comments.getBody()
+            .stream()
+            .map(DocCommentTags::getText)
+            .collect(joining());
+
         final var returnComment = comments == null ? "" : comments
-                .getBlockTags()
-                .stream()
-                .filter(dt -> RETURN.equals(dt.getKind()))
-                .map(DocCommentTags::getReturnComment)
-                .findFirst()
-                .orElse("");
+            .getBlockTags()
+            .stream()
+            .filter(dt -> RETURN.equals(dt.getKind()))
+            .map(DocCommentTags::getReturnComment)
+            .findFirst()
+            .orElse("");
 
         final var method = stub.addMethod(name.toString());
+        method.setSummary(summary);
+        method.setDescription(description);
 
         final var docTreeParameters = comments == null
             ? Collections.<ParamTree>emptyList()

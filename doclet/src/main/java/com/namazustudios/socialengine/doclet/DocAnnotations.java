@@ -10,7 +10,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 /**
- * Used to document annotations in various types when processsing documetnation.
+ * Used to document annotations in various types when processing documentation.
  */
 @Private
 public class DocAnnotations {

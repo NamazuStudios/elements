@@ -2,13 +2,16 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocRoot;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.List.copyOf;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
 
 public class LDocRootStubClass implements DocRoot {
 
@@ -16,13 +19,26 @@ public class LDocRootStubClass implements DocRoot {
 
     private final LDocStubClassHeader header;
 
+    private final ModuleDefinitionMetadata moduleDefinitionMetadata;
+
     private final List<LDocStubMethod> methods = new ArrayList<>();
 
     private final List<LDocConstructor> constructors = new ArrayList<>();
 
-    public LDocRootStubClass(final String name, final List<String> relativePath) {
-        header = new LDocStubClassHeader(name);
+    public LDocRootStubClass(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
+
+        final var relativePath = Stream
+            .of(moduleDefinitionMetadata.getName().toString().split("\\."))
+            .collect(toList());
+
+        final var file = format("%s.moon", relativePath.remove(relativePath.size() - 1));
+        relativePath.add(file);
+
+        header = new LDocStubClassHeader(moduleDefinitionMetadata);
+
+        this.moduleDefinitionMetadata = moduleDefinitionMetadata;
         this.relativePath = copyOf(relativePath);
+
     }
 
     public LDocStubClassHeader getHeader() {
@@ -34,7 +50,7 @@ public class LDocRootStubClass implements DocRoot {
     }
 
     public LDocStubMethod addMethod(final String name) {
-        final var method = new LDocStubMethod(name);
+        final var method = new LDocStubMethod(name, moduleDefinitionMetadata);
         getMethods().add(method);
         return method;
     }
@@ -72,10 +88,13 @@ public class LDocRootStubClass implements DocRoot {
             switch (ctors.size()) {
                 case 0:
                     writeDefaultConstructor(writer);
+                    break;
                 case 1:
                     writeSingleConstructor(writer);
+                    break;
                 default:
                     writeAggregateConstructor(writer);
+                    break;
             }
 
             getMethods().forEach(m -> {
@@ -115,15 +134,17 @@ public class LDocRootStubClass implements DocRoot {
         final var name = method.getName();
 
         final var params = method.getParameters()
-                .stream()
-                .map(LDocParameter::getName)
-                .collect(joining(","));
+            .stream()
+            .map(LDocParameter::getName)
+            .collect(joining(","));
 
         writer.printlnf("%s: (%s) =>", name, params);
 
         try (var indent = writer.indent()) {
             writer.println("-- Stub ");
         }
+
+        writer.println();
 
     }
 

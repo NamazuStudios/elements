@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.DocProcessor;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 import com.namazustudios.socialengine.rt.annotation.Intrinsic;
 
 import javax.lang.model.element.TypeElement;
@@ -30,7 +31,7 @@ public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModu
     @Override
     public List<LDocRootStubModule> process() {
 
-        final var stubs = Arrays.stream(intrinsic.value())
+        final var stubs = ModuleDefinitionMetadata.streamFrom(intrinsic)
             .map(LDocRootStubModule::new)
             .collect(toList());
 
@@ -50,9 +51,14 @@ public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModu
             }
 
             for (var method : intrinsic.methods()) {
+
                 final var m = stub.addMethod(method.value());
+                m.setSummary(method.summary());
+                m.setDescription(method.description());
+
                 for (var ret : method.returns()) m.addReturnValue(ret.type(), ret.comment());
                 for (var param : method.parameters()) m.addParameter(param.value(), param.type(), param.comment());
+
             }
 
         }

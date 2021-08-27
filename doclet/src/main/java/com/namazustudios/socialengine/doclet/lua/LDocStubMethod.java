@@ -1,14 +1,10 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocRootWriter;
-import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Function;
-import java.util.stream.IntStream;
-
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
 
 public class LDocStubMethod {
 
@@ -18,21 +14,25 @@ public class LDocStubMethod {
 
     private final String name;
 
-    private final Function<String, String> parameterNameTransform;
+    private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
     private final List<LDocReturn> returnValues = new ArrayList<>();
 
     private final List<LDocParameter> parameters = new ArrayList<>();
 
-    public LDocStubMethod(final String name) {
-        this.name = name;
-        this.parameterNameTransform = n -> n;
-    }
+    public LDocStubMethod(final String name, final ModuleDefinitionMetadata moduleDefinitionMetadata) {
 
-    public LDocStubMethod(final String name, final ModuleDefinition moduleDefinition) {
-        final var format = moduleDefinition.style().methodCaseFormat();
-        this.name = LOWER_CAMEL.to(format, name);
-        this.parameterNameTransform = n -> LOWER_CAMEL.to(moduleDefinition.style().parameterCaseFormat(), n);
+        final var inputFormat = moduleDefinitionMetadata
+            .getInputCodeStyle()
+            .getMethodCaseFormat();
+
+        final var outputFormat = moduleDefinitionMetadata
+            .getOutputCodeStyle()
+            .getMethodCaseFormat();
+
+        this.name = inputFormat.to(outputFormat, name);
+        this.moduleDefinitionMetadata = moduleDefinitionMetadata;
+
     }
 
     public String getName() {
@@ -61,9 +61,21 @@ public class LDocStubMethod {
     }
 
     public LDocParameter addParameter(final String name) {
-        final var param = new LDocParameter(parameterNameTransform.apply(name));
+
+        final var inputFormat = moduleDefinitionMetadata
+            .getOutputCodeStyle()
+            .getParameterCaseFormat();
+
+        final var outputFormat = moduleDefinitionMetadata
+            .getOutputCodeStyle()
+            .getParameterCaseFormat();
+
+        final var param = new LDocParameter(inputFormat.to(outputFormat, name));
+
         parameters.add(param);
+
         return param;
+
     }
 
     public LDocParameter addParameter(final String name, final String typeDescription, final String comment) {

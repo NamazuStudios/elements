@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.doclet.lua;
 
-import com.google.common.base.CaseFormat;
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
+import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,18 +15,18 @@ public class LDocStubClassHeader {
 
     private String description;
 
-    private final String name;
-
     private final List<String> authors = new ArrayList<>();
 
     private final List<LDocStubField> fields = new ArrayList<>();
 
-    public LDocStubClassHeader(final String name) {
-        this.name = name;
+    private final ModuleDefinitionMetadata moduleDefinitionMetadata;
+
+    public LDocStubClassHeader(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
+        this.moduleDefinitionMetadata = moduleDefinitionMetadata;
     }
 
     public String getName() {
-        return name;
+        return moduleDefinitionMetadata.getName();
     }
 
     public List<String> getAuthors() {

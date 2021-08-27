@@ -9,11 +9,10 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.*;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.Deque;
-import java.util.concurrent.ConcurrentLinkedDeque;
 
 import static com.namazustudios.socialengine.rt.Constants.*;
 import static java.lang.String.format;
+import static java.nio.file.FileVisitResult.CONTINUE;
 import static java.nio.file.Files.*;
 
 /**
@@ -24,6 +23,8 @@ import static java.nio.file.Files.*;
  * This {@link TemporaryFiles} type controls disk location using a set of environment variables. If, for some reason,
  * this instance cannot use the configured path this will log a warning and defer to the value of the "java.io.tmpdir"
  * system property.
+ *
+ * This class is thread safe and is suitable for use in static memory space.
  *
  * {@see {@link Constants#ELEMENTS_TEMP}}
  * {@see {@link Constants#ELEMENTS_TEMP_DEFAULT}}
@@ -77,38 +78,49 @@ public class TemporaryFiles {
 
     }
 
-    private final Path root;
-
     private final String prefix;
 
+    private final ThreadSafeLazyValue<Path> root;
+
     /**
-     * Creates an instance of {@link TemporaryFiles} with the enclosing class.
-     * @param enclosingClass
+     * Creates an instance of {@link TemporaryFiles} with the enclosing class. This simply uses the supplied class'
+     * fully qualifie dname as the prefix such that the temporary files may be identified later.
+     *
+     * @param enclosingClass the enclosing class
      */
     public TemporaryFiles(final Class<?> enclosingClass) {
         this(enclosingClass.getName());
     }
 
+    /**
+     * Creates an instance of {@link TemporaryFiles} with the supplied prefix. The prefix is used in all subsequent
+     * operations to create and manage temporary files.
+     *
+     * @param prefix the prefix to use
+     */
     public TemporaryFiles(final String prefix) {
 
-        try {
-            this.root = Files.createTempDirectory(TEMPORARY_ROOT, prefix).toAbsolutePath().normalize();
-        } catch (IOException ex) {
-            throw new UncheckedIOException(ex);
-        }
+        this.root = new ThreadSafeLazyValue<>(() -> {
+            try {
+                return Files.createTempDirectory(TEMPORARY_ROOT, prefix).toAbsolutePath().normalize();
+            } catch (IOException ex) {
+                throw new UncheckedIOException(ex);
+            }
+        });
 
         this.prefix = prefix;
         shutdownHooks.add(this::deleteTempFilesAndDirectories);
-        shutdownHooks.add(() -> {
-            if (AUTO_PURGE_TEMP) deleteIfExists(root);
-        });
+        shutdownHooks.add(() -> { if (AUTO_PURGE_TEMP) deleteIfExists(root.get()); });
 
     }
 
+    /**
+     * Deletes all temporary files and directories created by this {@link TemporaryFiles} instance.
+     */
     public void deleteTempFilesAndDirectories() {
         if (AUTO_PURGE_TEMP) {
             try {
-                walkFileTree(root, new DeleteRecursive());
+                walkFileTree(root.get(), new DeleteRecursive());
             } catch (FileNotFoundException | NoSuchFileException ex) {
                 logger.trace("Could not delete temp file: {}", root, ex);
             } catch (IOException ex) {
@@ -117,16 +129,32 @@ public class TemporaryFiles {
         }
     }
 
+    /**
+     * Creates a temporary directory using this instance's prefix.
+     *
+     * @return the {@link Path} to the directory
+     * @throws UncheckedIOException if there is a problem creating the directory.
+     *
+     */
     public Path createTempDirectory() throws UncheckedIOException {
-        return createTempDirectory(prefix);
+        return createTempDirectory(null);
     }
 
+    /**
+     * Creates a temporary directory, using a specific prefix. The prefix supplied will be appended to this instance's
+     * prefix.
+     *
+     * @return the {@link Path} to the directory
+     * @throws UncheckedIOException if there is a problem creating the directory.
+     *
+     */
     public Path createTempDirectory(final String prefix) throws UncheckedIOException {
 
         final Path path;
 
         try {
-            path = Files.createTempDirectory(root, prefix);
+            final var fullPrefix = format("%s%s", this.prefix, prefix == null ? "" : prefix);
+            path = Files.createTempDirectory(root.get(), fullPrefix);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -135,21 +163,44 @@ public class TemporaryFiles {
 
     }
 
+    /**
+     * Creates a temporary file.
+     *
+     * @return the temporary file {@link Path}
+     *
+     * @throws UncheckedIOException if an error occurred creating the temporary file.
+     */
     public Path createTempFile() throws UncheckedIOException {
         return createTempFile(null);
     }
 
+    /**
+     * Creates a temporary file with the supplied suffix and the default prefix.
+     *
+     * @param suffix the suffix the suffix of the file.
+     * @return the temporary file {@link Path}
+     * @throws UncheckedIOException if an error occurred creating the temporary file.
+     */
     public Path createTempFile(final String suffix) throws UncheckedIOException {
         return createTempFile(null, suffix);
     }
 
+    /**
+     * Creates a temporary file with the supplied prefix and suffix.
+     *
+     * @param prefix the prefix
+     * @param suffix the suffix
+     * @return the temporary file {@link Path}
+     *
+     * @throws UncheckedIOException if an error occurred creating the temporary file.
+     */
     public Path createTempFile(final String prefix, final String suffix) throws UncheckedIOException {
 
         final Path path;
 
         try {
             final var fullPrefix = format("%s%s", this.prefix, prefix == null ? "" : prefix);
-            path = Files.createTempFile(root, fullPrefix, suffix);
+            path = Files.createTempFile(root.get(), fullPrefix, suffix);
         } catch (IOException ex) {
             throw new UncheckedIOException(ex);
         }
@@ -159,28 +210,31 @@ public class TemporaryFiles {
     }
 
     private class DeleteRecursive extends SimpleFileVisitor<Path> {
+
         @Override
         public FileVisitResult visitFile(final Path file,
                                          final BasicFileAttributes attrs) {
-
-            try {
-                if (!root.equals(file)) deleteIfExists(file);
-            } catch (IOException ex) {
-                logger.warn("Could not delete temp file: {}", file, ex);
-            }
-
-            return FileVisitResult.CONTINUE;
+            return safeDelete(file);
         }
 
-
         @Override
-        public FileVisitResult postVisitDirectory(final Path dir,
-                                                  final IOException exc) throws IOException {
-            if (!root.equals(dir)) deleteIfExists(dir);
-            return FileVisitResult.CONTINUE;
+        public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) {
+            return safeDelete(dir);
+        }
+
+        private FileVisitResult safeDelete(final Path path) {
+
+            try {
+                if (!root.get().equals(path)) deleteIfExists(path);
+            } catch (FileNotFoundException | NoSuchFileException ex) {
+                logger.trace("Could not delete temp file: {}", path, ex);
+            }catch (IOException ex) {
+                logger.warn("Could not delete temp file: {}", path, ex);
+            }
+
+            return CONTINUE;
         }
 
     }
-
 
 }
