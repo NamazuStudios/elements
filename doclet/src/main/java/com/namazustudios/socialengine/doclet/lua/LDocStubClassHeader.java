@@ -17,8 +17,6 @@ public class LDocStubClassHeader {
 
     private final List<String> authors = new ArrayList<>();
 
-    private final List<LDocStubField> fields = new ArrayList<>();
-
     private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
     public LDocStubClassHeader(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
@@ -64,16 +62,6 @@ public class LDocStubClassHeader {
     public void addExtraDescriptionFormat(final String extraDescriptionFmt, final Object ... args) {
         final var extra = format(extraDescriptionFmt, args);
         addExtraDescription(extra);
-    }
-
-    public List<LDocStubField> getFields() {
-        return fields;
-    }
-
-    public LDocStubField addField(final String name) {
-        final var field = new LDocStubField(name);
-        fields.add(field);
-        return field;
     }
 
     public void write(final DocRootWriter writer) {

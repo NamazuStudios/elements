@@ -1,15 +1,21 @@
 package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.visitor.ElementVisitorBuilder;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableMap;
@@ -81,11 +87,11 @@ public class LDocTypes {
             } else if (String.class.isAssignableFrom(cls)) {
                 return "string";
             } else {
-                return forGenericType(cls, declaredType);
+                return forGenericType(declaredType);
             }
 
         } catch (ClassNotFoundException e) {
-            throw new IllegalArgumentException(e);
+            return forGenericType(declaredType);
         }
 
     }
@@ -111,17 +117,41 @@ public class LDocTypes {
         return format("{%s}", elementTypeDescription);
     }
 
-    private static String forGenericType(final Class<?> cls, final DeclaredType declaredType) {
+    private static String forGenericType(final DeclaredType declaredType) {
 
         final var typeArguments = declaredType.getTypeArguments()
             .stream()
             .map(LDocTypes::getTypeDescription)
             .collect(joining(","));
 
-        return typeArguments.isEmpty()
-            ? cls.getName()
-            : format("%s(%s)", cls.getTypeName(), typeArguments);
+        final var typeElement = (TypeElement) declaredType.asElement();
 
+        final var exposeAnnotation = typeElement.getAnnotation(Expose.class);
+        final var exposeEnumAnnotation = typeElement.getAnnotation(ExposeEnum.class);
+
+        return streamTypeNames(exposeAnnotation, exposeEnumAnnotation)
+            .findFirst()
+            .orElseGet(() -> typeArguments.isEmpty()
+                ? typeElement.getQualifiedName().toString()
+                : format("%s(%s)", "", "")
+            );
+
+    }
+
+    private static Stream<String> streamTypeNames(final Expose expose, final ExposeEnum exposeEnum) {
+        return Stream.concat(
+            expose == null ? Stream.empty() : streamTypeNames(expose.value(), expose.modules()),
+            exposeEnum == null ? Stream.empty() : streamTypeNames(exposeEnum.value(), exposeEnum.modules())
+        );
+    }
+
+    private static Stream<String> streamTypeNames(
+            final ModuleDefinition [] moduleDefinitions,
+            final String[] deprecatedModuleNames) {
+        return Stream.concat(
+            Arrays.stream(moduleDefinitions).map(ModuleDefinition::value),
+            Arrays.stream(deprecatedModuleNames)
+        );
     }
 
 }

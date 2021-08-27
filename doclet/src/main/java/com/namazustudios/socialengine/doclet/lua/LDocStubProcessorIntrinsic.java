@@ -44,7 +44,7 @@ public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModu
             Stream.of(intrinsic.authors()).forEach(header::addAuthor);
 
             for (var constant : intrinsic.constants()) {
-                final var field = header.addField(constant.value(), constant.sourceCaseFormat());
+                final var field = stub.addConstant(constant.value());
                 field.setType(constant.type());
                 field.setDescription(constant.description());
                 field.setConstantValue(constant.literal());

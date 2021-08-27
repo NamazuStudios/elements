@@ -21,6 +21,8 @@ public class LDocRootStubClass implements DocRoot {
 
     private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
+    private final List<LDocStubField> constants = new ArrayList<>();
+
     private final List<LDocStubMethod> methods = new ArrayList<>();
 
     private final List<LDocConstructor> constructors = new ArrayList<>();
@@ -43,6 +45,16 @@ public class LDocRootStubClass implements DocRoot {
 
     public LDocStubClassHeader getHeader() {
         return header;
+    }
+
+    public List<LDocStubField> getConstants() {
+        return constants;
+    }
+
+    public LDocStubField addConstant(final String name) {
+        final var field = new LDocStubField(name);
+        constants.add(field);
+        return field;
     }
 
     public List<LDocStubMethod> getMethods() {

@@ -9,11 +9,14 @@ import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.sun.source.doctree.ParamTree;
 
-import javax.lang.model.element.*;
+import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import java.util.*;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isConstant;
+import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isPublic;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.util.Arrays.asList;
@@ -91,10 +94,10 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
                 switch (enclosed.getKind()) {
                     case FIELD:
                     case ENUM_CONSTANT:
-                        processField(stub, (VariableElement) enclosed);
+                        if (isConstant(enclosed)) processField(stub, (VariableElement) enclosed);
                         break;
                     case METHOD:
-                        processMethod(stub, (ExecutableElement) enclosed);
+                        if (isPublic(enclosed)) processMethod(stub, (ExecutableElement) enclosed);
                         break;
                 }
             }
@@ -125,14 +128,7 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
         final var constantValue = enclosed.getConstantValue();
         final var typeDescription = LDocTypes.getTypeDescription(enclosed.asType());
 
-        final LDocStubField field;
-
-        if (modifiers.contains(Modifier.STATIC) && modifiers.contains(Modifier.FINAL)) {
-            field = stub.getHeader().addField(name.toString(), UPPER_UNDERSCORE);
-        } else {
-            field = stub.getHeader().addField(name.toString(), LOWER_CAMEL);
-        }
-
+        final var field = stub.addConstant(name.toString());
         field.setType(typeDescription);
         field.setSummary(summary);
         field.setDescription(description);

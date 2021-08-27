@@ -23,8 +23,6 @@ public class LDocStubModuleHeader {
 
     private final CompoundDescription metadata = new CompoundDescription("\n");
 
-    private final List<LDocStubField> fields = new ArrayList<>();
-
     private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
     public LDocStubModuleHeader(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
@@ -34,8 +32,15 @@ public class LDocStubModuleHeader {
         final var deprecation = moduleDefinitionMetadata.getDeprecationMetadata();
 
         if (deprecation.isDeprecated()) {
-            final var message = format("Deprecated: %s", deprecation.getDeprecationMessage());
-            getMetadata().appendDescription(message);
+
+            final var message = deprecation.getDeprecationMessage().trim();
+
+            if (message.isEmpty()) {
+                addMetadata("_Deprecated._");
+            } else {
+                addMetadata(format("_Deprecated: %s_", message));
+            }
+
         }
 
     }
@@ -76,23 +81,6 @@ public class LDocStubModuleHeader {
         authors.add(author);
     }
 
-    public List<LDocStubField> getFields() {
-        return fields;
-    }
-
-    public LDocStubField addField(final String name, final CaseFormat source) {
-
-        final var constantCaseFormat = moduleDefinitionMetadata
-            .getOutputCodeStyle()
-            .getConstantCaseFormat();
-
-        final var field = new LDocStubField(source, constantCaseFormat, name);
-        fields.add(field);
-
-        return field;
-
-    }
-
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("LDocStubHeader{");
@@ -119,16 +107,12 @@ public class LDocStubModuleHeader {
 
         writer.printlnf("-- @module %s", moduleDefinitionMetadata.getName());
 
-        getFields().forEach(f -> f.write(writer));
-
         getAuthors()
             .stream()
             .filter(Objects::nonNull)
             .map(String::trim)
             .filter(s -> !isNullOrEmpty(s))
             .forEach(a -> writer.printlnf("-- @author %s", a));
-
-        writer.println();
 
     }
 

@@ -16,13 +16,14 @@ import java.util.List;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata.fromJavaClassName;
+import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isConstant;
+import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isPublic;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.PROTECTED;
-import static javax.lang.model.element.Modifier.PUBLIC;
+import static javax.lang.model.element.Modifier.*;
 
 public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass> {
 
@@ -77,17 +78,17 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
             if (modifiers.contains(PUBLIC) || modifiers.contains(PROTECTED)) {
                 switch (enclosed.getKind()) {
                     case CLASS:
-                        process(classes, (TypeElement) enclosed);
+                        if (isPublic(enclosed)) process(classes, (TypeElement) enclosed);
                         break;
                     case FIELD:
                     case ENUM_CONSTANT:
-                        processField(stubClass, (VariableElement) enclosed);
+                        if (isConstant(enclosed)) processField(stubClass, (VariableElement) enclosed);
                         break;
                     case METHOD:
-                        processMethod(stubClass, (ExecutableElement) enclosed);
+                        if (isPublic(enclosed)) processMethod(stubClass, (ExecutableElement) enclosed);
                         break;
                     case CONSTRUCTOR:
-                        processConstructor(stubClass, (ExecutableElement) enclosed);
+                        if (isPublic(enclosed)) processConstructor(stubClass, (ExecutableElement) enclosed);
                         break;
                 }
             }
@@ -117,7 +118,7 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
         final var constantValue = enclosed.getConstantValue();
         final var typeDescription = LDocTypes.getTypeDescription(enclosed.asType());
 
-        final var field = stub.getHeader().addField(name.toString());
+        final var field = stub.addConstant(name.toString());
         field.setType(typeDescription);
         field.setSummary(summary);
         field.setDescription(description);

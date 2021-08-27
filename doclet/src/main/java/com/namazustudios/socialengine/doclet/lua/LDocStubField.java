@@ -22,12 +22,6 @@ public class LDocStubField {
         this.name = name;
     }
 
-    public LDocStubField(final CaseFormat source,
-                         final CaseFormat destination,
-                         final String name) {
-        this (source.to(destination, name));
-    }
-
     public String getType() {
         return type;
     }
@@ -68,15 +62,24 @@ public class LDocStubField {
         this.constantValue = nullToEmpty(constantValue).trim();
     }
 
-    public void write(final DocRootWriter writer) {
-        if (!isNullOrEmpty(getName())) {
-            final var sb = new StringBuilder("-- @field ").append(getName());
-            if (!isNullOrEmpty(getType())) sb.append(" ").append(getType()).append(".");
-            if (!isNullOrEmpty(getConstantValue())) sb.append(" \"").append(getConstantValue()).append("\".");
-            if (!isNullOrEmpty(getSummary())) sb.append(" ").append(getSummary());
-            if (!isNullOrEmpty(getDescription())) sb.append(" ").append(getSummary());
-            writer.println(sb);
+    public void writeCommentHeader(final DocRootWriter writer) {
+
+        final var type = nullToEmpty(getType()).trim();
+        final var summary = nullToEmpty(getSummary()).trim();
+        final var description = nullToEmpty(getDescription()).trim();
+
+        if (summary.isEmpty()) {
+            writer.println("---");
+        } else {
+            writer.printlnf("--- %s", getSummary());
         }
+
+        if (!description.isEmpty()) writer.printBlock("--", getDescription());
+
+        final var sb = new StringBuilder("-- @field").append(getName());
+        if (!type.isEmpty()) sb.append("[type=").append(type).append(("]"));
+        if (!description.isEmpty()) sb.append(" ").append(description);
+
     }
 
 }
