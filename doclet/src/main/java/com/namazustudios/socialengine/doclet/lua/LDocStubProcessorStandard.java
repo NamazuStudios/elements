@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.DocProcessor;
-import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
 import com.sun.source.doctree.ParamTree;
 
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata.fromJavaClassName;
 import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isConstant;
@@ -23,7 +21,8 @@ import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static javax.lang.model.element.Modifier.*;
+import static javax.lang.model.element.Modifier.PROTECTED;
+import static javax.lang.model.element.Modifier.PUBLIC;
 
 public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass> {
 
@@ -66,10 +65,7 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
 
         header.setSummary(summary);
         header.setDescription(description);
-
-        header.addExtraDescriptionFormat(
-            "Note: Instantiate with java.require\"%s\"",
-            typeElement.getQualifiedName());
+        header.prependMetadata(format("@usage java.require \"%s\"", typeElement.getQualifiedName()));
 
         for (var enclosed : typeElement.getEnclosedElements()) {
 
@@ -169,26 +165,6 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
 
     }
 
-    private void processParameters(final List<? extends VariableElement> parameters,
-                                   final LDocStubMethod method,
-                                   final List<ParamTree> docTreeParameters) {
-        for (var param : parameters) {
-
-            final var name = param.getSimpleName();
-            final var type = LDocTypes.getTypeDescription(param.asType());
-            final var comment = docTreeParameters
-                .stream()
-                .filter(pt -> name.equals(pt.getName().getName()))
-                .map(ParamTree::getDescription)
-                .flatMap(Collection::stream)
-                .map(DocCommentTags::getText)
-                .collect(joining());
-
-            method.addParameter(name.toString(), type, comment);
-
-        }
-    }
-
     private void processConstructor(final LDocRootStubClass stub,
                                     final ExecutableElement enclosed) {
 
@@ -208,7 +184,7 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
     }
 
     private void processParameters(final List<? extends VariableElement> parameters,
-                                   final LDocConstructor ctor,
+                                   final LDocStubFunction ctor,
                                    final List<ParamTree> docTreeParameters) {
         for (var param : parameters) {
 

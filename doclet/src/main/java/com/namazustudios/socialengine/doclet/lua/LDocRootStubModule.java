@@ -8,9 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
-import static com.google.common.base.Strings.nullToEmpty;
 import static java.lang.String.format;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class LDocRootStubModule implements DocRoot {
@@ -19,12 +17,13 @@ public class LDocRootStubModule implements DocRoot {
 
     private final List<LDocStubField> constants = new ArrayList<>();
 
-    private final List<LDocStubMethod> methods = new ArrayList<>();
+    private final List<LDocStubFunction> functions = new ArrayList<>();
 
     private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
     public LDocRootStubModule(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
         header = new LDocStubModuleHeader(moduleDefinitionMetadata);
+        header.appendMetadata(format("@module %s", moduleDefinitionMetadata.getName()));
         this.moduleDefinitionMetadata = moduleDefinitionMetadata;
     }
 
@@ -52,14 +51,14 @@ public class LDocRootStubModule implements DocRoot {
         return header;
     }
 
-    public List<LDocStubMethod> getMethods() {
-        return methods;
+    public List<LDocStubFunction> getFunctions() {
+        return functions;
     }
 
-    public LDocStubMethod addMethod(final String name) {
-        final var method = new LDocStubMethod(name, moduleDefinitionMetadata);
-        getMethods().add(method);
-        return method;
+    public LDocStubFunction addFunction(final String name) {
+        final var function = new LDocStubFunction(name, moduleDefinitionMetadata);
+        getFunctions().add(function);
+        return function;
     }
 
     @Override
@@ -89,68 +88,19 @@ public class LDocRootStubModule implements DocRoot {
 
         getConstants().forEach(c -> {
             c.writeCommentHeader(writer);
-            writeConstantStub(table, c, writer);
+            c.writeConstantStub(writer, table);
         });
 
         if (!getConstants().isEmpty()) {
             writer.println();
         }
 
-        getMethods().forEach(m -> {
+        getFunctions().forEach(m -> {
             m.writeCommentHeader(writer);
-            writeMethodStub(table, m, writer);
+            m.writeFunctionStub(writer, table);
         });
 
         writer.printlnf("return %s", table);
-        writer.println();
-
-    }
-
-    private void writeConstantStub(final String table,
-                                   final LDocStubField constant,
-                                   final DocRootWriter writer) {
-        final var name = constant.getName();
-        final var constantValue = nullToEmpty(constant.getConstantValue()).trim();
-
-        try {
-            final var val = Long.parseLong(constantValue);
-            writer.printlnf("%s.%s=%d", table, name, val);
-            return;
-        } catch (NumberFormatException ex) {
-            // Intentionally ignore exception
-        }
-
-        try {
-            final var val = Double.parseDouble(constantValue);
-            writer.printlnf("%s.%s=%f", table, name, val);
-            return;
-        } catch (NumberFormatException ex) {
-            // Intentionally ignore exception
-        }
-
-        writer.printlnf("%s.%s=\"%s\"", table, name, constantValue);
-        writer.println();
-
-    }
-
-    private void writeMethodStub(final String table,
-                                 final LDocStubMethod method,
-                                 final DocRootWriter writer) {
-
-        final var name = method.getName();
-
-        final var params = method.getParameters()
-            .stream()
-            .map(LDocParameter::getName)
-            .collect(joining(","));
-
-        writer.printlnf("function %s.%s(%s)", table, name, params);
-
-        try (var indent = writer.indent()) {
-            writer.println("-- Stub ");
-        }
-
-        writer.println("end");
         writer.println();
 
     }
@@ -159,7 +109,7 @@ public class LDocRootStubModule implements DocRoot {
     public String toString() {
         final StringBuilder sb = new StringBuilder("LDocStubModule{");
         sb.append("header=").append(header);
-        sb.append(", methods=").append(methods);
+        sb.append(", functions=").append(functions);
         sb.append('}');
         return sb.toString();
     }

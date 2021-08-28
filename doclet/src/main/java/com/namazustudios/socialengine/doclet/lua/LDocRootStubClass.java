@@ -10,40 +10,40 @@ import java.util.stream.Stream;
 
 import static java.lang.String.format;
 import static java.util.List.copyOf;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class LDocRootStubClass implements DocRoot {
 
     private final List<String> relativePath;
 
-    private final LDocStubClassHeader header;
+    private final LDocStubModuleHeader header;
 
     private final ModuleDefinitionMetadata moduleDefinitionMetadata;
 
     private final List<LDocStubField> constants = new ArrayList<>();
 
-    private final List<LDocStubMethod> methods = new ArrayList<>();
+    private final List<LDocStubFunction> methods = new ArrayList<>();
 
-    private final List<LDocConstructor> constructors = new ArrayList<>();
+    private final List<LDocStubFunction> constructors = new ArrayList<>();
 
     public LDocRootStubClass(final ModuleDefinitionMetadata moduleDefinitionMetadata) {
 
         final var relativePath = Stream
-            .of(moduleDefinitionMetadata.getName().toString().split("\\."))
+            .of(moduleDefinitionMetadata.getName().split("\\."))
             .collect(toList());
 
-        final var file = format("%s.moon", relativePath.remove(relativePath.size() - 1));
+        final var file = format("%s.lua", relativePath.remove(relativePath.size() - 1));
         relativePath.add(file);
 
-        header = new LDocStubClassHeader(moduleDefinitionMetadata);
+        header = new LDocStubModuleHeader(moduleDefinitionMetadata);
+        header.appendMetadata(format("@module %s", moduleDefinitionMetadata.getName()));
 
         this.moduleDefinitionMetadata = moduleDefinitionMetadata;
         this.relativePath = copyOf(relativePath);
 
     }
 
-    public LDocStubClassHeader getHeader() {
+    public LDocStubModuleHeader getHeader() {
         return header;
     }
 
@@ -57,23 +57,22 @@ public class LDocRootStubClass implements DocRoot {
         return field;
     }
 
-    public List<LDocStubMethod> getMethods() {
+    public List<LDocStubFunction> getMethods() {
         return methods;
     }
 
-    public LDocStubMethod addMethod(final String name) {
-        final var method = new LDocStubMethod(name, moduleDefinitionMetadata);
+    public LDocStubFunction addMethod(final String name) {
+        final var method = new LDocStubFunction(name, moduleDefinitionMetadata);
         getMethods().add(method);
         return method;
     }
 
-    public List<LDocConstructor> getConstructors() {
+    public List<LDocStubFunction> getConstructors() {
         return constructors;
     }
 
-    public LDocConstructor addConstructor() {
-        final var variant = format("(Variant #%s)", constructors.size() + 1);
-        final var constructor = new LDocConstructor(variant);
+    public LDocStubFunction addConstructor() {
+        final var constructor = new LDocStubFunction("new", moduleDefinitionMetadata);
         constructors.add(constructor);
         return constructor;
     }
@@ -88,77 +87,51 @@ public class LDocRootStubClass implements DocRoot {
 
         getHeader().write(writer);
         writer.printCopyrightNotice("--");
-
         writer.println();
 
-        writer.printlnf("class %s", getHeader().getName());
+        final var table = moduleDefinitionMetadata.getName().replaceAll("\\.", "_");
+        writer.printlnf("local %s = {}", table);
+        writer.println();
 
-        try (var indent = writer.indent()) {
+        getConstants().forEach(c -> {
+            c.writeCommentHeader(writer);
+            c.writeConstantStub(writer, table);
+        });
 
-            final var ctors = getConstructors();
+        if (!getConstants().isEmpty()) {
+            writer.println();
+        }
 
-            switch (ctors.size()) {
-                case 0:
-                    writeDefaultConstructor(writer);
-                    break;
-                case 1:
-                    writeSingleConstructor(writer);
-                    break;
-                default:
-                    writeAggregateConstructor(writer);
-                    break;
-            }
+        if (!getConstructors().isEmpty()) {
+
+            writer.println("--- Constructors");
+            writer.println("-- @section constructors");
+            writer.println();
+
+            getConstructors().forEach(c -> {
+                c.writeCommentHeader(writer);
+                c.writeMethodStub(writer, table);
+            });
+
+            writer.println();
+        }
+
+        if (!getMethods().isEmpty()) {
+
+            writer.println("--- Methods");
+            writer.println("-- @section methods");
+            writer.println();
 
             getMethods().forEach(m -> {
                 m.writeCommentHeader(writer);
-                writeMethodStub(m, writer);
+                m.writeMethodStub(writer, table);
             });
 
+            writer.println();
         }
 
-    }
-
-    private void writeDefaultConstructor(final DocRootWriter writer) {
-
-        writer.println("--- Default Constructor");
-        writer.println("--");
-        writer.println("new: =>");
-
-        try (var indent = writer.indent()) {
-            writer.println("-- Stub ");
-        }
-
-    }
-
-    private void writeSingleConstructor(final DocRootWriter writer) {
-        final var ctor = getConstructors().get(0);
-        ctor.writeSingleConstructor(writer);
-    }
-
-    private void writeAggregateConstructor(final DocRootWriter writer) {
-        getConstructors().forEach(c -> c.writeConstructorVariant(writer));
-        getConstructors().forEach(c -> c.writeConstructorParameters(writer));
-    }
-
-    private void writeMethodStub(final LDocStubMethod method,
-                                 final DocRootWriter writer) {
-
-        final var name = method.getName();
-
-        final var params = method.getParameters()
-            .stream()
-            .map(LDocParameter::getName)
-            .collect(joining(","));
-
-        writer.printlnf("%s: (%s) =>", name, params);
-
-        try (var indent = writer.indent()) {
-            writer.println("-- Stub ");
-        }
-
-        writer.println();
+        writer.printlnf("return %s", table);
 
     }
 
 }
-

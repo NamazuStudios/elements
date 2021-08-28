@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 import com.namazustudios.socialengine.rt.annotation.Intrinsic;
 
 import javax.lang.model.element.TypeElement;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -14,18 +13,10 @@ import static java.util.stream.Collectors.toList;
 
 public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModule> {
 
-    private final DocContext docContext;
-
     private final Intrinsic intrinsic;
 
-    private final TypeElement typeElement;
-
-    public LDocStubProcessorIntrinsic(final DocContext docContext,
-                                      final Intrinsic intrinsic,
-                                      final TypeElement typeElement) {
-        this.docContext = docContext;
+    public LDocStubProcessorIntrinsic(final Intrinsic intrinsic) {
         this.intrinsic = intrinsic;
-        this.typeElement = typeElement;
     }
 
     @Override
@@ -52,7 +43,7 @@ public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModu
 
             for (var method : intrinsic.methods()) {
 
-                final var m = stub.addMethod(method.value());
+                final var m = stub.addFunction(method.value());
                 m.setSummary(method.summary());
                 m.setDescription(method.description());
 

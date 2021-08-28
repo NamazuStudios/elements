@@ -38,14 +38,14 @@ public class LDocReturn {
 
     public void write(final DocRootWriter writer) {
 
-        final var sb = new StringBuilder("-- @return");
+        final var prefix = "-- @return";
+        final var sb = new StringBuilder(prefix);
         final var type = nullToEmpty(getType()).trim();
         final var description = nullToEmpty(getDescription()).trim();
 
         if (!type.isEmpty()) sb.append("[type=").append(type).append(("]"));
         if (!description.isEmpty()) sb.append(" ").append(description);
-
-        writer.println(sb);
+        if (sb.length() > prefix.length()) writer.println(sb);
 
     }
 

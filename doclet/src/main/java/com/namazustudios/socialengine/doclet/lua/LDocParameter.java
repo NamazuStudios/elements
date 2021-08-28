@@ -65,7 +65,8 @@ public class LDocParameter {
         final var description = nullToEmpty(getDescription()).trim();
 
         if (!type.isEmpty()) sb.append(format("[type=%s]", type));
-        if (!name.isEmpty()) sb.append(" ").append(name);
+        sb.append(" ").append(name);
+
         if (!description.isEmpty()) sb.append(" ").append(description);
 
         writer.println(sb);

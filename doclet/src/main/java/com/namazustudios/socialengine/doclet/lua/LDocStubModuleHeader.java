@@ -1,14 +1,10 @@
 package com.namazustudios.socialengine.doclet.lua;
 
-import com.google.common.base.CaseFormat;
 import com.namazustudios.socialengine.doclet.CompoundDescription;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
 import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Stream;
 
 import static com.google.common.base.Strings.*;
 import static java.lang.String.format;
@@ -18,8 +14,6 @@ public class LDocStubModuleHeader {
     private String summary;
 
     private String description;
-
-    private final List<String> authors = new ArrayList<>();
 
     private final CompoundDescription metadata = new CompoundDescription("\n");
 
@@ -36,9 +30,9 @@ public class LDocStubModuleHeader {
             final var message = deprecation.getDeprecationMessage().trim();
 
             if (message.isEmpty()) {
-                addMetadata("_Deprecated._");
+                appendMetadata("<i>Deprecated.</i>");
             } else {
-                addMetadata(format("_Deprecated: %s_", message));
+                appendMetadata(format("<i>Deprecated: %s</i>", message.replaceAll("[<>]*", "")));
             }
 
         }
@@ -49,8 +43,12 @@ public class LDocStubModuleHeader {
         return metadata;
     }
 
-    public void addMetadata(final String metadata) {
+    public void appendMetadata(final String metadata) {
         this.metadata.appendDescription(metadata);
+    }
+
+    public void prependMetadata(final String metadata) {
+        this.metadata.prependDescription(metadata);
     }
 
     public String getModule() {
@@ -73,30 +71,17 @@ public class LDocStubModuleHeader {
         this.description = description;
     }
 
-    public List<String> getAuthors() {
-        return authors;
-    }
-
     public void addAuthor(final String author) {
-        authors.add(author);
-    }
-
-    @Override
-    public String toString() {
-        final StringBuilder sb = new StringBuilder("LDocStubHeader{");
-        sb.append("description='").append(description).append('\'');
-        sb.append(", authors=").append(authors);
-        sb.append(", exposedModuleDefinition=").append(moduleDefinitionMetadata);
-        sb.append('}');
-        return sb.toString();
+        appendMetadata(format("@author %s", author));
     }
 
     public void write(final DocRootWriter writer) {
 
-        writer.printlnf("--- %s", nullToEmpty(getSummary()).trim())
-              .println("--")
-              .printBlock("-- ", nullToEmpty(getDescription()).trim())
-              .println("--");
+        final var summary = nullToEmpty(getSummary()).trim();
+        final var description = nullToEmpty(getDescription()).trim();
+
+        writer.printlnf("--- %s", summary);
+        if (!description.isEmpty()) writer.printBlock("--", description);
 
         getMetadata()
             .stream()
@@ -104,15 +89,6 @@ public class LDocStubModuleHeader {
             .map(String::trim)
             .filter(s -> !isNullOrEmpty(s))
             .forEach(s -> writer.printlnf("-- %s", s));
-
-        writer.printlnf("-- @module %s", moduleDefinitionMetadata.getName());
-
-        getAuthors()
-            .stream()
-            .filter(Objects::nonNull)
-            .map(String::trim)
-            .filter(s -> !isNullOrEmpty(s))
-            .forEach(a -> writer.printlnf("-- @author %s", a));
 
     }
 

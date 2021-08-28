@@ -164,7 +164,7 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
             .findFirst()
             .orElse("");
 
-        final var method = stub.addMethod(name.toString());
+        final var method = stub.addFunction(name.toString());
         method.setSummary(summary);
         method.setDescription(description);
 
@@ -181,7 +181,7 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
     }
 
     private void processParameters(final List<? extends VariableElement> parameters,
-                                   final LDocStubMethod method,
+                                   final LDocStubFunction method,
                                    final List<ParamTree> docTreeParameters) {
         for (var param : parameters) {
 

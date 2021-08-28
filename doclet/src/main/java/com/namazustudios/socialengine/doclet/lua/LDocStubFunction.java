@@ -6,7 +6,9 @@ import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 import java.util.ArrayList;
 import java.util.List;
 
-public class LDocStubMethod {
+import static java.util.stream.Collectors.joining;
+
+public class LDocStubFunction {
 
     private String summary = "";
 
@@ -20,7 +22,7 @@ public class LDocStubMethod {
 
     private final List<LDocParameter> parameters = new ArrayList<>();
 
-    public LDocStubMethod(final String name, final ModuleDefinitionMetadata moduleDefinitionMetadata) {
+    public LDocStubFunction(final String name, final ModuleDefinitionMetadata moduleDefinitionMetadata) {
 
         final var inputFormat = moduleDefinitionMetadata
             .getInputCodeStyle()
@@ -124,6 +126,35 @@ public class LDocStubMethod {
         writer.println("--");
 
         getReturnValues().forEach(r -> r.write(writer));
+
+    }
+
+    public void writeMethodStub(final DocRootWriter writer, final String table) {
+        writeExecutableStub(writer, table, ":");
+    }
+
+
+    public void writeFunctionStub(final DocRootWriter writer, final String table) {
+        writeExecutableStub(writer, table, ".");
+    }
+
+    private void writeExecutableStub(final DocRootWriter writer, final String table, final String delimiter) {
+
+        final var name = getName();
+
+        final var params = getParameters()
+            .stream()
+            .map(LDocParameter::getName)
+            .collect(joining(","));
+
+        writer.printlnf("function %s%s%s(%s)", table, delimiter, name, params);
+
+        try (var indent = writer.indent()) {
+            writer.println("-- Stub ");
+        }
+
+        writer.println("end");
+        writer.println();
 
     }
 

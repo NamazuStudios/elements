@@ -14,7 +14,7 @@ public class DocFormatting {
 
     private DocFormatting() {}
 
-    private static final Pattern WHOLE_WORD_SPLIT = Pattern.compile("\\w+");
+    private static final Pattern WHOLE_WORD_SPLIT = Pattern.compile("\\s+");
 
     /**
      * Splits a string into multiple lines with the max column count, specifying a prefix.
@@ -37,10 +37,9 @@ public class DocFormatting {
         while (words.hasNext()) {
 
             final var word = words.next();
-            final var atBeginning = line.length() == prefix.length();
-            final var willExceedLength = word.length() + prefix.length() > maxColumns;
+            final var willExceedLength = line.length() + word.length() + prefix.length() > maxColumns;
 
-            if (!atBeginning && willExceedLength) {
+            if (willExceedLength) {
                 result.add(line.toString());
                 line.setLength(prefix.length());
             }
