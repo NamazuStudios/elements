@@ -15,8 +15,11 @@ public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModu
 
     private final Intrinsic intrinsic;
 
-    public LDocStubProcessorIntrinsic(final Intrinsic intrinsic) {
+    private final DocContext docContext;
+
+    public LDocStubProcessorIntrinsic(final DocContext docContext, final Intrinsic intrinsic) {
         this.intrinsic = intrinsic;
+        this.docContext = docContext;
     }
 
     @Override
@@ -29,6 +32,7 @@ public class LDocStubProcessorIntrinsic implements DocProcessor<LDocRootStubModu
         for (var stub : stubs) {
 
             final var header = stub.getHeader();
+            docContext.getAuthors().forEach(header::addAuthor);
 
             header.setSummary(intrinsic.summary());
             header.setDescription(intrinsic.description());

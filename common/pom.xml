@@ -51,7 +51,74 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.0</version>
+
+                <configuration>
+
+                    <doclet>com.namazustudios.socialengine.doclet.lua.LDocStubDoclet</doclet>
+
+                    <docletArtifact>
+                        <groupId>com.namazustudios.socialengine</groupId>
+                        <artifactId>doclet</artifactId>
+                        <version>${project.version}</version>
+                    </docletArtifact>
+
+                    <additionalOptions>
+                        <additionalOption>-d</additionalOption>
+                        <additionalOption>${project.build.directory}/luastubs</additionalOption>
+                    </additionalOptions>
+
+                    <useStandardDocletOptions>false</useStandardDocletOptions>
+
+                </configuration>
+
+            </plugin>
         </plugins>
     </build>
+
+    <reporting>
+        <plugins>
+            <plugin>
+
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.0</version>
+
+                <reportSets>
+                    <reportSet>
+
+                        <id>luastubs</id>
+
+                        <reports>
+                            <report>javadoc</report>
+                        </reports>
+
+                        <configuration>
+
+                            <doclet>com.namazustudios.socialengine.doclet.lua.LDocStubDoclet</doclet>
+
+                            <docletArtifact>
+                                <groupId>com.namazustudios.socialengine</groupId>
+                                <artifactId>doclet</artifactId>
+                                <version>${project.version}</version>
+                            </docletArtifact>
+
+                            <additionalOptions>
+                                <additionalOption>-d</additionalOption>
+                                <additionalOption>${project.build.directory}/luastubs</additionalOption>
+                            </additionalOptions>
+
+                            <useStandardDocletOptions>true</useStandardDocletOptions>
+
+                        </configuration>
+                    </reportSet>
+                </reportSets>
+            </plugin>
+        </plugins>
+    </reporting>
 
 </project>

@@ -30,7 +30,7 @@ public class DocAnnotations {
         do {
             final var priv = e.getAnnotation(Private.class);
             if (priv != null) return true;
-        } while(!isTopLevel(e) && (e = element.getEnclosingElement()) != null);
+        } while((e = e.getEnclosingElement()) != null && !isTopLevel(e));
 
         return false;
 

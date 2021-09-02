@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.doclet.CompoundDescription;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.doclet.DocStrings.sanitize;
 import static java.lang.String.format;
 
 public class LDocParameter {
@@ -60,9 +61,9 @@ public class LDocParameter {
 
         final var sb = new StringBuilder("-- @param");
 
-        final var type = nullToEmpty(getType()).trim();
-        final var name = nullToEmpty(getName()).trim();
-        final var description = nullToEmpty(getDescription()).trim();
+        final var type = sanitize(getType());
+        final var name = sanitize(getName());
+        final var description = sanitize(getDescription());
 
         if (!type.isEmpty()) sb.append(format("[type=%s]", type));
         sb.append(" ").append(name);

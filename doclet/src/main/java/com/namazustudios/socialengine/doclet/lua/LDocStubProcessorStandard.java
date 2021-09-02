@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.DocProcessor;
-import com.namazustudios.socialengine.doclet.visitor.DocCommentTags;
 import com.sun.source.doctree.ParamTree;
 
 import javax.lang.model.element.ExecutableElement;
@@ -16,6 +15,8 @@ import java.util.List;
 import static com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata.fromJavaClassName;
 import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isConstant;
 import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isPublic;
+import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getReturnComment;
+import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getText;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.lang.String.format;
@@ -51,14 +52,16 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
 
         final var stubClass = new LDocRootStubClass(moduleDefinitionMetadata);
 
-        final var summary = docTree.getFirstSentence()
+        docContext.getAuthors().forEach(stubClass.getHeader()::addAuthor);
+
+        final var summary = docTree == null ? "" : docTree.getFirstSentence()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(dt -> getText(docContext, dt))
             .collect(joining());
 
-        final var description = docTree.getBody()
+        final var description = docTree == null ? "" : docTree.getBody()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(dt -> getText(docContext, dt))
             .collect(joining());
 
         final var header = stubClass.getHeader();
@@ -101,14 +104,14 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
 
         final var name = enclosed.getSimpleName();
 
-        final var summary = docTree.getFirstSentence()
+        final var summary = docTree == null ? "" : docTree.getFirstSentence()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(dt -> getText(docContext, dt))
             .collect(joining());
 
-        final var description = docTree.getFullBody()
+        final var description = docTree == null ? "" : docTree.getFullBody()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(dt -> getText(docContext, dt))
             .collect(joining());
 
         final var constantValue = enclosed.getConstantValue();
@@ -132,19 +135,19 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
 
         final var summary = comments == null ? "" : comments.getFirstSentence()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(dt -> getText(docContext, dt))
             .collect(joining());
 
         final var description = comments == null ? "" : comments.getBody()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(dt -> getText(docContext, dt))
             .collect(joining());
 
         final var returnComment = comments == null ? "" : comments
             .getBlockTags()
             .stream()
             .filter(dt -> RETURN.equals(dt.getKind()))
-            .map(DocCommentTags::getReturnComment)
+            .map(docTree -> getReturnComment(docContext, docTree))
             .findFirst()
             .orElse("");
 
@@ -195,7 +198,7 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
                     .filter(pt -> name.equals(pt.getName().getName()))
                     .map(ParamTree::getDescription)
                     .flatMap(Collection::stream)
-                    .map(DocCommentTags::getText)
+                    .map(dt -> getText(docContext, dt))
                     .collect(joining());
 
             ctor.addParameter(name.toString(), type, comment);

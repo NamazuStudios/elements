@@ -41,6 +41,7 @@ public class LDocTypes {
         map.put(CHAR, typeMirror -> "number");
         map.put(FLOAT, typeMirror -> "number");
         map.put(DOUBLE, typeMirror -> "number");
+        map.put(TYPEVAR, typeMirror -> "generic");
         map.put(ARRAY, LDocTypes::forArrayType);
         map.put(DECLARED, LDocTypes::forDeclaredType);
         TYPE_KINDS = unmodifiableMap(map);

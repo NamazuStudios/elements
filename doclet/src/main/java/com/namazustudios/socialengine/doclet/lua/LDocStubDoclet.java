@@ -4,16 +4,16 @@ import com.namazustudios.socialengine.doclet.*;
 import jdk.javadoc.doclet.Doclet;
 import jdk.javadoc.doclet.DocletEnvironment;
 import jdk.javadoc.doclet.Reporter;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.lang.model.SourceVersion;
 import javax.tools.Diagnostic;
+import javax.tools.StandardLocation;
 import java.io.IOException;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.time.format.TextStyle;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -21,17 +21,18 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 
 public class LDocStubDoclet implements Doclet {
-
-    private static final Logger logger = LoggerFactory.getLogger(LDocStubDoclet.class);
 
     private static final Pattern INDENTATION = Pattern.compile("\\s+");
 
     private Locale locale;
 
     private Reporter reporter;
+
+    private final List<String> authors = new ArrayList<>();
 
     private final DirectoryDocWriter.Builder directoryDocWriterBuilder = new DirectoryDocWriter.Builder();
 
@@ -71,7 +72,6 @@ public class LDocStubDoclet implements Doclet {
                         directoryDocWriterBuilder.withRoot(path);
                         return true;
                     } catch (InvalidPathException ex) {
-                        logger.debug("Invalid path.", ex);
                         reporter.print(Diagnostic.Kind.ERROR, "Invalid Path: " + directory + " " + ex.getMessage());
                         return false;
                     }
@@ -142,6 +142,13 @@ public class LDocStubDoclet implements Doclet {
                     return true;
 
                 }
+            },
+            new LDocAbstractOption(1, "Author", "<author>", "-author", "-a") {
+                @Override
+                public boolean process(final String option, final List<String> arguments) {
+                    authors.add(arguments.get(0));
+                    return true;
+                }
             }
         );
     }
@@ -154,7 +161,15 @@ public class LDocStubDoclet implements Doclet {
     @Override
     public boolean run(final DocletEnvironment environment) {
 
+        final var authors = unmodifiableList(this.authors);
+
         final var cxt = new DocContext() {
+
+            @Override
+            public List<String> getAuthors() {
+                return authors;
+            }
+
             @Override
             public Locale getLocale() {
                 return locale;
@@ -169,17 +184,29 @@ public class LDocStubDoclet implements Doclet {
             public DocletEnvironment getEnvironment() {
                 return environment;
             }
+
+            @Override
+            public Object getFileForTypename() throws IOException {
+                final var jfo = environment
+                    .getJavaFileManager()
+                    .getJavaFileForInput(StandardLocation.SOURCE_PATH, "", null);
+
+                return null;
+            }
+
         };
 
-        try (var docWriter = directoryDocWriterBuilder.build()) {
+        try (var docWriter = directoryDocWriterBuilder.withDocContext(cxt).build()) {
             for (var type : cxt.getIncludedElements()) {
+
+                int i = 0;
+
                 for (var processor : DocProcessor.get(cxt, type)) {
                     final var stubs = processor.process();
                     write(docWriter, stubs);
                 }
             }
         } catch (IOException ex) {
-            logger.debug("Failed to write docs", ex);
             reporter.print(Diagnostic.Kind.ERROR, "IOException Writing docs: " + ex.getMessage());
             return false;
         }

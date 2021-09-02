@@ -2,6 +2,10 @@ package com.namazustudios.socialengine.testsources;
 
 /**
  * A standard type to expose.
+ *
+ * Try looking at {@link TestExposedStandard#getFoo()}
+ *
+ * {@see http://java.net}
  */
 public class TestExposedStandard {
 
@@ -84,6 +88,14 @@ public class TestExposedStandard {
      *
      */
     public void loremIpsum() {}
+
+    /**
+     * Uses a link.
+     *
+     * {@see http://google.com}
+     *
+     */
+    public void testSee() {}
 
     public void undocumentedMethod() {}
 

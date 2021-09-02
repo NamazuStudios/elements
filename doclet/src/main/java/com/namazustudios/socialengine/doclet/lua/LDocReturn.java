@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.doclet.lua;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.doclet.DocStrings.sanitize;
 import static java.lang.String.format;
 
 public class LDocReturn {
@@ -40,8 +41,8 @@ public class LDocReturn {
 
         final var prefix = "-- @return";
         final var sb = new StringBuilder(prefix);
-        final var type = nullToEmpty(getType()).trim();
-        final var description = nullToEmpty(getDescription()).trim();
+        final var type = sanitize(getType());
+        final var description = sanitize(getDescription());
 
         if (!type.isEmpty()) sb.append("[type=").append(type).append(("]"));
         if (!description.isEmpty()) sb.append(" ").append(description);

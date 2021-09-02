@@ -2,12 +2,18 @@ package com.namazustudios.socialengine.doclet;
 
 import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 
+import javax.tools.Diagnostic;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.util.ArrayList;
+import java.util.List;
 
-import static java.nio.file.Files.createDirectories;
+import static java.nio.file.Files.*;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.StreamSupport.stream;
@@ -29,16 +35,39 @@ public class DirectoryDocWriter implements DocWriter {
 
     private final String copyrightNotice;
 
+    private final DocContext docContext;
+
     public DirectoryDocWriter(final Path root,
                               final int maxColumns,
                               final String indentation,
                               final String newline,
-                              final String copyrightNotice) {
+                              final String copyrightNotice,
+                              final DocContext docContext) {
         this.root = root.toAbsolutePath();
         this.maxColumns = maxColumns;
         this.indentation = indentation;
         this.newline = newline;
         this.copyrightNotice = copyrightNotice;
+        this.docContext = docContext;
+    }
+
+    @Override
+    public void reset() throws IOException {
+        walkFileTree(getRoot(), new SimpleFileVisitor<>() {
+
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attrs) throws IOException {
+                delete(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path dir, final IOException exc) throws IOException {
+                if (!getRoot().equals(dir)) delete(dir);
+                return FileVisitResult.CONTINUE;
+            }
+
+        });
     }
 
     @Override
@@ -50,12 +79,13 @@ public class DirectoryDocWriter implements DocWriter {
         final var relativeStream = docRoot.getRelativePath().stream();
         final var filePathString = separator + concat(rootStream, relativeStream).collect(joining(separator));
         final var filePath = Paths.get(filePathString);
+
         createDirectories(filePath.getParent());
+        docContext.getReporter().print(Diagnostic.Kind.NOTE, "Generating: " + filePath.toString());
 
         // Creates the writer
         final var fos = new FileOutputStream(filePath.toFile());
-        final var writer = new StreamDocRootWriter(fos, maxColumns, indentation, newline, copyrightNotice);
-        return writer;
+        return new StreamDocRootWriter(fos, maxColumns, indentation, newline, copyrightNotice);
 
     }
 
@@ -79,6 +109,10 @@ public class DirectoryDocWriter implements DocWriter {
         private String newline = "\n";
 
         private String copyrightNotice = "";
+
+        private DocContext docContext = null;
+
+        private List<String> authors = new ArrayList<>();
 
         public Builder withRoot(final Path root) {
             this.root = root;
@@ -112,16 +146,28 @@ public class DirectoryDocWriter implements DocWriter {
             return this;
         }
 
+        public Builder withDocContext(final DocContext docContext) {
+            this.docContext = docContext;
+            return this;
+        }
+
+        public Builder withAuthor(final String author) {
+            this.authors.add(author);
+            return this;
+        }
+
         public DirectoryDocWriter build() {
 
             if (root == null) throw new IllegalStateException("Directory root not specified.");
+            if (docContext == null) throw new IllegalStateException("DocContext not specified.");
 
             return new DirectoryDocWriter(
                 root,
                 maxColumns,
                 indentation,
                 newline,
-                copyrightNotice
+                copyrightNotice,
+                docContext
             );
 
         }

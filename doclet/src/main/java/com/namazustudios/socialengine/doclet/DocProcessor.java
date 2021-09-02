@@ -56,7 +56,7 @@ public interface DocProcessor<StubT extends DocRoot> {
 
         if (intrinsic != null) {
             skipStandardProcessing = true;
-            processors.add(new LDocStubProcessorIntrinsic(intrinsic));
+            processors.add(new LDocStubProcessorIntrinsic(cxt, intrinsic));
         }
 
         if (!skipStandardProcessing && isStandard(typeElement)) {

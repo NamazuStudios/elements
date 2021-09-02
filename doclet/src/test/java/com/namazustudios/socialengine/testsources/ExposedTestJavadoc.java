@@ -100,4 +100,8 @@ public interface ExposedTestJavadoc {
 
     void undocumentedMethod();
 
+    class Enclosed {}
+
+    interface EnclosedInterface {}
+
 }

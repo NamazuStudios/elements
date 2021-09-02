@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.*;
+import static com.namazustudios.socialengine.doclet.DocStrings.sanitize;
 import static java.lang.String.format;
 
 public class LDocStubModuleHeader {
@@ -72,13 +73,14 @@ public class LDocStubModuleHeader {
     }
 
     public void addAuthor(final String author) {
-        appendMetadata(format("@author %s", author));
+        final var tag = format("@author %s", author);
+        if (!getMetadata().contains(tag)) appendMetadata(tag);
     }
 
     public void write(final DocRootWriter writer) {
 
-        final var summary = nullToEmpty(getSummary()).trim();
-        final var description = nullToEmpty(getDescription()).trim();
+        final var summary = sanitize(getSummary());
+        final var description = sanitize(getDescription());
 
         writer.printlnf("--- %s", summary);
         if (!description.isEmpty()) writer.printBlock("--", description);

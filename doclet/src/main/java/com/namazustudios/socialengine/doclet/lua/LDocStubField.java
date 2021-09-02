@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.doclet.lua;
 import com.namazustudios.socialengine.doclet.DocRootWriter;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.doclet.DocStrings.sanitize;
 
 public class LDocStubField {
 
@@ -25,7 +26,7 @@ public class LDocStubField {
     }
 
     public void setType(String type) {
-        this.type = nullToEmpty(type).trim();
+        this.type = type;
     }
 
     public String getName() {
@@ -62,10 +63,10 @@ public class LDocStubField {
 
     public void writeCommentHeader(final DocRootWriter writer) {
 
-        final var type = nullToEmpty(getType()).trim();
-        final var summary = nullToEmpty(getSummary()).trim();
-        final var description = nullToEmpty(getDescription()).trim();
-        final var constantValue = nullToEmpty(getConstantValue()).trim();
+        final var type = sanitize(getType());
+        final var summary = sanitize(getSummary());
+        final var description = sanitize(getDescription());
+        final var constantValue = sanitize(getConstantValue());
 
         if (summary.isEmpty()) {
             writer.println("---");

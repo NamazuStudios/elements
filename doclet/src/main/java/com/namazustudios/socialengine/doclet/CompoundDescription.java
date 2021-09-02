@@ -80,6 +80,15 @@ public class CompoundDescription implements Iterable<String> {
     }
 
     /**
+     * Returns true if any component in this {@link CompoundDescription} contains the supplied string.
+     * @param value the value to fine
+     * @return true if this contains the value, false otherwise
+     */
+    public boolean contains(final String value) {
+        return components.contains(value);
+    }
+
+    /**
      * Streams all components.
      *
      * @return the {@link String<String>}
@@ -107,5 +116,4 @@ public class CompoundDescription implements Iterable<String> {
     public String toString() {
         return getDescription();
     }
-
 }

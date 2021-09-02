@@ -21,6 +21,13 @@ public interface DocWriter extends Closeable {
      */
     DocRootWriter open(final DocRoot docRoot) throws IOException;
 
+    /**
+     * Resets the writer. This clears the state of the the writer and makes it suitable for a fresh write.
+     *
+     * @throws IOException
+     */
+    default void reset() throws IOException {};
+
     @Override
     default void close() throws IOException {}
 

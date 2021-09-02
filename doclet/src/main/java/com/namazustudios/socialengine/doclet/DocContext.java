@@ -7,6 +7,8 @@ import jdk.javadoc.doclet.Reporter;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.ElementFilter;
+import java.io.IOException;
+import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 
@@ -29,6 +31,13 @@ public interface DocContext {
      * @return the {@link Reporter}
      */
     Reporter getReporter();
+
+    /**
+     * Gets all authors configured for the project.
+     *
+     * @return the authors
+     */
+    List<String> getAuthors();
 
     /**
      * Returns the {@link DocletEnvironment} used in conjunction with this instance.
@@ -55,5 +64,7 @@ public interface DocContext {
     default Set<TypeElement> getIncludedElements() {
         return ElementFilter.typesIn(getEnvironment().getIncludedElements());
     }
+
+    Object getFileForTypename() throws IOException;
 
 }

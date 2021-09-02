@@ -17,6 +17,8 @@ import java.util.*;
 
 import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isConstant;
 import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isPublic;
+import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getAuthors;
+import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getReturnComment;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
 import static com.sun.source.doctree.DocTree.Kind.RETURN;
 import static java.util.Arrays.asList;
@@ -68,23 +70,25 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
 
             final var body = comments.getFullBody()
                 .stream()
-                .map(DocCommentTags::getText)
+                .map(docTree -> DocCommentTags.getText(docContext, docTree))
                 .collect(joining());
 
             final var summary = comments.getFirstSentence()
                 .stream()
-                .map(DocCommentTags::getText)
+                .map(docTree -> DocCommentTags.getText(docContext, docTree))
                 .collect(joining());
 
             comments
                 .getBlockTags()
                 .stream()
-                .map(DocCommentTags::getAuthors)
+                .map(docTree -> getAuthors(docContext, docTree))
                 .flatMap(Collection::stream)
                 .forEach(stub.getHeader()::addAuthor);
 
             stub.getHeader().setSummary(summary);
             stub.getHeader().setDescription(body);
+
+            docContext.getAuthors().forEach(stub.getHeader()::addAuthor);
 
             for (var enclosed : typeElement.getEnclosedElements()) {
 
@@ -116,12 +120,12 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
 
         final var summary = comments == null ? "" : comments.getFirstSentence()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(docTree -> DocCommentTags.getText(docContext, docTree))
             .collect(joining());
 
         final var description = comments == null ? "" : comments.getBody()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(docTree -> DocCommentTags.getText(docContext, docTree))
             .collect(joining());
 
         final var modifiers = enclosed.getModifiers();
@@ -147,20 +151,20 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
         final var summary = comments == null ? "" : comments
             .getFirstSentence()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(docTree -> DocCommentTags.getText(docContext, docTree))
             .collect(joining());
 
         final var description = comments == null ? "" : comments
             .getBody()
             .stream()
-            .map(DocCommentTags::getText)
+            .map(docTree -> DocCommentTags.getText(docContext, docTree))
             .collect(joining());
 
         final var returnComment = comments == null ? "" : comments
             .getBlockTags()
             .stream()
             .filter(dt -> RETURN.equals(dt.getKind()))
-            .map(DocCommentTags::getReturnComment)
+            .map(docTree -> getReturnComment(docContext, docTree))
             .findFirst()
             .orElse("");
 
@@ -192,7 +196,7 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
                 .filter(pt -> name.equals(pt.getName().getName()))
                 .map(ParamTree::getDescription)
                 .flatMap(Collection::stream)
-                .map(DocCommentTags::getText)
+                .map(docTree -> DocCommentTags.getText(docContext, docTree))
                 .collect(joining());
 
             method.addParameter(name.toString(), type, comment);
