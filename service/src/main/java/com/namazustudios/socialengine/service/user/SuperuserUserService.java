@@ -49,12 +49,13 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     }
 
     @Override
-    public User updateUser(final String userId, UserUpdateRequest userUpdateRequest) {
+    public User updateUser(final String userId, final UserUpdateRequest userUpdateRequest) {
 
         final User user = new User();
 
         user.setId(userId);
         user.setActive(true);
+        user.setEmail(userUpdateRequest.getEmail());
         user.setName(userUpdateRequest.getName());
         user.setLevel(userUpdateRequest.getLevel());
 
