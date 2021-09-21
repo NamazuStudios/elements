@@ -138,8 +138,6 @@ class UsersService extends BaseService {
    *
    * - `name`:
    *
-   * - `password`:
-   *
    * - `body`:
    *
    * @return successful operation
@@ -301,8 +299,7 @@ module UsersService {
    */
   export interface UpdateUserParams {
     name: string;
-    password?: string;
-    body?: User;
+    body?: {name: string, email: string, password?: string, level: string};
   }
 
   /**

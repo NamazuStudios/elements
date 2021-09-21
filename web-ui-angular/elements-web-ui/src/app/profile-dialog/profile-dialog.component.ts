@@ -74,9 +74,10 @@ export class ProfileDialogComponent implements OnInit {
       width: '500px',
       data: {
         isNew: false, user: user, next: result => {
-          const password = result.password;
           delete result.passwordConfirmation;
-          return this.usersService.updateUser({name: user.name, password: password, body: result}).pipe(
+          delete result.id;
+          if(result.password === "") { delete result.password}
+          return this.usersService.updateUser({name: user.id, body: result}).pipe(
             map(r => {
               this.data.profile.user = r;
             })

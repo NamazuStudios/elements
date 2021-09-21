@@ -132,11 +132,11 @@ export class UsersListComponent implements OnInit, AfterViewInit {
 
   editUser(user) {
     this.showDialog(false, user, result => {
-      // backend expects password to be in query params, so delete from result before attaching to body
-      const password = result.password;
       delete result.passwordConfirmation;
-      //delete result.password;
-      return this.usersService.updateUser({name: user.name, password: password, body: result});
+      const id = result.id;
+      delete result.id;
+      if(result.password === "") { delete result.password }
+      return this.usersService.updateUser({name: id, body: result});
     });
   }
 }
