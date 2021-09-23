@@ -99,9 +99,8 @@ public class SuperUserProfileService implements ProfileService {
             .createOrReactivateProfile(createProfile(profileRequest));
 
         final var attributes = new SimpleAttributes.Builder()
-                .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
-                .build();
-
+            .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
+            .build();
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);

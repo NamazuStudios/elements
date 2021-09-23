@@ -12,11 +12,11 @@ import javax.validation.constraints.NotNull;
 public class CreateProfileRequest {
 
     @ApiModelProperty("The user id this profile belongs to.")
-    @NotNull(groups = ValidationGroups.Insert.class)
+    @NotNull
     private String userId;
 
     @ApiModelProperty("The application id this profile belongs to.")
-    @NotNull(groups = ValidationGroups.Insert.class)
+    @NotNull
     private String applicationId;
 
     /**
@@ -83,4 +83,5 @@ public class CreateProfileRequest {
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
+
 }

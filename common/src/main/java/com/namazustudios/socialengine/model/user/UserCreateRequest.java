@@ -1,22 +1,23 @@
 package com.namazustudios.socialengine.model.user;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
+import com.namazustudios.socialengine.model.profile.ProfileSignupRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 @ApiModel
 public class UserCreateRequest implements Serializable {
 
-    @NotNull
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String name;
 
-    @NotNull
     @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
     private String email;
 
@@ -27,6 +28,8 @@ public class UserCreateRequest implements Serializable {
     private String password;
 
     private User.Level level;
+
+    private List<ProfileSignupRequest> profiles;
 
     public String getName() {
         return name;
@@ -60,29 +63,37 @@ public class UserCreateRequest implements Serializable {
         this.level = level;
     }
 
+    public List<ProfileSignupRequest> getProfiles() {
+        return profiles;
+    }
+
+    public void setProfiles(List<ProfileSignupRequest> profiles) {
+        this.profiles = profiles;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UserCreateRequest that = (UserCreateRequest) o;
-        return Objects.equals(name, that.name) &&
-                Objects.equals(email, that.email) &&
-                Objects.equals(password, that.password) &&
-                level == that.level;
+        return Objects.equals(getName(), that.getName()) && Objects.equals(getEmail(), that.getEmail()) && Objects.equals(getPassword(), that.getPassword()) && getLevel() == that.getLevel() && Objects.equals(getProfiles(), that.getProfiles());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(name, email, password, level);
+        return Objects.hash(getName(), getEmail(), getPassword(), getLevel(), getProfiles());
     }
 
     @Override
     public String toString() {
-        return "UserCreateRequest{" +
-                "name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", level=" + level +
-                '}';
+        final StringBuilder sb = new StringBuilder("UserCreateRequest{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", email='").append(email).append('\'');
+        sb.append(", password='").append(password).append('\'');
+        sb.append(", level=").append(level);
+        sb.append(", profiles=").append(profiles);
+        sb.append('}');
+        return sb.toString();
     }
 
 }
