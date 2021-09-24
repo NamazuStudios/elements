@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.model.user;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.ProfileSignupRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.List;
@@ -27,8 +25,12 @@ public class UserCreateRequest implements Serializable {
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
     private String password;
 
+    @ApiModelProperty("The user's level to assign. Depending on the usage, the server may ignore this field and " +
+            "assign its own value.")
     private User.Level level;
 
+    @ApiModelProperty("A list of profiles to assign to this user during creation. The server will attempt to create " +
+            "a profile for each item in this list.")
     private List<ProfileSignupRequest> profiles;
 
     public String getName() {

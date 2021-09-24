@@ -6,12 +6,14 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
+import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.service.UserService.formatAnonymousEmail;
 
 public class AnonUserService extends AbstractUserService implements UserService {
 
@@ -36,19 +38,27 @@ public class AnonUserService extends AbstractUserService implements UserService 
     @Override
     public User createUser(final UserCreateRequest userCreateRequest)  {
 
-        final User user = new User();
-
+        final var user = new User();
+        user.setActive(true);
+        user.setLevel(User.Level.USER);
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
 
-        user.setLevel(User.Level.USER);
-        user.setActive(true);
+        if (user.getName() == null || user.getEmail() == null) {
+            final var name = getNameService().generateQualifiedName();
+            if (user.getName() == null) user.setName(name);
+            if (user.getEmail() == null) user.setEmail(formatAnonymousEmail(name));
+        }
 
-        final String password = nullToEmpty(userCreateRequest.getPassword()).trim();
+        // reuse existing DAO method
+        final var created = isNullOrEmpty(userCreateRequest.getPassword()) ?
+            getUserDao().createOrReactivateUser(user) :
+            getUserDao().createOrReactivateUserWithPassword(user, userCreateRequest.getPassword());
 
-        return isNullOrEmpty(password) ?
-                getUserDao().createOrReactivateUser(user) :
-                getUserDao().createOrReactivateUserWithPassword(user, password);
+        final var profiles = userCreateRequest.getProfiles();
+        if (profiles != null) createProfiles(user.getId(), userCreateRequest.getProfiles());
+
+        return created;
 
     }
 

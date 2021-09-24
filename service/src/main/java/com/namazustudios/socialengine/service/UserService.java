@@ -11,6 +11,8 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.Objects;
 
+import static java.lang.String.format;
+
 /**
  * Created by patricktwohig on 3/19/15.
  */
@@ -117,5 +119,15 @@ public interface UserService {
      * @param userId the userId
      */
     void deleteUser(final String userId);
+
+    /**
+     * Generates an email address for an anonymous user. The
+     *
+     * @param name the username part of the email
+     * @return a fully formated anonymous email
+     */
+    static String formatAnonymousEmail(final String name) {
+        return format("%s@anonymous.invalid", name);
+    }
 
 }

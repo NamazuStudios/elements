@@ -112,11 +112,14 @@ public class UserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile createProfile(CreateProfileRequest profileRequest) {
+    public Profile createProfile(final CreateProfileRequest profileRequest) {
+
         checkUserAndProfile(profileRequest.getUserId());
+
         final EventContext eventContext = getContextFactory()
             .getContextForApplication(profileRequest.getApplicationId())
             .getEventContext();
+
         final Profile createdProfile = getProfileDao().createOrReactivateProfile(createNewProfile(profileRequest));
         final Attributes attributes = new SimpleAttributes.Builder()
                 .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
@@ -137,7 +140,7 @@ public class UserProfileService implements ProfileService {
         }
     }
 
-    private Profile createNewProfile(CreateProfileRequest profileRequest) {
+    private Profile createNewProfile(final CreateProfileRequest profileRequest) {
         final Profile newProfile = new Profile();
         newProfile.setUser(getUserService().getUser(profileRequest.getUserId()));
         newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
@@ -219,4 +222,5 @@ public class UserProfileService implements ProfileService {
     public void setAttributesProvider(Provider<Attributes> attributesProvider) {
         this.attributesProvider = attributesProvider;
     }
+
 }

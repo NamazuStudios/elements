@@ -13,10 +13,10 @@ public class ProfileSignupRequest {
     @ApiModelProperty("The application id this profile belongs to.")
     private String applicationId;
 
-    @ApiModelProperty("A non-unique display name for this profile.")
+    @ApiModelProperty("A non-unique display name for this profile. If left null, the server will assign.")
     private String displayName;
 
-    @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
+    @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar). If left null, the server will no assign any URL.")
     private String imageUrl;
 
     public String getApplicationId() {

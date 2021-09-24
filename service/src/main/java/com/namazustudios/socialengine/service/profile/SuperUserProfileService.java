@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.profile;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
+import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -31,6 +32,8 @@ import static com.namazustudios.socialengine.service.profile.UserProfileService.
 public class SuperUserProfileService implements ProfileService {
 
     private static final Logger logger = LoggerFactory.getLogger(SuperUserProfileService.class);
+
+    private UserDao userDao;
 
     private ProfileDao profileDao;
 
@@ -89,14 +92,13 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile createProfile(CreateProfileRequest profileRequest) {
+    public Profile createProfile(final CreateProfileRequest createProfileRequest) {
+
+        final var createdProfile = createNewProfile(createProfileRequest);
 
         final var eventContext = getContextFactory()
-            .getContextForApplication(profileRequest.getApplicationId())
+            .getContextForApplication(createdProfile.getApplication().getId())
             .getEventContext();
-
-        final var createdProfile = getProfileDao()
-            .createOrReactivateProfile(createProfile(profileRequest));
 
         final var attributes = new SimpleAttributes.Builder()
             .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
@@ -112,6 +114,15 @@ public class SuperUserProfileService implements ProfileService {
 
     }
 
+    private Profile createNewProfile(final CreateProfileRequest profileRequest) {
+        final Profile newProfile = new Profile();
+        newProfile.setUser(getUserDao().getActiveUser(profileRequest.getUserId()));
+        newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
+        newProfile.setImageUrl(profileRequest.getImageUrl());
+        newProfile.setDisplayName(profileRequest.getDisplayName());
+        return getProfileDao().createOrReactivateProfile(newProfile);
+    }
+
     @Override
     public void deleteProfile(String profileId) {
         getProfileDao().softDeleteProfile(profileId);
@@ -119,6 +130,15 @@ public class SuperUserProfileService implements ProfileService {
 
     public ProfileDao getProfileDao() {
         return profileDao;
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     @Inject
