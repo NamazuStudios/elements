@@ -43,7 +43,10 @@ public class CreateProfileRequest {
     private String displayName;
 
     public String getUserId() {
-        return userId != null ? userId : user.getId();
+        return userId != null
+            ? userId
+            : user != null ? user.getId()
+            : null;
     }
 
     public void setUserId(String userId) {

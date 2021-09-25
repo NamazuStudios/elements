@@ -4,20 +4,15 @@ import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.profile.ProfileSignupRequest;
+import com.namazustudios.socialengine.model.profile.CreateProfileSignupRequest;
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
-import com.namazustudios.socialengine.rt.EventContext;
-import com.namazustudios.socialengine.rt.SimpleAttributes;
-import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
 import com.namazustudios.socialengine.service.NameService;
 import com.namazustudios.socialengine.service.UserService;
 import com.namazustudios.socialengine.service.profile.SuperUserProfileService;
 
 import javax.inject.Inject;
 
-import java.io.Serializable;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -96,18 +91,18 @@ public abstract class AbstractUserService implements UserService {
     }
 
     /**
-     * Creates a profile from the supplied user id and {@link ProfileSignupRequest}.
+     * Creates a profile from the supplied user id and {@link CreateProfileSignupRequest}.
      *
      * @param user the user id as specified by {@link User#getId()}
-     * @param profileSignupRequest the {@Link ProfileSignupRequest}
+     * @param createProfileSignupRequest the {@Link ProfileSignupRequest}
      * @return the created {@link Profile}
      */
-    protected Profile createProfile(final String userId, final ProfileSignupRequest profileSignupRequest) {
+    protected Profile createProfile(final String userId, final CreateProfileSignupRequest createProfileSignupRequest) {
         final var profile = new CreateProfileRequest();
         profile.setUserId(userId);
-        profile.setImageUrl(profileSignupRequest.getImageUrl());
-        profile.setDisplayName(profileSignupRequest.getDisplayName());
-        profile.setApplicationId(profileSignupRequest.getApplicationId());
+        profile.setImageUrl(createProfileSignupRequest.getImageUrl());
+        profile.setDisplayName(createProfileSignupRequest.getDisplayName());
+        profile.setApplicationId(createProfileSignupRequest.getApplicationId());
         return getSuperUserProfileService().createProfile(profile);
     }
 
@@ -115,12 +110,12 @@ public abstract class AbstractUserService implements UserService {
      * Creates several {@link Profile}s. The created {@link Profile}s will be created using the.
      *
      * @param user the {@link User} to assocaite with the new profile.
-     * @param profileSignupRequests a {@link List <ProfileSignupRequest>} instance
+     * @param createProfileSignupRequests a {@link List <ProfileSignupRequest>} instance
      * @return
      */
     protected List<Profile> createProfiles(final String userId,
-                                           final List<ProfileSignupRequest> profileSignupRequests) {
-        return profileSignupRequests
+                                           final List<CreateProfileSignupRequest> createProfileSignupRequests) {
+        return createProfileSignupRequests
                 .stream()
                 .map(req -> createProfile(userId, req))
                 .collect(Collectors.toList());

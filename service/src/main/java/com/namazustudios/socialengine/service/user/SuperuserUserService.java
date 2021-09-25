@@ -2,21 +2,21 @@ package com.namazustudios.socialengine.service.user;
 
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
-import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
+import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.service.NameService;
-import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;
-import com.namazustudios.socialengine.service.profile.SuperUserProfileService;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.service.UserService.formatAnonymousEmail;
+import static java.util.Collections.emptyList;
 
 /**
  *
@@ -25,9 +25,13 @@ import static com.namazustudios.socialengine.service.UserService.formatAnonymous
  */
 public class SuperuserUserService extends AbstractUserService implements UserService {
 
+    private Mapper mapper;
+
     private UserDao userDao;
 
     private NameService nameService;
+
+    private PasswordGenerator passwordGenerator;
 
     @Override
     public User getUser(String userId) {
@@ -45,7 +49,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     }
 
     @Override
-    public User createUser(final UserCreateRequest userCreateRequest) {
+    public UserCreateResponse createUser(final UserCreateRequest userCreateRequest) {
 
         final var user = new User();
         user.setActive(true);
@@ -60,14 +64,25 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         }
 
         // reuse existing DAO method
-        final var created = isNullOrEmpty(userCreateRequest.getPassword()) ?
-            getUserDao().createOrReactivateUser(user) :
-            getUserDao().createOrReactivateUserWithPassword(user, userCreateRequest.getPassword());
+        final var password = isNullOrEmpty(userCreateRequest.getPassword())
+            ? getPasswordGenerator().generate()
+            : userCreateRequest.getPassword();
+
+        final var created = getUserDao().createOrReactivateUserWithPassword(user, password);
+
+        final var response = getMapper().map(created, UserCreateResponse.class);
+        response.setPassword(password);
 
         final var profiles = userCreateRequest.getProfiles();
-        if (profiles != null) createProfiles(created.getId(), userCreateRequest.getProfiles());
 
-        return created;
+        if (profiles == null) {
+            response.setProfiles(emptyList());
+        } else {
+            final var createdProfiles = createProfiles(created.getId(), userCreateRequest.getProfiles());
+            response.setProfiles(createdProfiles);
+        }
+
+        return response;
 
     }
 
@@ -95,6 +110,15 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         getUserDao().softDeleteUser(userId);
     }
 
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Inject
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
+    }
+
     public UserDao getUserDao() {
         return userDao;
     }
@@ -111,6 +135,15 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
     @Inject
     public void setNameService(NameService nameService) {
         this.nameService = nameService;
+    }
+
+    public PasswordGenerator getPasswordGenerator() {
+        return passwordGenerator;
+    }
+
+    @Inject
+    public void setPasswordGenerator(PasswordGenerator passwordGenerator) {
+        this.passwordGenerator = passwordGenerator;
     }
 
 }

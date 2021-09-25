@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.rest.user;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.service.UserService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -28,7 +28,7 @@ public class SignupResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Sign Up a User",
             notes = "Supplying the user create request object, this will create a new user.")
-    public User signUpUser(final UserCreateRequest userCreateRequest) {
+    public UserCreateResponse signUpUser(final UserCreateRequest userCreateRequest) {
         getValidationHelper().validateModel(userCreateRequest, ValidationGroups.Create.class);
         return getUserService().createUser(userCreateRequest);
     }

@@ -7,7 +7,7 @@ import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel(description = "Used in conjunction with the user creation request to specify.")
-public class ProfileSignupRequest {
+public class CreateProfileSignupRequest {
 
     @NotNull
     @ApiModelProperty("The application id this profile belongs to.")
@@ -47,7 +47,7 @@ public class ProfileSignupRequest {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        ProfileSignupRequest that = (ProfileSignupRequest) o;
+        CreateProfileSignupRequest that = (CreateProfileSignupRequest) o;
         return Objects.equals(getApplicationId(), that.getApplicationId()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getImageUrl(), that.getImageUrl());
     }
 

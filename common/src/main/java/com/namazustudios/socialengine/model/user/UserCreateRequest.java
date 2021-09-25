@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.model.user;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.model.profile.ProfileSignupRequest;
+import com.namazustudios.socialengine.model.profile.CreateProfileSignupRequest;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -31,7 +31,7 @@ public class UserCreateRequest implements Serializable {
 
     @ApiModelProperty("A list of profiles to assign to this user during creation. The server will attempt to create " +
             "a profile for each item in this list.")
-    private List<ProfileSignupRequest> profiles;
+    private List<CreateProfileSignupRequest> profiles;
 
     public String getName() {
         return name;
@@ -65,11 +65,11 @@ public class UserCreateRequest implements Serializable {
         this.level = level;
     }
 
-    public List<ProfileSignupRequest> getProfiles() {
+    public List<CreateProfileSignupRequest> getProfiles() {
         return profiles;
     }
 
-    public void setProfiles(List<ProfileSignupRequest> profiles) {
+    public void setProfiles(List<CreateProfileSignupRequest> profiles) {
         this.profiles = profiles;
     }
 

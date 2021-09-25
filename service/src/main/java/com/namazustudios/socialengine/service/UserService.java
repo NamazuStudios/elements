@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
@@ -102,7 +103,7 @@ public interface UserService {
      * @param userCreateRequest the user to create
      * @return the User, as it was created by the database
      */
-    User createUser(UserCreateRequest userCreateRequest);
+    UserCreateResponse createUser(UserCreateRequest userCreateRequest);
 
     /**
      * Updates a user, preserving the user's password.

@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
+import com.namazustudios.socialengine.service.NameService;
 import com.namazustudios.socialengine.service.ProfileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,8 @@ public class SuperUserProfileService implements ProfileService {
     private ApplicationDao applicationDao;
 
     private Context.Factory contextFactory;
+
+    private NameService nameService;
 
     private Supplier<Profile> currentProfileSupplier;
 
@@ -115,12 +118,19 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
-        final Profile newProfile = new Profile();
+
+        final var newProfile = new Profile();
+
         newProfile.setUser(getUserDao().getActiveUser(profileRequest.getUserId()));
         newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
         newProfile.setImageUrl(profileRequest.getImageUrl());
         newProfile.setDisplayName(profileRequest.getDisplayName());
+
+        if (newProfile.getDisplayName() == null || newProfile.getDisplayName().trim().isEmpty())
+            newProfile.setDisplayName(getNameService().generateQualifiedName());
+
         return getProfileDao().createOrReactivateProfile(newProfile);
+
     }
 
     @Override
@@ -152,6 +162,15 @@ public class SuperUserProfileService implements ProfileService {
 
     public ApplicationDao getApplicationDao() {
         return applicationDao;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
     @Inject
