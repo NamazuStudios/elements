@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.service.UserService;
 
@@ -47,7 +48,7 @@ public class UserUserService extends AnonUserService implements UserService {
     }
 
     @Override
-    public User createUser(UserCreateRequest user) {
+    public UserCreateResponse createUser(UserCreateRequest user) {
         throw new ForbiddenException();
     }
 
@@ -70,7 +71,7 @@ public class UserUserService extends AnonUserService implements UserService {
 
         user.setActive(true);
 
-        final String password = nullToEmpty(userUpdateRequest.getPassword()).trim();
+        final var password = nullToEmpty(userUpdateRequest.getPassword()).trim();
 
         return isNullOrEmpty(password) ?
             getUserDao().updateActiveUser(user) :

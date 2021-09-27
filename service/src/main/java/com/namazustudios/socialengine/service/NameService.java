@@ -30,15 +30,27 @@ public interface NameService {
 
     /**
      * Generates a randomly-assigned qualifier string which is intended to be appended to the generated name. The
-     * details of this are up to the implementation, but the default value is a four-digit random integer. Advanced
+     * details of this are up to the implementation, but the default value is a nine-digit random integer. Advanced
      * implementations may use something such as a database lookup or advanced random generator to generate a more
      * complete qualifier code.
      *
      * @return the generated qualifier code
      */
     default String generateQualifier() {
-        final Random random = ThreadLocalRandom.current();
-        return format("%04d", random.nextInt(9999));
+        return generateQualifier(999999999);
+    }
+
+    /**
+     * Generates a randomly-assigned qualifier string which is intended to be appended to the generated name. The
+     * details of this are up to the implementation, but the default value is a padded integer up to the specified
+     * maximum value.
+     *
+     * @return the generated qualifier code
+     */
+    default String generateQualifier(final int max) {
+        final var random = ThreadLocalRandom.current();
+        final var digits = Integer.toString(max).length();
+        return format("%0" + digits + "d", random.nextInt(max));
     }
 
     /**
@@ -50,4 +62,5 @@ public interface NameService {
     default String generateQualifiedName() {
         return format("%s%s", generateRandomName(), generateQualifier());
     }
+
 }

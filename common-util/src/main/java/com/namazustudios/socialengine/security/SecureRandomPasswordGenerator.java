@@ -10,7 +10,10 @@ import static com.namazustudios.socialengine.Constants.GENERATED_PASSWORD_LENGTH
 
 public class SecureRandomPasswordGenerator implements PasswordGenerator {
 
-    private static final String CANDIDATES = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890!#$%^&*()){}";
+    private static final String CANDIDATES =
+        "abcdefghijklmnopqrstuvwxyz" +
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
+        "1234567890!#$%^&*()){}";
 
     private int length;
 

@@ -5,18 +5,27 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
+import com.namazustudios.socialengine.security.PasswordGenerator;
+import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.service.UserService.formatAnonymousEmail;
+import static java.util.Collections.emptyList;
 
 public class AnonUserService extends AbstractUserService implements UserService {
 
-    @Inject
+    private Mapper mapper;
+
     private UserDao userDao;
+
+    private PasswordGenerator passwordGenerator;
 
     @Override
     public User getUser(String userId)  {
@@ -34,22 +43,49 @@ public class AnonUserService extends AbstractUserService implements UserService 
     }
 
     @Override
-    public User createUser(final UserCreateRequest userCreateRequest)  {
+    public UserCreateResponse createUser(final UserCreateRequest userCreateRequest)  {
 
-        final User user = new User();
-
+        final var user = new User();
+        user.setActive(true);
+        user.setLevel(User.Level.USER);
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
 
-        user.setLevel(User.Level.USER);
-        user.setActive(true);
+        if (user.getName() == null || user.getEmail() == null) {
+            final var name = getNameService().generateQualifiedName();
+            if (user.getName() == null) user.setName(name);
+            if (user.getEmail() == null) user.setEmail(formatAnonymousEmail(name));
+        }
 
-        final String password = nullToEmpty(userCreateRequest.getPassword()).trim();
+        final var password = isNullOrEmpty(userCreateRequest.getPassword())
+            ? getPasswordGenerator().generate()
+            : userCreateRequest.getPassword();
 
-        return isNullOrEmpty(password) ?
-                getUserDao().createOrReactivateUser(user) :
-                getUserDao().createOrReactivateUserWithPassword(user, password);
+        final var created = getUserDao().createOrReactivateUserWithPassword(user, password);
 
+        final var response = getMapper().map(created, UserCreateResponse.class);
+        response.setPassword(password);
+
+        final var profiles = userCreateRequest.getProfiles();
+
+        if (profiles == null) {
+            response.setProfiles(emptyList());
+        } else {
+            final var createdProfiles = createProfiles(created.getId(), userCreateRequest.getProfiles());
+            response.setProfiles(createdProfiles);
+        }
+
+        return response;
+
+    }
+
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Inject
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
     }
 
     @Override
@@ -69,6 +105,15 @@ public class AnonUserService extends AbstractUserService implements UserService 
     @Inject
     public void setUserDao(UserDao userDao) {
         this.userDao = userDao;
+    }
+
+    public PasswordGenerator getPasswordGenerator() {
+        return passwordGenerator;
+    }
+
+    @Inject
+    public void setPasswordGenerator(PasswordGenerator passwordGenerator) {
+        this.passwordGenerator = passwordGenerator;
     }
 
 }

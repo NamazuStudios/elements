@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.profile;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
@@ -11,12 +10,12 @@ import javax.validation.constraints.NotNull;
 @ApiModel(description = "Represents a request to create a profile for a user.")
 public class CreateProfileRequest {
 
+    @NotNull
     @ApiModelProperty("The user id this profile belongs to.")
-    @NotNull(groups = ValidationGroups.Insert.class)
     private String userId;
 
+    @NotNull
     @ApiModelProperty("The application id this profile belongs to.")
-    @NotNull(groups = ValidationGroups.Insert.class)
     private String applicationId;
 
     /**
@@ -40,18 +39,21 @@ public class CreateProfileRequest {
     @ApiModelProperty("A URL to the image of the profile.  (ie the User's Avatar).")
     private String imageUrl;
 
-    @NotNull
     @ApiModelProperty("A non-unique display name for this profile.")
     private String displayName;
 
     public String getUserId() {
-        return userId != null ? userId : user.getId();
+        return userId != null
+            ? userId
+            : user != null ? user.getId()
+            : null;
     }
 
     public void setUserId(String userId) {
         this.userId = userId;
     }
 
+    @Deprecated
     public void setUser(User user){
         this.user = user;
     }
@@ -64,6 +66,7 @@ public class CreateProfileRequest {
         this.applicationId = applicationId;
     }
 
+    @Deprecated
     public void setApplication(Application application){
         this.application = application;
     }
@@ -83,4 +86,5 @@ public class CreateProfileRequest {
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
     }
+
 }

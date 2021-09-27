@@ -3,16 +3,15 @@ package com.namazustudios.socialengine.service.auth;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SessionDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.MockSessionCreation;
 import com.namazustudios.socialengine.model.session.MockSessionRequest;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
-import com.namazustudios.socialengine.service.MockSessionService;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
+import com.namazustudios.socialengine.service.MockSessionService;
 import com.namazustudios.socialengine.util.DisplayNameGenerator;
 
 import javax.inject.Inject;
