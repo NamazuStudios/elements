@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
-import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.dao.DatabaseHealthStatusDao;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -16,6 +14,7 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
+import com.namazustudios.socialengine.service.blockchain.*;
 import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
@@ -62,7 +61,6 @@ import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 import org.dozer.Mapper;
 
 import javax.inject.Provider;
-import java.util.Set;
 
 /**
  * Configures all of the services, using a {@link Scope} for {@link User}, {@link Profile} injections.
@@ -129,6 +127,10 @@ public class ServicesModule extends PrivateModule {
 
         bind(ProfileService.class)
             .toProvider(ProfileServiceProvider.class)
+            .in(scope);
+
+        bind(SmartContractTemplateService.class)
+            .toProvider(SmartContractTemplateServiceProvider.class)
             .in(scope);
 
         bind(FollowerService.class)
@@ -265,6 +267,18 @@ public class ServicesModule extends PrivateModule {
 
         bind(AppleSignInAuthService.class)
             .toProvider(AppleSignInAuthServiceProvider.class)
+            .in(scope);
+
+        bind(WalletService.class)
+            .toProvider(WalletServiceProvider.class)
+            .in(scope);
+
+        bind(TokenService.class)
+            .toProvider(TokenServiceProvider.class)
+            .in(scope);
+
+        bind(SmartContractTemplateService.class)
+            .toProvider(SmartContractTemplateServiceProvider.class)
             .in(scope);
 
         bind(HealthStatusService.class)
@@ -416,6 +430,18 @@ public class ServicesModule extends PrivateModule {
             .to(DefaultHealthStatusService.class)
             .asEagerSingleton();
 
+        bind(WalletService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserWalletService.class);
+
+        bind(TokenService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserTokenService.class);
+
+        bind(SmartContractTemplateService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserSmartContractTemplateService.class);
+
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
@@ -464,6 +490,9 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class);
         expose(NameService.class);
         expose(HealthStatusService.class);
+        expose(WalletService.class);
+        expose(TokenService.class);
+        expose(SmartContractTemplateService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -498,6 +527,9 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
         expose(NameService.class).annotatedWith(Unscoped.class);
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
+        expose(WalletService.class).annotatedWith(Unscoped.class);
+        expose(TokenService.class).annotatedWith(Unscoped.class);
+        expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
 
     }
 
