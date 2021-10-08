@@ -38,11 +38,11 @@ public class InventoryItem implements Serializable {
     @NotNull
     @ApiModelProperty("The quantity of the Item in inventory")
     @Min(value = 0, message = "Quantity may not be less than 0")
-    private Integer quantity;
+    private int quantity;
 
     @NotNull
     @ApiModelProperty("The priority of this Item grouping in inventory (for stacked/packaged inventory support)")
-    private Integer priority;
+    private int priority;
 
     public String getId() {
         return id;
@@ -68,28 +68,28 @@ public class InventoryItem implements Serializable {
         this.item = item;
     }
 
-    public Integer getQuantity() {
+    public int getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
 
-    public Integer getPriority() {
+    public int getPriority() {
         return priority;
     }
 
-    public void setPriority(Integer priority) { this.priority = priority; }
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
 
     @Override
-    public boolean equals(Object object) {
-        if (this == object) return true;
-        if (!(object instanceof InventoryItem)) return false;
-        InventoryItem that = (InventoryItem) object;
-        return Objects.equals(getId(), that.getId()) &&
-                Objects.equals(getUser(), that.getUser()) &&
-                Objects.equals(getItem(), that.getItem()) &&
-                Objects.equals(getQuantity(), that.getQuantity()) &&
-                Objects.equals(getPriority(), that.getPriority());
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        InventoryItem that = (InventoryItem) o;
+        return getQuantity() == that.getQuantity() && getPriority() == that.getPriority() && Objects.equals(getId(), that.getId()) && Objects.equals(getUser(), that.getUser()) && Objects.equals(getItem(), that.getItem());
     }
 
     @Override
@@ -99,13 +99,14 @@ public class InventoryItem implements Serializable {
 
     @Override
     public String toString() {
-        return "InventoryItem{" +
-                "id='" + id + '\'' +
-                ", user=" + user +
-                ", item='" + item + '\'' +
-                ", quantity='" + quantity + '\'' +
-                ", priority='" + priority + '\'' +
-                '}';
+        final StringBuilder sb = new StringBuilder("InventoryItem{");
+        sb.append("id='").append(id).append('\'');
+        sb.append(", user=").append(user);
+        sb.append(", item=").append(item);
+        sb.append(", quantity=").append(quantity);
+        sb.append(", priority=").append(priority);
+        sb.append('}');
+        return sb.toString();
     }
 
 }

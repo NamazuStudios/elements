@@ -22,7 +22,7 @@ public interface SimpleInventoryItemService {
      * @param count the count
      * @return the list of {@link InventoryItem} instances
      */
-    Pagination<InventoryItem> getInventoryItems(int offset, int count);
+    Pagination<InventoryItem> getInventoryItems(int offset, int count, String userId);
 
     /**
      * Returns a list of {@link InventoryItem} objects.
@@ -32,28 +32,27 @@ public interface SimpleInventoryItemService {
      * @param query the search query
      * @return the list of {@link InventoryItem} instances
      */
-    Pagination<InventoryItem> getInventoryItems(int offset, int count, String query);
+    Pagination<InventoryItem> getInventoryItems(int offset, int count, String userId, String query);
 
     /**
      * Adjusts the quantity of the {@link InventoryItem} associated with the specified {@Link Item}.
      *
-     *
-     * @param user
+     * @param userId the user's id
      * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}
      * @param quantityDelta the amount by which to adjust the quantity of the {@Link InventoryItem}
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem adjustInventoryItemQuantity(User user, String itemNameOrId, int quantityDelta);
+    InventoryItem adjustInventoryItemQuantity(String userId, String itemNameOrId, int quantityDelta);
 
     /**
      * Creates a new {@link InventoryItem} for the specified {@link Item}.
      *
-     * @param user the user to own the {@link InventoryItem}
-     * @param item the {@link Item} to use
+     * @param userId the user to own the {@link InventoryItem}
+     * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()} to use.
      * @param initialQuantity the initial quantity
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem createInventoryItem(User user, Item item, int initialQuantity);
+    InventoryItem createInventoryItem(String userId, String itemNameOrId, int initialQuantity);
 
     /**
      * Deletes an {@link InventoryItem} from the given {@link User}'s inventory.

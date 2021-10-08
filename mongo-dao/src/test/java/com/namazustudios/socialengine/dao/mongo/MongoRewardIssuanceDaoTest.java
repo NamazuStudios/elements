@@ -302,8 +302,8 @@ public class MongoRewardIssuanceDaoTest {
         assertEquals(inventoryItem.getId(), id);
         assertEquals(inventoryItem.getUser(), testUser);
         assertEquals(inventoryItem.getItem(), testItem);
-        assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
-        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getItemQuantity()));
+        assertEquals(inventoryItem.getPriority(), 0);
+        assertEquals(inventoryItem.getQuantity(), existing + rewardIssuance.getItemQuantity());
 
         final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
         assertEquals(postModified.getState(), REDEEMED);
@@ -342,17 +342,17 @@ public class MongoRewardIssuanceDaoTest {
         assertEquals(inventoryItem.getId(), id);
         assertEquals(inventoryItem.getUser(), testUser);
         assertEquals(inventoryItem.getItem(), testItem);
-        assertEquals(inventoryItem.getPriority(), Integer.valueOf(0));
-        assertEquals(inventoryItem.getQuantity(), Integer.valueOf(existing + rewardIssuance.getItemQuantity()));
+        assertEquals(inventoryItem.getPriority(), 0);
+        assertEquals(inventoryItem.getQuantity(), existing + rewardIssuance.getItemQuantity());
 
         try {
             final RewardIssuance postModified = getRewardIssuanceDao().getRewardIssuance(rewardIssuance.getId());
             assertNull(postModified);
-        }
-        catch (NotFoundException e) {
+        } catch (NotFoundException e) {
             assertNotNull(e);
             // this is expected
         }
+
     }
 
     @Test(dataProvider = "getAllRewardIssuances",

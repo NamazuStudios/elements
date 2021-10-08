@@ -41,6 +41,20 @@ public interface UserDao {
     User getActiveUser(String userId);
 
     /**
+     * Finds a user based on the supplied user id, returning the {@link Optional<User>} representing the resuot.
+     *
+     * @param userId the user's ID
+     * @return an {@link Optional<User>}
+     */
+    default Optional<User> findActiveUser(String userId) {
+        try {
+            return Optional.of(getActiveUser(userId));
+        } catch (UserNotFoundException unef) {
+            return Optional.empty();
+        }
+    }
+
+    /**
      * Finds a user either by email or name.
      *
      * @param userNameOrEmail the username or email

@@ -23,22 +23,31 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count) {
-        return getInventoryItemDao().getInventoryItems(getUser(), offset, count);
+    public Pagination<InventoryItem> getInventoryItems(final int offset,
+                                                       final int count,
+                                                       final String userId) {
+        return getUser().getId().equals(userId) ?
+            getInventoryItemDao().getInventoryItems(getUser(), offset, count) :
+            Pagination.empty();
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final String query) {
-        return getInventoryItemDao().getInventoryItems(getUser(), offset, count, query);
+    public Pagination<InventoryItem> getInventoryItems(final int offset,
+                                                       final int count,
+                                                       final String userId,
+                                                       final String query) {
+        return getUser().getId().equals(userId) ?
+            getInventoryItemDao().getInventoryItems(getUser(), offset, count) :
+            Pagination.empty();
     }
 
     @Override
-    public InventoryItem adjustInventoryItemQuantity(User user, final String itemNameOrId, final int quantityDelta)  {
+    public InventoryItem adjustInventoryItemQuantity(final String userId, final String itemNameOrId, final int quantityDelta)  {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 
     @Override
-    public InventoryItem createInventoryItem(final User user, final Item item, final int initialQuantity) {
+    public InventoryItem createInventoryItem(final String userId, final String itemNameOrId, final int initialQuantity) {
         throw new ForbiddenException("Unprivileged requests are unable to create inventory items.");
     }
 

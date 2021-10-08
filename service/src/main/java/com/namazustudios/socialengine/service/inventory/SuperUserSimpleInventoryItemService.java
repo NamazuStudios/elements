@@ -1,23 +1,44 @@
 package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.dao.InventoryItemDao;
+import com.namazustudios.socialengine.dao.ItemDao;
+import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
+import javax.inject.Inject;
+
 public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItemService implements SimpleInventoryItemService {
+
+    private UserDao userDao;
+
+    private ItemDao itemDao;
 
     @Override
     public InventoryItem adjustInventoryItemQuantity(
-            final User user,
+            final String userId,
             final String itemNameOrId,
             final int quantityDelta) {
-        return getInventoryItemDao().adjustQuantityForItem(user, itemNameOrId, InventoryItemDao.SIMPLE_PRIORITY, quantityDelta);
+
+        return getUserDao()
+            .findActiveUser(userId)
+            .map(uid -> getInventoryItemDao().adjustQuantityForItem(
+                    uid, itemNameOrId,
+                    InventoryItemDao.SIMPLE_PRIORITY, quantityDelta
+                )
+            ).orElseThrow(UserNotFoundException::new);
+
     }
 
     @Override
-    public InventoryItem createInventoryItem(final User user, final Item item, final int initialQuantity) {
-        final InventoryItem inventoryItem = new InventoryItem();
+    public InventoryItem createInventoryItem(final String userId, final String itemId, final int initialQuantity) {
+
+        final var user = getUserDao().getActiveUser(userId);
+        final var item = getItemDao().getItemByIdOrName(itemId);
+
+        final var inventoryItem = new InventoryItem();
 
         inventoryItem.setUser(user);
         inventoryItem.setItem(item);
@@ -30,6 +51,25 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
     @Override
     public void deleteInventoryItem(final String inventoryItemId) {
         getInventoryItemDao().deleteInventoryItem(inventoryItemId);
+    }
+
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public ItemDao getItemDao() {
+        return itemDao;
+    }
+
+    @Inject
+    public void setItemDao(ItemDao itemDao) {
+        this.itemDao = itemDao;
     }
 
 }
