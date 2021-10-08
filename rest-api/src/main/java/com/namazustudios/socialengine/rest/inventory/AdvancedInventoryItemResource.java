@@ -75,28 +75,31 @@ public class AdvancedInventoryItemResource {
     public InventoryItem adjustAdvancedInventoryItemQuantity(
             @PathParam("itemNameOrId")
             final String itemNameOrId,
-            final AdvancedInventoryItemQuantityAdjustment simpleInventoryItemQuantityAdjustment) {
+            final AdvancedInventoryItemQuantityAdjustment advancedInventoryItemQuantityAdjustment) {
 
-        getValidationHelper().validateModel(simpleInventoryItemQuantityAdjustment);
+        getValidationHelper().validateModel(advancedInventoryItemQuantityAdjustment);
 
         return getAdvancedInventoryItemService().adjustInventoryItemQuantity(
-                simpleInventoryItemQuantityAdjustment.getUserId(),
+                advancedInventoryItemQuantityAdjustment.getUserId(),
                 itemNameOrId,
-                simpleInventoryItemQuantityAdjustment.getQuantityDelta());
+                advancedInventoryItemQuantityAdjustment.getQuantityDelta(),
+                advancedInventoryItemQuantityAdjustment.getPriority()
+        );
 
     }
 
     @POST
     @ApiOperation(value = "Create an inventory item for the specified item",
             notes = "Create an inventory item for the specified item")
-    public InventoryItem createAdvancedInventoryItem(final CreateAdvancedInventoryItemRequest createSimpleInventoryItemRequest) {
+    public InventoryItem createAdvancedInventoryItem(final CreateAdvancedInventoryItemRequest createAdvancedInventoryItemRequest) {
 
-        getValidationHelper().validateModel(createSimpleInventoryItemRequest);
+        getValidationHelper().validateModel(createAdvancedInventoryItemRequest);
 
         return getAdvancedInventoryItemService().createInventoryItem(
-                createSimpleInventoryItemRequest.getUserId(),
-                createSimpleInventoryItemRequest.getItemId(),
-                createSimpleInventoryItemRequest.getQuantity());
+                createAdvancedInventoryItemRequest.getUserId(),
+                createAdvancedInventoryItemRequest.getItemId(),
+                createAdvancedInventoryItemRequest.getQuantity(),
+                createAdvancedInventoryItemRequest.getPriority());
 
     }
 

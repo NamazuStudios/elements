@@ -11,9 +11,9 @@ public interface AdvancedInventoryItemService {
 
     Pagination<InventoryItem> getInventoryItems(int offset, int count, String userId, String query);
 
-    InventoryItem adjustInventoryItemQuantity(String userId, String itemNameOrId, int quantityDelta);
+    InventoryItem adjustInventoryItemQuantity(String userId, String itemNameOrId, int quantityDelta, int priority);
 
-    InventoryItem createInventoryItem(String userId, String itemId, int quantity);
+    InventoryItem createInventoryItem(String userId, String itemId, int quantity, int priority);
 
     void deleteInventoryItem(String inventoryItemId);
 

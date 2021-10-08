@@ -163,7 +163,7 @@ public class MongoInventoryItemDaoTest {
     @Test(dependsOnMethods = "testUpdateInventoryItem", dataProvider = "getUsersAndPriorities")
     public void testAdjustInventoryItemById(final User user, final int priority) {
         final InventoryItem inventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getId(), priority);
-        final InventoryItem adjustedInventoryItem = getInventoryItemDao().adjustQuantityForItem(user.getId(), testItemA.getId(), priority, 50);
+        final InventoryItem adjustedInventoryItem = getInventoryItemDao().adjustQuantityForItem(user, testItemA.getId(), priority, 50);
         assertEquals(inventoryItem.getId(), adjustedInventoryItem.getId());
         assertEquals(adjustedInventoryItem.getQuantity(), inventoryItem.getQuantity() + 50);
     }
@@ -171,7 +171,7 @@ public class MongoInventoryItemDaoTest {
     @Test(dependsOnMethods = "testAdjustInventoryItemById", dataProvider = "getUsersAndPriorities")
     public void testAdjustInventoryItemByName(final User user, final int priority) {
         final InventoryItem inventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getName(), priority);
-        final InventoryItem adjustedInventoryItem = getInventoryItemDao().adjustQuantityForItem(user.getId(), testItemA.getName(), priority, 50);
+        final InventoryItem adjustedInventoryItem = getInventoryItemDao().adjustQuantityForItem(user, testItemA.getName(), priority, 50);
         assertEquals(inventoryItem.getId(), adjustedInventoryItem.getId());
         assertEquals(adjustedInventoryItem.getQuantity(), inventoryItem.getQuantity() + 50);
     }
