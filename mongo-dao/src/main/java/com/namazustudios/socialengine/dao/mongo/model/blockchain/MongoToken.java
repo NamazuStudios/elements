@@ -1,67 +1,67 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
-import io.swagger.annotations.ApiModel;
-import io.swagger.annotations.ApiModelProperty;
+import com.namazustudios.elements.fts.annotation.SearchableDocument;
+import com.namazustudios.elements.fts.annotation.SearchableField;
+import com.namazustudios.elements.fts.annotation.SearchableIdentity;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
+import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import dev.morphia.annotations.*;
+import dev.morphia.utils.IndexType;
+import org.bson.types.ObjectId;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import java.util.List;
 
-@ApiModel
-public class Token {
+@SearchableIdentity(@SearchableField(
+        name = "id",
+        path = "/objectId",
+        type = ObjectId.class,
+        extractor = ObjectIdExtractor.class,
+        processors = ObjectIdProcessor.class))
+@Entity(value = "token", useDiscriminator = false)
+@SearchableDocument(fields = {
+        @SearchableField(name = "name", path = "/name"),
+        @SearchableField(name = "tags", path = "/tags"),
+        @SearchableField(name = "type", path = "/type")
+})
+@Indexes({
+        @Index(fields = @Field(value = "name", type = IndexType.TEXT))
+})
+public class MongoToken {
 
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
-    @ApiModelProperty("The unique ID of the token itself.")
+    @Id
     public String id;
 
-    @NotNull
-    @ApiModelProperty("The name given to this token.")
+    @Property
     public String name;
 
-    @ApiModelProperty("The description of this token.")
+    @Property
     public String description;
 
-    @NotNull
-    @ApiModelProperty("The type of this token. Valid options are " +
-            "\"purchase\" : ownership is transferred to the purchaser, " +
-            "\"license\" : the minter of the token retains ownership, but grants access to the purchaser, and " +
-            "\"rent\" : same as license, but access is revoked after a certain period of time (see rentDuration).")
+    @Property
     public String type;
 
-    @NotNull
-    @ApiModelProperty("Any tags to assist in filtering/searching for this token.")
+    @Property
     public List<String> tags;
 
-    @ApiModelProperty("The royalty percentage to be processed on resale, if any.")
+    @Property
     public int royaltyPercentage;
 
-    @ApiModelProperty("The duration of the rental before it is automatically returned (in seconds). " +
-            "Only valid for rent type tokens")
+    @Property
     public long rentDuration;
 
-    @ApiModelProperty("The quantity of copies of this token that can be distributed.")
+    @Property
     public long quantity;
 
-    @NotNull
-    @ApiModelProperty("The transfer options of this token. Valid values are " +
-            "\"none\" : Cannot be transferred, " +
-            "\"resale_only\" : Can be resold, but not traded, " +
-            "\"trades_only\" : Can be traded, but not resold, and " +
-            "\"resale_and_trades\" : Can be either resold or traded.")
+    @Property
     public String transferOptions;
 
-    @NotNull
-    @ApiModelProperty("Indicates whether or not this can be viewed publicly. " +
-            "If false, only the previewUrl can be viewed publicly.")
+    @Property
     public boolean publiclyAccessible;
 
-    @ApiModelProperty("The URL pointed at any preview of the contents of this token.")
+    @Property
     public String previewUrl;
 
-    @NotNull
-    @ApiModelProperty("The asset URLs of this token.")
+    @Property
     public List<String> assetUrls;
 
 

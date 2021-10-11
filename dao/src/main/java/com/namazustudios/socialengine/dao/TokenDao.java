@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
 
+import java.util.List;
+
 public interface TokenDao {
 
     /**
@@ -11,10 +13,11 @@ public interface TokenDao {
      *
      * @param offset
      * @param count
-     * @param search
+     * @param tags
+     * @param search - name or type
      * @return a {@link Pagination} of {@link Token} instances
      */
-    Pagination<Token> getTokens(int offset, int count, String search);
+    Pagination<Token> getTokens(int offset, int count, List<String> tags, String search);
 
     /**
      * Fetches a specific {@link Token} instance based on ID or name.  If not found, an

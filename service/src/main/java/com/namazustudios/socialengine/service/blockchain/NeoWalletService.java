@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 /**
- * Manages instances of {@link Wallet}.
+ * Manages instances of {@link NeoWallet}.
  *
  * Created by keithhudnall on 9/22/21.
  */
@@ -19,34 +19,34 @@ import com.namazustudios.socialengine.service.Unscoped;
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
-public interface WalletService {
+public interface NeoWalletService {
 
     /**
-     * Lists all {@link Wallet} instances, specifying a search query.
+     * Lists all {@link NeoWallet} instances, specifying a search query.
      *
      * @param offset
      * @param count
      * @param search
-     * @return a {@link Pagination} of {@link Wallet} instances
+     * @return a {@link Pagination} of {@link NeoWallet} instances
      */
-    Pagination<SmartContractTemplate> getWallets(int offset, int count, String search);
+    Pagination<NeoWallet> getWallets(int offset, int count, String search);
 
     /**
-     * Fetches a specific {@link Wallet} instance based on ID or name.  If not found, an
+     * Fetches a specific {@link NeoWallet} instance based on ID or name.  If not found, an
      * exception is raised.
      *
      * @param walletIdOrName the profile ID
-     * @return the {@link Wallet}, never null
+     * @return the {@link NeoWallet}, never null
      */
-    Wallet getWallet(String walletIdOrName);
+    NeoWallet getWallet(String walletIdOrName);
 
     /**
-     * Updates the supplied {@link Wallet}.
+     * Updates the supplied {@link NeoWallet}.
      *
      * @param walletRequest the {@link UpdateWalletRequest} with the information to update
      * @return the {@link SmartContractTemplate} as it was changed by the service.
      */
-    Wallet updateWallet(UpdateWalletRequest walletRequest);
+    NeoWallet updateWallet(UpdateWalletRequest walletRequest);
 
     /**
      * Creates a new Wallet.
@@ -54,10 +54,10 @@ public interface WalletService {
      * @param walletRequest the {@link CreateWalletRequest} with the information to create
      * @return the {@link SmartContractTemplate} as it was created by the service.
      */
-    Wallet createWallet(CreateWalletRequest walletRequest);
+    NeoWallet createWallet(CreateWalletRequest walletRequest);
 
     /**
-     * Deletes the {@link Wallet} with the supplied wallet ID.
+     * Deletes the {@link NeoWallet} with the supplied wallet ID.
      *
      * @param walletId the template ID.
      */

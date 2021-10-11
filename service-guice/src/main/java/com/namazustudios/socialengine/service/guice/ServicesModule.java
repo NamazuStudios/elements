@@ -269,7 +269,7 @@ public class ServicesModule extends PrivateModule {
             .toProvider(AppleSignInAuthServiceProvider.class)
             .in(scope);
 
-        bind(WalletService.class)
+        bind(NeoWalletService.class)
             .toProvider(WalletServiceProvider.class)
             .in(scope);
 
@@ -430,9 +430,9 @@ public class ServicesModule extends PrivateModule {
             .to(DefaultHealthStatusService.class)
             .asEagerSingleton();
 
-        bind(WalletService.class)
+        bind(NeoWalletService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserWalletService.class);
+            .to(SuperUserNeoWalletService.class);
 
         bind(TokenService.class)
             .annotatedWith(Unscoped.class)
@@ -490,7 +490,7 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class);
         expose(NameService.class);
         expose(HealthStatusService.class);
-        expose(WalletService.class);
+        expose(NeoWalletService.class);
         expose(TokenService.class);
         expose(SmartContractTemplateService.class);
 
@@ -527,7 +527,7 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
         expose(NameService.class).annotatedWith(Unscoped.class);
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
-        expose(WalletService.class).annotatedWith(Unscoped.class);
+        expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(TokenService.class).annotatedWith(Unscoped.class);
         expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
 

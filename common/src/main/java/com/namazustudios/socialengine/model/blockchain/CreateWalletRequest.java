@@ -13,8 +13,11 @@ public class CreateWalletRequest {
     @NotNull(groups = ValidationGroups.Insert.class)
     private String displayName;
 
-    @ApiModelProperty("The password used to log into the wallet.")
-    @NotNull(groups = ValidationGroups.Insert.class)
-    private String password;
+    public String getDisplayName() {
+        return displayName;
+    }
 
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
 }

@@ -2,10 +2,11 @@ package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.Wallet;
+import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
-import com.namazustudios.socialengine.service.blockchain.WalletService;
+import com.namazustudios.socialengine.service.blockchain.NeoWalletService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -19,20 +20,38 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 /**
  * Created by keithhudnall on 9/21/21.
  */
-@Api(value = "Neo Smart Contract Templates",
+@Api(value = "Neo Wallets",
         description = "Allows for the storage and retrieval of compiled Neo smart contracts.",
         authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("blockchain/neo/wallet")
 public class NeoWalletResource {
 
-    private WalletService walletService;
+    private NeoWalletService neoWalletService;
 
+    @GET
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Gets a Neo wallets for a specific user",
+            notes = "Gets a pagination of Neo Wallets for the given user id.")
+    public Pagination<NeoWallet> getWallets(
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("user") String userId) {
+
+        userId = Strings.nullToEmpty(userId).trim();
+
+        if (userId.isEmpty()) {
+            throw new NotFoundException();
+        }
+
+        return getWalletService().getWallets(offset, count, userId);
+    }
+    
     @GET
     @Path("{walletId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a specific Neo Smart Contract Template",
-            notes = "Gets a specific Neo Smart Contract Template by templateId.")
-    public Wallet getWallet(@PathParam("walletId") String walletId) {
+    @ApiOperation(value = "Gets a specific Neo Wallet",
+            notes = "Gets a specific Neo Wallet by templateId.")
+    public NeoWallet getWallet(@PathParam("walletId") String walletId) {
 
         walletId = Strings.nullToEmpty(walletId).trim();
 
@@ -45,25 +64,25 @@ public class NeoWalletResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Creates a new Neo Smart Contract Template",
-            notes = "Creates a new Neo Smart Contract Template, associated with the specified application.")
-    public Wallet createWallet(final CreateWalletRequest request) {
+    @ApiOperation(value = "Creates a new Neo Wallet",
+            notes = "Creates a new Neo Wallet, associated with the authenticated user.")
+    public NeoWallet createWallet(final CreateWalletRequest request) {
         return getWalletService().createWallet(request);
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates a Neo Smart Contract Template",
-            notes = "Updates a Neo Smart Contract Template with the specified name or id.")
-    public Wallet updateWallet(final UpdateWalletRequest request) {
+    @ApiOperation(value = "Updates a Neo Wallet",
+            notes = "Updates a Neo Wallet with the specified name or id.")
+    public NeoWallet updateWallet(final UpdateWalletRequest request) {
         return getWalletService().updateWallet(request);
     }
 
     @DELETE
     @Path("{templateId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Deletes a Neo Smart Contract Template",
-            notes = "Deletes a Neo Smart Contract Template with the specified name or id.")
+    @ApiOperation(value = "Deletes a Neo Wallet",
+            notes = "Deletes a Neo Wallet with the specified name or id.")
     public void deleteTemplate(@PathParam("templateId") String nameOrId) {
 
         nameOrId = Strings.nullToEmpty(nameOrId).trim();
@@ -75,12 +94,12 @@ public class NeoWalletResource {
         getWalletService().deleteWallet(nameOrId);
     }
 
-    public WalletService getWalletService() {
-        return walletService;
+    public NeoWalletService getWalletService() {
+        return neoWalletService;
     }
 
     @Inject
-    public void setWalletService(WalletService walletService) {
-        this.walletService = walletService;
+    public void setWalletService(NeoWalletService neoWalletService) {
+        this.neoWalletService = neoWalletService;
     }
 }

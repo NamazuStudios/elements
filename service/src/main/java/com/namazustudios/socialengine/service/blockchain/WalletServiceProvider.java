@@ -6,23 +6,23 @@ import com.namazustudios.socialengine.service.Services;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class WalletServiceProvider implements Provider<WalletService> {
+public class WalletServiceProvider implements Provider<NeoWalletService> {
 
     private User user;
 
-    private Provider<SuperUserWalletService> superUserWalletService;
+    private Provider<SuperUserNeoWalletService> superUserWalletService;
 
-    private Provider<UserWalletService> userWalletService;
+    private Provider<UserNeoWalletService> userWalletService;
 
     @Override
-    public WalletService get() {
+    public NeoWalletService get() {
         switch (getUser().getLevel()) {
             case SUPERUSER:
                 return getSuperUserWalletService().get();
             case USER:
                 return getUserWalletService().get();
             default:
-                return Services.forbidden(WalletService.class);
+                return Services.forbidden(NeoWalletService.class);
         }
     }
 
@@ -35,21 +35,21 @@ public class WalletServiceProvider implements Provider<WalletService> {
         this.user = user;
     }
 
-    public Provider<SuperUserWalletService> getSuperUserWalletService() {
+    public Provider<SuperUserNeoWalletService> getSuperUserWalletService() {
         return superUserWalletService;
     }
 
     @Inject
-    public void setWalletServiceProvider(Provider<SuperUserWalletService> superUserWalletService) {
+    public void setWalletServiceProvider(Provider<SuperUserNeoWalletService> superUserWalletService) {
         this.superUserWalletService = superUserWalletService;
     }
 
-    public Provider<UserWalletService> getUserWalletService() {
+    public Provider<UserNeoWalletService> getUserWalletService() {
         return userWalletService;
     }
 
     @Inject
-    public void setUserWalletService(Provider<UserWalletService> userWalletService) {
+    public void setUserWalletService(Provider<UserNeoWalletService> userWalletService) {
         this.userWalletService = userWalletService;
     }
 }

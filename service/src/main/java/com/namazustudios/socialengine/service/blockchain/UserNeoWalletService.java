@@ -1,17 +1,17 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.namazustudios.socialengine.dao.WalletDao;
+import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.SmartContractTemplate;
 import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.Wallet;
+import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 
 import javax.inject.Inject;
 
-public class UserWalletService implements WalletService{
+public class UserNeoWalletService implements NeoWalletService {
 
-    private WalletDao walletDao;
+    private NeoWalletDao neoWalletDao;
 
     @Override
     public Pagination<SmartContractTemplate> getWallets(int offset, int count, String search) {
@@ -19,17 +19,17 @@ public class UserWalletService implements WalletService{
     }
 
     @Override
-    public Wallet getWallet(String walletIdOrName) {
+    public NeoWallet getWallet(String walletIdOrName) {
         return null;
     }
 
     @Override
-    public Wallet updateWallet(UpdateWalletRequest walletRequest) {
+    public NeoWallet updateWallet(UpdateWalletRequest walletRequest) {
         return null;
     }
 
     @Override
-    public Wallet createWallet(CreateWalletRequest walletRequest) {
+    public NeoWallet createWallet(CreateWalletRequest walletRequest) {
         return null;
     }
 
@@ -38,12 +38,12 @@ public class UserWalletService implements WalletService{
 
     }
 
-    public WalletDao getWalletDao() {
-        return walletDao;
+    public NeoWalletDao getWalletDao() {
+        return neoWalletDao;
     }
 
     @Inject
-    public void setWalletDao(WalletDao walletDao) {
-        this.walletDao = walletDao;
+    public void setWalletDao(NeoWalletDao neoWalletDao) {
+        this.neoWalletDao = neoWalletDao;
     }
 }

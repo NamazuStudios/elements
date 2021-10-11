@@ -2,11 +2,14 @@ package com.namazustudios.socialengine.model.blockchain;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.application.Application;
+import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.List;
 
+@ApiModel
 public class SmartContractTemplate {
 
     @NotNull(groups = ValidationGroups.Update.class)
@@ -27,6 +30,8 @@ public class SmartContractTemplate {
     @NotNull(groups = ValidationGroups.Insert.class)
     @ApiModelProperty("The Application associated with this smart contract template.")
     private Application application;
+
+    private List<String> tags;
 
     public String getId() {
         return id;
@@ -58,5 +63,13 @@ public class SmartContractTemplate {
 
     public void setApplication(Application application) {
         this.application = application;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 }
