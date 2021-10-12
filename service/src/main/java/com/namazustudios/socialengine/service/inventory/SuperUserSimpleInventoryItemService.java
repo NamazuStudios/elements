@@ -4,32 +4,54 @@ import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
-import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
 import javax.inject.Inject;
 
-public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItemService implements SimpleInventoryItemService {
+import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
+
+public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemService {
 
     private UserDao userDao;
 
     private ItemDao itemDao;
+
+    private InventoryItemDao inventoryItemDao;
+
+    @Override
+    public InventoryItem getInventoryItem(final String inventoryItemId) {
+        return getInventoryItemDao().getInventoryItem(inventoryItemId);
+    }
+
+    @Override
+    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final String userId) {
+        return userId == null || userId.trim().isEmpty() ?
+            getInventoryItemDao().getInventoryItems(offset, count) :
+            getUserDao().findActiveUser(userId)
+                .map(user -> getInventoryItemDao().getInventoryItems(offset, count, user))
+                .orElseGet(Pagination::new);
+    }
+
+    @Override
+    public Pagination<InventoryItem> getInventoryItems(final int offset,
+                                                       final int count,
+                                                       final String userId,
+                                                       final String query) {
+        return userId == null || userId.trim().isEmpty() ?
+            getInventoryItemDao().getInventoryItems(offset, count) :
+            getUserDao().findActiveUser(userId)
+                .map(user -> getInventoryItemDao().getInventoryItems(offset, count, user, query))
+                .orElseGet(Pagination::new);
+    }
 
     @Override
     public InventoryItem adjustInventoryItemQuantity(
             final String userId,
             final String itemNameOrId,
             final int quantityDelta) {
-
-        return getUserDao()
-            .findActiveUser(userId)
-            .map(uid -> getInventoryItemDao().adjustQuantityForItem(
-                    uid, itemNameOrId,
-                    InventoryItemDao.SIMPLE_PRIORITY, quantityDelta
-                )
-            ).orElseThrow(UserNotFoundException::new);
-
+        final var user = getUserDao().getActiveUser(userId);
+        return getInventoryItemDao().adjustQuantityForItem(user, itemNameOrId, quantityDelta, SIMPLE_PRIORITY);
     }
 
     @Override
@@ -42,7 +64,7 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
 
         inventoryItem.setUser(user);
         inventoryItem.setItem(item);
-        inventoryItem.setPriority(InventoryItemDao.SIMPLE_PRIORITY);
+        inventoryItem.setPriority(SIMPLE_PRIORITY);
         inventoryItem.setQuantity(initialQuantity);
 
         return getInventoryItemDao().createInventoryItem(inventoryItem);
@@ -52,7 +74,6 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
     public void deleteInventoryItem(final String inventoryItemId) {
         getInventoryItemDao().deleteInventoryItem(inventoryItemId);
     }
-
 
     public UserDao getUserDao() {
         return userDao;
@@ -70,6 +91,15 @@ public class SuperUserSimpleInventoryItemService extends UserSimpleInventoryItem
     @Inject
     public void setItemDao(ItemDao itemDao) {
         this.itemDao = itemDao;
+    }
+
+    public InventoryItemDao getInventoryItemDao() {
+        return inventoryItemDao;
+    }
+
+    @Inject
+    public void setInventoryItemDao(InventoryItemDao inventoryItemDao) {
+        this.inventoryItemDao = inventoryItemDao;
     }
 
 }

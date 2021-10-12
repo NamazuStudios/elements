@@ -19,7 +19,6 @@ import java.util.Random;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.of;
 import static org.testng.Assert.*;
@@ -109,7 +108,7 @@ public class MongoInventoryItemDaoTest {
         assertEquals(priority, fetched.getPriority());
         assertEquals(quantity, fetched.getQuantity());
 
-        final Pagination<InventoryItem> items = getInventoryItemDao().getInventoryItems(user, 0, 20);
+        final Pagination<InventoryItem> items = getInventoryItemDao().getInventoryItems(0, 20, user);
 
         assertEquals(items.getTotal(), priority + 1);
 

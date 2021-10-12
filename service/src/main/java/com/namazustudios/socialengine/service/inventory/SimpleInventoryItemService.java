@@ -10,10 +10,10 @@ public interface SimpleInventoryItemService {
     /**
      * Returns the {@link InventoryItem} associated with the specified {@Link Item}.
      *
-     * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}
+     * @param inventoryItemId the id of the as specified by {@link InventoryItem#getId()}
      * @return the {@link InventoryItem} associated with specified item
      */
-    InventoryItem getInventoryItem(String itemNameOrId);
+    InventoryItem getInventoryItem(String inventoryItemId);
 
     /**
      * Returns a list of {@link InventoryItem} objects.

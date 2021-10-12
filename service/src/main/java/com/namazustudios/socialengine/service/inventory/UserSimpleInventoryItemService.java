@@ -2,14 +2,12 @@ package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
+import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
-
-import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
 
 public class UserSimpleInventoryItemService implements SimpleInventoryItemService {
 
@@ -18,16 +16,14 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     private InventoryItemDao inventoryItemDao;
 
     @Override
-    public InventoryItem getInventoryItem(final String itemNameOrId) {
-        return getInventoryItemDao().getInventoryItemByItemNameOrId(getUser(), itemNameOrId, SIMPLE_PRIORITY);
+    public InventoryItem getInventoryItem(final String inventoryItemId) {
+        return getInventoryItemDao().getInventoryItem(inventoryItemId);
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(final int offset,
-                                                       final int count,
-                                                       final String userId) {
-        return getUser().getId().equals(userId) ?
-            getInventoryItemDao().getInventoryItems(getUser(), offset, count) :
+    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final String userId) {
+        return userId == null || getUser().getId().equals(userId.trim()) ?
+            getInventoryItemDao().getInventoryItems(offset, count, getUser()) :
             Pagination.empty();
     }
 
@@ -36,8 +32,8 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
                                                        final int count,
                                                        final String userId,
                                                        final String query) {
-        return getUser().getId().equals(userId) ?
-            getInventoryItemDao().getInventoryItems(getUser(), offset, count) :
+        return userId == null || getUser().getId().equals(userId.trim()) ?
+            getInventoryItemDao().getInventoryItems(offset, count, getUser(), query) :
             Pagination.empty();
     }
 
@@ -73,4 +69,5 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     public void setUser(User user) {
         this.user = user;
     }
+
 }

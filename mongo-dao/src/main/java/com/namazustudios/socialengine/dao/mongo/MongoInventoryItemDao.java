@@ -23,7 +23,6 @@ import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.experimental.filters.Filters;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
@@ -33,7 +32,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
-import javax.inject.Singleton;
 
 import static com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
 import static dev.morphia.query.experimental.filters.Filters.eq;
@@ -106,26 +104,32 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(final User user, final int offset, final int count) {
-        return getInventoryItems(user, offset, count, null);
+    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final User user) {
+        return getInventoryItems(offset, count, user, null);
     }
 
     @Override
-    public Pagination<InventoryItem> getInventoryItems(final User user,
-                                                       final int offset, final int count,
+    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final User user,
                                                        final String search) {
-        if (StringUtils.isNotEmpty(search)) {
-            LOGGER.warn(" getItems(int offset, int count, String query) was called with a query " +
-                    "string parameter.  This field is presently ignored and will return all values");
-        }
 
-        final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
-
-        query.filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
+        final var query = getDatastore().find(MongoInventoryItem.class)
+            .filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
             mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class), new FindOptions());
+
+    }
+
+    @Override
+    public Pagination<InventoryItem> getInventoryItems(final int offset, final int count) {
+
+        final var query = getDatastore().find(MongoInventoryItem.class);
+
+        return getMongoDBUtils().paginationFromQuery(
+                query, offset, count,
+                mongoItem -> getDozerMapper().map(mongoItem, InventoryItem.class), new FindOptions());
+
     }
 
     @Override
