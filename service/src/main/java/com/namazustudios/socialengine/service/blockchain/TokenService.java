@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.service.blockchain;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -44,10 +45,10 @@ public interface TokenService {
     /**
      * Updates the supplied {@link Token}.
      *
-     * @param tokenId the id of the token with the information to update
+     * @param tokenRequest the id of the token with the information to update
      * @return the {@link Token} as it was changed by the service.
      */
-    Token updateToken(String tokenId);
+    Token updateToken(UpdateTokenRequest tokenRequest);
 
     /**
      * Creates a new token using a pre-created template.

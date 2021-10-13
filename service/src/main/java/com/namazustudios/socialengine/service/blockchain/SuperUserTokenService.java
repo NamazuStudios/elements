@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.TokenDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
 
 import javax.inject.Inject;
 
@@ -22,7 +23,7 @@ public class SuperUserTokenService implements TokenService {
     }
 
     @Override
-    public Token updateToken(String tokenId) {
+    public Token updateToken(UpdateTokenRequest tokenId) {
         return null;
     }
 

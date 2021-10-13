@@ -2,8 +2,10 @@ package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
 
+import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
 import com.namazustudios.socialengine.service.blockchain.TokenService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -46,16 +48,16 @@ public class TokenResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new Neo Smart Contract Template",
             notes = "Creates a new Neo Smart Contract Template, associated with the specified application.")
-    public Token createToken(final String templateId) {
-        return getTokenService().createToken(templateId);
+    public Token createToken(final CreateTokenRequest tokenRequest) {
+        return getTokenService().createToken(tokenRequest);
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a Neo Smart Contract Template",
             notes = "Updates a Neo Smart Contract Template with the specified name or id.")
-    public Token updateToken(final String templateId) {
-        return getTokenService().updateToken(templateId);
+    public Token updateToken(final UpdateTokenRequest tokenRequest) {
+        return getTokenService().updateToken(tokenRequest);
     }
 
     @DELETE
