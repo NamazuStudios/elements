@@ -11,7 +11,6 @@ import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 
 public class InventoryApiTest {
 
-
     @Factory
     public static Object[] getTests() {
         return new Object[] {
@@ -41,6 +40,11 @@ public class InventoryApiTest {
         user0.createUser("user0").createSession();
         user1.createUser("user1").createSession();
         superUser.createSuperuser("admin").createSession();
+    }
+
+    @Test
+    public void createDigitalGoods() {
+
     }
 
     @Test(dependsOnMethods = "createUsers")
