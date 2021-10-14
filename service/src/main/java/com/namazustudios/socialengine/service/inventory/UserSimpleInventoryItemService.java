@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.user.User;
@@ -38,7 +37,12 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     }
 
     @Override
-    public InventoryItem adjustInventoryItemQuantity(final String userId, final String itemNameOrId, final int quantityDelta)  {
+    public InventoryItem updateInventoryItem(final String inventoryItemId, final String userId, final String itemId, final int quantity) {
+        throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
+    }
+
+    @Override
+    public InventoryItem adjustInventoryItemQuantity(final String inventoryItemId, final String userId, final int quantityDelta)  {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 

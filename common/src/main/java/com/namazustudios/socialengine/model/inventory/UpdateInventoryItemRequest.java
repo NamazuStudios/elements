@@ -7,11 +7,8 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
-/**
- *
- */
 @ApiModel
-public class CreateSimpleInventoryItemRequest {
+public class UpdateInventoryItemRequest {
 
     @NotNull
     @ApiModelProperty("The User ID")
@@ -55,7 +52,7 @@ public class CreateSimpleInventoryItemRequest {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        CreateSimpleInventoryItemRequest that = (CreateSimpleInventoryItemRequest) o;
+        UpdateInventoryItemRequest that = (UpdateInventoryItemRequest) o;
         return getQuantity() == that.getQuantity() && Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getItemId(), that.getItemId());
     }
 
@@ -66,7 +63,7 @@ public class CreateSimpleInventoryItemRequest {
 
     @Override
     public String toString() {
-        final StringBuilder sb = new StringBuilder("CreateSimpleInventoryItemRequest{");
+        final StringBuilder sb = new StringBuilder("UpdateSimpleInventoryItemRequest{");
         sb.append("userId='").append(userId).append('\'');
         sb.append(", itemId='").append(itemId).append('\'');
         sb.append(", quantity=").append(quantity);

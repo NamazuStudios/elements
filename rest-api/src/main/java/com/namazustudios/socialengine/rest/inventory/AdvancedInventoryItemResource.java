@@ -34,10 +34,10 @@ public class AdvancedInventoryItemResource {
     private AdvancedInventoryItemService advancedInventoryItemService;
 
     @GET
-    @Path("{itemNameOrId}")
+    @Path("{inventoryItemId}")
     @ApiOperation(value = "Gets inventory item for the specified item",
             notes = "Gets the first (primary) inventory item for the specified item")
-    public InventoryItem getAdvancedInventoryItem(@PathParam("itemNameOrId") final String itemNameOrId) {
+    public InventoryItem getAdvancedInventoryItem(@PathParam("inventoryItemId") final String itemNameOrId) {
         return getAdvancedInventoryItemService().getInventoryItem(itemNameOrId);
     }
 
@@ -68,23 +68,42 @@ public class AdvancedInventoryItemResource {
     }
 
     @PATCH
-    @Path("{itemNameOrId}")
+    @Path("{inventoryItemId}")
     @ApiOperation(value = "Adjust the quantity of the inventory item for the specified item.",
             notes = "Adjust the quantity of the first (primary) inventory item for the specified item.  This " +
                     "implicitly will create the InventoryItem if it does not exist.  The inventory item value")
     public InventoryItem adjustAdvancedInventoryItemQuantity(
-            @PathParam("itemNameOrId")
-            final String itemNameOrId,
+            @PathParam("inventoryItemId")
+            final String inventoryItemId,
             final AdvancedInventoryItemQuantityAdjustment advancedInventoryItemQuantityAdjustment) {
 
         getValidationHelper().validateModel(advancedInventoryItemQuantityAdjustment);
 
         return getAdvancedInventoryItemService().adjustInventoryItemQuantity(
+                inventoryItemId,
                 advancedInventoryItemQuantityAdjustment.getUserId(),
-                itemNameOrId,
                 advancedInventoryItemQuantityAdjustment.getQuantityDelta(),
                 advancedInventoryItemQuantityAdjustment.getPriority()
         );
+
+    }
+
+    @PUT
+    @Path("{inventoryItemId}")
+    @ApiOperation(value = "Updates an inventory item for the specified item",
+            notes = "Updates an inventory item for the specified item")
+    public InventoryItem updateSimpleInventoryItem(
+            @PathParam("inventoryItemId")
+            final String inventoryItemId,
+            final UpdateInventoryItemRequest updateInventoryItemRequest) {
+
+        getValidationHelper().validateModel(updateInventoryItemRequest);
+
+        return getAdvancedInventoryItemService().updateInventoryItem(
+                inventoryItemId,
+                updateInventoryItemRequest.getUserId(),
+                updateInventoryItemRequest.getItemId(),
+                updateInventoryItemRequest.getQuantity());
 
     }
 

@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.service.inventory;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
@@ -47,11 +46,10 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
 
     @Override
     public InventoryItem adjustInventoryItemQuantity(
-            final String userId,
-            final String itemNameOrId,
+            final String inventoryItemId, final String userId,
             final int quantityDelta) {
         final var user = getUserDao().getActiveUser(userId);
-        return getInventoryItemDao().adjustQuantityForItem(user, itemNameOrId, quantityDelta, SIMPLE_PRIORITY);
+        return getInventoryItemDao().adjustQuantityForItem(user, inventoryItemId, quantityDelta, SIMPLE_PRIORITY);
     }
 
     @Override
@@ -68,6 +66,28 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
         inventoryItem.setQuantity(initialQuantity);
 
         return getInventoryItemDao().createInventoryItem(inventoryItem);
+
+    }
+
+    @Override
+    public InventoryItem updateInventoryItem(
+            final String inventoryItemId,
+            final String userId,
+            final String itemId,
+            final int quantity) {
+
+        final var user = getUserDao().getActiveUser(userId);
+        final var item = getItemDao().getItemByIdOrName(itemId);
+
+        final var inventoryItem = new InventoryItem();
+
+        inventoryItem.setId(inventoryItemId);
+        inventoryItem.setUser(user);
+        inventoryItem.setItem(item);
+        inventoryItem.setQuantity(quantity);
+
+        return getInventoryItemDao().updateInventoryItem(inventoryItem);
+
     }
 
     @Override

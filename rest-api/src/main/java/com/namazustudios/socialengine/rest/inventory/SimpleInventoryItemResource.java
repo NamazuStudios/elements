@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.CreateSimpleInventoryItemRequest;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.inventory.SimpleInventoryItemQuantityAdjustment;
+import com.namazustudios.socialengine.model.inventory.UpdateInventoryItemRequest;
 import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemService;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
@@ -37,10 +38,10 @@ public class SimpleInventoryItemResource {
     private SimpleInventoryItemService simpleInventoryItemService;
 
     @GET
-    @Path("{itemNameOrId}")
+    @Path("{inventoryItemId}")
     @ApiOperation(value = "Gets inventory item for the specified item",
                   notes = "Gets the first (primary) inventory item for the specified item")
-    public InventoryItem getSimpleInventoryItem(@PathParam("itemNameOrId") final String itemNameOrId) {
+    public InventoryItem getSimpleInventoryItem(@PathParam("inventoryItemId") final String itemNameOrId) {
         return getSimpleInventoryItemService().getInventoryItem(itemNameOrId);
     }
 
@@ -71,21 +72,39 @@ public class SimpleInventoryItemResource {
     }
 
     @PATCH
-    @Path("{itemNameOrId}")
+    @Path("{inventoryItemId}")
     @ApiOperation(value = "Adjust the quantity of the inventory item for the specified item.",
                   notes = "Adjust the quantity of the first (primary) inventory item for the specified item.  This " +
                           "implicitly will create the InventoryItem if it does not exist.  The inventory item value")
     public InventoryItem adjustSimpleInventoryItemQuantity(
-            @PathParam("itemNameOrId")
-            final String itemNameOrId,
+            @PathParam("inventoryItemId") final String inventoryItemId,
             final SimpleInventoryItemQuantityAdjustment simpleInventoryItemQuantityAdjustment) {
 
         getValidationHelper().validateModel(simpleInventoryItemQuantityAdjustment);
 
         return getSimpleInventoryItemService().adjustInventoryItemQuantity(
-            simpleInventoryItemQuantityAdjustment.getUserId(),
-            itemNameOrId,
-            simpleInventoryItemQuantityAdjustment.getQuantityDelta());
+                inventoryItemId,
+                simpleInventoryItemQuantityAdjustment.getUserId(),
+                simpleInventoryItemQuantityAdjustment.getQuantityDelta());
+
+    }
+
+    @PUT
+    @Path("{inventoryItemId}")
+    @ApiOperation(value = "Updates an inventory item for the specified item",
+                  notes = "Updates an inventory item for the specified item")
+    public InventoryItem updateSimpleInventoryItem(
+            @PathParam("inventoryItemId")
+            final String inventoryItemId,
+            final UpdateInventoryItemRequest updateInventoryItemRequest) {
+
+        getValidationHelper().validateModel(updateInventoryItemRequest);
+
+        return getSimpleInventoryItemService().updateInventoryItem(
+                inventoryItemId,
+                updateInventoryItemRequest.getUserId(),
+                updateInventoryItemRequest.getItemId(),
+                updateInventoryItemRequest.getQuantity());
 
     }
 

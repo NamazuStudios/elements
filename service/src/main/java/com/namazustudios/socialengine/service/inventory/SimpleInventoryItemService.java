@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.goods.Item;
 public interface SimpleInventoryItemService {
 
     /**
-     * Returns the {@link InventoryItem} associated with the specified {@Link Item}.
+     * Returns the {@link InventoryItem} associated with the specified id.
      *
      * @param inventoryItemId the id of the as specified by {@link InventoryItem#getId()}
      * @return the {@link InventoryItem} associated with specified item
@@ -20,6 +20,7 @@ public interface SimpleInventoryItemService {
      *
      * @param offset the offset
      * @param count the count
+     * @param userId the user id to filter, pass null or empty to fetch all
      * @return the list of {@link InventoryItem} instances
      */
     Pagination<InventoryItem> getInventoryItems(int offset, int count, String userId);
@@ -29,6 +30,7 @@ public interface SimpleInventoryItemService {
      *
      * @param offset the offset
      * @param count the count
+     * @param userId the user id to filter, pass null or empty to fetch all
      * @param query the search query
      * @return the list of {@link InventoryItem} instances
      */
@@ -37,12 +39,12 @@ public interface SimpleInventoryItemService {
     /**
      * Adjusts the quantity of the {@link InventoryItem} associated with the specified {@Link Item}.
      *
+     * @param inventoryItemId the value of {@link InventoryItem#getId()}
      * @param userId the user's id
-     * @param itemNameOrId the value of {@link Item#getId()} or {@link Item#getName()}
      * @param quantityDelta the amount by which to adjust the quantity of the {@Link InventoryItem}
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem adjustInventoryItemQuantity(String userId, String itemNameOrId, int quantityDelta);
+    InventoryItem adjustInventoryItemQuantity(String inventoryItemId, String userId, int quantityDelta);
 
     /**
      * Creates a new {@link InventoryItem} for the specified {@link Item}.
@@ -53,6 +55,18 @@ public interface SimpleInventoryItemService {
      * @return the {@link InventoryItem} as it was written to the database
      */
     InventoryItem createInventoryItem(String userId, String itemNameOrId, int initialQuantity);
+
+    /**
+     * Updates an inventory item with the supplied user id, item id, and quantity.
+     *
+     *
+     * @param inventoryItemId the inventory item id
+     * @param userId the user id of the user owning the inventory item
+     * @param itemId the item id of the user owning the inventory item
+     * @param quantity the quantity to set
+     * @return the updated {@link InventoryItem}
+     */
+    InventoryItem updateInventoryItem(String inventoryItemId, String userId, String itemId, int quantity);
 
     /**
      * Deletes an {@link InventoryItem} from the given {@link User}'s inventory.

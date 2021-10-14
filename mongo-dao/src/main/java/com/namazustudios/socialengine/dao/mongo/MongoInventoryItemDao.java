@@ -41,8 +41,6 @@ import static java.util.UUID.randomUUID;
 
 public class MongoInventoryItemDao implements InventoryItemDao {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(MongoInventoryItemDao.class);
-
     private StandardQueryParser standardQueryParser;
 
     private ObjectIndex objectIndex;
@@ -147,16 +145,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         mongoInventoryItem.setVersion(randomUUID().toString());
         mongoInventoryItem.setObjectId(new MongoInventoryItemId(mongoUser, mongoItem, inventoryItem.getPriority()));
 
-        try {
-            getDatastore().insert(mongoInventoryItem);
-        } catch (MongoException ex) {
-            if (ex.getCode() == 11000) {
-                throw new DuplicateException(ex);
-            } else {
-                throw new InternalException(ex);
-            }
-        }
-
+        getMongoDBUtils().performV(ds -> ds.insert(mongoInventoryItem));
         getObjectIndex().index(mongoInventoryItem);
 
         final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
