@@ -21,7 +21,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
  * Created by keithhudnall on 9/21/21.
  */
 @Api(value = "Neo Wallets",
-        description = "Allows for the storage and retrieval of compiled Neo smart contracts.",
+        description = "Allows for the storage and retrieval of compiled Neo wallets.",
         authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("blockchain/neo/wallet")
 public class NeoWalletResource {

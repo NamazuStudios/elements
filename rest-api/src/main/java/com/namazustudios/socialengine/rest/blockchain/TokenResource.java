@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import com.namazustudios.socialengine.model.blockchain.Token;
 
 import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
@@ -20,20 +22,38 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 /**
  * Created by keithhudnall on 9/21/21.
  */
-@Api(value = "Neo Smart Contract Templates",
-        description = "Allows for the storage and retrieval of compiled Neo smart contracts.",
+@Api(value = "Neo Tokens",
+        description = "Allows for the storage and retrieval of compiled Neo tokens.",
         authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
-@Path("blockchain/neo/template")
+@Path("blockchain/neo/token")
 public class TokenResource {
 
     private TokenService tokenService;
 
     @GET
-    @Path("{templateId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a specific Neo Smart Contract Template",
-            notes = "Gets a specific Neo Smart Contract Template by templateId.")
-    public Token getToken(@PathParam("templateId") String tokenId) {
+    @ApiOperation(value = "Gets a Neo Tokens for a specific user",
+            notes = "Gets a pagination of Neo Tokens for the given query.")
+    public Pagination<Token> getTokens(
+            @QueryParam("offset") @DefaultValue("0") final int offset,
+            @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("query") String query) {
+
+        query = Strings.nullToEmpty(query).trim();
+
+        if (query.isEmpty()) {
+            throw new NotFoundException();
+        }
+
+        return getTokenService().getTokens(offset, count, query);
+    }
+
+    @GET
+    @Path("{tokenId}")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Gets a specific Neo Token",
+            notes = "Gets a specific Neo Token by tokenId.")
+    public Token getToken(@PathParam("tokenId") String tokenId) {
 
         tokenId = Strings.nullToEmpty(tokenId).trim();
 
@@ -46,34 +66,34 @@ public class TokenResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Creates a new Neo Smart Contract Template",
-            notes = "Creates a new Neo Smart Contract Template, associated with the specified application.")
+    @ApiOperation(value = "Creates a new Neo Token",
+            notes = "Creates a new Neo Token, associated with the specified smart contract.")
     public Token createToken(final CreateTokenRequest tokenRequest) {
         return getTokenService().createToken(tokenRequest);
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates a Neo Smart Contract Template",
-            notes = "Updates a Neo Smart Contract Template with the specified name or id.")
+    @ApiOperation(value = "Updates a Neo Token",
+            notes = "Updates a Neo Token with the specified name or id.")
     public Token updateToken(final UpdateTokenRequest tokenRequest) {
         return getTokenService().updateToken(tokenRequest);
     }
 
     @DELETE
-    @Path("{templateId}")
+    @Path("{tokenId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Deletes a Neo Smart Contract Template",
-            notes = "Deletes a Neo Smart Contract Template with the specified name or id.")
-    public void deleteToken(@PathParam("templateId") String nameOrId) {
+    @ApiOperation(value = "Deletes a Neo Token",
+            notes = "Deletes a Neo Token with the specified id.")
+    public void deleteToken(@PathParam("tokenId") String tokenId) {
 
-        nameOrId = Strings.nullToEmpty(nameOrId).trim();
+        tokenId = Strings.nullToEmpty(tokenId).trim();
 
-        if (nameOrId.isEmpty()) {
+        if (tokenId.isEmpty()) {
             throw new NotFoundException();
         }
 
-        getTokenService().deleteToken(nameOrId);
+        getTokenService().deleteToken(tokenId);
     }
 
     public TokenService getTokenService() {

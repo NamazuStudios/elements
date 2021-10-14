@@ -59,10 +59,10 @@ public interface TokenService {
     Token createToken(CreateTokenRequest tokenRequest);
 
     /**
-     * Deletes the {@link Token} with the supplied profile ID.
+     * Deletes the {@link Token} with the supplied token ID.
      *
-     * @param templateId the template ID.
+     * @param tokenId the token ID.
      */
-    void deleteToken(String templateId);
+    void deleteToken(String tokenId);
 
 }
