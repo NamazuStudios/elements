@@ -89,7 +89,7 @@ public class ItemResource {
             @PathParam("identifier")
             final String identifier,
             final UpdateItemRequest updateItemRequest) {
-        
+
         getValidationHelper().validateModel(updateItemRequest);
 
         final Item item = new Item();

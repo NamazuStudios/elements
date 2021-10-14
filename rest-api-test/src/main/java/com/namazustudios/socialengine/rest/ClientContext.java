@@ -54,7 +54,7 @@ class ClientContext {
     }
 
     public String getSessionSecret() {
-        if (sessionCreation == null) throw new IllegalStateException("No profiles set.");
+        if (sessionCreation == null) throw new IllegalStateException("No session secret set.");
         return sessionCreation.getSessionSecret();
     }
 
