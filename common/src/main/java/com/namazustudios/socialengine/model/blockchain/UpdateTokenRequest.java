@@ -7,7 +7,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import java.util.List;
 
-@ApiModel(description = "Represents a request to create a Smart Contract Template for an Application.")
+@ApiModel(description = "Represents a request to update a Neo Token.")
 public class UpdateTokenRequest {
 
     @ApiModelProperty("The id of the deployed token to update.")

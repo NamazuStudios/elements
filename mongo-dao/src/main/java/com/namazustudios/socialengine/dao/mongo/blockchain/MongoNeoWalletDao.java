@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -75,10 +76,10 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public NeoWallet updateWallet(NeoWallet wallet) {
-        getValidationHelper().validateModel(wallet, ValidationGroups.Update.class);
+    public NeoWallet updateWallet(UpdateWalletRequest walletRequest) {
+        getValidationHelper().validateModel(walletRequest, ValidationGroups.Update.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(wallet.getId());
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletRequest.getId());
         final var query = getDatastore().find(MongoNeoWallet.class);
 
         final var builder = new UpdateBuilder();
@@ -86,7 +87,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         query.filter(eq("_id", objectId));
 
         builder.with(
-                set("displayName", nullToEmpty(wallet.getDisplayName()).trim())
+                set("displayName", nullToEmpty(walletRequest.getDisplayName()).trim())
         );
 
         final MongoNeoWallet mongoNeoWallet = getMongoDBUtils().perform(ds ->
@@ -94,7 +95,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         );
 
         if (mongoNeoWallet == null) {
-            throw new NotFoundException("application not found: " + wallet.getId());
+            throw new NotFoundException("Wallet not found: " + walletRequest.getId());
         }
 
         getObjectIndex().index(mongoNeoWallet);

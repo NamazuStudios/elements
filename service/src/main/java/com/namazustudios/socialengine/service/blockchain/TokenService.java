@@ -9,6 +9,8 @@ import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
+import java.util.List;
+
 /**
  * Manages instances of {@link Token}.
  *
@@ -28,10 +30,11 @@ public interface TokenService {
      *
      * @param offset
      * @param count
+     * @param tags
      * @param search
      * @return a {@link Pagination} of {@link Token} instances
      */
-    Pagination<Token> getTokens(int offset, int count, String search);
+    Pagination<Token> getTokens(int offset, int count, List<String> tags, String search);
 
     /**
      * Fetches a specific {@link Token} instance based on ID or name.  If not found, an

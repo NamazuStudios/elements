@@ -7,34 +7,35 @@ import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
 
 import javax.inject.Inject;
+import java.util.List;
 
 public class UserTokenService implements TokenService {
 
     private TokenDao tokenDao;
 
     @Override
-    public Pagination<Token> getTokens(int offset, int count, String search) {
-        return null;
+    public Pagination<Token> getTokens(int offset, int count, List<String> tags, String search) {
+        return getTokenDao().getTokens(offset, count, tags, search);
     }
 
     @Override
     public Token getToken(String tokenIdOrName) {
-        return null;
+        return getTokenDao().getToken(tokenIdOrName);
     }
 
     @Override
-    public Token updateToken(UpdateTokenRequest tokenId) {
-        return null;
+    public Token updateToken(UpdateTokenRequest updateTokenRequest) {
+        return getTokenDao().updateToken(updateTokenRequest);
     }
 
     @Override
     public Token createToken(CreateTokenRequest tokenRequest) {
-        return null;
+        return getTokenDao().createToken(tokenRequest);
     }
 
     @Override
-    public void deleteToken(String templateId) {
-
+    public void deleteToken(String tokenId) {
+        getTokenDao().deleteToken(tokenId);
     }
 
     public TokenDao getTokenDao() {

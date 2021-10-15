@@ -7,6 +7,8 @@ import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
+import java.util.Optional;
+
 /**
  * Manages instances of {@link NeoWallet}.
  *
@@ -38,7 +40,7 @@ public interface NeoWalletService {
      * @param walletIdOrName the profile ID
      * @return the {@link NeoWallet}, never null
      */
-    NeoWallet getWallet(String walletIdOrName);
+    Optional<NeoWallet> getWallet(String walletIdOrName);
 
     /**
      * Updates the supplied {@link NeoWallet}.

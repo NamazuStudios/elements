@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
 
 import java.util.List;
 
@@ -31,10 +32,10 @@ public interface TokenDao {
     /**
      * Updates the supplied {@link Token}.
      *
-     * @param tokenId the id of the token with the information to update
+     * @param updateTokenRequest the update request for the token.
      * @return the {@link Token} as it was changed by the service.
      */
-    Token updateToken(String tokenId);
+    Token updateToken(UpdateTokenRequest updateTokenRequest);
 
     /**
      * Creates a new token using a pre-created template.

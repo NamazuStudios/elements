@@ -17,6 +17,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.util.List;
+
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 /**
@@ -37,6 +39,7 @@ public class TokenResource {
     public Pagination<Token> getTokens(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
+            @QueryParam("tags") @DefaultValue("") final List<String> tags,
             @QueryParam("query") String query) {
 
         query = Strings.nullToEmpty(query).trim();
@@ -45,7 +48,7 @@ public class TokenResource {
             throw new NotFoundException();
         }
 
-        return getTokenService().getTokens(offset, count, query);
+        return getTokenService().getTokens(offset, count, tags, query);
     }
 
     @GET

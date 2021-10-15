@@ -35,7 +35,7 @@ public interface NeoWalletDao {
      * @param wallet the {@link UpdateWalletRequest} with the information to update
      * @return the {@link SmartContractTemplate} as it was changed by the service.
      */
-    NeoWallet updateWallet(NeoWallet wallet);
+    NeoWallet updateWallet(UpdateWalletRequest wallet);
 
     /**
      * Creates a new Wallet.

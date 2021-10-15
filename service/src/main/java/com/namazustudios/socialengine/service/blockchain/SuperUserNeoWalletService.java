@@ -12,6 +12,7 @@ import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.wallet.Wallet;
 
 import javax.inject.Inject;
+import java.util.Optional;
 
 public class SuperUserNeoWalletService implements NeoWalletService {
 
@@ -22,25 +23,25 @@ public class SuperUserNeoWalletService implements NeoWalletService {
     private PasswordGenerator passwordGenerator;
 
     @Override
-    public Pagination<SmartContractTemplate> getWallets(int offset, int count, String search) {
-        return null;
+    public Pagination<NeoWallet> getWallets(int offset, int count, String search) {
+        return getWalletDao().getWallets(offset, count, search);
     }
 
     @Override
-    public NeoWallet getWallet(String walletIdOrName) {
-        return null;
+    public Optional<NeoWallet> getWallet(String walletIdOrName) {
+        return getWalletDao().getWallet(walletIdOrName);
     }
 
     @Override
     public NeoWallet updateWallet(UpdateWalletRequest walletRequest) {
-        return null;
+        return getWalletDao().updateWallet(walletRequest);
     }
 
     @Override
     public NeoWallet createWallet(CreateWalletRequest walletRequest) {
 
         var user = getUser();
-        var pw = passwordGenerator.generate();
+        var pw = getPasswordGenerator().generate();
 
         try {
             var wallet = Wallet.create(pw)
@@ -61,7 +62,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
 
     @Override
     public void deleteWallet(String walletId) {
-
+        getWalletDao().deleteWallet(walletId);
     }
 
     public NeoWalletDao getWalletDao() {

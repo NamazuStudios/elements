@@ -19,6 +19,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -97,8 +98,30 @@ public class MongoTokenDao implements TokenDao {
     }
 
     @Override
-    public Token updateToken(String tokenId) {
-        return null;
+    public Token updateToken(UpdateTokenRequest updateTokenRequest) {
+        getValidationHelper().validateModel(updateTokenRequest, ValidationGroups.Update.class);
+
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateTokenRequest.getTokenId());
+        final var query = getDatastore().find(MongoToken.class);
+
+        final var builder = new UpdateBuilder();
+
+        query.filter(eq("_id", objectId));
+
+        builder.with(
+                set("name", nullToEmpty(updateTokenRequest.getName()).trim())
+        );
+
+        final MongoToken mongoToken = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoToken == null) {
+            throw new NotFoundException("Token not found: " + updateTokenRequest.getTokenId());
+        }
+
+        getObjectIndex().index(mongoToken);
+        return transform(mongoToken);
     }
 
     @Override
