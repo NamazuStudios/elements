@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
 import com.namazustudios.socialengine.model.session.SessionCreation;
+import com.namazustudios.socialengine.rt.util.Hex;
 import org.bson.types.ObjectId;
 
 import java.security.MessageDigest;
@@ -64,8 +65,7 @@ public class MongoSessionSecret {
 
     public MongoSessionSecret(final String sessionSecret) {
 
-        final Base64.Decoder decoder = Base64.getDecoder();
-        final byte[] parsedSecret = decoder.decode(sessionSecret);
+        final byte[] parsedSecret = Hex.decode(sessionSecret);
 
         if (parsedSecret.length < SECRET_HEADER_LENGTH) {
             throw new IllegalArgumentException("Invalid Session Secret.");
@@ -104,8 +104,7 @@ public class MongoSessionSecret {
      * @return the secret token
      */
     public String getSessionSecret() {
-        final Base64.Encoder encoder = Base64.getEncoder();
-        return encoder.encodeToString(secret);
+        return Hex.encode(secret);
     }
 
     /**
@@ -154,9 +153,8 @@ public class MongoSessionSecret {
      * @return the secret hash
      */
     public String getSecretDigestEncoded(final MessageDigest messageDigest, final byte[] salt) {
-        final Base64.Encoder encoder = Base64.getEncoder();
         final byte[] bytes = getSecretDigest(messageDigest, salt);
-        return encoder.encodeToString(bytes);
+        return Hex.encode(bytes);
     }
 
 }

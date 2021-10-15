@@ -37,7 +37,7 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     }
 
     @Override
-    public InventoryItem updateInventoryItem(final String inventoryItemId, final String userId, final String itemId, final int quantity) {
+    public InventoryItem updateInventoryItem(final String inventoryItemId, final int quantity) {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 

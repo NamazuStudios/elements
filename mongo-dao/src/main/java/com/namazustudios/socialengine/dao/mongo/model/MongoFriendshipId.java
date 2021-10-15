@@ -1,16 +1,15 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
-import com.namazustudios.socialengine.dao.mongo.MongoConstants;
+import com.namazustudios.socialengine.rt.util.Hex;
 import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Entity;
-import org.bson.types.ObjectId;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
+import org.bson.types.ObjectId;
 
 import java.util.Base64;
 import java.util.function.Function;
 
-import static com.namazustudios.socialengine.dao.mongo.MongoConstants.*;
+import static com.namazustudios.socialengine.dao.mongo.MongoConstants.OID_LENGTH_BYTES;
 import static java.lang.System.arraycopy;
 
 /**
@@ -73,7 +72,7 @@ public class MongoFriendshipId {
 
     public MongoFriendshipId(final String hexStringRepresentation) {
 
-        final byte[] bytes = Base64.getDecoder().decode(hexStringRepresentation);
+        final byte[] bytes = Hex.decode(hexStringRepresentation);
 
         if (bytes.length != LENGTH_BYTES) {
             throw new IllegalArgumentException("Invalid Friend ID ength.");
@@ -138,7 +137,7 @@ public class MongoFriendshipId {
 
     public String toHexString() {
         final byte[] bytes = toByteArray();
-        return Base64.getEncoder().encodeToString(bytes);
+        return Hex.encode(bytes);
     }
 
     @Override

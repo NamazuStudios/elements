@@ -61,12 +61,10 @@ public interface SimpleInventoryItemService {
      *
      *
      * @param inventoryItemId the inventory item id
-     * @param userId the user id of the user owning the inventory item
-     * @param itemId the item id of the user owning the inventory item
      * @param quantity the quantity to set
      * @return the updated {@link InventoryItem}
      */
-    InventoryItem updateInventoryItem(String inventoryItemId, String userId, String itemId, int quantity);
+    InventoryItem updateInventoryItem(String inventoryItemId, int quantity);
 
     /**
      * Deletes an {@link InventoryItem} from the given {@link User}'s inventory.

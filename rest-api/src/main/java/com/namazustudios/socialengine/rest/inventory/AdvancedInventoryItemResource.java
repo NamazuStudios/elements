@@ -11,6 +11,7 @@ import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.core.MediaType;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
@@ -27,6 +28,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
                 @Authorization(SOCIALENGINE_SESSION_SECRET)
         }
 )
+@Produces(MediaType.APPLICATION_JSON)
 public class AdvancedInventoryItemResource {
 
     private ValidationHelper validationHelper;
@@ -81,9 +83,7 @@ public class AdvancedInventoryItemResource {
 
         return getAdvancedInventoryItemService().adjustInventoryItemQuantity(
                 inventoryItemId,
-                advancedInventoryItemQuantityAdjustment.getUserId(),
-                advancedInventoryItemQuantityAdjustment.getQuantityDelta(),
-                advancedInventoryItemQuantityAdjustment.getPriority()
+                advancedInventoryItemQuantityAdjustment.getQuantityDelta()
         );
 
     }
@@ -100,10 +100,8 @@ public class AdvancedInventoryItemResource {
         getValidationHelper().validateModel(updateInventoryItemRequest);
 
         return getAdvancedInventoryItemService().updateInventoryItem(
-                inventoryItemId,
-                updateInventoryItemRequest.getUserId(),
-                updateInventoryItemRequest.getItemId(),
-                updateInventoryItemRequest.getQuantity());
+            inventoryItemId,
+            updateInventoryItemRequest.getQuantity());
 
     }
 

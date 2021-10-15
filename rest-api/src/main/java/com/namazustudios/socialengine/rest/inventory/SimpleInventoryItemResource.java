@@ -101,10 +101,8 @@ public class SimpleInventoryItemResource {
         getValidationHelper().validateModel(updateInventoryItemRequest);
 
         return getSimpleInventoryItemService().updateInventoryItem(
-                inventoryItemId,
-                updateInventoryItemRequest.getUserId(),
-                updateInventoryItemRequest.getItemId(),
-                updateInventoryItemRequest.getQuantity());
+            inventoryItemId,
+            updateInventoryItemRequest.getQuantity());
 
     }
 

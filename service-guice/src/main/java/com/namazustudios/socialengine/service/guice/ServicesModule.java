@@ -457,6 +457,7 @@ public class ServicesModule extends PrivateModule {
         expose(GameOnGamePrizeService.class);
         expose(ItemService.class);
         expose(SimpleInventoryItemService.class);
+        expose(AdvancedInventoryItemService.class);
         expose(MissionService.class);
         expose(ProgressService.class);
         expose(FacebookAuthService.class);
@@ -494,6 +495,7 @@ public class ServicesModule extends PrivateModule {
         expose(GameOnAdminPrizeService.class).annotatedWith(Unscoped.class);
         expose(ItemService.class).annotatedWith(Unscoped.class);
         expose(SimpleInventoryItemService.class).annotatedWith(Unscoped.class);
+        expose(AdvancedInventoryItemService.class).annotatedWith(Unscoped.class);
         expose(MissionService.class).annotatedWith(Unscoped.class);
         expose(ProgressService.class).annotatedWith(Unscoped.class);
         expose(FacebookAuthService.class).annotatedWith(Unscoped.class);

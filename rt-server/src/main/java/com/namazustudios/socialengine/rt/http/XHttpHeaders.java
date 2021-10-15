@@ -17,4 +17,9 @@ public interface XHttpHeaders {
      */
     String RT_RESPONSE_CODE = "X-NamazuResponseCode";
 
+    /**
+     * Used by "X-HTTP-Method-Override"
+     */
+    String X_HTTP_METHOD_OVERRIDE = "X-HTTP-Method-Override";
+
 }

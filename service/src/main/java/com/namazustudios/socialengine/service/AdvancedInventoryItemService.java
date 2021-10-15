@@ -43,12 +43,10 @@ public interface AdvancedInventoryItemService {
      * Adjusts the quantity of the {@link InventoryItem} associated with the specified {@Link Item}.
      *
      * @param inventoryItemId the value of {@link InventoryItem#getId()}
-     * @param userId the user's id
      * @param quantityDelta the amount by which to adjust the quantity of the {@Link InventoryItem}
-     * @param priority the priority slot
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem adjustInventoryItemQuantity(String inventoryItemId, String userId, int quantityDelta, int priority);
+    InventoryItem adjustInventoryItemQuantity(String inventoryItemId, int quantityDelta);
 
     /**
      * Creates a new {@link InventoryItem} for the specified {@link Item}.
@@ -70,7 +68,7 @@ public interface AdvancedInventoryItemService {
      * @param quantity the quantity to set
      * @return the updated {@link InventoryItem}
      */
-    InventoryItem updateInventoryItem(String inventoryItemId, String userId, String itemId, int quantity);
+    InventoryItem updateInventoryItem(String inventoryItemId, int quantity);
 
     /**
      * Deletes an {@link InventoryItem} from the given {@link User}'s inventory.

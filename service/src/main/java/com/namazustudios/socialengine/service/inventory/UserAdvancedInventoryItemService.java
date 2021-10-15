@@ -38,17 +38,14 @@ public class UserAdvancedInventoryItemService implements AdvancedInventoryItemSe
     }
 
     @Override
-    public InventoryItem adjustInventoryItemQuantity(final String inventoryItemId, final String userId,
-                                                     final int quantityDelta,
-                                                     final int priority) {
+    public InventoryItem adjustInventoryItemQuantity(final String inventoryItemId,
+                                                     final int quantityDelta) {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 
     @Override
     public InventoryItem updateInventoryItem(
             final String inventoryItemId,
-            final String userId,
-            final String itemId,
             final int quantity) {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }

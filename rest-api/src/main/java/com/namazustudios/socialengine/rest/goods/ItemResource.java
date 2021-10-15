@@ -56,7 +56,6 @@ public class ItemResource {
         return getItemService().createItem(item);
     }
 
-
     @GET
     @ApiOperation(value = "Retrieves all Items",
         notes = "Searches all items and returns all matching items, filtered by the passed in search parameters.  " +

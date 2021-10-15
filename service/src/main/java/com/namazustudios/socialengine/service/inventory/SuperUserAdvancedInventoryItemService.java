@@ -46,32 +46,15 @@ public class SuperUserAdvancedInventoryItemService implements AdvancedInventoryI
     @Override
     public InventoryItem adjustInventoryItemQuantity(
             final String inventoryItemId,
-            final String userId,
-            final int quantityDelta,
-            final int priority) {
-        final var user = getUserDao().getActiveUser(userId);
-        return getInventoryItemDao().adjustQuantityForItem(user, inventoryItemId, quantityDelta, priority);
+            final int quantityDelta) {
+        return getInventoryItemDao().adjustQuantityForItem(inventoryItemId, quantityDelta);
     }
 
     @Override
     public InventoryItem updateInventoryItem(
             final String inventoryItemId,
-            final String userId,
-            final String itemId,
             final int quantity) {
-
-        final var user = getUserDao().getActiveUser(userId);
-        final var item = getItemDao().getItemByIdOrName(itemId);
-
-        final var inventoryItem = new InventoryItem();
-
-        inventoryItem.setId(inventoryItemId);
-        inventoryItem.setUser(user);
-        inventoryItem.setItem(item);
-        inventoryItem.setQuantity(quantity);
-
-        return getInventoryItemDao().updateInventoryItem(inventoryItem);
-
+        return getInventoryItemDao().updateInventoryItem(inventoryItemId, quantity);
     }
 
     @Override

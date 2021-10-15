@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.MongoException;
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
@@ -11,8 +10,6 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -23,13 +20,10 @@ import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
 import dev.morphia.query.Query;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 
@@ -156,24 +150,23 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public InventoryItem updateInventoryItem(final InventoryItem inventoryItem) {
+    public InventoryItem updateInventoryItem(final String inventoryItemId, int quantity) {
 
-        getValidationHelper().validateModel(inventoryItem, Update.class);
+        getValidationHelper().validateModel(inventoryItemId, Update.class);
 
         final var query = getDatastore().find(MongoInventoryItem.class);
-
-        final var objectId = parseOrThrowNotFoundException(inventoryItem.getId());
+        final var objectId = parseOrThrowNotFoundException(inventoryItemId);
         query.filter(eq("_id", objectId));
 
         final var mongoInventoryItem = getMongoDBUtils().perform(ds ->
             query.modify(
                 set("version", randomUUID().toString()),
-                set("quantity", inventoryItem.getQuantity())
+                set("quantity", quantity)
             ).execute(new ModifyOptions().upsert(true).returnDocument(ReturnDocument.AFTER))
         );
 
         if (mongoInventoryItem == null) {
-            throw new NotFoundException("Inventory item with id of " + inventoryItem.getId() + " does not exist");
+            throw new NotFoundException("Inventory item with id of " + inventoryItemId + " does not exist");
         }
 
         getObjectIndex().index(mongoInventoryItem);
@@ -224,14 +217,10 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     @Override
     public InventoryItem adjustQuantityForItem(
-            final User user,
-            final String itemNameOrId,
-            final int priority,
+            final String inventoryItemId,
             final int quantityDelta) {
 
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(user);
-        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
-        final MongoInventoryItemId objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
+        final MongoInventoryItemId objectId = MongoInventoryItemId.parseOrThrowNotFoundException(inventoryItemId);
 
         final MongoInventoryItem mongoInventoryItem;
 

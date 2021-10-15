@@ -2,11 +2,11 @@ package com.namazustudios.socialengine.dao.mongo.model.goods;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.rt.util.Hex;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Property;
 
-import java.util.Base64;
 import java.util.Objects;
 
 import static java.lang.System.arraycopy;
@@ -39,7 +39,7 @@ public class MongoInventoryItemId {
 
         if (hexString == null) throw new IllegalArgumentException("must specify inventory item id string");
 
-        final byte [] bytes = Base64.getDecoder().decode(hexString);
+        final byte [] bytes = Hex.decode(hexString);
         if (bytes.length != (OBJECT_ID_LENGTH * 2) + Integer.BYTES) throw new IllegalArgumentException();
 
         final byte[] objectIdBytes = new byte[OBJECT_ID_LENGTH];
@@ -114,7 +114,7 @@ public class MongoInventoryItemId {
 
     public String toHexString() {
         final byte[] bytes = toByteArray();
-        return Base64.getEncoder().encodeToString(bytes);
+        return Hex.encode(bytes);
     }
 
     @Override

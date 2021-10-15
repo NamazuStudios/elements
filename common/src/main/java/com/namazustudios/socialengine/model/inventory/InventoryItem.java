@@ -28,10 +28,12 @@ public class InventoryItem implements Serializable {
     private String id;
 
     @NotNull
+    @Null(groups = Update.class)
     @ApiModelProperty("The User associated with this InventoryItem.")
     private User user;
 
     @NotNull
+    @Null(groups = Update.class)
     @ApiModelProperty("The Item in inventory")
     private Item item;
 

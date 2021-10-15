@@ -83,8 +83,10 @@ public interface InventoryItemDao {
      * @return the {@link InventoryItem} as it was written into the database
      * @throws InvalidDataException
      *     if the state of the passed in InventoryItem is invalid
+     * @param inventoryItemId
+     * @param quantity
      */
-    InventoryItem updateInventoryItem(InventoryItem inventoryItem);
+    InventoryItem updateInventoryItem(String inventoryItemId, int quantity);
 
     /**
      * Creates an inventory item.  The value of {@link InventoryItem#getId()} will be ignored.
@@ -111,13 +113,11 @@ public interface InventoryItemDao {
     /**
      * Adjusts the quantity of the supplied item and user.
      *
-     * @param user the {@link User} for which to adjust the item.
-     * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()}
-     * @param priority the priority of the item slot
+     * @param inventoryItemId the {@link Item#getName()} or {@link Item#getId()}
      * @param quantityDelta the amount to adjust the quantity by
      * @return the updated {@link InventoryItem}
      */
-    InventoryItem adjustQuantityForItem(User user, String itemNameOrId, int priority, int quantityDelta);
+    InventoryItem adjustQuantityForItem(String inventoryItemId, int quantityDelta);
 
     /**
      * Deletes an inventory item.
