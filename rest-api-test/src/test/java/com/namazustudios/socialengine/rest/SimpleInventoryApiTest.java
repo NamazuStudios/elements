@@ -57,16 +57,16 @@ public class SimpleInventoryApiTest {
 
     @Test
     public void createUsers() {
-        user0.createUser("user0").createSession();
-        user1.createUser("user1").createSession();
-        superUser.createSuperuser("admin").createSession();
+        user0.createUser("simple_inventory_user0").createSession();
+        user1.createUser("simple_inventory_user1").createSession();
+        superUser.createSuperuser("simple_inventory_admin").createSession();
     }
 
     @Test(dependsOnMethods = "createUsers")
     public void createDigitalGoods() {
 
         final var aRequest = new CreateItemRequest();
-        aRequest.setName("test_item_a");
+        aRequest.setName("simple_inventory_test_item_a");
         aRequest.setDisplayName("Test Item A");
         aRequest.setDescription("Test Item A (More)");
         aRequest.setTags(List.of("item_a", "item"));
@@ -76,7 +76,7 @@ public class SimpleInventoryApiTest {
         aRequest.setMetadata(aMetadata);
 
         final var bRequest = new CreateItemRequest();
-        bRequest.setName("test_item_b");
+        bRequest.setName("simple_inventory_test_item_b");
         bRequest.setDisplayName("Test Item B");
         bRequest.setDescription("Test Item B (More)");
         bRequest.setTags(List.of("item_b", "item"));
@@ -206,7 +206,7 @@ public class SimpleInventoryApiTest {
 
         final var inventoryItem = items.getObjects()
             .stream()
-            .filter(i -> i.getItem().getName().equals("test_item_a"))
+            .filter(i -> i.getItem().getName().equals("simple_inventory_test_item_a"))
             .findFirst()
             .get();
 
@@ -245,7 +245,7 @@ public class SimpleInventoryApiTest {
 
         final var inventoryItem = items.getObjects()
             .stream()
-            .filter(i -> i.getItem().getName().equals("test_item_a"))
+            .filter(i -> i.getItem().getName().equals("simple_inventory_test_item_a"))
             .findFirst()
             .get();
 
@@ -301,7 +301,7 @@ public class SimpleInventoryApiTest {
 
         final var inventoryItem = items.getObjects()
             .stream()
-            .filter(i -> i.getItem().getName().equals("test_item_a"))
+            .filter(i -> i.getItem().getName().equals("simple_inventory_test_item_a"))
             .findFirst()
             .get();
 

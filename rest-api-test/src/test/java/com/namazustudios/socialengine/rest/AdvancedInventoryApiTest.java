@@ -55,16 +55,16 @@ public class AdvancedInventoryApiTest {
 
     @Test
     public void createUsers() {
-        user0.createUser("user0").createSession();
-        user1.createUser("user1").createSession();
-        superUser.createSuperuser("admin").createSession();
+        user0.createUser("advanced_inventory_user0").createSession();
+        user1.createUser("advanced_inventory_user1").createSession();
+        superUser.createSuperuser("advanced_inventory_admin").createSession();
     }
 
     @Test(dependsOnMethods = "createUsers")
     public void createDigitalGoods() {
 
         final var aRequest = new CreateItemRequest();
-        aRequest.setName("test_item_a");
+        aRequest.setName("advanced_inventory_test_item_a");
         aRequest.setDisplayName("Test Item A");
         aRequest.setDescription("Test Item A (More)");
         aRequest.setTags(List.of("item_a", "item"));
@@ -74,7 +74,7 @@ public class AdvancedInventoryApiTest {
         aRequest.setMetadata(aMetadata);
 
         final var bRequest = new CreateItemRequest();
-        bRequest.setName("test_item_b");
+        bRequest.setName("advanced_inventory_test_item_b");
         bRequest.setDisplayName("Test Item B");
         bRequest.setDescription("Test Item B (More)");
         bRequest.setTags(List.of("item_b", "item"));
@@ -209,7 +209,7 @@ public class AdvancedInventoryApiTest {
 
         final var inventoryItem = items.getObjects()
             .stream()
-            .filter(i -> i.getItem().getName().equals("test_item_a") && i.getPriority() == priority)
+            .filter(i -> i.getItem().getName().equals("advanced_inventory_test_item_a") && i.getPriority() == priority)
             .findFirst()
             .get();
 
@@ -249,7 +249,7 @@ public class AdvancedInventoryApiTest {
 
         final var inventoryItem = items.getObjects()
             .stream()
-            .filter(i -> i.getItem().getName().equals("test_item_a") && i.getPriority() == priority)
+            .filter(i -> i.getItem().getName().equals("advanced_inventory_test_item_a") && i.getPriority() == priority)
             .findFirst()
             .get();
 
@@ -310,7 +310,7 @@ public class AdvancedInventoryApiTest {
 
         final var inventoryItem = items.getObjects()
             .stream()
-            .filter(i -> i.getItem().getName().equals("test_item_a") && i.getPriority() == priority)
+            .filter(i -> i.getItem().getName().equals("advanced_inventory_test_item_a") && i.getPriority() == priority)
             .findFirst()
             .get();
 
