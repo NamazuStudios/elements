@@ -5,10 +5,11 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.service.AdvancedInventoryItemService;
 
 import javax.inject.Inject;
 
-public class UserSimpleInventoryItemService implements SimpleInventoryItemService {
+public class UserAdvancedInventoryItemService implements AdvancedInventoryItemService {
 
     private User user;
 
@@ -37,32 +38,29 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     }
 
     @Override
-    public InventoryItem updateInventoryItem(final String inventoryItemId, final int quantity) {
+    public InventoryItem adjustInventoryItemQuantity(final String inventoryItemId,
+                                                     final int quantityDelta) {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 
     @Override
-    public InventoryItem adjustInventoryItemQuantity(final String inventoryItemId, final String userId, final int quantityDelta)  {
+    public InventoryItem updateInventoryItem(
+            final String inventoryItemId,
+            final int quantity) {
         throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 
     @Override
-    public InventoryItem createInventoryItem(final String userId, final String itemNameOrId, final int initialQuantity) {
-        throw new ForbiddenException("Unprivileged requests are unable to create inventory items.");
+    public InventoryItem createInventoryItem(final String userId,
+                                             final String itemId,
+                                             final int quantity,
+                                             final int priority) {
+        throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 
     @Override
     public void deleteInventoryItem(final String inventoryItemId) {
-        throw new ForbiddenException("Unprivileged requests are unable to delete inventory items.");
-    }
-
-    public InventoryItemDao getInventoryItemDao() {
-        return inventoryItemDao;
-    }
-
-    @Inject
-    public void setInventoryItemDao(InventoryItemDao inventoryItemDao) {
-        this.inventoryItemDao = inventoryItemDao;
+        throw new ForbiddenException("Unprivileged requests are unable to modify inventory items.");
     }
 
     public User getUser() {
@@ -72,6 +70,15 @@ public class UserSimpleInventoryItemService implements SimpleInventoryItemServic
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public InventoryItemDao getInventoryItemDao() {
+        return inventoryItemDao;
+    }
+
+    @Inject
+    public void setInventoryItemDao(InventoryItemDao inventoryItemDao) {
+        this.inventoryItemDao = inventoryItemDao;
     }
 
 }

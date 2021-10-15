@@ -42,6 +42,7 @@ public abstract class JerseyModule extends ServletModule {
         configureResoures();
 
         bind(VersionResource.class);
+        bind(MethodOverrideFilter.class);
         bind(DefaultExceptionMapper.class);
         bind(CORSFilter.class);
         bind(ShortLinkForwardingFilter.class);

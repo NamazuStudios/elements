@@ -1,14 +1,17 @@
 package com.namazustudios.socialengine.dao.mongo.model.gameon;
 
-import com.namazustudios.elements.fts.*;
+import com.namazustudios.elements.fts.AbstractIndexableFieldProcessor;
+import com.namazustudios.elements.fts.FieldExtractionException;
+import com.namazustudios.elements.fts.FieldMetadata;
+import com.namazustudios.elements.fts.IndexableFieldExtractor;
 import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
+import com.namazustudios.socialengine.rt.util.Hex;
 import dev.morphia.annotations.*;
 import org.apache.lucene.document.Document;
 import org.bson.types.ObjectId;
 import org.dozer.CustomConverter;
 import org.dozer.MappingException;
 
-import java.util.Base64;
 import java.util.Objects;
 
 import static com.namazustudios.socialengine.dao.mongo.MongoConstants.OID_LENGTH_BYTES;
@@ -38,11 +41,12 @@ public class MongoGameOnSessionId {
     @Property
     private DeviceOSType deviceOSType;
 
+    @SuppressWarnings("unused")
     MongoGameOnSessionId() { /* needed for morphia */}
 
     public MongoGameOnSessionId(final String string) {
 
-        final byte[] bytes = Base64.getDecoder().decode(string);
+        final byte[] bytes = Hex.decode(string);
         if (bytes.length != LENGTH_BYTES) throw new IllegalArgumentException("Invalid length");
         if (bytes[0] != VERSION) throw new IllegalArgumentException("Invalid version: " + bytes[0]);
 
@@ -84,7 +88,7 @@ public class MongoGameOnSessionId {
 
     public String toHexString() {
         final byte[] bytes = toByteArray();
-        return Base64.getEncoder().encodeToString(bytes);
+        return Hex.encode(bytes);
     }
 
     @Override

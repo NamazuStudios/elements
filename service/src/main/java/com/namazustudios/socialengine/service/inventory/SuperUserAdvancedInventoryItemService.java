@@ -5,12 +5,11 @@ import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
+import com.namazustudios.socialengine.service.AdvancedInventoryItemService;
 
 import javax.inject.Inject;
 
-import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
-
-public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemService {
+public class SuperUserAdvancedInventoryItemService implements AdvancedInventoryItemService {
 
     private UserDao userDao;
 
@@ -46,13 +45,24 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
 
     @Override
     public InventoryItem adjustInventoryItemQuantity(
-            final String inventoryItemId, final String userId,
+            final String inventoryItemId,
             final int quantityDelta) {
         return getInventoryItemDao().adjustQuantityForItem(inventoryItemId, quantityDelta);
     }
 
     @Override
-    public InventoryItem createInventoryItem(final String userId, final String itemId, final int initialQuantity) {
+    public InventoryItem updateInventoryItem(
+            final String inventoryItemId,
+            final int quantity) {
+        return getInventoryItemDao().updateInventoryItem(inventoryItemId, quantity);
+    }
+
+    @Override
+    public InventoryItem createInventoryItem(
+            final String userId,
+            final String itemId,
+            final int initialQuantity,
+            final int priority) {
 
         final var user = getUserDao().getActiveUser(userId);
         final var item = getItemDao().getItemByIdOrName(itemId);
@@ -61,18 +71,11 @@ public class SuperUserSimpleInventoryItemService implements SimpleInventoryItemS
 
         inventoryItem.setUser(user);
         inventoryItem.setItem(item);
-        inventoryItem.setPriority(SIMPLE_PRIORITY);
+        inventoryItem.setPriority(priority);
         inventoryItem.setQuantity(initialQuantity);
 
         return getInventoryItemDao().createInventoryItem(inventoryItem);
 
-    }
-
-    @Override
-    public InventoryItem updateInventoryItem(
-            final String inventoryItemId,
-            final int quantity) {
-        return getInventoryItemDao().updateInventoryItem(inventoryItemId, quantity);
     }
 
     @Override

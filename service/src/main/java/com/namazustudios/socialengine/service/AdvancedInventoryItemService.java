@@ -1,11 +1,14 @@
-package com.namazustudios.socialengine.service.inventory;
+package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.inventory.InventoryItem;
+import com.namazustudios.socialengine.model.user.User;
 
-public interface SimpleInventoryItemService {
+/**
+ * Allows for modification of the inventory using the advanced API.
+ */
+public interface AdvancedInventoryItemService {
 
     /**
      * Returns the {@link InventoryItem} associated with the specified id.
@@ -40,27 +43,28 @@ public interface SimpleInventoryItemService {
      * Adjusts the quantity of the {@link InventoryItem} associated with the specified {@Link Item}.
      *
      * @param inventoryItemId the value of {@link InventoryItem#getId()}
-     * @param userId the user's id
      * @param quantityDelta the amount by which to adjust the quantity of the {@Link InventoryItem}
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem adjustInventoryItemQuantity(String inventoryItemId, String userId, int quantityDelta);
+    InventoryItem adjustInventoryItemQuantity(String inventoryItemId, int quantityDelta);
 
     /**
      * Creates a new {@link InventoryItem} for the specified {@link Item}.
      *
      * @param userId the user to own the {@link InventoryItem}
-     * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()} to use.
-     * @param initialQuantity the initial quantity
+     * @param itemId the {@link Item#getName()} or {@link Item#getId()} to use.
+     * @param quantity the initial quantity
+     * @param priority the priority slot
      * @return the {@link InventoryItem} as it was written to the database
      */
-    InventoryItem createInventoryItem(String userId, String itemNameOrId, int initialQuantity);
+    InventoryItem createInventoryItem(String userId, String itemId, int quantity, int priority);
 
     /**
      * Updates an inventory item with the supplied user id, item id, and quantity.
      *
-     *
      * @param inventoryItemId the inventory item id
+     * @param userId the user id of the user owning the inventory item
+     * @param itemId the item id of the user owning the inventory item
      * @param quantity the quantity to set
      * @return the updated {@link InventoryItem}
      */
