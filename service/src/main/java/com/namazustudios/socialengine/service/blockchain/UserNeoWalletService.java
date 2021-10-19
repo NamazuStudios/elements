@@ -22,6 +22,8 @@ public class UserNeoWalletService implements NeoWalletService {
 
     private PasswordGenerator passwordGenerator;
 
+    private Neow3jService neow3jService;
+
     @Override
     public Pagination<NeoWallet> getWallets(int offset, int count, String search) {
         return getWalletDao().getWallets(offset, count, search);
@@ -44,9 +46,9 @@ public class UserNeoWalletService implements NeoWalletService {
         var pw = getPasswordGenerator().generate();
 
         try {
-            var wallet = Wallet.create(pw)
-                    .name(walletRequest.getDisplayName())
-                    .toNEP6Wallet();
+
+            var wallet = getNeow3jService()
+                    .createWallet(walletRequest.getDisplayName(), pw);
 
             var neoWallet = new NeoWallet();
 
@@ -91,4 +93,9 @@ public class UserNeoWalletService implements NeoWalletService {
     public void setPasswordGenerator(PasswordGenerator passwordGenerator) {
         this.passwordGenerator = passwordGenerator;
     }
+
+    public Neow3jService getNeow3jService(){return neow3jService;}
+
+    @Inject
+    public void setNeow3jService(Neow3jService neow3jService){this.neow3jService = neow3jService;}
 }

@@ -277,6 +277,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(TokenServiceProvider.class)
             .in(scope);
 
+        bind(Neow3jService.class)
+            .toProvider(Neow3jServiceProvider.class)
+            .in(scope);
+
         bind(SmartContractTemplateService.class)
             .toProvider(SmartContractTemplateServiceProvider.class)
             .in(scope);

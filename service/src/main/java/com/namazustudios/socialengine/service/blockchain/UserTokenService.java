@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.TokenDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
@@ -12,6 +13,8 @@ import java.util.List;
 public class UserTokenService implements TokenService {
 
     private TokenDao tokenDao;
+
+    private Neow3jService neow3jService;
 
     @Override
     public Pagination<Token> getTokens(int offset, int count, List<String> tags, String search) {
@@ -30,7 +33,7 @@ public class UserTokenService implements TokenService {
 
     @Override
     public Token createToken(CreateTokenRequest tokenRequest) {
-        return getTokenDao().createToken(tokenRequest);
+        throw new ForbiddenException();
     }
 
     @Override
@@ -46,4 +49,9 @@ public class UserTokenService implements TokenService {
     public void setTokenDao(TokenDao tokenDao) {
         this.tokenDao = tokenDao;
     }
+
+    public Neow3jService getNeow3jService(){return neow3jService;}
+
+    @Inject
+    public void setNeow3jService(Neow3jService neow3jService){this.neow3jService = neow3jService;}
 }
