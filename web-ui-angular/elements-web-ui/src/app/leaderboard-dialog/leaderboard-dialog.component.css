@@ -1,0 +1,8 @@
+.leaderboard-form-container {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .leaderboard-form-container > * {
+    width: 100%;
+  }

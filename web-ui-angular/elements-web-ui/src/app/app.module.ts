@@ -51,6 +51,8 @@ import { BundleRewardsEditorComponent } from './bundle-rewards-editor/bundle-rew
 import { ProfilesListComponent } from './profiles-list/profiles-list.component';
 import { ProfileDialogComponent } from './profile-dialog/profile-dialog.component';
 import { UserSelectDialogComponent } from './user-select-dialog/user-select-dialog.component';
+import { LeaderboardsListComponent } from './leaderboards-list/leaderboards-list.component';
+import { LeaderboardDialogComponent } from './leaderboard-dialog/leaderboard-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -72,7 +74,8 @@ export function initialize(configService: ConfigService) {
     AndroidGooglePlayConfigurationDialogComponent,
     ProductBundleEditorComponent,
     ProfileDialogComponent,
-    UserSelectDialogComponent
+    UserSelectDialogComponent,
+    LeaderboardDialogComponent
   ],
   declarations: [
     AppComponent,
@@ -108,6 +111,8 @@ export function initialize(configService: ConfigService) {
     ProfilesListComponent,
     ProfileDialogComponent,
     UserSelectDialogComponent,
+    LeaderboardsListComponent,
+    LeaderboardDialogComponent,
   ],
   imports: [
     BrowserModule,
