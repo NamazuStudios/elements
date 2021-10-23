@@ -35,6 +35,7 @@ import { MockSessionsService } from './services/mock-sessions.service';
 import { SessionAndLoginService } from './services/session-and-login.service';
 import { UsernamePasswordSessionService } from './services/username-password-session.service';
 import { MissionsService } from './services/missions.service';
+import { InventoryService } from './services/inventory.service';
 
 /**
  * Provider for all Api services, plus ApiConfiguration
@@ -80,7 +81,8 @@ import { MissionsService } from './services/missions.service';
     MockSessionsService,
     SessionAndLoginService,
     UsernamePasswordSessionService,
-    MissionsService
+    MissionsService,
+    InventoryService
   ],
 })
 export class ApiModule { }
