@@ -12,6 +12,7 @@ import {AlertService} from "../alert.service";
 import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
 import {UserDialogComponent} from "../user-dialog/user-dialog.component";
 import {UserViewModel} from "../models/user-view-model";
+import { InventoryDialogComponent } from '../inventory-dialog/inventory-dialog.component';
 
 @Component({
   selector: 'app-users-list',
@@ -137,6 +138,16 @@ export class UsersListComponent implements OnInit, AfterViewInit {
       delete result.id;
       if(result.password === "") { delete result.password }
       return this.usersService.updateUser({name: id, body: result});
+    });
+  }
+
+  editInventory(user) {
+
+    this.dialog.open(InventoryDialogComponent, {
+      width: '800px',
+      data: {
+        user: user
+      }
     });
   }
 }

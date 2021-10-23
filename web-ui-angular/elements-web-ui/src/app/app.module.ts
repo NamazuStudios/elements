@@ -53,6 +53,7 @@ import { ProfileDialogComponent } from './profile-dialog/profile-dialog.componen
 import { UserSelectDialogComponent } from './user-select-dialog/user-select-dialog.component';
 import { LeaderboardsListComponent } from './leaderboards-list/leaderboards-list.component';
 import { LeaderboardDialogComponent } from './leaderboard-dialog/leaderboard-dialog.component';
+import { InventoryDialogComponent } from './inventory-dialog/inventory-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -113,6 +114,7 @@ export function initialize(configService: ConfigService) {
     UserSelectDialogComponent,
     LeaderboardsListComponent,
     LeaderboardDialogComponent,
+    InventoryDialogComponent,
   ],
   imports: [
     BrowserModule,

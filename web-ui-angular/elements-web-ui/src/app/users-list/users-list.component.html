@@ -45,6 +45,8 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let user">
+        <button mat-raised-button color="primary" (click)="editInventory(user)">Inventory</button>
+        &nbsp;
         <button mat-raised-button color="primary" (click)="editUser(user)">Edit</button>
         &nbsp;
         <button mat-raised-button color="primary" (click)="deleteUser(user)">Delete</button>

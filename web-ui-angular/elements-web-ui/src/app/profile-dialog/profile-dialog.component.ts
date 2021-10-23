@@ -10,6 +10,7 @@ import {UserDialogComponent} from '../user-dialog/user-dialog.component';
 import {UsersService} from '../api/services/users.service';
 import { map } from 'rxjs/operators';
 import {UserSelectDialogComponent} from '../user-select-dialog/user-select-dialog.component';
+import { InventoryDialogComponent } from '../inventory-dialog/inventory-dialog.component';
 
 @Component({
   selector: 'app-profile-dialog',
@@ -94,6 +95,16 @@ export class ProfileDialogComponent implements OnInit {
         next: result => {
           this.data.profile.user = result;
         }
+      }
+    });
+  }
+
+  showInventoryDialog() {
+    console.log("show inventory dialog data: ", this.data.profile.user);
+    this.dialog.open(InventoryDialogComponent, {
+      width: '800px',
+      data: {
+        user: this.data.profile.user
       }
     });
   }

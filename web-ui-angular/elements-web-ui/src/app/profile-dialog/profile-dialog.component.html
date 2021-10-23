@@ -18,8 +18,9 @@
       <div class="prof-form-row">
         <h2>User Info</h2>
         <div class="user-buttons">
-          <button color="primary" type="button" mat-raised-button [disabled]="!data.isNew" (click)="showSelectUserDialog()">Select User</button>
-          <button color="primary" type="button" mat-raised-button [disabled]="!data.profile.user" (click)="showEditUserDialog(data.profile.user)">Edit User</button>
+          <button *ngIf="!data.isNew" color="primary" type="button" mat-raised-button (click)="showInventoryDialog()"><mat-icon>edit</mat-icon> Inventory</button>
+          <button *ngIf="data.isNew" color="primary" type="button" mat-raised-button (click)="showSelectUserDialog()">Select User</button>
+          <button *ngIf="data.profile.user" color="primary" type="button" mat-raised-button (click)="showEditUserDialog(data.profile.user)"><mat-icon>manage_accounts</mat-icon> User</button>
         </div>
       </div>
 
@@ -53,6 +54,6 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" color="primary" mat-raised-button (click)="close(true)" [disabled]="!profileForm.valid || !editorCard?.isJSONValid">Save</button>
+  <button *ngIf="profileForm.valid && editorCard?.isJSONValid" type="button" color="primary" mat-raised-button (click)="close(true)">Save</button>
   <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>
