@@ -37,65 +37,27 @@
 
     <build>
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>3.3.0</version>
+
                 <executions>
                     <execution>
-                        <id>attach-sources</id>
-                        <phase>verify</phase>
+                        <id>standard-javadoc</id>
+                        <phase>package</phase>
                         <goals>
-                            <goal>jar-no-fork</goal>
+                            <goal>jar</goal>
                         </goals>
                     </execution>
-                </executions>
-            </plugin>
-            <plugin>
+                    <execution>
 
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.0</version>
+                        <id>luastubs-javadoc</id>
 
-                <configuration>
-
-                    <doclet>com.namazustudios.socialengine.doclet.lua.LDocStubDoclet</doclet>
-
-                    <docletArtifact>
-                        <groupId>com.namazustudios.socialengine</groupId>
-                        <artifactId>doclet</artifactId>
-                        <version>${project.version}</version>
-                    </docletArtifact>
-
-                    <additionalOptions>
-                        <additionalOption>-d</additionalOption>
-                        <additionalOption>${project.build.directory}/luastubs</additionalOption>
-                    </additionalOptions>
-
-                    <useStandardDocletOptions>false</useStandardDocletOptions>
-
-                </configuration>
-
-            </plugin>
-        </plugins>
-    </build>
-
-    <reporting>
-        <plugins>
-            <plugin>
-
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-javadoc-plugin</artifactId>
-                <version>3.3.0</version>
-
-                <reportSets>
-                    <reportSet>
-
-                        <id>luastubs</id>
-
-                        <reports>
-                            <report>javadoc</report>
-                        </reports>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
 
                         <configuration>
 
@@ -109,16 +71,22 @@
 
                             <additionalOptions>
                                 <additionalOption>-d</additionalOption>
-                                <additionalOption>${project.build.directory}/luastubs</additionalOption>
+                                <additionalOption>${project.build.directory}/site/luastubs</additionalOption>
                             </additionalOptions>
 
-                            <useStandardDocletOptions>true</useStandardDocletOptions>
+                            <useStandardDocletOptions>false</useStandardDocletOptions>
+
+                            <classifier>luastubs</classifier>
+                            <outputDirectory>${project.build.directory}/site/luastubs</outputDirectory>
 
                         </configuration>
-                    </reportSet>
-                </reportSets>
+
+                    </execution>
+                </executions>
             </plugin>
+
         </plugins>
-    </reporting>
+
+    </build>
 
 </project>

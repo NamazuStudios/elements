@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.DocProcessor;
+import com.namazustudios.socialengine.doclet.visitor.FunctionalElementVisitor;
 import com.sun.source.doctree.ParamTree;
 
 import javax.lang.model.element.ExecutableElement;

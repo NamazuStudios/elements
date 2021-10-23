@@ -18,23 +18,7 @@ public class ElementVisitorBuilder<R, P> {
 
     private final List<Consumer<FunctionalElementVisitor<R,P>>> operations = new ArrayList<>();
 
-    public ElementVisitorBuilder<R, P> passingAll() {
-        return passingAll(() -> null);
-    }
-
-    public ElementVisitorBuilder<R, P> passingAll(final Supplier<R> rSupplier) {
-        return withVisit(v -> rSupplier.get())
-            .withVisitPackage(pass(rSupplier))
-            .withVisitType(pass(rSupplier))
-            .withVisitVariable(pass(rSupplier))
-            .withVisitModule(pass(rSupplier))
-            .withVisitExecutable(pass(rSupplier))
-            .withVisitTypeParameter(pass(rSupplier))
-            .withVisitUnknown(pass(rSupplier))
-            .withVisitModule(pass(rSupplier));
-    }
-
-    public ElementVisitorBuilder<R, P> withVisit(final Function<Element, R> visit) {
+    public ElementVisitorBuilder<R, P> withVisit(final BiFunction<Element, P, R> visit) {
         operations.add(v -> v.setVisit(visit));
         return this;
     }

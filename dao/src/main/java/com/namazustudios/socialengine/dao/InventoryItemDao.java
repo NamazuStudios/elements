@@ -23,7 +23,7 @@ import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 public interface InventoryItemDao {
 
     /**
-     * The priority for use by the {@link InventoryItemDao};
+     * The priority for use by the {@link InventoryItemDao}
      */
     int SIMPLE_PRIORITY = 0;
 

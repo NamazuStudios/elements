@@ -55,9 +55,9 @@ public class LDocTypes {
      * @return the type description, or null if there should be no return description
      */
     public static String getTypeDescription(final TypeMirror typeMirror) {
-        return TYPE_KINDS.getOrDefault(typeMirror.getKind(), tc -> {
-            throw new IllegalArgumentException("Unsupported type: " + typeMirror.getKind());
-        }).apply(typeMirror);
+        return TYPE_KINDS
+            .getOrDefault(typeMirror.getKind(), tk -> typeMirror.toString())
+            .apply(typeMirror);
     }
 
     private static String forArrayType(final TypeMirror typeMirror) {
@@ -100,6 +100,7 @@ public class LDocTypes {
     private static String forMapType(final DeclaredType declaredType) {
 
         final var arguments = declaredType.getTypeArguments();
+        if (arguments.size() < 2) return "{}";
 
         final var keyType = arguments.get(0);
         final var valType = arguments.get(1);
@@ -112,10 +113,14 @@ public class LDocTypes {
     }
 
     private static String forListType(final DeclaredType declaredType) {
+
         final var arguments = declaredType.getTypeArguments();
+        if (arguments.size() < 1) return "{}";
+
         final var elementType = arguments.get(0);
         final var elementTypeDescription = getTypeDescription(elementType);
         return format("{%s}", elementTypeDescription);
+
     }
 
     private static String forGenericType(final DeclaredType declaredType) {

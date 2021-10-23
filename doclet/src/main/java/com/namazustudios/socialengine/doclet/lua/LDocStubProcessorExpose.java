@@ -68,22 +68,24 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
                 .getDocTrees()
                 .getDocCommentTree(typeElement);
 
-            final var body = comments.getFullBody()
+            final var body = comments == null ? "" : comments.getFullBody()
                 .stream()
                 .map(docTree -> DocCommentTags.getText(docContext, docTree))
                 .collect(joining());
 
-            final var summary = comments.getFirstSentence()
+            final var summary = comments == null ? "" : comments.getFirstSentence()
                 .stream()
                 .map(docTree -> DocCommentTags.getText(docContext, docTree))
                 .collect(joining());
 
-            comments
-                .getBlockTags()
-                .stream()
-                .map(docTree -> getAuthors(docContext, docTree))
-                .flatMap(Collection::stream)
-                .forEach(stub.getHeader()::addAuthor);
+            if (comments != null) {
+                comments
+                    .getBlockTags()
+                    .stream()
+                    .map(docTree -> getAuthors(docContext, docTree))
+                    .flatMap(Collection::stream)
+                    .forEach(stub.getHeader()::addAuthor);
+            }
 
             stub.getHeader().setSummary(summary);
             stub.getHeader().setDescription(body);

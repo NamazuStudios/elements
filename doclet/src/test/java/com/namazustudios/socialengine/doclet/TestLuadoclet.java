@@ -5,12 +5,18 @@ import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.testng.annotations.Test;
 
 import javax.tools.ToolProvider;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.FileSystem;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
 
 import static java.nio.file.Files.exists;
+import static java.util.stream.Collectors.joining;
 import static org.testng.Assert.assertEquals;
+import static org.testng.AssertJUnit.assertTrue;
 
 public class TestLuadoclet {
 

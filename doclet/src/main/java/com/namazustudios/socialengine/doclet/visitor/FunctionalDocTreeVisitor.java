@@ -3,72 +3,73 @@ package com.namazustudios.socialengine.doclet.visitor;
 import com.sun.source.doctree.*;
 
 import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 public class FunctionalDocTreeVisitor<R, P> implements DocTreeVisitor<R, P> {
 
-    private static <ReturnT, FirstT, SecondT> BiFunction<ReturnT, FirstT, SecondT> fail() {
-        return (r, p) -> {
-            throw new UnsupportedOperationException();
-        };
+    private Supplier<R> defaultResultSupplier = () -> null;
+
+    private <ElementT extends DocTree> BiFunction<ElementT, P, R> pass() {
+        return (r, p) -> defaultResultSupplier.get();
     }
 
-    private BiFunction<AttributeTree, P, R> visitAttribute = fail();
+    private BiFunction<AttributeTree, P, R> visitAttribute = pass();
 
-    private BiFunction<AuthorTree, P, R> visitAuthor = fail();
+    private BiFunction<AuthorTree, P, R> visitAuthor = pass();
 
-    private BiFunction<CommentTree, P, R> visitComment = fail();
+    private BiFunction<CommentTree, P, R> visitComment = pass();
 
-    private BiFunction<DeprecatedTree, P, R> visitDeprecated = fail();
+    private BiFunction<DeprecatedTree, P, R> visitDeprecated = pass();
 
-    private BiFunction<DocCommentTree, P, R> visitDocComment = fail();
+    private BiFunction<DocCommentTree, P, R> visitDocComment = pass();
 
-    private BiFunction<DocRootTree, P, R> visitDocRoot = fail();
+    private BiFunction<DocRootTree, P, R> visitDocRoot = pass();
 
-    private BiFunction<EndElementTree, P, R> visitEndElement = fail();
+    private BiFunction<EndElementTree, P, R> visitEndElement = pass();
 
-    private BiFunction<EntityTree, P, R> visitEntity = fail();
+    private BiFunction<EntityTree, P, R> visitEntity = pass();
 
-    private BiFunction<ErroneousTree, P, R> visitErroneous = fail();
+    private BiFunction<ErroneousTree, P, R> visitErroneous = pass();
 
-    private BiFunction<IdentifierTree, P, R> visitIdentifier = fail();
+    private BiFunction<IdentifierTree, P, R> visitIdentifier = pass();
 
-    private BiFunction<InheritDocTree, P, R> visitInheritDoc = fail();
+    private BiFunction<InheritDocTree, P, R> visitInheritDoc = pass();
 
-    private BiFunction<LinkTree, P, R> visitLink = fail();
+    private BiFunction<LinkTree, P, R> visitLink = pass();
 
-    private BiFunction<LiteralTree, P, R> visitLiteral = fail();
+    private BiFunction<LiteralTree, P, R> visitLiteral = pass();
 
-    private BiFunction<ParamTree, P, R> visitParam = fail();
+    private BiFunction<ParamTree, P, R> visitParam = pass();
 
-    private BiFunction<ReferenceTree, P, R> visitReference = fail();
+    private BiFunction<ReferenceTree, P, R> visitReference = pass();
 
-    private BiFunction<ReturnTree, P, R> visitReturn = fail();
+    private BiFunction<ReturnTree, P, R> visitReturn = pass();
 
-    private BiFunction<SeeTree, P, R> visitSee = fail();
+    private BiFunction<SeeTree, P, R> visitSee = pass();
 
-    private BiFunction<SerialTree, P, R> visitSerial = fail();
+    private BiFunction<SerialTree, P, R> visitSerial = pass();
 
-    private BiFunction<SerialDataTree, P, R> visitSerialData = fail();
+    private BiFunction<SerialDataTree, P, R> visitSerialData = pass();
 
-    private BiFunction<SerialFieldTree, P, R> visitSerialField = fail();
+    private BiFunction<SerialFieldTree, P, R> visitSerialField = pass();
 
-    private BiFunction<SinceTree, P, R> visitSince = fail();
+    private BiFunction<SinceTree, P, R> visitSince = pass();
 
-    private BiFunction<StartElementTree, P, R> visitStartElement = fail();
+    private BiFunction<StartElementTree, P, R> visitStartElement = pass();
 
-    private BiFunction<TextTree, P, R> visitText = fail();
+    private BiFunction<TextTree, P, R> visitText = pass();
 
-    private BiFunction<ThrowsTree, P, R> visitThrows = fail();
+    private BiFunction<ThrowsTree, P, R> visitThrows = pass();
 
-    private BiFunction<UnknownBlockTagTree, P, R> visitUnknownBlockTag = fail();
+    private BiFunction<UnknownBlockTagTree, P, R> visitUnknownBlockTag = pass();
 
-    private BiFunction<UnknownInlineTagTree, P, R> visitUnknownInlineTag = fail();
+    private BiFunction<UnknownInlineTagTree, P, R> visitUnknownInlineTag = pass();
 
-    private BiFunction<ValueTree, P, R> visitValue = fail();
+    private BiFunction<ValueTree, P, R> visitValue = pass();
 
-    private BiFunction<VersionTree, P, R> visitVersion = fail();
+    private BiFunction<VersionTree, P, R> visitVersion = pass();
 
-    private BiFunction<DocTree, P, R> visitOther = fail();
+    private BiFunction<DocTree, P, R> visitOther = pass();
 
     @Override
     public R visitAttribute(AttributeTree node, P p) {
@@ -213,6 +214,10 @@ public class FunctionalDocTreeVisitor<R, P> implements DocTreeVisitor<R, P> {
     @Override
     public R visitOther(DocTree node, P p) {
         return visitOther.apply(node, p);
+    }
+
+    public void setDefaultResultSupplier(Supplier<R> defaultResultSupplier) {
+        this.defaultResultSupplier = defaultResultSupplier;
     }
 
     public void setVisitAttribute(BiFunction<AttributeTree, P, R> visitAttribute) {

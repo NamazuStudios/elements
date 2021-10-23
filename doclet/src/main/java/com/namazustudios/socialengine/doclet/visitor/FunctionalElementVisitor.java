@@ -1,38 +1,49 @@
 package com.namazustudios.socialengine.doclet.visitor;
 
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementVisitor;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.ModuleElement;
+import javax.lang.model.element.PackageElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.TypeParameterElement;
+import javax.lang.model.element.VariableElement;
 import java.util.function.BiFunction;
-import java.util.function.Function;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 
 public class FunctionalElementVisitor<R, P> implements ElementVisitor<R, P> {
 
-    private static <ReturnT, FirstT, SecondT> BiFunction<ReturnT, FirstT, SecondT> fail() {
-        return (r, p) -> {
-            throw new UnsupportedOperationException();
-        };
+    private Supplier<R> initialResultSupplier = () -> null;
+
+    private BinaryOperator<R> resultReducer = (r1, r2) -> r2;
+
+    private <ElementT extends Element> BiFunction<ElementT, P, R> recurse() {
+        return (r, p) -> r.getEnclosedElements()
+            .stream()
+            .map(e -> e.accept(this, p))
+            .reduce(initialResultSupplier.get(), resultReducer);
     }
 
-    private Function<Element, R> visit = e -> {
-        throw new UnsupportedOperationException();
-    };
+    private BiFunction<Element, P, R> visit = recurse();
 
-    private BiFunction<PackageElement, P, R> visitPackage = fail();
+    private BiFunction<PackageElement, P, R> visitPackage = recurse();
 
-    private BiFunction<TypeElement, P, R> visitType = fail();
+    private BiFunction<TypeElement, P, R> visitType = recurse();
 
-    private BiFunction<VariableElement, P, R> visitVariable = fail();
+    private BiFunction<VariableElement, P, R> visitVariable = recurse();
 
-    private BiFunction<ExecutableElement, P, R> visitExecutable = fail();
+    private BiFunction<ExecutableElement, P, R> visitExecutable = recurse();
 
-    private BiFunction<TypeParameterElement, P, R> visitTypeParameter = fail();
+    private BiFunction<TypeParameterElement, P, R> visitTypeParameter = recurse();
 
-    private BiFunction<Element, P, R> visitUnknown = fail();
+    private BiFunction<Element, P, R> visitUnknown = recurse();
 
-    private BiFunction<ModuleElement, P, R> visitModule = fail();
+    private BiFunction<ModuleElement, P, R> visitModule = recurse();
 
     @Override
     public R visit(Element e, P p) {
-        return visit.apply(e);
+        return visit.apply(e, p);
     }
 
     @Override
@@ -67,7 +78,7 @@ public class FunctionalElementVisitor<R, P> implements ElementVisitor<R, P> {
 
     @Override
     public R visit(Element e) {
-        return visit.apply(e);
+        return visit.apply(e, null);
     }
 
     @Override
@@ -75,7 +86,15 @@ public class FunctionalElementVisitor<R, P> implements ElementVisitor<R, P> {
         return visitModule.apply(e, p);
     }
 
-    public void setVisit(Function<Element, R> visit) {
+    public void setInitialResultSupplier(Supplier<R> initialResultSupplier) {
+        this.initialResultSupplier = initialResultSupplier;
+    }
+
+    public void setResultReducer(BinaryOperator<R> resultReducer) {
+        this.resultReducer = resultReducer;
+    }
+
+    public void setVisit(BiFunction<Element, P, R> visit) {
         this.visit = visit;
     }
 
