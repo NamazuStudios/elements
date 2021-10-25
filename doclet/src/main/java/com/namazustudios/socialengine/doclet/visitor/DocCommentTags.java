@@ -87,9 +87,16 @@ public class DocCommentTags {
                 return null;
             })
             .withVisitLink((linkTree, docTrees) -> {
-                final var link = linkTree.getReference().getSignature();
-                sb.append(link);
+
+                final var ref = linkTree.getReference();
+                if (ref == null) return null;
+
+                final var signature = ref.getSignature();
+                if (signature == null) return null;
+
+                sb.append(signature);
                 return null;
+
             })
             .withVisitErroneous((erroneousTree, unused) -> {
                 final var diagnostic = erroneousTree.getDiagnostic();
