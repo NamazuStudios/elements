@@ -32,6 +32,7 @@ function client.post(base)
         method = "POST",
         base = base,
         path = "simple",
+        accept ="*/*",
         entity = {
             media_type = "application/json",
             value = {
@@ -59,6 +60,28 @@ function client.get_all(base)
         method = "GET",
         base = base,
         path = "simple"
+    }
+
+    assert(status  == 200, "Expected 200 but got " .. tostring(status))
+    assert(headers ~= nil, "Expected non-nil headers.  Got nil instead.")
+    assert(type(response) == "table", "Expected table for response.  Got " .. type(response))
+    assert(#response == 1, "Expected one entry in response.  Got " .. tostring(#response) .. " entries instead.")
+    assert(headers["Content-Length"][1] ~= nil, "Expected non-nil content length.");
+
+end
+
+
+function client.get_all_query(base)
+
+    log.info("Sending request {}", base)
+
+    local status, headers, response = namazu_http_client.send{
+        method = "GET",
+        base = base,
+        path = "simple",
+        params = {
+            hello = "Hello!"
+        }
     }
 
     assert(status  == 200, "Expected 200 but got " .. tostring(status))
