@@ -50,6 +50,7 @@ public class HttpClientBuiltin implements Builtin {
 
         WebTarget target = getClient().target(base);
         target = getRequiredStringField(l, "path", target::path);
+        target = getOptionalMultiField(l, "query", target, target::queryParam);
         target = getOptionalMultiField(l, "params", target, target::queryParam);
         target = getOptionalMultiField(l, "matrix", target, target::matrixParam);
 
@@ -228,7 +229,7 @@ public class HttpClientBuiltin implements Builtin {
             if (!l.isTable( -1)) throw new IllegalArgumentException(key + " must be a table");
 
             l.pushNil();
-            while (l.next(-1)) {
+            while (l.next(-2)) {
 
                 l.pushValue(-2);
                 l.pushValue(-2);
