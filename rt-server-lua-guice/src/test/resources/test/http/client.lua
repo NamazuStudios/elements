@@ -80,7 +80,8 @@ function client.get_all_query(base)
         base = base,
         path = "simple",
         params = {
-            hello = "Hello!"
+            hello = "Hello!",
+            world = "World!"
         }
     }
 
