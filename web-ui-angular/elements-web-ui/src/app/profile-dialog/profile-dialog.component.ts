@@ -10,6 +10,7 @@ import {UserDialogComponent} from '../user-dialog/user-dialog.component';
 import {UsersService} from '../api/services/users.service';
 import { map } from 'rxjs/operators';
 import {UserSelectDialogComponent} from '../user-select-dialog/user-select-dialog.component';
+import { InventoryDialogComponent } from '../inventory-dialog/inventory-dialog.component';
 
 @Component({
   selector: 'app-profile-dialog',
@@ -71,7 +72,7 @@ export class ProfileDialogComponent implements OnInit {
 
   showEditUserDialog(user: User) {
     this.dialog.open(UserDialogComponent, {
-      width: '500px',
+      width: '700px',
       data: {
         isNew: false, user: user, next: result => {
           delete result.passwordConfirmation;
@@ -94,6 +95,15 @@ export class ProfileDialogComponent implements OnInit {
         next: result => {
           this.data.profile.user = result;
         }
+      }
+    });
+  }
+
+  showInventoryDialog() {
+    this.dialog.open(InventoryDialogComponent, {
+      width: '800px',
+      data: {
+        user: this.data.profile.user
       }
     });
   }

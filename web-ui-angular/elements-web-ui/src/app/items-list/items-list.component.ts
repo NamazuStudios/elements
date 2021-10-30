@@ -1,7 +1,7 @@
 import {AfterViewInit, Component, ElementRef, OnInit, ViewChild} from '@angular/core';
 import {Item} from '../api/models/item';
 import {SelectionModel} from '@angular/cdk/collections';
-import {ItemsDatasource} from '../items.datasource';
+import {ItemsDataSource} from '../items.datasource';
 import {MatDialog} from '@angular/material/dialog';
 import {MatPaginator} from '@angular/material/paginator';
 import {MatTable} from '@angular/material/table';
@@ -21,7 +21,7 @@ import {ItemDialogComponent} from '../item-dialog/item-dialog.component';
 export class ItemsListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Item>;
-  dataSource: ItemsDatasource;
+  dataSource: ItemsDataSource;
   displayedColumns = ['select', 'id', 'name', 'actions'];
   currentItems: Item[];
 
@@ -33,7 +33,7 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.selection = new SelectionModel<Item>(true, []);
-    this.dataSource = new ItemsDatasource(this.itemsService);
+    this.dataSource = new ItemsDataSource(this.itemsService);
     this.refresh(0);
   }
 
