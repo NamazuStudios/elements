@@ -15,6 +15,8 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
+import java.util.Optional;
+
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 /**
@@ -51,7 +53,7 @@ public class NeoWalletResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Neo Wallet",
             notes = "Gets a specific Neo Wallet by templateId.")
-    public NeoWallet getWallet(@PathParam("walletId") String walletId) {
+    public Optional<NeoWallet> getWallet(@PathParam("walletId") String walletId) {
 
         walletId = Strings.nullToEmpty(walletId).trim();
 
