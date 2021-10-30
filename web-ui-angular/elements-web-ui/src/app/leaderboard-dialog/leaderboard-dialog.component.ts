@@ -36,10 +36,9 @@ export class LeaderboardDialogComponent implements OnInit, AfterViewInit {
   private leaderboardExistsValidator = new LeaderboardExistsValidator(this.leaderboardsService);
   public timeZone!: string;
 
-
-// TODO... make sure data from last two items in group get sent in as MS....
-
-
+// TODO... 1) make sure data from last two items in group get sent in as MS....
+// TODO... 2) make sure leaderboard exists validator implemented
+// TODO... 3) make sure time zone picker is available for new letterboards
 
   leaderboardForm = this.formBuilder.group({
     //name: [ this.data.leaderboard.name, [ Validators.required ], [this.leaderboardExistsValidator.validate]], 
@@ -50,11 +49,11 @@ export class LeaderboardDialogComponent implements OnInit, AfterViewInit {
     scoreStrategyType: [ this.data.leaderboard.scoreStrategyType, [ Validators.required ]], 
     scoreUnits: [ this.data.leaderboard.scoreUnits, [ Validators.required ]], 
 
-    firstEpochTimestampView: [ this.data.leaderboard.firstEpochTimestampView], // this must be converted into ms by getting current time (Date.getTime()) and adding the difference    
-    days: [ this.data.leaderboard.days],
-    hours: [ this.data.leaderboard.hours],
-    minutes: [ this.data.leaderboard.minutes],
-    seconds: [ this.data.leaderboard.seconds]
+    firstEpochTimestampView: [ {value: this.data.leaderboard.firstEpochTimestampView, disabled: !this.data.isNew}], // this must be converted into ms by getting current time (Date.getTime()) and adding the difference    
+    days: [ {value: this.data.leaderboard.days, disabled: !this.data.isNew}],
+    hours: [ {value: this.data.leaderboard.hours, disabled: !this.data.isNew}],
+    minutes: [ {value: this.data.leaderboard.minutes, disabled: !this.data.isNew}],
+    seconds: [ {value: this.data.leaderboard.seconds, disabled: !this.data.isNew}]
 
     // make sure to unccommend this and fix the validation
     // firstEpochTimestampView: [ this.data.leaderboard.firstEpochTimestampView, [ Validators.required ]], // this must be converted into ms by getting current time (Date.getTime()) and adding the difference    
@@ -83,8 +82,17 @@ export class LeaderboardDialogComponent implements OnInit, AfterViewInit {
     this.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   }
 
-  handleNewDate(date){
-    console.log("handle new date called", date);
+  get timeStrategyType() {
+    return this.leaderboardForm.get('timeStrategyType').value;
+  }
+
+  showEpochalOption() {
+    return this.timeStrategyType === 'EPOCHAL';
+  }
+
+  getCurrentOffset() {
+    const offset = (new Date).getTimezoneOffset()/60;
+    return `UTC ${offset > 0 ? '+' : '-'} ${ Math.abs(offset)}`;
   }
 
   close(res?: any) {

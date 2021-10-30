@@ -7,7 +7,7 @@
     <input matInput placeholder="Search users" #input>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="addUser()">Add User</button>
+  <button mat-raised-button color="primary" (click)="addUser()"><mat-icon>person_add</mat-icon> Add User</button>
   <button mat-raised-button color="primary" (click)="deleteSelectedUsers()" [disabled]="!hasSelection">Delete Selected Users</button>
 
   <mat-table class="users-table mat-elevation-z8" [dataSource]="dataSource" >
@@ -45,7 +45,7 @@
     <ng-container matColumnDef="actions">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let user">
-        <button mat-raised-button color="primary" (click)="editInventory(user)">Inventory</button>
+        <button mat-raised-button color="primary" (click)="editInventory(user)"><mat-icon>inventory</mat-icon> Inventory</button>
         &nbsp;
         <button mat-raised-button color="primary" (click)="editUser(user)">Edit</button>
         &nbsp;

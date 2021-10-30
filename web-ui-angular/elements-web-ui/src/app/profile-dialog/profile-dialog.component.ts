@@ -72,7 +72,7 @@ export class ProfileDialogComponent implements OnInit {
 
   showEditUserDialog(user: User) {
     this.dialog.open(UserDialogComponent, {
-      width: '500px',
+      width: '700px',
       data: {
         isNew: false, user: user, next: result => {
           delete result.passwordConfirmation;
@@ -100,7 +100,6 @@ export class ProfileDialogComponent implements OnInit {
   }
 
   showInventoryDialog() {
-    console.log("show inventory dialog data: ", this.data.profile.user);
     this.dialog.open(InventoryDialogComponent, {
       width: '800px',
       data: {

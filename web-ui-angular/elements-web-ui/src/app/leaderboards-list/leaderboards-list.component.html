@@ -8,11 +8,11 @@
   </mat-form-field>
 
   <button mat-raised-button color="primary" (click)="addLeaderboard()">Add Leaderboard</button>
-  <button mat-raised-button color="primary" (click)="deleteSelectedLeaderboards()" [disabled]="!hasSelection">Delete Selected Leaderboards</button>
+  <!-- <button mat-raised-button color="primary" (click)="deleteSelectedLeaderboards()" [disabled]="!hasSelection">Delete Selected Leaderboards</button> -->
 
   <mat-table class="users-table mat-elevation-z8" [dataSource]="dataSource" >
 
-    <ng-container matColumnDef="select">
+    <!-- <ng-container matColumnDef="select">
       <mat-header-cell fxFlex="75px" *matHeaderCellDef>
         <mat-checkbox (change)="$event ? masterToggle() : null"
                       [checked]="selection.hasValue() && isAllSelected()"
@@ -25,7 +25,7 @@
                       [checked]="selection.isSelected(row)">
         </mat-checkbox>
       </mat-cell>
-    </ng-container>
+    </ng-container> -->
 
     <ng-container matColumnDef="id">
       <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
@@ -56,8 +56,8 @@
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let leaderboard">
         <button mat-raised-button color="primary" (click)="editLeaderboard(leaderboard)">Edit</button>
-        &nbsp;
-        <button mat-raised-button color="primary" (click)="deleteLeaderboard(leaderboard)">Delete</button>
+        <!-- &nbsp;
+        <button mat-raised-button color="primary" (click)="deleteLeaderboard(leaderboard)">Delete</button> -->
       </mat-cell>
     </ng-container>
 

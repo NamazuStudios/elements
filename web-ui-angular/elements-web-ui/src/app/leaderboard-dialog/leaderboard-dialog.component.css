@@ -6,3 +6,17 @@
   .leaderboard-form-container > * {
     width: 100%;
   }
+
+  .names {
+    display: flex;
+  }
+
+  .item {
+    width: 100%;
+    padding: 10px;
+  }
+
+  .number {
+    width: 75px;
+    padding: 10px;
+  }

@@ -1,7 +1,7 @@
 .users-list {
-  margin: 0 auto;
-}
-
+    margin: 0 auto;
+  }
+  
 .spinner-container {
   left:50%;
   top:50%;
@@ -26,18 +26,11 @@ input[type=button] {
   margin-right:8px;
 }
 
-.cdk-column-select {
-  max-width: 30px;
+.user-email {
+  flex-grow: 2;
 }
 
-.cdk-column-level {
-  max-width: 100px;
+mat-cell:last-of-type {
+  justify-content: flex-end;
 }
-
-.cdk-column-email {
-  max-width: 250px;
-}
-
-.cdk-column-id {
-  max-width: 310px;
-}
+  

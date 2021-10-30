@@ -54,6 +54,10 @@ import { UserSelectDialogComponent } from './user-select-dialog/user-select-dial
 import { LeaderboardsListComponent } from './leaderboards-list/leaderboards-list.component';
 import { LeaderboardDialogComponent } from './leaderboard-dialog/leaderboard-dialog.component';
 import { InventoryDialogComponent } from './inventory-dialog/inventory-dialog.component';
+import { InventoryEditorComponent } from './inventory-dialog/inventory-editor/inventory-editor.component';
+import { AddInventoryComponent } from './inventory-dialog/add-inventory/add-inventory.component';
+import { ItemSelectDialogComponent } from './inventory-dialog/item-select-dialog/item-select-dialog.component';
+import { ModifyInventoryComponent } from './inventory-dialog/modify-inventory/modify-inventory.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -76,7 +80,9 @@ export function initialize(configService: ConfigService) {
     ProductBundleEditorComponent,
     ProfileDialogComponent,
     UserSelectDialogComponent,
-    LeaderboardDialogComponent
+    LeaderboardDialogComponent,
+    InventoryDialogComponent,
+    ItemSelectDialogComponent,
   ],
   declarations: [
     AppComponent,
@@ -115,6 +121,10 @@ export function initialize(configService: ConfigService) {
     LeaderboardsListComponent,
     LeaderboardDialogComponent,
     InventoryDialogComponent,
+    InventoryEditorComponent,
+    AddInventoryComponent,
+    ItemSelectDialogComponent,
+    ModifyInventoryComponent,
   ],
   imports: [
     BrowserModule,

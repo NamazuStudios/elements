@@ -142,9 +142,8 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   }
 
   editInventory(user) {
-
     this.dialog.open(InventoryDialogComponent, {
-      width: '800px',
+      width: '1000px',
       data: {
         user: user
       }

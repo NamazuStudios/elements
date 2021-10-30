@@ -7,7 +7,7 @@
     <input matInput placeholder="Search items" #input>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="addItem()">Add Item</button>
+  <button mat-raised-button color="primary" (click)="addItem()"><mat-icon>add</mat-icon> Add Item</button>
   <button mat-raised-button color="primary" (click)="deleteSelectedItems()" [disabled]="!hasSelection">Delete Selected Items</button>
 
   <mat-table class="items-table mat-elevation-z8" [dataSource]="dataSource" >

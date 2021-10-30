@@ -18,9 +18,9 @@
       <div class="prof-form-row">
         <h2>User Info</h2>
         <div class="user-buttons">
-          <button *ngIf="!data.isNew" color="primary" type="button" mat-raised-button (click)="showInventoryDialog()"><mat-icon>edit</mat-icon> Inventory</button>
+          <button *ngIf="!data.isNew" color="primary" type="button" mat-raised-button (click)="showInventoryDialog()"><mat-icon>inventory</mat-icon> Edit User Inventory</button>
           <button *ngIf="data.isNew" color="primary" type="button" mat-raised-button (click)="showSelectUserDialog()">Select User</button>
-          <button *ngIf="data.profile.user" color="primary" type="button" mat-raised-button (click)="showEditUserDialog(data.profile.user)"><mat-icon>manage_accounts</mat-icon> User</button>
+          <button *ngIf="data.profile.user" color="primary" type="button" mat-raised-button (click)="showEditUserDialog(data.profile.user)"><mat-icon>manage_accounts</mat-icon> Edit User</button>
         </div>
       </div>
 

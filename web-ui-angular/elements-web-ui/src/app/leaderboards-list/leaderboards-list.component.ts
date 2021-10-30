@@ -25,7 +25,9 @@ export class LeaderboardsListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Leaderboard>;
   dataSource: LeaderboardsDataSource;
-  displayedColumns = ["select", "id", "name", "title", "scoreStrategyType", "timeStrategyType", "actions"];
+  // TODO: "select" column was removed until we decide if we want to allow leaderboards to be deleted.
+  //displayedColumns = ["select", "id", "name", "title", "scoreStrategyType", "timeStrategyType", "actions"];
+  displayedColumns = ["id", "name", "title", "scoreStrategyType", "timeStrategyType", "actions"];
   currentLeaderboards: Leaderboard[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
@@ -202,7 +204,7 @@ convertMS( milliseconds ) {
 
  editLeaderboard(leaderboard) {
    this.showDialog(false, leaderboard, result => {
-    const newLeaderboard = this.convertLBViewModeltoLB(result);
+     const newLeaderboard = this.convertLBViewModeltoLB(result);
     return this.leaderboardsService.updateLeaderboard({nameOrId: leaderboard.id, body: newLeaderboard});
   });
  }    

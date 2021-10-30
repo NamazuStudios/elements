@@ -7,7 +7,7 @@
     <input matInput placeholder="Search applications" #input>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="addApplication()">Add Application</button>
+  <button mat-raised-button color="primary" (click)="addApplication()"><mat-icon>add</mat-icon> Add Application</button>
   <button mat-raised-button color="primary" (click)="deleteSelectedApplications()" [disabled]="!hasSelection">Delete Selected Applications</button>
 
   <mat-table class="applications-table mat-elevation-z8" [dataSource]="dataSource" >

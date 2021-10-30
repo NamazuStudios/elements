@@ -4,7 +4,7 @@ import {ItemsService} from './api/services/items.service';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {catchError, finalize} from 'rxjs/operators';
 
-export class ItemsDatasource implements DataSource<Item> {
+export class ItemsDataSource implements DataSource<Item> {
   private itemsSubject = new BehaviorSubject<Item[]>([]);
   private totalCountSubject = new BehaviorSubject<number>(0);
   private loadingSubject = new BehaviorSubject<boolean>(false);
