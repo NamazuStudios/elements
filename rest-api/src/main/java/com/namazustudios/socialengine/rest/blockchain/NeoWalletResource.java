@@ -37,7 +37,8 @@ public class NeoWalletResource {
     public Pagination<NeoWallet> getWallets(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("user") String userId) {
+            @QueryParam("user") String userId,
+            @QueryParam("format") @DefaultValue("NONE") String format) {
 
         userId = Strings.nullToEmpty(userId).trim();
 
@@ -67,7 +68,7 @@ public class NeoWalletResource {
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new Neo Wallet",
-            notes = "Creates a new Neo Wallet, associated with the authenticated user.")
+            notes = "Creates a new Neo Wallet, associated with the given user.")
     public NeoWallet createWallet(final CreateWalletRequest request) {
         return getWalletService().createWallet(request);
     }

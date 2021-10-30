@@ -33,6 +33,11 @@ public class UserNeow3jService implements Neow3jService{
     }
 
     @Override
+    public NEP6Wallet createWallet(String name) {
+        return Wallet.create().name(name).toNEP6Wallet();
+    }
+
+    @Override
     public NEP6Wallet createWallet(String name, String password) throws CipherException {
         return Wallet.create(password).name(name).toNEP6Wallet();
     }

@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
+import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.security.InsufficientPermissionException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.SmartContractTemplate;
@@ -41,24 +44,37 @@ public class UserNeoWalletService implements NeoWalletService {
 
     @Override
     public NeoWallet createWallet(CreateWalletRequest walletRequest) {
-
         var user = getUser();
-        var pw = getPasswordGenerator().generate();
+        var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
+        if (userId.isEmpty()){
+            walletRequest.setUserId(user.getId());
+        } else if(!user.getId().equals(userId)){
+            throw new InsufficientPermissionException("You do not have permission to create a wallet for another user.");
+        }
+        var pw = Strings.nullToEmpty(walletRequest.getPassword()).trim();
 
-        try {
-
-            var wallet = getNeow3jService()
-                    .createWallet(walletRequest.getDisplayName(), pw);
-
+        if (pw.isEmpty()){
+            var wallet = getNeow3jService().createWallet(walletRequest.getDisplayName());
             var neoWallet = new NeoWallet();
 
             neoWallet.displayName = walletRequest.getDisplayName();
             neoWallet.wallet = wallet;
+            neoWallet.setUser(user);
 
             return neoWalletDao.createWallet(neoWallet);
+        } else {
+            try {
+                var wallet = getNeow3jService().createWallet(walletRequest.getDisplayName(), pw);
+                var neoWallet = new NeoWallet();
 
-        } catch (CipherException e) {
-            return null;
+                neoWallet.displayName = walletRequest.getDisplayName();
+                neoWallet.wallet = wallet;
+                neoWallet.setUser(user);
+
+                return neoWalletDao.createWallet(neoWallet);
+            } catch (CipherException e) {
+                return null;
+            }
         }
     }
 

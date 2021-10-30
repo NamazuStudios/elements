@@ -59,6 +59,14 @@ public interface Neow3jService {
      * Creates a {@link NEP6Wallet}.
      *
      * @param name the name for the wallet
+     * @return the {@link NEP6Wallet}
+     */
+    NEP6Wallet createWallet(String name);
+
+    /**
+     * Creates an encrypted {@link NEP6Wallet}.
+     *
+     * @param name the name for the wallet
      * @param password the password for the wallet
      * @return the {@link NEP6Wallet}
      */
