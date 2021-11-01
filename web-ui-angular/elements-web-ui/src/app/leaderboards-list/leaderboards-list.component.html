@@ -33,23 +33,23 @@
     </ng-container>
 
     <ng-container matColumnDef="name">
-      <mat-header-cell *matHeaderCellDef>Leaderboard Display Name</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
       <mat-cell *matCellDef="let leaderboard">{{leaderboard.name}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="title">
-      <mat-header-cell *matHeaderCellDef>Leaderboard Display Name (Title)</mat-header-cell>
+      <mat-header-cell *matHeaderCellDef>Display Name (Title)</mat-header-cell>
       <mat-cell *matCellDef="let leaderboard">{{leaderboard.title}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="scoreStrategyType">
-      <mat-header-cell *matHeaderCellDef>Score Strategy Type</mat-header-cell>
-      <mat-cell *matCellDef="let leaderboard">{{leaderboard.scoreStrategyType}}</mat-cell>
+      <mat-header-cell *matHeaderCellDef>Score Strategy</mat-header-cell>
+      <mat-cell *matCellDef="let leaderboard">{{getStrategyDescription(leaderboard.scoreStrategyType, scoreStrategyTypes)}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="timeStrategyType">
-      <mat-header-cell *matHeaderCellDef>Time Strategy Type</mat-header-cell>
-      <mat-cell *matCellDef="let leaderboard">{{leaderboard.timeStrategyType}}</mat-cell>
+      <mat-header-cell *matHeaderCellDef>Time Strategy</mat-header-cell>
+      <mat-cell *matCellDef="let leaderboard">{{getStrategyDescription(leaderboard.timeStrategyType, timeStrategyTypes)}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="actions">

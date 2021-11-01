@@ -1,8 +1,10 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { MatDialog, MatSnackBar } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { Item } from 'src/app/api/models';
 import { InventoryService } from 'src/app/api/services/inventory.service';
 import { ItemSelectDialogComponent } from '../item-select-dialog/item-select-dialog.component';
+
 
 @Component({
   selector: 'app-add-inventory',

@@ -1,10 +1,12 @@
 import {AfterViewInit, Component, Inject, OnInit} from '@angular/core';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatSnackBar} from '@angular/material/snack-bar'
-import {FormBuilder, Validators} from "@angular/forms";
+import {AbstractControl, FormBuilder, Validators} from "@angular/forms";
 import {AlertService} from '../alert.service';
 import { LeaderboardsService } from '../api/services';
 import { LeaderboardExistsValidator } from '../leaderboard-exists-validator';
+import { getTimeZones, TimeZone } from "@vvo/tzdb";
+import { DateTime } from 'luxon';
 
 export interface TimeStrategyType {
   key: string;
@@ -35,10 +37,9 @@ export class LeaderboardDialogComponent implements OnInit, AfterViewInit {
 
   private leaderboardExistsValidator = new LeaderboardExistsValidator(this.leaderboardsService);
   public timeZone!: string;
+  public timeZones: TimeZone[];
 
-// TODO... 1) make sure data from last two items in group get sent in as MS....
-// TODO... 2) make sure leaderboard exists validator implemented
-// TODO... 3) make sure time zone picker is available for new letterboards
+// TODO... make sure leaderboard exists validator implemented
 
   leaderboardForm = this.formBuilder.group({
     //name: [ this.data.leaderboard.name, [ Validators.required ], [this.leaderboardExistsValidator.validate]], 
@@ -49,18 +50,13 @@ export class LeaderboardDialogComponent implements OnInit, AfterViewInit {
     scoreStrategyType: [ this.data.leaderboard.scoreStrategyType, [ Validators.required ]], 
     scoreUnits: [ this.data.leaderboard.scoreUnits, [ Validators.required ]], 
 
-    firstEpochTimestampView: [ {value: this.data.leaderboard.firstEpochTimestampView, disabled: !this.data.isNew}], // this must be converted into ms by getting current time (Date.getTime()) and adding the difference    
-    days: [ {value: this.data.leaderboard.days, disabled: !this.data.isNew}],
-    hours: [ {value: this.data.leaderboard.hours, disabled: !this.data.isNew}],
-    minutes: [ {value: this.data.leaderboard.minutes, disabled: !this.data.isNew}],
-    seconds: [ {value: this.data.leaderboard.seconds, disabled: !this.data.isNew}]
+    zone: [ {value: DateTime.local().zoneName, disabled: !this.data.isNew}],   
+    firstEpochTimestampView: [ {value: this.data.leaderboard.firstEpochTimestampView, disabled: !this.data.isNew}],
+    days: [ {value: this.data.leaderboard.days || 0, disabled: !this.data.isNew}],
+    hours: [ {value: this.data.leaderboard.hours || 0, disabled: !this.data.isNew}],
+    minutes: [ {value: this.data.leaderboard.minutes || 0, disabled: !this.data.isNew}],
+    seconds: [ {value: this.data.leaderboard.seconds || 0, disabled: !this.data.isNew}]
 
-    // make sure to unccommend this and fix the validation
-    // firstEpochTimestampView: [ this.data.leaderboard.firstEpochTimestampView, [ Validators.required ]], // this must be converted into ms by getting current time (Date.getTime()) and adding the difference    
-    // days: [ this.data.leaderboard.days, [ Validators.required ]],
-    // hours: [ this.data.leaderboard.hours, [ Validators.required ]],
-    // minutes: [ this.data.leaderboard.minutes, [ Validators.required ]],
-    // seconds: [ this.data.leaderboard.seconds, [ Validators.required ]]
   });
 
   constructor(public dialogRef: MatDialogRef<LeaderboardDialogComponent>,
@@ -76,7 +72,25 @@ export class LeaderboardDialogComponent implements OnInit, AfterViewInit {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
     });
+    this.getTimeZoneData();
+    //Listen to time strategy type value and update validators of reset date/time/period accordingly
+    this.leaderboardForm.get('timeStrategyType').valueChanges.subscribe(data => this.onTimeStrategyChanged(data));
   }
+
+  onTimeStrategyChanged(value: any){
+
+    let controlsNames = [ 'firstEpochTimestampView', 'days', 'hours', 'minutes', 'seconds'];
+    let controls: AbstractControl[] = controlsNames.map( (value) => this.leaderboardForm.get(value) );
+
+    // Using setValidators to add and remove validators. No better support for adding and removing validators to controller atm.
+    // See issue: https://github.com/angular/angular/issues/10567
+    if(value==="EPOCHAL"){
+      controls.forEach( control => control.setValidators([Validators.required]));
+    }else {
+      controls.forEach( control => control.setValidators([]));
+    }
+    controls.forEach( control => control.updateValueAndValidity()); //Need to call this to trigger a update
+}
 
   ngAfterViewInit() {
     this.timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
@@ -90,9 +104,10 @@ export class LeaderboardDialogComponent implements OnInit, AfterViewInit {
     return this.timeStrategyType === 'EPOCHAL';
   }
 
-  getCurrentOffset() {
-    const offset = (new Date).getTimezoneOffset()/60;
-    return `UTC ${offset > 0 ? '+' : '-'} ${ Math.abs(offset)}`;
+  getTimeZoneData() {
+    const zones: TimeZone[] = getTimeZones();
+    const luxonValidTimezones = zones.filter(tz => tz.name.includes('/') && DateTime.local().setZone(tz.name).isValid);
+    this.timeZones = luxonValidTimezones;  
   }
 
   close(res?: any) {
