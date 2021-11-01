@@ -11,9 +11,9 @@ import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dia
 import { LeaderboardsService } from '../api/services';
 import { Leaderboard } from '../api/models/leaderboard';
 import { LeaderboardsDataSource } from '../leaderboards.datasource';
-import { LeaderboardDialogComponent } from '../leaderboard-dialog/leaderboard-dialog.component';
+import { LeaderboardDialogComponent, ScoreStrategyType, TimeStrategyType } from '../leaderboard-dialog/leaderboard-dialog.component';
 import { LeaderboardViewModel } from '../models/leaderboard-view-model';
-
+import { DateTime} from 'luxon';
 
 @Component({
   selector: 'app-leaderboards-list',
@@ -21,6 +21,20 @@ import { LeaderboardViewModel } from '../models/leaderboard-view-model';
   styleUrls: ['./leaderboards-list.component.css']
 })
 export class LeaderboardsListComponent implements OnInit, AfterViewInit {
+
+  timeStrategyTypes: TimeStrategyType[] = [
+    { key: "ALL_TIME", description: "All Time" },
+    { key: "EPOCHAL", description: "Epochal" }
+  ];
+
+  scoreStrategyTypes: ScoreStrategyType[] = [
+    { key: "OVERWRITE_IF_GREATER", description: "Overwrite" },
+    { key: "ACCUMULATE", description: "Accumulate" }
+  ];
+
+  getStrategyDescription(key: string, strategyTypes: any[]): string {
+    return strategyTypes.find(strategy => strategy.key === key).description;
+  }
 
   hasSelection = false;
   selection: SelectionModel<Leaderboard>;
@@ -143,7 +157,7 @@ convertLBToLBViewModel (leaderboard: Leaderboard): LeaderboardViewModel {
   
   if(leaderboard.firstEpochTimestamp){
     viewLeaderboard.firstEpochTimestampView = 
-    new Date(new Date(leaderboard.firstEpochTimestamp).toString().split('GMT')[0]+' UTC').toISOString().split('.')[0];
+    DateTime.fromMillis(leaderboard.firstEpochTimestamp).toString().split('.')[0];
   }
 
   return viewLeaderboard;
@@ -175,7 +189,7 @@ convertMS( milliseconds ) {
 
  convertLBViewModeltoLB(leaderboardViewModel: LeaderboardViewModel): Leaderboard {
    
-  const { firstEpochTimestampView, days, hours, minutes, seconds, name, timeStrategyType, scoreStrategyType, title, scoreUnits } = leaderboardViewModel;
+  const { firstEpochTimestampView, days, hours, minutes, seconds, name, timeStrategyType, scoreStrategyType, title, scoreUnits, zone } = leaderboardViewModel;
   let leaderboard: Leaderboard = {
     name,
     timeStrategyType,
@@ -186,7 +200,7 @@ convertMS( milliseconds ) {
     epochInterval: 0,
   };
 
-  leaderboard.firstEpochTimestamp = Date.parse(firstEpochTimestampView);
+  leaderboard.firstEpochTimestamp = DateTime.fromISO(firstEpochTimestampView, { zone }).toMillis();
   leaderboard.epochInterval = this.getTimeInMS(days, hours, minutes, seconds);
 
   if(leaderboard.timeStrategyType !== 'EPOCHAL'){

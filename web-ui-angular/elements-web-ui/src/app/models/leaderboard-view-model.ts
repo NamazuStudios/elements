@@ -10,6 +10,7 @@ export class LeaderboardViewModel implements Leaderboard {
   hours?: number;
   minutes?: number;
   seconds?: number;
+  zone?: string;
   firstEpochTimestampView?: string;
   
 }
