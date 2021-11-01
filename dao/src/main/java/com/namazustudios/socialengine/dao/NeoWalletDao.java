@@ -40,7 +40,7 @@ public interface NeoWalletDao {
     /**
      * Creates a new Wallet.
      *
-     * @param wallet the {@link NEP6Wallet} with the information to create
+     * @param wallet the {@link NeoWallet} with the information to create
      * @return the {@link NeoWallet} as it was created by the service.
      */
     NeoWallet createWallet(NeoWallet wallet);

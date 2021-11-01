@@ -56,7 +56,6 @@ public class SuperUserNeoWalletService implements NeoWalletService {
 
             neoWallet.displayName = walletRequest.getDisplayName();
             neoWallet.wallet = wallet;
-            neoWallet.setUser(user);
 
             return neoWalletDao.createWallet(neoWallet);
         } else {

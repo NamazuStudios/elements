@@ -12,32 +12,25 @@ import javax.validation.constraints.Null;
 @ApiModel(description = "Represents a request to update a Neo Wallet.")
 public class UpdateWalletRequest {
 
-    @ApiModelProperty("The unique ID of the wallet itself.")
-    @NotNull
-    public String id;
-
     @ApiModelProperty("The display name of the wallet.")
     @NotNull
     private String displayName;
 
+    @ApiModelProperty("The unique ID of the wallet itself.")
+    public String userId;
+
     @ApiModelProperty("The password used to log into the wallet.")
-    @NotNull
     private String password;
 
-    @ApiModelProperty("The NEP6 wallet file.")
-    @NotNull
-    public NEP6Wallet wallet;
-
-    @ApiModelProperty("The User associated with this wallet.")
-    @NotNull
-    public User user;
+    @ApiModelProperty("The new password to encrypt the wallet.")
+    public String newPassword;
 
     public String getId() {
-        return id;
+        return userId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setId(String userId) {
+        this.userId = userId;
     }
 
     public String getDisplayName() {
@@ -48,20 +41,11 @@ public class UpdateWalletRequest {
         this.displayName = displayName;
     }
 
-    public NEP6Wallet getWallet() {
-        return wallet;
+    public String getNewPassword() {
+        return newPassword;
     }
 
-    public void setWallet(NEP6Wallet wallet) {
-        this.wallet = wallet;
+    public void setNewPassword(String newPassword) {
+        this.newPassword = newPassword;
     }
-
-    public User getUser() {
-        return user;
-    }
-
-    public void setUser(User user) {
-        this.user = user;
-    }
-
 }

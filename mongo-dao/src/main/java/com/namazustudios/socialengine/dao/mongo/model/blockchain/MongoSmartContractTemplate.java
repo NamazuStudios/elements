@@ -4,7 +4,7 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.model.application.Application;
+import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
@@ -18,24 +18,19 @@ import java.util.List;
         extractor = ObjectIdExtractor.class,
         processors = ObjectIdProcessor.class))
 @Entity(value = "profile", useDiscriminator = false)
-@Indexes({
-        @Index(fields = {@Field("user")}),
-        @Index(fields = @Field(value = "displayName", type = IndexType.TEXT))
-})
 public class MongoSmartContractTemplate {
 
     @Id
     public String id;
 
-    @Indexed
     @Property
     public String name;
 
     @Property
     public Object contractBinary;
 
-    @Reference
-    private Application application;
+    @Reference()
+    private MongoApplication application;
 
     private List<String> tags;
 
@@ -63,11 +58,11 @@ public class MongoSmartContractTemplate {
         this.contractBinary = contractBinary;
     }
 
-    public Application getApplication() {
+    public MongoApplication getApplication() {
         return application;
     }
 
-    public void setApplication(Application application) {
+    public void setApplication(MongoApplication application) {
         this.application = application;
     }
 
