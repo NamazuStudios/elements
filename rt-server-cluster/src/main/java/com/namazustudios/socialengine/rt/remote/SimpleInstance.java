@@ -74,7 +74,11 @@ public class SimpleInstance implements Instance {
         postStart(exceptionList::add);
 
         logger.debug("Completed post-start tasks for Instance ID {}", instanceId);
-        if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
+
+        if (!exceptionList.isEmpty()) {
+            logger.error("One or more nodes failed to start up.");
+            throw new MultiException(exceptionList);
+        }
 
     }
 
