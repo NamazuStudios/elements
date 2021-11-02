@@ -25,7 +25,6 @@ export class ModifyInventoryComponent implements OnInit {
     this.inventoryService.updateInventoryItemAdvanced({identifier: inventoryItemId, body: {quantity}}).subscribe(
       data => this.refresh.emit()
     );
-
   }
 
   deleteInventory(inventoryItemId: string) {
@@ -34,4 +33,5 @@ export class ModifyInventoryComponent implements OnInit {
     );
   }
 
+  compare = (a, b) => a.name.localeCompare(b.name) || a.priority - b.priority;
 }
