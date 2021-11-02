@@ -92,6 +92,7 @@ public class ItemResource {
         getValidationHelper().validateModel(updateItemRequest);
 
         final Item item = new Item();
+        item.setId(identifier);
         item.setName(updateItemRequest.getName());
         item.setTags(updateItemRequest.getTags());
         item.setMetadata(updateItemRequest.getMetadata());
