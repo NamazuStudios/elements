@@ -88,7 +88,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 exceptionConsumer.accept(ex);
                 return null;
             }
-        }).filter(s -> s != null).collect(toList());
+        }).filter(Objects::nonNull).collect(toList());
 
         doStartNodes(startupList, exceptionConsumer);
 

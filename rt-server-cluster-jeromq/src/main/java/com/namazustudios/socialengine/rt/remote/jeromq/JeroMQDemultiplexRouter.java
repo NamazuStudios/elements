@@ -61,6 +61,8 @@ public class JeroMQDemultiplexRouter {
 
     public String openBinding(final NodeId nodeId) {
 
+        logger.info("Opening binding for node {}", nodeId);
+
         if (backends.containsKey(nodeId)) {
             throw new JeroMQControlException(DUPLICATE_NODE_BINDING);
         }
@@ -76,6 +78,8 @@ public class JeroMQDemultiplexRouter {
             logger.error("Attempting to duplicate binding for node {}", nodeId);
             throw new JeroMQControlException(DUPLICATE_NODE_BINDING);
         }
+
+        logger.info("Opening binding for node {} with connect address {}", nodeId, localConnectAddress);
 
         return localConnectAddress;
 
