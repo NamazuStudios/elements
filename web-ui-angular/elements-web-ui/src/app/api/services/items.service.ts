@@ -180,7 +180,6 @@ class ItemsService extends BaseService {
     let __body: any = null;
 
     __body = params.body;
-    __body.id = params.identifier;
     let req = new HttpRequest<any>(
       'PUT',
       this.rootUrl + `/item/${params.identifier}`,
