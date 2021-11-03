@@ -19,7 +19,7 @@ public class CodeServeModuleDefaults implements ModuleDefaults {
     public Properties get() {
         final var properties = new Properties();
         properties.put(HTTP_PORT, "8082");
-        properties.put(HTTP_PATH_PREFIX, "code-serve");
+        properties.put(HTTP_PATH_PREFIX, "code");
         properties.put(GIT_STORAGE_DIRECTORY, "script-repos/git");
         return properties;
     }
