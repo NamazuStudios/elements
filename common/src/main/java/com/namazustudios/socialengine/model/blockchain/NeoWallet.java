@@ -15,19 +15,19 @@ public class NeoWallet {
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @ApiModelProperty("The unique ID of the wallet itself.")
-    public String id;
+    private String id;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The name given to this wallet.")
-    public String displayName;
+    private String displayName;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The NEP6 wallet file.")
-    public NEP6Wallet wallet;
+    private NEP6Wallet wallet;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The User associated with this wallet.")
-    public User user;
+    private User user;
 
     public String getId() {
         return id;

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.dao.mongo.provider;
 import com.namazustudios.socialengine.dao.mongo.converter.*;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
@@ -12,6 +13,7 @@ import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.*;
 import com.namazustudios.socialengine.model.Deployment;
+import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
@@ -160,6 +162,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(Deployment.class, MongoDeployment.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(NeoWallet.class, MongoNeoWallet.class)
+                    .fields("wallet", "walletString", customConverter(MongoNeoWalletConverter.class));
             }
         };
 

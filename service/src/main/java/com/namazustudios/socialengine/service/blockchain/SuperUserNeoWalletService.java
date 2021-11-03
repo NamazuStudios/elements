@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.security.InsufficientPermissionException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateWalletRequest;
@@ -10,6 +12,8 @@ import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
+import com.namazustudios.socialengine.service.UserService;
+import com.namazustudios.socialengine.service.user.UserUserService;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.wallet.Wallet;
 
@@ -26,9 +30,11 @@ public class SuperUserNeoWalletService implements NeoWalletService {
 
     private Neow3jService neow3jService;
 
+    private UserService userService;
+
     @Override
-    public Pagination<NeoWallet> getWallets(int offset, int count, String search) {
-        return getWalletDao().getWallets(offset, count, search);
+    public Pagination<NeoWallet> getWallets(int offset, int count, String userId) {
+        return getWalletDao().getWallets(offset, count, userId);
     }
 
     @Override
@@ -50,25 +56,35 @@ public class SuperUserNeoWalletService implements NeoWalletService {
         }
         var pw = Strings.nullToEmpty(walletRequest.getPassword()).trim();
 
+        var existing = getWalletDao().getWalletForUser(walletRequest.getUserId(), walletRequest.getDisplayName());
+        if (existing != null) {
+            throw new DuplicateException(String.format("Wallet with name: %s already exists.", walletRequest.getDisplayName()));
+        }
+
         if (pw.isEmpty()){
-            var wallet = getNeow3jService().createWallet(walletRequest.getDisplayName());
-            var neoWallet = new NeoWallet();
+            try {
+                var wallet = getNeow3jService().createWallet(walletRequest.getDisplayName());
+                var neoWallet = new NeoWallet();
 
-            neoWallet.displayName = walletRequest.getDisplayName();
-            neoWallet.wallet = wallet;
+                neoWallet.setDisplayName(walletRequest.getDisplayName());
+                neoWallet.setWallet(wallet);
+                neoWallet.setUser(getUserService().getUser(walletRequest.getUserId()));
 
-            return neoWalletDao.createWallet(neoWallet);
+                return getWalletDao().createWallet(neoWallet);
+            } catch (CipherException | JsonProcessingException e) {
+                return null;
+            }
         } else {
             try {
                 var wallet = getNeow3jService().createWallet(walletRequest.getDisplayName(), pw);
                 var neoWallet = new NeoWallet();
 
-                neoWallet.displayName = walletRequest.getDisplayName();
-                neoWallet.wallet = wallet;
-                neoWallet.setUser(user);
+                neoWallet.setDisplayName(walletRequest.getDisplayName());
+                neoWallet.setWallet(wallet);
+                neoWallet.setUser(getUserService().getUser(walletRequest.getUserId()));
 
                 return neoWalletDao.createWallet(neoWallet);
-            } catch (CipherException e) {
+            } catch (CipherException | JsonProcessingException e) {
                 return null;
             }
         }
@@ -86,6 +102,15 @@ public class SuperUserNeoWalletService implements NeoWalletService {
     @Inject
     public void setWalletDao(NeoWalletDao neoWalletDao) {
         this.neoWalletDao = neoWalletDao;
+    }
+
+    public UserService getUserService() {
+        return userService;
+    }
+
+    @Inject
+    public void setUserService(UserService userService) {
+        this.userService = userService;
     }
 
     public User getUser() {

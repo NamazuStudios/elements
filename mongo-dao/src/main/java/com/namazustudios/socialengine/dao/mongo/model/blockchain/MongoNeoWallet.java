@@ -31,7 +31,7 @@ public class MongoNeoWallet {
     public String displayName;
 
     @Property
-    public NEP6Wallet wallet;
+    public String walletString;
 
     @Reference
     public MongoUser user;
@@ -52,12 +52,12 @@ public class MongoNeoWallet {
         this.displayName = displayName;
     }
 
-    public NEP6Wallet getWallet() {
-        return wallet;
+    public String getWalletString() {
+        return walletString;
     }
 
-    public void setWallet(NEP6Wallet wallet) {
-        this.wallet = wallet;
+    public void setWalletString(String walletString) {
+        this.walletString = walletString;
     }
 
     public MongoUser getUser() {

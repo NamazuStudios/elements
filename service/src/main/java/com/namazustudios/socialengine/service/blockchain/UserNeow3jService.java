@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.protocol.Neow3j;
@@ -33,8 +34,8 @@ public class UserNeow3jService implements Neow3jService{
     }
 
     @Override
-    public NEP6Wallet createWallet(String name) {
-        return Wallet.create().name(name).toNEP6Wallet();
+    public NEP6Wallet createWallet(String name) throws CipherException {
+        return Wallet.create("").name(name).toNEP6Wallet();
     }
 
     @Override

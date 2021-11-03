@@ -28,10 +28,10 @@ public interface NeoWalletService {
      *
      * @param offset
      * @param count
-     * @param search
+     * @param userId the user ID to fetch wallets for.
      * @return a {@link Pagination} of {@link NeoWallet} instances
      */
-    Pagination<NeoWallet> getWallets(int offset, int count, String search);
+    Pagination<NeoWallet> getWallets(int offset, int count, String userId);
 
     /**
      * Fetches a specific {@link NeoWallet} instance based on ID or name.  If not found, an

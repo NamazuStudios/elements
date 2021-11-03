@@ -1,11 +1,13 @@
 package com.namazustudios.socialengine.dao.mongo.blockchain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
+import com.namazustudios.socialengine.dao.mongo.model.MongoFollower;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.exception.NotFoundException;
@@ -18,18 +20,19 @@ import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.updates.UpdateOperators;
+import io.neow3j.wallet.Wallet;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.util.Base64;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.eq;
-import static dev.morphia.query.experimental.filters.Filters.or;
+import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoNeoWalletDao implements NeoWalletDao {
@@ -62,17 +65,32 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public Optional<NeoWallet> getWallet(String walletIdOrName) {
+    public Optional<NeoWallet> getWallet(String walletId) {
 
         final var query = getDatastore().find(MongoNeoWallet.class);
 
         query.filter(or(
-                eq("_id", new ObjectId(walletIdOrName)),
+                eq("_id", new ObjectId(walletId)),
                 eq("displayName", true)
         ));
 
         final var mongoNeoWallet = query.first();
         return mongoNeoWallet == null ? Optional.empty() : Optional.of(transform(mongoNeoWallet));
+    }
+
+    @Override
+    public NeoWallet getWalletForUser(String userId, String walletName){
+
+        final var query = getDatastore().find(MongoNeoWallet.class);
+        final var user = getMongoUser(userId);
+
+        query.filter(and(
+                eq("user", user),
+                eq("displayName", walletName)
+        ));
+
+        final var mongoNeoWallet = query.first();
+        return mongoNeoWallet == null ? null : transform(mongoNeoWallet);
     }
 
     @Override
@@ -103,28 +121,22 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public NeoWallet createWallet(NeoWallet wallet) {
+    public NeoWallet createWallet(NeoWallet wallet) throws JsonProcessingException {
 
         getValidationHelper().validateModel(wallet, ValidationGroups.Insert.class);
 
         final var query = getDatastore().find(MongoNeoWallet.class);
-        final var user = getMongoUserFromWallet(wallet);
+        final var user = getMongoUser(wallet.getUser().getId());
+        final var walletBytes = Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet());
 
-        query.filter(eq("user", user));
+        final var builder = new UpdateBuilder().with(
+                set("user", user),
+                set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
+                set("walletString", Base64.getEncoder().encodeToString(walletBytes))
+        );
 
-        // These fields are not part of the "refresh" operation, but will get set if it is the first time we create
-        // the wallet.
-        final var insertMap = new HashMap<String, Object>(Collections.emptyMap());
-
-        insertMap.put("user", user);
-        insertMap.put("displayName", nullToEmpty(wallet.getDisplayName()).trim());
-
-        final var builder = new UpdateBuilder();
-
-        final var mongoWallet = getMongoDBUtils().perform(ds ->
-                builder.with(
-                        UpdateOperators.setOnInsert(insertMap)
-                ).execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+        final var mongoWallet = getMongoDBUtils().perform(
+                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
         getObjectIndex().index(mongoWallet);
@@ -152,8 +164,8 @@ public class MongoNeoWalletDao implements NeoWalletDao {
 
     }
 
-    private MongoUser getMongoUserFromWallet(final NeoWallet wallet) {
-        return getMongoUserDao().getActiveMongoUser(wallet.getUser().getId());
+    private MongoUser getMongoUser(final String userId) {
+        return getMongoUserDao().getActiveMongoUser(userId);
     }
 
 

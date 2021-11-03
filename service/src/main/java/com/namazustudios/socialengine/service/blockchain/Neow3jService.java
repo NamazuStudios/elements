@@ -1,9 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.Token;
-import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -11,13 +8,9 @@ import com.namazustudios.socialengine.service.Unscoped;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.protocol.Neow3j;
 import io.neow3j.script.ScriptBuilder;
-import io.neow3j.transaction.Transaction;
 import io.neow3j.transaction.TransactionBuilder;
 import io.neow3j.wallet.Account;
-import io.neow3j.wallet.Wallet;
 import io.neow3j.wallet.nep6.NEP6Wallet;
-
-import java.util.List;
 
 /**
  * Manages instances of {@link Neow3j}.
@@ -61,7 +54,7 @@ public interface Neow3jService {
      * @param name the name for the wallet
      * @return the {@link NEP6Wallet}
      */
-    NEP6Wallet createWallet(String name);
+    NEP6Wallet createWallet(String name) throws CipherException;
 
     /**
      * Creates an encrypted {@link NEP6Wallet}.
