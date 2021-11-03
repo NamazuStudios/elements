@@ -250,37 +250,6 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile updateActiveProfile(final Profile profile) {
-
-        getValidationHelper().validateModel(profile, Update.class);
-
-        final var query = getDatastore().find(MongoProfile.class);
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
-
-        query.filter(and(
-            eq("_id", objectId),
-            eq("active", true)
-        ));
-
-        final var builder = new UpdateBuilder();
-
-        final var mongoProfile = getMongoDBUtils().perform(ds ->
-            builder.with(
-                set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-                set("displayName", nullToEmpty(profile.getDisplayName()).trim())
-            ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
-        );
-
-        if (mongoProfile == null) {
-            throw new NotFoundException("application not found: " + profile.getId());
-        }
-
-        getObjectIndex().index(mongoProfile);
-        return transform(mongoProfile);
-
-    }
-
-    @Override
     public Profile updateActiveProfile(final Profile profile, final Map<String, Object> metadata) {
 
         getValidationHelper().validateModel(profile, Update.class);

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.profile;
 
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.UserDao;
@@ -48,6 +47,8 @@ public class SuperUserProfileService implements ProfileService {
 
     private Provider<Attributes> attributesProvider;
 
+    private ProfileServiceUtils profileServiceUtils;
+
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
                                            final String applicationNameOrId, final String userId,
@@ -59,11 +60,7 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Override
-    public Pagination<Profile> getProfiles(
-            int offset,
-            int count,
-            String search
-    ) {
+    public Pagination<Profile> getProfiles(int offset, int count, String search) {
         return getProfileDao().getActiveProfiles(offset, count, search);
     }
 
@@ -79,19 +76,8 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
-        return getProfileDao().updateActiveProfile(profileWithUpdates(profileId, profileRequest));
-    }
-
-    public Profile profileWithUpdates(String profileId, UpdateProfileRequest profileRequest) {
-        final Profile updates = new Profile();
-        updates.setId(profileId);
-        if(!Strings.isNullOrEmpty(profileRequest.getDisplayName())){
-            updates.setDisplayName(profileRequest.getDisplayName());
-        }
-        if(!Strings.isNullOrEmpty(profileRequest.getImageUrl())){
-            updates.setImageUrl(profileRequest.getImageUrl());
-        }
-        return updates;
+        final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
+        return getProfileDao().updateActiveProfile(profile);
     }
 
     @Override
@@ -118,19 +104,8 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     private Profile createNewProfile(final CreateProfileRequest profileRequest) {
-
-        final var newProfile = new Profile();
-
-        newProfile.setUser(getUserDao().getActiveUser(profileRequest.getUserId()));
-        newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
-        newProfile.setImageUrl(profileRequest.getImageUrl());
-        newProfile.setDisplayName(profileRequest.getDisplayName());
-
-        if (newProfile.getDisplayName() == null || newProfile.getDisplayName().trim().isEmpty())
-            newProfile.setDisplayName(getNameService().generateQualifiedName());
-
-        return getProfileDao().createOrReactivateProfile(newProfile);
-
+        final var profile = getProfileServiceUtils().getProfileForCreate(profileRequest);
+        return getProfileDao().createOrReactivateProfile(profile);
     }
 
     @Override
@@ -199,6 +174,15 @@ public class SuperUserProfileService implements ProfileService {
     @Inject
     public void setAttributesProvider(Provider<Attributes> attributesProvider) {
         this.attributesProvider = attributesProvider;
+    }
+
+    public ProfileServiceUtils getProfileServiceUtils() {
+        return profileServiceUtils;
+    }
+
+    @Inject
+    public void setProfileServiceUtils(ProfileServiceUtils profileServiceUtils) {
+        this.profileServiceUtils = profileServiceUtils;
     }
 
 }

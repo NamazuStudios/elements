@@ -85,12 +85,11 @@ public interface ProfileDao {
      * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
      * profile can't be found.  The {@link Profile#getId()} is used to key the profile being updated.
      *
-     * Note that this does not update the profile metadata, as specified by {@link Profile#getMetadata()}, updates to
-     * metadata are required {@see {@link #updateActiveProfile(Profile, Map)}}
-     *
      * @return the {@link Profile} as it was written into the database
      */
-    Profile updateActiveProfile(Profile profile);
+    default Profile updateActiveProfile(Profile profile) {
+        return updateActiveProfile(profile, profile.getMetadata());
+    }
 
     /**
      * Updates the specific active profile with the id, or throws a {@link NotFoundException} if the
@@ -124,9 +123,6 @@ public interface ProfileDao {
      * {@link DuplicateException}.  The newly created or reactivated profile will contain the
      * ID of the profile as requested.  The value of {@link Profile#getId()} will be ignored
      * and updates will be keyed using the {@link User} and {@link Application}.
-     *
-     * Note that this does not set the profile metadata, as specified by {@link Profile#getMetadata()}, if creation with
-     * metadata are required {@see {@link #createOrReactivateProfile(Profile, Map)}}
      *
      * @return the {@link Profile} as it was written into the database
      */
