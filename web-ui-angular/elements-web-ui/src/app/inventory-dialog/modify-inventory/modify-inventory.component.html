@@ -1,6 +1,6 @@
 <h4>Modify Existing Inventory</h4>
   
-<div class="metadata-row" *ngFor="let item of inventoryItems">
+<div class="metadata-row" *ngFor="let item of inventoryItems?.sort(compare)">
   <mat-form-field>
     <input #existingName disabled=true matInput placeholder="Name" name="name" value="{{item.name}}">
   </mat-form-field>
