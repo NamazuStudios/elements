@@ -444,6 +444,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoWalletService.class);
 
+        bind(Neow3jService.class)
+            .annotatedWith(Unscoped.class)
+            .to(UserNeow3jService.class);
+
         bind(TokenService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserTokenService.class);
@@ -502,6 +506,7 @@ public class ServicesModule extends PrivateModule {
         expose(NameService.class);
         expose(HealthStatusService.class);
         expose(NeoWalletService.class);
+        expose(Neow3jService.class);
         expose(TokenService.class);
         expose(SmartContractTemplateService.class);
 
@@ -540,6 +545,7 @@ public class ServicesModule extends PrivateModule {
         expose(NameService.class).annotatedWith(Unscoped.class);
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
+        expose(Neow3jService.class).annotatedWith(Unscoped.class);
         expose(TokenService.class).annotatedWith(Unscoped.class);
         expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
 
