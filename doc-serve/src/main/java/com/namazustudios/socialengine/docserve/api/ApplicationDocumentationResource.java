@@ -60,10 +60,8 @@ import static java.util.Collections.emptyList;
         @Authorization(SOCIALENGINE_SESSION_SECRET)
     }
 )
-@Path("application/{applicationNameOrId}/swagger.json")
+@Path("{applicationNameOrId}")
 public class ApplicationDocumentationResource {
-
-    public static final String PROFILE_ID = "profile_id";
 
     public static final String AUTH_BEARER = "auth_bearer";
 

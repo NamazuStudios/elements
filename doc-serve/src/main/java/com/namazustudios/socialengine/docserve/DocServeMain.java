@@ -87,41 +87,41 @@ public class DocServeMain implements Runnable {
         facebookPermissionListSupplier =  new FacebookBuiltinPermissionsSupplier();
 
         return createInjector(
-                new ConfigurationModule(defaultConfigurationSupplier),
-                new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
-                new JeroMQControlClientModule(),
-                new SimpleInstanceModule(),
-                new MongoCoreModule(),
-                new ServerModule(),
-                new MongoDaoModule(),
-                new ValidationModule(),
-                new MongoSearchModule(),
-                new ZContextModule(),
-                new GameOnInvokerModule(),
-                new ClusterContextFactoryModule(),
-                new JeroMQRemoteInvokerModule(),
-                new JeroMQInstanceConnectionServiceModule(),
-                new JeroMQAsyncConnectionServiceModule(),
-                new SimpleRemoteInvokerRegistryModule(),
-                new FSTPayloadReaderWriterModule(),
-                new RandomInstanceIdModule(),
-                new FirebaseAppFactoryModule(),
-                new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
-                new AppleIapReceiptInvokerModule(),
-                new JacksonHttpClientModule()
-                        .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
-                        .withDefaultObjectMapperProvider(() -> {
-                            final ObjectMapper objectMapper = new ObjectMapper();
-                            objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                            return objectMapper;
-                        }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
-                    final ObjectMapper objectMapper = new ObjectMapper();
-                    final DateFormat dateFormat = new AppleDateFormat();
-                    objectMapper.setDateFormat(dateFormat);
-                    objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
-                    objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
-                    return objectMapper;
-                })
+            new ConfigurationModule(defaultConfigurationSupplier),
+            new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
+            new JeroMQControlClientModule(),
+            new SimpleInstanceModule(),
+            new MongoCoreModule(),
+            new ServerModule(),
+            new MongoDaoModule(),
+            new ValidationModule(),
+            new MongoSearchModule(),
+            new ZContextModule(),
+            new GameOnInvokerModule(),
+            new ClusterContextFactoryModule(),
+            new JeroMQRemoteInvokerModule(),
+            new JeroMQInstanceConnectionServiceModule(),
+            new JeroMQAsyncConnectionServiceModule(),
+            new SimpleRemoteInvokerRegistryModule(),
+            new FSTPayloadReaderWriterModule(),
+            new RandomInstanceIdModule(),
+            new FirebaseAppFactoryModule(),
+            new FacebookBuiltinPermissionsModule(facebookPermissionListSupplier),
+            new AppleIapReceiptInvokerModule(),
+            new JacksonHttpClientModule()
+                    .withRegisteredComponent(OctetStreamJsonMessageBodyReader.class)
+                    .withDefaultObjectMapperProvider(() -> {
+                        final ObjectMapper objectMapper = new ObjectMapper();
+                        objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                        return objectMapper;
+                    }).withNamedObjectMapperProvider(APPLE_ITUNES, () -> {
+                final ObjectMapper objectMapper = new ObjectMapper();
+                final DateFormat dateFormat = new AppleDateFormat();
+                objectMapper.setDateFormat(dateFormat);
+                objectMapper.setPropertyNamingStrategy(SNAKE_CASE);
+                objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
+                return objectMapper;
+            })
         ).getInstance(Server.class);
 
     }

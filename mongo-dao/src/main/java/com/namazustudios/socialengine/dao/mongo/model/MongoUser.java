@@ -31,7 +31,6 @@ import static dev.morphia.utils.IndexType.TEXT;
     @SearchableField(name = "facebookId", path = "/facebookId"),
     @SearchableField(name = "appleSignInId", path = "/appleSignInId")
 })
-
 @Entity(value = "user", useDiscriminator = false)
 @Indexes({
     @Index(
