@@ -138,6 +138,11 @@
             <version>${logback.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>io.neow3j</groupId>
+            <artifactId>contract</artifactId>
+            <version>3.13.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
