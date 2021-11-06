@@ -82,6 +82,10 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private ContextHandler createLuaContext(final App app) {
 
+        if (!getLuaContext().equals(app.getOriginId())) {
+            throw new IllegalStateException("Expected: " + getLuaContext());
+        }
+
         final var injector = getInjector().createChildInjector(new LuaStaticPathDocsModule());
         final var pathDocs = injector.getInstance(StaticPathDocs.class);
         pathDocs.start();
@@ -104,6 +108,11 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private ContextHandler createSwaggerContext(final App app) {
+
+        if (!getSwaggerContext().equals(app.getOriginId())) {
+            throw new IllegalStateException("Expected: " + getSwaggerContext());
+        }
+
         final var injector = getInjector().createChildInjector(new DocJerseyModule());
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
         final var servletContextHandler = new ServletContextHandler();
@@ -113,6 +122,10 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private ContextHandler createHealthContext(final App app) {
+
+        if (!getHealthContext().equals(app.getOriginId())) {
+            throw new IllegalStateException("Expected: " + getHealthContext());
+        }
 
         final var injector = getInjector().createChildInjector(new ServletModule() {
             @Override
@@ -131,6 +144,10 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
     }
 
     private ContextHandler createVersionContext(final App app) {
+
+        if (!getVersionContext().equals(app.getOriginId())) {
+            throw new IllegalStateException("Expected: " + getVersionContext());
+        }
 
         final var injector = getInjector().createChildInjector(new ServletModule() {
             @Override
