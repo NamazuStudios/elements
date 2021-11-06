@@ -75,8 +75,8 @@ public class DocGuiceResourceConfig extends ResourceConfig {
             final Class<?> beanValidationMode = Class.forName("org.eclipse.persistence.jaxb.BeanValidationMode");
 
             register(new MoxyJsonConfig()
-                    .property("eclipselink.beanvalidation.mode", beanValidationMode.getField("NONE").get(null))
-                    .resolver());
+                .property("eclipselink.beanvalidation.mode", beanValidationMode.getField("NONE").get(null))
+                .resolver());
 
             return true;
         } catch (ClassNotFoundException ex) {
