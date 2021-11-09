@@ -29,7 +29,6 @@ public class DocGuiceResourceConfig extends ResourceConfig {
 
         register(HealthResource.class);
         register(VersionResource.class);
-        register(VersionResource.class);
         register(SwaggerSerializers.class);
         register(ISODateParamConverter.class);
         register(DefaultExceptionMapper.class);
@@ -43,8 +42,8 @@ public class DocGuiceResourceConfig extends ResourceConfig {
 
         GuiceBridge.getGuiceBridge().initializeGuiceBridge(serviceLocator);
 
-        final GuiceIntoHK2Bridge guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
-        final Injector injector = (Injector) context.getAttribute(INJECTOR_ATTRIBUTE_NAME);
+        final var guiceBridge = serviceLocator.getService(GuiceIntoHK2Bridge.class);
+        final var injector = (Injector) context.getAttribute(INJECTOR_ATTRIBUTE_NAME);
         guiceBridge.bridgeGuiceInjector(injector);
 
     }

@@ -1,12 +1,9 @@
 package com.namazustudios.socialengine.docserve.guice;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.inject.PrivateModule;
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.docserve.DocGuiceResourceConfig;
 import com.namazustudios.socialengine.rest.CORSFilter;
-import com.namazustudios.socialengine.service.SessionService;
-import com.namazustudios.socialengine.service.auth.DefaultSessionService;
 import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
 import org.glassfish.jersey.servlet.ServletContainer;
 

@@ -40,7 +40,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import static com.google.common.base.Functions.identity;
-import static com.namazustudios.socialengine.docserve.api.ApplicationDocumentationResource.*;
+import static com.namazustudios.socialengine.docserve.api.Swagger2ApplicationDocumentationResource.*;
 import static io.swagger.models.Scheme.forValue;
 import static io.swagger.models.auth.In.HEADER;
 import static java.util.Arrays.asList;
@@ -60,8 +60,8 @@ import static java.util.Collections.emptyList;
         @Authorization(SOCIALENGINE_SESSION_SECRET)
     }
 )
-@Path("{applicationNameOrId}")
-public class ApplicationDocumentationResource {
+@Path("swagger/2/{applicationNameOrId}/swagger.json")
+public class Swagger2ApplicationDocumentationResource {
 
     public static final String AUTH_BEARER = "auth_bearer";
 

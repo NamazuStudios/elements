@@ -2,15 +2,12 @@ package com.namazustudios.socialengine.docserve;
 
 import com.google.inject.Injector;
 import com.google.inject.servlet.GuiceFilter;
-import com.google.inject.servlet.ServletModule;
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.docserve.guice.DocJerseyModule;
 import com.namazustudios.socialengine.docserve.guice.LuaStaticPathDocsModule;
 import com.namazustudios.socialengine.rest.guice.RestAPISecurityModule;
 import com.namazustudios.socialengine.rest.guice.RestAPIServicesModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;
-import com.namazustudios.socialengine.servlet.security.HealthServlet;
-import com.namazustudios.socialengine.servlet.security.VersionServlet;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -24,31 +21,26 @@ import org.eclipse.jetty.util.component.AbstractLifeCycle;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.DispatcherType;
+import java.util.HashMap;
 import java.util.List;
 
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
+import static com.namazustudios.socialengine.docserve.DocGuiceResourceConfig.INJECTOR_ATTRIBUTE_NAME;
 import static java.lang.String.format;
 import static java.util.EnumSet.allOf;
+import static org.eclipse.jetty.util.Loader.getResource;
 
 public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
     public static final String LUA_CONTEXT_FORMAT = "%s/lua";
 
-    public static final String HEALTH_CONTEXT_FORMAT = "%s/health";
-
-    public static final String VERSION_CONTEXT_FORMAT = "%s/version";
-
-    public static final String SWAGGER2_CONTEXT_FORMAT = "%s/swagger/2";
+    public static final String SWAGGER2_CONTEXT_FORMAT = "%s/rest";
 
     private String pathPrefix;
 
     private String luaContext;
 
-    private String healthContext;
-
-    private String versionContext;
-
-    private String swaggerContext;
+    private String restContext;
 
     private Injector injector;
 
@@ -58,9 +50,7 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
     protected void doStart() {
         List.of(
             new App(getDeploymentManager(), this, getLuaContext()),
-//            new App(getDeploymentManager(), this, getHealthContext()),
-//            new App(getDeploymentManager(), this, getVersionContext()),
-            new App(getDeploymentManager(), this, getSwaggerContext())
+            new App(getDeploymentManager(), this, getRestContext())
         ).forEach(getDeploymentManager()::addApp);
     }
 
@@ -69,14 +59,10 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var originId = app.getOriginId();
 
-        if (originId.equals(getHealthContext())) {
-            return createHealthContext(app);
-        } else if (originId.equals(getLuaContext())) {
+        if (originId.equals(getLuaContext())) {
             return createLuaContext(app);
-        } else if (originId.equals(getVersionContext())) {
-            return createVersionContext(app);
-        } else if (originId.equals(getSwaggerContext())) {
-            return createSwaggerContext(app);
+        } else if (originId.equals(getRestContext())) {
+            return createRestContext(app);
         }
 
         throw new IllegalStateException("Unknown App: " + app.getOriginId());
@@ -96,24 +82,25 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         final var defaultServlet = new DefaultServlet();
         final var defaultServletHolder = new ServletHolder("default", defaultServlet);
 
-        final var servletContextHandler = new ServletContextHandler();
-
         final var resourceBase = pathDocs.getPath().toAbsolutePath().toString();
         defaultServletHolder.setInitParameter("resourceBase", resourceBase);
 
+        final var servletContextHandler = new ServletContextHandler();
+
+        servletContextHandler.addServlet(defaultServletHolder, "/*");
         servletContextHandler.setContextPath(getLuaContext());
         servletContextHandler
             .getMimeTypes()
-            .addMimeMapping("lua", "application/text");
+            .addMimeMapping("lua", "text/plain");
 
         return servletContextHandler;
 
     }
 
-    private ContextHandler createSwaggerContext(final App app) {
+    private ContextHandler createRestContext(final App app) {
 
-        if (!getSwaggerContext().equals(app.getOriginId())) {
-            throw new IllegalStateException("Expected: " + getSwaggerContext());
+        if (!getRestContext().equals(app.getOriginId())) {
+            throw new IllegalStateException("Expected: " + getRestContext());
         }
 
         final var injector = getInjector().createChildInjector(
@@ -123,56 +110,22 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
             new RedissonServicesModule(ServletScopes.REQUEST)
         );
 
-        final var guiceFilter = injector.getInstance(GuiceFilter.class);
         final var servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(getSwaggerContext());
-        servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
-
-        return servletContextHandler;
-    }
-
-    private ContextHandler createHealthContext(final App app) {
-
-        if (!getHealthContext().equals(app.getOriginId())) {
-            throw new IllegalStateException("Expected: " + getHealthContext());
-        }
-
-        final var injector = getInjector().createChildInjector(new ServletModule() {
-            @Override
-            protected void configureServlets() {
-            serve("/").with(HealthServlet.class);
-            }
-        });
 
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
-        final var servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(getHealthContext());
+        servletContextHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
 
-        return servletContextHandler;
+        final var defaultServletHolder = servletContextHandler.addServlet(DefaultServlet.class, "/");
 
-    }
+        final var defaultInitParameters = new HashMap<String, String>();
+        defaultInitParameters.put("dirAllowed", "false");
+        defaultInitParameters.put("resourceBase", getResource("swagger").toString());
+        defaultServletHolder.setInitParameters(defaultInitParameters);
 
-    private ContextHandler createVersionContext(final App app) {
-
-        if (!getVersionContext().equals(app.getOriginId())) {
-            throw new IllegalStateException("Expected: " + getVersionContext());
-        }
-
-        final var injector = getInjector().createChildInjector(new ServletModule() {
-            @Override
-            protected void configureServlets() {
-                serve("/").with(VersionServlet.class);
-            }
-        });
-
-        final var guiceFilter = injector.getInstance(GuiceFilter.class);
-        final var servletContextHandler = new ServletContextHandler();
-        servletContextHandler.setContextPath(getVersionContext());
-        servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
+        servletContextHandler.setContextPath(getRestContext());
 
         return servletContextHandler;
-
     }
 
     public String getPathPrefix() {
@@ -183,16 +136,8 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         return luaContext;
     }
 
-    public String getHealthContext() {
-        return healthContext;
-    }
-
-    public String getVersionContext() {
-        return versionContext;
-    }
-
-    public String getSwaggerContext() {
-        return swaggerContext;
+    public String getRestContext() {
+        return restContext;
     }
 
     @Inject
@@ -201,25 +146,15 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         this.pathPrefix = pathPrefix;
 
         this.luaContext = format(LUA_CONTEXT_FORMAT, getPathPrefix());
-        this.healthContext = format(HEALTH_CONTEXT_FORMAT, getPathPrefix());
-        this.swaggerContext = format(SWAGGER2_CONTEXT_FORMAT, getPathPrefix());
-        this.versionContext = format(VERSION_CONTEXT_FORMAT, getVersionContext());
+        this.restContext = format(SWAGGER2_CONTEXT_FORMAT, getPathPrefix());
 
         this.luaContext = this.luaContext.startsWith("/")
             ? this.luaContext
             : "/" + this.luaContext;
 
-        this.healthContext = this.healthContext.startsWith("/")
-            ? this.healthContext
-            : "/" + this.healthContext;
-
-        this.versionContext = this.versionContext.startsWith("/")
-            ? this.versionContext
-            : "/" + this.versionContext;
-
-        this.swaggerContext = this.swaggerContext.startsWith("/")
-            ? this.swaggerContext
-            : "/" + this.swaggerContext;
+        this.restContext = this.restContext.startsWith("/")
+            ? this.restContext
+            : "/" + this.restContext;
 
     }
 

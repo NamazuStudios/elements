@@ -11,6 +11,7 @@ import org.reflections.util.ConfigurationBuilder;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
@@ -24,6 +25,11 @@ public class LuaStaticPathDocs implements StaticPathDocs {
     private static final String SOURCES_PREFIX = "src";
 
     private static final String ELEMENTS_PREFIX = "elements";
+
+    private static final List<Pattern> EXCLUSIONS = List.of(
+        Pattern.compile("main.lua"),
+        Pattern.compile("example.*")
+    );
 
     private static final Pattern LUA_SOURCE_FILES = Pattern.compile(".*\\.lua");
 
@@ -70,6 +76,15 @@ public class LuaStaticPathDocs implements StaticPathDocs {
     }
 
     private void addSource(final Path path, final String source) {
+
+        final var excluded = EXCLUSIONS
+            .stream()
+            .map(pat -> pat.matcher(source).matches())
+            .filter(match -> match)
+            .findFirst()
+            .orElse(false);
+
+        if (excluded) return;
 
         final var dst = path.resolve(source);
 
