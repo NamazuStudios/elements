@@ -4,13 +4,18 @@ import com.namazustudios.socialengine.docserve.StaticPathDocs;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.reflections.Reflections;
+import org.reflections.scanners.ResourcesScanner;
+import org.reflections.util.ClasspathHelper;
+import org.reflections.util.ConfigurationBuilder;
 
 import java.io.*;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
 import static java.lang.ClassLoader.getSystemClassLoader;
+import static java.nio.file.Files.createDirectories;
 
 public class LuaStaticPathDocs implements StaticPathDocs {
 
@@ -20,7 +25,7 @@ public class LuaStaticPathDocs implements StaticPathDocs {
 
     private static final String ELEMENTS_PREFIX = "elements";
 
-    private static final Pattern LUA_SOURCE_FILES = Pattern.compile(".\\.lua");
+    private static final Pattern LUA_SOURCE_FILES = Pattern.compile(".*\\.lua");
 
     private static final TemporaryFiles files = new TemporaryFiles(LuaStaticPathDocs.class);
 
@@ -35,9 +40,15 @@ public class LuaStaticPathDocs implements StaticPathDocs {
 
     @Override
     public void start() {
-        final var path = files.createTempFile();
+
+        final var path = files.createTempDirectory();
         final var sources = loadElementsSources(path);
         loadLuaDocs(sources);
+
+        if (!this.path.compareAndSet(null, path)) {
+            throw new IllegalStateException("Already started.");
+        }
+
     }
 
     private Path loadElementsSources(final Path path) {
@@ -46,33 +57,59 @@ public class LuaStaticPathDocs implements StaticPathDocs {
             .resolve(ELEMENTS_PREFIX)
             .resolve(SOURCES_PREFIX);
 
-        final var classLoader = getSystemClassLoader();
-        final var reflections = new Reflections("com.namazustudios", classLoader);
+        final var reflections = new Reflections(new ConfigurationBuilder()
+            .setUrls(ClasspathHelper.forJavaClassPath())
+            .setScanners(new ResourcesScanner()));
 
         reflections
             .getResources(LUA_SOURCE_FILES)
-            .forEach(source -> addSource(path, source));
+            .forEach(source -> addSource(sources, source));
 
-        return null;
+        return sources;
 
     }
 
     private void addSource(final Path path, final String source) {
 
-        final var dst = path.resolve(source).toFile();
+        final var dst = path.resolve(source);
 
-        try (final var fos = new FileOutputStream(dst);
+        try {
+            createDirectories(dst.getParent());
+        } catch (IOException e) {
+            throw new InternalException(e);
+        }
+
+        try (final var fos = new FileOutputStream(dst.toFile());
              final var bos = new BufferedOutputStream(fos);
              final var ris = getSystemClassLoader().getResourceAsStream(source)) {
+
             if (ris == null) throw new InternalException("Unable to read Lua source " + source);
-            ris.transferTo(bos);
+
+            try (final var bis = new BufferedInputStream(ris)) {
+                bis.transferTo(bos);
+            }
+
         } catch (IOException e) {
             throw new InternalException(e);
         }
 
     }
 
-    private void loadLuaDocs(final Path path) {
+    private void loadLuaDocs(final Path sources) {
+
+        final var paths = sources.getParent().resolve(DOCS_PREFIX);
+
+        try {
+
+            final var process = new ProcessBuilder()
+                .command("ldoc", "-d", paths.toString(), sources.toString())
+                .start();
+
+            process.waitFor();
+
+        } catch (IOException | InterruptedException e) {
+            throw new InternalException(e);
+        }
 
     }
 

@@ -1,15 +1,12 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.docserve.guice;
 
 import com.google.inject.servlet.ServletScopes;
 import com.namazustudios.socialengine.rt.servlet.HttpServletAttributesProvider;
 import com.namazustudios.socialengine.service.guice.ServicesModule;
 
-/**
- * Created by patricktwohig on 3/19/15.
- */
-public class RestAPIServicesModule extends ServicesModule {
+public class DocServeServicesModule extends ServicesModule {
 
-    public RestAPIServicesModule() {
+    public DocServeServicesModule() {
         super(ServletScopes.REQUEST, HttpServletAttributesProvider.class);
     }
 

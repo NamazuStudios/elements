@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.docserve;
 
 import com.google.inject.Injector;
+import com.namazustudios.socialengine.rest.HealthResource;
 import com.namazustudios.socialengine.rest.VersionResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rest.support.ISODateParamConverter;
@@ -26,11 +27,13 @@ public class DocGuiceResourceConfig extends ResourceConfig {
     @Inject
     public DocGuiceResourceConfig(final ServiceLocator serviceLocator, final ServletContext context) {
 
+        register(HealthResource.class);
+        register(VersionResource.class);
         register(VersionResource.class);
         register(SwaggerSerializers.class);
-        register(EnhancedApiListingResource.class);
         register(ISODateParamConverter.class);
         register(DefaultExceptionMapper.class);
+        register(EnhancedApiListingResource.class);
 
         packages(true, "com.namazustudios.socialengine.docserve.api");
 

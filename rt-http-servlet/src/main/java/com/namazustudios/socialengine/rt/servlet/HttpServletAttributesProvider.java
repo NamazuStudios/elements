@@ -1,13 +1,12 @@
-package com.namazustudios.socialengine.rest.guice;
+package com.namazustudios.socialengine.rt.servlet;
 
 import com.namazustudios.socialengine.rt.Attributes;
-import com.namazustudios.socialengine.rt.servlet.ServletRequestAttributes;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
 import javax.servlet.http.HttpServletRequest;
 
-public class AttributesProvider implements Provider<Attributes> {
+public class HttpServletAttributesProvider implements Provider<Attributes> {
 
     private Provider<HttpServletRequest> httpServletRequestProvider;
 

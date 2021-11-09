@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
-import com.google.inject.TypeLiteral;
-import com.namazustudios.socialengine.dao.DatabaseHealthStatusDao;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -62,7 +60,6 @@ import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 import org.dozer.Mapper;
 
 import javax.inject.Provider;
-import java.util.Set;
 
 /**
  * Configures all of the services, using a {@link Scope} for {@link User}, {@link Profile} injections.

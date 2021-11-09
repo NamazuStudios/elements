@@ -24,12 +24,11 @@ public class DocJerseyModule extends ServletModule {
         // Setup servlets
 
         bind(ServletContainer.class).in(Singleton.class);
-        bind(SessionService.class).to(DefaultSessionService.class);
         bind(SessionIdAuthenticationFilter.class).asEagerSingleton();
 
         final Map<String, String> params = new ImmutableMap.Builder<String, String>()
-                .put("javax.ws.rs.Application", DocGuiceResourceConfig.class.getName())
-                .build();
+            .put("javax.ws.rs.Application", DocGuiceResourceConfig.class.getName())
+            .build();
 
         serve("/*").with(ServletContainer.class, params);
 
