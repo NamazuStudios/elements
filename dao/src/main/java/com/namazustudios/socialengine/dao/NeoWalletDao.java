@@ -42,10 +42,12 @@ public interface NeoWalletDao {
     /**
      * Updates the supplied {@link NeoWallet}.
      *
-     * @param wallet the {@link UpdateWalletRequest} with the information to update
-     * @return the {@link SmartContractTemplate} as it was changed by the service.
+     * @param walletId the Id of the wallet to update
+     * @param userId the user Id to own the wallet
+     * @param updatedWallet the {@link NEP6Wallet} with the updated information
+     * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(UpdateWalletRequest wallet);
+    NeoWallet updateWallet(String walletId, String userId, NEP6Wallet updatedWallet) throws JsonProcessingException;
 
     /**
      * Creates a new Wallet.

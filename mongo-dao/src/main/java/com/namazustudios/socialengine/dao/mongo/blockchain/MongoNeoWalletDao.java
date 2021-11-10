@@ -21,6 +21,7 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.updates.UpdateOperators;
 import io.neow3j.wallet.Wallet;
+import io.neow3j.wallet.nep6.NEP6Wallet;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
@@ -69,10 +70,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
 
         final var query = getDatastore().find(MongoNeoWallet.class);
 
-        query.filter(or(
-                eq("_id", new ObjectId(walletId)),
-                eq("displayName", true)
-        ));
+        query.filter(eq("_id", new ObjectId(walletId)));
 
         final var mongoNeoWallet = query.first();
         return mongoNeoWallet == null ? Optional.empty() : Optional.of(transform(mongoNeoWallet));
@@ -94,18 +92,25 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public NeoWallet updateWallet(UpdateWalletRequest walletRequest) {
-        getValidationHelper().validateModel(walletRequest, ValidationGroups.Update.class);
+    public NeoWallet updateWallet(String walletId, String userId, NEP6Wallet updatedWallet) throws JsonProcessingException {
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletRequest.getId());
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletId);
         final var query = getDatastore().find(MongoNeoWallet.class);
+        final var walletBytes = Wallet.OBJECT_MAPPER.writeValueAsBytes(updatedWallet);
+        final var displayName = nullToEmpty(updatedWallet.getName()).trim();
+        final var user = getMongoUser(userId);
 
         final var builder = new UpdateBuilder();
 
         query.filter(eq("_id", objectId));
 
+        if (!displayName.isEmpty()) {
+            builder.with(set("displayName", nullToEmpty(updatedWallet.getName()).trim()));
+        }
+
         builder.with(
-                set("displayName", nullToEmpty(walletRequest.getDisplayName()).trim())
+                set("user", user),
+                set("walletString", Base64.getEncoder().encodeToString(walletBytes))
         );
 
         final MongoNeoWallet mongoNeoWallet = getMongoDBUtils().perform(ds ->
@@ -113,7 +118,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         );
 
         if (mongoNeoWallet == null) {
-            throw new NotFoundException("Wallet not found: " + walletRequest.getId());
+            throw new NotFoundException("Wallet not found: " + walletId);
         }
 
         getObjectIndex().index(mongoNeoWallet);

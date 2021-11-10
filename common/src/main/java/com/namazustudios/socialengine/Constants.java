@@ -166,6 +166,16 @@ public interface Constants {
     String CDN_SERVE_ENDPOINT = "com.namazustudios.socialengine.cdnserve.endpoint.serve";
 
     /**
+     * Used to specify the host for neo blockchain.
+     */
+    String NEO_BLOCKCHAIN_HOST = "com.namazustudios.socialengine.blockchain.host";
+
+    /**
+     * Used to specify the port for neo blockchain.
+     */
+    String NEO_BLOCKCHAIN_PORT = "com.namazustudios.socialengine.blockchain.port";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {

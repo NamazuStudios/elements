@@ -32,7 +32,7 @@ public class NeoWalletResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Neo wallets for a specific user",
+    @ApiOperation(value = "Gets Neo wallets for a specific user",
             notes = "Gets a pagination of Neo Wallets for the given user id.")
     public Pagination<NeoWallet> getWallets(
             @QueryParam("offset") @DefaultValue("0") final int offset,
@@ -53,8 +53,8 @@ public class NeoWalletResource {
     @Path("{walletId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Neo Wallet",
-            notes = "Gets a specific Neo Wallet by templateId.")
-    public Optional<NeoWallet> getWallet(@PathParam("walletId") String walletId) {
+            notes = "Gets a specific Neo Wallet by Id.")
+    public NeoWallet getWallet(@PathParam("walletId") String walletId) {
 
         walletId = Strings.nullToEmpty(walletId).trim();
 
@@ -62,7 +62,7 @@ public class NeoWalletResource {
             throw new NotFoundException();
         }
 
-        return getWalletService().getWallet(walletId);
+        return getWalletService().getWallet(walletId).orElse(null);
     }
 
     @POST
@@ -74,11 +74,12 @@ public class NeoWalletResource {
     }
 
     @PUT
+    @Path("{walletId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a Neo Wallet",
             notes = "Updates a Neo Wallet with the specified name or id.")
-    public NeoWallet updateWallet(final UpdateWalletRequest request) {
-        return getWalletService().updateWallet(request);
+    public NeoWallet updateWallet(@PathParam("walletId") String walletId, final UpdateWalletRequest request) {
+        return getWalletService().updateWallet(walletId, request);
     }
 
     @DELETE

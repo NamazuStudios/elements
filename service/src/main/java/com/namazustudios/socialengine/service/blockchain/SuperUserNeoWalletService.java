@@ -15,7 +15,10 @@ import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.service.UserService;
 import com.namazustudios.socialengine.service.user.UserUserService;
 import io.neow3j.crypto.exceptions.CipherException;
+import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
+import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.wallet.Wallet;
+import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
 import java.util.Optional;
@@ -38,13 +41,37 @@ public class SuperUserNeoWalletService implements NeoWalletService {
     }
 
     @Override
-    public Optional<NeoWallet> getWallet(String walletIdOrName) {
-        return getWalletDao().getWallet(walletIdOrName);
+    public Optional<NeoWallet> getWallet(String walletId) {
+        return getWalletDao().getWallet(walletId);
     }
 
     @Override
-    public NeoWallet updateWallet(UpdateWalletRequest walletRequest) {
-        return getWalletDao().updateWallet(walletRequest);
+    public NeoWallet updateWallet(String walletId, UpdateWalletRequest walletRequest) {
+        var user = getUser();
+        var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
+        if (userId.isEmpty()){
+            userId = user.getId();
+        }
+
+        var name = Strings.nullToEmpty(walletRequest.getDisplayName()).trim();
+        var password = Strings.nullToEmpty(walletRequest.getPassword()).trim();
+        var newPassword = Strings.nullToEmpty(walletRequest.getNewPassword()).trim();
+
+        NEP6Wallet updatedWallet = null;
+        var neoWallet = getWalletDao().getWallet(walletId);
+        if(neoWallet.isPresent()) {
+            try {
+                updatedWallet = getNeow3jService().updateWallet(neoWallet.get().getWallet(), name, password, newPassword);
+            } catch (CipherException | NEP2InvalidFormat | NEP2InvalidPassphrase e) {
+                return null;
+            }
+        }
+
+        try {
+            return getWalletDao().updateWallet(walletId, userId, updatedWallet);
+        } catch (JsonProcessingException e) {
+            return null;
+        }
     }
 
     @Override

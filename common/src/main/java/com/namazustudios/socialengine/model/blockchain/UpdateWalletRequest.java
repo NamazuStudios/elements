@@ -12,12 +12,12 @@ import javax.validation.constraints.Null;
 @ApiModel(description = "Represents a request to update a Neo Wallet.")
 public class UpdateWalletRequest {
 
-    @ApiModelProperty("The display name of the wallet.")
+    @ApiModelProperty("The new display name of the wallet.")
     @NotNull
     private String displayName;
 
-    @ApiModelProperty("The unique ID of the wallet itself.")
-    public String userId;
+    @ApiModelProperty("The user Id of the wallet owner.")
+    private String userId;
 
     @ApiModelProperty("The password used to log into the wallet.")
     private String password;
@@ -25,11 +25,11 @@ public class UpdateWalletRequest {
     @ApiModelProperty("The new password to encrypt the wallet.")
     public String newPassword;
 
-    public String getId() {
+    public String getUserId() {
         return userId;
     }
 
-    public void setId(String userId) {
+    public void setUserId(String userId) {
         this.userId = userId;
     }
 
@@ -39,6 +39,14 @@ public class UpdateWalletRequest {
 
     public void setDisplayName(String displayName) {
         this.displayName = displayName;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String newPassword) {
+        this.password = password;
     }
 
     public String getNewPassword() {
