@@ -11,6 +11,8 @@ local testjavamoduleb = require "test.java.module.a"
 
 local javamodule = {}
 
+local simple_model = java.require("com.namazustudios.socialengine.rt.lua.guice.rest.SimpleModel")
+
 function javamodule.test_hello_world()
     testjavamodulea.hello_world()
     testjavamoduleb.hello_world()
@@ -49,5 +51,17 @@ function javamodule.test_overload_2()
     assert(6 == val, "Expected 42 but got " .. tostring(val))
 
 end
+
+function javamodule.test_overload_fail()
+    local val
+
+    val = pcall(testjavamodulea.test_overload, simple_model:new())
+    assert(not val, "Expected method failure.")
+
+    val = pcall(testjavamodulea.test_overload, simple_model:new(), simple_model:new())
+    assert(not val, "Expected method failure.")
+
+end
+
 
 return javamodule

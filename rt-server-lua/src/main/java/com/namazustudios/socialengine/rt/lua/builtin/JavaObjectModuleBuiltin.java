@@ -5,8 +5,6 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.CurrentResource;
-import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
@@ -14,7 +12,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
@@ -26,9 +23,11 @@ import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromDefinition;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
 import static com.namazustudios.socialengine.rt.lua.persist.ErisPersistence.mangle;
+import static java.lang.String.format;
 import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Allows a Java object to behave as a module.
@@ -158,7 +157,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
                 return 0;
             }
 
-            final JavaFunction dispatcherForMethod = getDispatcherForMethods(object, methodName, methodList);
+            final JavaFunction dispatcherForMethod = getDispatcherForMethods(object, methodList);
             luaState.pushJavaFunction(dispatcherForMethod);
             return 1;
 
@@ -179,9 +178,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
         });
     }
 
-    public JavaFunction getDispatcherForMethods(final Object target,
-                                                final String methodName,
-                                                final List<Method> methodList) {
+    public JavaFunction getDispatcherForMethods(final Object target, final List<Method> methodList) {
         return luaState -> {
 
             final int nargs = luaState.getTop();
@@ -191,7 +188,19 @@ public class JavaObjectModuleBuiltin implements Builtin {
                 .filter(m -> m.getParameterCount() == nargs)
                 .filter(m -> parametersMatch(luaState, m))
                 .findFirst()
-                .orElseThrow(() -> new InternalException("parameters do not match" + target + "." + methodName));
+                .orElseThrow(() -> {
+
+                    final var message = "Parameter mismatch: [" + methodList
+                        .stream()
+                        .filter(m -> m.getParameterCount() == nargs)
+                        .map(m -> format("%s fails at parameter %s",
+                            m.getName(),
+                            m.getParameters()[failedMatchIndex(luaState, m)].getName()
+                        )).collect(joining(",")) + "]";
+
+                    return new InternalException(message);
+
+                });
 
             final Object[] args = new Object[nargs];
             final Class<?>[] parameterTypes = toInvoke.getParameterTypes();
@@ -215,20 +224,23 @@ public class JavaObjectModuleBuiltin implements Builtin {
             }
 
         };
-
     }
 
     private boolean parametersMatch(final LuaState luaState, final Method method) {
+        return failedMatchIndex(luaState, method) < 0;
+    }
+
+    private int failedMatchIndex(final LuaState luaState, final Method method) {
 
         final var parameterTypes = method.getParameterTypes();
 
         for (int i = 0; i < parameterTypes.length; ++i) {
             if (!luaState.isJavaObject(i + 1, parameterTypes[i])) {
-                return false;
+                return i;
             }
         }
 
-        return true;
+        return -1;
 
     }
 
