@@ -63,5 +63,19 @@ function javamodule.test_overload_fail()
 
 end
 
+function javamodule.test_java_pcall()
+
+    local success, result
+
+    success, result = pcall(testjavamodulea.throw_exception)
+    assert(not success, "Expected unsuccessful call.")
+    assert(result, "Expected non-nil result.")
+
+    success, result = pcall(testjavamodulea.throw_exception, "test")
+    assert(not success, "Expected unsuccessful call.")
+    assert(result, "Expected non-nil result.")
+
+end
 
 return javamodule
+

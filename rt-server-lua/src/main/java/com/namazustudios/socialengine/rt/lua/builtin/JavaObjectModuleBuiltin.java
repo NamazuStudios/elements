@@ -24,6 +24,7 @@ import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fr
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
 import static com.namazustudios.socialengine.rt.lua.persist.ErisPersistence.mangle;
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
@@ -157,7 +158,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
                 return 0;
             }
 
-            final JavaFunction dispatcherForMethod = getDispatcherForMethods(object, methodList);
+            final JavaFunction dispatcherForMethod = getDispatcherForMethods(object, methodName, methodList);
             luaState.pushJavaFunction(dispatcherForMethod);
             return 1;
 
@@ -178,7 +179,9 @@ public class JavaObjectModuleBuiltin implements Builtin {
         });
     }
 
-    public JavaFunction getDispatcherForMethods(final Object target, final List<Method> methodList) {
+    public JavaFunction getDispatcherForMethods(final Object target,
+                                                final String methodName,
+                                                final List<Method> methodList) {
         return luaState -> {
 
             final int nargs = luaState.getTop();
@@ -190,15 +193,24 @@ public class JavaObjectModuleBuiltin implements Builtin {
                 .findFirst()
                 .orElseThrow(() -> {
 
-                    final var message = "Parameter mismatch: [" + methodList
+                    final var nargsMismatch = methodList
+                        .stream()
+                        .filter(m -> m.getParameterCount() != nargs)
+                        .map(m -> format("%s has mismatched arg count. Expected %d. Got %d ",
+                            m,
+                            m.getParameterCount(),
+                            nargs)).collect(joining(","));
+
+                    final var paramMismatch = methodList
                         .stream()
                         .filter(m -> m.getParameterCount() == nargs)
                         .map(m -> format("%s fails at parameter %s",
-                            m.getName(),
+                            m,
                             m.getParameters()[failedMatchIndex(luaState, m)].getName()
-                        )).collect(joining(",")) + "]";
+                        )).collect(joining(",\n"));
 
-                    return new InternalException(message);
+                    final var aggregate = join(",\n", nargsMismatch, paramMismatch);
+                    return new InternalException(format("Can't match %s: [%s]", methodName, aggregate));
 
                 });
 

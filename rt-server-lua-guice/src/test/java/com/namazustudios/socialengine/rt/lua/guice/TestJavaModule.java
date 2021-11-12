@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.lua.guice.rest.SimpleModel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,6 +27,18 @@ public class TestJavaModule {
 
     public int testOverload(int a, int b) {
         return a + b;
+    }
+
+    public int testAcceptModel(SimpleModel model) {
+        return 0;
+    }
+
+    public void throwException() {
+        throw new IllegalArgumentException("exception");
+    }
+
+    public void throwException(final String message) {
+        throw new IllegalArgumentException(message);
     }
 
 }
