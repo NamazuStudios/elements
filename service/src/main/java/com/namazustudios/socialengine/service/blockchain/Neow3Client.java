@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -26,7 +25,7 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
-public interface Neow3jService {
+public interface Neow3Client {
 
     /**
      * Gets the {@link Neow3j} instance.

@@ -32,19 +32,13 @@ public class NeoWalletResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets Neo wallets for a specific user",
-            notes = "Gets a pagination of Neo Wallets for the given user id.")
+    @ApiOperation(value = "Gets Neo wallets. Optionally filtered for a specific user",
+            notes = "Gets a pagination of Neo Wallets. Optionally a user Id can be specified to filter for a given user.")
     public Pagination<NeoWallet> getWallets(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("userId") String userId,
             @QueryParam("format") @DefaultValue("NONE") String format) {
-
-        userId = Strings.nullToEmpty(userId).trim();
-
-        if (userId.isEmpty()) {
-            throw new NotFoundException();
-        }
 
         return getWalletService().getWallets(offset, count, userId);
     }
@@ -58,11 +52,7 @@ public class NeoWalletResource {
 
         walletId = Strings.nullToEmpty(walletId).trim();
 
-        if (walletId.isEmpty()) {
-            throw new NotFoundException();
-        }
-
-        return getWalletService().getWallet(walletId).orElse(null);
+        return getWalletService().getWallet(walletId);
     }
 
     @POST

@@ -40,7 +40,7 @@ public interface NeoWalletService {
      * @param walletId the wallet Id
      * @return the {@link NeoWallet}, never null
      */
-    Optional<NeoWallet> getWallet(String walletId);
+    NeoWallet getWallet(String walletId);
 
     /**
      * Updates the supplied {@link NeoWallet}.

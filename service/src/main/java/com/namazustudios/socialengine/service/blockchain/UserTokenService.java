@@ -14,7 +14,7 @@ public class UserTokenService implements TokenService {
 
     private TokenDao tokenDao;
 
-    private Neow3jService neow3jService;
+    private Neow3Client neow3Client;
 
     @Override
     public Pagination<Token> getTokens(int offset, int count, List<String> tags, String search) {
@@ -50,8 +50,8 @@ public class UserTokenService implements TokenService {
         this.tokenDao = tokenDao;
     }
 
-    public Neow3jService getNeow3jService(){return neow3jService;}
+    public Neow3Client getNeow3jClient(){return neow3Client;}
 
     @Inject
-    public void setNeow3jService(Neow3jService neow3jService){this.neow3jService = neow3jService;}
+    public void setNeow3jClient(Neow3Client neow3Client){this.neow3Client = neow3Client;}
 }

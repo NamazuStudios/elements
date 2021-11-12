@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import io.neow3j.wallet.nep6.NEP6Wallet;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
@@ -13,17 +12,28 @@ import javax.validation.constraints.Null;
 public class UpdateWalletRequest {
 
     @ApiModelProperty("The new display name of the wallet.")
-    @NotNull
+    @Null(groups = {Update.class})
     private String displayName;
 
-    @ApiModelProperty("The user Id of the wallet owner.")
+    @ApiModelProperty("The user Id of the current wallet owner. If left null the current logged in user will be assumed to be the wallet owner.")
+    @Null(groups = {Update.class})
     private String userId;
 
-    @ApiModelProperty("The password used to log into the wallet.")
+    @ApiModelProperty("The user Id of the new wallet owner.")
+    @Null(groups = {Update.class})
+    private String newUserId;
+
+    @ApiModelProperty("The current password used to log into the wallet.")
+    @Null(groups = {Update.class})
     private String password;
 
-    @ApiModelProperty("The new password to encrypt the wallet.")
-    public String newPassword;
+    @ApiModelProperty("The new password to be used to encrypt the wallet.")
+    @Null(groups = {Update.class})
+    private String newPassword;
+
+    private String walletId;
+
+    private String updatedWallet;
 
     public String getUserId() {
         return userId;
@@ -31,6 +41,14 @@ public class UpdateWalletRequest {
 
     public void setUserId(String userId) {
         this.userId = userId;
+    }
+
+    public String getNewUserId() {
+        return newUserId;
+    }
+
+    public void setNewUserId(String newUserId) {
+        this.newUserId = newUserId;
     }
 
     public String getDisplayName() {
@@ -55,5 +73,21 @@ public class UpdateWalletRequest {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
+    }
+
+    public String getWalletId() {
+        return walletId;
+    }
+
+    public void setWalletId(String walletId) {
+        this.walletId = walletId;
+    }
+
+    public String getUpdatedWallet() {
+        return updatedWallet;
+    }
+
+    public void setUpdatedWallet(String updatedWallet) {
+        this.updatedWallet = updatedWallet;
     }
 }

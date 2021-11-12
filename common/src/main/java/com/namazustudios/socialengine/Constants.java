@@ -168,12 +168,12 @@ public interface Constants {
     /**
      * Used to specify the host for neo blockchain.
      */
-    String NEO_BLOCKCHAIN_HOST = "com.namazustudios.socialengine.blockchain.host";
+    String NEO_BLOCKCHAIN_HOST = "com.namazustudios.socialengine.blockchain.neo.host";
 
     /**
      * Used to specify the port for neo blockchain.
      */
-    String NEO_BLOCKCHAIN_PORT = "com.namazustudios.socialengine.blockchain.port";
+    String NEO_BLOCKCHAIN_PORT = "com.namazustudios.socialengine.blockchain.neo.port";
 
     /**
      * Defines some useful regex patterns.

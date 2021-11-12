@@ -1,8 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
@@ -19,7 +17,7 @@ import javax.inject.Named;
 
 import static java.lang.String.format;
 
-public class UserNeow3jService implements Neow3jService{
+public class UserNeow3Client implements Neow3Client {
 
     private Neow3j neow3j;
 

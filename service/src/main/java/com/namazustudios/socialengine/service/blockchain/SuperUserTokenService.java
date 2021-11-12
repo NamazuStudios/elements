@@ -5,8 +5,6 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
-import io.neow3j.protocol.Neow3j;
-import io.neow3j.protocol.http.HttpService;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -15,7 +13,7 @@ public class SuperUserTokenService implements TokenService {
 
     private TokenDao tokenDao;
 
-    private Neow3jService neow3jService;
+    private Neow3Client neow3Client;
 
     @Override
     public Pagination<Token> getTokens(int offset, int count, List<String> tags, String search) {
@@ -51,8 +49,8 @@ public class SuperUserTokenService implements TokenService {
         this.tokenDao = tokenDao;
     }
 
-    public Neow3jService getNeow3jService(){return neow3jService;}
+    public Neow3Client getNeow3jClient(){return neow3Client;}
 
     @Inject
-    public void setNeow3jService(Neow3jService neow3jService){this.neow3jService = neow3jService;}
+    public void setNeow3jClient(Neow3Client neow3Client){this.neow3Client = neow3Client;}
 }
