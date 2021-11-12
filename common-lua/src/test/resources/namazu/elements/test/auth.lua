@@ -16,6 +16,8 @@ local Profile = java.require "com.namazustudios.socialengine.model.profile.Profi
 
 local responsecode = require "namazu.response.code"
 
+local inventory_item_dao = require "namazu.elements.dao.inventoryitem"
+
 local test_auth = {}
 
 function test_auth.test_facebook_security_manifest()
@@ -131,5 +133,33 @@ function test_auth.test_profile_remote()
     assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
 
 end
+
+
+
+function test_auth.test_auth_inventory()
+
+    local user = auth.user();
+
+    local result, credited = pcall(
+        function ()
+            return inventory_item_dao.adjust_quantity_for_item(user, "foo", 0, 100)
+        end
+    )
+
+    assert(result, "Expected successful result.")
+
+end
+
+function test_auth.test_auth_inventory_remote()
+
+    local result, code
+    local rid = make_resource()
+
+    result, code = resource.invoke(rid, "test_auth_inventory")
+    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
+
+end
+
 
 return test_auth

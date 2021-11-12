@@ -120,6 +120,18 @@ public interface InventoryItemDao {
     InventoryItem adjustQuantityForItem(String inventoryItemId, int quantityDelta);
 
     /**
+     * Convenience method which allows for invoking {@link #adjustQuantityForItem(String, int)} without needing to
+     * create the item first.
+     *
+     * @param user the user object to adjust
+     * @param itemNameOrId the item name or identifier
+     * @param priority the priority slot
+     * @param quantityDelta the quantity delta
+     * @return the updated {@link InventoryItem}
+     */
+    InventoryItem adjustQuantityForItem(User user, String itemNameOrId, int priority, int quantityDelta);
+
+    /**
      * Deletes an inventory item.
      *
      * @param inventoryItemId the {@link InventoryItem}'s id.

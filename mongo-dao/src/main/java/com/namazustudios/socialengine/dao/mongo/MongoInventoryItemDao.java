@@ -216,17 +216,28 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     }
 
     @Override
-    public InventoryItem adjustQuantityForItem(
-            final String inventoryItemId,
-            final int quantityDelta) {
+    public InventoryItem adjustQuantityForItem(final String inventoryItemId, final int quantityDelta) {
+        final var objectId = MongoInventoryItemId.parseOrThrowNotFoundException(inventoryItemId);
+        return adjustQuantityForItem(objectId, quantityDelta);
+    }
 
-        final MongoInventoryItemId objectId = MongoInventoryItemId.parseOrThrowNotFoundException(inventoryItemId);
+    @Override
+    public InventoryItem adjustQuantityForItem(final User user,
+                                               final String itemNameOrId,
+                                               final int priority, final int quantityDelta) {
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(user);
+        final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(itemNameOrId);
+        final var objectId = new MongoInventoryItemId(mongoUser, mongoItem, priority);
+        return adjustQuantityForItem(objectId, quantityDelta);
+    }
+
+    public InventoryItem adjustQuantityForItem(final MongoInventoryItemId objectId, final int quantityDelta) {
 
         final MongoInventoryItem mongoInventoryItem;
 
         try {
             mongoInventoryItem = getMongoConcurrentUtils().performOptimistic(
-                ads -> doAdjustQuantityForItem(objectId, quantityDelta)
+                    ads -> doAdjustQuantityForItem(objectId, quantityDelta)
             );
         } catch (MongoConcurrentUtils.ConflictException ex) {
             throw new TooBusyException(ex);

@@ -94,6 +94,32 @@ public class LuaAuthUnitTest {
         performLuaTest("namazu.elements.test.auth", "test_unauthenticated_user", attributes);
     }
 
+    @Test
+    public void testAuthInventory() throws Exception {
+
+        final User user = mockUser();
+
+        final Attributes attributes = new SimpleAttributes.Builder()
+                .setAttribute(User.USER_ATTRIBUTE, user)
+                .build();
+
+        performLuaTest("namazu.elements.test.auth", "test_auth_inventory", attributes);
+
+    }
+
+    @Test
+    public void testAuthInventoryRemote() throws Exception {
+
+        final User user = mockUser();
+
+        final Attributes attributes = new SimpleAttributes.Builder()
+                .setAttribute(User.USER_ATTRIBUTE, user)
+                .build();
+
+        performLuaTest("namazu.elements.test.auth", "test_auth_inventory_remote", attributes);
+
+    }
+
     public Context getContext() {
         return context;
     }
