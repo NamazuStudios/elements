@@ -75,6 +75,10 @@ function javamodule.test_java_pcall()
     assert(not success, "Expected unsuccessful call.")
     assert(result, "Expected non-nil result.")
 
+    success, result = pcall(testjavamodulea.throw_exception, "test", 0, 0)
+    assert(not success, "Expected unsuccessful call.")
+    assert(result, "Expected non-nil result.")
+
 end
 
 return javamodule
