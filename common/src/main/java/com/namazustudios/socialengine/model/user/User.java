@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.model.user;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.profile.Profile;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 

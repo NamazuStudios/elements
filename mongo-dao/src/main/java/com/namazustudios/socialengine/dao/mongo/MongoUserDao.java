@@ -1,24 +1,23 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.mongodb.DuplicateKeyException;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import com.namazustudios.socialengine.exception.user.UserNotFoundException;
-import com.namazustudios.socialengine.util.ValidationHelper;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.*;
-import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 import javax.inject.Named;

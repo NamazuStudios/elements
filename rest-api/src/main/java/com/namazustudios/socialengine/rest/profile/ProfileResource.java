@@ -123,7 +123,9 @@ public class ProfileResource {
     @ApiOperation(value = "Updates a Profile",
             notes = "Supplying an update request will attempt to update the profile.  The call " +
                     "will return the profile as it was written to the database.")
-    public Profile updateProfile(@PathParam("profileId") String profileId, final UpdateProfileRequest profileRequest) {
+    public Profile updateProfile(
+            @PathParam("profileId") String profileId,
+            final UpdateProfileRequest profileRequest) {
 
         getValidationHelper().validateModel(profileRequest, Update.class);
         profileId = Strings.nullToEmpty(profileId).trim();
@@ -142,6 +144,15 @@ public class ProfileResource {
             notes = "Supplying the create profile request, this will update the profile with the new information supplied " +
                     "in the body of the request. This will fire an event, " + PROFILE_CREATED_EVENT + ", from the event manifest.")
     public Profile createProfile(final CreateProfileRequest profileRequest) {
+
+        if (profileRequest.getUserId() == null && profileRequest.getUser() != null) {
+            profileRequest.setUserId(profileRequest.getUser().getId());
+        }
+
+        if (profileRequest.getApplicationId() == null && profileRequest.getApplication() != null) {
+            profileRequest.setApplicationId(profileRequest.getApplication().getId());
+        }
+
         getValidationHelper().validateModel(profileRequest, Create.class);
         return getProfileService().createProfile(profileRequest);
     }

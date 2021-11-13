@@ -2,10 +2,11 @@ package com.namazustudios.socialengine.dao.mongo.model.mission;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import org.bson.types.ObjectId;
+import com.namazustudios.socialengine.rt.util.Hex;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Indexed;
 import dev.morphia.annotations.Property;
+import org.bson.types.ObjectId;
 
 import java.util.Base64;
 import java.util.Objects;
@@ -32,7 +33,7 @@ public class MongoProgressId {
 
     public MongoProgressId(final String hexString) {
 
-        final byte [] bytes = Base64.getDecoder().decode(hexString);
+        final byte [] bytes = Hex.decode(hexString);
         if (bytes.length != (OBJECT_ID_LENGTH * 2)) throw new IllegalArgumentException();
 
         final byte[] objectIdBytes = new byte[OBJECT_ID_LENGTH];
@@ -70,7 +71,7 @@ public class MongoProgressId {
 
     public String toHexString() {
         final byte[] bytes = toByteArray();
-        return Base64.getEncoder().encodeToString(bytes);
+        return Hex.encode(bytes);
     }
 
     public ObjectId getProfileId() {

@@ -8,6 +8,7 @@ import com.mongodb.client.MongoDatabase;
 import com.namazustudios.socialengine.dao.mongo.codec.TimestampCodec;
 import org.bson.codecs.configuration.CodecRegistries;
 import org.bson.codecs.configuration.CodecRegistry;
+import org.bson.codecs.pojo.PojoCodecProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,8 +17,7 @@ import javax.inject.Named;
 import javax.inject.Provider;
 
 import static com.mongodb.MongoClientSettings.getDefaultCodecRegistry;
-import static org.bson.codecs.configuration.CodecRegistries.fromCodecs;
-import static org.bson.codecs.configuration.CodecRegistries.fromRegistries;
+import static org.bson.codecs.configuration.CodecRegistries.*;
 
 /**
  * Created by patricktwohig on 4/3/15.
@@ -41,7 +41,7 @@ public class MongoClientProvider implements Provider<MongoClient> {
 
         final var registry = fromRegistries(
             fromCodecs(new TimestampCodec()),
-            fromRegistries(getDefaultCodecRegistry())
+            fromRegistries(getDefaultCodecRegistry(), fromProviders(PojoCodecProvider.builder().automatic(true).build()))
         );
 
         final var settings = MongoClientSettings.builder()

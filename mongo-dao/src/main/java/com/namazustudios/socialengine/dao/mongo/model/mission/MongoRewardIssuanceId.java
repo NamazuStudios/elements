@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.rt.util.Hex;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
@@ -50,7 +51,7 @@ public class MongoRewardIssuanceId {
             throw new IllegalArgumentException("Provided RewardIssuance id is too short.");
         }
 
-        final byte [] bytes = Base64.getDecoder().decode(hexString);
+        final byte [] bytes = Hex.decode(hexString);
 
         if (bytes.length <= CONTEXT_BYTE_START_POSITION) {
             throw new IllegalArgumentException("Provided RewardIssuance id is too short.");
@@ -125,7 +126,7 @@ public class MongoRewardIssuanceId {
 
     public String toHexString() {
         final byte[] bytes = toByteArray();
-        return Base64.getEncoder().encodeToString(bytes);
+        return Hex.encode(bytes);
     }
 
     public ObjectId getUserId() {

@@ -38,35 +38,32 @@ public interface InventoryItemDao {
     /**
      * Gets inventory items specifying the offset and the count.
      *
-     * @param user the {@link User} that owns the items
      * @param offset the offset
      * @param count the count
      * @return a {@link Pagination} of {@link InventoryItem} objects.
      */
-    Pagination<InventoryItem> getInventoryItems(User user, int offset, int count);
+    Pagination<InventoryItem> getInventoryItems(int offset, int count);
+
+    /**
+     * Gets inventory items specifying the offset and the count.
+     *
+     * @param offset the offset
+     * @param count the count
+     * @param user the {@link User} that owns the items
+     * @return a {@link Pagination} of {@link InventoryItem} objects.
+     */
+    Pagination<InventoryItem> getInventoryItems(int offset, int count, User user);
 
     /**
      * Gets inventory items specifying the offset and the count, specifying a search filter.
      *
-     * @param user the {@link User} that owns the items
      * @param offset the offset
      * @param count the count
+     * @param user the {@link User} that owns the items
      * @param search a query to filter the results
      * @return a {@link Pagination} of {@link InventoryItem} objects.
      */
-    Pagination<InventoryItem> getInventoryItems(User user, int offset, int count, String search);
-
-    /**
-     * Gets the primary (single) inventory item for with the item name or id, or throws a {@link NotFoundException}
-     * if the item or inventory item can't be found.  This uses the {@link #SIMPLE_PRIORITY} slot.
-     *
-     * @param user the {@link User} that owns the item
-     * @param itemNameOrId an item name or ID to limit the results
-     * @return the {@link InventoryItem} that was requested, never null
-     */
-    default InventoryItem getInventoryItemByItemNameOrId(User user, String itemNameOrId) {
-        return getInventoryItemByItemNameOrId(user, itemNameOrId, SIMPLE_PRIORITY);
-    }
+    Pagination<InventoryItem> getInventoryItems(int offset, int count, User user, String search);
 
     /**
      * Gets the primary (single) inventory item for with the item name or id, or throws a {@link NotFoundException}
@@ -86,8 +83,10 @@ public interface InventoryItemDao {
      * @return the {@link InventoryItem} as it was written into the database
      * @throws InvalidDataException
      *     if the state of the passed in InventoryItem is invalid
+     * @param inventoryItemId
+     * @param quantity
      */
-    InventoryItem updateInventoryItem(InventoryItem inventoryItem);
+    InventoryItem updateInventoryItem(String inventoryItemId, int quantity);
 
     /**
      * Creates an inventory item.  The value of {@link InventoryItem#getId()} will be ignored.
@@ -114,10 +113,20 @@ public interface InventoryItemDao {
     /**
      * Adjusts the quantity of the supplied item and user.
      *
-     * @param user the {@link User} for which to adjust the item.
-     * @param itemNameOrId the {@link Item#getName()} or {@link Item#getId()}
-     * @param priority the priority of the item slot
+     * @param inventoryItemId the {@link Item#getName()} or {@link Item#getId()}
      * @param quantityDelta the amount to adjust the quantity by
+     * @return the updated {@link InventoryItem}
+     */
+    InventoryItem adjustQuantityForItem(String inventoryItemId, int quantityDelta);
+
+    /**
+     * Convenience method which allows for invoking {@link #adjustQuantityForItem(String, int)} without needing to
+     * create the item first.
+     *
+     * @param user the user object to adjust
+     * @param itemNameOrId the item name or identifier
+     * @param priority the priority slot
+     * @param quantityDelta the quantity delta
      * @return the updated {@link InventoryItem}
      */
     InventoryItem adjustQuantityForItem(User user, String itemNameOrId, int priority, int quantityDelta);

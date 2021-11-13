@@ -18,7 +18,6 @@ import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
-import com.namazustudios.socialengine.rt.xodus.XodusEnvironmentModule;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
 import com.namazustudios.socialengine.service.guice.GameOnInvokerModule;
 import com.namazustudios.socialengine.service.guice.RedissonServicesModule;

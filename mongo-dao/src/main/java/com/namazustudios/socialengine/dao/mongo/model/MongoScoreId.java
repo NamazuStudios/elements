@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import com.namazustudios.socialengine.rt.util.Hex;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.Property;
 
@@ -33,7 +34,7 @@ public class MongoScoreId {
 
     public MongoScoreId(final String hexString) {
 
-        final byte[] bytes = Base64.getDecoder().decode(hexString);
+        final byte[] bytes = Hex.decode(hexString);
 
         if (bytes.length != BYTE_LENGTH) {
             throw new IllegalArgumentException("Expecting length of " + BYTE_LENGTH + " bytes.");
@@ -103,7 +104,7 @@ public class MongoScoreId {
 
     public String toHexString() {
         final byte[] bytes = toByteArray();
-        return Base64.getEncoder().encodeToString(bytes);
+        return Hex.encode(bytes);
     }
 
 }

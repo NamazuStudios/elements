@@ -90,7 +90,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final MongoInventoryItem item = getDatastore()
             .find(MongoInventoryItem.class)
-            .filter(Filters.eq("_id", objectId))
+            .filter(eq("_id", objectId))
             .first();
 
         if (item == null) {
@@ -119,9 +119,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
                     "string parameter.  This field is presently ignored and will return all values");
         }
 
-        final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
-
-        query.filter(Filters.eq("user", getDozerMapper().map(user, MongoUser.class)));
+        final var query = getDatastore().find(MongoInventoryItem.class)
+            .filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
             query, offset, count,
@@ -156,7 +155,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         getObjectIndex().index(mongoInventoryItem);
 
         final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
-        query.filter(Filters.eq("_id", mongoInventoryItem.getObjectId()));
+        query.filter(eq("_id", mongoInventoryItem.getObjectId()));
 
         return getDozerMapper().map(query.first(), InventoryItem.class);
 
@@ -170,7 +169,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         final var query = getDatastore().find(MongoInventoryItem.class);
 
         final var objectId = parseOrThrowNotFoundException(inventoryItem.getId());
-        query.filter(Filters.eq("_id", objectId));
+        query.filter(eq("_id", objectId));
 
         final var mongoInventoryItem = getMongoDBUtils().perform(ds ->
             query.modify(
@@ -203,7 +202,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final var query = getDatastore().find(MongoInventoryItem.class);
 
-        query.filter(Filters.eq("_id", objectId));
+        query.filter(eq("_id", objectId));
 
         final MongoInventoryItem mongoInventoryItem = query.first();
 
@@ -255,13 +254,20 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
     }
 
-    private MongoInventoryItem doAdjustQuantityForItem(final MongoInventoryItemId objectId, final int quantityDelta) throws ContentionException {
+    private MongoInventoryItem doAdjustQuantityForItem(final MongoInventoryItemId objectId,
+                                                       final int quantityDelta) throws ContentionException {
 
         final Query<MongoInventoryItem> query = getDatastore().find(MongoInventoryItem.class);
-        query.filter(Filters.eq("_id", objectId));
+        query.filter(eq("_id", objectId));
 
         final MongoInventoryItem mongoInventoryItem = query.first();
-        query.filter(Filters.eq("version", mongoInventoryItem == null ? randomUUID().toString() : mongoInventoryItem.getVersion()));
+
+        query.filter(eq("version",
+            mongoInventoryItem == null
+                ? randomUUID().toString()
+                : mongoInventoryItem.getVersion()
+            )
+        );
 
         final var builder = new UpdateBuilder();
 
@@ -308,7 +314,7 @@ public class MongoInventoryItemDao implements InventoryItemDao {
 
         final MongoInventoryItemId objectId = parseOrThrowNotFoundException(inventoryItemId);
         final DeleteResult deleteResult = getDatastore().find(MongoInventoryItem.class)
-                .filter(Filters.eq("_id", objectId)).delete();
+                .filter(eq("_id", objectId)).delete();
 
         if (deleteResult.getDeletedCount() == 0) {
             throw new NotFoundException("Item Inventory not found: " + inventoryItemId);

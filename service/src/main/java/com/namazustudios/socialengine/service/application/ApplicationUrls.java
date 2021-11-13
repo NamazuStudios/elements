@@ -18,7 +18,7 @@ public class ApplicationUrls {
 
     private static final String CONFIG_PARAM = "url";
 
-    private static final String API_SUFFIX = "api";
+    private static final String API_SUFFIX = "rest";
 
     private URI codeServeUrl;
 

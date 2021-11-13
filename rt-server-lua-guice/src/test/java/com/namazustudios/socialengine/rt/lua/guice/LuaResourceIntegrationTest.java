@@ -116,6 +116,8 @@ public class LuaResourceIntegrationTest {
             {"test.javamodule", "test_return_hello_world"},
             {"test.javamodule", "test_overload_1"},
             {"test.javamodule", "test_overload_2"},
+            {"test.javamodule", "test_overload_fail"},
+            {"test.javamodule", "test_java_pcall"},
             {"test.response", "test_simple_response"},
             {"test.yield_commit", "test_commit"},
             {"test.yield_commit", "test_complex_commit"},

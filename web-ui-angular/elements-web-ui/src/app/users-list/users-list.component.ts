@@ -12,6 +12,7 @@ import {AlertService} from "../alert.service";
 import {ConfirmationDialogService} from "../confirmation-dialog/confirmation-dialog.service";
 import {UserDialogComponent} from "../user-dialog/user-dialog.component";
 import {UserViewModel} from "../models/user-view-model";
+import { InventoryDialogComponent } from '../inventory-dialog/inventory-dialog.component';
 
 @Component({
   selector: 'app-users-list',
@@ -132,11 +133,20 @@ export class UsersListComponent implements OnInit, AfterViewInit {
 
   editUser(user) {
     this.showDialog(false, user, result => {
-      // backend expects password to be in query params, so delete from result before attaching to body
-      const password = result.password;
       delete result.passwordConfirmation;
-      //delete result.password;
-      return this.usersService.updateUser({name: user.name, password: password, body: result});
+      const id = result.id;
+      delete result.id;
+      if(result.password === "") { delete result.password }
+      return this.usersService.updateUser({name: id, body: result});
+    });
+  }
+
+  editInventory(user) {
+    this.dialog.open(InventoryDialogComponent, {
+      width: '1000px',
+      data: {
+        user: user
+      }
     });
   }
 }

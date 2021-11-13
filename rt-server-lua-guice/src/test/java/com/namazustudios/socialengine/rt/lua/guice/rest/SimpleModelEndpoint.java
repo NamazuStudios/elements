@@ -4,10 +4,13 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.stream.Collectors;
 
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toList;
 
 @Path("simple")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,8 +23,14 @@ public class SimpleModelEndpoint {
     }
 
     @GET
-    public List<SimpleModel> getModels() {
-        return new ArrayList<>(models.values());
+    public List<SimpleModel> getModels(
+            @QueryParam("hello") final String hello,
+            @QueryParam("world") final String world) {
+        return hello == null && world == null ? new ArrayList<>(models.values()) : models
+            .values()
+            .stream()
+            .filter(m -> Objects.equals(m.getHello(), hello) && Objects.equals(m.getWorld(), world))
+            .collect(toList());
     }
 
     @GET

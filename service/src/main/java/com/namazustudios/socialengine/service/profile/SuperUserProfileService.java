@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine.service.profile;
 
-import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.ApplicationDao;
 import com.namazustudios.socialengine.dao.ProfileDao;
+import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
+import com.namazustudios.socialengine.service.NameService;
 import com.namazustudios.socialengine.service.ProfileService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,15 +33,21 @@ public class SuperUserProfileService implements ProfileService {
 
     private static final Logger logger = LoggerFactory.getLogger(SuperUserProfileService.class);
 
+    private UserDao userDao;
+
     private ProfileDao profileDao;
 
     private ApplicationDao applicationDao;
 
     private Context.Factory contextFactory;
 
+    private NameService nameService;
+
     private Supplier<Profile> currentProfileSupplier;
 
     private Provider<Attributes> attributesProvider;
+
+    private ProfileServiceUtils profileServiceUtils;
 
     @Override
     public Pagination<Profile> getProfiles(final int offset, final int count,
@@ -53,11 +60,7 @@ public class SuperUserProfileService implements ProfileService {
     }
 
     @Override
-    public Pagination<Profile> getProfiles(
-            int offset,
-            int count,
-            String search
-    ) {
+    public Pagination<Profile> getProfiles(int offset, int count, String search) {
         return getProfileDao().getActiveProfiles(offset, count, search);
     }
 
@@ -73,35 +76,22 @@ public class SuperUserProfileService implements ProfileService {
 
     @Override
     public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
-        return getProfileDao().updateActiveProfile(profileWithUpdates(profileId, profileRequest));
-    }
-
-    public Profile profileWithUpdates(String profileId, UpdateProfileRequest profileRequest) {
-        final Profile updates = new Profile();
-        updates.setId(profileId);
-        if(!Strings.isNullOrEmpty(profileRequest.getDisplayName())){
-            updates.setDisplayName(profileRequest.getDisplayName());
-        }
-        if(!Strings.isNullOrEmpty(profileRequest.getImageUrl())){
-            updates.setImageUrl(profileRequest.getImageUrl());
-        }
-        return updates;
+        final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
+        return getProfileDao().updateActiveProfile(profile);
     }
 
     @Override
-    public Profile createProfile(CreateProfileRequest profileRequest) {
+    public Profile createProfile(final CreateProfileRequest createProfileRequest) {
+
+        final var createdProfile = createNewProfile(createProfileRequest);
 
         final var eventContext = getContextFactory()
-            .getContextForApplication(profileRequest.getApplicationId())
+            .getContextForApplication(createdProfile.getApplication().getId())
             .getEventContext();
 
-        final var createdProfile = getProfileDao()
-            .createOrReactivateProfile(createProfile(profileRequest));
-
         final var attributes = new SimpleAttributes.Builder()
-                .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
-                .build();
-
+            .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
+            .build();
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -113,6 +103,11 @@ public class SuperUserProfileService implements ProfileService {
 
     }
 
+    private Profile createNewProfile(final CreateProfileRequest profileRequest) {
+        final var profile = getProfileServiceUtils().getProfileForCreate(profileRequest);
+        return getProfileDao().createOrReactivateProfile(profile);
+    }
+
     @Override
     public void deleteProfile(String profileId) {
         getProfileDao().softDeleteProfile(profileId);
@@ -120,6 +115,15 @@ public class SuperUserProfileService implements ProfileService {
 
     public ProfileDao getProfileDao() {
         return profileDao;
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
     }
 
     @Inject
@@ -133,6 +137,15 @@ public class SuperUserProfileService implements ProfileService {
 
     public ApplicationDao getApplicationDao() {
         return applicationDao;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
     @Inject
@@ -161,6 +174,15 @@ public class SuperUserProfileService implements ProfileService {
     @Inject
     public void setAttributesProvider(Provider<Attributes> attributesProvider) {
         this.attributesProvider = attributesProvider;
+    }
+
+    public ProfileServiceUtils getProfileServiceUtils() {
+        return profileServiceUtils;
+    }
+
+    @Inject
+    public void setProfileServiceUtils(ProfileServiceUtils profileServiceUtils) {
+        this.profileServiceUtils = profileServiceUtils;
     }
 
 }

@@ -16,6 +16,7 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.EventContext;
 import com.namazustudios.socialengine.rt.SimpleAttributes;
 import com.namazustudios.socialengine.rt.exception.NodeNotFoundException;
+import com.namazustudios.socialengine.service.NameService;
 import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;
 import org.slf4j.Logger;
@@ -38,9 +39,13 @@ public class UserProfileService implements ProfileService {
 
     private UserService userService;
 
+    private NameService nameService;
+
     private ProfileDao profileDao;
 
     private ApplicationDao applicationDao;
+
+    private ProfileServiceUtils profileServiceUtils;
 
     private Context.Factory contextFactory;
 
@@ -94,33 +99,30 @@ public class UserProfileService implements ProfileService {
     }
 
     @Override
-    public Profile updateProfile(String profileId, UpdateProfileRequest profileRequest) {
-        checkUserAndProfile(getProfileDao().getActiveProfile(profileId).getUser().getId());
-        return getProfileDao().updateActiveProfile(profileWithUpdates(profileId, profileRequest));
-    }
+    public Profile updateProfile(final String profileId, final UpdateProfileRequest profileRequest) {
 
-    private Profile profileWithUpdates(String profileId, UpdateProfileRequest profileRequest) {
-        final Profile updates = new Profile();
-        updates.setId(profileId);
-        if(!Strings.isNullOrEmpty(profileRequest.getDisplayName())){
-            updates.setDisplayName(profileRequest.getDisplayName());
-        }
-        if(!Strings.isNullOrEmpty(profileRequest.getImageUrl())){
-            updates.setImageUrl(profileRequest.getImageUrl());
-        }
-        return updates;
+        checkUserAndProfile(getProfileDao().getActiveProfile(profileId).getUser().getId());
+        profileRequest.setMetadata(null);
+
+        final var profile = getProfileServiceUtils().getProfileForUpdate(profileId, profileRequest);
+        return getProfileDao().updateActiveProfile(profile);
+
     }
 
     @Override
-    public Profile createProfile(CreateProfileRequest profileRequest) {
+    public Profile createProfile(final CreateProfileRequest profileRequest) {
+
         checkUserAndProfile(profileRequest.getUserId());
+        profileRequest.setMetadata(null);
+
         final EventContext eventContext = getContextFactory()
             .getContextForApplication(profileRequest.getApplicationId())
             .getEventContext();
-        final Profile createdProfile = getProfileDao().createOrReactivateProfile(createNewProfile(profileRequest));
+
+        final Profile createdProfile = createNewProfile(profileRequest);
         final Attributes attributes = new SimpleAttributes.Builder()
-                .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
-                .build();
+            .from(getAttributesProvider().get(), (n, v) -> v instanceof Serializable)
+            .build();
 
         try {
             eventContext.postAsync(PROFILE_CREATED_EVENT, attributes, createdProfile);
@@ -137,13 +139,11 @@ public class UserProfileService implements ProfileService {
         }
     }
 
-    private Profile createNewProfile(CreateProfileRequest profileRequest) {
-        final Profile newProfile = new Profile();
-        newProfile.setUser(getUserService().getUser(profileRequest.getUserId()));
-        newProfile.setApplication(getApplicationDao().getActiveApplication(profileRequest.getApplicationId()));
-        newProfile.setImageUrl(profileRequest.getImageUrl());
-        newProfile.setDisplayName(profileRequest.getDisplayName());
-        return newProfile;
+    private Profile createNewProfile(final CreateProfileRequest profileRequest) {
+        final var profile = getProfileServiceUtils().getProfileForCreate(profileRequest);
+        profileRequest.setMetadata(null);
+
+        return getProfileDao().createOrReactivateProfile(profile);
     }
 
     @Override
@@ -173,6 +173,15 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setUserService(UserService userService) {
         this.userService = userService;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
     public ProfileDao getProfileDao() {
@@ -219,4 +228,14 @@ public class UserProfileService implements ProfileService {
     public void setAttributesProvider(Provider<Attributes> attributesProvider) {
         this.attributesProvider = attributesProvider;
     }
+
+    public ProfileServiceUtils getProfileServiceUtils() {
+        return profileServiceUtils;
+    }
+
+    @Inject
+    public void setProfileServiceUtils(ProfileServiceUtils profileServiceUtils) {
+        this.profileServiceUtils = profileServiceUtils;
+    }
+
 }

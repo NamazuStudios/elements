@@ -15,6 +15,7 @@ import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 import static com.namazustudios.socialengine.model.user.User.Level.USER;
 import static java.lang.String.format;
 import static java.lang.System.currentTimeMillis;
@@ -22,6 +23,8 @@ import static java.util.concurrent.TimeUnit.DAYS;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 class ClientContext {
+
+    public static final String DUMMY_PASSWORD = "password";
 
     public static final String CONTEXT_APPLICATION = "com.namazustudios.socialengine.rest.test.client.context.application";
 
@@ -51,18 +54,33 @@ class ClientContext {
     }
 
     public String getSessionSecret() {
-        if (sessionCreation == null) throw new IllegalStateException("No profiles set.");
+        if (sessionCreation == null) throw new IllegalStateException("No session secret set.");
         return sessionCreation.getSessionSecret();
     }
 
     public ClientContext createUser(final String name) {
         try {
-            final User user = new User();
+            final var user = new User();
             user.setName(name);
             user.setEmail(format("%s@example.com", name));
             user.setLevel(USER);
             user.setActive(true);
-            this.user = userDao.createUserWithPasswordStrict(user, "password");
+            this.user = userDao.createUserWithPasswordStrict(user, DUMMY_PASSWORD);
+            return this;
+        } finally {
+            profiles.clear();
+            sessionCreation = null;
+        }
+    }
+
+    public ClientContext createSuperuser(final String name) {
+        try {
+            final var user = new User();
+            user.setName(name);
+            user.setEmail(format("%s@example.com", name));
+            user.setLevel(SUPERUSER);
+            user.setActive(true);
+            this.user = userDao.createUserWithPasswordStrict(user, DUMMY_PASSWORD);
             return this;
         } finally {
             profiles.clear();

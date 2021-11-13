@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.leaderboard;
 
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import io.swagger.annotations.ApiModel;
@@ -10,6 +11,7 @@ import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import javax.validation.constraints.Pattern;
 import java.util.Objects;
 
 @ApiModel
@@ -19,6 +21,7 @@ public class Leaderboard {
     private String id;
 
     @NotNull
+    @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
     @ApiModelProperty("The name of the leaderboard.  This must be unique across all leaderboards.")
     private String name;
 

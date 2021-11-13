@@ -14,6 +14,7 @@ import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptService;
 import com.namazustudios.socialengine.service.appleiap.AppleIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.application.*;
 import com.namazustudios.socialengine.service.auth.*;
+import com.namazustudios.socialengine.service.blockchain.*;
 import com.namazustudios.socialengine.service.follower.FollowerServiceProvider;
 import com.namazustudios.socialengine.service.follower.SuperUserFollowerService;
 import com.namazustudios.socialengine.service.friend.FacebookFriendServiceProvider;
@@ -24,9 +25,7 @@ import com.namazustudios.socialengine.service.goods.SuperuserItemService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptService;
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.health.DefaultHealthStatusService;
-import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemService;
-import com.namazustudios.socialengine.service.inventory.SimpleInventoryItemServiceProvider;
-import com.namazustudios.socialengine.service.inventory.SuperUserSimpleInventoryItemService;
+import com.namazustudios.socialengine.service.inventory.*;
 import com.namazustudios.socialengine.service.leaderboard.LeaderboardServiceProvider;
 import com.namazustudios.socialengine.service.leaderboard.RankServiceProvider;
 import com.namazustudios.socialengine.service.leaderboard.ScoreServiceProvider;
@@ -126,6 +125,10 @@ public class ServicesModule extends PrivateModule {
 
         bind(ProfileService.class)
             .toProvider(ProfileServiceProvider.class)
+            .in(scope);
+
+        bind(SmartContractTemplateService.class)
+            .toProvider(SmartContractTemplateServiceProvider.class)
             .in(scope);
 
         bind(FollowerService.class)
@@ -228,6 +231,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(SimpleInventoryItemServiceProvider.class)
             .in(scope);
 
+        bind(AdvancedInventoryItemService.class)
+            .toProvider(AdvancedInventoryItemServiceProvider.class)
+            .in(scope);
+
         bind(MissionService.class)
             .toProvider(MissionServiceProvider.class)
             .in(scope);
@@ -262,6 +269,22 @@ public class ServicesModule extends PrivateModule {
 
         bind(AppleSignInAuthService.class)
             .toProvider(AppleSignInAuthServiceProvider.class)
+            .in(scope);
+
+        bind(NeoWalletService.class)
+            .toProvider(WalletServiceProvider.class)
+            .in(scope);
+
+        bind(TokenService.class)
+            .toProvider(TokenServiceProvider.class)
+            .in(scope);
+
+        bind(Neow3jService.class)
+            .toProvider(Neow3jServiceProvider.class)
+            .in(scope);
+
+        bind(SmartContractTemplateService.class)
+            .toProvider(SmartContractTemplateServiceProvider.class)
             .in(scope);
 
         bind(HealthStatusService.class)
@@ -371,6 +394,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserSimpleInventoryItemService.class);
 
+        bind(AdvancedInventoryItemService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserAdvancedInventoryItemService.class);
+
         bind(MissionService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserMissionService.class);
@@ -413,6 +440,22 @@ public class ServicesModule extends PrivateModule {
             .to(DefaultHealthStatusService.class)
             .asEagerSingleton();
 
+        bind(NeoWalletService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserNeoWalletService.class);
+
+        bind(Neow3jService.class)
+            .annotatedWith(Unscoped.class)
+            .to(UserNeow3jService.class);
+
+        bind(TokenService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserTokenService.class);
+
+        bind(SmartContractTemplateService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserSmartContractTemplateService.class);
+
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
         expose(SocialCampaignService.class);
@@ -448,6 +491,7 @@ public class ServicesModule extends PrivateModule {
         expose(GameOnGamePrizeService.class);
         expose(ItemService.class);
         expose(SimpleInventoryItemService.class);
+        expose(AdvancedInventoryItemService.class);
         expose(MissionService.class);
         expose(ProgressService.class);
         expose(FacebookAuthService.class);
@@ -461,6 +505,10 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class);
         expose(NameService.class);
         expose(HealthStatusService.class);
+        expose(NeoWalletService.class);
+        expose(Neow3jService.class);
+        expose(TokenService.class);
+        expose(SmartContractTemplateService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -485,6 +533,7 @@ public class ServicesModule extends PrivateModule {
         expose(GameOnAdminPrizeService.class).annotatedWith(Unscoped.class);
         expose(ItemService.class).annotatedWith(Unscoped.class);
         expose(SimpleInventoryItemService.class).annotatedWith(Unscoped.class);
+        expose(AdvancedInventoryItemService.class).annotatedWith(Unscoped.class);
         expose(MissionService.class).annotatedWith(Unscoped.class);
         expose(ProgressService.class).annotatedWith(Unscoped.class);
         expose(FacebookAuthService.class).annotatedWith(Unscoped.class);
@@ -495,6 +544,10 @@ public class ServicesModule extends PrivateModule {
         expose(AppleSignInAuthService.class).annotatedWith(Unscoped.class);
         expose(NameService.class).annotatedWith(Unscoped.class);
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
+        expose(NeoWalletService.class).annotatedWith(Unscoped.class);
+        expose(Neow3jService.class).annotatedWith(Unscoped.class);
+        expose(TokenService.class).annotatedWith(Unscoped.class);
+        expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
 
     }
 

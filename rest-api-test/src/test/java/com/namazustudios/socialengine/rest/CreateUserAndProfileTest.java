@@ -18,6 +18,8 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
+import java.util.HashMap;
+
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
 import static com.namazustudios.socialengine.rest.TestUtils.*;
@@ -30,8 +32,8 @@ public class CreateUserAndProfileTest {
     @Factory
     public Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(CreateUserAndProfileTest.class),
-                TestUtils.getInstance().getUnixFSTest(CreateUserAndProfileTest.class)
+            TestUtils.getInstance().getXodusTest(CreateUserAndProfileTest.class),
+            TestUtils.getInstance().getUnixFSTest(CreateUserAndProfileTest.class)
         };
     }
 
@@ -68,7 +70,7 @@ public class CreateUserAndProfileTest {
     @Test
     public void createUser() {
 
-        final UserCreateRequest toCreate = new UserCreateRequest();
+        final var toCreate = new UserCreateRequest();
         toCreate.setName(name);
         toCreate.setEmail(email);
         toCreate.setPassword(password);
@@ -99,7 +101,7 @@ public class CreateUserAndProfileTest {
     @Test(dependsOnMethods = "createUser", dataProvider = "credentialsProvider")
     public void testUserLogin(final String uid, final String password) {
 
-        final UsernamePasswordSessionRequest request = new UsernamePasswordSessionRequest();
+        final var request = new UsernamePasswordSessionRequest();
         request.setUserId(uid);
         request.setPassword(password);
 
@@ -124,7 +126,7 @@ public class CreateUserAndProfileTest {
     @Test(dependsOnMethods = "createUser", dataProvider = "credentialsProvider")
     public void testBogusUserLogin(final String uid, final String _ignored) {
 
-        final UsernamePasswordSessionRequest request = new UsernamePasswordSessionRequest();
+        final var request = new UsernamePasswordSessionRequest();
         request.setUserId(uid);
         request.setPassword("bogus password");
 
@@ -139,7 +141,7 @@ public class CreateUserAndProfileTest {
 
     @Test(dependsOnMethods = "testUserLogin")
     public void createProfileExpectingFailureNoAuth() {
-        final CreateProfileRequest toCreate = new CreateProfileRequest();
+        final var toCreate = new CreateProfileRequest();
 
         toCreate.setUserId(user.getId());
         toCreate.setDisplayName("Paddy O' Furniture");
@@ -157,11 +159,16 @@ public class CreateUserAndProfileTest {
     @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
     public void createForUserHappy(final String authHeader) {
 
-        final CreateProfileRequest toCreate = new CreateProfileRequest();
+        final var toCreate = new CreateProfileRequest();
 
         toCreate.setUserId(user.getId());
         toCreate.setDisplayName("Paddy O' Furniture");
         toCreate.setApplicationId(clientContext.getApplication().getId());
+
+        final var metadata = new HashMap<String, Object>();
+        metadata.put("foo", "bar");
+
+        toCreate.setMetadata(metadata);
 
         final Response response = client
             .target(apiRoot + "/profile")
@@ -171,6 +178,7 @@ public class CreateUserAndProfileTest {
 
         profile = response.readEntity(Profile.class);
 
+        assertNull(profile.getMetadata());
         assertNotNull(profile.getId());
         assertEquals(profile.getUser(), user);
         assertEquals(profile.getApplication(), clientContext.getApplication());
@@ -180,7 +188,7 @@ public class CreateUserAndProfileTest {
     @Test(dependsOnMethods = "testUserLogin", dataProvider = "getAuthHeader")
     public void createForBogusUser(final String authHeader) {
 
-        final CreateProfileRequest toCreate = new CreateProfileRequest();
+        final var toCreate = new CreateProfileRequest();
 
         // We want to test that the system will reject the bogus user
 

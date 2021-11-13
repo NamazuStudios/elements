@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.service.UserService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -106,7 +107,7 @@ public class UserResource {
                   notes = "Supplying the user object, this will update the user with the new information supplied " +
                           "in the body of the request.  Optionally, the user's password may be provided in the User " +
                           "object.")
-    public User createUser(final UserCreateRequest userCreateRequest) {
+    public UserCreateResponse createUser(final UserCreateRequest userCreateRequest) {
         getValidationHelper().validateModel(userCreateRequest);
         return getUserService().createUser(userCreateRequest);
     }

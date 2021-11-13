@@ -74,6 +74,7 @@ public class HttpClientIntegrationTest {
         return new Object[][] {
             {"post"},
             {"get_all"},
+            {"get_all_query"},
             {"get_specific"},
             {"put"},
             {"delete"}

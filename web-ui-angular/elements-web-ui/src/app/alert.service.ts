@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { Router, NavigationStart } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
+import { APIError } from './api/models/api-error';
 
 @Injectable()
 export class AlertService {
@@ -27,9 +28,9 @@ export class AlertService {
     this.subject.next({ type: 'success', text: message });
   }
 
-  error(message: string, keepAfterNavigationChange = false) {
+  error(error: APIError, keepAfterNavigationChange = false) {
     this.keepAfterNavigationChange = keepAfterNavigationChange;
-    this.subject.next({ type: 'error', text: message });
+    this.subject.next({ type: 'error', text: error.message });
   }
 
   getMessage(): Observable<any> {

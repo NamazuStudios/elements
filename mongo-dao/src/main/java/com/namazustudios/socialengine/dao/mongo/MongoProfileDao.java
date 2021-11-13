@@ -63,15 +63,15 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public Optional<Profile> findActiveProfile(final String profileId) {
 
-        final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
-        if (!ObjectId.isValid(profileId)) throw new ProfileNotFoundException();
+        final var query = getDatastore().find(MongoProfile.class);
+        if (!ObjectId.isValid(profileId)) return Optional.empty();
 
         query.filter(and(
                 eq("_id", new ObjectId(profileId)),
                 eq("active", true)
                 ));
 
-        final MongoProfile mongoProfile = query.first();
+        final var mongoProfile = query.first();
         return mongoProfile == null ? Optional.empty() : Optional.of(transform(mongoProfile));
 
     }
@@ -79,8 +79,10 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public Optional<Profile> findActiveProfileForUser(final String profileId, final String userId) {
 
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(profileId);
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(userId);
+        if (!ObjectId.isValid(profileId)) return Optional.empty();
+
+        final var objectId = getMongoDBUtils().parseOrReturnNull(profileId);
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(userId);
 
         final Query<MongoProfile> query = getDatastore().find(MongoProfile.class);
 
@@ -245,37 +247,6 @@ public class MongoProfileDao implements ProfileDao {
         final MongoUser mongoUser = new MongoUser();
         mongoUser.setObjectId(mongoUserObjectId);
         return getActiveMongoProfilesForUser(mongoUser);
-    }
-
-    @Override
-    public Profile updateActiveProfile(final Profile profile) {
-
-        getValidationHelper().validateModel(profile, Update.class);
-
-        final var query = getDatastore().find(MongoProfile.class);
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(profile.getId());
-
-        query.filter(and(
-            eq("_id", objectId),
-            eq("active", true)
-        ));
-
-        final var builder = new UpdateBuilder();
-
-        final var mongoProfile = getMongoDBUtils().perform(ds ->
-            builder.with(
-                set("imageUrl", nullToEmpty(profile.getImageUrl()).trim()),
-                set("displayName", nullToEmpty(profile.getDisplayName()).trim())
-            ).execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
-        );
-
-        if (mongoProfile == null) {
-            throw new NotFoundException("application not found: " + profile.getId());
-        }
-
-        getObjectIndex().index(mongoProfile);
-        return transform(mongoProfile);
-
     }
 
     @Override

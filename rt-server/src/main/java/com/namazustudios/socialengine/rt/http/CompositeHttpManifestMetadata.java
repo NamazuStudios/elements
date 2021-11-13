@@ -12,10 +12,13 @@ import java.util.stream.Collectors;
 import static com.google.common.net.HttpHeaders.ACCEPT;
 import static com.google.common.net.HttpHeaders.CONTENT_TYPE;
 import static com.google.common.net.MediaType.ANY_TYPE;
+import static com.google.common.net.MediaType.parse;
 import static com.namazustudios.socialengine.rt.http.Accept.parseHeader;
 import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.*;
+import static java.lang.String.join;
 import static java.util.Arrays.asList;
 import static java.util.Collections.*;
+import static java.util.stream.Collectors.joining;
 
 /**
  * Builds an {@link HttpManifestMetadata} as a composite of an {@link HttpRequest} and a {@link HttpManifest}.  All
@@ -61,7 +64,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
         final MediaType producedMediaType;
 
         try {
-            producedMediaType = MediaType.parse(httpContent.getType());
+            producedMediaType = parse(httpContent.getType());
         } catch (IllegalArgumentException ex) {
             throw new BadRequestException(ex);
         }
@@ -77,12 +80,12 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
             final MediaType consumedMediaType;
 
             try {
-                consumedMediaType = MediaType.parse(content.getType());
+                consumedMediaType = parse(content.getType());
             } catch (IllegalArgumentException ex) {
                 throw new BadRequestException(ex);
             }
 
-            return contentType.is(consumedMediaType);
+            return consumedMediaType.is(contentType);
 
         };
 
@@ -93,19 +96,18 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
 
     }
 
-    private MediaType getContentType() {
-
-        final String contentTypeHeader = httpRequest
+    private MediaType getContentType(final MediaType defaultMediaType) {
+        return httpRequest
             .getHeader()
-            .getHeader(CONTENT_TYPE).orElse(ANY_TYPE)
-            .toString();
-
-        try {
-            return MediaType.parse(contentTypeHeader);
-        } catch (IllegalArgumentException ex) {
-            throw new BadRequestException(ex);
-        }
-
+            .getHeader(CONTENT_TYPE)
+            .map(Object::toString)
+            .map(header -> {
+                try {
+                    return parse(header);
+                } catch (IllegalArgumentException ex) {
+                    throw new BadRequestException(ex);
+                }
+            }).orElse(defaultMediaType);
     }
 
     private HttpModule resolveModule() {
@@ -143,12 +145,13 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
                 .flatMap(module -> module.getOperationsByName().values().stream())
                 .collect(Collectors.toList());
 
-        final MediaType contentType = getContentType();
-        final List<Accept> acceptableContentTypes = getAcceptableContentTypes();
+        final var acceptableContentTypes = getAcceptableContentTypes();
 
         httpOperationList.removeIf(op -> !op.getPath().matches(req.getHeader().getParsedPath()));
         httpOperationList.removeIf(op -> !op.getVerb().equals(req.getVerb()));
         httpOperationList.removeIf(op -> !isAcceptable(acceptableContentTypes, op));
+
+        final var contentType = getContentType(ANY_TYPE);
         httpOperationList.removeIf(op -> !isConsumable(contentType, op));
 
         return httpOperationList.size() == 1;
@@ -161,7 +164,7 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
         final List<HttpOperation> httpOperationList = getAvailableOperations();
 
         if (httpOperationList.isEmpty()) {
-            throw new UnsupportedMediaTypeException("unsupported content type " + getContentType());
+            throw new UnsupportedMediaTypeException("unsupported content type " + getContentType(null));
         } else if (httpOperationList.size() > 1) {
             throw new BadRequestException("multiple operations match request");
         } else {
@@ -235,8 +238,10 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
             throw new UnacceptableContentException("unacceptable content");
         }
 
-        if (POST.equals(verb) || PUT.equals(verb)) {
-            final MediaType contentType = getContentType();
+
+
+        if ((POST.equals(verb) || PUT.equals(verb))) {
+            final var contentType = getContentType(ANY_TYPE);
             httpOperationList.removeIf(op -> !isConsumable(contentType, op));
         }
 
@@ -247,30 +252,25 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
     @Override
     public HttpContent getPreferredRequestContent() {
 
-        final MediaType contentType = getContentType();
-        final HttpOperation preferredOperation = getPreferredOperation();
+        final var contentType = getContentType(ANY_TYPE);
+        final var preferredOperation = getPreferredOperation();
 
-        final List<HttpContent> preferredContentList = preferredOperation
+        final var preferredContentList = preferredOperation
             .getConsumesContentByType()
             .values()
             .stream()
-            .filter(c -> contentType.is(MediaType.parse(c.getType())))
+            .filter(c -> parse(c.getType()).is(contentType))
             .collect(Collectors.toList());
 
         if (preferredContentList.size() > 1) {
             preferredContentList.removeIf(c -> !c.isDefaultContent());
         }
 
-        if (preferredContentList.size() != 1) {
-
-            final String matching = "[" + preferredOperation
-                .getConsumesContentByType()
-                .keySet()
-                .stream()
-                .collect(Collectors.joining(",")) + "]";
-
+        if (preferredContentList.isEmpty()) {
+            throw new UnsupportedMediaTypeException("unsupported content type " + getContentType(null));
+        } else if (preferredContentList.size() > 1) {
+            final var matching = "[" + join(",", preferredOperation.getConsumesContentByType().keySet()) + "]";
             throw new InternalException(contentType + " matches multiple request content types" + matching);
-
         }
 
         return preferredContentList.get(0);
@@ -301,13 +301,13 @@ public class CompositeHttpManifestMetadata implements HttpManifestMetadata {
                     .getHeaders(ACCEPT).orElseGet(() -> asList(ANY_TYPE))
                     .stream()
                     .map(o -> o.toString())
-                    .collect(Collectors.joining(",")) + "]";
+                    .collect(joining(",")) + "]";
 
             final String matching = "[" + preferredOperation
                     .getConsumesContentByType()
                     .keySet()
                     .stream()
-                    .collect(Collectors.joining(",")) + "]";
+                    .collect(joining(",")) + "]";
 
             throw new InternalException(acceptableTypes + " matches multiple response types " + matching);
 

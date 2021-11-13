@@ -50,14 +50,15 @@ public class HttpClientBuiltin implements Builtin {
 
         WebTarget target = getClient().target(base);
         target = getRequiredStringField(l, "path", target::path);
-        target = getOptionalMultiField(l, "params", target, target::queryParam);
-        target = getOptionalMultiField(l, "matrix", target, target::matrixParam);
+        target = getOptionalMultiField(l, "query", target, WebTarget::queryParam);
+        target = getOptionalMultiField(l, "params", target, WebTarget::queryParam);
+        target = getOptionalMultiField(l, "matrix", target, WebTarget::matrixParam);
 
-        final Invocation.Builder builder = target.request();
-        getOptionalMultiField(l, "headers", builder::header);
-        getOptionalMultiField(l, "cookies", builder::cookie);
-        getOptionalStringFields(l, "accept", builder::accept);
-        getOptionalStringFields(l, "accept_language", builder::acceptLanguage);
+        var builder = target.request();
+        builder = getOptionalMultiField(l, "headers", builder, Invocation.Builder::header);
+        builder = getOptionalMultiField(l, "cookies", builder, Invocation.Builder::cookie);
+        builder = getOptionalStringFields(l, "accept", builder, Invocation.Builder::accept);
+        builder = getOptionalStringFields(l, "accept_language", builder, Invocation.Builder::acceptLanguage);
 
         final String method = getRequiredStringField(l, "method");
         final Entity<Object> requestEntity = getEntity(l);
@@ -68,9 +69,9 @@ public class HttpClientBuiltin implements Builtin {
                 builder.rx().method(method, new GenericType<Response>(){});
 
         if (logger.isDebugEnabled()) {
-            final StringBuilder req = new StringBuilder();
+            final var req = new StringBuilder();
             req.append(format("%s %s\n", method, target.getUri()));
-            getOptionalMultiField(l, "headers", (k, v) -> req.append(k).append(": ").append(v).append('\n'));
+            getOptionalMultiField(l, "headers", req, (r, k, v) -> r.append(k).append(": ").append(v).append('\n'));
             logger.debug("HTTP Request: \n{}\n", req);
         }
 
@@ -86,7 +87,7 @@ public class HttpClientBuiltin implements Builtin {
                     } else {
 
                         final int status = response.getStatus();
-                        final MultivaluedMap headers = response.getHeaders();
+                        final var headers = response.getHeaders();
                         final Object responseEntity = SUCCESSFUL.equals(response.getStatusInfo().getFamily()) ?
                             response.readEntity(Object.class) :
                             null;
@@ -128,18 +129,23 @@ public class HttpClientBuiltin implements Builtin {
         }
     }
 
-    private void getOptionalStringFields(final LuaState l, final String key, final Consumer<String> consumer) {
+    private <T> T getOptionalStringFields(final LuaState l, final String key,
+                                          final T initial, final BiFunction<T, String, T> consumer) {
         try {
 
             l.getField(1, key);
 
+            T out = initial;
+
             if (l.isString(-1) || l.isNumber(-1)) {
-                consumer.accept(l.toString(-1));
+                out = consumer.apply(out, l.toString(-1));
             } else if (l.isTable(-1)) {
-                Stream.of(l.toJavaObject(-1, String[].class)).forEach(v -> consumer.accept(v));
+                for (var v : l.toJavaObject(-1, String[].class)) out = consumer.apply(out, v);
             } else if (!l.isNil(-1)) {
                 throw new IllegalArgumentException("unsupportred type for key " + key);
             }
+
+            return out;
 
         } finally {
             l.pop(1);
@@ -175,16 +181,18 @@ public class HttpClientBuiltin implements Builtin {
 
     }
 
-    private void getOptionalMultiField(final LuaState l, final String key, final BiConsumer<String, String> consumer) {
-
+    private <T> T getOptionalMultiField(final LuaState l, final String key,
+                                        final T initial, final BuilderMutator<String, String, T> mutator) {
         final int top = l .getTop();
 
         try {
 
             l.getField(1, key);
 
-            if (l.isNil(-1)) return;
+            if (l.isNil(-1)) return initial;
             if (!l.isTable( -1)) throw new IllegalArgumentException(key + " must be a table");
+
+            T out = initial;
 
             l.pushNil();
             while (l.next(-2)) {
@@ -195,48 +203,10 @@ public class HttpClientBuiltin implements Builtin {
                 if (l.isString(-1) || l.isNumber(-1)) {
                     final String h = l.toString(-2);
                     final String v = l.toString(-1);
-                    consumer.accept(h, v);
+                    out = mutator.apply(out, h, v);
                 } else if (l.isTable(-1)) {
                     final String h = l.toString(-2);
-                    Stream.of(l.toJavaObject(-1, String[].class))
-                          .forEach(v -> consumer.accept(h, v));
-                } else {
-                    throw new IllegalArgumentException(key + " has invalid value at " + l.toString(-1));
-                }
-
-                l.pop(3);
-
-            }
-
-        } finally {
-            l.setTop(top);
-        }
-
-    }
-
-    private <T> T getOptionalMultiField(final LuaState l, final String key,
-                                        final T initial, final BiFunction<String, String[], T> consumer) {
-
-        T out = initial;
-        final int top = l .getTop();
-
-        try {
-
-            l.getField(1, key);
-
-            if (l.isNil(-1)) return out;
-            if (!l.isTable( -1)) throw new IllegalArgumentException(key + " must be a table");
-
-            l.pushNil();
-            while (l.next(-1)) {
-
-                l.pushValue(-2);
-                l.pushValue(-2);
-
-                if (l.isString(-1) || l.isNumber(-1)) {
-                    out = consumer.apply(l.toString(-2), new String[]{l.toString(-1)});
-                } else if (l.isTable(-1)) {
-                    out = consumer.apply(l.toString(-2), l.toJavaObject(-1, String[].class));
+                    for (var v : l.toJavaObject(-1, String[].class)) out = mutator.apply(out, h, v);
                 } else {
                     throw new IllegalArgumentException(key + " has invalid value at " + l.toString(-1));
                 }
@@ -299,6 +269,12 @@ public class HttpClientBuiltin implements Builtin {
     @Inject
     public void setContext(@Named(LOCAL) Context context) {
         this.context = context;
+    }
+
+    private interface BuilderMutator<KeyT, ValueT, MutatedT> {
+
+        MutatedT apply(MutatedT mutated, KeyT k, ValueT v);
+
     }
 
 }

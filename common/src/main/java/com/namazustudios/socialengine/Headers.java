@@ -58,4 +58,20 @@ public interface Headers {
      */
     String BEARER = "Bearer";
 
+    String ORIGIN = "Origin";
+
+    String AC_ALLOW_ORIGIN = "Access-Control-Allow-Origin";
+
+    String AC_ALLOW_HEADERS = "Access-Control-Allow-Headers";
+
+    String AC_ALLOW_HEADERS_VALUE = "X-HTTP-Method-Override, Content-Type, SocialEngine-SessionSecret, Elements-SessionSecret";
+
+    String AC_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
+
+    String AC_ALLOW_CREDENTIALS_VALUE = "true";
+
+    String AC_ALLOW_ALLOW_METHODS = "Access-Control-Allow-Methods";
+
+    String AC_ALLOW_ALLOW_METHODS_VALUE = "GET, POST, PUT, PATCH, DELETE";
+
 }

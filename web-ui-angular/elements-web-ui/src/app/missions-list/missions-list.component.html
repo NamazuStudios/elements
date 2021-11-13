@@ -6,7 +6,7 @@
     <input matInput placeholder="Search missions" #input>
   </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="addMission()">Add Mission</button>
+  <button mat-raised-button color="primary" (click)="addMission()"><mat-icon>add</mat-icon> Add Mission</button>
   <button mat-raised-button color="primary" (click)="deleteSelectedMissions()" [disabled]="!hasSelection">Delete Selected Missions</button>
 
   <mat-table class="items-table mat-elevation-z8" [dataSource]="dataSource" >

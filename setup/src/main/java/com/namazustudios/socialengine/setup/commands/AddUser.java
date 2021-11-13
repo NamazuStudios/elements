@@ -31,9 +31,11 @@ public class AddUser extends AbstractUserSetupCommand {
             }
         }
 
-        // Validate that we can get both the username and password
-        getUserDao().validateActiveUserPassword(getUser().getName(), getPassword());
-        getUserDao().validateActiveUserPassword(getUser().getEmail(), getPassword());
+        if (hasPassword()) {
+            // Validate that we can get both the username and password
+            getUserDao().validateActiveUserPassword(getUser().getName(), getPassword());
+            getUserDao().validateActiveUserPassword(getUser().getEmail(), getPassword());
+        }
 
     }
 

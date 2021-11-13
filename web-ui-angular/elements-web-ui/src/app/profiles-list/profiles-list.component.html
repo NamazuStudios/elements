@@ -9,7 +9,7 @@
         <input matInput placeholder="Search profiles" #input>
       </mat-form-field>
 
-      <button mat-raised-button color="primary" (click)="addProfile()">Add Profile</button>
+      <button mat-raised-button color="primary" (click)="addProfile()"><mat-icon>add</mat-icon> Add Profile</button>
       <button mat-raised-button color="primary" (click)="deleteSelectedProfiles()" [disabled]="!hasSelection">Delete Selected Profiles</button>
     </div>
 
