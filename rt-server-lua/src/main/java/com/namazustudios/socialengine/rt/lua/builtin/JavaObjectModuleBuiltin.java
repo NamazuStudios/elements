@@ -5,17 +5,18 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.CurrentResource;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Provider;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,6 @@ import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromDefinition;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
 import static com.namazustudios.socialengine.rt.lua.persist.ErisPersistence.mangle;
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
 
@@ -50,7 +50,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
         this(fromModuleName(moduleName), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
     }
 
-    public <T> JavaObjectModuleBuiltin(final ExposedModuleDefinition definition,
+    public <T> JavaObjectModuleBuiltin(final ModuleDefinition definition,
                                        final Provider<T> tProvider) {
         this(fromDefinition(definition), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
     }

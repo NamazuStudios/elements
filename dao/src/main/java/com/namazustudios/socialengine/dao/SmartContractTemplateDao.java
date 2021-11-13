@@ -7,16 +7,16 @@ import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by patricktwohig on 6/28/17.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.smartcontracttemplate"),
-        @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.smartcontracttemplate",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.smartcontracttemplate instead"))
+        @ModuleDefinition("namazu.elements.dao.smartcontracttemplate"),
+        @ModuleDefinition(
+            value = "namazu.socialengine.dao.smartcontracttemplate",
+            deprecated = @DeprecationDefinition("Use namazu.elements.dao.smartcontracttemplate instead"))
 })
 public interface SmartContractTemplateDao {
 

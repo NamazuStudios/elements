@@ -5,8 +5,8 @@ import com.namazustudios.socialengine.model.blockchain.CreateSmartContractTempla
 import com.namazustudios.socialengine.model.blockchain.UpdateSmartContractTemplateRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.model.blockchain.SmartContractTemplate;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 /**
@@ -15,8 +15,8 @@ import com.namazustudios.socialengine.service.Unscoped;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.smartcontracttemplate"),
-        @ExposedModuleDefinition(
+        @ModuleDefinition(value = "namazu.elements.service.blockchain.smartcontracttemplate"),
+        @ModuleDefinition(
                 value = "namazu.elements.service.blockchain.unscoped.smartcontracttemplate",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
@@ -32,8 +32,9 @@ public interface SmartContractTemplateService {
          * @param search
          * @return a {@link Pagination} of {@link SmartContractTemplate} instances
          */
-        Pagination<SmartContractTemplate> getSmartContractTemplates(int offset, int count,
-                                        String applicationNameOrId, String search);
+        Pagination<SmartContractTemplate> getSmartContractTemplates(
+                int offset, int count,
+                String applicationNameOrId, String search);
 
         /**
          * Lists all {@link SmartContractTemplate} instances, specifying a search query.
@@ -65,8 +66,7 @@ public interface SmartContractTemplateService {
         SmartContractTemplate updateSmartContractTemplate(UpdateSmartContractTemplateRequest templateRequest);
 
         /**
-         * Creates a new profile.  The ID of the profile, as specified by {@link Profile#getId()},
-         * should be null and will be assigned.
+         * Creates a new profile.  The ID of the profile, as specified by should be null and will be assigned.
          *
          * @param templateRequest the {@link CreateSmartContractTemplateRequest} with the information to create
          * @return the {@link SmartContractTemplate} as it was created by the service.

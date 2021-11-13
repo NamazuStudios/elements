@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 import java.util.List;
@@ -17,11 +17,11 @@ import java.util.List;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.token"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.token",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.token"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.unscoped.token",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface TokenService {
 
