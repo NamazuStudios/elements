@@ -41,21 +41,30 @@ public class ApplicationUrls {
     }
 
     public void addCodeServeUrl(final Application application) {
-        final URI base = appendPath(getCodeServeUrl(), GIT_PREFIX, application.getName());
-        final URI repositoryRoot = base.resolve(application.getName());
+        final var base = appendPath(getCodeServeUrl(), GIT_PREFIX, application.getName());
+        final var repositoryRoot = base.resolve(application.getName());
         application.setScriptRepoUrl(repositoryRoot.toString());
     }
 
     public void addHttpTunnelUrl(final Application application) {
-        final URI base = appendPath(getHttpTunnelUrl(), application.getName());
-        final URI httpTunnelEndpointUrl = base.resolve(format("%s/%s", application.getName(), API_SUFFIX));
+        final var base = appendPath(getHttpTunnelUrl(), application.getName());
+        final var httpTunnelEndpointUrl = base.resolve(format("%s/%s", application.getName(), API_SUFFIX));
         application.setHttpTunnelEndpointUrl(httpTunnelEndpointUrl.toString());
     }
 
     public void addDocumentationUrl(final Application application) {
-        final URI httpDocumentationUrl = appendPath(getApiOutsideUrl(), "application", application.getId(), "swagger.json");
+
+        final var httpDocumentationUrl = appendPath(
+            getDocOutsideUrl(),
+            "swagger",
+            "2",
+            application.getName(),
+            "swagger.json"
+        );
+
         application.setHttpDocumentationUrl(httpDocumentationUrl.toString());
         addDocumentationUiUrl(httpDocumentationUrl, application);
+
     }
 
     private void addDocumentationUiUrl(final URI httpDocumentationUrl, final Application application) {
