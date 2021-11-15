@@ -25,7 +25,7 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
-public interface Neow3Client {
+public interface Neow3jClient {
 
     /**
      * Gets the {@link Neow3j} instance.

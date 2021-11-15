@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
@@ -28,7 +29,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
 
     private PasswordGenerator passwordGenerator;
 
-    private Neow3Client neow3Client;
+    private Neow3jClient neow3JClient;
 
     private UserService userService;
 
@@ -60,7 +61,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
             var walletBytes = Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet);
             walletRequest.setUpdatedWallet(Base64.getEncoder().encodeToString(walletBytes));
         } catch (CipherException | NEP2InvalidFormat | NEP2InvalidPassphrase | JsonProcessingException e) {
-            throw new RuntimeException(e.getMessage());
+            throw new InternalException(e.getMessage());
         }
 
         return getWalletDao().updateWallet(walletRequest);
@@ -150,8 +151,8 @@ public class SuperUserNeoWalletService implements NeoWalletService {
         this.passwordGenerator = passwordGenerator;
     }
 
-    public Neow3Client getNeow3jClient(){return neow3Client;}
+    public Neow3jClient getNeow3jClient(){return neow3JClient;}
 
     @Inject
-    public void setNeow3jClient(Neow3Client neow3Client){this.neow3Client = neow3Client;}
+    public void setNeow3jClient(Neow3jClient neow3JClient){this.neow3JClient = neow3JClient;}
 }

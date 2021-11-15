@@ -17,7 +17,7 @@ import javax.inject.Named;
 
 import static java.lang.String.format;
 
-public class UserNeow3Client implements Neow3Client {
+public class StandardNeow3jClient implements Neow3jClient {
 
     private Neow3j neow3j;
 

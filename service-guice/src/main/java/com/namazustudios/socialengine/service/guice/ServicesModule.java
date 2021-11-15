@@ -277,10 +277,6 @@ public class ServicesModule extends PrivateModule {
             .toProvider(TokenServiceProvider.class)
             .in(scope);
 
-        bind(Neow3Client.class)
-            .toProvider(Neow3jClientProvider.class)
-            .in(scope);
-
         bind(SmartContractTemplateService.class)
             .toProvider(SmartContractTemplateServiceProvider.class)
             .in(scope);
@@ -303,6 +299,8 @@ public class ServicesModule extends PrivateModule {
 
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
         bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
+
+        bind(Neow3jClient.class).to(StandardNeow3jClient.class).asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
             .annotatedWith(Unscoped.class)
@@ -438,9 +436,9 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoWalletService.class);
 
-        bind(Neow3Client.class)
+        bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
-            .to(UserNeow3Client.class);
+            .to(StandardNeow3jClient.class);
 
         bind(TokenService.class)
             .annotatedWith(Unscoped.class)
@@ -499,7 +497,7 @@ public class ServicesModule extends PrivateModule {
         expose(NameService.class);
         expose(HealthStatusService.class);
         expose(NeoWalletService.class);
-        expose(Neow3Client.class);
+        expose(Neow3jClient.class);
         expose(TokenService.class);
         expose(SmartContractTemplateService.class);
 
@@ -537,7 +535,7 @@ public class ServicesModule extends PrivateModule {
         expose(NameService.class).annotatedWith(Unscoped.class);
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
-        expose(Neow3Client.class).annotatedWith(Unscoped.class);
+        expose(Neow3jClient.class).annotatedWith(Unscoped.class);
         expose(TokenService.class).annotatedWith(Unscoped.class);
         expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
 

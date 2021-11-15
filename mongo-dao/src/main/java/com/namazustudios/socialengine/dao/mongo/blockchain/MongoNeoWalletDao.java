@@ -146,6 +146,11 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         final var user = getMongoUser(wallet.getUser().getId());
         final var walletBytes = Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet());
 
+        query.filter(and(
+                eq("user", user),
+                eq("displayName", nullToEmpty(wallet.getDisplayName()).trim())
+        ));
+
         final var builder = new UpdateBuilder().with(
                 set("user", user),
                 set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
