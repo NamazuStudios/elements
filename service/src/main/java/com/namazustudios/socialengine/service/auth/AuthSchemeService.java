@@ -2,6 +2,10 @@ package com.namazustudios.socialengine.service.auth;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.auth.AuthScheme;
+import com.namazustudios.socialengine.model.auth.CreateAuthSchemeRequest;
+import com.namazustudios.socialengine.model.auth.CreateAuthSchemeResponse;
+import com.namazustudios.socialengine.model.auth.UpdateAuthSchemeRequest;
+import com.namazustudios.socialengine.model.auth.UpdateAuthSchemeResponse;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -39,6 +43,22 @@ public interface AuthSchemeService {
      * @return the {@link AuthScheme}, never null
      */
     AuthScheme getAuthScheme(String authSchemeId);
+
+    /**
+     * Updates the supplied {@link AuthScheme}
+     *
+     * @param authSchemeRequest the {@link UpdateAuthSchemeRequest} with the information to update the authScheme
+     * @return a {@link UpdateAuthSchemeResponse} as it was created
+     */
+    UpdateAuthSchemeResponse updateAuthScheme(UpdateAuthSchemeRequest authSchemeRequest);
+
+    /**
+     * Creates an {@link AuthScheme}
+     *
+     * @param authSchemeRequest the {@link CreateAuthSchemeRequest} with the information to create the authScheme
+     * @return a {@link CreateAuthSchemeResponse} as it was created
+     */
+    CreateAuthSchemeResponse createAuthScheme(CreateAuthSchemeRequest authSchemeRequest);
 
     /**
      * Deletes the {@link AuthScheme} with the supplied auth scheme ID.
