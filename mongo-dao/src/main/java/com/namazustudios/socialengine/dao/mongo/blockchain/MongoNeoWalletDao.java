@@ -7,11 +7,9 @@ import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoFollower;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
-import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.blockchain.MongoNeoWalletNotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
@@ -20,17 +18,11 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 import io.neow3j.wallet.Wallet;
-import io.neow3j.wallet.nep6.NEP6Wallet;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.Base64;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
@@ -80,7 +72,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         final var mongoNeoWallet = query.first();
 
         if (mongoNeoWallet == null) {
-            throw new MongoNeoWalletNotFoundException("Wallet not found: " + walletId);
+            throw new NeoWalletNotFoundException("Wallet not found: " + walletId);
         }
 
         return transform(mongoNeoWallet);
@@ -130,7 +122,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         );
 
         if (mongoNeoWallet == null) {
-            throw new MongoNeoWalletNotFoundException("Wallet not found: " + updatedWalletRequest.getWalletId());
+            throw new NeoWalletNotFoundException("Wallet not found: " + updatedWalletRequest.getWalletId());
         }
 
         getObjectIndex().index(mongoNeoWallet);
