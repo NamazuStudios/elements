@@ -4,8 +4,7 @@ import com.namazustudios.socialengine.config.ModuleDefaults;
 
 import java.util.Properties;
 
-import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
-import static com.namazustudios.socialengine.Constants.HTTP_PORT;
+import static com.namazustudios.socialengine.Constants.*;
 import static com.namazustudios.socialengine.rest.RestAPIMain.*;
 import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
@@ -38,6 +37,8 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.put(MAX_SOCKETS, "500000");
         properties.put(SRV_QUERY, "_elements._tcp.internal");
         properties.put(SRV_SERVERS, "");
+        properties.put(NEO_BLOCKCHAIN_HOST, "http://127.0.0.1");
+        properties.put(NEO_BLOCKCHAIN_PORT, "50012");
         properties.setProperty(SRV_AUTHORITATIVE, "false");
         properties.setProperty(REFRESH_RATE_SECONDS, String.valueOf(DEFAULT_REFRESH_RATE));
         properties.setProperty(REFRESH_TIMEOUT_SECONDS, String.valueOf(DEFAULT_REFRESH_TIMEOUT));

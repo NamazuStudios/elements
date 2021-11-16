@@ -37,31 +37,32 @@ public interface NeoWalletService {
      * Fetches a specific {@link NeoWallet} instance based on ID or name.  If not found, an
      * exception is raised.
      *
-     * @param walletIdOrName the profile ID
+     * @param walletId the wallet Id
      * @return the {@link NeoWallet}, never null
      */
-    Optional<NeoWallet> getWallet(String walletIdOrName);
+    NeoWallet getWallet(String walletId);
 
     /**
      * Updates the supplied {@link NeoWallet}.
      *
+     * @param walletId the Id of the wallet to update.
      * @param walletRequest the {@link UpdateWalletRequest} with the information to update
-     * @return the {@link SmartContractTemplate} as it was changed by the service.
+     * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(UpdateWalletRequest walletRequest);
+    NeoWallet updateWallet(String walletId, UpdateWalletRequest walletRequest);
 
     /**
      * Creates a new Wallet.
      *
      * @param walletRequest the {@link CreateWalletRequest} with the information to create
-     * @return the {@link SmartContractTemplate} as it was created by the service.
+     * @return the {@link NeoWallet} as it was created by the service.
      */
     NeoWallet createWallet(CreateWalletRequest walletRequest);
 
     /**
      * Deletes the {@link NeoWallet} with the supplied wallet ID.
      *
-     * @param walletId the template ID.
+     * @param walletId the wallet Id.
      */
     void deleteWallet(String walletId);
 }

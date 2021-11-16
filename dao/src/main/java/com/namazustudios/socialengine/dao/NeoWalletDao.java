@@ -28,7 +28,7 @@ public interface NeoWalletDao {
      * @param walletId the wallent name or ID to
      * @return the {@link NeoWallet}, never null
      */
-    Optional<NeoWallet> getWallet(String walletId);
+    NeoWallet getWallet(String walletId);
 
     /**
      * Tries to fetch a users specific {@link NeoWallet} instance based on name. Returns null if specified named wallet is not found.
@@ -42,10 +42,10 @@ public interface NeoWalletDao {
     /**
      * Updates the supplied {@link NeoWallet}.
      *
-     * @param wallet the {@link UpdateWalletRequest} with the information to update
-     * @return the {@link SmartContractTemplate} as it was changed by the service.
+     * @param updatedWalletRequest the {@link UpdateWalletRequest} with the updated information
+     * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(UpdateWalletRequest wallet);
+    NeoWallet updateWallet(UpdateWalletRequest updatedWalletRequest);
 
     /**
      * Creates a new Wallet.

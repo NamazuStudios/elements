@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.TokenDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
@@ -14,21 +15,24 @@ public class UserTokenService implements TokenService {
 
     private TokenDao tokenDao;
 
-    private Neow3jService neow3jService;
+    private Neow3jClient neow3JClient;
 
     @Override
     public Pagination<Token> getTokens(int offset, int count, List<String> tags, String search) {
-        return getTokenDao().getTokens(offset, count, tags, search);
+        throw new NotImplementedException();
+//        return getTokenDao().getTokens(offset, count, tags, search);
     }
 
     @Override
     public Token getToken(String tokenIdOrName) {
-        return getTokenDao().getToken(tokenIdOrName);
+        throw new NotImplementedException();
+//        return getTokenDao().getToken(tokenIdOrName);
     }
 
     @Override
     public Token updateToken(UpdateTokenRequest updateTokenRequest) {
-        return getTokenDao().updateToken(updateTokenRequest);
+        throw new NotImplementedException();
+//        return getTokenDao().updateToken(updateTokenRequest);
     }
 
     @Override
@@ -38,7 +42,8 @@ public class UserTokenService implements TokenService {
 
     @Override
     public void deleteToken(String tokenId) {
-        getTokenDao().deleteToken(tokenId);
+        throw new NotImplementedException();
+//        getTokenDao().deleteToken(tokenId);
     }
 
     public TokenDao getTokenDao() {
@@ -50,8 +55,8 @@ public class UserTokenService implements TokenService {
         this.tokenDao = tokenDao;
     }
 
-    public Neow3jService getNeow3jService(){return neow3jService;}
+    public Neow3jClient getNeow3jClient(){return neow3JClient;}
 
     @Inject
-    public void setNeow3jService(Neow3jService neow3jService){this.neow3jService = neow3jService;}
+    public void setNeow3jClient(Neow3jClient neow3JClient){this.neow3JClient = neow3JClient;}
 }

@@ -1,12 +1,11 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.TokenDao;
+import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
-import io.neow3j.protocol.Neow3j;
-import io.neow3j.protocol.http.HttpService;
 
 import javax.inject.Inject;
 import java.util.List;
@@ -15,31 +14,36 @@ public class SuperUserTokenService implements TokenService {
 
     private TokenDao tokenDao;
 
-    private Neow3jService neow3jService;
+    private Neow3jClient neow3JClient;
 
     @Override
     public Pagination<Token> getTokens(int offset, int count, List<String> tags, String search) {
-        return getTokenDao().getTokens(offset, count, tags, search);
+        throw new NotImplementedException();
+//        return getTokenDao().getTokens(offset, count, tags, search);
     }
 
     @Override
     public Token getToken(String tokenIdOrName) {
-        return getTokenDao().getToken(tokenIdOrName);
+        throw new NotImplementedException();
+//        return getTokenDao().getToken(tokenIdOrName);
     }
 
     @Override
     public Token updateToken(UpdateTokenRequest tokenRequest) {
-        return getTokenDao().updateToken(tokenRequest);
+        throw new NotImplementedException();
+//        return getTokenDao().updateToken(tokenRequest);
     }
 
     @Override
     public Token createToken(CreateTokenRequest tokenRequest) {
-        return getTokenDao().createToken(tokenRequest);
+        throw new NotImplementedException();
+//        return getTokenDao().createToken(tokenRequest);
     }
 
     @Override
     public void deleteToken(String templateId) {
-        getTokenDao().deleteToken(templateId);
+        throw new NotImplementedException();
+//        getTokenDao().deleteToken(templateId);
     }
 
     public TokenDao getTokenDao() {
@@ -51,8 +55,8 @@ public class SuperUserTokenService implements TokenService {
         this.tokenDao = tokenDao;
     }
 
-    public Neow3jService getNeow3jService(){return neow3jService;}
+    public Neow3jClient getNeow3jClient(){return neow3JClient;}
 
     @Inject
-    public void setNeow3jService(Neow3jService neow3jService){this.neow3jService = neow3jService;}
+    public void setNeow3jClient(Neow3jClient neow3JClient){this.neow3JClient = neow3JClient;}
 }
