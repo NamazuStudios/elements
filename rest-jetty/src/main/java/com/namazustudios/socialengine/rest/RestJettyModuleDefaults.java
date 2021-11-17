@@ -37,8 +37,6 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.put(MAX_SOCKETS, "500000");
         properties.put(SRV_QUERY, "_elements._tcp.internal");
         properties.put(SRV_SERVERS, "");
-        properties.put(NEO_BLOCKCHAIN_HOST, "http://127.0.0.1");
-        properties.put(NEO_BLOCKCHAIN_PORT, "50012");
         properties.setProperty(SRV_AUTHORITATIVE, "false");
         properties.setProperty(REFRESH_RATE_SECONDS, String.valueOf(DEFAULT_REFRESH_RATE));
         properties.setProperty(REFRESH_TIMEOUT_SECONDS, String.valueOf(DEFAULT_REFRESH_TIMEOUT));
