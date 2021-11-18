@@ -14,7 +14,11 @@ import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Set;
+
+import static com.namazustudios.socialengine.util.URIs.appendPath;
+import static com.namazustudios.socialengine.util.URIs.originFor;
 
 /**
  * Created by patricktwohig on 5/11/17.
@@ -24,7 +28,7 @@ public class CORSFilter implements ContainerResponseFilter {
 
     public static final Logger logger = LoggerFactory.getLogger(CORSFilter.class);
 
-    private Set<URI> allowedOrigins;
+    private final Set<URI> allowedOrigins = new HashSet<>();
 
     @Override
     public void filter(final ContainerRequestContext requestContext,
@@ -63,8 +67,14 @@ public class CORSFilter implements ContainerResponseFilter {
     }
 
     @Inject
-    public void setAllowedOrigins(@Named(Constants.CORS_ALLOWED_ORIGINS) Set<URI> allowedOrigins) {
-        this.allowedOrigins = allowedOrigins;
+    public void addDocServeOrigins(@Named(Constants.DOC_OUTSIDE_URL) final URI docServeRoot) throws URISyntaxException {
+        final var origin = originFor(docServeRoot);
+        this.allowedOrigins.add(origin);
+    }
+
+    @Inject
+    public void addAllowedOrigins(@Named(Constants.CORS_ALLOWED_ORIGINS) final Set<URI> allowedOrigins) {
+        this.allowedOrigins.addAll(allowedOrigins);
     }
 
 }

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.servlet.security;
 
-import com.namazustudios.socialengine.Constants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,15 +11,19 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.HashSet;
 import java.util.Set;
 
+import static com.namazustudios.socialengine.Constants.CORS_ALLOWED_ORIGINS;
+import static com.namazustudios.socialengine.Constants.DOC_OUTSIDE_URL;
 import static com.namazustudios.socialengine.Headers.*;
+import static com.namazustudios.socialengine.util.URIs.originFor;
 
 public class HttpServletCORSFilter implements Filter {
 
     private static final Logger logger = LoggerFactory.getLogger(HttpServletCORSFilter.class);
 
-    private Set<URI> allowedOrigins;
+    private final Set<URI> allowedOrigins = new HashSet<>();
     
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {}
@@ -43,7 +46,7 @@ public class HttpServletCORSFilter implements Filter {
                 origin = new URI(originHeader);
             } catch (URISyntaxException e) {
                 logger.info("Caught bad Origin header {}", originHeader, e);
-                chain.doFilter(servletRequest,servletResponse);
+                chain.doFilter(servletRequest, servletResponse);
                 return;
             }
 
@@ -72,8 +75,14 @@ public class HttpServletCORSFilter implements Filter {
     }
 
     @Inject
-    public void setAllowedOrigins(@Named(Constants.CORS_ALLOWED_ORIGINS) Set<URI> allowedOrigins) {
-        this.allowedOrigins = allowedOrigins;
+    public void addDocServeOrigins(@Named(DOC_OUTSIDE_URL) final URI docServeRoot) throws URISyntaxException {
+        final var origin = originFor(docServeRoot);
+        this.allowedOrigins.add(origin);
+    }
+
+    @Inject
+    public void addAllowedOrigins(@Named(CORS_ALLOWED_ORIGINS) final Set<URI> allowedOrigins) {
+        this.allowedOrigins.addAll(allowedOrigins);
     }
 
 }

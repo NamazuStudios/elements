@@ -14,9 +14,9 @@ import static java.lang.String.format;
 
 public class ApplicationUrls {
 
-    public static final String GIT_PREFIX = "git";
+    public static final String DOC_URL = "url";
 
-    private static final String CONFIG_PARAM = "url";
+    public static final String GIT_PREFIX = "git";
 
     private static final String API_SUFFIX = "rest";
 
@@ -69,7 +69,7 @@ public class ApplicationUrls {
 
     private void addDocumentationUiUrl(final URI httpDocumentationUrl, final Application application) {
         final String encoded = urlFragmentEscaper().escape(httpDocumentationUrl.toString());
-        final String fragment = format("%s=%s", CONFIG_PARAM, encoded);
+        final String fragment = format("%s=%s", DOC_URL, encoded);
         final URI documentationUiUri = appendOrReplaceQuery(getDocOutsideUrl(), fragment);
         application.setHttpDocumentationUiUrl(documentationUiUri.toString());
     }
