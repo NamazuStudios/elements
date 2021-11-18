@@ -6,7 +6,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 
-import static com.google.common.net.UrlEscapers.urlFragmentEscaper;
 import static com.namazustudios.socialengine.Constants.*;
 import static com.namazustudios.socialengine.util.URIs.appendOrReplaceQuery;
 import static com.namazustudios.socialengine.util.URIs.appendPath;
@@ -56,6 +55,7 @@ public class ApplicationUrls {
 
         final var httpDocumentationUrl = appendPath(
             getDocOutsideUrl(),
+            "rest",
             "swagger",
             "2",
             application.getName(),
@@ -68,9 +68,9 @@ public class ApplicationUrls {
     }
 
     private void addDocumentationUiUrl(final URI httpDocumentationUrl, final Application application) {
-        final String encoded = urlFragmentEscaper().escape(httpDocumentationUrl.toString());
-        final String fragment = format("%s=%s", DOC_URL, encoded);
-        final URI documentationUiUri = appendOrReplaceQuery(getDocOutsideUrl(), fragment);
+        final var swaggerUiUrl = appendPath(getDocOutsideUrl(), "swagger");
+        final var query = format("%s=%s", DOC_URL, httpDocumentationUrl.toString());
+        final URI documentationUiUri = appendOrReplaceQuery(swaggerUiUrl, query);
         application.setHttpDocumentationUiUrl(documentationUiUri.toString());
     }
 

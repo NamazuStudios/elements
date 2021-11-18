@@ -133,6 +133,9 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(getSwaggerContext());
 
+        final var redirect = injector.createChildInjector().getInstance(DocRedirectFilter.class);
+        servletContextHandler.addFilter(new FilterHolder(redirect), "/*", allOf(DispatcherType.class));
+
         final var defaultServletHolder = servletContextHandler.addServlet(DefaultServlet.class, "/*");
 
         final var defaultInitParameters = new HashMap<String, String>();
