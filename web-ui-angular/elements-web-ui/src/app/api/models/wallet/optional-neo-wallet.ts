@@ -1,5 +1,5 @@
 /* tslint:disable */
-export interface NeoWallet {
+export interface OptionalNeoWallet {
   empty?: boolean;
 
   present?: boolean;
