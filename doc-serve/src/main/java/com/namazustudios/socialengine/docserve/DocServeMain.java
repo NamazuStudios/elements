@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.docserve;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import com.namazustudios.socialengine.annotation.FacebookPermission;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.config.FacebookBuiltinPermissionsSupplier;
@@ -11,6 +13,7 @@ import com.namazustudios.socialengine.docserve.guice.ServerModule;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.guice.FacebookBuiltinPermissionsModule;
 import com.namazustudios.socialengine.rt.fst.FSTPayloadReaderWriterModule;
+import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.guice.*;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
 import com.namazustudios.socialengine.service.guice.AppleIapReceiptInvokerModule;
@@ -31,7 +34,6 @@ import java.util.function.Supplier;
 
 import static com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES;
 import static com.fasterxml.jackson.databind.PropertyNamingStrategy.SNAKE_CASE;
-import static com.google.inject.Guice.createInjector;
 import static com.namazustudios.socialengine.annotation.ClientSerializationStrategy.APPLE_ITUNES;
 
 public class DocServeMain implements Runnable {
@@ -40,22 +42,27 @@ public class DocServeMain implements Runnable {
 
     private final Server server;
 
+    private final Instance instance;
+
     public DocServeMain(final String[] args) {
-        this(createServer(args));
+        this(createInjector(args));
     }
 
     @Inject
-    public DocServeMain(final Server server) {
-        this.server = server;
+    public DocServeMain(final Injector injector) {
+        this.server = injector.getInstance(Server.class);
+        this.instance = injector.getInstance(Instance.class);
     }
 
     public void start() throws Exception {
+        instance.start();
         server.start();
     }
 
     public void stop() throws Exception {
         server.stop();
         join();
+        instance.close();
     }
 
     public void join() throws InterruptedException {
@@ -78,7 +85,7 @@ public class DocServeMain implements Runnable {
         main.join();
     }
 
-    private static Server createServer(final String[] args) {
+    private static Injector createInjector(final String[] args) {
 
         final DefaultConfigurationSupplier defaultConfigurationSupplier;
         defaultConfigurationSupplier = new DefaultConfigurationSupplier();
@@ -86,7 +93,7 @@ public class DocServeMain implements Runnable {
         final Supplier<List<FacebookPermission>> facebookPermissionListSupplier;
         facebookPermissionListSupplier =  new FacebookBuiltinPermissionsSupplier();
 
-        return createInjector(
+        return Guice.createInjector(
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
             new JeroMQControlClientModule(),
@@ -122,7 +129,7 @@ public class DocServeMain implements Runnable {
                 objectMapper.configure(FAIL_ON_UNKNOWN_PROPERTIES, false);
                 return objectMapper;
             })
-        ).getInstance(Server.class);
+        );
 
     }
 

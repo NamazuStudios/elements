@@ -24,7 +24,7 @@ public class DocJerseyModule extends ServletModule {
         bind(SessionIdAuthenticationFilter.class).asEagerSingleton();
 
         final Map<String, String> params = new ImmutableMap.Builder<String, String>()
-            .put("javax.ws.rs.Application", DocGuiceResourceConfig.class.getName())
+                .put("javax.ws.rs.Application", DocGuiceResourceConfig.class.getName())
             .build();
 
         serve("/*").with(ServletContainer.class, params);

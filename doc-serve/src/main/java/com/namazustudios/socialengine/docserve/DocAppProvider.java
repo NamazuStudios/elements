@@ -34,13 +34,17 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
     public static final String LUA_CONTEXT_FORMAT = "%s/lua";
 
-    public static final String SWAGGER2_CONTEXT_FORMAT = "%s/rest";
+    public static final String REST_CONTEXT_FORMAT = "%s/rest";
+
+    public static final String SWAGGER_CONTEXT_FORMAT = "%s/swagger";
 
     private String pathPrefix;
 
     private String luaContext;
 
     private String restContext;
+
+    private String swaggerContext;
 
     private Injector injector;
 
@@ -50,7 +54,8 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
     protected void doStart() {
         List.of(
             new App(getDeploymentManager(), this, getLuaContext()),
-            new App(getDeploymentManager(), this, getRestContext())
+            new App(getDeploymentManager(), this, getRestContext()),
+            new App(getDeploymentManager(), this, getSwaggerContext())
         ).forEach(getDeploymentManager()::addApp);
     }
 
@@ -63,6 +68,8 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
             return createLuaContext(app);
         } else if (originId.equals(getRestContext())) {
             return createRestContext(app);
+        } else if (originId.equals(getSwaggerContext())) {
+            return createSwaggerContext(app);
         }
 
         throw new IllegalStateException("Unknown App: " + app.getOriginId());
@@ -115,17 +122,26 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
         servletContextHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
         servletContextHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
+        servletContextHandler.setContextPath(getRestContext());
 
-        final var defaultServletHolder = servletContextHandler.addServlet(DefaultServlet.class, "/");
+        return servletContextHandler;
+
+    }
+
+    private ContextHandler createSwaggerContext(final App app) {
+
+        final var servletContextHandler = new ServletContextHandler();
+        servletContextHandler.setContextPath(getSwaggerContext());
+
+        final var defaultServletHolder = servletContextHandler.addServlet(DefaultServlet.class, "/*");
 
         final var defaultInitParameters = new HashMap<String, String>();
         defaultInitParameters.put("dirAllowed", "false");
         defaultInitParameters.put("resourceBase", getResource("swagger").toString());
         defaultServletHolder.setInitParameters(defaultInitParameters);
 
-        servletContextHandler.setContextPath(getRestContext());
-
         return servletContextHandler;
+
     }
 
     public String getPathPrefix() {
@@ -140,13 +156,18 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         return restContext;
     }
 
+    public String getSwaggerContext() {
+        return swaggerContext;
+    }
+
     @Inject
     public void setPathPrefix(@Named(HTTP_PATH_PREFIX) final String pathPrefix) {
 
         this.pathPrefix = pathPrefix;
 
         this.luaContext = format(LUA_CONTEXT_FORMAT, getPathPrefix());
-        this.restContext = format(SWAGGER2_CONTEXT_FORMAT, getPathPrefix());
+        this.restContext = format(REST_CONTEXT_FORMAT, getPathPrefix());
+        this.swaggerContext = format(SWAGGER_CONTEXT_FORMAT, getPathPrefix());
 
         this.luaContext = this.luaContext.startsWith("/")
             ? this.luaContext
@@ -155,6 +176,10 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
         this.restContext = this.restContext.startsWith("/")
             ? this.restContext
             : "/" + this.restContext;
+
+        this.swaggerContext = this.swaggerContext.startsWith("/")
+            ? this.swaggerContext
+            : "/" + this.swaggerContext;
 
     }
 
