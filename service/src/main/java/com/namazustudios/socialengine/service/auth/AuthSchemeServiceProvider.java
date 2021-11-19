@@ -10,7 +10,7 @@ public class AuthSchemeServiceProvider implements Provider<AuthSchemeService> {
 
     private User user;
 
-    private Provider<AuthSchemeService> authSchemeService;
+    private Provider<SuperUserAuthSchemeService> authSchemeService;
 
     @Override
     public AuthSchemeService get() {
@@ -29,12 +29,12 @@ public class AuthSchemeServiceProvider implements Provider<AuthSchemeService> {
         this.user = user;
     }
 
-    public Provider<AuthSchemeService> getAuthSchemeService() {
+    public Provider<SuperUserAuthSchemeService> getAuthSchemeService() {
         return authSchemeService;
     }
 
     @Inject
-    public void setAuthSchemeService(Provider<AuthSchemeService> authSchemeService) {
+    public void setAuthSchemeService(Provider<SuperUserAuthSchemeService> authSchemeService) {
         this.authSchemeService = authSchemeService;
     }
 }
