@@ -2,38 +2,30 @@ package com.namazustudios.socialengine.dao.mongo.blockchain;
 
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.socialengine.dao.TokenDao;
+import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
-import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoToken;
-import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
-import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -42,7 +34,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
-public class MongoTokenDao implements TokenDao {
+public class MongoNeoTokenDao implements NeoTokenDao {
 
     private ObjectIndex objectIndex;
 
@@ -59,7 +51,7 @@ public class MongoTokenDao implements TokenDao {
     private MongoApplicationDao mongoApplicationDao;
 
     @Override
-    public Pagination<Token> getTokens(int offset, int count, List<String> tags, String search) {
+    public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
 
         final String trimmedSearch = nullToEmpty(search).trim();
         final Query<MongoToken> mongoQuery = getDatastore().find(MongoToken.class);
@@ -81,7 +73,7 @@ public class MongoTokenDao implements TokenDao {
     }
 
     @Override
-    public Token getToken(String tokenIdOrName) {
+    public NeoToken getToken(String tokenIdOrName) {
 
         var mongoToken = getDatastore().find(MongoToken.class)
                 .filter(Filters.or(
@@ -98,7 +90,7 @@ public class MongoTokenDao implements TokenDao {
     }
 
     @Override
-    public Token updateToken(UpdateTokenRequest updateTokenRequest) {
+    public NeoToken updateToken(UpdateTokenRequest updateTokenRequest) {
         getValidationHelper().validateModel(updateTokenRequest, ValidationGroups.Update.class);
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateTokenRequest.getTokenId());
@@ -117,7 +109,7 @@ public class MongoTokenDao implements TokenDao {
         );
 
         if (mongoToken == null) {
-            throw new NotFoundException("Token not found: " + updateTokenRequest.getTokenId());
+            throw new NotFoundException("NeoToken not found: " + updateTokenRequest.getTokenId());
         }
 
         getObjectIndex().index(mongoToken);
@@ -125,7 +117,7 @@ public class MongoTokenDao implements TokenDao {
     }
 
     @Override
-    public Token createToken(CreateTokenRequest tokenRequest) {
+    public NeoToken createToken(CreateTokenRequest tokenRequest) {
 
         getValidationHelper().validateModel(tokenRequest, ValidationGroups.Insert.class);
 
@@ -154,9 +146,9 @@ public class MongoTokenDao implements TokenDao {
     }
 
 
-    private Token transform(MongoToken token)
+    private NeoToken transform(MongoToken token)
     {
-        return getBeanMapper().map(token, Token.class);
+        return getBeanMapper().map(token, NeoToken.class);
     }
 
 

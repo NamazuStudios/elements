@@ -1,29 +1,13 @@
-package com.namazustudios.socialengine.service.blockchain;
+package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
-import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
-import com.namazustudios.socialengine.service.Unscoped;
 
 import java.util.List;
 
-/**
- * Manages instances of {@link NeoToken}.
- *
- * Created by keithhudnall on 9/22/21.
- */
-@Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.token"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.token",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
-})
-public interface TokenService {
+public interface NeoTokenDao {
 
     /**
      * Lists all {@link NeoToken} instances, specifying a search query.
@@ -31,7 +15,7 @@ public interface TokenService {
      * @param offset
      * @param count
      * @param tags
-     * @param search
+     * @param search - name or type
      * @return a {@link Pagination} of {@link NeoToken} instances
      */
     Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search);
@@ -48,10 +32,10 @@ public interface TokenService {
     /**
      * Updates the supplied {@link NeoToken}.
      *
-     * @param tokenRequest the id of the token with the information to update
+     * @param updateTokenRequest the update request for the token.
      * @return the {@link NeoToken} as it was changed by the service.
      */
-    NeoToken updateToken(UpdateTokenRequest tokenRequest);
+    NeoToken updateToken(UpdateTokenRequest updateTokenRequest);
 
     /**
      * Creates a new token using a pre-created template.
@@ -62,10 +46,9 @@ public interface TokenService {
     NeoToken createToken(CreateTokenRequest tokenRequest);
 
     /**
-     * Deletes the {@link NeoToken} with the supplied token ID.
+     * Deletes the {@link NeoToken} with the supplied profile ID.
      *
-     * @param tokenId the token ID.
+     * @param templateId the template ID.
      */
-    void deleteToken(String tokenId);
-
+    void deleteToken(String templateId);
 }
