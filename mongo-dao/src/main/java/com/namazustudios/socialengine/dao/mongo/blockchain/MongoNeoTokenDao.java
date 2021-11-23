@@ -101,7 +101,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         query.filter(eq("_id", objectId));
 
         builder.with(
-                set("name", nullToEmpty(updateNeoTokenRequest.getName()).trim())
+                set("name", nullToEmpty(updateNeoTokenRequest.getToken().getName()).trim())
         );
 
         final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->

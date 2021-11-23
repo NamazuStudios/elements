@@ -21,6 +21,14 @@ public class UpdateNeoTokenRequest {
     @ApiModelProperty("Any meta data for this token.")
     private Map<String, Object> metaData;
 
+    public String getTokenId() {
+        return tokenId;
+    }
+
+    public void setTokenId(String tokenId) {
+        this.tokenId = tokenId;
+    }
+
     public Token getToken() {
         return token;
     }
