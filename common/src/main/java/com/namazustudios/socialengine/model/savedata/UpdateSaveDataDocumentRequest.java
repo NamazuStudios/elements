@@ -1,7 +1,8 @@
-package com.namazustudios.socialengine.model.save;
+package com.namazustudios.socialengine.model.savedata;
 
 import io.swagger.annotations.ApiModel;
 
+import javax.validation.constraints.NotNull;
 import java.util.Objects;
 
 @ApiModel(description = "Updates a save data document. This accepts the contents of the document as well as the " +
@@ -12,6 +13,7 @@ public class UpdateSaveDataDocumentRequest {
 
     private String version;
 
+    @NotNull
     private String contents;
 
     public Boolean getForce() {

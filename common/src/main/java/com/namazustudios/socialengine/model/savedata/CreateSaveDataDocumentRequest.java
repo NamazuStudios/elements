@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.save;
+package com.namazustudios.socialengine.model.savedata;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;

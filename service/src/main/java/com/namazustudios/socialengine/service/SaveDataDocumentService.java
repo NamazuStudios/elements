@@ -2,9 +2,9 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.model.save.CreateSaveDataDocumentRequest;
-import com.namazustudios.socialengine.model.save.SaveDataDocument;
-import com.namazustudios.socialengine.model.save.UpdateSaveDataDocumentRequest;
+import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
+import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
+import com.namazustudios.socialengine.model.savedata.UpdateSaveDataDocumentRequest;
 
 public interface SaveDataDocumentService {
 
