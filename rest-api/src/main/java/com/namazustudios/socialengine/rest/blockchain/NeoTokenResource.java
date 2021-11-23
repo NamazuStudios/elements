@@ -3,11 +3,11 @@ package com.namazustudios.socialengine.rest.blockchain;
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoToken;
 
-import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
-import com.namazustudios.socialengine.service.blockchain.TokenService;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.service.blockchain.NeoTokenService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -27,13 +27,13 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
         description = "Allows for the storage and retrieval of compiled Neo tokens.",
         authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
 @Path("blockchain/neo/token")
-public class TokenResource {
+public class NeoTokenResource {
 
-    private TokenService tokenService;
+    private NeoTokenService neoTokenService;
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets a Neo Tokens for a specific user",
+    @ApiOperation(value = "Gets Neo Tokens",
             notes = "Gets a pagination of Neo Tokens for the given query.")
     public Pagination<NeoToken> getTokens(
             @QueryParam("offset") @DefaultValue("0") final int offset,
@@ -68,25 +68,25 @@ public class TokenResource {
 
     @POST
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Creates a new Neo NeoToken",
-            notes = "Creates a new Neo NeoToken, associated with the specified smart contract.")
-    public NeoToken createToken(final CreateTokenRequest tokenRequest) {
+    @ApiOperation(value = "Creates a new NeoToken definition",
+            notes = "Creates a new NeoToken definition.")
+    public NeoToken createToken(final CreateNeoTokenRequest tokenRequest) {
         return getTokenService().createToken(tokenRequest);
     }
 
     @PUT
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Updates a Neo NeoToken",
-            notes = "Updates a Neo NeoToken with the specified name or id.")
-    public NeoToken updateToken(final UpdateTokenRequest tokenRequest) {
+    @ApiOperation(value = "Updates a NeoToken",
+            notes = "Updates a NeoToken with the specified name or id.")
+    public NeoToken updateToken(final UpdateNeoTokenRequest tokenRequest) {
         return getTokenService().updateToken(tokenRequest);
     }
 
     @DELETE
     @Path("{tokenId}")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Deletes a Neo NeoToken",
-            notes = "Deletes a Neo NeoToken with the specified id.")
+    @ApiOperation(value = "Deletes a NeoToken",
+            notes = "Deletes a NeoToken with the specified id.")
     public void deleteToken(@PathParam("tokenId") String tokenId) {
 
         tokenId = Strings.nullToEmpty(tokenId).trim();
@@ -98,12 +98,12 @@ public class TokenResource {
         getTokenService().deleteToken(tokenId);
     }
 
-    public TokenService getTokenService() {
-        return tokenService;
+    public NeoTokenService getTokenService() {
+        return neoTokenService;
     }
 
     @Inject
-    public void setTokenService(TokenService tokenService) {
-        this.tokenService = tokenService;
+    public void setTokenService(NeoTokenService neoTokenService) {
+        this.neoTokenService = neoTokenService;
     }
 }

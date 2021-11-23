@@ -1,21 +1,23 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.NeoTokenDao;
-import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
 import java.util.List;
 
-public class UserTokenService implements TokenService {
+public class SuperUserNeoTokenService implements NeoTokenService {
 
     private NeoTokenDao neoTokenDao;
 
     private Neow3jClient neow3JClient;
+
+    private User user;
 
     @Override
     public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
@@ -30,20 +32,30 @@ public class UserTokenService implements TokenService {
     }
 
     @Override
-    public NeoToken updateToken(UpdateTokenRequest updateTokenRequest) {
+    public NeoToken updateToken(UpdateNeoTokenRequest tokenRequest) {
         throw new NotImplementedException();
-//        return getTokenDao().updateToken(updateTokenRequest);
+//        return getTokenDao().updateToken(tokenRequest);
     }
 
     @Override
-    public NeoToken createToken(CreateTokenRequest tokenRequest) {
-        throw new ForbiddenException();
+    public NeoToken createToken(CreateNeoTokenRequest tokenRequest) {
+        throw new NotImplementedException();
+//        return getTokenDao().createToken(tokenRequest);
     }
 
     @Override
-    public void deleteToken(String tokenId) {
+    public void deleteToken(String templateId) {
         throw new NotImplementedException();
-//        getTokenDao().deleteToken(tokenId);
+//        getTokenDao().deleteToken(templateId);
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public NeoTokenDao getTokenDao() {

@@ -7,8 +7,6 @@ import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
-import java.util.Optional;
-
 /**
  * Manages instances of {@link NeoWallet}.
  *
@@ -46,18 +44,18 @@ public interface NeoWalletService {
      * Updates the supplied {@link NeoWallet}.
      *
      * @param walletId the Id of the wallet to update.
-     * @param walletRequest the {@link UpdateWalletRequest} with the information to update
+     * @param walletRequest the {@link UpdateNeoWalletRequest} with the information to update
      * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(String walletId, UpdateWalletRequest walletRequest);
+    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest walletRequest);
 
     /**
      * Creates a new Wallet.
      *
-     * @param walletRequest the {@link CreateWalletRequest} with the information to create
+     * @param walletRequest the {@link CreateNeoWalletRequest} with the information to create
      * @return the {@link NeoWallet} as it was created by the service.
      */
-    NeoWallet createWallet(CreateWalletRequest walletRequest);
+    NeoWallet createWallet(CreateNeoWalletRequest walletRequest);
 
     /**
      * Deletes the {@link NeoWallet} with the supplied wallet ID.

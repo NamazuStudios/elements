@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.service.Services;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class WalletServiceProvider implements Provider<NeoWalletService> {
+public class NeoWalletServiceProvider implements Provider<NeoWalletService> {
 
     private User user;
 

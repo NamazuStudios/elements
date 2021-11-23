@@ -8,14 +8,14 @@ import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoToken;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -54,7 +54,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
 
         final String trimmedSearch = nullToEmpty(search).trim();
-        final Query<MongoToken> mongoQuery = getDatastore().find(MongoToken.class);
+        final Query<MongoNeoToken> mongoQuery = getDatastore().find(MongoNeoToken.class);
 
         if (tags != null && !tags.isEmpty()) {
             mongoQuery.filter(Filters.in("tags", tags));
@@ -75,7 +75,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     @Override
     public NeoToken getToken(String tokenIdOrName) {
 
-        var mongoToken = getDatastore().find(MongoToken.class)
+        var mongoToken = getDatastore().find(MongoNeoToken.class)
                 .filter(Filters.or(
                             Filters.eq("_id", tokenIdOrName),
                             Filters.eq("name", tokenIdOrName)
@@ -90,38 +90,38 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
     @Override
-    public NeoToken updateToken(UpdateTokenRequest updateTokenRequest) {
-        getValidationHelper().validateModel(updateTokenRequest, ValidationGroups.Update.class);
+    public NeoToken updateToken(UpdateNeoTokenRequest updateNeoTokenRequest) {
+        getValidationHelper().validateModel(updateNeoTokenRequest, ValidationGroups.Update.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateTokenRequest.getTokenId());
-        final var query = getDatastore().find(MongoToken.class);
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateNeoTokenRequest.getTokenId());
+        final var query = getDatastore().find(MongoNeoToken.class);
 
         final var builder = new UpdateBuilder();
 
         query.filter(eq("_id", objectId));
 
         builder.with(
-                set("name", nullToEmpty(updateTokenRequest.getName()).trim())
+                set("name", nullToEmpty(updateNeoTokenRequest.getName()).trim())
         );
 
-        final MongoToken mongoToken = getMongoDBUtils().perform(ds ->
+        final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
-        if (mongoToken == null) {
-            throw new NotFoundException("NeoToken not found: " + updateTokenRequest.getTokenId());
+        if (mongoNeoToken == null) {
+            throw new NotFoundException("NeoToken not found: " + updateNeoTokenRequest.getTokenId());
         }
 
-        getObjectIndex().index(mongoToken);
-        return transform(mongoToken);
+        getObjectIndex().index(mongoNeoToken);
+        return transform(mongoNeoToken);
     }
 
     @Override
-    public NeoToken createToken(CreateTokenRequest tokenRequest) {
+    public NeoToken createToken(CreateNeoTokenRequest tokenRequest) {
 
         getValidationHelper().validateModel(tokenRequest, ValidationGroups.Insert.class);
 
-        var mongoToken = getBeanMapper().map(tokenRequest, MongoToken.class);
+        var mongoToken = getBeanMapper().map(tokenRequest, MongoNeoToken.class);
 
         try {
             getDatastore().save(mongoToken);
@@ -130,8 +130,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         }
         getObjectIndex().index(mongoToken);
 
-        final Query<MongoToken> query = getDatastore().find(MongoToken.class);
-        query.filter(eq("_id", mongoToken.getId()));
+        final Query<MongoNeoToken> query = getDatastore().find(MongoNeoToken.class);
 
         return transform(mongoToken);
     }
@@ -146,7 +145,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
 
-    private NeoToken transform(MongoToken token)
+    private NeoToken transform(MongoNeoToken token)
     {
         return getBeanMapper().map(token, NeoToken.class);
     }

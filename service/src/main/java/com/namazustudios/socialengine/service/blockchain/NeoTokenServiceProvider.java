@@ -6,23 +6,23 @@ import com.namazustudios.socialengine.service.Services;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
-public class TokenServiceProvider implements Provider<TokenService> {
+public class NeoTokenServiceProvider implements Provider<NeoTokenService> {
 
     private User user;
 
-    private Provider<SuperUserTokenService> superUserTokenService;
+    private Provider<SuperUserNeoTokenService> superUserTokenService;
 
-    private Provider<UserTokenService> userTokenService;
+    private Provider<UserNeoTokenService> userTokenService;
 
     @Override
-    public TokenService get() {
+    public NeoTokenService get() {
         switch (getUser().getLevel()) {
             case SUPERUSER:
                 return getSuperUserTokenService().get();
             case USER:
                 return getUserTokenService().get();
             default:
-                return Services.forbidden(TokenService.class);
+                return Services.forbidden(NeoTokenService.class);
         }
     }
 
@@ -36,21 +36,21 @@ public class TokenServiceProvider implements Provider<TokenService> {
     }
 
 
-    public Provider<SuperUserTokenService> getSuperUserTokenService() {
+    public Provider<SuperUserNeoTokenService> getSuperUserTokenService() {
         return superUserTokenService;
     }
 
     @Inject
-    public void setSuperUserTokenService(Provider<SuperUserTokenService> superUserTokenService) {
+    public void setSuperUserTokenService(Provider<SuperUserNeoTokenService> superUserTokenService) {
         this.superUserTokenService = superUserTokenService;
     }
 
-    public Provider<UserTokenService> getUserTokenService() {
+    public Provider<UserNeoTokenService> getUserTokenService() {
         return userTokenService;
     }
 
     @Inject
-    public void setUserTokenService(Provider<UserTokenService> userTokenService) {
+    public void setUserTokenService(Provider<UserNeoTokenService> userTokenService) {
         this.userTokenService = userTokenService;
     }
 }

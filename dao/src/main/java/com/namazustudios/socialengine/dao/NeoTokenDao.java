@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.UpdateTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
 
 import java.util.List;
 
@@ -32,18 +32,18 @@ public interface NeoTokenDao {
     /**
      * Updates the supplied {@link NeoToken}.
      *
-     * @param updateTokenRequest the update request for the token.
+     * @param updateNeoTokenRequest the update request for the token.
      * @return the {@link NeoToken} as it was changed by the service.
      */
-    NeoToken updateToken(UpdateTokenRequest updateTokenRequest);
+    NeoToken updateToken(UpdateNeoTokenRequest updateNeoTokenRequest);
 
     /**
      * Creates a new token using a pre-created template.
      *
-     * @param tokenRequest the {@link CreateTokenRequest} with the information to create
+     * @param tokenRequest the {@link CreateNeoTokenRequest} with the information to create
      * @return the {@link NeoToken} as it was created by the service.
      */
-    NeoToken createToken(CreateTokenRequest tokenRequest);
+    NeoToken createToken(CreateNeoTokenRequest tokenRequest);
 
     /**
      * Deletes the {@link NeoToken} with the supplied profile ID.
