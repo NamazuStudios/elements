@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.auth.MongoAuthScheme;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoToken;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
