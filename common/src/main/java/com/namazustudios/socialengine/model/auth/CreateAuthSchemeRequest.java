@@ -23,4 +23,28 @@ public class CreateAuthSchemeRequest {
     @ApiModelProperty("The list of issuers allowed to use this scheme.")
     @NotNull
     public List<String> allowedIssuers;
+
+    public String getAud() {
+        return aud;
+    }
+
+    public void setAud(String aud) {
+        this.aud = aud;
+    }
+
+    public String getPubKey() {
+        return pubKey;
+    }
+
+    public void setPubKey(String pubKey) {
+        this.pubKey = pubKey;
+    }
+
+    public String getUserLevel() {
+        return userLevel;
+    }
+
+    public void setUserLevel(String userLevel) {
+        this.userLevel = userLevel;
+    }
 }
