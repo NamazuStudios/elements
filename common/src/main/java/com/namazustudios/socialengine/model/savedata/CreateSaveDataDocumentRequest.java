@@ -10,10 +10,17 @@ import java.util.Objects;
 public class CreateSaveDataDocumentRequest {
 
     @NotNull
-    @ApiModelProperty("The slot of the property. Must be unique")
+    @ApiModelProperty("The slot of the property. Must be unique for user or profile.")
     private int slot;
 
-    @ApiModelProperty("The id of the profile which owns the save data.")
+    @ApiModelProperty(
+        "The id of the user which owns the save data. If specified, the user will own this save data and the " +
+        "profileId must be null or be owned by the user specified.")
+    private String userId;
+
+    @ApiModelProperty(
+        "The id of the profile which owns the save data. If specified, the profile will own this save data and " +
+        "the userId must be null or be owned by the user specified.")
     private String profileId;
 
     @NotNull
@@ -26,6 +33,14 @@ public class CreateSaveDataDocumentRequest {
 
     public void setSlot(int slot) {
         this.slot = slot;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getProfileId() {
@@ -49,18 +64,19 @@ public class CreateSaveDataDocumentRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateSaveDataDocumentRequest that = (CreateSaveDataDocumentRequest) o;
-        return getSlot() == that.getSlot() && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getContents(), that.getContents());
+        return getSlot() == that.getSlot() && Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getContents(), that.getContents());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSlot(), getProfileId(), getContents());
+        return Objects.hash(getSlot(), getUserId(), getProfileId(), getContents());
     }
 
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("CreateSaveDataDocumentRequest{");
         sb.append("slot=").append(slot);
+        sb.append(", userId='").append(userId).append('\'');
         sb.append(", profileId='").append(profileId).append('\'');
         sb.append(", contents='").append(contents).append('\'');
         sb.append('}');

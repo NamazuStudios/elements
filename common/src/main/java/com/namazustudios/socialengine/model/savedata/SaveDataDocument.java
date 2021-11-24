@@ -1,9 +1,17 @@
 package com.namazustudios.socialengine.model.savedata;
 
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.util.Objects;
 
 @ApiModel(description = "Represents an arbitrary save data document that persists on the server. The document " +
@@ -11,21 +19,32 @@ import java.util.Objects;
                         "copy and the remote copy.")
 public class SaveDataDocument {
 
+    @Null(groups = Insert.class)
     @ApiModelProperty("The database assigned unique ID of the document.")
     private String id;
 
+    @NotNull(groups = Insert.class)
     @ApiModelProperty("The slot of the property.")
     private int slot;
 
+    @NotNull(groups = Update.class)
+    @ApiModelProperty("The user which owns the save data.")
+    private User user;
+
+    @NotNull(groups = Update.class)
     @ApiModelProperty("The profile which owns the save data.")
     private Profile profile;
 
+    @Min(0)
+    @Max(Long.MAX_VALUE)
     @ApiModelProperty("The timestamp of the last write to this document.")
     private long timestamp;
 
+    @NotNull(groups = {Insert.class, Update.class})
     @ApiModelProperty("The revision of the save data document.")
     private String version;
 
+    @NotNull
     @ApiModelProperty("The contents of the save data.")
     private String contents;
 
@@ -43,6 +62,14 @@ public class SaveDataDocument {
 
     public void setSlot(int slot) {
         this.slot = slot;
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public Profile getProfile() {
@@ -82,12 +109,12 @@ public class SaveDataDocument {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         SaveDataDocument that = (SaveDataDocument) o;
-        return getSlot() == that.getSlot() && getTimestamp() == that.getTimestamp() && Objects.equals(getId(), that.getId()) && Objects.equals(getProfile(), that.getProfile()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getContents(), that.getContents());
+        return getSlot() == that.getSlot() && getTimestamp() == that.getTimestamp() && Objects.equals(getId(), that.getId()) && Objects.equals(user, that.user) && Objects.equals(getProfile(), that.getProfile()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getContents(), that.getContents());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getId(), getSlot(), getProfile(), getTimestamp(), getVersion(), getContents());
+        return Objects.hash(getId(), getSlot(), user, getProfile(), getTimestamp(), getVersion(), getContents());
     }
 
     @Override
@@ -95,6 +122,7 @@ public class SaveDataDocument {
         final StringBuilder sb = new StringBuilder("SaveDataDocument{");
         sb.append("id='").append(id).append('\'');
         sb.append(", slot=").append(slot);
+        sb.append(", user=").append(user);
         sb.append(", profile=").append(profile);
         sb.append(", timestamp=").append(timestamp);
         sb.append(", version='").append(version).append('\'');

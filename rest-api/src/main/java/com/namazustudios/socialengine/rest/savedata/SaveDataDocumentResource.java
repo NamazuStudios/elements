@@ -38,7 +38,7 @@ public class SaveDataDocumentResource {
     @ApiOperation(
         value = "Search Save Data Documents",
         notes = "Gets all save data documents available to the user.")
-    public Pagination<Application> getSaveDataDocuments(
+    public Pagination<SaveDataDocument> getSaveDataDocuments(
             @QueryParam("offset") @DefaultValue("0")
             final int offset,
             @QueryParam("count")  @DefaultValue("20")
