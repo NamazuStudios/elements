@@ -47,4 +47,12 @@ public class CreateAuthSchemeRequest {
     public void setUserLevel(String userLevel) {
         this.userLevel = userLevel;
     }
+
+    public List<String> getAllowedIssuers() {
+        return allowedIssuers;
+    }
+
+    public void setAllowedIssuers(List<String> allowedIssuers) {
+        this.allowedIssuers = allowedIssuers;
+    }
 }
