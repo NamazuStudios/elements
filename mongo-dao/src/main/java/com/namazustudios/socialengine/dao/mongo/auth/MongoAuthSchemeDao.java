@@ -1,14 +1,21 @@
 package com.namazustudios.socialengine.dao.mongo.auth;
 
+import com.mongodb.DuplicateKeyException;
+import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.AuthSchemeDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.auth.MongoAuthScheme;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoToken;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.auth.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
@@ -17,7 +24,12 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 import java.util.List;
 
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+
 public class MongoAuthSchemeDao implements AuthSchemeDao {
+
+    private ObjectIndex objectIndex;
 
     private MongoDBUtils mongoDBUtils;
 
@@ -61,17 +73,51 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateAuthSchemeRequest.getAuthSchemeId());
         final var query = getDatastore().find(MongoAuthScheme.class);
 
-        return null;
+        final var builder = new UpdateBuilder();
+
+        query.filter(eq("_id", objectId));
+
+        final MongoAuthScheme mongoAuthScheme = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoAuthScheme == null) {
+            throw new NotFoundException("auth scheme not found: " + updateAuthSchemeRequest.getAuthSchemeId());
+        }
+
+        getObjectIndex().index(mongoAuthScheme);
+
+        var authScheme = transform(mongoAuthScheme);
+        return null; //TODO: auth scheme to auth scheme response
     }
 
     @Override
     public CreateAuthSchemeResponse createAuthScheme(CreateAuthSchemeRequest authSchemeRequest) {
-        return null;
+        getValidationHelper().validateModel(authSchemeRequest, ValidationGroups.Insert.class);
+
+        var mongoToken = getBeanMapper().map(authSchemeRequest, MongoAuthScheme.class);
+
+        try {
+            getDatastore().save(mongoToken);
+        } catch (DuplicateKeyException e) {
+            throw new DuplicateException(e);
+        }
+        getObjectIndex().index(mongoToken);
+
+        final Query<MongoAuthScheme> query = getDatastore().find(MongoAuthScheme.class);
+        query.filter(eq("_id", mongoToken.getId()));
+
+        var authscheme = transform(mongoToken);
+        return null; //TODO: auth scheme to create auth screme responseWe're 
     }
 
     @Override
     public void deleteAuthScheme(String authSchemeId) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(authSchemeId);
+        final var query = getDatastore().find(MongoNeoWallet.class);
 
+        query.filter(eq("_id", objectId));
+        query.delete();
     }
 
     private AuthScheme transform(MongoAuthScheme authScheme)
@@ -113,5 +159,14 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     @Inject
     public void setDatastore(Datastore datastore) {
         this.datastore = datastore;
+    }
+
+    public ObjectIndex getObjectIndex() {
+        return objectIndex;
+    }
+
+    @Inject
+    public void setObjectIndex(ObjectIndex objectIndex) {
+        this.objectIndex = objectIndex;
     }
 }
