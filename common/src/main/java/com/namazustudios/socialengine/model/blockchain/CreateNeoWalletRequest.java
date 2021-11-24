@@ -3,12 +3,11 @@ package com.namazustudios.socialengine.model.blockchain;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
-import org.testng.annotations.Optional;
 
 import javax.validation.constraints.NotNull;
 
 @ApiModel(description = "Represents a request to create a neo wallet.")
-public class CreateWalletRequest {
+public class CreateNeoWalletRequest {
 
     @ApiModelProperty("A user-defined name for the wallet..")
     @NotNull(groups = ValidationGroups.Insert.class)

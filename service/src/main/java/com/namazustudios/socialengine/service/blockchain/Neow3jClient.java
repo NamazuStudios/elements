@@ -1,11 +1,12 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 import io.neow3j.crypto.exceptions.CipherException;
+import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
+import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.Neow3j;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
@@ -24,7 +25,7 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
-public interface Neow3jService {
+public interface Neow3jClient {
 
     /**
      * Gets the {@link Neow3j} instance.
@@ -64,6 +65,17 @@ public interface Neow3jService {
      * @return the {@link NEP6Wallet}
      */
     NEP6Wallet createWallet(String name, String password) throws CipherException;
+
+    /**
+     * Creates an encrypted {@link NEP6Wallet}.
+     *
+     * @param wallet the NEP6Wallet
+     * @param name the new name for the wallet
+     * @param password the current password for the wallet
+     * @param newPassword the new password for the wallet
+     * @return the {@link NEP6Wallet}
+     */
+    NEP6Wallet updateWallet(NEP6Wallet wallet, String name, String password, String newPassword) throws CipherException, NEP2InvalidPassphrase, NEP2InvalidFormat;
 
     /**
      * Gets the {@link ScriptBuilder} instance.

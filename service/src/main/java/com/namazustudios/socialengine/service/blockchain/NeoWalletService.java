@@ -7,8 +7,6 @@ import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
-import java.util.Optional;
-
 /**
  * Manages instances of {@link NeoWallet}.
  *
@@ -37,31 +35,32 @@ public interface NeoWalletService {
      * Fetches a specific {@link NeoWallet} instance based on ID or name.  If not found, an
      * exception is raised.
      *
-     * @param walletIdOrName the profile ID
+     * @param walletId the wallet Id
      * @return the {@link NeoWallet}, never null
      */
-    Optional<NeoWallet> getWallet(String walletIdOrName);
+    NeoWallet getWallet(String walletId);
 
     /**
      * Updates the supplied {@link NeoWallet}.
      *
-     * @param walletRequest the {@link UpdateWalletRequest} with the information to update
-     * @return the {@link SmartContractTemplate} as it was changed by the service.
+     * @param walletId the Id of the wallet to update.
+     * @param walletRequest the {@link UpdateNeoWalletRequest} with the information to update
+     * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(UpdateWalletRequest walletRequest);
+    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest walletRequest);
 
     /**
      * Creates a new Wallet.
      *
-     * @param walletRequest the {@link CreateWalletRequest} with the information to create
-     * @return the {@link SmartContractTemplate} as it was created by the service.
+     * @param walletRequest the {@link CreateNeoWalletRequest} with the information to create
+     * @return the {@link NeoWallet} as it was created by the service.
      */
-    NeoWallet createWallet(CreateWalletRequest walletRequest);
+    NeoWallet createWallet(CreateNeoWalletRequest walletRequest);
 
     /**
      * Deletes the {@link NeoWallet} with the supplied wallet ID.
      *
-     * @param walletId the template ID.
+     * @param walletId the wallet Id.
      */
     void deleteWallet(String walletId);
 }
