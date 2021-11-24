@@ -1,20 +1,33 @@
 package com.namazustudios.socialengine.service.savedata;
 
+import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SaveDataDocumentDao;
+import com.namazustudios.socialengine.dao.UserDao;
+import com.namazustudios.socialengine.exception.ConflictException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
 import com.namazustudios.socialengine.model.savedata.UpdateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.SaveDataDocumentService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 
 import javax.inject.Inject;
 import java.util.Objects;
 import java.util.Optional;
 
+import static java.lang.System.currentTimeMillis;
+
 public class UserSaveDataDocumentService implements SaveDataDocumentService {
 
     private User user;
+
+    private ValidationHelper validationHelper;
+
+    private UserDao userDao;
+
+    private ProfileDao profileDao;
 
     private SaveDataDocumentDao saveDataDocumentDao;
 
@@ -44,7 +57,35 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
     @Override
     public SaveDataDocument createSaveDataDocument(final CreateSaveDataDocumentRequest createSaveDataDocumentRequest) {
 
-        return null;
+        getValidationHelper().validateModel(createSaveDataDocumentRequest);
+
+        final var document = new SaveDataDocument();
+
+        final var userId = createSaveDataDocumentRequest.getUserId();
+        final var profileId = createSaveDataDocumentRequest.getProfileId();
+
+        var user = userId == null ? null : getUserDao().getActiveUser(userId);
+        var profile = profileId == null ? null : getProfileDao().getActiveProfile(profileId);
+
+        if (user != null && profile != null) {
+            if (Objects.equals(user.getId(), profile.getUser().getId()))
+                throw new ConflictException("User and profile do not match.");
+        } else if (profile != null) {
+            document.setUser(profile.getUser());
+        } else if (user != null) {
+            document.setUser(user);
+        } else {
+            throw new InvalidDataException("Must specify either user or profile.");
+        }
+
+        document.setUser(user);
+        document.setProfile(profile);
+        document.setTimestamp(currentTimeMillis());
+        document.setSlot(createSaveDataDocumentRequest.getSlot());
+        document.setContents(createSaveDataDocumentRequest.getContents());
+
+        return getSaveDataDocumentDao().createSaveDataDocument(document);
+
     }
 
     @Override
@@ -74,6 +115,33 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
     @Inject
     public void setSaveDataDocumentDao(SaveDataDocumentDao saveDataDocumentDao) {
         this.saveDataDocumentDao = saveDataDocumentDao;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public UserDao getUserDao() {
+        return userDao;
+    }
+
+    @Inject
+    public void setUserDao(UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public ProfileDao getProfileDao() {
+        return profileDao;
+    }
+
+    @Inject
+    public void setProfileDao(ProfileDao profileDao) {
+        this.profileDao = profileDao;
     }
 
 }
