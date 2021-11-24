@@ -13,7 +13,7 @@ import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundExce
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
-import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -94,7 +94,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public NeoWallet updateWallet(UpdateWalletRequest updatedWalletRequest) {
+    public NeoWallet updateWallet(UpdateNeoWalletRequest updatedWalletRequest) {
 
         getValidationHelper().validateModel(updatedWalletRequest, ValidationGroups.Update.class);
 

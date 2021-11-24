@@ -272,11 +272,11 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(NeoWalletService.class)
-            .toProvider(WalletServiceProvider.class)
+            .toProvider(NeoWalletServiceProvider.class)
             .in(scope);
 
-        bind(TokenService.class)
-            .toProvider(TokenServiceProvider.class)
+        bind(NeoTokenService.class)
+            .toProvider(NeoTokenServiceProvider.class)
             .in(scope);
 
         bind(SmartContractTemplateService.class)
@@ -446,9 +446,9 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(StandardNeow3jClient.class);
 
-        bind(TokenService.class)
+        bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserTokenService.class);
+            .to(SuperUserNeoTokenService.class);
 
         bind(SmartContractTemplateService.class)
             .annotatedWith(Unscoped.class)
@@ -505,7 +505,7 @@ public class ServicesModule extends PrivateModule {
         expose(HealthStatusService.class);
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
-        expose(TokenService.class);
+        expose(NeoTokenService.class);
         expose(SmartContractTemplateService.class);
 
         // Unscoped Services
@@ -544,7 +544,7 @@ public class ServicesModule extends PrivateModule {
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
-        expose(TokenService.class).annotatedWith(Unscoped.class);
+        expose(NeoTokenService.class).annotatedWith(Unscoped.class);
         expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
 
     }

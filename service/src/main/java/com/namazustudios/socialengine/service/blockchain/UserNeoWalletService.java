@@ -7,8 +7,8 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.security.InsufficientPermissionException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.CreateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
@@ -42,7 +42,7 @@ public class UserNeoWalletService implements NeoWalletService {
     }
 
     @Override
-    public NeoWallet updateWallet(String walletId, UpdateWalletRequest walletRequest) {
+    public NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest walletRequest) {
         var user = getUser();
         var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
         if (userId.isEmpty()){
@@ -68,7 +68,7 @@ public class UserNeoWalletService implements NeoWalletService {
     }
 
     @Override
-    public NeoWallet createWallet(CreateWalletRequest walletRequest) {
+    public NeoWallet createWallet(CreateNeoWalletRequest walletRequest) {
         var user = getUser();
         var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
         if (userId.isEmpty()){

@@ -1,15 +1,13 @@
 package com.namazustudios.socialengine.model.blockchain;
 
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
-import io.neow3j.wallet.nep6.NEP6Wallet;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 
 @ApiModel(description = "Represents a request to update a Neo Wallet.")
-public class UpdateWalletRequest {
+public class UpdateNeoWalletRequest {
 
     @ApiModelProperty("The new display name of the wallet.")
     @Null(groups = {Update.class})

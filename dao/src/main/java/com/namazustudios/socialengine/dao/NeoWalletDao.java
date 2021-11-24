@@ -2,12 +2,8 @@ package com.namazustudios.socialengine.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.SmartContractTemplate;
-import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
-import io.neow3j.wallet.nep6.NEP6Wallet;
-
-import java.util.Optional;
 
 public interface NeoWalletDao {
 
@@ -42,10 +38,10 @@ public interface NeoWalletDao {
     /**
      * Updates the supplied {@link NeoWallet}.
      *
-     * @param updatedWalletRequest the {@link UpdateWalletRequest} with the updated information
+     * @param updatedWalletRequest the {@link UpdateNeoWalletRequest} with the updated information
      * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(UpdateWalletRequest updatedWalletRequest);
+    NeoWallet updateWallet(UpdateNeoWalletRequest updatedWalletRequest);
 
     /**
      * Creates a new Wallet.
