@@ -202,7 +202,7 @@ public class MongoProfileDao implements ProfileDao {
     }
 
     @Override
-    public Profile getActiveProfile(String profileId) {
+    public Profile getActiveProfile(final String profileId) {
         final MongoProfile mongoProfile = getActiveMongoProfile(profileId);
         return getBeanMapper().map(mongoProfile, Profile.class);
     }

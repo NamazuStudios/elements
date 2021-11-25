@@ -1,10 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo.model.savedata;
 
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
+import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 
-import java.security.Timestamp;
+import java.sql.Timestamp;
 
 @Entity(value = "save_data", useDiscriminator = false)
 @Indexes({
@@ -17,10 +18,16 @@ public class MongoSaveDataDocument {
     private MongoSaveDataDocumentId id;
 
     @Property
-    private String version;
+    private byte[] version;
 
     @Property
     private Timestamp timestamp;
+
+    @Property
+    private String digestAlgorithm;
+
+    @Reference
+    private MongoUser user;
 
     @Reference
     private MongoProfile profile;
@@ -33,11 +40,11 @@ public class MongoSaveDataDocument {
         this.id = id;
     }
 
-    public String getVersion() {
+    public byte[] getVersion() {
         return version;
     }
 
-    public void setVersion(String version) {
+    public void setVersion(byte[] version) {
         this.version = version;
     }
 
@@ -49,12 +56,28 @@ public class MongoSaveDataDocument {
         this.timestamp = timestamp;
     }
 
+    public MongoUser getUser() {
+        return user;
+    }
+
+    public void setUser(MongoUser user) {
+        this.user = user;
+    }
+
     public MongoProfile getProfile() {
         return profile;
     }
 
     public void setProfile(MongoProfile profile) {
         this.profile = profile;
+    }
+
+    public String getDigestAlgorithm() {
+        return digestAlgorithm;
+    }
+
+    public void setDigestAlgorithm(String digestAlgorithm) {
+        this.digestAlgorithm = digestAlgorithm;
     }
 
 }

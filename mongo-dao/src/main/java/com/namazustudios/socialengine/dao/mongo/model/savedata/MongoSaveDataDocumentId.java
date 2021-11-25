@@ -36,7 +36,7 @@ public class MongoSaveDataDocumentId {
         }
     }
 
-    public MongoSaveDataDocumentId(final int slot, final ObjectId owner) {
+    public MongoSaveDataDocumentId(final ObjectId owner, final int slot) {
         this.slot = slot;
         this.owner = owner;
     }
