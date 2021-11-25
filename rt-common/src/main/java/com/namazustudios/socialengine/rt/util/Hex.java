@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rt.util;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * A set of utilities for encoding and decoding Hexadecimal strings.
@@ -35,7 +37,7 @@ public class Hex {
      * @return the {@link String} representing the hex string
      */
     public static String encode(final byte[] raw) {
-        return encode(raw, Case.LOWER);
+        return encode(ByteBuffer.wrap(raw), Case.LOWER);
     }
 
     /**
@@ -46,6 +48,27 @@ public class Hex {
      * @return the {@link String} representing the hex string
      */
     public static String encode(final byte[] raw, final Case c) {
+        return encode(ByteBuffer.wrap(raw), c);
+    }
+
+    /**
+     * Encodes hex to to lower-case hex encoding.
+     *
+     * @param raw the raw byte value
+     * @return the {@link String} representing the hex string
+     */
+    public static String encode(final ByteBuffer raw) {
+        return encode(raw, Case.LOWER);
+    }
+
+    /**
+     * Encodes hex to to lower-case hex encoding.
+     *
+     * @param raw the raw byte value
+     * @param c the {@link Case}
+     * @return the {@link String} representing the hex string
+     */
+    public static String encode(final ByteBuffer raw, final Case c) {
         switch (c == null ? Case.LOWER : c) {
             case LOWER: return encode(raw, HEX_CHARS_LOWER);
             case UPPER: return encode(raw, HEX_CHARS_UPPER);
@@ -53,15 +76,14 @@ public class Hex {
         }
     }
 
-    private static String encode(final byte[] raw, final char[] output) {
+    private static String encode(final ByteBuffer bytes, final char[] lookup) {
 
-        final ByteBuffer bytes = ByteBuffer.wrap(raw);
-        final CharBuffer chars = CharBuffer.allocate(raw.length * 2);
+        final CharBuffer chars = CharBuffer.allocate(bytes.remaining() * 2);
 
         while(bytes.hasRemaining()) {
             int value = bytes.get() & 0xFF;
-            chars.put(output[value >>> 4]);
-            chars.put(output[value & 0xF]);
+            chars.put(lookup[value >>> 4]);
+            chars.put(lookup[value & 0xF]);
         }
 
         chars.flip();
@@ -76,22 +98,54 @@ public class Hex {
      * @return a {@link byte[]} representing the hex
      */
     public static byte[] decode(final String hex) {
+        return decodeToBuffer(hex, ByteBuffer::allocate).array();
+    }
+
+    /**
+     * Decodes a {@link String} into raw hexadecimal bytes, allocating a new {@link ByteBuffer} for storage.
+     *
+     * @param hex the hex string
+     * @return a {@link byte[]} representing the hex
+     */
+    private static ByteBuffer decodeToBuffer(final String hex) {
+        return decodeToBuffer(hex, ByteBuffer::allocate);
+    }
+
+    /**
+     * Decodes a {@link String} into raw hexadecimal bytes, allocating a new {@link ByteBuffer} for storage using the
+     * supplied {@link ByteBufferAllocator}.
+     *
+     * @param hex the hex string
+     * @return a {@link byte[]} representing the hex
+     */
+    private static ByteBuffer decodeToBuffer(final String hex, final ByteBufferAllocator byteBufferAllocator) {
+        return decodeToBuffer(hex, byteBufferAllocator.allocate(hex.length() / 2));
+    }
+
+    /**
+     * Decodes a {@link String} into raw hexadecimal bytes, allocating a {@link ByteBuffer}.
+     *
+     * @param hex the hex string
+     * @return a {@link byte[]} representing the hex
+     * @throws java.nio.BufferOverflowException if the buffer has insufficient space.
+     */
+    private static ByteBuffer decodeToBuffer(final String hex, final ByteBuffer destination) {
 
         if ((hex.length() % 2) == 1) throw new InvalidHexString("Invalid hex string " + hex);
 
-        final int length = hex.length();
         final CharBuffer chars = CharBuffer.wrap(hex);
-        final ByteBuffer bytes = ByteBuffer.allocate(length / 2);
 
         while (chars.hasRemaining()) {
             final int upper = decode(chars.get()) << 4;
             final int lower = decode(chars.get()) & 0xFF;
-            bytes.put((byte)(upper | lower));
+            destination.put((byte)(upper | lower));
         }
 
-        return bytes.array();
+        return destination;
 
     }
+
+
 
     private static int decode(final char ch) {
         switch (ch) {
@@ -127,5 +181,8 @@ public class Hex {
     public static class InvalidHexString extends IllegalArgumentException {
         public InvalidHexString(String s) {  super(s); }
     }
+
+    @FunctionalInterface
+    public interface ByteBufferAllocator { ByteBuffer allocate(int size); }
 
 }
