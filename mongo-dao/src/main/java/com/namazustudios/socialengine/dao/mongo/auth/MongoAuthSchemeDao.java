@@ -92,7 +92,26 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         getObjectIndex().index(mongoAuthScheme);
 
         var authScheme = transform(mongoAuthScheme);
-        return null; //TODO: auth scheme to auth scheme response
+        var response = new UpdateAuthSchemeResponse();
+
+        // serialize auth scheme
+        try {
+            response.scheme = objectMapper.writeValueAsString(authScheme);
+        } catch (JsonProcessingException e) {
+            throw new BadRequestException(e);
+        }
+
+        if (updateAuthSchemeRequest.getRegenerate()) {
+            if (updateAuthSchemeRequest.getPubKey() != null)
+            {
+                throw new BadRequestException();
+            }
+            // TODO regenerate pub/private key pair
+        } else {
+            response.publicKey = updateAuthSchemeRequest.getPubKey();
+        }
+
+        return response;
     }
 
     @Override
@@ -125,7 +144,7 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         if (authSchemeRequest.pubKey == null) {
             //TODO generate pub/private key pair
         } else {
-            response.publicKey = authSchemeRequest.pubKey;
+            response.publicKey = authSchemeRequest.getPubKey();
         }
 
         return response;
