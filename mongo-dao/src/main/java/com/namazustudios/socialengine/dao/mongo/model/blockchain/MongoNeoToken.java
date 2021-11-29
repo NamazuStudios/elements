@@ -47,17 +47,14 @@ public class MongoNeoToken {
     public Token token;
 
     @Property
-    public List<String> previewUrls;
-
-    @Property
-    public List<String> assetUrls;
-
-    @Property
     public Map<String, Object> metaData;
 
     @Property
     private String contract;
 
     @Property
-    private boolean released;
+    private boolean listed;
+
+    @Property
+    private boolean minted;
 }

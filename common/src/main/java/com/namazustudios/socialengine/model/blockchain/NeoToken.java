@@ -17,8 +17,7 @@ public class NeoToken {
     @ApiModelProperty("The unique ID of the token itself.")
     private String id;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @ApiModelProperty("The base token properties used by the blockchain.")
     private Token token;
 

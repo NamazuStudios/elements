@@ -23,19 +23,19 @@ public class UserNeoTokenService implements NeoTokenService {
     @Override
     public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
         throw new NotImplementedException();
-//        return getTokenDao().getTokens(offset, count, tags, search);
+//        return getNeoTokenDao().getTokens(offset, count, tags, search);
     }
 
     @Override
     public NeoToken getToken(String tokenIdOrName) {
         throw new NotImplementedException();
-//        return getTokenDao().getToken(tokenIdOrName);
+//        return getNeoTokenDao().getToken(tokenIdOrName);
     }
 
     @Override
     public NeoToken updateToken(UpdateNeoTokenRequest updateNeoTokenRequest) {
         throw new NotImplementedException();
-//        return getTokenDao().updateToken(updateNeoTokenRequest);
+//        return getNeoTokenDao().updateToken(updateNeoTokenRequest);
     }
 
     @Override
@@ -46,7 +46,7 @@ public class UserNeoTokenService implements NeoTokenService {
     @Override
     public void deleteToken(String tokenId) {
         throw new NotImplementedException();
-//        getTokenDao().deleteToken(tokenId);
+//        getNeoTokenDao().deleteToken(tokenId);
     }
 
     public User getUser() {
@@ -58,12 +58,12 @@ public class UserNeoTokenService implements NeoTokenService {
         this.user = user;
     }
 
-    public NeoTokenDao getTokenDao() {
+    public NeoTokenDao getNeoTokenDao() {
         return neoTokenDao;
     }
 
     @Inject
-    public void setTokenDao(NeoTokenDao neoTokenDao) {
+    public void setNeoTokenDao(NeoTokenDao neoTokenDao) {
         this.neoTokenDao = neoTokenDao;
     }
 

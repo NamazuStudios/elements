@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain;
 
+import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -10,7 +11,7 @@ import java.util.Map;
 @ApiModel(description = "Represents a request to create a NeoToken definition.")
 public class CreateNeoTokenRequest {
 
-    @NotNull
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @ApiModelProperty("The token definition to deploy.")
     private Token token;
 

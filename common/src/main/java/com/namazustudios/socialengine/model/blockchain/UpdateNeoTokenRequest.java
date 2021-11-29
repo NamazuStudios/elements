@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain;
 
+import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -10,8 +11,8 @@ import java.util.Map;
 @ApiModel(description = "Represents a request to update a Neo NeoToken.")
 public class UpdateNeoTokenRequest {
 
+    @NotNull(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The id of the NeoToken to update.")
-    @NotNull
     private String tokenId;
 
     @NotNull

@@ -22,15 +22,18 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
+import io.neow3j.wallet.Wallet;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.and;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
@@ -121,17 +124,28 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         getValidationHelper().validateModel(tokenRequest, ValidationGroups.Insert.class);
 
-        var mongoToken = getBeanMapper().map(tokenRequest, MongoNeoToken.class);
+        final var query = getDatastore().find(MongoNeoToken.class);
+        final var token = tokenRequest.getToken();
 
-        try {
-            getDatastore().save(mongoToken);
-        } catch (DuplicateKeyException e) {
-            throw new DuplicateException(e);
+        final var builder = new UpdateBuilder().with(
+                set("name", token.getName()),
+                set("tags", token.getTags()),
+                set("type", token.getType()),
+                set("token", token),
+                set("contract", ""),
+                set("listed", false),
+                set("minted", false)
+        );
+
+        if (tokenRequest.getMetaData() != null) {
+            builder.with(set("metadata", tokenRequest.getMetaData()));
         }
+
+        final var mongoToken = getMongoDBUtils().perform(
+                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
+
         getObjectIndex().index(mongoToken);
-
-        final Query<MongoNeoToken> query = getDatastore().find(MongoNeoToken.class);
-
         return transform(mongoToken);
     }
 
