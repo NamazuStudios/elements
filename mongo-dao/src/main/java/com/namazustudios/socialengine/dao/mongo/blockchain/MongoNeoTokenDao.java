@@ -59,7 +59,8 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         final String trimmedSearch = nullToEmpty(search).trim();
         final Query<MongoNeoToken> mongoQuery = getDatastore().find(MongoNeoToken.class);
 
-        if (tags != null && !tags.isEmpty()) {
+        tags.remove("");
+        if (!tags.isEmpty()) {
             mongoQuery.filter(Filters.in("tags", tags));
         }
 
@@ -78,9 +79,11 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     @Override
     public NeoToken getToken(String tokenIdOrName) {
 
+        final var objectId = getMongoDBUtils().parseOrReturnNull(tokenIdOrName);
+
         var mongoToken = getDatastore().find(MongoNeoToken.class)
                 .filter(Filters.or(
-                            Filters.eq("_id", tokenIdOrName),
+                            Filters.eq("_id", objectId),
                             Filters.eq("name", tokenIdOrName)
                         )
                 ).first();
@@ -126,11 +129,16 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         final var query = getDatastore().find(MongoNeoToken.class);
         final var token = tokenRequest.getToken();
+        final var name = token.getName().trim();
+        final var tags = token.getTags();
+        tags.remove("");
+
+        query.filter(eq("name", nullToEmpty(name)));
 
         final var builder = new UpdateBuilder().with(
-                set("name", token.getName()),
-                set("tags", token.getTags()),
-                set("type", token.getType()),
+                set("name", name),
+                set("tags", tags),
+                set("type", token.getType().trim()),
                 set("token", token),
                 set("contract", ""),
                 set("listed", false),

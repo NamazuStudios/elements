@@ -41,29 +41,17 @@ public class NeoTokenResource {
             @QueryParam("tags") @DefaultValue("") final List<String> tags,
             @QueryParam("query") String query) {
 
-        query = Strings.nullToEmpty(query).trim();
-
-        if (query.isEmpty()) {
-            throw new NotFoundException();
-        }
-
         return getTokenService().getTokens(offset, count, tags, query);
     }
 
     @GET
-    @Path("{tokenId}")
+    @Path("{tokenNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Neo NeoToken",
-            notes = "Gets a specific Neo NeoToken by tokenId.")
-    public NeoToken getToken(@PathParam("tokenId") String tokenId) {
+            notes = "Gets a specific NeoToken by token name or Id.")
+    public NeoToken getToken(@PathParam("tokenNameOrId") String tokenNameOrId) {
 
-        tokenId = Strings.nullToEmpty(tokenId).trim();
-
-        if (tokenId.isEmpty()) {
-            throw new NotFoundException();
-        }
-
-        return getTokenService().getToken(tokenId);
+        return getTokenService().getToken(tokenNameOrId);
     }
 
     @POST

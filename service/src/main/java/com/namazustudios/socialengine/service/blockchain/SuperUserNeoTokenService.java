@@ -26,8 +26,7 @@ public class SuperUserNeoTokenService implements NeoTokenService {
 
     @Override
     public NeoToken getToken(String tokenIdOrName) {
-        throw new NotImplementedException();
-//        return getNeoTokenDao().getToken(tokenIdOrName);
+        return getNeoTokenDao().getToken(tokenIdOrName);
     }
 
     @Override
