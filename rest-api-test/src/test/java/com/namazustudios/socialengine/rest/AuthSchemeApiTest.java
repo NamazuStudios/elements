@@ -3,8 +3,6 @@ package com.namazustudios.socialengine.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.model.auth.*;
-import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -14,10 +12,7 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.core.Response;
-
 import java.util.ArrayList;
-import java.util.List;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
