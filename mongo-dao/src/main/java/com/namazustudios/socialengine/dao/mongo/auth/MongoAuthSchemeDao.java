@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.auth;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.mongodb.DuplicateKeyException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.AuthSchemeDao;
@@ -12,6 +14,7 @@ import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.auth.*;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -35,6 +38,8 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     private Datastore datastore;
 
     private Mapper beanMapper;
+
+    private ObjectMapper objectMapper;
 
     private ValidationHelper validationHelper;
 
@@ -94,6 +99,7 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     public CreateAuthSchemeResponse createAuthScheme(CreateAuthSchemeRequest authSchemeRequest) {
         getValidationHelper().validateModel(authSchemeRequest, ValidationGroups.Insert.class);
 
+        var response = new CreateAuthSchemeResponse();
         var mongoToken = getBeanMapper().map(authSchemeRequest, MongoAuthScheme.class);
 
         try {
@@ -106,8 +112,23 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         final Query<MongoAuthScheme> query = getDatastore().find(MongoAuthScheme.class);
         query.filter(eq("_id", mongoToken.getId()));
 
-        var authscheme = transform(mongoToken);
-        return null; //TODO: auth scheme to create auth screme responseWe're 
+        var authScheme = transform(mongoToken);
+
+        // serialize auth scheme
+        try {
+            response.scheme = objectMapper.writeValueAsString(authScheme);
+        } catch (JsonProcessingException e) {
+            throw new BadRequestException(e);
+        }
+
+        // generate public/private key
+        if (authSchemeRequest.pubKey == null) {
+            //TODO generate pub/private key pair
+        } else {
+            response.publicKey = authSchemeRequest.pubKey;
+        }
+
+        return response;
     }
 
     @Override
@@ -130,6 +151,15 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
 
     public ValidationHelper getValidationHelper() {
         return validationHelper;
+    }
+
+    @Inject
+    public void setObjectMapper(final ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
     }
 
     @Inject
