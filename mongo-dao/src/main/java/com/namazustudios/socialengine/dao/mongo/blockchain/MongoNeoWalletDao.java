@@ -94,11 +94,11 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public NeoWallet updateWallet(UpdateNeoWalletRequest updatedWalletRequest) {
+    public NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest) {
 
         getValidationHelper().validateModel(updatedWalletRequest, ValidationGroups.Update.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updatedWalletRequest.getWalletId());
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletId);
         final var query = getDatastore().find(MongoNeoWallet.class);
         final var displayName = nullToEmpty(updatedWalletRequest.getDisplayName()).trim();
         final var newUserId = nullToEmpty(updatedWalletRequest.getNewUserId()).trim();
@@ -122,7 +122,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         );
 
         if (mongoNeoWallet == null) {
-            throw new NeoWalletNotFoundException("Wallet not found: " + updatedWalletRequest.getWalletId());
+            throw new NeoWalletNotFoundException("Wallet not found: " + walletId);
         }
 
         getObjectIndex().index(mongoNeoWallet);

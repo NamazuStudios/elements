@@ -38,10 +38,11 @@ public interface NeoWalletDao {
     /**
      * Updates the supplied {@link NeoWallet}.
      *
+     * @param walletId the id of the wallet to update
      * @param updatedWalletRequest the {@link UpdateNeoWalletRequest} with the updated information
      * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(UpdateNeoWalletRequest updatedWalletRequest);
+    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest);
 
     /**
      * Creates a new Wallet.

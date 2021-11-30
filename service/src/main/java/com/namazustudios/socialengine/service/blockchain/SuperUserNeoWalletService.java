@@ -64,7 +64,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
             throw new InternalException(e.getMessage());
         }
 
-        return getWalletDao().updateWallet(walletRequest);
+        return getWalletDao().updateWallet(walletId, walletRequest);
     }
 
     @Override

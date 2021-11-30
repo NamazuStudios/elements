@@ -22,7 +22,7 @@ public class NeoToken {
     private Token token;
 
     @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metaData;
+    private Map<String, Object> metadata;
 
     private String contract;
 
@@ -46,12 +46,12 @@ public class NeoToken {
         this.token = token;
     }
 
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 
-    public void setMetaData(Map<String, Object> metaData) {
-        this.metaData = metaData;
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 
     public String getContract() {

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.NeoTokenDao;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
@@ -30,20 +31,25 @@ public class SuperUserNeoTokenService implements NeoTokenService {
     }
 
     @Override
-    public NeoToken updateToken(UpdateNeoTokenRequest tokenRequest) {
-        throw new NotImplementedException();
-//        return getNeoTokenDao().updateToken(tokenRequest);
+    public NeoToken updateToken(String tokenId, UpdateNeoTokenRequest tokenRequest) {
+        return getNeoTokenDao().updateToken(tokenId, tokenRequest);
     }
 
     @Override
     public NeoToken createToken(CreateNeoTokenRequest tokenRequest) {
+
+        var token = getNeoTokenDao().getToken(tokenRequest.getToken().getName());
+
+        if (token != null) {
+            throw new DuplicateException(String.format("NeoToken with name: %s already exists.", tokenRequest.getToken().getName()));
+        }
+
         return getNeoTokenDao().createToken(tokenRequest);
     }
 
     @Override
-    public void deleteToken(String templateId) {
-        throw new NotImplementedException();
-//        getNeoTokenDao().deleteToken(templateId);
+    public void deleteToken(String tokenId) {
+        getNeoTokenDao().deleteToken(tokenId);
     }
 
     public User getUser() {

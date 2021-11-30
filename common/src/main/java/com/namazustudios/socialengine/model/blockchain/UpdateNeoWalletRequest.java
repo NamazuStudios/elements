@@ -29,8 +29,6 @@ public class UpdateNeoWalletRequest {
     @Null(groups = {Update.class})
     private String newPassword;
 
-    private String walletId;
-
     private String updatedWallet;
 
     public String getUserId() {
@@ -71,14 +69,6 @@ public class UpdateNeoWalletRequest {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
-    }
-
-    public String getWalletId() {
-        return walletId;
-    }
-
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
     }
 
     public String getUpdatedWallet() {

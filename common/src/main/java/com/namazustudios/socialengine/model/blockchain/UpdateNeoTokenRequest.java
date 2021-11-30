@@ -5,30 +5,23 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.util.List;
 import java.util.Map;
 
-@ApiModel(description = "Represents a request to update a Neo NeoToken.")
+@ApiModel(description = "Represents a request to update a NeoToken.")
 public class UpdateNeoTokenRequest {
 
     @NotNull(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The id of the NeoToken to update.")
-    private String tokenId;
-
-    @NotNull
-    @ApiModelProperty("The token definition to deploy.")
+    @ApiModelProperty("The updated token definition.")
     private Token token;
 
+    @NotNull(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("Is this token listed for sale?")
+    private boolean listed;
+
     @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metaData;
-
-    public String getTokenId() {
-        return tokenId;
-    }
-
-    public void setTokenId(String tokenId) {
-        this.tokenId = tokenId;
-    }
+    private Map<String, Object> metadata;
 
     public Token getToken() {
         return token;
@@ -38,11 +31,19 @@ public class UpdateNeoTokenRequest {
         this.token = token;
     }
 
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public boolean isListed() {
+        return listed;
     }
 
-    public void setMetaData(Map<String, Object> metaData) {
-        this.metaData = metaData;
+    public void setListed(boolean listed) {
+        this.listed = listed;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetaData(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 }

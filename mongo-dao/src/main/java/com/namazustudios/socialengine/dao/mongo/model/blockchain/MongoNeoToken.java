@@ -32,22 +32,22 @@ import java.util.Map;
 public class MongoNeoToken {
 
     @Id
-    public ObjectId objectId;
+    private ObjectId objectId;
 
     @Property
-    public String name;
+    private String name;
 
     @Property
-    public List<String> tags;
+    private List<String> tags;
 
     @Property
-    public String type;
+    private String type;
 
     @Property
-    public Token token;
+    private Token token;
 
     @Property
-    public Map<String, Object> metaData;
+    private Map<String, Object> metadata;
 
     @Property
     private String contract;
@@ -98,12 +98,12 @@ public class MongoNeoToken {
         this.token = token;
     }
 
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 
-    public void setMetaData(Map<String, Object> metaData) {
-        this.metaData = metaData;
+    public void setMetaData(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 
     public String getContract() {

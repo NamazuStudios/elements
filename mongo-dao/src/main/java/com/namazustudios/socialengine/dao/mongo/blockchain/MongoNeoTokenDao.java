@@ -96,26 +96,36 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
     @Override
-    public NeoToken updateToken(UpdateNeoTokenRequest updateNeoTokenRequest) {
+    public NeoToken updateToken(String tokenId, UpdateNeoTokenRequest updateNeoTokenRequest) {
         getValidationHelper().validateModel(updateNeoTokenRequest, ValidationGroups.Update.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateNeoTokenRequest.getTokenId());
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
         final var query = getDatastore().find(MongoNeoToken.class);
-
-        final var builder = new UpdateBuilder();
+        final var token = updateNeoTokenRequest.getToken();
+        final var name = token.getName().trim();
+        final var tags = token.getTags();
+        tags.remove("");
 
         query.filter(eq("_id", objectId));
 
-        builder.with(
-                set("name", nullToEmpty(updateNeoTokenRequest.getToken().getName()).trim())
+        final var builder = new UpdateBuilder().with(
+                set("name", name),
+                set("tags", tags),
+                set("type", token.getType().trim()),
+                set("token", token),
+                set("listed", updateNeoTokenRequest.isListed())
         );
+
+        if (updateNeoTokenRequest.getMetadata() != null) {
+            builder.with(set("metadata", updateNeoTokenRequest.getMetadata()));
+        }
 
         final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoNeoToken == null) {
-            throw new NotFoundException("NeoToken not found: " + updateNeoTokenRequest.getTokenId());
+            throw new NotFoundException("NeoToken not found: " + tokenId);
         }
 
         getObjectIndex().index(mongoNeoToken);
@@ -145,8 +155,8 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                 set("minted", false)
         );
 
-        if (tokenRequest.getMetaData() != null) {
-            builder.with(set("metadata", tokenRequest.getMetaData()));
+        if (tokenRequest.getMetadata() != null) {
+            builder.with(set("metadata", tokenRequest.getMetadata()));
         }
 
         final var mongoToken = getMongoDBUtils().perform(
@@ -158,9 +168,9 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
     @Override
-    public void deleteToken(String templateId) {
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(templateId);
-        final var query = getDatastore().find(MongoNeoWallet.class);
+    public void deleteToken(String tokenId) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
+        final var query = getDatastore().find(MongoNeoToken.class);
 
         query.filter(eq("_id", objectId));
         query.delete();

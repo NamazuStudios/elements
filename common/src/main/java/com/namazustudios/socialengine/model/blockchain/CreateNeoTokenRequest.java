@@ -16,7 +16,7 @@ public class CreateNeoTokenRequest {
     private Token token;
 
     @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metaData;
+    private Map<String, Object> metadata;
 
     public Token getToken() {
         return token;
@@ -26,11 +26,11 @@ public class CreateNeoTokenRequest {
         this.token = token;
     }
 
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 
-    public void setMetaData(Map<String, Object> metaData) {
-        this.metaData = metaData;
+    public void setMetaData(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 }

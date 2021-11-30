@@ -63,11 +63,12 @@ public class NeoTokenResource {
     }
 
     @PUT
+    @Path("{tokenId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates a NeoToken",
-            notes = "Updates a NeoToken with the specified name or id.")
-    public NeoToken updateToken(final UpdateNeoTokenRequest tokenRequest) {
-        return getTokenService().updateToken(tokenRequest);
+            notes = "Updates a NeoToken with the specified id.")
+    public NeoToken updateToken(@PathParam("tokenId") String tokenId, final UpdateNeoTokenRequest tokenRequest) {
+        return getTokenService().updateToken(tokenId, tokenRequest);
     }
 
     @DELETE

@@ -32,10 +32,11 @@ public interface NeoTokenDao {
     /**
      * Updates the supplied {@link NeoToken}.
      *
+     * @param tokenId the id of the token to update
      * @param updateNeoTokenRequest the update request for the token.
      * @return the {@link NeoToken} as it was changed by the service.
      */
-    NeoToken updateToken(UpdateNeoTokenRequest updateNeoTokenRequest);
+    NeoToken updateToken(String tokenId, UpdateNeoTokenRequest updateNeoTokenRequest);
 
     /**
      * Creates a new token using a pre-created template.
@@ -48,7 +49,7 @@ public interface NeoTokenDao {
     /**
      * Deletes the {@link NeoToken} with the supplied profile ID.
      *
-     * @param templateId the template ID.
+     * @param tokenId the neo token ID.
      */
-    void deleteToken(String templateId);
+    void deleteToken(String tokenId);
 }
