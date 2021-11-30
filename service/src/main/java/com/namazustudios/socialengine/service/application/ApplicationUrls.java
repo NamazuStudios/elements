@@ -23,8 +23,6 @@ public class ApplicationUrls {
 
     private URI httpTunnelUrl;
 
-    private URI apiOutsideUrl;
-
     private URI docOutsideUrl;
 
     public Application addAllUrls(final Application application) {
@@ -90,15 +88,6 @@ public class ApplicationUrls {
     @Inject
     public void setHttpTunnelUrl(@Named(HTTP_TUNNEL_URL) URI httpTunnelUrl) {
         this.httpTunnelUrl = httpTunnelUrl;
-    }
-
-    public URI getApiOutsideUrl() {
-        return apiOutsideUrl;
-    }
-
-    @Inject
-    public void setApiOutsideUrl(@Named(API_OUTSIDE_URL) URI apiOutsideUrl) {
-        this.apiOutsideUrl = apiOutsideUrl;
     }
 
     public URI getDocOutsideUrl() {
