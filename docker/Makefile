@@ -69,6 +69,7 @@ revision: login
 		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG_SHORT)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-api,api)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-node,app-node)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-doc-serve,doc-serve)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-serve,app-serve)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-code-serve,code-serve)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-setup,setup)
