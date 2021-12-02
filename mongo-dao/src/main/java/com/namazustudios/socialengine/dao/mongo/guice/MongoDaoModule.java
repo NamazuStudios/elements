@@ -9,7 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.*;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInSessionDao;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInUserDao;
 import com.namazustudios.socialengine.dao.mongo.application.*;
-import com.namazustudios.socialengine.dao.mongo.blockchain.MongoSmartContractTemplateDao;
+import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoSmartContractDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
@@ -79,7 +79,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(FollowerDao.class).to(MongoFollowerDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
-        bind(SmartContractTemplateDao.class).to(MongoSmartContractTemplateDao.class);
+        bind(NeoSmartContractDao.class).to(MongoNeoSmartContractDao.class);
         bind(NeoTokenDao.class).to(MongoNeoTokenDao.class);
         bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
 
@@ -134,7 +134,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(FollowerDao.class);
         expose(DeploymentDao.class);
         expose(DatabaseHealthStatusDao.class);
-        expose(SmartContractTemplateDao.class);
+        expose(NeoSmartContractDao.class);
         expose(NeoTokenDao.class);
         expose(NeoWalletDao.class);
 

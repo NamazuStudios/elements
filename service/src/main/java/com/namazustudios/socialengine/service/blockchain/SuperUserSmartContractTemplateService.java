@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.namazustudios.socialengine.dao.SmartContractTemplateDao;
+import com.namazustudios.socialengine.dao.NeoSmartContractDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateSmartContractTemplateRequest;
 import com.namazustudios.socialengine.model.blockchain.SmartContractTemplate;
@@ -10,7 +10,7 @@ import javax.inject.Inject;
 
 public class SuperUserSmartContractTemplateService implements SmartContractTemplateService {
 
-    private SmartContractTemplateDao smartContractTemplateDao;
+    private NeoSmartContractDao neoSmartContractDao;
 
     @Override
     public Pagination<SmartContractTemplate> getSmartContractTemplates(int offset, int count, String applicationNameOrId, String search) {
@@ -42,12 +42,12 @@ public class SuperUserSmartContractTemplateService implements SmartContractTempl
 
     }
 
-    public SmartContractTemplateDao getSmartContractTemplateDao() {
-        return smartContractTemplateDao;
+    public NeoSmartContractDao getSmartContractTemplateDao() {
+        return neoSmartContractDao;
     }
 
     @Inject
-    public void setSmartContractTemplateDao(SmartContractTemplateDao smartContractTemplateDao) {
-        this.smartContractTemplateDao = smartContractTemplateDao;
+    public void setSmartContractTemplateDao(NeoSmartContractDao neoSmartContractDao) {
+        this.neoSmartContractDao = neoSmartContractDao;
     }
 }

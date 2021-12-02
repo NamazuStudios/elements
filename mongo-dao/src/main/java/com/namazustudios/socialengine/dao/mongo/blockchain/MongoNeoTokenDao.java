@@ -49,10 +49,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
     private ValidationHelper validationHelper;
 
-    private MongoUserDao mongoUserDao;
-
-    private MongoApplicationDao mongoApplicationDao;
-
     @Override
     public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
 
@@ -176,12 +172,10 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         query.delete();
     }
 
-
     private NeoToken transform(MongoNeoToken token)
     {
         return getBeanMapper().map(token, NeoToken.class);
     }
-
 
     public MongoDBUtils getMongoDBUtils() {
         return mongoDBUtils;
@@ -217,24 +211,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public MongoUserDao getMongoUserDao() {
-        return mongoUserDao;
-    }
-
-    @Inject
-    public void setMongoUserDao(MongoUserDao mongoUserDao) {
-        this.mongoUserDao = mongoUserDao;
-    }
-
-    public MongoApplicationDao getMongoApplicationDao() {
-        return mongoApplicationDao;
-    }
-
-    @Inject
-    public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
-        this.mongoApplicationDao = mongoApplicationDao;
     }
 
     public ObjectIndex getObjectIndex() {
