@@ -22,15 +22,18 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
+import io.neow3j.wallet.Wallet;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
+import java.util.Base64;
 import java.util.List;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.and;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
@@ -46,17 +49,14 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
     private ValidationHelper validationHelper;
 
-    private MongoUserDao mongoUserDao;
-
-    private MongoApplicationDao mongoApplicationDao;
-
     @Override
     public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
 
         final String trimmedSearch = nullToEmpty(search).trim();
         final Query<MongoNeoToken> mongoQuery = getDatastore().find(MongoNeoToken.class);
 
-        if (tags != null && !tags.isEmpty()) {
+        tags.remove("");
+        if (!tags.isEmpty()) {
             mongoQuery.filter(Filters.in("tags", tags));
         }
 
@@ -75,9 +75,11 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     @Override
     public NeoToken getToken(String tokenIdOrName) {
 
+        final var objectId = getMongoDBUtils().parseOrReturnNull(tokenIdOrName);
+
         var mongoToken = getDatastore().find(MongoNeoToken.class)
                 .filter(Filters.or(
-                            Filters.eq("_id", tokenIdOrName),
+                            Filters.eq("_id", objectId),
                             Filters.eq("name", tokenIdOrName)
                         )
                 ).first();
@@ -90,26 +92,36 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
     @Override
-    public NeoToken updateToken(UpdateNeoTokenRequest updateNeoTokenRequest) {
+    public NeoToken updateToken(String tokenId, UpdateNeoTokenRequest updateNeoTokenRequest) {
         getValidationHelper().validateModel(updateNeoTokenRequest, ValidationGroups.Update.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateNeoTokenRequest.getTokenId());
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
         final var query = getDatastore().find(MongoNeoToken.class);
-
-        final var builder = new UpdateBuilder();
+        final var token = updateNeoTokenRequest.getToken();
+        final var name = token.getName().trim();
+        final var tags = token.getTags();
+        tags.remove("");
 
         query.filter(eq("_id", objectId));
 
-        builder.with(
-                set("name", nullToEmpty(updateNeoTokenRequest.getToken().getName()).trim())
+        final var builder = new UpdateBuilder().with(
+                set("name", name),
+                set("tags", tags),
+                set("type", token.getType().trim()),
+                set("token", token),
+                set("listed", updateNeoTokenRequest.isListed())
         );
+
+        if (updateNeoTokenRequest.getMetadata() != null) {
+            builder.with(set("metadata", updateNeoTokenRequest.getMetadata()));
+        }
 
         final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoNeoToken == null) {
-            throw new NotFoundException("NeoToken not found: " + updateNeoTokenRequest.getTokenId());
+            throw new NotFoundException("NeoToken not found: " + tokenId);
         }
 
         getObjectIndex().index(mongoNeoToken);
@@ -121,35 +133,49 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         getValidationHelper().validateModel(tokenRequest, ValidationGroups.Insert.class);
 
-        var mongoToken = getBeanMapper().map(tokenRequest, MongoNeoToken.class);
+        final var query = getDatastore().find(MongoNeoToken.class);
+        final var token = tokenRequest.getToken();
+        final var name = token.getName().trim();
+        final var tags = token.getTags();
+        tags.remove("");
 
-        try {
-            getDatastore().save(mongoToken);
-        } catch (DuplicateKeyException e) {
-            throw new DuplicateException(e);
+        query.filter(eq("name", nullToEmpty(name)));
+
+        final var builder = new UpdateBuilder().with(
+                set("name", name),
+                set("tags", tags),
+                set("type", token.getType().trim()),
+                set("token", token),
+                set("contract", ""),
+                set("listed", false),
+                set("minted", false)
+        );
+
+        if (tokenRequest.getMetadata() != null) {
+            builder.with(set("metadata", tokenRequest.getMetadata()));
         }
+
+        final var mongoToken = getMongoDBUtils().perform(
+                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
+
         getObjectIndex().index(mongoToken);
-
-        final Query<MongoNeoToken> query = getDatastore().find(MongoNeoToken.class);
-
         return transform(mongoToken);
     }
 
     @Override
-    public void deleteToken(String templateId) {
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(templateId);
-        final var query = getDatastore().find(MongoNeoWallet.class);
+    public void deleteToken(String tokenId) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
+        final var query = getDatastore().find(MongoNeoToken.class);
 
         query.filter(eq("_id", objectId));
         query.delete();
     }
 
-
     private NeoToken transform(MongoNeoToken token)
     {
         return getBeanMapper().map(token, NeoToken.class);
     }
-
 
     public MongoDBUtils getMongoDBUtils() {
         return mongoDBUtils;
@@ -185,24 +211,6 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     @Inject
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
-    }
-
-    public MongoUserDao getMongoUserDao() {
-        return mongoUserDao;
-    }
-
-    @Inject
-    public void setMongoUserDao(MongoUserDao mongoUserDao) {
-        this.mongoUserDao = mongoUserDao;
-    }
-
-    public MongoApplicationDao getMongoApplicationDao() {
-        return mongoApplicationDao;
-    }
-
-    @Inject
-    public void setMongoApplicationDao(MongoApplicationDao mongoApplicationDao) {
-        this.mongoApplicationDao = mongoApplicationDao;
     }
 
     public ObjectIndex getObjectIndex() {

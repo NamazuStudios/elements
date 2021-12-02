@@ -48,10 +48,11 @@ public interface NeoTokenService {
     /**
      * Updates the supplied {@link NeoToken}.
      *
-     * @param tokenRequest the id of the token with the information to update
+     * @param tokenId the id of the token to update
+     * @param tokenRequest the token information to update
      * @return the {@link NeoToken} as it was changed by the service.
      */
-    NeoToken updateToken(UpdateNeoTokenRequest tokenRequest);
+    NeoToken updateToken(String tokenId, UpdateNeoTokenRequest tokenRequest);
 
     /**
      * Creates a new token using a pre-created template.

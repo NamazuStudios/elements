@@ -39,8 +39,8 @@ public class SuperUserNeoWalletService implements NeoWalletService {
     }
 
     @Override
-    public NeoWallet getWallet(String walletId) {
-        return getWalletDao().getWallet(walletId);
+    public NeoWallet getWallet(String walletNameOrId) {
+        return getWalletDao().getWallet(walletNameOrId);
     }
 
     @Override
@@ -64,7 +64,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
             throw new InternalException(e.getMessage());
         }
 
-        return getWalletDao().updateWallet(walletRequest);
+        return getWalletDao().updateWallet(walletId, walletRequest);
     }
 
     @Override

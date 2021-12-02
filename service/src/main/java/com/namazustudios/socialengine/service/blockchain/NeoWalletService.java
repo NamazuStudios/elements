@@ -35,10 +35,10 @@ public interface NeoWalletService {
      * Fetches a specific {@link NeoWallet} instance based on ID or name.  If not found, an
      * exception is raised.
      *
-     * @param walletId the wallet Id
+     * @param walletNameOrId the wallet Id or name
      * @return the {@link NeoWallet}, never null
      */
-    NeoWallet getWallet(String walletId);
+    NeoWallet getWallet(String walletNameOrId);
 
     /**
      * Updates the supplied {@link NeoWallet}.

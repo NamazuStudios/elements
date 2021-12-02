@@ -10,26 +10,19 @@ import javax.validation.constraints.Null;
 public class UpdateNeoWalletRequest {
 
     @ApiModelProperty("The new display name of the wallet.")
-    @Null(groups = {Update.class})
     private String displayName;
 
     @ApiModelProperty("The user Id of the current wallet owner. If left null the current logged in user will be assumed to be the wallet owner.")
-    @Null(groups = {Update.class})
     private String userId;
 
     @ApiModelProperty("The user Id of the new wallet owner.")
-    @Null(groups = {Update.class})
     private String newUserId;
 
     @ApiModelProperty("The current password used to log into the wallet.")
-    @Null(groups = {Update.class})
     private String password;
 
     @ApiModelProperty("The new password to be used to encrypt the wallet.")
-    @Null(groups = {Update.class})
     private String newPassword;
-
-    private String walletId;
 
     private String updatedWallet;
 
@@ -71,14 +64,6 @@ public class UpdateNeoWalletRequest {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
-    }
-
-    public String getWalletId() {
-        return walletId;
-    }
-
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
     }
 
     public String getUpdatedWallet() {

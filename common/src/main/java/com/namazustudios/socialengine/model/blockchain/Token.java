@@ -9,36 +9,36 @@ import java.util.List;
 
 public class Token {
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The name given to this token.")
     private String name;
 
     @ApiModelProperty("The description of this token.")
     private String description;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The type of this token. Valid options are " +
             "\"purchase\" : ownership is transferred to the purchaser, " +
             "\"license\" : the minter of the token retains ownership, but grants access to the purchaser, and " +
             "\"rent\" : same as license, but access is revoked after a certain period of time (see rentDuration).")
     private String type;
 
-    @NotNull
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @ApiModelProperty("Any tags to assist in filtering/searching for this token.")
     private List<String> tags;
 
     @ApiModelProperty("Defines the ownership for this token.")
     private Ownership ownership;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The quantity of copies of this token that can be distributed.")
     private long totalQuantity;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("Will this token exist as a series 1-x.")
     private boolean series;
 
@@ -46,8 +46,8 @@ public class Token {
             "to the total quantity, and are numbered in sequence as minted.")
     private long numberInSeries;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The transfer options of this token. Valid values are " +
             "\"none\" : Cannot be transferred, " +
             "\"resale_only\" : Can be resold, but not traded, " +
@@ -55,21 +55,21 @@ public class Token {
             "\"resale_and_trades\" : Can be either resold or traded.")
     private String transferOptions;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The status of this token. Valid values are " +
             "\"public\" : Can be viewed by everyone, " +
             "\"private\" : Only the token or contract owner can view the token properties " +
             "\"preview\" : If not the token or contract owner, the asset urls cannot be viewed.")
     private String status;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The URLs pointing at any preview of the contents of this token.")
     private List<String> previewUrls;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The asset URLs of this token.")
     private List<String> assetUrls;
 

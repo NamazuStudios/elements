@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.Map;
 
 @SearchableIdentity(@SearchableField(
-        name = "id",
+        name = "objectId",
         path = "/objectId",
         type = ObjectId.class,
         extractor = ObjectIdExtractor.class,
@@ -32,32 +32,101 @@ import java.util.Map;
 public class MongoNeoToken {
 
     @Id
-    public String id;
+    private ObjectId objectId;
 
     @Property
-    public String name;
+    private String name;
 
     @Property
-    public List<String> tags;
+    private List<String> tags;
 
     @Property
-    public String type;
+    private String type;
 
     @Property
-    public Token token;
+    private Token token;
 
     @Property
-    public List<String> previewUrls;
-
-    @Property
-    public List<String> assetUrls;
-
-    @Property
-    public Map<String, Object> metaData;
+    private Map<String, Object> metadata;
 
     @Property
     private String contract;
 
     @Property
-    private boolean released;
+    private boolean listed;
+
+    @Property
+    private boolean minted;
+
+    public ObjectId getObjectId() {
+        return objectId;
+    }
+
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public Token getToken() {
+        return token;
+    }
+
+    public void setToken(Token token) {
+        this.token = token;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetaData(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getContract() {
+        return contract;
+    }
+
+    public void setContract(String contract) {
+        this.contract = contract;
+    }
+
+    public boolean isListed() {
+        return listed;
+    }
+
+    public void setListed(boolean listed) {
+        this.listed = listed;
+    }
+
+    public boolean isMinted() {
+        return minted;
+    }
+
+    public void setMinted(boolean minted) {
+        this.minted = minted;
+    }
 }
