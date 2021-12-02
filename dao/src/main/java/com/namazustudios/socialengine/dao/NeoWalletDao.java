@@ -21,10 +21,10 @@ public interface NeoWalletDao {
      * Fetches a specific {@link NeoWallet} instance based on ID. If not found, an
      * exception is raised.
      *
-     * @param walletId the wallent name or ID to
+     * @param walletNameOrId the wallent name or ID to
      * @return the {@link NeoWallet}, never null
      */
-    NeoWallet getWallet(String walletId);
+    NeoWallet getWallet(String walletNameOrId);
 
     /**
      * Tries to fetch a users specific {@link NeoWallet} instance based on name. Returns null if specified named wallet is not found.

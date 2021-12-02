@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
@@ -18,6 +19,7 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.experimental.filters.Filters;
 import io.neow3j.wallet.Wallet;
 import org.dozer.Mapper;
 
@@ -61,18 +63,19 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public NeoWallet getWallet(String walletId) {
+    public NeoWallet getWallet(String walletNameOrId) {
 
-        final var query = getDatastore().find(MongoNeoWallet.class);
+        final var objectId = getMongoDBUtils().parseOrReturnNull(walletNameOrId);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletId);
-
-        query.filter(eq("_id", objectId));
-
-        final var mongoNeoWallet = query.first();
+        var mongoNeoWallet = getDatastore().find(MongoNeoWallet.class)
+                .filter(Filters.or(
+                                Filters.eq("_id", objectId),
+                                Filters.eq("name", walletNameOrId)
+                        )
+                ).first();
 
         if (mongoNeoWallet == null) {
-            throw new NeoWalletNotFoundException("Wallet not found: " + walletId);
+            throw new NeoWalletNotFoundException("Wallet not found: " + walletNameOrId);
         }
 
         return transform(mongoNeoWallet);

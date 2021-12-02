@@ -39,8 +39,8 @@ public class SuperUserNeoWalletService implements NeoWalletService {
     }
 
     @Override
-    public NeoWallet getWallet(String walletId) {
-        return getWalletDao().getWallet(walletId);
+    public NeoWallet getWallet(String walletNameOrId) {
+        return getWalletDao().getWallet(walletNameOrId);
     }
 
     @Override
