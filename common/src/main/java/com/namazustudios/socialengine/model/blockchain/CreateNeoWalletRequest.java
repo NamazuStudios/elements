@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 public class CreateNeoWalletRequest {
 
     @ApiModelProperty("A user-defined name for the wallet..")
-    @NotNull(groups = ValidationGroups.Insert.class)
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     private String displayName;
 
     @ApiModelProperty("The elements-defined user ID to own the wallet.")
