@@ -25,7 +25,7 @@ public interface NeoSmartContractDao {
      * @param search
      * @return a {@link Pagination} of {@link NeoSmartContract} instances
      */
-    Pagination<NeoSmartContract> getNeoSmartContract(int offset, int count, String search);
+    Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search);
 
     /**
      * Fetches a specific {@link NeoSmartContract} instance based on ID or name.  If not found, an
@@ -39,10 +39,10 @@ public interface NeoSmartContractDao {
     /**
      * Updates the supplied {@link NeoSmartContract}.
      *
-     * @param updateNeoSmartContractRequest the {@link UpdateNeoSmartContractRequest} with the information to update
+     * @param patchNeoSmartContractRequest the {@link PatchNeoSmartContractRequest} with the information to update
      * @return the {@link NeoSmartContract} as it was changed by the service.
      */
-    NeoSmartContract patchNeoSmartContract(UpdateNeoSmartContractRequest updateNeoSmartContractRequest);
+    NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest);
 
     /**
      * Deletes the {@link NeoSmartContract} with the supplied contract ID.

@@ -8,7 +8,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.Map;
 
-public class CreateNeoSmartContractRequest {
+public class PatchNeoSmartContractRequest {
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The name given to this contract.")

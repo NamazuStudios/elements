@@ -3,14 +3,30 @@ package com.namazustudios.socialengine.dao.mongo.blockchain;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.NeoSmartContractDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoSmartContract;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
+import dev.morphia.ModifyOptions;
+import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
+import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+
+import java.util.regex.Pattern;
+
+import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoNeoSmartContractDao implements NeoSmartContractDao {
 
@@ -25,28 +41,73 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<NeoSmartContract> getNeoSmartContract(int offset, int count, String search) {
-        return null;
+    public Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search) {
+        final String trimmedSearch = nullToEmpty(search).trim();
+        final Query<MongoNeoSmartContract> mongoQuery = getDatastore().find(MongoNeoSmartContract.class);
+
+        if (!trimmedSearch.isEmpty()) {
+            mongoQuery.filter(Filters.regex("displayName").pattern(Pattern.compile(trimmedSearch)));
+        }
+
+        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, input -> transform(input), new FindOptions());
     }
 
     @Override
     public NeoSmartContract getNeoSmartContract(String contractIdOrName) {
-        return null;
+        final var objectId = getMongoDBUtils().parseOrReturnNull(contractIdOrName);
+
+        var mongoContract = getDatastore().find(MongoNeoSmartContract.class)
+                .filter(Filters.or(
+                                Filters.eq("_id", objectId),
+                                Filters.eq("name", contractIdOrName)
+                        )
+                ).first();
+
+        if(null == mongoContract) {
+            throw new NotFoundException("Unable to find contract with an id or name of " + contractIdOrName);
+        }
+
+        return transform(mongoContract);
     }
 
     @Override
-    public NeoSmartContract patchNeoSmartContract(UpdateNeoSmartContractRequest updateNeoSmartContractRequest) {
-        return null;
+    public NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest) {
+        getValidationHelper().validateModel(patchNeoSmartContractRequest, ValidationGroups.Insert.class);
+
+        final var query = getDatastore().find(MongoNeoSmartContract.class);
+        final var scriptHash = patchNeoSmartContractRequest.getScriptHash();
+
+        query.filter(eq("scriptHash", scriptHash));
+
+        final var builder = new UpdateBuilder().with(
+                set("displayname", patchNeoSmartContractRequest.getDisplayName()),
+                set("scriptHash", scriptHash)
+        );
+
+        var metadata = patchNeoSmartContractRequest.getMetadata();
+        if (metadata != null) {
+            builder.with(set("metadata", metadata));
+        }
+
+        final var mongoContract = getMongoDBUtils().perform(
+                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
+
+        getObjectIndex().index(mongoContract);
+        return transform(mongoContract);
     }
 
     @Override
     public void deleteNeoSmartContract(String contractId) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(contractId);
+        final var query = getDatastore().find(MongoNeoSmartContract.class);
 
+        query.filter(eq("_id", objectId));
+        query.delete();
     }
 
-    private NeoToken transform(MongoNeoToken token)
-    {
-        return getBeanMapper().map(token, NeoToken.class);
+    private NeoSmartContract transform(MongoNeoSmartContract token) {
+        return getBeanMapper().map(token, NeoSmartContract.class);
     }
 
     public MongoDBUtils getMongoDBUtils() {
