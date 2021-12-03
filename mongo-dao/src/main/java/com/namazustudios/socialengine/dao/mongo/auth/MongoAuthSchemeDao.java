@@ -10,10 +10,12 @@ import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.auth.MongoAuthScheme;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.auth.*;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -116,22 +118,23 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
 
     @Override
     public CreateAuthSchemeResponse createAuthScheme(CreateAuthSchemeRequest authSchemeRequest) {
-        getValidationHelper().validateModel(authSchemeRequest, ValidationGroups.Insert.class);
+
+        if (authSchemeRequest == null) {
+            throw new InvalidDataException("Auth Scheme request must not be null.");
+        }
 
         var response = new CreateAuthSchemeResponse();
-        var mongoToken = getBeanMapper().map(authSchemeRequest, MongoAuthScheme.class);
+        var mongoAuthScheme = getBeanMapper().map(authSchemeRequest, MongoAuthScheme.class);
 
         try {
-            getDatastore().save(mongoToken);
-        } catch (DuplicateKeyException e) {
-            throw new DuplicateException(e);
+            getDatastore().save(mongoAuthScheme);
+            getObjectIndex().index(mongoAuthScheme);
+        } catch (DuplicateKeyException ex) {
+            throw new DuplicateException(ex);
         }
-        getObjectIndex().index(mongoToken);
 
-        final Query<MongoAuthScheme> query = getDatastore().find(MongoAuthScheme.class);
-        query.filter(eq("_id", mongoToken.getId()));
-
-        var authScheme = transform(mongoToken);
+        var authScheme = transform(mongoAuthScheme);
+        getValidationHelper().validateModel(authScheme);
 
         // serialize auth scheme
         try {
@@ -141,7 +144,7 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         }
 
         // generate public/private key
-        if (authSchemeRequest.pubKey == null) {
+        if (authSchemeRequest.getPubKey() == null) {
             //TODO generate pub/private key pair
         } else {
             response.publicKey = authSchemeRequest.getPubKey();
@@ -159,9 +162,9 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         query.delete();
     }
 
-    private AuthScheme transform(MongoAuthScheme authScheme)
+    private AuthScheme transform(MongoAuthScheme mongoAuthScheme)
     {
-        return getBeanMapper().map(authScheme, AuthScheme.class);
+        return getBeanMapper().map(mongoAuthScheme, AuthScheme.class);
     }
 
     public MongoDBUtils getMongoDBUtils() {
