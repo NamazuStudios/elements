@@ -91,7 +91,7 @@ public class AuthSchemeResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Deletes an Auth Scheme",
             notes = "Deletes an Auth Scheme with the specified id.")
-    public void deleteToken(@PathParam("authSchemeId") String authSchemeId) {
+    public void deleteAuthScheme(@PathParam("authSchemeId") String authSchemeId) {
 
         authSchemeId = Strings.nullToEmpty(authSchemeId).trim();
 
@@ -107,7 +107,7 @@ public class AuthSchemeResource {
     }
 
     @Inject
-    public void setTokenService(AuthSchemeService authSchemeService) {
+    public void setAuthSchemeService(AuthSchemeService authSchemeService) {
         this.authSchemeService = authSchemeService;
     }
 }

@@ -55,7 +55,7 @@ public class AuthSchemeApiTest {
         };
     }
 
-    @Test(dataProvider = "getAuthHeader")
+    @Test()
     public void createAuthScheme() {
         final var createRequest = new CreateAuthSchemeRequest();
 

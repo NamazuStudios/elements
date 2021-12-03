@@ -17,14 +17,10 @@ import java.util.List;
         type = ObjectId.class,
         extractor = ObjectIdExtractor.class,
         processors = ObjectIdProcessor.class))
-@Entity(value = "token", useDiscriminator = false)
+@Entity(value = "auth_scheme", useDiscriminator = false)
 @SearchableDocument(fields = {
-        @SearchableField(name = "name", path = "/name"),
-        @SearchableField(name = "tags", path = "/tags"),
-        @SearchableField(name = "type", path = "/type")
-})
-@Indexes({
-        @Index(fields = @Field(value = "name", type = IndexType.TEXT))
+        @SearchableField(name = "aud", path = "/aud"),
+        @SearchableField(name = "userLevel", path = "/userLevel")
 })
 public class MongoAuthScheme {
 
