@@ -4,7 +4,10 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SaveDataDocumentDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ConflictException;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.savedata.SaveDataNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
@@ -91,7 +94,38 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
     @Override
     public SaveDataDocument updateSaveDataDocument(final String saveDataDocumentId,
                                                    final UpdateSaveDataDocumentRequest updateSaveDataDocumentRequest) {
-        return null;
+
+        getValidationHelper().validateModel(updateSaveDataDocumentRequest);
+
+        final var force = updateSaveDataDocumentRequest.getForce();
+        final var document = getSaveDataDocumentDao().getSaveDataDocument(saveDataDocumentId);
+
+        if (!user.getId().equals(document.getUser().getId())) {
+            throw new SaveDataNotFoundException("No save data with id: " + saveDataDocumentId);
+        }
+
+        document.setTimestamp(currentTimeMillis());
+        document.setContents(updateSaveDataDocumentRequest.getContents());
+
+        if (force != null && force) {
+            return getSaveDataDocumentDao().forceUpdateSaveDataDocument(document);
+        } else {
+
+            final var existingVersion = updateSaveDataDocumentRequest.getVersion();
+
+            if (existingVersion == null)
+                throw new InvalidDataException("Must specify existing version.");
+
+            document.setVersion(existingVersion);
+
+            try {
+                return getSaveDataDocumentDao().checkedUpdate(document);
+            } catch (SaveDataNotFoundException nfe) {
+                throw new DuplicateException("Version mismatch.");
+            }
+
+        }
+
     }
 
     @Override

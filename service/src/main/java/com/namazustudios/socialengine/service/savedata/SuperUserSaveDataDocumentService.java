@@ -4,7 +4,9 @@ import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SaveDataDocumentDao;
 import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.ConflictException;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
+import com.namazustudios.socialengine.exception.savedata.SaveDataNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
@@ -102,7 +104,11 @@ public class SuperUserSaveDataDocumentService implements SaveDataDocumentService
 
             document.setVersion(existingVersion);
 
-            return getSaveDataDocumentDao().checkedUpdate(document);
+            try {
+                return getSaveDataDocumentDao().checkedUpdate(document);
+            } catch (SaveDataNotFoundException nfe) {
+                throw new DuplicateException("Version mismatch.");
+            }
 
         }
 

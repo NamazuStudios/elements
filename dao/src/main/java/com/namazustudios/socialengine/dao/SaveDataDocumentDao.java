@@ -79,6 +79,7 @@ public interface SaveDataDocumentDao {
      *
      * @param document the document
      * @return the document as it was written to the database
+     * @throws SaveDataNotFoundException if the document was not found, or the version mismatched
      */
     SaveDataDocument checkedUpdate(SaveDataDocument document);
 

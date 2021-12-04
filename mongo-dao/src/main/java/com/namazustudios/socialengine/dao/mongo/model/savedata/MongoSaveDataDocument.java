@@ -15,10 +15,13 @@ import java.sql.Timestamp;
 public class MongoSaveDataDocument {
 
     @Id
-    private MongoSaveDataDocumentId id;
+    private MongoSaveDataDocumentId saveDataDocumentId;
 
     @Property
     private byte[] version;
+
+    @Property
+    private String contents;
 
     @Property
     private Timestamp timestamp;
@@ -32,12 +35,20 @@ public class MongoSaveDataDocument {
     @Reference
     private MongoProfile profile;
 
-    public MongoSaveDataDocumentId getId() {
-        return id;
+    public MongoSaveDataDocumentId getSaveDataDocumentId() {
+        return saveDataDocumentId;
     }
 
-    public void setId(MongoSaveDataDocumentId id) {
-        this.id = id;
+    public void setSaveDataDocumentId(MongoSaveDataDocumentId saveDataDocumentId) {
+        this.saveDataDocumentId = saveDataDocumentId;
+    }
+
+    public String getContents() {
+        return contents;
+    }
+
+    public void setContents(String contents) {
+        this.contents = contents;
     }
 
     public byte[] getVersion() {

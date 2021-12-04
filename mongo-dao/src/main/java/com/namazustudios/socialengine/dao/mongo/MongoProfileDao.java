@@ -62,17 +62,24 @@ public class MongoProfileDao implements ProfileDao {
 
     @Override
     public Optional<Profile> findActiveProfile(final String profileId) {
+        return findActiveMongoProfile(profileId).map(this::transform);
+    }
 
-        final var query = getDatastore().find(MongoProfile.class);
+    public Optional<MongoProfile> findActiveMongoProfile(final String profileId) {
+
         if (!ObjectId.isValid(profileId)) return Optional.empty();
 
-        query.filter(and(
+        final var query = getDatastore().find(MongoProfile.class);
+
+        query.filter(
+            and(
                 eq("_id", new ObjectId(profileId)),
                 eq("active", true)
-                ));
+            )
+        );
 
         final var mongoProfile = query.first();
-        return mongoProfile == null ? Optional.empty() : Optional.of(transform(mongoProfile));
+        return Optional.ofNullable(mongoProfile);
 
     }
 
@@ -152,11 +159,9 @@ public class MongoProfileDao implements ProfileDao {
         }
 
         if (userId != null) {
-            final MongoUser mongoUser = getMongoUserDao().findActiveMongoUser(userId);
-            if (mongoUser == null) return new Pagination<>();
-            query.filter(
-                    eq("user", mongoUser)
-            );
+            final Optional<MongoUser> mongoUser = getMongoUserDao().findActiveMongoUser(userId);
+            if (mongoUser.isPresent()) return new Pagination<>();
+            query.filter(eq("user", mongoUser));
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
@@ -179,19 +184,19 @@ public class MongoProfileDao implements ProfileDao {
         final Query<MongoUser> userQuery = getDatastore().find(MongoUser.class);
 
         userQuery.filter(
-                eq("active", true),
-                Filters.or(
-                        Filters.regex("name").pattern(Pattern.compile(trimmedSearch)),
-                        Filters.regex("email").pattern(Pattern.compile(trimmedSearch))
-                )
+            eq("active", true),
+            Filters.or(
+                Filters.regex("name").pattern(Pattern.compile(trimmedSearch)),
+                Filters.regex("email").pattern(Pattern.compile(trimmedSearch))
+            )
         );
 
         profileQuery.filter(
-                eq("active", true),
-                Filters.or(
-                        Filters.regex("displayName").pattern(Pattern.compile(trimmedSearch)),
-                        Filters.in("user", userQuery.iterator().toList())
-                )
+            eq("active", true),
+            Filters.or(
+                Filters.regex("displayName").pattern(Pattern.compile(trimmedSearch)),
+                Filters.in("user", userQuery.iterator().toList())
+            )
         );
 
         return paginationFromQuery(profileQuery, offset, count);

@@ -4,6 +4,7 @@ import com.namazustudios.elements.fts.AbstractIndexableFieldProcessor;
 import com.namazustudios.elements.fts.FieldExtractionException;
 import com.namazustudios.elements.fts.FieldMetadata;
 import com.namazustudios.elements.fts.IndexableFieldExtractor;
+import com.namazustudios.socialengine.dao.mongo.HexableId;
 import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.rt.util.Hex;
 import dev.morphia.annotations.*;
@@ -21,7 +22,7 @@ import static java.lang.System.arraycopy;
 @Indexes({
     @Index(fields = @Field("deviceOSType"))
 })
-public class MongoGameOnSessionId {
+public class MongoGameOnSessionId implements HexableId {
 
     public static final byte VERSION = 0;
 

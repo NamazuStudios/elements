@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.regex.Pattern;
 
 /**
  * A set of utilities for encoding and decoding Hexadecimal strings.
@@ -25,6 +26,10 @@ public class Hex {
          */
         LOWER
     }
+
+    public static final String VALID_REGEX = "[0-9a-fA-F]*";
+
+    public static final Pattern VALID_PATTERN = Pattern.compile(VALID_REGEX);
 
     private static final char[] HEX_CHARS_UPPER = "0123456789ABCDEF".toCharArray();
 

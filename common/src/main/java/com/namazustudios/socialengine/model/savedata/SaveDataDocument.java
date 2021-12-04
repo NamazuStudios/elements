@@ -1,17 +1,14 @@
 package com.namazustudios.socialengine.model.savedata;
 
-import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.rt.util.Hex;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
+import javax.validation.constraints.*;
 import java.util.Objects;
 
 @ApiModel(description = "Represents an arbitrary save data document that persists on the server. The document " +
@@ -23,24 +20,23 @@ public class SaveDataDocument {
     @ApiModelProperty("The database assigned unique ID of the document.")
     private String id;
 
-    @NotNull(groups = Insert.class)
+    @Min(0) @Max(Integer.MAX_VALUE)
     @ApiModelProperty("The slot of the property.")
     private int slot;
 
-    @NotNull(groups = Update.class)
     @ApiModelProperty("The user which owns the save data.")
     private User user;
 
-    @NotNull(groups = Update.class)
     @ApiModelProperty("The profile which owns the save data.")
     private Profile profile;
 
-    @Min(0)
-    @Max(Long.MAX_VALUE)
+    @Min(0) @Max(Long.MAX_VALUE)
     @ApiModelProperty("The timestamp of the last write to this document.")
     private long timestamp;
 
-    @NotNull(groups = {Insert.class, Update.class})
+    @Null(groups = Insert.class)
+    @NotNull(groups = Update.class)
+    @Pattern(regexp = Hex.VALID_REGEX)
     @ApiModelProperty("The revision of the save data document.")
     private String version;
 
