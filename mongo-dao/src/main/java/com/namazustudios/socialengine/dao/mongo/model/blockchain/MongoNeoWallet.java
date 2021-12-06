@@ -5,6 +5,7 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import com.namazustudios.socialengine.model.blockchain.Nep6Wallet;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
 import io.neow3j.wallet.nep6.NEP6Wallet;
@@ -24,23 +25,23 @@ import org.bson.types.ObjectId;
 public class MongoNeoWallet {
 
     @Id
-    public String id;
+    public ObjectId id;
 
     @Indexed
     @Property
     public String displayName;
 
     @Property
-    public String walletString;
+    public Nep6Wallet wallet;
 
     @Reference
     public MongoUser user;
 
-    public String getId() {
+    public ObjectId getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(ObjectId id) {
         this.id = id;
     }
 
@@ -52,12 +53,12 @@ public class MongoNeoWallet {
         this.displayName = displayName;
     }
 
-    public String getWalletString() {
-        return walletString;
+    public Nep6Wallet getWallet() {
+        return wallet;
     }
 
-    public void setWalletString(String walletString) {
-        this.walletString = walletString;
+    public void setWallet(Nep6Wallet wallet) {
+        this.wallet = wallet;
     }
 
     public MongoUser getUser() {

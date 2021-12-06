@@ -24,8 +24,6 @@ public class UpdateNeoWalletRequest {
     @ApiModelProperty("The new password to be used to encrypt the wallet.")
     private String newPassword;
 
-    private String updatedWallet;
-
     public String getUserId() {
         return userId;
     }
@@ -64,13 +62,5 @@ public class UpdateNeoWalletRequest {
 
     public void setNewPassword(String newPassword) {
         this.newPassword = newPassword;
-    }
-
-    public String getUpdatedWallet() {
-        return updatedWallet;
-    }
-
-    public void setUpdatedWallet(String updatedWallet) {
-        this.updatedWallet = updatedWallet;
     }
 }

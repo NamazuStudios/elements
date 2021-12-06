@@ -23,7 +23,7 @@ public class NeoWallet {
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The NEP6 wallet file.")
-    private NEP6Wallet wallet;
+    private Nep6Wallet wallet;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The User associated with this wallet.")
@@ -45,11 +45,11 @@ public class NeoWallet {
         this.displayName = displayName;
     }
 
-    public NEP6Wallet getWallet() {
+    public Nep6Wallet getWallet() {
         return wallet;
     }
 
-    public void setWallet(NEP6Wallet wallet) {
+    public void setWallet(Nep6Wallet wallet) {
         this.wallet = wallet;
     }
 
