@@ -127,8 +127,8 @@ public class ServicesModule extends PrivateModule {
             .toProvider(ProfileServiceProvider.class)
             .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(FollowerService.class)
@@ -283,8 +283,8 @@ public class ServicesModule extends PrivateModule {
             .toProvider(NeoTokenServiceProvider.class)
             .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(HealthStatusService.class)
@@ -458,9 +458,9 @@ public class ServicesModule extends PrivateModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserAuthSchemeService.class);
 
-        bind(SmartContractTemplateService.class)
+        bind(NeoSmartContractService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserSmartContractTemplateService.class);
+            .to(SuperUserNeoSmartContractService.class);
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
@@ -514,8 +514,8 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
         expose(NeoTokenService.class);
-        expose(SmartContractTemplateService.class);
         expose(AuthSchemeService.class);
+        expose(NeoSmartContractService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -554,8 +554,8 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
         expose(NeoTokenService.class).annotatedWith(Unscoped.class);
-        expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
         expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
+        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
 
     }
 

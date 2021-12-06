@@ -17,13 +17,12 @@ public class NeoToken {
     @ApiModelProperty("The unique ID of the token itself.")
     private String id;
 
-    @NotNull(groups = ValidationGroups.Create.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @ApiModelProperty("The base token properties used by the blockchain.")
     private Token token;
 
     @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metaData;
+    private Map<String, Object> metadata;
 
     private String contract;
 
@@ -47,12 +46,12 @@ public class NeoToken {
         this.token = token;
     }
 
-    public Map<String, Object> getMetaData() {
-        return metaData;
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 
-    public void setMetaData(Map<String, Object> metaData) {
-        this.metaData = metaData;
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 
     public String getContract() {

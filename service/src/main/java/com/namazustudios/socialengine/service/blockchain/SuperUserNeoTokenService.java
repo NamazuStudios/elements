@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.NeoTokenDao;
+import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
@@ -21,32 +22,34 @@ public class SuperUserNeoTokenService implements NeoTokenService {
 
     @Override
     public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
-        throw new NotImplementedException();
-//        return getTokenDao().getTokens(offset, count, tags, search);
+        return getNeoTokenDao().getTokens(offset, count, tags, search);
     }
 
     @Override
     public NeoToken getToken(String tokenIdOrName) {
-        throw new NotImplementedException();
-//        return getTokenDao().getToken(tokenIdOrName);
+        return getNeoTokenDao().getToken(tokenIdOrName);
     }
 
     @Override
-    public NeoToken updateToken(UpdateNeoTokenRequest tokenRequest) {
-        throw new NotImplementedException();
-//        return getTokenDao().updateToken(tokenRequest);
+    public NeoToken updateToken(String tokenId, UpdateNeoTokenRequest tokenRequest) {
+        return getNeoTokenDao().updateToken(tokenId, tokenRequest);
     }
 
     @Override
     public NeoToken createToken(CreateNeoTokenRequest tokenRequest) {
-        throw new NotImplementedException();
-//        return getTokenDao().createToken(tokenRequest);
+
+        var token = getNeoTokenDao().getToken(tokenRequest.getToken().getName());
+
+        if (token != null) {
+            throw new DuplicateException(String.format("NeoToken with name: %s already exists.", tokenRequest.getToken().getName()));
+        }
+
+        return getNeoTokenDao().createToken(tokenRequest);
     }
 
     @Override
-    public void deleteToken(String templateId) {
-        throw new NotImplementedException();
-//        getTokenDao().deleteToken(templateId);
+    public void deleteToken(String tokenId) {
+        getNeoTokenDao().deleteToken(tokenId);
     }
 
     public User getUser() {
@@ -58,12 +61,12 @@ public class SuperUserNeoTokenService implements NeoTokenService {
         this.user = user;
     }
 
-    public NeoTokenDao getTokenDao() {
+    public NeoTokenDao getNeoTokenDao() {
         return neoTokenDao;
     }
 
     @Inject
-    public void setTokenDao(NeoTokenDao neoTokenDao) {
+    public void setNeoTokenDao(NeoTokenDao neoTokenDao) {
         this.neoTokenDao = neoTokenDao;
     }
 
