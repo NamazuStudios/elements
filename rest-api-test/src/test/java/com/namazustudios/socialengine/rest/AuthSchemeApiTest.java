@@ -73,7 +73,7 @@ public class AuthSchemeApiTest {
         assertNotNull(createAuthSchemeResponse.publicKey);
     }
 
-    @Test(dependsOnMethods = "createAuthScheme", dataProvider = "getAuthHeader")
+    @Test(dependsOnMethods = "createAuthScheme")
     public void updateAuthScheme() {
         var scheme = createAuthSchemeResponse.getScheme();
         var objectMapper = new ObjectMapper();

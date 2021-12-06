@@ -74,7 +74,11 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
 
     @Override
     public UpdateAuthSchemeResponse updateAuthScheme(UpdateAuthSchemeRequest updateAuthSchemeRequest) {
-        getValidationHelper().validateModel(updateAuthSchemeRequest, ValidationGroups.Update.class);
+
+        if (updateAuthSchemeRequest == null) {
+            throw new InvalidDataException("Auth Scheme request must not be null.");
+        }
+
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateAuthSchemeRequest.getAuthSchemeId());
         final var query = getDatastore().find(MongoAuthScheme.class);
@@ -94,6 +98,8 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         getObjectIndex().index(mongoAuthScheme);
 
         var authScheme = transform(mongoAuthScheme);
+        getValidationHelper().validateModel(authScheme);
+
         var response = new UpdateAuthSchemeResponse();
 
         // serialize auth scheme
