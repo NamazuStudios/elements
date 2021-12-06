@@ -94,7 +94,7 @@ public class StandardNeow3jClient implements Neow3jClient {
                 nep6Parameters.add(nep6Parameter);
             }
             var nep6Contract = new NEP6Contract(acc.getContract().getScript(), nep6Parameters, acc.getContract().getDeployed());
-            var nep6Account = new NEP6Account(acc.getAddress(), acc.getLabel(), acc.getDefault(), acc.getLock(), acc.getKey(), nep6Contract, acc.getExtra());
+            var nep6Account = new NEP6Account(acc.getAddress(), acc.getLabel(), acc.getIsDefault(), acc.getIsLocked(), acc.getKey(), nep6Contract, acc.getExtra());
             nep6Accounts.add(nep6Account);
         }
         return new NEP6Wallet(wallet.getName(), wallet.getVersion(), scryptParams, nep6Accounts, wallet.getExtra());

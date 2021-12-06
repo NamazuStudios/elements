@@ -25,24 +25,24 @@ import org.bson.types.ObjectId;
 public class MongoNeoWallet {
 
     @Id
-    public ObjectId id;
+    public ObjectId objectId;
 
     @Indexed
     @Property
     public String displayName;
 
     @Property
-    public Nep6Wallet wallet;
+    public byte[] wallet;
 
     @Reference
     public MongoUser user;
 
-    public ObjectId getId() {
-        return id;
+    public ObjectId getObjectId() {
+        return objectId;
     }
 
-    public void setId(ObjectId id) {
-        this.id = id;
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
     }
 
     public String getDisplayName() {
@@ -53,11 +53,11 @@ public class MongoNeoWallet {
         this.displayName = displayName;
     }
 
-    public Nep6Wallet getWallet() {
+    public byte[] getWallet() {
         return wallet;
     }
 
-    public void setWallet(Nep6Wallet wallet) {
+    public void setWallet(byte[] wallet) {
         this.wallet = wallet;
     }
 

@@ -63,7 +63,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
             var walletFromElements = getNeow3jClient().elementsWalletToNEP6(neoWallet.getWallet());
             var wallet = getNeow3jClient().updateWallet(walletFromElements, name, password, newPassword);
             return getWalletDao().updateWallet(walletId, walletRequest, getNeow3jClient().nep6ToElementsWallet(wallet));
-        } catch (CipherException | NEP2InvalidFormat | NEP2InvalidPassphrase e) {
+        } catch (CipherException | NEP2InvalidFormat | NEP2InvalidPassphrase | JsonProcessingException e) {
             throw new InternalException(e.getMessage());
         }
     }
@@ -93,7 +93,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
                 neoWallet.setUser(getUserService().getUser(walletRequest.getUserId()));
 
                 return getWalletDao().createWallet(neoWallet);
-            } catch (CipherException e) {
+            } catch (CipherException | JsonProcessingException e) {
                 throw new InternalException(e.getMessage());
             }
         } else {
@@ -107,7 +107,7 @@ public class SuperUserNeoWalletService implements NeoWalletService {
                 neoWallet.setUser(getUserService().getUser(walletRequest.getUserId()));
 
                 return neoWalletDao.createWallet(neoWallet);
-            } catch (CipherException e) {
+            } catch (CipherException | JsonProcessingException e) {
                 throw new InternalException(e.getMessage());
             }
         }

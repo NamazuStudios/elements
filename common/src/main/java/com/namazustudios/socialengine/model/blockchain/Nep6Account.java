@@ -48,11 +48,11 @@ public class Nep6Account {
         return label;
     }
 
-    public Boolean getDefault() {
+    public Boolean getIsDefault() {
         return isDefault;
     }
 
-    public Boolean getLock() {
+    public Boolean getIsLocked() {
         return isLocked;
     }
 
@@ -78,7 +78,7 @@ public class Nep6Account {
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAddress(), getLabel(), isDefault, getLock(), getKey(),
+        return Objects.hash(getAddress(), getLabel(), getIsDefault(), getIsLocked(), getKey(),
                 getContract(), getExtra());
     }
 
@@ -88,7 +88,7 @@ public class Nep6Account {
                 "address='" + address + '\'' +
                 ", label='" + label + '\'' +
                 ", isDefault=" + isDefault +
-                ", lock=" + isLocked +
+                ", isLocked=" + isLocked +
                 ", key='" + key + '\'' +
                 ", contract=" + contract +
                 ", extra=" + extra +

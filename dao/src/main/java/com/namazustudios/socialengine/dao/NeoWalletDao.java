@@ -44,7 +44,7 @@ public interface NeoWalletDao {
      * @param updatedWallet the {@link Nep6Wallet} with the updated information
      * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet);
+    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet) throws JsonProcessingException;
 
     /**
      * Creates a new Wallet.
@@ -52,7 +52,7 @@ public interface NeoWalletDao {
      * @param wallet the {@link NeoWallet} with the information to create
      * @return the {@link NeoWallet} as it was created by the service.
      */
-    NeoWallet createWallet(NeoWallet wallet);
+    NeoWallet createWallet(NeoWallet wallet) throws JsonProcessingException;
 
     /**
      * Deletes the {@link NeoWallet} with the supplied wallet ID.

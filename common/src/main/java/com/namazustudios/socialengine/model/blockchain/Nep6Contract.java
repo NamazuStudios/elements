@@ -10,8 +10,8 @@ public class Nep6Contract {
     @ApiModelProperty("script")
     private String script;
 
-    @ApiModelProperty("paramenters")
-    private List<Nep6Parameter> nep6Parameters;
+    @ApiModelProperty("parameters")
+    private List<Nep6Parameter> parameters;
 
     @ApiModelProperty("deployed")
     private Boolean deployed;
@@ -19,9 +19,9 @@ public class Nep6Contract {
     public Nep6Contract() {
     }
 
-    public Nep6Contract(String script, List<Nep6Parameter> nep6Parameters, Boolean deployed) {
+    public Nep6Contract(String script, List<Nep6Parameter> parameters, Boolean deployed) {
         this.script = script;
-        this.nep6Parameters = nep6Parameters;
+        this.parameters = parameters;
         this.deployed = deployed;
     }
 
@@ -30,7 +30,7 @@ public class Nep6Contract {
     }
 
     public List<Nep6Parameter> getParameters() {
-        return nep6Parameters;
+        return parameters;
     }
 
     public Boolean getDeployed() {
@@ -56,7 +56,7 @@ public class Nep6Contract {
     public String toString() {
         return "Contract{" +
                 "script='" + script + '\'' +
-                ", nep6Parameters=" + nep6Parameters +
+                ", nep6Parameters=" + parameters +
                 ", deployed=" + deployed +
                 '}';
     }
