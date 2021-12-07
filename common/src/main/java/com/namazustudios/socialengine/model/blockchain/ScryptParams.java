@@ -38,8 +38,8 @@ public class ScryptParams {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof io.neow3j.crypto.ScryptParams)) return false;
-        io.neow3j.crypto.ScryptParams that = (io.neow3j.crypto.ScryptParams) o;
+        if (!(o instanceof ScryptParams)) return false;
+        ScryptParams that = (ScryptParams) o;
         return getN() == that.getN() &&
                 getR() == that.getR() &&
                 getP() == that.getP();

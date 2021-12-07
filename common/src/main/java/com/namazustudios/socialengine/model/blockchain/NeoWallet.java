@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.model.blockchain;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.user.User;
-import io.neow3j.wallet.nep6.NEP6Wallet;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
