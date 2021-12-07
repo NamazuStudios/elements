@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.blockchain.*;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
@@ -10,10 +11,15 @@ import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.Wallet;
+import io.neow3j.wallet.nep6.NEP6Account;
+import io.neow3j.wallet.nep6.NEP6Contract;
 import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+
+import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.String.format;
 
@@ -74,6 +80,42 @@ public class StandardNeow3jClient implements Neow3jClient {
     @Override
     public TransactionBuilder getTransactionBuilder(Neow3j neow3j) {
         return new TransactionBuilder(neow3j);
+    }
+
+    @Override
+    public NEP6Wallet elementsWalletToNEP6(Nep6Wallet wallet) {
+        var scryptParams = new io.neow3j.crypto.ScryptParams(wallet.getScrypt().getN(), wallet.getScrypt().getR(), wallet.getScrypt().getP());
+        List<NEP6Account> nep6Accounts = new ArrayList<>();
+        for (Nep6Account acc : wallet.getAccounts()) {
+            List<NEP6Contract.NEP6Parameter> nep6Parameters = new ArrayList<>();
+            for (Nep6Parameter param : acc.getContract().getParameters()) {
+                var paramType = io.neow3j.types.ContractParameterType.fromJsonValue(param.getParamType().jsonValue());
+                var nep6Parameter = new NEP6Contract.NEP6Parameter(param.getParamName(), paramType);
+                nep6Parameters.add(nep6Parameter);
+            }
+            var nep6Contract = new NEP6Contract(acc.getContract().getScript(), nep6Parameters, acc.getContract().getDeployed());
+            var nep6Account = new NEP6Account(acc.getAddress(), acc.getLabel(), acc.getIsDefault(), acc.getIsLocked(), acc.getKey(), nep6Contract, acc.getExtra());
+            nep6Accounts.add(nep6Account);
+        }
+        return new NEP6Wallet(wallet.getName(), wallet.getVersion(), scryptParams, nep6Accounts, wallet.getExtra());
+    }
+
+    @Override
+    public Nep6Wallet nep6ToElementsWallet(NEP6Wallet wallet) {
+        var scryptParams = new com.namazustudios.socialengine.model.blockchain.ScryptParams(wallet.getScrypt().getN(), wallet.getScrypt().getR(), wallet.getScrypt().getP());
+        List<Nep6Account> nep6Accounts = new ArrayList<>();
+        for (NEP6Account acc : wallet.getAccounts()) {
+            List<Nep6Parameter> nep6Parameters = new ArrayList<>();
+            for (NEP6Contract.NEP6Parameter param : acc.getContract().getParameters()) {
+                var paramType = ContractParameterType.fromJsonValue(param.getParamType().jsonValue());
+                var nep6Parameter = new Nep6Parameter(param.getParamName(), paramType);
+                nep6Parameters.add(nep6Parameter);
+            }
+            var nep6Contract = new Nep6Contract(acc.getContract().getScript(), nep6Parameters, acc.getContract().getDeployed());
+            var nep6Account = new Nep6Account(acc.getAddress(), acc.getLabel(), acc.getDefault(), acc.getLock(), acc.getKey(), nep6Contract, acc.getExtra());
+            nep6Accounts.add(nep6Account);
+        }
+        return new Nep6Wallet(wallet.getName(), wallet.getVersion(), scryptParams, nep6Accounts, wallet.getExtra());
     }
 
     private String getNeoHost() {

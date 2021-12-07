@@ -42,15 +42,15 @@ public class NeoWalletResource {
     }
     
     @GET
-    @Path("{walletId}")
+    @Path("{walletNameOrId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Neo Wallet",
             notes = "Gets a specific Neo Wallet by Id.")
-    public NeoWallet getWallet(@PathParam("walletId") String walletId) {
+    public NeoWallet getWallet(@PathParam("walletNameOrId") String walletNameOrId) {
 
-        walletId = Strings.nullToEmpty(walletId).trim();
+        walletNameOrId = Strings.nullToEmpty(walletNameOrId).trim();
 
-        return getWalletService().getWallet(walletId);
+        return getWalletService().getWallet(walletNameOrId);
     }
 
     @POST
@@ -71,19 +71,12 @@ public class NeoWalletResource {
     }
 
     @DELETE
-    @Path("{templateId}")
+    @Path("{walletId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Deletes a Neo Wallet",
-            notes = "Deletes a Neo Wallet with the specified name or id.")
-    public void deleteTemplate(@PathParam("templateId") String nameOrId) {
-
-        nameOrId = Strings.nullToEmpty(nameOrId).trim();
-
-        if (nameOrId.isEmpty()) {
-            throw new NotFoundException();
-        }
-
-        getWalletService().deleteWallet(nameOrId);
+            notes = "Deletes a Neo Wallet with the specified id.")
+    public void deleteTemplate(@PathParam("walletId") String walletId) {
+        getWalletService().deleteWallet(walletId);
     }
 
     public NeoWalletService getWalletService() {

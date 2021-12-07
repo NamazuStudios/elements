@@ -124,6 +124,7 @@
         <auth0.java.jwt.version>3.10.3</auth0.java.jwt.version>
         <spotify.dns.version>3.2.2</spotify.dns.version>
         <annotations.version>2.11.3</annotations.version>
+        <neow3j.version>3.14.0</neow3j.version>
     </properties>
 
     <dependencies>
@@ -137,11 +138,6 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.neow3j</groupId>
-            <artifactId>contract</artifactId>
-            <version>3.13.0</version>
         </dependency>
     </dependencies>
     <build>

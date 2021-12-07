@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.Nep6Wallet;
 import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 
@@ -21,7 +22,7 @@ public interface NeoWalletDao {
      * Fetches a specific {@link NeoWallet} instance based on ID. If not found, an
      * exception is raised.
      *
-     * @param walletNameOrId the wallent name or ID to
+     * @param walletNameOrId the wallet name or ID to
      * @return the {@link NeoWallet}, never null
      */
     NeoWallet getWallet(String walletNameOrId);
@@ -39,10 +40,11 @@ public interface NeoWalletDao {
      * Updates the supplied {@link NeoWallet}.
      *
      * @param walletId the id of the wallet to update
-     * @param updatedWalletRequest the {@link UpdateNeoWalletRequest} with the updated information
+     * @param updatedWalletRequest the {@link UpdateNeoWalletRequest} with the information to update
+     * @param updatedWallet the {@link Nep6Wallet} with the updated information
      * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest);
+    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet) throws JsonProcessingException;
 
     /**
      * Creates a new Wallet.
