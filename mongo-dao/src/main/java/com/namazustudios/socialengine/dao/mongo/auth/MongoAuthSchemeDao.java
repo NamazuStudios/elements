@@ -109,15 +109,7 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
             throw new BadRequestException(e);
         }
 
-        if (updateAuthSchemeRequest.getRegenerate()) {
-            if (updateAuthSchemeRequest.getPubKey() != null)
-            {
-                throw new BadRequestException();
-            }
-            // TODO regenerate pub/private key pair
-        } else {
-            response.publicKey = updateAuthSchemeRequest.getPubKey();
-        }
+        response.publicKey = updateAuthSchemeRequest.getPubKey();
 
         return response;
     }
@@ -148,14 +140,7 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         } catch (JsonProcessingException e) {
             throw new BadRequestException(e);
         }
-
-        // generate public/private key
-        if (authSchemeRequest.getPubKey() == null) {
-            //TODO generate pub/private key pair
-        } else {
-            response.publicKey = authSchemeRequest.getPubKey();
-        }
-
+        response.publicKey = authSchemeRequest.getPubKey();
         return response;
     }
 
