@@ -14,10 +14,7 @@ public class AuthSchemeServiceProvider implements Provider<AuthSchemeService> {
 
     @Override
     public AuthSchemeService get() {
-        if (getUser().getLevel() == User.Level.SUPERUSER) {
-            return getAuthSchemeService().get();
-        }
-        return Services.forbidden(AuthSchemeService.class);
+        return getAuthSchemeService().get();
     }
 
     public User getUser() {
