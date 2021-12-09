@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
@@ -38,11 +39,13 @@ public class SuperUserNeoTokenService implements NeoTokenService {
     @Override
     public NeoToken createToken(CreateNeoTokenRequest tokenRequest) {
 
-        var token = getNeoTokenDao().getToken(tokenRequest.getToken().getName());
+        try {
+            var token = getNeoTokenDao().getToken(tokenRequest.getToken().getName());
 
-        if (token != null) {
-            throw new DuplicateException(String.format("NeoToken with name: %s already exists.", tokenRequest.getToken().getName()));
-        }
+            if (token != null) {
+                throw new DuplicateException(String.format("NeoToken with name: %s already exists.", tokenRequest.getToken().getName()));
+            }
+        } catch (NotFoundException ignored) {}
 
         return getNeoTokenDao().createToken(tokenRequest);
     }

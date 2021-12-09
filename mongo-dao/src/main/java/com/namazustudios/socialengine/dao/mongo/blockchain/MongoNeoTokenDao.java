@@ -84,7 +84,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                         )
                 ).first();
 
-        if(null == mongoToken) {
+        if(mongoToken == null) {
             throw new NotFoundException("Unable to find item with an id of " + tokenIdOrName);
         }
 
