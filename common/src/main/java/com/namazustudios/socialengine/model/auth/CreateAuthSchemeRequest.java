@@ -11,7 +11,7 @@ public class CreateAuthSchemeRequest {
 
     @ApiModelProperty("The JWT audience for the scheme. Must be unique.")
     @NotNull
-    public String aud;
+    public String audience;
 
     @ApiModelProperty("The public key for the scheme. If null, Elements will generate a public and private key pair with the response.")
     public String pubKey;
@@ -24,12 +24,12 @@ public class CreateAuthSchemeRequest {
     @NotNull
     public List<String> allowedIssuers;
 
-    public String getAud() {
-        return aud;
+    public String getAudience() {
+        return audience;
     }
 
-    public void setAud(String aud) {
-        this.aud = aud;
+    public void setAudience(String audience) {
+        this.audience = audience;
     }
 
     public String getPubKey() {

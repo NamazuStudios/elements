@@ -15,7 +15,7 @@ public class UpdateAuthSchemeRequest {
 
     @ApiModelProperty("The JWT audience for the scheme. Must be unique.")
     @NotNull
-    public String aud;
+    public String audience;
 
     @ApiModelProperty("If set to true, Elements will regenerate the key and pubKey must be null or omitted")
     @NotNull
@@ -40,12 +40,12 @@ public class UpdateAuthSchemeRequest {
         this.authSchemeId = authSchemeId;
     }
 
-    public String getAud() {
-        return aud;
+    public String getAudience() {
+        return audience;
     }
 
-    public void setAud(String aud) {
-        this.aud = aud;
+    public void setAudience(String audience) {
+        this.audience = audience;
     }
 
     public Boolean getRegenerate() { return regenerate; }

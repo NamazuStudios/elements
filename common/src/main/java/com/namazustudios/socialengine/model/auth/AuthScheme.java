@@ -19,7 +19,7 @@ public class AuthScheme implements Serializable {
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("A unique name used to identify the scheme within the instance of Elements.")
-    public String aud;
+    public String audience;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("A base-64 encoded public key.")
@@ -41,12 +41,12 @@ public class AuthScheme implements Serializable {
         this.id = id;
     }
 
-    public String getAud() {
-        return aud;
+    public String getAudience() {
+        return audience;
     }
 
-    public void setAud(String aud) {
-        this.aud = aud;
+    public void setAudience(String audience) {
+        this.audience = audience;
     }
 
     public String getPubKey() {

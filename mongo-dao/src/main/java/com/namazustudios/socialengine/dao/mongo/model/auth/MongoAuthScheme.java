@@ -6,7 +6,6 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import dev.morphia.annotations.*;
-import dev.morphia.utils.IndexType;
 import org.bson.types.ObjectId;
 
 import java.util.List;
@@ -19,7 +18,7 @@ import java.util.List;
         processors = ObjectIdProcessor.class))
 @Entity(value = "auth_scheme", useDiscriminator = false)
 @SearchableDocument(fields = {
-        @SearchableField(name = "aud", path = "/aud"),
+        @SearchableField(name = "audience", path = "/audience"),
         @SearchableField(name = "userLevel", path = "/userLevel")
 })
 public class MongoAuthScheme {
@@ -28,7 +27,7 @@ public class MongoAuthScheme {
     public String id;
 
     @Property
-    public String aud;
+    public String audience;
 
     @Property
     public String pubKey;
@@ -47,12 +46,12 @@ public class MongoAuthScheme {
         this.id = id;
     }
 
-    public String getAud() {
-        return aud;
+    public String getAudience() {
+        return audience;
     }
 
-    public void setAud(String aud) {
-        this.aud = aud;
+    public void setAudience(String audience) {
+        this.audience = audience;
     }
 
     public String getPubKey() {

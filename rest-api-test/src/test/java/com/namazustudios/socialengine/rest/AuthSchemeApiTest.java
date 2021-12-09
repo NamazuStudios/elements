@@ -59,7 +59,7 @@ public class AuthSchemeApiTest {
     public void createAuthScheme() {
         final var createRequest = new CreateAuthSchemeRequest();
 
-        createRequest.setAud("test_aud");
+        createRequest.setAudience("test_aud");
         createRequest.setUserLevel("SUPERUSER");
         createRequest.setPubKey("test_key");
 
@@ -89,7 +89,7 @@ public class AuthSchemeApiTest {
 
         final var updateRequest = new UpdateAuthSchemeRequest();
         updateRequest.setAuthSchemeId(authScheme.id);
-        updateRequest.setAud("test_aud");
+        updateRequest.setAudience("test_aud");
         updateRequest.setPubKey("test_key");
         updateRequest.setRegenerate(false);
         updateRequest.setUserLevel("SUPERUSER");
