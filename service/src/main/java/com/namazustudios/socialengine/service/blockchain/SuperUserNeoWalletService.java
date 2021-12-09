@@ -6,20 +6,23 @@ import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateNeoWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.service.UserService;
+import io.neow3j.crypto.ScryptParams;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.wallet.Wallet;
+import io.neow3j.wallet.nep6.NEP6Account;
+import io.neow3j.wallet.nep6.NEP6Contract;
 import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Base64;
+import java.util.List;
 
 public class SuperUserNeoWalletService implements NeoWalletService {
 
@@ -57,14 +60,12 @@ public class SuperUserNeoWalletService implements NeoWalletService {
 
         var neoWallet = getWalletDao().getWallet(walletId);
         try {
-            NEP6Wallet wallet = getNeow3jClient().updateWallet(neoWallet.getWallet(), name, password, newPassword);
-            var walletBytes = Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet);
-            walletRequest.setUpdatedWallet(Base64.getEncoder().encodeToString(walletBytes));
+            var walletFromElements = getNeow3jClient().elementsWalletToNEP6(neoWallet.getWallet());
+            var wallet = getNeow3jClient().updateWallet(walletFromElements, name, password, newPassword);
+            return getWalletDao().updateWallet(walletId, walletRequest, getNeow3jClient().nep6ToElementsWallet(wallet));
         } catch (CipherException | NEP2InvalidFormat | NEP2InvalidPassphrase | JsonProcessingException e) {
             throw new InternalException(e.getMessage());
         }
-
-        return getWalletDao().updateWallet(walletId, walletRequest);
     }
 
     @Override
@@ -84,28 +85,30 @@ public class SuperUserNeoWalletService implements NeoWalletService {
         if (pw.isEmpty()){
             try {
                 var wallet = getNeow3jClient().createWallet(walletRequest.getDisplayName());
+                var elementsWallet = getNeow3jClient().nep6ToElementsWallet(wallet);
                 var neoWallet = new NeoWallet();
 
                 neoWallet.setDisplayName(walletRequest.getDisplayName());
-                neoWallet.setWallet(wallet);
+                neoWallet.setWallet(elementsWallet);
                 neoWallet.setUser(getUserService().getUser(walletRequest.getUserId()));
 
                 return getWalletDao().createWallet(neoWallet);
             } catch (CipherException | JsonProcessingException e) {
-                return null;
+                throw new InternalException(e.getMessage());
             }
         } else {
             try {
                 var wallet = getNeow3jClient().createWallet(walletRequest.getDisplayName(), pw);
+                var elementsWallet = getNeow3jClient().nep6ToElementsWallet(wallet);
                 var neoWallet = new NeoWallet();
 
                 neoWallet.setDisplayName(walletRequest.getDisplayName());
-                neoWallet.setWallet(wallet);
+                neoWallet.setWallet(elementsWallet);
                 neoWallet.setUser(getUserService().getUser(walletRequest.getUserId()));
 
                 return neoWalletDao.createWallet(neoWallet);
             } catch (CipherException | JsonProcessingException e) {
-                return null;
+                throw new InternalException(e.getMessage());
             }
         }
     }

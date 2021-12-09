@@ -14,6 +14,7 @@ import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundExce
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.Nep6Wallet;
 import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -70,7 +71,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         var mongoNeoWallet = getDatastore().find(MongoNeoWallet.class)
                 .filter(Filters.or(
                                 Filters.eq("_id", objectId),
-                                Filters.eq("name", walletNameOrId)
+                                Filters.eq("displayName", walletNameOrId)
                         )
                 ).first();
 
@@ -97,7 +98,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
     }
 
     @Override
-    public NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest) {
+    public NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet) throws JsonProcessingException {
 
         getValidationHelper().validateModel(updatedWalletRequest, ValidationGroups.Update.class);
 
@@ -118,7 +119,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
             builder.with(set("user", newUser));
         }
 
-        builder.with(set("walletString", updatedWalletRequest.getUpdatedWallet()));
+        builder.with(set("wallet", Wallet.OBJECT_MAPPER.writeValueAsBytes(updatedWallet)));
 
         final MongoNeoWallet mongoNeoWallet = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
@@ -139,7 +140,6 @@ public class MongoNeoWalletDao implements NeoWalletDao {
 
         final var query = getDatastore().find(MongoNeoWallet.class);
         final var user = getMongoUser(wallet.getUser().getId());
-        final var walletBytes = Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet());
 
         query.filter(and(
                 eq("user", user),
@@ -149,7 +149,7 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         final var builder = new UpdateBuilder().with(
                 set("user", user),
                 set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
-                set("walletString", Base64.getEncoder().encodeToString(walletBytes))
+                set("wallet", Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
         );
 
         final var mongoWallet = getMongoDBUtils().perform(
@@ -178,7 +178,6 @@ public class MongoNeoWalletDao implements NeoWalletDao {
         }
 
         return getBeanMapper().map(input, NeoWallet.class);
-
     }
 
     private MongoUser getMongoUser(final String userId) {

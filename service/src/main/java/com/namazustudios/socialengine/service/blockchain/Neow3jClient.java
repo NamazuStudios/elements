@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.namazustudios.socialengine.model.blockchain.Nep6Wallet;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -90,6 +91,22 @@ public interface Neow3jClient {
      * @return the {@link TransactionBuilder}, never null
      */
     TransactionBuilder getTransactionBuilder(Neow3j neow3j);
+
+    /**
+     * Converts a {@link Nep6Wallet} into a {@link NEP6Wallet}.
+     *
+     * @param wallet the elements {@link Nep6Wallet}.
+     * @return the converted {@link NEP6Wallet}, never null
+     */
+    NEP6Wallet elementsWalletToNEP6(Nep6Wallet wallet);
+
+    /**
+     * Converts a {@link NEP6Wallet} into a {@link Nep6Wallet}.
+     *
+     * @param wallet the {@link NEP6Wallet}.
+     * @return the converted {@link Nep6Wallet}, never null
+     */
+    Nep6Wallet nep6ToElementsWallet(NEP6Wallet wallet);
 
 }
 

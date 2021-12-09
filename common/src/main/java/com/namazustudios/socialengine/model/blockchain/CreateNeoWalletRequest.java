@@ -14,6 +14,7 @@ public class CreateNeoWalletRequest {
     private String displayName;
 
     @ApiModelProperty("The elements-defined user ID to own the wallet.")
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     private String userId;
 
     @ApiModelProperty("Password to encrypt the wallet.")

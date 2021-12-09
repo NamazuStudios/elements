@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.model.blockchain;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.user.User;
-import io.neow3j.wallet.nep6.NEP6Wallet;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -23,7 +22,7 @@ public class NeoWallet {
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The NEP6 wallet file.")
-    private NEP6Wallet wallet;
+    private Nep6Wallet wallet;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The User associated with this wallet.")
@@ -45,11 +44,11 @@ public class NeoWallet {
         this.displayName = displayName;
     }
 
-    public NEP6Wallet getWallet() {
+    public Nep6Wallet getWallet() {
         return wallet;
     }
 
-    public void setWallet(NEP6Wallet wallet) {
+    public void setWallet(Nep6Wallet wallet) {
         this.wallet = wallet;
     }
 
