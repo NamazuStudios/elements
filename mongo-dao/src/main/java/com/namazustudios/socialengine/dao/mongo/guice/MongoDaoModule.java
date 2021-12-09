@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.*;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInSessionDao;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInUserDao;
 import com.namazustudios.socialengine.dao.mongo.application.*;
+import com.namazustudios.socialengine.dao.mongo.auth.MongoAuthSchemeDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoSmartContractDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
@@ -82,6 +83,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(NeoSmartContractDao.class).to(MongoNeoSmartContractDao.class);
         bind(NeoTokenDao.class).to(MongoNeoTokenDao.class);
         bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
+        bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -137,6 +139,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(NeoSmartContractDao.class);
         expose(NeoTokenDao.class);
         expose(NeoWalletDao.class);
+        expose(AuthSchemeDao.class);
 
     }
 
