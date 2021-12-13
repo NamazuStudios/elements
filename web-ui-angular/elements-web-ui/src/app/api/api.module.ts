@@ -36,7 +36,7 @@ import { SessionAndLoginService } from './services/session-and-login.service';
 import { UsernamePasswordSessionService } from './services/username-password-session.service';
 import { MissionsService } from './services/missions.service';
 import { InventoryService } from './services/inventory.service';
-import { NeoWalletsService } from './services/neo-wallets.service';
+import { NeoWalletsService } from './services/blockchain/neo-wallets.service';
 
 /**
  * Provider for all Api services, plus ApiConfiguration

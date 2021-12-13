@@ -6,13 +6,13 @@ export interface NEP6Account {
 
   readonly label?: string;
 
-  readonly isDefault: boolean;
+  readonly isDefault?: boolean;
 
-  readonly lock: boolean;
+  readonly lock?: boolean;
 
-  readonly key: string;
+  readonly key?: string;
 
-  contract: NEP6Contract;
+  contract?: NEP6Contract;
 
-  extra: any;
+  extra?: any;
 }

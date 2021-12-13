@@ -2,7 +2,7 @@
 /**
  * Represents a request to create a neo wallet.
  */
-export interface CreateWalletRequest {
+export interface CreateNeoWalletRequest {
   /**
    * A user-defined name for the wallet..
    */

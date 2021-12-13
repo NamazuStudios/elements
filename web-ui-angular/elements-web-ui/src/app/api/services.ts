@@ -23,7 +23,7 @@ export { GameOnTournamentService } from './services/game-on-tournament.service';
 export { ItemsService } from './services/items.service';
 export { MissionsService } from './services/missions.service';
 export { LeaderboardsService } from './services/leaderboards.service';
-export { NeoWalletsService } from './services/neo-wallets.service';
+export { NeoWalletsService } from './services/blockchain/neo-wallets.service';
 export { RankingService } from './services/ranking.service';
 export { ScoresService } from './services/scores.service';
 export { FirebaseCloudNotificationsService } from './services/firebase-cloud-notifications.service';

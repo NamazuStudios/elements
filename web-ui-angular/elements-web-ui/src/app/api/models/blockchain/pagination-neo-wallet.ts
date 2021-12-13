@@ -1,5 +1,5 @@
 /* tslint:disable */
-import { NeoWallet } from './neo-wallet';
+import { NeoWallet } from "./neo-wallet";
 export interface PaginationNeoWallet {
   offset?: number;
   total?: number;

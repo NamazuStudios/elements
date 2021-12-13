@@ -1,47 +1,56 @@
 /* tslint:disable */
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpRequest, HttpResponse, HttpHeaders} from '@angular/common/http';
-import { BaseService } from '../base-service';
-import { ApiConfiguration } from '../api-configuration';
-import { StrictHttpResponse } from '../strict-http-response';
-import { Observable } from 'rxjs';
-import { map as __map, filter as __filter } from 'rxjs/operators';
+import { Injectable } from "@angular/core";
+import {
+  HttpClient,
+  HttpRequest,
+  HttpResponse,
+  HttpHeaders,
+} from "@angular/common/http";
+import { BaseService } from "../../base-service";
+import { ApiConfiguration } from "../../api-configuration";
+import { StrictHttpResponse } from "../../strict-http-response";
+import { Observable } from "rxjs";
+import { map as __map, filter as __filter } from "rxjs/operators";
 
-import { NeoWallet } from '../models/wallet/neo-wallet';
-import { PaginationNeoWallet } from '../models/wallet/pagination-neo-wallet';
+import { NeoWallet } from "../../models/blockchain/neo-wallet";
+import { PaginationNeoWallet } from "../../models/blockchain/pagination-neo-wallet";
+import { CreateNeoWalletRequest } from "../../models/blockchain/create-neo-wallet-request";
+import { UpdateNeoWalletRequest } from "../../models/blockchain/update-neo-wallet-request";
 @Injectable({
-  providedIn: 'root',
+  providedIn: "root",
 })
 class NeoWalletsService extends BaseService {
-  constructor(
-    config: ApiConfiguration,
-    http: HttpClient
-  ) {
+  constructor(config: ApiConfiguration, http: HttpClient) {
     super(config, http);
   }
+
+  readonly network = "NEO";
 
   /**
    * Gets the metadata for a single wallet.  This may include more specific details not availble in the bulk-get or fetch operation.
    * @param walletId undefined
    * @return successful operation
    */
-  getWalletResponse(walletId: string): Observable<StrictHttpResponse<NeoWallet>> {
+  getWalletResponse(
+    walletId: string
+  ): Observable<StrictHttpResponse<NeoWallet>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
 
     let req = new HttpRequest<any>(
-      'GET',
+      "GET",
       this.rootUrl + `/blockchain/neo/wallet/${walletId}`,
       __body,
       {
         headers: __headers,
         params: __params,
-        responseType: 'json'
-      });
+        responseType: "json",
+      }
+    );
 
     return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
+      __filter((_r) => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
         return _r as StrictHttpResponse<NeoWallet>;
       })
@@ -54,9 +63,7 @@ class NeoWalletsService extends BaseService {
    * @return successful operation
    */
   getWallet(walletId: string): Observable<NeoWallet> {
-    return this.getWalletResponse(walletId).pipe(
-      __map(_r => _r.body)
-    );
+    return this.getWalletResponse(walletId).pipe(__map((_r) => _r.body));
   }
 
   /**
@@ -69,24 +76,27 @@ class NeoWalletsService extends BaseService {
    *
    * @return successful operation
    */
-  updateWalletResponse(params: NeoWalletsService.UpdateWalletParams): Observable<StrictHttpResponse<NeoWallet>> {
+  updateWalletResponse(
+    params: NeoWalletsService.UpdateWalletParams
+  ): Observable<StrictHttpResponse<NeoWallet>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
 
     __body = params.body;
     let req = new HttpRequest<any>(
-      'PUT',
+      "PUT",
       this.rootUrl + `/blockchain/neo/wallet/${params.id}`,
       __body,
       {
         headers: __headers,
         params: __params,
-        responseType: 'json'
-      });
+        responseType: "json",
+      }
+    );
 
     return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
+      __filter((_r) => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
         return _r as StrictHttpResponse<NeoWallet>;
       })
@@ -97,16 +107,16 @@ class NeoWalletsService extends BaseService {
    * Updates a Neo Wallet with the specified walletId.
    * @param params The `WalletsService.UpdateWalletParams` containing the following parameters:
    *
-   * - `walletId`:
+   * - `tokenId`:
    *
    * - `body`:
    *
    * @return successful operation
    */
-  updateWallet(params: NeoWalletsService.UpdateWalletParams): Observable<NeoWallet> {
-    return this.updateWalletResponse(params).pipe(
-      __map(_r => _r.body)
-    );
+  updateWallet(
+    params: NeoWalletsService.UpdateWalletParams
+  ): Observable<NeoWallet> {
+    return this.updateWalletResponse(params).pipe(__map((_r) => _r.body));
   }
 
   /**
@@ -119,19 +129,20 @@ class NeoWalletsService extends BaseService {
     let __body: any = null;
 
     let req = new HttpRequest<any>(
-      'DELETE',
+      "DELETE",
       this.rootUrl + `/blockchain/neo/wallet/${walletId}`,
       __body,
       {
         headers: __headers,
         params: __params,
-        responseType: 'text'
-      });
+        responseType: "text",
+      }
+    );
 
     return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
+      __filter((_r) => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
-        return _r.clone({ body: null }) as StrictHttpResponse<void>
+        return _r.clone({ body: null }) as StrictHttpResponse<void>;
       })
     );
   }
@@ -141,9 +152,7 @@ class NeoWalletsService extends BaseService {
    * @param walletId undefined
    */
   deleteWallet(walletId: string): Observable<void> {
-    return this.deleteWalletResponse(walletId).pipe(
-      __map(_r => _r.body)
-    );
+    return this.deleteWalletResponse(walletId).pipe(__map((_r) => _r.body));
   }
 
   /**
@@ -160,26 +169,33 @@ class NeoWalletsService extends BaseService {
    *
    * @return successful operation
    */
-  getWalletsResponse(params: NeoWalletsService.GetWalletsParams): Observable<StrictHttpResponse<PaginationNeoWallet>> {
+  getWalletsResponse(
+    params: NeoWalletsService.GetWalletsParams
+  ): Observable<StrictHttpResponse<PaginationNeoWallet>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
-    if (params.offset != null) __params = __params.set('offset', params.offset.toString());
-    if (params.count != null) __params = __params.set('count', params.count.toString());
-    if (params.userId != null) __params = __params.set('userId', params.userId.toString());
-    if (params.format != null) __params = __params.set('format', params.format.toString());
+    if (params.offset != null)
+      __params = __params.set("offset", params.offset.toString());
+    if (params.count != null)
+      __params = __params.set("count", params.count.toString());
+    if (params.userId != null)
+      __params = __params.set("userId", params.userId.toString());
+    if (params.format != null)
+      __params = __params.set("format", params.format.toString());
     let req = new HttpRequest<any>(
-      'GET',
+      "GET",
       this.rootUrl + `/blockchain/neo/wallet`,
       __body,
       {
         headers: __headers,
         params: __params,
-        responseType: 'json'
-      });
+        responseType: "json",
+      }
+    );
 
     return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
+      __filter((_r) => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
         return _r as StrictHttpResponse<PaginationNeoWallet>;
       })
@@ -200,10 +216,10 @@ class NeoWalletsService extends BaseService {
    *
    * @return successful operation
    */
-  getWallets(params: NeoWalletsService.GetWalletsParams): Observable<PaginationNeoWallet> {
-    return this.getWalletsResponse(params).pipe(
-      __map(_r => _r.body)
-    );
+  getWallets(
+    params: NeoWalletsService.GetWalletsParams
+  ): Observable<PaginationNeoWallet> {
+    return this.getWalletsResponse(params).pipe(__map((_r) => _r.body));
   }
 
   /**
@@ -211,23 +227,26 @@ class NeoWalletsService extends BaseService {
    * @param body undefined
    * @return successful operation
    */
-  createWalletResponse(body?: NeoWallet): Observable<StrictHttpResponse<NeoWallet>> {
+  createWalletResponse(
+    body?: CreateNeoWalletRequest
+  ): Observable<StrictHttpResponse<NeoWallet>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
     __body = body;
     let req = new HttpRequest<any>(
-      'POST',
+      "POST",
       this.rootUrl + `/blockchain/neo/wallet`,
       __body,
       {
         headers: __headers,
         params: __params,
-        responseType: 'json'
-      });
+        responseType: "json",
+      }
+    );
 
     return this.http.request<any>(req).pipe(
-      __filter(_r => _r instanceof HttpResponse),
+      __filter((_r) => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
         return _r as StrictHttpResponse<NeoWallet>;
       })
@@ -239,21 +258,18 @@ class NeoWalletsService extends BaseService {
    * @param body undefined
    * @return successful operation
    */
-  createWallet(body?: NeoWallet): Observable<NeoWallet> {
-    return this.createWalletResponse(body).pipe(
-      __map(_r => _r.body)
-    );
+  createWallet(body?: CreateNeoWalletRequest): Observable<NeoWallet> {
+    return this.createWalletResponse(body).pipe(__map((_r) => _r.body));
   }
 }
 
 module NeoWalletsService {
-
   /**
    * Parameters for updateWallet
    */
   export interface UpdateWalletParams {
     id: string;
-    body?: NeoWallet;
+    body?: UpdateNeoWalletRequest;
   }
 
   /**
@@ -262,9 +278,9 @@ module NeoWalletsService {
   export interface GetWalletsParams {
     offset?: number;
     count?: number;
-    userId: string;
+    userId?: string;
     format?: string;
   }
 }
 
-export { NeoWalletsService }
+export { NeoWalletsService };

@@ -9,6 +9,7 @@ import { ItemsListComponent } from './items-list/items-list.component';
 import { MissionsListComponent} from './missions-list/missions-list.component';
 import { ProfilesListComponent } from './profiles-list/profiles-list.component';
 import { LeaderboardsListComponent } from './leaderboards-list/leaderboards-list.component';
+import { WalletsListComponent } from './wallets-list/wallets-list.component';
 
 const appRoutes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -20,6 +21,7 @@ const appRoutes: Routes = [
   { path: 'missions', component: MissionsListComponent, canActivate: [AuthenticationGuard] },
   { path: 'profiles', component: ProfilesListComponent, canActivate: [AuthenticationGuard] },
   { path: 'leaderboards', component: LeaderboardsListComponent, canActivate: [AuthenticationGuard] },
+  { path: 'wallets', component: WalletsListComponent, canActivate: [AuthenticationGuard] },
   // { path: 'applications/:id', component: ApplicationDetailComponent, canActivate: [AuthenticationGuard] },
   // { path: 'applications/:applicationId/configurations/:id', component: ApplicationConfigurationDetailComponent, canActivate: [AuthenticationGuard] },
   { path: '**', redirectTo: '' }
