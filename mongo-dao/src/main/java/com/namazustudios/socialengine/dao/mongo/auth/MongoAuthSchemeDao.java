@@ -151,7 +151,7 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     @Override
     public void deleteAuthScheme(String authSchemeId) {
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(authSchemeId);
-        final var query = getDatastore().find(MongoNeoWallet.class);
+        final var query = getDatastore().find(MongoAuthScheme.class);
 
         query.filter(eq("_id", objectId));
         query.delete();
