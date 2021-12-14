@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.auth.*;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import org.testng.annotations.DataProvider;
@@ -102,5 +103,16 @@ public class AuthSchemeApiTest {
                 .readEntity(UpdateAuthSchemeResponse.class);
 
         assertNotNull(updateAuthSchemeResponse);
+    }
+
+    @Test(dependsOnMethods = "createAuthScheme")
+    public void getAuthSchemes() {
+        var authSchemes = client
+                .target(apiRoot + "/auth_scheme")
+                .request()
+                .get()
+                .readEntity(Pagination.class);
+
+        assertNotNull(authSchemes);
     }
 }

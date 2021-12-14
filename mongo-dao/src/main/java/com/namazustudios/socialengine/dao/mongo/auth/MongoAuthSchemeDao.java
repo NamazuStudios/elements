@@ -12,6 +12,7 @@ import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.auth.*;
@@ -50,7 +51,8 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
 
         final Query<MongoAuthScheme> mongoQuery = getDatastore().find(MongoAuthScheme.class);
 
-        if (tags != null && !tags.isEmpty()) {
+        tags.remove("");
+        if (!tags.isEmpty()) {
             mongoQuery.filter(Filters.in("tags", tags));
         }
 
@@ -59,14 +61,16 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
 
     @Override
     public AuthScheme getAuthScheme(String authSchemeId) {
+        final var objectId = getMongoDBUtils().parseOrReturnNull(authSchemeId);
+
         var mongoAuthScheme = getDatastore().find(MongoAuthScheme.class)
                 .filter(Filters.or(
-                                Filters.eq("_id", authSchemeId)
+                                Filters.eq("_id", objectId)
                         )
                 ).first();
 
-        if(null == mongoAuthScheme) {
-            throw new NotFoundException("Unable to find auth scheme with an id of " + authSchemeId);
+        if (mongoAuthScheme == null) {
+            throw new NeoWalletNotFoundException("Auth Scheme not found: " + authSchemeId);
         }
 
         return transform(mongoAuthScheme);
