@@ -48,8 +48,6 @@ import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
 import com.namazustudios.socialengine.service.progress.SuperUserProgressService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
-import com.namazustudios.socialengine.service.savedata.SaveDataDocumentServiceProvider;
-import com.namazustudios.socialengine.service.savedata.SuperUserSaveDataDocumentService;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
@@ -289,10 +287,6 @@ public class ServicesModule extends PrivateModule {
             .to(DefaultHealthStatusService.class)
             .in(scope);
 
-        bind(SaveDataDocumentService.class)
-            .toProvider(SaveDataDocumentServiceProvider.class)
-            .in(scope);
-
         bind(NameService.class)
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
@@ -372,7 +366,7 @@ public class ServicesModule extends PrivateModule {
 
         bind(ScoreService.class)
             .annotatedWith(Unscoped.class)
-            .toProvider(ScoreServiceProvider.class);
+            .to(ScoreService.class);
 
         bind(LeaderboardService.class)
             .annotatedWith(Unscoped.class)
@@ -452,13 +446,17 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(StandardNeow3jClient.class);
 
-        bind(TokenService.class)
+        bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserTokenService.class);
+            .to(SuperUserNeoTokenService.class);
 
-        bind(SmartContractTemplateService.class)
+        bind(AuthSchemeService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserAuthSchemeService.class);
+
+        bind(NeoSmartContractService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserSmartContractTemplateService.class);
+            .to(SuperUserNeoSmartContractService.class);
 
         bind(SaveDataDocumentService.class)
             .annotatedWith(Unscoped.class)
@@ -517,7 +515,6 @@ public class ServicesModule extends PrivateModule {
         expose(Neow3jClient.class);
         expose(TokenService.class);
         expose(SmartContractTemplateService.class);
-        expose(SaveDataDocumentService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -557,7 +554,6 @@ public class ServicesModule extends PrivateModule {
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
         expose(TokenService.class).annotatedWith(Unscoped.class);
         expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
-        expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
 
     }
 

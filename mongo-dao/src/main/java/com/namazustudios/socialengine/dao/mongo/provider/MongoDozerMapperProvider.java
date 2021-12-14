@@ -12,10 +12,8 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.*;
-import com.namazustudios.socialengine.dao.mongo.model.savedata.MongoSaveDataDocument;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
-import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
@@ -166,7 +164,12 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(NeoWallet.class, MongoNeoWallet.class)
-                .fields("wallet", "walletString", customConverter(MongoNeoWalletConverter.class));
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                    .fields("wallet", "wallet", customConverter(MongoNeoWalletConverter.class));
+
+            mapping(NeoToken.class, MongoNeoToken.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                    .fields("metadata", "metadata", customConverter(IdentityConverter.class));
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)
                 .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))

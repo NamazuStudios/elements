@@ -1,0 +1,85 @@
+<div class="wallets-list">
+  <div class="spinner-container" *ngIf="dataSource.loading$ | async">
+    <mat-spinner></mat-spinner>
+  </div>
+
+  <mat-form-field>
+    <input matInput placeholder="Search wallets" #input>
+  </mat-form-field>
+
+  <button mat-raised-button color="primary" (click)="addWallet()">Create Wallet</button>
+  <button mat-raised-button color="primary" (click)="deleteSelectedWallets()" [disabled]="!hasSelection">Remove Selected
+    Wallets</button>
+
+  <mat-button-toggle-group>
+    <mat-button-toggle value="Yours">Yours</mat-button-toggle>
+    <mat-button-toggle value="Superusers">Superusers</mat-button-toggle>
+    <mat-button-toggle value="Users">Users</mat-button-toggle>
+    <mat-button-toggle value="All">All</mat-button-toggle>
+  </mat-button-toggle-group>
+  <span style="float:right">
+    Active Wallet: <a routerLink="/">Wallet</a>
+  </span>
+
+  <mat-table class="users-table mat-elevation-z8" [dataSource]="dataSource">
+
+    <ng-container matColumnDef="select">
+      <mat-header-cell fxFlex="75px" *matHeaderCellDef>
+        <mat-checkbox (change)="$event ? masterToggle() : null" [checked]="selection.hasValue() && isAllSelected()"
+          [indeterminate]="selection.hasValue() && !isAllSelected()">
+        </mat-checkbox>
+      </mat-header-cell>
+      <mat-cell fxFlex="75px" *matCellDef="let row">
+        <mat-checkbox (click)="$event.stopPropagation()" (change)="$event ? selection.toggle(row) : null"
+          [checked]="selection.isSelected(row)">
+        </mat-checkbox>
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="id">
+      <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+      <mat-cell *matCellDef="let wallet" style="text-overflow: ellipsis;">{{wallet.id}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="owner">
+      <mat-header-cell *matHeaderCellDef>Owner</mat-header-cell>
+      <mat-cell *matCellDef="let wallet">{{wallet.user.name}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="level">
+      <mat-header-cell *matHeaderCellDef>Level</mat-header-cell>
+      <mat-cell *matCellDef="let wallet">{{wallet.user.level}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let wallet">{{wallet.displayName}}</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="content">
+      <mat-header-cell *matHeaderCellDef>Content</mat-header-cell>
+      <mat-cell *matCellDef="let wallet"><span style='font-weight: bold;'>N:</span>{{wallet.wallet.scrypt.n}}
+        <span style='font-weight: bold; padding-left: 4px;'>R:</span>{{wallet.wallet.scrypt.r}}
+        <span style='font-weight: bold; padding-left: 4px;'>P:</span>{{wallet.wallet.scrypt.p}}
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let wallet">
+        <button mat-raised-button color="primary" (click)="editWallet(wallet)">Contents</button>
+        &nbsp;
+        <button mat-raised-button color="primary" (click)="editWallet(wallet)">Edit</button>
+        &nbsp;
+        <button mat-raised-button color="primary" (click)="deleteWallet(wallet)">Remove</button>
+      </mat-cell>
+    </ng-container>
+
+    <mat-header-row *matHeaderRowDef="displayedColumns"></mat-header-row>
+
+    <mat-row *matRowDef="let row; columns: displayedColumns"></mat-row>
+
+  </mat-table>
+
+  <mat-paginator [pageSize]="10" [pageSizeOptions]="[5, 10, 20]"></mat-paginator>
+</div>

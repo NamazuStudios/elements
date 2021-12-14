@@ -20,7 +20,6 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.socialengine.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
@@ -84,6 +83,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(TokenDao.class).to(MongoTokenDao.class);
         bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
+        bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -140,6 +140,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(TokenDao.class);
         expose(NeoWalletDao.class);
         expose(SaveDataDocumentDao.class);
+        expose(AuthSchemeDao.class);
 
     }
 

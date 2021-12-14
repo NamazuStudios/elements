@@ -7,8 +7,8 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.security.InsufficientPermissionException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.CreateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoWallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
@@ -42,7 +42,7 @@ public class UserNeoWalletService implements NeoWalletService {
     }
 
     @Override
-    public NeoWallet updateWallet(String walletId, UpdateWalletRequest walletRequest) {
+    public NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest walletRequest) {
         var user = getUser();
         var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
         if (userId.isEmpty()){
@@ -57,18 +57,16 @@ public class UserNeoWalletService implements NeoWalletService {
 
         var neoWallet = getWalletDao().getWallet(walletId);
         try {
-            NEP6Wallet wallet = getNeow3jClient().updateWallet(neoWallet.getWallet(), name, password, newPassword);
-            var walletBytes = Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet);
-            walletRequest.setUpdatedWallet(Base64.getEncoder().encodeToString(walletBytes));
+            var walletFromElements = getNeow3jClient().elementsWalletToNEP6(neoWallet.getWallet());
+            var wallet = getNeow3jClient().updateWallet(walletFromElements, name, password, newPassword);
+            return getWalletDao().updateWallet(walletId, walletRequest, getNeow3jClient().nep6ToElementsWallet(wallet));
         } catch (CipherException | NEP2InvalidFormat | NEP2InvalidPassphrase | JsonProcessingException e) {
             throw new InternalException(e.getMessage());
         }
-
-        return getWalletDao().updateWallet(walletRequest);
     }
 
     @Override
-    public NeoWallet createWallet(CreateWalletRequest walletRequest) {
+    public NeoWallet createWallet(CreateNeoWalletRequest walletRequest) {
         var user = getUser();
         var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
         if (userId.isEmpty()){
@@ -86,28 +84,30 @@ public class UserNeoWalletService implements NeoWalletService {
         if (pw.isEmpty()){
             try {
                 var wallet = getNeow3jClient().createWallet(walletRequest.getDisplayName());
+                var elementsWallet = getNeow3jClient().nep6ToElementsWallet(wallet);
                 var neoWallet = new NeoWallet();
 
                 neoWallet.setDisplayName(walletRequest.getDisplayName());
-                neoWallet.setWallet(wallet);
+                neoWallet.setWallet(elementsWallet);
                 neoWallet.setUser(user);
 
                 return neoWalletDao.createWallet(neoWallet);
             } catch (CipherException | JsonProcessingException e) {
-                return null;
+                throw new InternalException(e.getMessage());
             }
         } else {
             try {
                 var wallet = getNeow3jClient().createWallet(walletRequest.getDisplayName(), pw);
+                var elementsWallet = getNeow3jClient().nep6ToElementsWallet(wallet);
                 var neoWallet = new NeoWallet();
 
                 neoWallet.setDisplayName(walletRequest.getDisplayName());
-                neoWallet.setWallet(wallet);
+                neoWallet.setWallet(elementsWallet);
                 neoWallet.setUser(user);
 
                 return neoWalletDao.createWallet(neoWallet);
             } catch (CipherException | JsonProcessingException e) {
-                return null;
+                throw new InternalException(e.getMessage());
             }
         }
     }
