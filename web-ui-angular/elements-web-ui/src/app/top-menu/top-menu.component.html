@@ -14,6 +14,7 @@
       <a mat-list-item routerLink="/missions">Missions</a>
       <a mat-list-item routerLink="/profiles">Profiles</a>
       <a mat-list-item routerLink="/leaderboards">Leaderboards</a>
+      <a mat-list-item routerLink="/wallets">Wallets</a>
       <hr />
       <a mat-list-item routerLink="/login" >Logout {{this.authenticationService.currentSession?.session.user.name}}</a>
     </mat-nav-list>
@@ -41,6 +42,7 @@
       <a mat-button routerLink="/missions" *ngIf="(this.authenticationService.isLoggedIn() | async)">Missions</a>
       <a mat-button routerLink="/profiles" *ngIf="(this.authenticationService.isLoggedIn() | async)">Profiles</a>
       <a mat-button routerLink="/leaderboards" *ngIf="(this.authenticationService.isLoggedIn() | async)">Leaderboards</a>
+      <a mat-button routerLink="/wallets" *ngIf="(this.authenticationService.isLoggedIn() | async)">Wallets</a>
 
       <span class="fill-remaining-space"></span>
 
