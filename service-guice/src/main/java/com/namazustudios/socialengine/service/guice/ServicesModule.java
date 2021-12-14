@@ -48,6 +48,7 @@ import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
 import com.namazustudios.socialengine.service.progress.SuperUserProgressService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
+import com.namazustudios.socialengine.service.savedata.SuperUserSaveDataDocumentService;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
@@ -127,8 +128,8 @@ public class ServicesModule extends PrivateModule {
             .toProvider(ProfileServiceProvider.class)
             .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(FollowerService.class)
@@ -272,15 +273,15 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(NeoWalletService.class)
-            .toProvider(WalletServiceProvider.class)
+            .toProvider(NeoWalletServiceProvider.class)
             .in(scope);
 
-        bind(TokenService.class)
-            .toProvider(TokenServiceProvider.class)
+        bind(NeoTokenService.class)
+            .toProvider(NeoTokenServiceProvider.class)
             .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(HealthStatusService.class)
@@ -513,8 +514,8 @@ public class ServicesModule extends PrivateModule {
         expose(HealthStatusService.class);
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
-        expose(TokenService.class);
-        expose(SmartContractTemplateService.class);
+        expose(NeoTokenService.class);
+        expose(NeoSmartContractService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -552,8 +553,8 @@ public class ServicesModule extends PrivateModule {
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
-        expose(TokenService.class).annotatedWith(Unscoped.class);
-        expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
+        expose(NeoTokenService.class).annotatedWith(Unscoped.class);
+        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
 
     }
 
