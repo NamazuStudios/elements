@@ -1,4 +1,4 @@
-import {TestBed, async, waitForAsync} from '@angular/core/testing';
+import { TestBed, async, waitForAsync } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import {ConfigService} from './config.service';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
