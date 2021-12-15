@@ -21,7 +21,7 @@ public class NeoSmartContract {
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The script hash of the contract from the blockchain.")
-    private byte[] scriptHash;
+    private String scriptHash;
 
     @ApiModelProperty("Any meta data for this contract.")
     private Map<String, Object> metadata;
@@ -42,11 +42,11 @@ public class NeoSmartContract {
         this.displayName = displayName;
     }
 
-    public byte[] getScriptHash() {
+    public String getScriptHash() {
         return scriptHash;
     }
 
-    public void setScriptHash(byte[] scriptHash) {
+    public void setScriptHash(String scriptHash) {
         this.scriptHash = scriptHash;
     }
 

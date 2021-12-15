@@ -80,7 +80,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
         query.filter(eq("scriptHash", scriptHash));
 
         final var builder = new UpdateBuilder().with(
-                set("displayname", patchNeoSmartContractRequest.getDisplayName()),
+                set("displayName", patchNeoSmartContractRequest.getDisplayName()),
                 set("scriptHash", scriptHash)
         );
 

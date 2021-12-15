@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.blockchain.*;
+import io.neow3j.contract.SmartContract;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
@@ -9,6 +10,7 @@ import io.neow3j.protocol.Neow3j;
 import io.neow3j.protocol.http.HttpService;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
+import io.neow3j.types.Hash160;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.Wallet;
 import io.neow3j.wallet.nep6.NEP6Account;
@@ -116,6 +118,16 @@ public class StandardNeow3jClient implements Neow3jClient {
             nep6Accounts.add(nep6Account);
         }
         return new Nep6Wallet(wallet.getName(), wallet.getVersion(), scryptParams, nep6Accounts, wallet.getExtra());
+    }
+
+    @Override
+    public Hash160 toHash160(String hash){
+        return new Hash160(hash);
+    }
+
+    @Override
+    public SmartContract getSmartContract(Hash160 hash) {
+        return new SmartContract(hash, getNeow3j());
     }
 
     private String getNeoHost() {

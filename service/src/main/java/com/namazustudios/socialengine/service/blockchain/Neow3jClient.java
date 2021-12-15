@@ -5,12 +5,14 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
+import io.neow3j.contract.SmartContract;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.Neow3j;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
+import io.neow3j.types.Hash160;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.nep6.NEP6Wallet;
 
@@ -108,5 +110,20 @@ public interface Neow3jClient {
      */
     Nep6Wallet nep6ToElementsWallet(NEP6Wallet wallet);
 
+    /**
+     * Converts a {@link Byte} array hash into a {@link Hash160}.
+     *
+     * @param hash the {@link Hash160} as a {@link Byte} array.
+     * @return the converted {@link Hash160}, never null
+     */
+    Hash160 toHash160(String hash);
+
+    /**
+     * Constructs a {@link SmartContract} representing the smart contract with the given script hash.
+     *
+     * @param hash the {@link Hash160}.
+     * @return the {@link SmartContract}, never null
+     */
+    SmartContract getSmartContract(Hash160 hash);
 }
 

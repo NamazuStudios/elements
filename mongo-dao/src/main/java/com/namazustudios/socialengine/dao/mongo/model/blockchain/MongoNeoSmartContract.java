@@ -5,13 +5,9 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
-import io.neow3j.types.Hash160;
 import org.bson.types.ObjectId;
-
-import java.util.List;
 import java.util.Map;
 
 @SearchableIdentity(@SearchableField(
@@ -36,7 +32,7 @@ public class MongoNeoSmartContract {
     public String displayName;
 
     @Property
-    public Hash160 scriptHash;
+    public String scriptHash;
 
     @Property
     private Map<String, Object> metadata;
@@ -57,11 +53,11 @@ public class MongoNeoSmartContract {
         this.displayName = displayName;
     }
 
-    public Hash160 getScriptHash() {
+    public String getScriptHash() {
         return scriptHash;
     }
 
-    public void setScriptHash(Hash160 scriptHash) {
+    public void setScriptHash(String scriptHash) {
         this.scriptHash = scriptHash;
     }
 
