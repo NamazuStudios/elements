@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.rest.security;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.model.user.UserClaim;
+import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.security.JWTCredentials;
 import com.namazustudios.socialengine.service.SessionService;
 import com.namazustudios.socialengine.service.UserService;
@@ -58,7 +61,15 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
 
         if (elm_user == null)
         {
-            // create user
+            var elm_userModelString = jwtCredentials.getClaim("elm_usermodel");
+            try {
+                var elm_userModel = objectMapper.readValue(elm_userModelString, UserClaim.class);
+
+                // create user
+
+            } catch (JsonProcessingException e) {
+                throw new BadRequestException(e);
+            }
         }
 
         requestContext.setProperty(USER_ATTRIBUTE, elm_user);
