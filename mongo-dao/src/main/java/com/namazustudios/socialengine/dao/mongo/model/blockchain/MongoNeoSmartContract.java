@@ -35,6 +35,9 @@ public class MongoNeoSmartContract {
     public String scriptHash;
 
     @Property
+    public String blockchain;
+
+    @Property
     private Map<String, Object> metadata;
 
     public String getId() {
@@ -59,6 +62,14 @@ public class MongoNeoSmartContract {
 
     public void setScriptHash(String scriptHash) {
         this.scriptHash = scriptHash;
+    }
+
+    public String getBlockchain() {
+        return blockchain;
+    }
+
+    public void setBlockchain(String blockchain) {
+        this.blockchain = blockchain;
     }
 
     public Map<String, Object> getMetadata() {

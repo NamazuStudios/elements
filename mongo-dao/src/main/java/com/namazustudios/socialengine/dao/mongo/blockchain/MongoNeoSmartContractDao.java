@@ -81,7 +81,8 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
 
         final var builder = new UpdateBuilder().with(
                 set("displayName", patchNeoSmartContractRequest.getDisplayName()),
-                set("scriptHash", scriptHash)
+                set("scriptHash", scriptHash),
+                set("blockchain", patchNeoSmartContractRequest.getBlockchain())
         );
 
         var metadata = patchNeoSmartContractRequest.getMetadata();

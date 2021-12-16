@@ -121,13 +121,9 @@ public class StandardNeow3jClient implements Neow3jClient {
     }
 
     @Override
-    public Hash160 toHash160(String hash){
-        return new Hash160(hash);
-    }
-
-    @Override
-    public SmartContract getSmartContract(Hash160 hash) {
-        return new SmartContract(hash, getNeow3j());
+    public SmartContract getSmartContract(String hash) {
+        var hash160 = new Hash160(hash);
+        return new SmartContract(hash160, getNeow3j());
     }
 
     private String getNeoHost() {

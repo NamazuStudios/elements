@@ -111,19 +111,11 @@ public interface Neow3jClient {
     Nep6Wallet nep6ToElementsWallet(NEP6Wallet wallet);
 
     /**
-     * Converts a {@link Byte} array hash into a {@link Hash160}.
-     *
-     * @param hash the {@link Hash160} as a {@link Byte} array.
-     * @return the converted {@link Hash160}, never null
-     */
-    Hash160 toHash160(String hash);
-
-    /**
      * Constructs a {@link SmartContract} representing the smart contract with the given script hash.
      *
-     * @param hash the {@link Hash160}.
+     * @param hash the {@link Hash160} as a string.
      * @return the {@link SmartContract}, never null
      */
-    SmartContract getSmartContract(Hash160 hash);
+    SmartContract getSmartContract(String hash);
 }
 
