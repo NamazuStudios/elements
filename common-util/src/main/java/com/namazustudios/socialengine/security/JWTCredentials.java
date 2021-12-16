@@ -2,8 +2,13 @@ package com.namazustudios.socialengine.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
+import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.namazustudios.socialengine.exception.security.AuthorizationHeaderParseException;
+
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 public class JWTCredentials {
 
@@ -52,5 +57,40 @@ public class JWTCredentials {
     public String getSignature() {
         return decoded.getSignature();
     }
+
+    /**
+     * Gets the issuer of the token
+     *
+     * @return the issuer, or null
+     */
+    public String getIssuer() { return decoded.getIssuer(); }
+
+    /**
+     * Gets the audience of the token
+     *
+     * @return the audience, or null
+     */
+    public List<String> getAudience() { return decoded.getAudience(); }
+
+    /**
+     * Gets the expiration date of the token
+     *
+     * @return the expiration, or null
+     */
+    public Date getExpirationDate() { return decoded.getExpiresAt(); }
+
+    /**
+     * Gets the 'not before' date of the token
+     *
+     * @return the 'not before' date, or null
+     */
+    public Date getNotBefore() { return decoded.getNotBefore(); }
+
+    /**
+     * Gets a token claim by name
+     *
+     * @return the token claim with the given name
+     */
+    public String getClaim(String name) { return decoded.getClaim(name).asString(); }
 
 }
