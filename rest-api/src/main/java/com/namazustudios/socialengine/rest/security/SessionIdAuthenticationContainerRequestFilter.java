@@ -1,9 +1,12 @@
 package com.namazustudios.socialengine.rest.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.security.JWTCredentials;
 import com.namazustudios.socialengine.service.SessionService;
+import com.namazustudios.socialengine.service.UserService;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -19,6 +22,10 @@ import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
 public abstract class SessionIdAuthenticationContainerRequestFilter implements ContainerRequestFilter {
 
     private SessionService sessionService;
+
+    private UserService userService;
+
+    private ObjectMapper objectMapper;
 
     /**
      * Checks the session and sets the appropraite attributes to the {@link ContainerRequestContext}.
@@ -40,6 +47,23 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
 
     }
 
+    protected void checkJWTAndSetAttributes(final ContainerRequestContext requestContext, final String jwt) {
+        var jwtCredentials = new JWTCredentials(jwt);
+
+        // TODO verify the signature against private key
+        var signature = jwtCredentials.getSignature();
+
+        var elm_uesrKey = jwtCredentials.getClaim("elm_userkey");
+        var elm_user = getUserService().getUser(elm_uesrKey);
+
+        if (elm_user == null)
+        {
+            // create user
+        }
+
+        requestContext.setProperty(USER_ATTRIBUTE, elm_user);
+    }
+
     public SessionService getSessionService() {
         return sessionService;
     }
@@ -49,4 +73,19 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
         this.sessionService = sessionService;
     }
 
+    public UserService getUserService() { return userService; }
+
+    @Inject
+    public void setUserService(UserService userService) {
+        this.userService = userService;
+    }
+
+    @Inject
+    public void setObjectMapper(final ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
 }

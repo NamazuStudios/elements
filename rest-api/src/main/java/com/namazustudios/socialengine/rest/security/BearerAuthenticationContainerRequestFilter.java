@@ -15,7 +15,17 @@ public class BearerAuthenticationContainerRequestFilter extends SessionIdAuthent
     public void filter(final ContainerRequestContext requestContext) throws IOException {
         AuthorizationHeader.withValueSupplier(requestContext::getHeaderString)
             .map(AuthorizationHeader::asBearerHeader)
-            .ifPresent(h -> checkSessionAndSetAttributes(requestContext, h.getCredentials()));
+            .ifPresent(h -> {
+                if (ValidateJWTFormat(h.getCredentials())) {
+                    checkJWTAndSetAttributes(requestContext, h.getCredentials());
+                } else {
+                    checkSessionAndSetAttributes(requestContext, h.getCredentials());
+                }
+            });
     }
 
+    // check for JWT format {xxx.xxx.xxx}
+    private Boolean ValidateJWTFormat(String credentials) {
+        return credentials.matches("(^[\\w-]*\\.[\\w-]*\\.[\\w-]*$)");
+    }
 }
