@@ -1,20 +1,27 @@
 package com.namazustudios.socialengine.service.auth;
 
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.service.Services;
 
 import javax.inject.Inject;
 import javax.inject.Provider;
+
+import static com.namazustudios.socialengine.service.Services.forbidden;
 
 public class AuthSchemeServiceProvider implements Provider<AuthSchemeService> {
 
     private User user;
 
-    private Provider<SuperUserAuthSchemeService> authSchemeService;
+    private Provider<SuperUserAuthSchemeService> superUserAuthSchemeServiceProvider;
 
     @Override
     public AuthSchemeService get() {
-        return getAuthSchemeService().get();
+
+        if (getUser().getLevel() == User.Level.SUPERUSER) {
+            return getSuperUserAuthSchemeServiceProvider().get();
+        }
+
+        return forbidden(AuthSchemeService.class);
+
     }
 
     public User getUser() {
@@ -26,12 +33,12 @@ public class AuthSchemeServiceProvider implements Provider<AuthSchemeService> {
         this.user = user;
     }
 
-    public Provider<SuperUserAuthSchemeService> getAuthSchemeService() {
-        return authSchemeService;
+    public Provider<SuperUserAuthSchemeService> getSuperUserAuthSchemeServiceProvider() {
+        return superUserAuthSchemeServiceProvider;
     }
 
     @Inject
-    public void setAuthSchemeService(Provider<SuperUserAuthSchemeService> authSchemeService) {
-        this.authSchemeService = authSchemeService;
+    public void setSuperUserAuthSchemeServiceProvider(Provider<SuperUserAuthSchemeService> superUserAuthSchemeServiceProvider) {
+        this.superUserAuthSchemeServiceProvider = superUserAuthSchemeServiceProvider;
     }
 }
