@@ -6,10 +6,13 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserClaim;
+import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.security.JWTCredentials;
 import com.namazustudios.socialengine.service.SessionService;
 import com.namazustudios.socialengine.service.UserService;
+import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
@@ -29,6 +32,8 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
     private UserService userService;
 
     private ObjectMapper objectMapper;
+
+    private Mapper mapper;
 
     /**
      * Checks the session and sets the appropraite attributes to the {@link ContainerRequestContext}.
@@ -50,11 +55,18 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
 
     }
 
+    /**
+     * Checks the JWT and sets the appropraite attributes to the {@link ContainerRequestContext}.
+     *
+     * @param requestContext the {@link ContainerRequestContext}
+     * @param jwt token
+     */
     protected void checkJWTAndSetAttributes(final ContainerRequestContext requestContext, final String jwt) {
         var jwtCredentials = new JWTCredentials(jwt);
 
-        // TODO verify the signature against private key
-        var signature = jwtCredentials.getSignature();
+        if (!jwtCredentials.verify()) {
+            throw new BadRequestException();
+        }
 
         var elm_uesrKey = jwtCredentials.getClaim("elm_userkey");
         var elm_user = getUserService().getUser(elm_uesrKey);
@@ -66,6 +78,13 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
                 var elm_userModel = objectMapper.readValue(elm_userModelString, UserClaim.class);
 
                 // create user
+                var toCreate = new UserCreateRequest();
+                toCreate.setName(elm_userModel.getName());
+                toCreate.setEmail(elm_userModel.getEmail());
+                toCreate.setLevel(elm_userModel.getLevel());
+
+                var createUserResponse = getUserService().createUser(toCreate);
+                elm_user = getMapper().map(createUserResponse, User.class);
 
             } catch (JsonProcessingException e) {
                 throw new BadRequestException(e);
@@ -73,6 +92,8 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
         }
 
         requestContext.setProperty(USER_ATTRIBUTE, elm_user);
+        // TODO: How to get profile from user?
+
     }
 
     public SessionService getSessionService() {
@@ -98,5 +119,14 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
 
     public ObjectMapper getObjectMapper() {
         return objectMapper;
+    }
+
+    public Mapper getMapper() {
+        return mapper;
+    }
+
+    @Inject
+    public void setMapper(Mapper mapper) {
+        this.mapper = mapper;
     }
 }
