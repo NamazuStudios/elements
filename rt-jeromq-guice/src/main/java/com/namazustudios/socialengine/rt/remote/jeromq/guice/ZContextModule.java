@@ -33,10 +33,6 @@ public class ZContextModule extends PrivateModule {
         return this;
     }
 
-    public ZContextModule withDefaultMaxSockets() {
-        return withMaxSockets(zmq.ZMQ.ZMQ_MAX_SOCKETS_DFLT);
-    }
-
     public ZContextModule withMaxSockets(int maxSockets) {
         maxSocketsAction = () -> bind(Integer.class).annotatedWith(named(MAX_SOCKETS)).toInstance(maxSockets);
         return this;
