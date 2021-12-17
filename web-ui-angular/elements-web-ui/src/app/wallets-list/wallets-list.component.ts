@@ -26,14 +26,16 @@ export class WalletsListComponent implements OnInit, AfterViewInit {
   selection: SelectionModel<NeoWallet>;
   dataSource: NeoWalletsDataSource;
 
-  displayedColumns = [
+  displayedColumns : Array<string> = [
     "select",
     "id",
     "owner",
     "name",
     "level",
     "content",
-    "actions",
+    "content-action",
+    "edit-action",
+    "remove-action",
   ];
   currentWallets: NeoWallet[];
   currentUser: User;

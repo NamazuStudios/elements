@@ -23,7 +23,7 @@ export class UsersListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<User>;
   dataSource: UsersDataSource;
-  displayedColumns = ["select", "id", "email", "level", "actions"];
+  displayedColumns = ["select", "id", "email", "level", "inventory-action", "edit-action", "delete-action"];
   currentUsers: User[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
