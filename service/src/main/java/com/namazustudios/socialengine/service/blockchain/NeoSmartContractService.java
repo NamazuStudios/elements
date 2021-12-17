@@ -1,14 +1,14 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoSmartContract;
-import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.PatchNeoSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Manages instances of {@link NeoSmartContract}.
@@ -60,6 +60,16 @@ public interface NeoSmartContractService {
          * @return the {@link NeoToken} as it was changed by the service.
          */
         NeoToken mintToken(MintTokenRequest mintTokenRequest);
+
+        /**
+         * Invokes a method on the {@link NeoSmartContract} corresponding to the passed contract id.
+         *
+         * @param invokeRequest the {@link InvokeContractRequest} with the contract and wallet id's
+         * @param method the method to invoke on the contract
+         * @param params optional params that may be required for the method
+         * @return the {@link Object} response from the blockchain invocation.
+         */
+        Object invoke(InvokeContractRequest invokeRequest, String method, List<String> params);
 
         /**
          * Deletes the {@link NeoSmartContract} with the supplied contract ID.

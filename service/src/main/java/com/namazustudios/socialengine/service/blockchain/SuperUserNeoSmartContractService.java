@@ -15,6 +15,7 @@ import io.neow3j.wallet.Account;
 import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -56,13 +57,64 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                 if (mintTokenRequest.getTokenId().size() > 1){
                     //TODO call mintAll with token list
                 } else {
-                    NeoToken token = getNeoTokenDao().getToken(mintTokenRequest.getTokenId().get(0));
-                    ContractParameter tokenIdParam = ContractParameter.byteArray(token.getId());
-                    ContractParameter tokenParam = ContractParameter.any(token.getToken());
+                    NeoToken neoToken = getNeoTokenDao().getToken(mintTokenRequest.getTokenId().get(0));
+                    ContractParameter tokenIdParam = ContractParameter.byteArray(neoToken.getId());
+                    var token = neoToken.getToken();
+                    List<ContractParameter> stakeholders = new ArrayList<>();
+                    for (StakeHolder stkhldr : token.getOwnership().getStakeHolders()){
+                        NeoWallet stakeholderWallet = getNeoWalletDao().getWallet(stkhldr.getWalletId());
+                        stakeholders.add(ContractParameter.array(
+                                ContractParameter.bool(stkhldr.isVoting()),
+                                ContractParameter.integer(stakeholderWallet.getWallet().getScrypt().getN()),
+                                ContractParameter.integer((int) stkhldr.getShares())
+                        ));
+                    }
+                    ContractParameter tokenParam = ContractParameter.array(
+                            ContractParameter.string(token.getDescription()),
+                            ContractParameter.array(token.getTags()),
+                            ContractParameter.integer((int) token.getTotalQuantity()),
+                            ContractParameter.string(token.getStatus()),
+                            ContractParameter.string(token.getPreviewUrls().get(0)),
+                            ContractParameter.array(token.getAssetUrls()),
+                            ContractParameter.array(
+                                    ContractParameter.array(stakeholders),
+                                    ContractParameter.integer((int) token.getOwnership().getCapitalization())
+                            ),
+                            ContractParameter.string(token.getTransferOptions())
+                    );
                     List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenParam);
                     try {
                         NeoInvokeFunction response = smartContract.callInvokeFunction("mint", params, AccountSigner.calledByEntry(account));
 
+//                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenParam)
+//                                .signers(AccountSigner.calledByEntry(account))
+//                                .sign()
+//                                .send();
+                    } catch (Throwable e){
+
+                    }
+                }
+                break;
+        }
+        return null;
+    }
+
+    @Override
+    public Object invoke(InvokeContractRequest invokeRequest, String method, List<String> params) {
+        NeoSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
+
+        switch(contract.getBlockchain()){
+            case "NEO":
+                SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
+                NeoWallet neoWallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
+                NEP6Wallet nepWallet = neow3JClient.elementsWalletToNEP6(neoWallet.getWallet());
+                Account account = Account.fromNEP6Account(nepWallet.getAccounts().get(0));
+                if (params.size() > 0){
+                    //TODO invoke method passing params
+                } else {
+                    try {
+                        NeoInvokeFunction response = smartContract.callInvokeFunction(method, AccountSigner.calledByEntry(account));
+                        return response;
 //                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenParam)
 //                                .signers(AccountSigner.calledByEntry(account))
 //                                .sign()

@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoSmartContract;
-import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.PatchNeoSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.service.blockchain.NeoSmartContractService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -13,6 +10,8 @@ import io.swagger.annotations.Authorization;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
@@ -63,6 +62,17 @@ public class NeoSmartContractResource {
             notes = "Mints the specified token using the specified contract id.")
     public NeoToken mintToken(final MintTokenRequest request) {
         return getNeoSmartContractService().mintToken(request);
+    }
+
+    @POST
+    @Path("invoke")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Mints a token using the specified contract.",
+            notes = "Mints the specified token using the specified contract id.")
+    public Object invoke(final InvokeContractRequest request,
+                              @QueryParam("method") String methodToInvoke,
+                              @QueryParam("params") List<String> methodParams) {
+        return getNeoSmartContractService().invoke(request, methodToInvoke, methodParams);
     }
 
     @DELETE
