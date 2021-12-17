@@ -27,7 +27,7 @@ import java.util.Map;
         @SearchableField(name = "type", path = "/type")
 })
 @Indexes({
-        @Index(fields = @Field(value = "name", type = IndexType.TEXT))
+        @Index(fields = @Field(value = "name", type = IndexType.TEXT), options = @IndexOptions(unique = true))
 })
 public class MongoNeoToken {
 

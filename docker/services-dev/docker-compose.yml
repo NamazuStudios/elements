@@ -4,7 +4,7 @@
 # social engine services.  This exposes ports so that the local machine may access
 # the local instances.
 
-version: '3'
+version: '3.7'
 services:
 
   redis:
@@ -24,6 +24,58 @@ services:
       - socialengine
     ports:
       - "27017:27017"
+
+  build-neo-cli:
+    build:
+      context: ../neo3-privatenet-docker/neo-node
+    image: ghcr.io/axlabs/neo3-privatenet-docker/neo-cli:master
+
+  build-neo-cli-with-plugins:
+    build:
+      context: ../neo3-privatenet-docker/neo-modules
+      dockerfile: ../docker/Dockerfile
+      target: NeoCliFinal
+      args:
+        IMAGE_TAG: master
+    image: ghcr.io/axlabs/neo3-privatenet-docker/neo-cli-with-plugins:master
+    depends_on:
+      - build-neo-cli
+
+  neo-consensus:
+    image: ghcr.io/axlabs/neo3-privatenet-docker/neo-cli-with-plugins:master
+    hostname: neo-consensus
+    container_name: neo-consensus
+    depends_on:
+      - build-neo-cli-with-plugins
+    volumes:
+      - ../neo3-privatenet-docker/config/config-consensus.privatenet3.json:/neo-cli/config.json:ro
+      - ../neo3-privatenet-docker/config/wallet-consensus.privatenet3.json:/neo-cli/wallet.json:rw
+      - ../neo3-privatenet-docker/config/rpcserver.config-consensus.json:/neo-cli/Plugins/RpcServer/config.json:ro
+      - ../neo3-privatenet-docker/config/dbft.config-consensus.json:/neo-cli/Plugins/DBFTPlugin/config.json:ro
+      - ../neo3-privatenet-docker/config/applicationlogs.config-consensus.json:/neo-cli/Plugins/ApplicationLogs/config.json:ro
+      - ../neo3-privatenet-docker/config/oracle.config-consensus.json:/neo-cli/Plugins/OracleService/config.json:ro
+      - ../neo3-privatenet-docker/config/rpcnep17tracker.config-consensus.json:/neo-cli/Plugins/RpcNep17Tracker/config.json:ro
+      - ../neo3-privatenet-docker/config/stateservice.config-consensus.json:/neo-cli/Plugins/StateService/config.json:ro
+    ports:
+      - "40332:40332"
+
+  neo-client:
+    image: ghcr.io/axlabs/neo3-privatenet-docker/neo-cli-with-plugins:master
+    hostname: neo-client
+    container_name: neo-client
+    depends_on:
+      - build-neo-cli-with-plugins
+      - neo-consensus
+    volumes:
+      - ../neo3-privatenet-docker/config/config-client2.privatenet3.json:/neo-cli/config.json:ro
+      - ../neo3-privatenet-docker/config/wallet-client2.privatenet3.json:/neo-cli/wallet.json:rw
+      - ../neo3-privatenet-docker/config/rpcserver.config-client2.json:/neo-cli/Plugins/RpcServer/config.json:ro
+      - ../neo3-privatenet-docker/config/applicationlogs.config-client2.json:/neo-cli/Plugins/ApplicationLogs/config.json:ro
+      - ../neo3-privatenet-docker/config/oracle.config-client2.json:/neo-cli/Plugins/OracleService/config.json:ro
+      - ../neo3-privatenet-docker/config/rpcnep17tracker.config-client2.json:/neo-cli/Plugins/RpcNep17Tracker/config.json:ro
+      - ../neo3-privatenet-docker/config/stateservice.config-client2.json:/neo-cli/Plugins/StateService/config.json:ro
+    ports:
+      - "20332:20332"
 
 networks:
   socialengine:

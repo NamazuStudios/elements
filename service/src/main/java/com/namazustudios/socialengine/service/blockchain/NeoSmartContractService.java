@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoSmartContract;
+import com.namazustudios.socialengine.model.blockchain.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.PatchNeoSmartContractRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
@@ -50,6 +52,14 @@ public interface NeoSmartContractService {
          * @return the {@link NeoSmartContract} as it was changed by the service.
          */
         NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest);
+
+        /**
+         * Mints the supplied {@link MintTokenRequest} using the supplied {@link NeoSmartContract}.
+         *
+         * @param mintTokenRequest the {@link MintTokenRequest} containing the contract id and token id for minting.
+         * @return the {@link NeoToken} as it was changed by the service.
+         */
+        NeoToken mintToken(MintTokenRequest mintTokenRequest);
 
         /**
          * Deletes the {@link NeoSmartContract} with the supplied contract ID.
