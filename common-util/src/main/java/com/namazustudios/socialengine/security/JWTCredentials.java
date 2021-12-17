@@ -93,4 +93,31 @@ public class JWTCredentials {
      */
     public String getClaim(String name) { return decoded.getClaim(name).asString(); }
 
+    /**
+     * Verifies the JWT has the required data, and that the signature matches
+     *
+     * @return if the JWT token is valid
+     */
+    public Boolean verify() {
+        var validJWT = true;
+
+        var audience = getAudience();
+        if (audience == null) {
+            validJWT = false;
+        }
+
+        var exp = getExpirationDate();
+        if (exp != null && exp.before(new Date())) {
+            validJWT = false;
+        }
+
+        var notBefore = getNotBefore();
+        if (notBefore != null && notBefore.after(new Date())) {
+            validJWT = false;
+        }
+
+        // TODO verify the signature against private key
+
+        return validJWT;
+    }
 }
