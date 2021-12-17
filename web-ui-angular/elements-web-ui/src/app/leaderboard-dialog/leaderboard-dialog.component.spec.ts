@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { LeaderboardDialogComponent } from './leaderboard-dialog.component';
 
@@ -6,7 +6,7 @@ describe('LeaderboardDialogComponent', () => {
   let component: LeaderboardDialogComponent;
   let fixture: ComponentFixture<LeaderboardDialogComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ LeaderboardDialogComponent ]
     })

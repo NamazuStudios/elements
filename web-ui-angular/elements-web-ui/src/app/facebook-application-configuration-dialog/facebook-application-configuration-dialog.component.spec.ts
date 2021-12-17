@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { FacebookApplicationConfigurationDialogComponent } from './facebook-application-configuration-dialog.component';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
@@ -8,7 +8,7 @@ describe('FacebookApplicationConfigurationsDialogComponent', () => {
   let component: FacebookApplicationConfigurationDialogComponent;
   let fixture: ComponentFixture<FacebookApplicationConfigurationDialogComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ FacebookApplicationConfigurationDialogComponent ],
       imports: [MatDialogModule, FormsModule, ReactiveFormsModule],
