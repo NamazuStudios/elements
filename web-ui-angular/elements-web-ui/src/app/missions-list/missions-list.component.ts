@@ -22,7 +22,7 @@ export class MissionsListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Mission>;
   dataSource: MissionsDatasource;
-  displayedColumns = ['select', 'id', 'name', 'actions'];
+  displayedColumns = ['select', 'id', 'name', 'edit-action', 'delete-action'];
   currentMissions: Mission[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;

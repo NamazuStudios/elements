@@ -8,7 +8,7 @@ import {ApiConfiguration} from './api/api-configuration';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent implements OnInit {
-  title = 'Namazu Elements';
+  title = 'ELEMENTS';
 
   constructor(private configService: ConfigService, private apiConfiguration: ApiConfiguration) { }
 
