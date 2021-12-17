@@ -59,7 +59,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
         var mongoContract = getDatastore().find(MongoNeoSmartContract.class)
                 .filter(Filters.or(
                                 Filters.eq("_id", objectId),
-                                Filters.eq("name", contractIdOrName)
+                                Filters.eq("displayName", contractIdOrName)
                         )
                 ).first();
 

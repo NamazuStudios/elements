@@ -33,8 +33,7 @@ import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.and;
-import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoNeoTokenDao implements NeoTokenDao {
@@ -139,7 +138,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         final var tags = token.getTags();
         tags.remove("");
 
-        query.filter(eq("name", nullToEmpty(name)));
+        query.filter(exists("name").not());
 
         final var builder = new UpdateBuilder().with(
                 set("name", name),

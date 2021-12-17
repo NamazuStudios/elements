@@ -6,13 +6,17 @@ import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import io.neow3j.contract.SmartContract;
+import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.neow3j.transaction.AccountSigner;
 import io.neow3j.types.ContractParameter;
+import io.neow3j.types.ContractParameterType;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
+import java.util.Arrays;
+import java.util.List;
 
 public class SuperUserNeoSmartContractService implements NeoSmartContractService {
 
@@ -53,15 +57,18 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                     //TODO call mintAll with token list
                 } else {
                     NeoToken token = getNeoTokenDao().getToken(mintTokenRequest.getTokenId().get(0));
-                    ContractParameter tokenIdParam = ContractParameter.string(token.getId());
+                    ContractParameter tokenIdParam = ContractParameter.byteArray(token.getId());
                     ContractParameter tokenParam = ContractParameter.any(token.getToken());
+                    List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenParam);
                     try {
-                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenParam)
-                                .signers(AccountSigner.calledByEntry(account))
-                                .sign()
-                                .send();
+                        NeoInvokeFunction response = smartContract.callInvokeFunction("mint", params, AccountSigner.calledByEntry(account));
+
+//                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenParam)
+//                                .signers(AccountSigner.calledByEntry(account))
+//                                .sign()
+//                                .send();
                     } catch (Throwable e){
-                        
+
                     }
                 }
                 break;
@@ -96,6 +103,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         return neoWalletDao;
     }
 
+    @Inject
     public void setNeoWalletDao(NeoWalletDao neoWalletDao) {
         this.neoWalletDao = neoWalletDao;
     }

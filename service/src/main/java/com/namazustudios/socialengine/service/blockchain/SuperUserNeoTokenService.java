@@ -38,15 +38,6 @@ public class SuperUserNeoTokenService implements NeoTokenService {
 
     @Override
     public NeoToken createToken(CreateNeoTokenRequest tokenRequest) {
-
-        try {
-            var token = getNeoTokenDao().getToken(tokenRequest.getToken().getName());
-
-            if (token != null) {
-                throw new DuplicateException(String.format("NeoToken with name: %s already exists.", tokenRequest.getToken().getName()));
-            }
-        } catch (NotFoundException ignored) {}
-
         return getNeoTokenDao().createToken(tokenRequest);
     }
 
