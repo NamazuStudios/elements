@@ -71,7 +71,7 @@ public class NeoWalletApiTest {
     @Test
     public void createUser() {
         superUserClientContext
-                .createSuperuser("admin")
+                .createSuperuser("walletAdmin")
                 .createSession();
     }
 
