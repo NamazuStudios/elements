@@ -21,6 +21,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
+import static com.namazustudios.socialengine.rt.remote.NodeState.HEALTHY;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.*;
 import static java.util.stream.Stream.concat;
@@ -254,7 +255,8 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             lock.lock();
             return getNodeSet()
                 .stream()
-                .map(n -> n.getNodeId())
+                .filter(n -> HEALTHY.equals(n.getState()))
+                .map(Node::getNodeId)
                 .collect(toSet());
         } finally {
             lock.unlock();
