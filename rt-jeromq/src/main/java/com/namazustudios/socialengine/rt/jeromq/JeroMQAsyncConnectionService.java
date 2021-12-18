@@ -20,7 +20,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
-import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
 import static java.util.stream.Collectors.toList;
@@ -67,7 +66,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
     @Override
     public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group(final String name) {
-        final SimpleAsyncConnectionServiceContext context = getContext();
+        final var context = getContext();
         return context.group(name);
     }
 
@@ -80,7 +79,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
     }
 
     private SimpleAsyncConnectionServiceContext getContext() {
-        final SimpleAsyncConnectionServiceContext context = this.context.get();
+        final var context = this.context.get();
         if (context == null) throw new IllegalArgumentException();
         return context;
     }

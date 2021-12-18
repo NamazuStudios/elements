@@ -164,7 +164,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 exceptionConsumer.accept(ex);
                 return null;
             }
-        }).filter(s -> s != null).collect(toList());
+        }).filter(Objects::nonNull).collect(toList());
 
         shutdownList.forEach(s -> {
             try {
@@ -252,7 +252,10 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
         try {
             lock.lock();
-            return getNodeSet().stream().map(n -> n.getNodeId()).collect(toSet());
+            return getNodeSet()
+                .stream()
+                .map(n -> n.getNodeId())
+                .collect(toSet());
         } finally {
             lock.unlock();
         }
