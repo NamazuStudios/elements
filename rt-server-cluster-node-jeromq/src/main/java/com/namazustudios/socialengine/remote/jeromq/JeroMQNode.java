@@ -41,7 +41,7 @@ public class JeroMQNode implements Node {
 
     public static final String JEROMQ_NODE_MAX_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.max.connections";
 
-    private final AtomicReference<NodeState> state = new AtomicReference<>(NodeState.STOPPED);
+    private final AtomicReference<NodeState> state = new AtomicReference<>(READY);
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
@@ -362,6 +362,7 @@ public class JeroMQNode implements Node {
         }
 
         private void onFrontendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            state.set(UNHEALTHY);
             logger.error("Frontend Connection Error {} - errno {}", connection, connection.socket().errno());
         }
 
@@ -371,6 +372,7 @@ public class JeroMQNode implements Node {
         }
 
         private void onBackendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            state.set(UNHEALTHY);
             logger.error("Backend Connection Error {} - errno {}", connection, connection.socket().errno());
         }
 
