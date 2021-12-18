@@ -40,16 +40,6 @@ public class NeoWalletApiTest {
         };
     }
 
-    private User user;
-
-    private SessionCreation sessionCreation;
-
-    private final String name = "testuser-name-" + randomUUID().toString();
-
-    private final String email = "testuser-email-" + randomUUID().toString() + "@example.com";
-
-    private final String password = randomUUID().toString();
-
     @Inject
     @Named(TEST_API_ROOT)
     private String apiRoot;
@@ -75,22 +65,13 @@ public class NeoWalletApiTest {
                 .createSession();
     }
 
-    @DataProvider
-    public Object[][] credentialsProvider() {
-        return new Object[][] {
-                new Object[]{name, password},
-                new Object[]{email, password},
-                new Object[]{user.getId(), password}
-        };
-    }
-
     @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
     public void testCreateAndDeleteWallet(final String authHeader) {
 
         String walletName = "WalletTest-" + randomUUID().toString();
 
         final var request = new CreateNeoWalletRequest();
-        request.setUserId(user.getId());
+        request.setUserId(superUserClientContext.getUser().getId());
         request.setDisplayName(walletName);
 
         NeoWallet neoWallet = client
@@ -102,7 +83,7 @@ public class NeoWalletApiTest {
 
         assertNotNull(neoWallet);
         assertNotNull(neoWallet.getId());
-        assertEquals(neoWallet.getUser().getId(), user.getId());
+        assertEquals(neoWallet.getUser().getId(), superUserClientContext.getUser().getId());
         assertEquals(neoWallet.getDisplayName(), walletName);
 
         String req = "/blockchain/neo/wallet/" + neoWallet.getId();
@@ -122,7 +103,7 @@ public class NeoWalletApiTest {
         String walletName = "WalletTest-" + randomUUID().toString();
 
         final var request = new CreateNeoWalletRequest();
-        request.setUserId(user.getId());
+        request.setUserId(superUserClientContext.getUser().getId());
         request.setDisplayName(walletName);
 
         Response response = client
@@ -142,7 +123,7 @@ public class NeoWalletApiTest {
 
         assertNotNull(neoWallet);
         assertNotNull(neoWallet.getId());
-        assertEquals(neoWallet.getUser().getId(), user.getId());
+        assertEquals(neoWallet.getUser().getId(), superUserClientContext.getUser().getId());
         assertEquals(neoWallet.getDisplayName(), walletName);
 
         response = client
@@ -160,7 +141,7 @@ public class NeoWalletApiTest {
         String walletName = "WalletTest-" + randomUUID().toString();
 
         final var request = new CreateNeoWalletRequest();
-        request.setUserId(user.getId());
+        request.setUserId(superUserClientContext.getUser().getId());
         request.setDisplayName(walletName);
 
         NeoWallet neoWallet = client
@@ -172,7 +153,7 @@ public class NeoWalletApiTest {
 
         assertNotNull(neoWallet);
         assertNotNull(neoWallet.getId());
-        assertEquals(neoWallet.getUser().getId(), user.getId());
+        assertEquals(neoWallet.getUser().getId(), superUserClientContext.getUser().getId());
         assertEquals(neoWallet.getDisplayName(), walletName);
 
         String updatedWalletName = "WalletTest-" + randomUUID().toString();
@@ -188,7 +169,7 @@ public class NeoWalletApiTest {
 
         assertNotNull(updatedNeoWallet);
         assertNotNull(updatedNeoWallet.getId());
-        assertEquals(updatedNeoWallet.getUser().getId(), user.getId());
+        assertEquals(updatedNeoWallet.getUser().getId(), superUserClientContext.getUser().getId());
         assertNotEquals(updatedNeoWallet.getDisplayName(), walletName);
         assertEquals(updatedNeoWallet.getDisplayName(), updatedWalletName);
 
