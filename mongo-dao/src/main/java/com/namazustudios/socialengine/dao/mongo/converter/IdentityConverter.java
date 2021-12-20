@@ -10,8 +10,10 @@ public class IdentityConverter implements CustomConverter {
 
     @Override
     public Object convert(
-            final Object existingDestinationFieldValue, final Object sourceFieldValue,
-            final Class<?> destinationClass, final Class<?> sourceClass) {
+            final Object existingDestinationFieldValue,
+            final Object sourceFieldValue,
+            final Class<?> destinationClass,
+            final Class<?> sourceClass) {
         return sourceFieldValue;
     }
 

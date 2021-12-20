@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.guice;
 
+import com.auth0.jwt.JWT;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -48,6 +49,8 @@ import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
 import com.namazustudios.socialengine.service.progress.SuperUserProgressService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
+import com.namazustudios.socialengine.service.savedata.SaveDataDocumentServiceProvider;
+import com.namazustudios.socialengine.service.savedata.SuperUserSaveDataDocumentService;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
@@ -275,10 +278,6 @@ public class ServicesModule extends PrivateModule {
             .toProvider(NeoWalletServiceProvider.class)
             .in(scope);
 
-        bind(AuthSchemeService.class)
-                .toProvider(AuthSchemeServiceProvider.class)
-                .in(scope);
-        
         bind(NeoTokenService.class)
             .toProvider(NeoTokenServiceProvider.class)
             .in(scope);
@@ -289,6 +288,14 @@ public class ServicesModule extends PrivateModule {
 
         bind(HealthStatusService.class)
             .to(DefaultHealthStatusService.class)
+            .in(scope);
+
+        bind(AuthSchemeService.class)
+            .toProvider(AuthSchemeServiceProvider.class)
+            .in(scope);
+
+        bind(SaveDataDocumentService.class)
+            .toProvider(SaveDataDocumentServiceProvider.class)
             .in(scope);
 
         bind(NameService.class)
@@ -455,12 +462,16 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserNeoTokenService.class);
 
         bind(AuthSchemeService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserAuthSchemeService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserAuthSchemeService.class);
 
         bind(NeoSmartContractService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoSmartContractService.class);
+
+        bind(SaveDataDocumentService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserSaveDataDocumentService.class);
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
@@ -514,8 +525,9 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
         expose(NeoTokenService.class);
-        expose(AuthSchemeService.class);
         expose(NeoSmartContractService.class);
+        expose(AuthSchemeService.class);
+        expose(SaveDataDocumentService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -554,8 +566,9 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
         expose(NeoTokenService.class).annotatedWith(Unscoped.class);
-        expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
+        expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
+        expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
 
     }
 
