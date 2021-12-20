@@ -74,6 +74,10 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
         if (elm_user == null)
         {
             var elm_userModelString = jwtCredentials.getClaim("elm_usermodel");
+            if (elm_userModelString == null) {
+                throw new BadRequestException();
+            }
+
             try {
                 var elm_userModel = objectMapper.readValue(elm_userModelString, UserClaim.class);
 
