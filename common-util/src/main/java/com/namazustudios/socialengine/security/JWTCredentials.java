@@ -2,13 +2,11 @@ package com.namazustudios.socialengine.security;
 
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.exceptions.JWTDecodeException;
-import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.namazustudios.socialengine.exception.security.AuthorizationHeaderParseException;
 
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 public class JWTCredentials {
 
@@ -100,6 +98,7 @@ public class JWTCredentials {
      */
     public Boolean verify() {
         var validJWT = true;
+        var now = new Date();
 
         var audience = getAudience();
         if (audience == null) {
@@ -107,12 +106,12 @@ public class JWTCredentials {
         }
 
         var exp = getExpirationDate();
-        if (exp != null && exp.before(new Date())) {
+        if (exp != null && exp.before(now)) {
             validJWT = false;
         }
 
         var notBefore = getNotBefore();
-        if (notBefore != null && notBefore.after(new Date())) {
+        if (notBefore != null && notBefore.after(now)) {
             validJWT = false;
         }
 
