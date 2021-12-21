@@ -160,8 +160,8 @@ public class MongoProfileDao implements ProfileDao {
 
         if (userId != null) {
             final Optional<MongoUser> mongoUser = getMongoUserDao().findActiveMongoUser(userId);
-            if (mongoUser.isPresent()) return new Pagination<>();
-            query.filter(eq("user", mongoUser));
+            if (mongoUser.isEmpty()) return new Pagination<>();
+            query.filter(eq("user", mongoUser.get()));
         }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());

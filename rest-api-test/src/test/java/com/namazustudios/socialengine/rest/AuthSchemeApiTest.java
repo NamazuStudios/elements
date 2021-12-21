@@ -56,7 +56,7 @@ public class AuthSchemeApiTest {
         };
     }
 
-    @Test()
+    @Test(enabled = false)
     public void createAuthScheme() {
         final var createRequest = new CreateAuthSchemeRequest();
 
@@ -72,9 +72,10 @@ public class AuthSchemeApiTest {
 
         assertNotNull(createAuthSchemeResponse);
         assertNotNull(createAuthSchemeResponse.publicKey);
+
     }
 
-    @Test(dependsOnMethods = "createAuthScheme")
+    @Test(enabled = false, dependsOnMethods = "createAuthScheme")
     public void updateAuthScheme() {
         var scheme = createAuthSchemeResponse.getScheme();
         var objectMapper = new ObjectMapper();
@@ -105,7 +106,7 @@ public class AuthSchemeApiTest {
         assertNotNull(updateAuthSchemeResponse);
     }
 
-    @Test(dependsOnMethods = "createAuthScheme")
+    @Test(enabled = false, dependsOnMethods = "createAuthScheme")
     public void getAuthSchemes() {
         var authSchemes = client
                 .target(apiRoot + "/auth_scheme")
