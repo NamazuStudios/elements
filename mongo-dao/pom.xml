@@ -17,7 +17,6 @@
     <name>mongo-dao</name>
 
     <properties>
-        <critter.version>4.1.0</critter.version>
         <morphia.version>2.1.4</morphia.version>
         <mongo.java.driver.version>4.0.5</mongo.java.driver.version>
     </properties>
@@ -152,24 +151,6 @@
 
     <build>
         <plugins>
-            <plugin>
-                <groupId>dev.morphia.critter</groupId>
-                <artifactId>critter-maven</artifactId>
-                <version>${critter.version}</version>
-                <executions>
-                    <execution>
-                        <id>critter</id>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                    </execution>
-                </executions>
-                <configuration>
-                    <force>true</force>
-                    <outputType>java</outputType>
-                    <criteriaPackage>criteria</criteriaPackage>
-                </configuration>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
