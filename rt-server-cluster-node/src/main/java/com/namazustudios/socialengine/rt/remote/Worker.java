@@ -3,8 +3,14 @@ package com.namazustudios.socialengine.rt.remote;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
+
+import static com.namazustudios.socialengine.rt.remote.NodeState.HEALTHY;
+import static com.namazustudios.socialengine.rt.remote.NodeState.UNHEALTHY;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Represents the worker, hosing one or more nodes performing work.
@@ -25,14 +31,6 @@ public interface Worker {
     String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.scheduled.executor";
 
     /**
-     * Gets a set of all active nodes.  This may change as new nodes may be introduced as well as removed.  The returned
-     * {@link Set<NodeId>} shall be an instantaneous snapshot.  The returned set may be empty if no nodes are active.
-     *
-     * @return a {@link Set<NodeId>}
-     */
-    Set<NodeId> getActiveNodeIds();
-
-    /**
      * Opens a {@link Mutator} which can be used to modify the run-state of this {@link Worker}.
      *
      * @return the {@link Mutator}
@@ -40,9 +38,35 @@ public interface Worker {
     Mutator beginMutation();
 
     /**
+     * Opens an {@link Accessor} which can be used to read the run-state of this {@link Worker}.
+     *
+     * @return the {@link Accessor}
+     */
+    Accessor accessWorkerState();
+
+    /**
+     * Allows client code to read the sstate of the {@link Worker}
+     */
+    interface Accessor extends AutoCloseable {
+
+        /**
+         * Gets all {@link Node} instances running in this {@link Worker}.
+         *
+         * @return a {@link Set<Node>}
+         */
+        Set<Node> getNodeSet();
+
+        /**
+         * Releases any resources associated with the {@link Mutator}.
+         */
+        void close();
+
+    }
+
+    /**
      * Allows for the mutation of the {@link Worker}.
      */
-    interface Mutator extends AutoCloseable {
+    interface Mutator extends Accessor, AutoCloseable {
 
         /**
          * Adds a new node with the supplied {@link ApplicationId}.
@@ -65,15 +89,24 @@ public interface Worker {
         }
 
         /**
+         * Restarts the supplied {@link Node}s with the supplied {@link NodeId}.
+         * @param toRestart the {@link NodeId} to restart
+         */
+        void restart(final NodeId toRestart);
+
+        /**
+         * Restarts the supplied {@link Node}s with the supplied {@link NodeId}.
+         * @param toRestart a {@link Collection<NodeId>} to restart in succession
+         */
+        default void restart(final Collection<NodeId> toRestart) {
+            toRestart.forEach(this::restart);
+        }
+
+        /**
          * Commits any changes to the {@link Worker}.
          * @return this instance
          */
         Mutator commit();
-
-        /**
-         * Releases any resources associated with the {@link Mutator}.
-         */
-        void close();
 
     }
 

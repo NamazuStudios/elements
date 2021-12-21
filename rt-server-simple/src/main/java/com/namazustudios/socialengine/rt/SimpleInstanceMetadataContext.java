@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.AsyncOperation;
+import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,6 +11,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.Set;
 import java.util.function.Consumer;
+
+import static com.namazustudios.socialengine.rt.remote.NodeState.HEALTHY;
+import static java.util.stream.Collectors.toSet;
 
 /**
  * Provides data for an Instance.
@@ -36,7 +40,13 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
 
     @Override
     public Set<NodeId> getNodeIds() {
-        return getWorker().getActiveNodeIds();
+        try (final var accessor = getWorker().accessWorkerState()) {
+            return accessor.getNodeSet()
+                .stream()
+                .filter(node -> HEALTHY.equals(node.getState()))
+                .map(Node::getNodeId)
+                .collect(toSet());
+        }
     }
 
     @Override
@@ -48,10 +58,15 @@ public class SimpleInstanceMetadataContext implements InstanceMetadataContext {
     public AsyncOperation getInstanceMetadataAsync(final Consumer<InstanceMetadata> success,
                                                    final Consumer<Throwable> failure) {
 
-        try {
+        try (var accessor = getWorker().accessWorkerState()) {
 
             final var quality = getLoadMonitorService().getInstanceQuality();
-            final var nodeIdSet = getWorker().getActiveNodeIds();
+            final var nodeIdSet = accessor.getNodeSet()
+                    .stream()
+                    .filter(node -> HEALTHY.equals(node.getState()))
+                    .map(Node::getNodeId)
+                    .collect(toSet());
+
             logger.debug("Reporting instance quality {} - {}", instanceId, quality);
             logger.debug("Returning active node IDs for instance {} - {}", instanceId, nodeIdSet);
 

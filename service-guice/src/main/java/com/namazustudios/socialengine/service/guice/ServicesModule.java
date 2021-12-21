@@ -276,8 +276,8 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(AuthSchemeService.class)
-                .toProvider(AuthSchemeServiceProvider.class)
-                .in(scope);
+            .toProvider(AuthSchemeServiceProvider.class)
+            .in(scope);
         
         bind(NeoTokenService.class)
             .toProvider(NeoTokenServiceProvider.class)
@@ -357,8 +357,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserProfileService.class);
 
         bind(FollowerService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserFollowerService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserFollowerService.class);
 
         bind(ProfileOverrideService.class)
             .annotatedWith(Unscoped.class)
@@ -455,8 +455,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserNeoTokenService.class);
 
         bind(AuthSchemeService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserAuthSchemeService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserAuthSchemeService.class);
 
         bind(NeoSmartContractService.class)
             .annotatedWith(Unscoped.class)

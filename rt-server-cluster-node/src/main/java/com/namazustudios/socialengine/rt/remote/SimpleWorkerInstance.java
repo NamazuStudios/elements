@@ -12,7 +12,6 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
-import java.util.concurrent.CopyOnWriteArraySet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -247,21 +246,33 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
     }
 
     @Override
-    public Set<NodeId> getActiveNodeIds() {
+    public Accessor accessWorkerState() {
 
-        final var lock = rwLock.readLock();
+        final var rLock = rwLock.readLock();
+        rLock.lock();
 
-        try {
-            lock.lock();
-            return getNodeSet()
-                .stream()
-                .filter(n -> HEALTHY.equals(n.getState()))
-                .map(Node::getNodeId)
-                .collect(toSet());
-        } finally {
-            lock.unlock();
-        }
+        return new Accessor() {
 
+            boolean locked = true;
+
+            @Override
+            public Set<Node> getNodeSet() {
+                return new HashSet<>(nodeSet);
+            }
+
+            @Override
+            public void close() {
+                if (locked) {
+                    locked = false;
+                    rLock.unlock();
+                }
+            }
+
+            private void check() {
+                if (!locked) throw new IllegalStateException("The accessor is closed.");
+            }
+
+        };
     }
 
     @Override
@@ -271,6 +282,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
         wLock.lock();
 
         final var toAdd = new HashSet<ApplicationId>();
+        final var toRestart = new HashSet<NodeId>();
         final var existing = new HashSet<ApplicationId>();
 
         final Runnable refresh = () -> {
@@ -286,6 +298,11 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             boolean locked = true;
 
             @Override
+            public Set<Node> getNodeSet() {
+                return new HashSet<>(nodeSet);
+            }
+
+            @Override
             public Mutator addNode(final ApplicationId applicationId) {
 
                 check();
@@ -297,6 +314,11 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 }
 
                 return this;
+            }
+
+            @Override
+            public void restart(final NodeId nodeId) {
+
             }
 
             @Override

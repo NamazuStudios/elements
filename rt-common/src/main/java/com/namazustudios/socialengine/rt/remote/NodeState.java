@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 /**
- * Defines the state of the {@link Node}.
+ * Defines the state of the Node.
  */
 public enum NodeState {
 
