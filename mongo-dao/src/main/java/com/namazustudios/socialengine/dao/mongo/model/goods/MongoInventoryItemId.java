@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.goods;
 
+import com.namazustudios.socialengine.dao.mongo.HexableId;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.util.Hex;
@@ -12,7 +13,7 @@ import java.util.Objects;
 import static java.lang.System.arraycopy;
 
 @Embedded
-public class MongoInventoryItemId {
+public class MongoInventoryItemId implements HexableId {
 
     private static final int USER_ID_INDEX = 0;
 

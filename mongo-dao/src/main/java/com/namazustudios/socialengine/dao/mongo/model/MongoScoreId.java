@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import com.namazustudios.socialengine.dao.mongo.HexableId;
 import com.namazustudios.socialengine.rt.util.Hex;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.Property;
@@ -9,7 +10,7 @@ import java.util.Base64;
 
 import static java.lang.System.arraycopy;
 
-public class MongoScoreId {
+public class MongoScoreId implements HexableId {
 
     /**
      * By convention, if the leaderboard is global instead of epochal, we record the leaderboardEpoch as 0L. This is to
@@ -102,6 +103,7 @@ public class MongoScoreId {
         return bytes;
     }
 
+    @Override
     public String toHexString() {
         final byte[] bytes = toByteArray();
         return Hex.encode(bytes);

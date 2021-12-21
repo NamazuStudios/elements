@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import com.namazustudios.socialengine.dao.mongo.HexableId;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.InvalidDataException;
@@ -17,7 +18,7 @@ import java.util.Objects;
 import static java.lang.System.arraycopy;
 
 @Embedded
-public class MongoRewardIssuanceId {
+public class MongoRewardIssuanceId implements HexableId {
 
     private static final int USER_ID_LENGTH = 12;
     private static final int USER_ID_START_POSITION = 0;
@@ -124,6 +125,7 @@ public class MongoRewardIssuanceId {
 
     }
 
+    @Override
     public String toHexString() {
         final byte[] bytes = toByteArray();
         return Hex.encode(bytes);

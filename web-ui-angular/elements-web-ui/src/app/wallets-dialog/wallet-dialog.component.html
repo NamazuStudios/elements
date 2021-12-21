@@ -1,0 +1,71 @@
+<h1 mat-dialog-title>{{data.isNew ? "New" : "Edit"}} Wallet</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="walletForm">
+    <div class="form-container">
+
+      <div class="names">
+        <mat-form-field class="item">
+          <input matInput placeholder="Wallet Name" name="displayName" formControlName="displayName">
+          <!-- <mat-error *ngIf="walletForm.controls.name.hasError('required')">Wallet name is required</mat-error>
+          <mat-error *ngIf="walletForm.controls.name.hasError('unique') && data.isNew">Wallet name must unique
+          </mat-error> -->
+        </mat-form-field>
+      </div>
+
+      <div class="names">
+        <mat-form-field class="item">
+          <input matInput placeholder="Wallet Owner Username" name="walletUserName" formControlName="walletUserName"
+            #owner>
+          <!-- <mat-error *ngIf="walletForm.controls.title.hasError('required')">Owner username is required
+        </mat-error> -->
+        </mat-form-field>
+
+        <div mat-dialog-actions>
+          <button type="button" (click)="showSelectUserDialog()" mat-raised-button>Select User</button>
+        </div>
+
+      </div>
+
+      <div class="names">
+        <mat-form-field class="item">
+          <input matInput placeholder="Wallet Password (optional)" name="walletPassword"
+            formControlName="walletPassword" type="password" autocomplete="new-password">
+          <!-- <mat-error *ngIf="walletForm.controls.password.hasError('required')">Password is required</mat-error> -->
+        </mat-form-field>
+      </div>
+
+      <div class="names" *ngIf="data.isNew">
+        <mat-form-field class="item">
+          <input matInput placeholder="Wallet Password Confirmation (optional)" name="walletConfirmPassword"
+            formControlName="walletConfirmPassword" type="password" autocomplete="new-password">
+          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('required')">Password confirmation is required</mat-error> -->
+          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('passwordMatch')">Password confirmation does not match</mat-error> -->
+        </mat-form-field>
+      </div>
+
+      <div class="names" *ngIf="!data.isNew">
+        <mat-form-field class="item">
+          <input matInput placeholder="NEW Wallet Password (optional)" name="newWalletPassword"
+            formControlName="newWalletPassword" type="password" autocomplete="new-password">
+          <!-- <mat-error *ngIf="walletForm.controls.password.hasError('required')">Password is required</mat-error> -->
+        </mat-form-field>
+      </div>
+
+      <div class="names" *ngIf="!data.isNew">
+        <mat-form-field class="item">
+          <input matInput placeholder="NEW Wallet Password Confirmation (optional)" name="walletConfirmPassword"
+            formControlName="walletConfirmPassword" type="password" autocomplete="new-password">
+          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('required')">Password confirmation is required</mat-error> -->
+          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('passwordMatch')">Password confirmation does not match</mat-error> -->
+        </mat-form-field>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<div mat-dialog-actions>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!walletForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="close(false)">Cancel</button>
+</div>

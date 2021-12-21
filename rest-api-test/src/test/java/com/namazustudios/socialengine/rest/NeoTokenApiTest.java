@@ -71,7 +71,7 @@ public class NeoTokenApiTest {
     @Test
     public void createUser() {
         superUserClientContext
-                .createSuperuser("admin")
+                .createSuperuser("tokenAdmin")
                 .createSession();
     }
 

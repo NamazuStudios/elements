@@ -1,4 +1,4 @@
-<div class="users-list">
+<div class="data-list">
   <div class="spinner-container" *ngIf="dataSource.loading$ | async">
     <mat-spinner></mat-spinner>
   </div>
@@ -10,7 +10,7 @@
   <button mat-raised-button color="primary" (click)="addUser()"><mat-icon>person_add</mat-icon> Add User</button>
   <button mat-raised-button color="primary" (click)="deleteSelectedUsers()" [disabled]="!hasSelection">Delete Selected Users</button>
 
-  <mat-table class="users-table mat-elevation-z8" [dataSource]="dataSource" >
+  <mat-table class="data-table mat-elevation-z8" [dataSource]="dataSource" >
 
     <ng-container matColumnDef="select">
       <mat-header-cell fxFlex="75px" *matHeaderCellDef>
@@ -34,7 +34,7 @@
 
     <ng-container matColumnDef="email">
       <mat-header-cell *matHeaderCellDef>Email Address</mat-header-cell>
-      <mat-cell *matCellDef="let user">{{user.email}}</mat-cell>
+      <mat-cell *matCellDef="let user"><span class="truncate-text-right">{{user.email}}</span></mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="level">
@@ -42,13 +42,23 @@
       <mat-cell *matCellDef="let user">{{user.level}}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="actions">
+    <ng-container matColumnDef="inventory-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let user">
         <button mat-raised-button color="primary" (click)="editInventory(user)"><mat-icon>inventory</mat-icon> Inventory</button>
-        &nbsp;
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="edit-action">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let user">
         <button mat-raised-button color="primary" (click)="editUser(user)">Edit</button>
-        &nbsp;
+      </mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="delete-action">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let user">
         <button mat-raised-button color="primary" (click)="deleteUser(user)">Delete</button>
       </mat-cell>
     </ng-container>

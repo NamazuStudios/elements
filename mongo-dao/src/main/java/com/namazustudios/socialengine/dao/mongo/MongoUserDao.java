@@ -72,54 +72,52 @@ public class MongoUserDao implements UserDao {
         return getActiveMongoUser(user.getId());
     }
 
-    public MongoUser findActiveMongoUser(final String userId) {
-        final ObjectId objectId = getMongoDBUtils().parseOrReturnNull(userId);
-        return objectId == null ? null : getActiveMongoUser(objectId);
+    public Optional<MongoUser> findActiveMongoUser(final String userId) {
+        final var mongoUserId = getMongoDBUtils().parseOrReturnNull(userId);
+        return mongoUserId == null ? Optional.empty() : findActiveMongoUser(mongoUserId);
+    }
+
+    public Optional<MongoUser> findActiveMongoUser(final ObjectId userId) {
+
+        final var query = getDatastore().find(MongoUser.class);
+
+        query.filter(and(
+            eq("_id", userId)),
+            eq("active", true)
+        );
+
+        final var mongoUser = query.first();
+        return Optional.ofNullable(mongoUser);
+
     }
 
     public MongoUser getActiveMongoUser(final String userId) {
-        final ObjectId objectId = getMongoDBUtils().parseOrThrow(userId, UserNotFoundException::new);
-        return getActiveMongoUser(objectId);
+        return findActiveMongoUser(userId)
+            .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found."));
     }
 
     public MongoUser getActiveMongoUser(final ObjectId mongoUserId) {
-
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-
-        query.filter(and(
-                eq("_id", mongoUserId)),
-                eq("active", true)
-        );
-
-        final MongoUser mongoUser = query.first();
-
-        if (mongoUser == null) {
-            throw new UserNotFoundException("User with id " + mongoUserId + " not found.");
-        }
-
-        return mongoUser;
-
+        return findActiveMongoUser(mongoUserId)
+            .orElseThrow(() -> new UserNotFoundException("User with id " + mongoUserId + " not found."));
     }
 
     @Override
     public Optional<User> findActiveUserByNameOrEmail(String userNameOrEmail) {
 
-        final String trimmedUserNameOrEmail = nullToEmpty(userNameOrEmail).trim();
+        final var trimmedUserNameOrEmail = nullToEmpty(userNameOrEmail).trim();
 
-        if (trimmedUserNameOrEmail.isEmpty()) {
-            throw new InvalidDataException("name/email must be specified.");
-        }
+        if (trimmedUserNameOrEmail.isEmpty()) throw new InvalidDataException("name/email must be specified.");
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        final var query = getDatastore().find(MongoUser.class);
 
         query.filter(eq("active", true));
 
         query.filter(or(
-                eq("name", trimmedUserNameOrEmail),
-                eq("email", trimmedUserNameOrEmail)
+            eq("name", trimmedUserNameOrEmail),
+            eq("email", trimmedUserNameOrEmail)
         ));
 
-        final MongoUser mongoUser = query.first();
+        final var mongoUser = query.first();
 
         return mongoUser == null
             ? Optional.empty()

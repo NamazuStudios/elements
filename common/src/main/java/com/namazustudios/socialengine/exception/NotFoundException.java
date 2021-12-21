@@ -4,8 +4,8 @@ package com.namazustudios.socialengine.exception;
  * Created by patricktwohig on 3/19/15.
  */
 public class NotFoundException extends BaseException {
-    public NotFoundException() {
-    }
+
+    public NotFoundException() {}
 
     public NotFoundException(String message) {
         super(message);
@@ -26,6 +26,11 @@ public class NotFoundException extends BaseException {
     @Override
     public ErrorCode getCode() {
         return ErrorCode.NOT_FOUND;
+    }
+
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+        return this;
     }
 
 }

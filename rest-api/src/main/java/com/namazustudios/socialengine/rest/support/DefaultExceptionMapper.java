@@ -29,18 +29,18 @@ public class DefaultExceptionMapper implements ExceptionMapper<Exception> {
 
     private static final Logger LOG = LoggerFactory.getLogger(DefaultExceptionMapper.class);
 
-    private static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Maps.immutableEnumMap(
-        new ImmutableMap.Builder<ErrorCode, Response.Status>()
-            .put(ErrorCode.DUPLICATE, Response.Status.CONFLICT)
-            .put(ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED)
-            .put(ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN)
-            .put(ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST)
-            .put(ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST)
-            .put(ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND)
-            .put(ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE)
-            .put(ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR)
-            .put(ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED)
-        .build());
+    private static final Map<ErrorCode, Response.Status> HTTP_STATUS_MAP = Map.of(
+        ErrorCode.DUPLICATE, Response.Status.CONFLICT,
+        ErrorCode.UNAUTHORIZED, Response.Status.UNAUTHORIZED,
+        ErrorCode.CONFLICT, Response.Status.CONFLICT,
+        ErrorCode.FORBIDDEN, Response.Status.FORBIDDEN,
+        ErrorCode.INVALID_DATA, Response.Status.BAD_REQUEST,
+        ErrorCode.INVALID_PARAMETER, Response.Status.BAD_REQUEST,
+        ErrorCode.NOT_FOUND, Response.Status.NOT_FOUND,
+        ErrorCode.OVERLOAD, Response.Status.SERVICE_UNAVAILABLE,
+        ErrorCode.UNKNOWN, Response.Status.INTERNAL_SERVER_ERROR,
+        ErrorCode.NOT_IMPLEMENTED, Response.Status.NOT_IMPLEMENTED
+    );
 
     public static final Response.Status getStatusForCode(final Object code) {
         final Response.Status status = HTTP_STATUS_MAP.get(code);

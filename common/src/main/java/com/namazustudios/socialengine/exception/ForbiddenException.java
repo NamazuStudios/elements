@@ -28,4 +28,9 @@ public class ForbiddenException extends BaseException {
         return ErrorCode.FORBIDDEN;
     }
 
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+        return this;
+    }
+
 }

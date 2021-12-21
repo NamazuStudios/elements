@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { async, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { SimpleJsonEditorComponent } from './simple-json-editor.component';
 import {FormBuilder, FormsModule, ReactiveFormsModule} from "@angular/forms";

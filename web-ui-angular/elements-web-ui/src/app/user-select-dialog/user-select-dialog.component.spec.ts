@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { UserSelectDialogComponent } from './user-select-dialog.component';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from '@angular/material/dialog';
@@ -13,7 +13,7 @@ describe('UserSelectDialogComponent', () => {
   let component: UserSelectDialogComponent;
   let fixture: ComponentFixture<UserSelectDialogComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ UserSelectDialogComponent ],
       imports: [MatDialogModule, HttpClientTestingModule, RouterTestingModule, MatSnackBarModule, MatPaginatorModule, BrowserAnimationsModule],
