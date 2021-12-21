@@ -22,7 +22,7 @@ export class ApplicationsListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Application>;
   dataSource: ApplicationsDataSource;
-  displayedColumns= ["select", "id", "name", "actions"];
+  displayedColumns= ["select", "id", "name", "action-edit", "action-delete"];
   currentApplications: Application[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;

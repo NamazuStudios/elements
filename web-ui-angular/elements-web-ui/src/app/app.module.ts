@@ -58,6 +58,8 @@ import { InventoryEditorComponent } from './inventory-dialog/inventory-editor/in
 import { AddInventoryComponent } from './inventory-dialog/add-inventory/add-inventory.component';
 import { ItemSelectDialogComponent } from './inventory-dialog/item-select-dialog/item-select-dialog.component';
 import { ModifyInventoryComponent } from './inventory-dialog/modify-inventory/modify-inventory.component';
+import { WalletsListComponent } from './wallets-list/wallets-list.component';
+import { WalletDialogComponent } from './wallets-dialog/wallet-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -120,6 +122,8 @@ export function initialize(configService: ConfigService) {
     UserSelectDialogComponent,
     LeaderboardsListComponent,
     LeaderboardDialogComponent,
+    WalletsListComponent,
+    WalletDialogComponent,
     InventoryDialogComponent,
     InventoryEditorComponent,
     AddInventoryComponent,

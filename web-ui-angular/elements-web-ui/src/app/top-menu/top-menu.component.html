@@ -14,6 +14,7 @@
       <a mat-list-item routerLink="/missions">Missions</a>
       <a mat-list-item routerLink="/profiles">Profiles</a>
       <a mat-list-item routerLink="/leaderboards">Leaderboards</a>
+      <a mat-list-item routerLink="/wallets">Wallets</a>
       <hr />
       <a mat-list-item routerLink="/login" >Logout {{this.authenticationService.currentSession?.session.user.name}}</a>
     </mat-nav-list>
@@ -29,7 +30,8 @@
       <mat-icon aria-label="Side nav toggle icon">menu</mat-icon>
     </button>
 
-    <span class="title"><a routerLink="/">Namazu Elements</a></span>
+    <img class="logo" src="../../assets/Elements_logo_FINAL_white_small.webp" />
+    <span class="title"><a routerLink="/">ELEMENTS</a></span>
 
     <span fxShow="true" fxHide.lt-md="true" class="fill-remaining-space" style="display:flex;" >
 
@@ -41,6 +43,7 @@
       <a mat-button routerLink="/missions" *ngIf="(this.authenticationService.isLoggedIn() | async)">Missions</a>
       <a mat-button routerLink="/profiles" *ngIf="(this.authenticationService.isLoggedIn() | async)">Profiles</a>
       <a mat-button routerLink="/leaderboards" *ngIf="(this.authenticationService.isLoggedIn() | async)">Leaderboards</a>
+      <a mat-button routerLink="/wallets" *ngIf="(this.authenticationService.isLoggedIn() | async)">Wallets</a>
 
       <span class="fill-remaining-space"></span>
 
