@@ -2,7 +2,7 @@
 FROM ubuntu:20.04
 
 RUN apt-get update && \
-    apt-get -y install openjdk-11-jdk="11.0.11+9-0ubuntu2~20.04" && \
+    apt-get -y install openjdk-11-jdk && \
     apt-get -y install wget="1.20.3-1ubuntu1"
 
 ENV DOCKERIZE_VERSION v0.6.1

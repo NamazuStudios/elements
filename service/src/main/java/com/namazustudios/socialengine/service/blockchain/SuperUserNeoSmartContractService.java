@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.dao.NeoSmartContractDao;
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
@@ -13,6 +15,7 @@ import io.neow3j.types.ContractParameter;
 import io.neow3j.types.ContractParameterType;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.nep6.NEP6Wallet;
+import org.dozer.DozerBeanMapper;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -28,6 +31,8 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     private NeoWalletDao neoWalletDao;
 
     private Neow3jClient neow3JClient;
+
+    private ObjectMapper objectMapper;
 
     @Override
     public Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search) {
@@ -54,46 +59,40 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                 NeoWallet neoWallet = getNeoWalletDao().getWallet(mintTokenRequest.getWalletId());
                 NEP6Wallet nepWallet = neow3JClient.elementsWalletToNEP6(neoWallet.getWallet());
                 Account account = Account.fromNEP6Account(nepWallet.getAccounts().get(0));
-                if (mintTokenRequest.getTokenId().size() > 1){
-                    //TODO call mintAll with token list
-                } else {
-                    NeoToken neoToken = getNeoTokenDao().getToken(mintTokenRequest.getTokenId().get(0));
-                    ContractParameter tokenIdParam = ContractParameter.byteArray(neoToken.getId());
-                    var token = neoToken.getToken();
-                    List<ContractParameter> stakeholders = new ArrayList<>();
-                    for (StakeHolder stkhldr : token.getOwnership().getStakeHolders()){
-                        NeoWallet stakeholderWallet = getNeoWalletDao().getWallet(stkhldr.getWalletId());
-                        stakeholders.add(ContractParameter.array(
-                                ContractParameter.bool(stkhldr.isVoting()),
-                                ContractParameter.integer(stakeholderWallet.getWallet().getScrypt().getN()),
-                                ContractParameter.integer((int) stkhldr.getShares())
-                        ));
-                    }
-                    ContractParameter tokenParam = ContractParameter.array(
-                            ContractParameter.string(token.getDescription()),
-                            ContractParameter.array(token.getTags()),
-                            ContractParameter.integer((int) token.getTotalQuantity()),
-                            ContractParameter.string(token.getStatus()),
-                            ContractParameter.string(token.getPreviewUrls().get(0)),
-                            ContractParameter.array(token.getAssetUrls()),
-                            ContractParameter.array(
-                                    ContractParameter.array(stakeholders),
-                                    ContractParameter.integer((int) token.getOwnership().getCapitalization())
-                            ),
-                            ContractParameter.string(token.getTransferOptions())
-                    );
-                    List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenParam);
-                    try {
-                        NeoInvokeFunction response = smartContract.callInvokeFunction("mint", params, AccountSigner.calledByEntry(account));
+                NeoToken neoToken = getNeoTokenDao().getToken(mintTokenRequest.getTokenId().get(0));
+                ContractParameter tokenIdParam = ContractParameter.byteArray(neoToken.getId());
 
-//                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenParam)
-//                                .signers(AccountSigner.calledByEntry(account))
-//                                .sign()
-//                                .send();
+                try {
+
+                    ArrayList<Token> tokens = new ArrayList<Token>();
+
+                    for (var tid : mintTokenRequest.getTokenId()) {
+                        var t = getNeoTokenDao().getToken(tid);
+                        //TODO: Figure out what is happening and why this workaround works
+                        t.getToken().setType("0");
+                        tokens.add(t.getToken());
+                    }
+
+                    var tokenString = ContractParameter.string(getObjectMapper().writeValueAsString(tokens));
+
+                    try {
+//                        List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenString);
+//                        NeoInvokeFunction testresponse = smartContract.callInvokeFunction("mint", params, AccountSigner.calledByEntry(account));
+
+                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenString)
+                                .signers(AccountSigner.calledByEntry(account))
+                                .sign()
+                                .send();
+
+
                     } catch (Throwable e){
 
                     }
+
+                } catch (JsonProcessingException exception) {
+
                 }
+
                 break;
         }
         return null;
@@ -167,5 +166,14 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     @Inject
     public void setNeow3JClient(Neow3jClient neow3JClient) {
         this.neow3JClient = neow3JClient;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
+    }
+
+    @Inject
+    public void setObjectMapper(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
     }
 }
