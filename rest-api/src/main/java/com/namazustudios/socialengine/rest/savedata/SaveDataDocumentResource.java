@@ -78,6 +78,28 @@ public class SaveDataDocumentResource {
         return getSaveDataDocumentService().getSaveDataDocument(nameOrId);
     }
 
+    @GET
+    @Path("user/{userId}/{slot}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SaveDataDocument getUserSaveDataDocumentBySlot(
+            @PathParam("userId")
+            final String userId,
+            @PathParam("slot")
+            final int slot) {
+        return getSaveDataDocumentService().getUserSaveDataDocumentBySlot(userId, slot);
+    }
+
+    @GET
+    @Path("profile/{profileId}/{slot}")
+    @Produces(MediaType.APPLICATION_JSON)
+    public SaveDataDocument getProfileSaveDataDocumentBySlot(
+            @PathParam("profileId")
+            final String profileId,
+            @PathParam("slot")
+            final int slot) {
+        return getSaveDataDocumentService().getProfileSaveDataDocumentBySlot(profileId, slot);
+    }
+
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

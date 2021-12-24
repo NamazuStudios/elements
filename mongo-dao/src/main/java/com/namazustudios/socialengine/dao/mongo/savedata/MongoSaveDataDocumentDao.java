@@ -69,6 +69,42 @@ public class MongoSaveDataDocumentDao implements SaveDataDocumentDao  {
     }
 
     @Override
+    public Optional<SaveDataDocument> findUserSaveDataDocumentBySlot(final String userId, final int slot) {
+
+        final var mongoUser = getMongoUserDao()
+            .findActiveMongoUser(userId)
+            .orElseThrow(SaveDataNotFoundException::new);
+
+        final var saveGameDocumentId = new MongoSaveDataDocumentId(mongoUser.getObjectId(), slot);
+
+        final var mongoSaveDocument = getDatastore()
+            .find(MongoSaveDataDocument.class)
+            .filter(eq("_id", saveGameDocumentId))
+            .first();
+
+        return Optional.ofNullable(mongoSaveDocument).map(msd -> getMapper().map(msd, SaveDataDocument.class));
+
+    }
+
+    @Override
+    public Optional<SaveDataDocument> findProfileSaveDataDocumentBySlot(final String profileId, final int slot) {
+
+        final var mongoProfile = getMongoProfileDao()
+            .findActiveMongoProfile(profileId)
+            .orElseThrow(SaveDataNotFoundException::new);
+
+        final var saveGameDocumentId = new MongoSaveDataDocumentId(mongoProfile.getObjectId(), slot);
+
+        final var mongoSaveDocument = getDatastore()
+            .find(MongoSaveDataDocument.class)
+            .filter(eq("_id", saveGameDocumentId))
+            .first();
+
+        return Optional.ofNullable(mongoSaveDocument).map(msd -> getMapper().map(msd, SaveDataDocument.class));
+
+    }
+
+    @Override
     public Pagination<SaveDataDocument> getSaveDataDocuments(final int offset, final int count,
                                                              final String userId, final String profileId) {
 

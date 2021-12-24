@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.savedata.SaveDataNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
 import com.namazustudios.socialengine.model.savedata.UpdateSaveDataDocumentRequest;
@@ -55,6 +56,28 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
     public Pagination<SaveDataDocument> getSaveDataDocuments(final int offset, final int count,
                                                              final String userId, final String profileId) {
         return getSaveDataDocumentDao().getSaveDataDocuments(offset, count, getUser().getId(), profileId);
+    }
+
+    @Override
+    public SaveDataDocument getUserSaveDataDocumentBySlot(final String userId, final int slot) {
+        if (getUser().getId().equals(userId)) {
+            return getSaveDataDocumentDao().getUserSaveDataDocumentBySlot(userId, slot);
+        } else {
+            throw new SaveDataNotFoundException();
+        }
+    }
+
+    @Override
+    public SaveDataDocument getProfileSaveDataDocumentBySlot(final String profileId, int slot) {
+
+        final var profile = getProfileDao().getActiveProfile(profileId);
+
+        if (getUser().getId().equals(profile.getUser().getId())) {
+            return getSaveDataDocumentDao().getProfileSaveDataDocumentBySlot(profileId, slot);
+        } else {
+            throw new SaveDataNotFoundException();
+        }
+
     }
 
     @Override

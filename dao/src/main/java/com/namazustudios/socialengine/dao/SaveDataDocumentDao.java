@@ -23,12 +23,48 @@ public interface SaveDataDocumentDao {
     }
 
     /**
+     * Gets the user-scoped save data document supplying the user id and the slot.
+     * @param userId
+     * @param slot
+     * @return the {@link SaveDataDocument}
+     */
+    default SaveDataDocument getUserSaveDataDocumentBySlot(String userId, int slot) {
+        return findUserSaveDataDocumentBySlot(userId, slot).orElseThrow(SaveDataNotFoundException::new);
+    }
+
+    /**
+     * Gets the profile scoped save data document supplying the user id and the slot.
+     * @param profileId the profile Id
+     * @param slot the slot
+     * @return the {@link SaveDataDocument}
+     */
+    default SaveDataDocument getProfileSaveDataDocumentBySlot(String profileId, int slot) {
+        return findProfileSaveDataDocumentBySlot(profileId, slot).orElseThrow(SaveDataNotFoundException::new);
+    }
+
+    /**
      * Finds a {@link SaveDataDocument} from the supplied id.
      *
      * @param saveDataDocumentId the save data document ID
      * @return an {@link Optional<SaveDataDocument>} with the data
      */
     Optional<SaveDataDocument> findSaveDataDocument(final String saveDataDocumentId);
+
+    /**
+     * Finds the user-scoped save data document supplying the user id and the slot.
+     * @param userId
+     * @param slot
+     * @return the {@link SaveDataDocument}
+     */
+    Optional<SaveDataDocument> findUserSaveDataDocumentBySlot(final String userId, final int slot);
+
+    /**
+     * Finds the profile scoped save data document supplying the user id and the slot.
+     * @param profileId the profile Id
+     * @param slot the slot
+     * @return the {@link SaveDataDocument}
+     */
+    Optional<SaveDataDocument> findProfileSaveDataDocumentBySlot(final String profileId, final int slot);
 
     /**
      * Gets all save data documents matching the supplied criteria.
