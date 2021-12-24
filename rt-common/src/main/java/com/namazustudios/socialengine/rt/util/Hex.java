@@ -2,8 +2,6 @@ package com.namazustudios.socialengine.rt.util;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
-import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 
 /**
@@ -149,8 +147,6 @@ public class Hex {
         return destination;
 
     }
-
-
 
     private static int decode(final char ch) {
         switch (ch) {

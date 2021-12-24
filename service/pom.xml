@@ -95,6 +95,11 @@
             <artifactId>java-jwt</artifactId>
             <version>${auth0.java.jwt.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.neow3j</groupId>
+            <artifactId>contract</artifactId>
+            <version>${neow3j.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

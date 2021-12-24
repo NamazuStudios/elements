@@ -1,4 +1,4 @@
-import {async, ComponentFixture, TestBed, waitForAsync} from '@angular/core/testing';
+import { async, ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ApplicationConfigurationsListComponent } from './application-configurations-list.component';
 import {HttpClient, HttpHandler} from "@angular/common/http";

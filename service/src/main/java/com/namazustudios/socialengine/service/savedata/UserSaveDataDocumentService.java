@@ -3,10 +3,7 @@ package com.namazustudios.socialengine.service.savedata;
 import com.namazustudios.socialengine.dao.ProfileDao;
 import com.namazustudios.socialengine.dao.SaveDataDocumentDao;
 import com.namazustudios.socialengine.dao.UserDao;
-import com.namazustudios.socialengine.exception.ConflictException;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.exception.savedata.SaveDataNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -104,6 +101,10 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
             throw new InvalidDataException("Must specify either user or profile.");
         }
 
+        if (!Objects.equals(document.getUser().getId(), getUser().getId())) {
+            throw new ForbiddenException("User mismatch.");
+        }
+
         document.setUser(user);
         document.setProfile(profile);
         document.setTimestamp(currentTimeMillis());
@@ -123,7 +124,7 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
         final var force = updateSaveDataDocumentRequest.getForce();
         final var document = getSaveDataDocumentDao().getSaveDataDocument(saveDataDocumentId);
 
-        if (!user.getId().equals(document.getUser().getId())) {
+        if (!getUser().getId().equals(document.getUser().getId())) {
             throw new SaveDataNotFoundException("No save data with id: " + saveDataDocumentId);
         }
 
@@ -144,7 +145,7 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
             try {
                 return getSaveDataDocumentDao().checkedUpdate(document);
             } catch (SaveDataNotFoundException nfe) {
-                throw new DuplicateException("Version mismatch.");
+                throw new ConflictException("Version mismatch.", nfe);
             }
 
         }
@@ -153,7 +154,7 @@ public class UserSaveDataDocumentService implements SaveDataDocumentService {
 
     @Override
     public void deleteSaveDocument(final String saveDataDocumentId) {
-
+        getSaveDataDocumentDao().deleteSaveDocument(saveDataDocumentId);
     }
 
     public User getUser() {

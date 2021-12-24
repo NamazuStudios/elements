@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { GameOnPrizeDialogComponent } from './game-on-prize-dialog.component';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
@@ -8,7 +8,7 @@ describe('GameOnPrizeDialogComponent', () => {
   let component: GameOnPrizeDialogComponent;
   let fixture: ComponentFixture<GameOnPrizeDialogComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ GameOnPrizeDialogComponent ],
       imports: [MatDialogModule, FormsModule, ReactiveFormsModule],

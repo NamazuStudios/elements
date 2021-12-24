@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rest.savedata;
 
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
 import com.namazustudios.socialengine.model.savedata.UpdateSaveDataDocumentRequest;
@@ -72,7 +71,7 @@ public class SaveDataDocumentResource {
     @ApiOperation(
         value = "Get save data document.",
         notes = "Gets a single save data document.")
-    public SaveDataDocument getApplication(
+    public SaveDataDocument getSaveDataDocument(
             @PathParam("id")
             final String nameOrId) {
         return getSaveDataDocumentService().getSaveDataDocument(nameOrId);
@@ -113,7 +112,7 @@ public class SaveDataDocumentResource {
         return getSaveDataDocumentService().createSaveDataDocument(createSaveDataDocumentRequest);
     }
 
-    @POST
+    @PUT
     @Path("{saveDataDocumentId}")
     @Consumes(MediaType.APPLICATION_JSON)
     @Produces(MediaType.APPLICATION_JSON)

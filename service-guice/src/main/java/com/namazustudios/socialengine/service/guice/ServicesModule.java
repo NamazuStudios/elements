@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.guice;
 
+import com.auth0.jwt.JWT;
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
 import com.namazustudios.socialengine.model.profile.Profile;
@@ -129,8 +130,8 @@ public class ServicesModule extends PrivateModule {
             .toProvider(ProfileServiceProvider.class)
             .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(FollowerService.class)
@@ -274,19 +275,23 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(NeoWalletService.class)
-            .toProvider(WalletServiceProvider.class)
+            .toProvider(NeoWalletServiceProvider.class)
             .in(scope);
 
-        bind(TokenService.class)
-            .toProvider(TokenServiceProvider.class)
+        bind(NeoTokenService.class)
+            .toProvider(NeoTokenServiceProvider.class)
             .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(HealthStatusService.class)
             .to(DefaultHealthStatusService.class)
+            .in(scope);
+
+        bind(AuthSchemeService.class)
+            .toProvider(AuthSchemeServiceProvider.class)
             .in(scope);
 
         bind(SaveDataDocumentService.class)
@@ -372,7 +377,7 @@ public class ServicesModule extends PrivateModule {
 
         bind(ScoreService.class)
             .annotatedWith(Unscoped.class)
-            .toProvider(ScoreServiceProvider.class);
+            .to(ScoreService.class);
 
         bind(LeaderboardService.class)
             .annotatedWith(Unscoped.class)
@@ -452,13 +457,17 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(StandardNeow3jClient.class);
 
-        bind(TokenService.class)
+        bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserTokenService.class);
+            .to(SuperUserNeoTokenService.class);
 
-        bind(SmartContractTemplateService.class)
+        bind(AuthSchemeService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserSmartContractTemplateService.class);
+            .to(SuperUserAuthSchemeService.class);
+
+        bind(NeoSmartContractService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserNeoSmartContractService.class);
 
         bind(SaveDataDocumentService.class)
             .annotatedWith(Unscoped.class)
@@ -515,8 +524,9 @@ public class ServicesModule extends PrivateModule {
         expose(HealthStatusService.class);
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
-        expose(TokenService.class);
-        expose(SmartContractTemplateService.class);
+        expose(NeoTokenService.class);
+        expose(NeoSmartContractService.class);
+        expose(AuthSchemeService.class);
         expose(SaveDataDocumentService.class);
 
         // Unscoped Services
@@ -555,8 +565,9 @@ public class ServicesModule extends PrivateModule {
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
-        expose(TokenService.class).annotatedWith(Unscoped.class);
-        expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
+        expose(NeoTokenService.class).annotatedWith(Unscoped.class);
+        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
+        expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
         expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
 
     }
