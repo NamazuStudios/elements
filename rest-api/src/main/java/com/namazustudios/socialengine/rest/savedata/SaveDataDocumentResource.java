@@ -70,7 +70,7 @@ public class SaveDataDocumentResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(
         value = "Get save data document.",
-        notes = "Gets a single save data document.")
+        notes = "Gets a single save data document")
     public SaveDataDocument getSaveDataDocument(
             @PathParam("id")
             final String nameOrId) {
@@ -80,6 +80,10 @@ public class SaveDataDocumentResource {
     @GET
     @Path("user/{userId}/{slot}")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Get save data document.",
+            notes = "Gets a single save data document based on UserID and slot. This is a convenience method which" +
+                    "allows the client to fetch a save data based on slot an user id.")
     public SaveDataDocument getUserSaveDataDocumentBySlot(
             @PathParam("userId")
             final String userId,
@@ -91,6 +95,10 @@ public class SaveDataDocumentResource {
     @GET
     @Path("profile/{profileId}/{slot}")
     @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(
+            value = "Get save data document.",
+            notes = "Gets a single save data document based on Profile ID and slot. This is a convenience method which" +
+                    "allows the client to fetch a save data based on slot an profile id.")
     public SaveDataDocument getProfileSaveDataDocumentBySlot(
             @PathParam("profileId")
             final String profileId,
