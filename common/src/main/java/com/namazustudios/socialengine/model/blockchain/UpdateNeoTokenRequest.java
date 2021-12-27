@@ -20,9 +20,6 @@ public class UpdateNeoTokenRequest {
     @ApiModelProperty("Is this token listed for sale?")
     private boolean listed;
 
-    @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metadata;
-
     public Token getToken() {
         return token;
     }
@@ -37,13 +34,5 @@ public class UpdateNeoTokenRequest {
 
     public void setListed(boolean listed) {
         this.listed = listed;
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetaData(Map<String, Object> metadata) {
-        this.metadata = metadata;
     }
 }

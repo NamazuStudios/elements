@@ -23,8 +23,7 @@ import java.util.Map;
 @Entity(value = "token", useDiscriminator = false)
 @SearchableDocument(fields = {
         @SearchableField(name = "name", path = "/name"),
-        @SearchableField(name = "tags", path = "/tags"),
-        @SearchableField(name = "type", path = "/type")
+        @SearchableField(name = "tags", path = "/tags")
 })
 @Indexes({
         @Index(fields = @Field(value = "name", type = IndexType.TEXT), options = @IndexOptions(unique = true))
@@ -41,16 +40,7 @@ public class MongoNeoToken {
     private List<String> tags;
 
     @Property
-    private String type;
-
-    @Property
     private Token token;
-
-    @Property
-    private Map<String, Object> metadata;
-
-    @Property
-    private String contract;
 
     @Property
     private boolean listed;
@@ -82,36 +72,12 @@ public class MongoNeoToken {
         this.tags = tags;
     }
 
-    public String getType() {
-        return type;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
     public Token getToken() {
         return token;
     }
 
     public void setToken(Token token) {
         this.token = token;
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetaData(Map<String, Object> metadata) {
-        this.metadata = metadata;
-    }
-
-    public String getContract() {
-        return contract;
-    }
-
-    public void setContract(String contract) {
-        this.contract = contract;
     }
 
     public boolean isListed() {

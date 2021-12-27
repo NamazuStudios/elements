@@ -5,18 +5,22 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.util.List;
 import java.util.Map;
 
 @ApiModel(description = "Represents a request to create a NeoToken definition.")
 public class CreateNeoTokenRequest {
 
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The token definition to deploy.")
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The token definition to create.")
     private Token token;
 
-    @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metadata;
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("Is this token listed.")
+    private boolean listed;
 
     public Token getToken() {
         return token;
@@ -26,11 +30,11 @@ public class CreateNeoTokenRequest {
         this.token = token;
     }
 
-    public Map<String, Object> getMetadata() {
-        return metadata;
+    public boolean isListed() {
+        return listed;
     }
 
-    public void setMetaData(Map<String, Object> metadata) {
-        this.metadata = metadata;
+    public void setListed(boolean listed) {
+        this.listed = listed;
     }
 }

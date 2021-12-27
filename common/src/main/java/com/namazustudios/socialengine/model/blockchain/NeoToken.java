@@ -21,11 +21,6 @@ public class NeoToken {
     @ApiModelProperty("The base token properties used by the blockchain.")
     private Token token;
 
-    @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metadata;
-
-    private String contract;
-
     private boolean listed;
 
     private boolean minted;
@@ -44,22 +39,6 @@ public class NeoToken {
 
     public void setToken(Token token) {
         this.token = token;
-    }
-
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Map<String, Object> metadata) {
-        this.metadata = metadata;
-    }
-
-    public String getContract() {
-        return contract;
-    }
-
-    public void setContract(String contract) {
-        this.contract = contract;
     }
 
     public boolean isListed() {

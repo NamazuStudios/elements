@@ -91,7 +91,7 @@ public class NeoTokenApiTest {
 
         final var request = new CreateNeoTokenRequest();
         request.setToken(newToken(tokenName));
-        request.setMetaData(null);
+        request.setListed(false);
 
         NeoToken neoToken = client
                 .target(apiRoot + "/blockchain/neo/token")
@@ -120,7 +120,7 @@ public class NeoTokenApiTest {
 
         final var request = new CreateNeoTokenRequest();
         request.setToken(newToken(tokenName));
-        request.setMetaData(null);
+        request.setListed(false);
 
         Response response = client
                 .target(apiRoot + "/blockchain/neo/token")
@@ -157,7 +157,7 @@ public class NeoTokenApiTest {
 
         final var request = new CreateNeoTokenRequest();
         request.setToken(newToken(tokenName));
-        request.setMetaData(null);
+        request.setListed(false);
 
         NeoToken neoToken = client
                 .target(apiRoot + "/blockchain/neo/token")
@@ -175,7 +175,6 @@ public class NeoTokenApiTest {
         neoToken.getToken().setName(updatedTokenName);
         updateRequest.setToken(neoToken.getToken());
         updateRequest.setListed(false);
-        updateRequest.setMetaData(null);
 
         var updatedNeoToken = client
                 .target(apiRoot + "/blockchain/neo/token/" + neoToken.getId())
@@ -199,15 +198,24 @@ public class NeoTokenApiTest {
 
     private Token newToken(String tokenName) {
         final var token = new Token();
+        token.setOwner("");
+        token.setContractId("");
         token.setName(tokenName);
         token.setDescription("");
-        token.setType("purchase");
         List<String> tags = new ArrayList<>();
         tags.add("tag1");
         token.setTags(tags);
+        token.setTotalSupply(1);
+        token.setAccessOption("private");
+        List<String> previewUrls = new ArrayList<>();
+        previewUrls.add("");
+        token.setPreviewUrls(previewUrls);
+        List<String> assetUrls = new ArrayList<>();
+        assetUrls.add("");
+        token.setAssetUrls(assetUrls);
         Ownership ownership = new Ownership();
         StakeHolder stakeHolder = new StakeHolder();
-        stakeHolder.setWalletId("");
+        stakeHolder.setOwner("");
         stakeHolder.setVoting(false);
         stakeHolder.setShares(1000);
         List<StakeHolder> stakeHolders = new ArrayList<>();
@@ -215,17 +223,7 @@ public class NeoTokenApiTest {
         ownership.setStakeHolders(stakeHolders);
         ownership.setCapitalization(0);
         token.setOwnership(ownership);
-        token.setTotalQuantity(1);
-        token.setSeries(false);
-        token.setNumberInSeries(1);
         token.setTransferOptions("");
-        token.setStatus("private");
-        List<String> previewUrls = new ArrayList<>();
-        previewUrls.add("");
-        token.setPreviewUrls(previewUrls);
-        List<String> assetUrls = new ArrayList<>();
-        assetUrls.add("");
-        token.setAssetUrls(assetUrls);
         return token;
     }
 }
