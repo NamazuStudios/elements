@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
+import com.namazustudios.socialengine.exception.blockchain.NeoTokenNotFoundException;
 import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
@@ -162,12 +163,16 @@ public class MongoNeoWalletDao implements NeoWalletDao {
 
     @Override
     public void deleteWallet(final String walletId) {
+        final var objectId = getMongoDBUtils().parseOrThrow(walletId, NeoWalletNotFoundException::new);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletId);
-        final var query = getDatastore().find(MongoNeoWallet.class);
+        final var result = getDatastore()
+                .find(MongoNeoWallet.class)
+                .filter(eq("_id", objectId))
+                .delete();
 
-        query.filter(eq("_id", objectId));
-        query.delete();
+        if(result.getDeletedCount() == 0){
+            throw new NeoWalletNotFoundException("NeoWallet not deleted: " + walletId);
+        }
     }
 
 

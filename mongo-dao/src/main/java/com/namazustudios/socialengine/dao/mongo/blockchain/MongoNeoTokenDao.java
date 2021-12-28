@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.NeoTokenNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
@@ -79,7 +80,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                 ).first();
 
         if(mongoToken == null) {
-            throw new NotFoundException("Unable to find token with an id of " + tokenIdOrName);
+            throw new NeoTokenNotFoundException("Unable to find token with an id of " + tokenIdOrName);
         }
 
         return transform(mongoToken);
@@ -114,7 +115,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         );
 
         if (mongoNeoToken == null) {
-            throw new NotFoundException("NeoToken not found or was already minted: " + tokenId);
+            throw new NeoTokenNotFoundException("NeoToken not found or was already minted: " + tokenId);
         }
 
         getObjectIndex().index(mongoNeoToken);
@@ -137,7 +138,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         );
 
         if (mongoNeoToken == null) {
-            throw new NotFoundException("NeoToken not found: " + tokenId);
+            throw new NeoTokenNotFoundException("NeoToken not found: " + tokenId);
         }
 
         getObjectIndex().index(mongoNeoToken);
@@ -176,11 +177,16 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
     @Override
     public void deleteToken(String tokenId) {
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
-        final var query = getDatastore().find(MongoNeoToken.class);
+        final var objectId = getMongoDBUtils().parseOrThrow(tokenId, NeoTokenNotFoundException::new);
 
-        query.filter(eq("_id", objectId));
-        query.delete();
+        final var result = getDatastore()
+                .find(MongoNeoToken.class)
+                .filter(eq("_id", objectId))
+                .delete();
+
+        if(result.getDeletedCount() == 0){
+            throw new NeoTokenNotFoundException("NeoToken not deleted: " + tokenId);
+        }
     }
 
     private NeoToken transform(MongoNeoToken token)
