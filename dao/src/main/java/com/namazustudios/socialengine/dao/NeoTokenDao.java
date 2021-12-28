@@ -4,9 +4,21 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
 
+/**
+ * Created by garrettmcspadden on 11/23/21.
+ */
+@Expose({
+        @ExposedModuleDefinition("namazu.elements.dao.neotoken"),
+        @ExposedModuleDefinition(
+                value = "namazu.socialengine.dao.neotoken",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neotoken instead"))
+})
 public interface NeoTokenDao {
 
     /**
