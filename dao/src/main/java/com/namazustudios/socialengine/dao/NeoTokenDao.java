@@ -39,6 +39,14 @@ public interface NeoTokenDao {
     NeoToken updateToken(String tokenId, UpdateNeoTokenRequest updateNeoTokenRequest);
 
     /**
+     * Updates the supplied {@link NeoToken} marking it as minted.
+     *
+     * @param tokenId the id of the token to update
+     * @return the {@link NeoToken} as it was changed by the service.
+     */
+    NeoToken mintToken(String tokenId);
+
+    /**
      * Creates a new token using a pre-created template.
      *
      * @param tokenRequest the {@link CreateNeoTokenRequest} with the information to create

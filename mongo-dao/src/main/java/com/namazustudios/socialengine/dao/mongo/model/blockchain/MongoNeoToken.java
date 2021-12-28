@@ -48,6 +48,9 @@ public class MongoNeoToken {
     @Property
     private boolean minted;
 
+    @Property
+    private String contractId;
+
     public ObjectId getObjectId() {
         return objectId;
     }
@@ -94,5 +97,13 @@ public class MongoNeoToken {
 
     public void setMinted(boolean minted) {
         this.minted = minted;
+    }
+
+    public String getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
     }
 }

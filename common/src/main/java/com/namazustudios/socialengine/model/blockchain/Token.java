@@ -17,11 +17,6 @@ public class Token {
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The elements contract id to mint this token with.")
-    private String contractId;
-
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The name given to this token.")
     private String name;
 
@@ -86,14 +81,6 @@ public class Token {
 
     public void setOwner(String owner) {
         this.owner = owner;
-    }
-
-    public String getContractId() {
-        return contractId;
-    }
-
-    public void setContractId(String contractId) {
-        this.contractId = contractId;
     }
 
     public String getName() {

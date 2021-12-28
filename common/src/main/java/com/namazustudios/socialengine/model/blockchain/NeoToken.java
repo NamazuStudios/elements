@@ -21,6 +21,11 @@ public class NeoToken {
     @ApiModelProperty("The base token properties used by the blockchain.")
     private Token token;
 
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The elements contract id to mint this token with.")
+    private String contractId;
+
     private boolean listed;
 
     private boolean minted;
@@ -55,5 +60,13 @@ public class NeoToken {
 
     public void setMinted(boolean minted) {
         this.minted = minted;
+    }
+
+    public String getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
     }
 }

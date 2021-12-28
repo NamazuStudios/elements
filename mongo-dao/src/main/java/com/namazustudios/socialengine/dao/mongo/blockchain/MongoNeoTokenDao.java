@@ -105,7 +105,8 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                 set("name", name),
                 set("tags", tags),
                 set("token", token),
-                set("listed", updateNeoTokenRequest.isListed())
+                set("listed", updateNeoTokenRequest.isListed()),
+                set("contractId", updateNeoTokenRequest.getContractId())
         );
 
         final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
@@ -114,6 +115,29 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         if (mongoNeoToken == null) {
             throw new NotFoundException("NeoToken not found or was already minted: " + tokenId);
+        }
+
+        getObjectIndex().index(mongoNeoToken);
+        return transform(mongoNeoToken);
+    }
+
+    @Override
+    public NeoToken mintToken(String tokenId) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
+        final var query = getDatastore().find(MongoNeoToken.class);
+
+        query.filter(eq("_id", objectId));
+
+        final var builder = new UpdateBuilder().with(
+                set("minted", true)
+        );
+
+        final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoNeoToken == null) {
+            throw new NotFoundException("NeoToken not found: " + tokenId);
         }
 
         getObjectIndex().index(mongoNeoToken);
@@ -138,7 +162,8 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                 set("tags", tags),
                 set("token", token),
                 set("listed", tokenRequest.isListed()),
-                set("minted", false)
+                set("minted", false),
+                set("contractId", tokenRequest.getContractId())
         );
 
         final var mongoToken = getMongoDBUtils().perform(

@@ -92,6 +92,7 @@ public class NeoTokenApiTest {
         final var request = new CreateNeoTokenRequest();
         request.setToken(newToken(tokenName));
         request.setListed(false);
+        request.setContractId("");
 
         NeoToken neoToken = client
                 .target(apiRoot + "/blockchain/neo/token")
@@ -121,6 +122,7 @@ public class NeoTokenApiTest {
         final var request = new CreateNeoTokenRequest();
         request.setToken(newToken(tokenName));
         request.setListed(false);
+        request.setContractId("");
 
         Response response = client
                 .target(apiRoot + "/blockchain/neo/token")
@@ -158,6 +160,7 @@ public class NeoTokenApiTest {
         final var request = new CreateNeoTokenRequest();
         request.setToken(newToken(tokenName));
         request.setListed(false);
+        request.setContractId("");
 
         NeoToken neoToken = client
                 .target(apiRoot + "/blockchain/neo/token")
@@ -175,6 +178,7 @@ public class NeoTokenApiTest {
         neoToken.getToken().setName(updatedTokenName);
         updateRequest.setToken(neoToken.getToken());
         updateRequest.setListed(false);
+        updateRequest.setContractId("");
 
         var updatedNeoToken = client
                 .target(apiRoot + "/blockchain/neo/token/" + neoToken.getId())
@@ -199,7 +203,6 @@ public class NeoTokenApiTest {
     private Token newToken(String tokenName) {
         final var token = new Token();
         token.setOwner("");
-        token.setContractId("");
         token.setName(tokenName);
         token.setDescription("");
         List<String> tags = new ArrayList<>();
