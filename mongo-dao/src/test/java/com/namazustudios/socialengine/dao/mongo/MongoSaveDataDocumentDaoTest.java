@@ -469,6 +469,77 @@ public class MongoSaveDataDocumentDaoTest {
         assertTrue(doc.isPresent());
     }
 
+    @DataProvider
+    public Object[][] getIntermediateUserSaveGameData() {
+        return intermediateDocuments
+            .values()
+            .stream()
+            .filter(sdd -> sdd.getProfile() == null)
+            .map(sdd -> new Object[]{sdd})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getIntermediateUserSaveGameData", dependsOnMethods = "testForceUpdateSaveDocumentUser")
+    public void testGetByUserSlot(final SaveDataDocument saveDataDocument) {
+
+        final var doc = getSaveDataDocumentDao().getUserSaveDataDocumentBySlot(
+            saveDataDocument.getUser().getId(),
+            saveDataDocument.getSlot()
+        );
+
+        assertEquals(saveDataDocument.getId(), doc.getId());
+
+    }
+
+    @Test(dataProvider = "getIntermediateUserSaveGameData", dependsOnMethods = "testForceUpdateSaveDocumentUser")
+    public void testFindByUserSlot(final SaveDataDocument saveDataDocument) {
+
+        final var doc = getSaveDataDocumentDao().findUserSaveDataDocumentBySlot(
+            saveDataDocument.getUser().getId(),
+            saveDataDocument.getSlot()
+        );
+
+        assertTrue(doc.isPresent());
+        assertEquals(saveDataDocument.getId(), doc.get().getId());
+
+    }
+
+    @DataProvider
+    public Object[][] getIntermediateProfileSaveGameData() {
+        return intermediateDocuments
+            .values()
+            .stream()
+            .filter(sdd -> sdd.getProfile() != null)
+            .map(sdd -> new Object[]{sdd})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getIntermediateProfileSaveGameData", dependsOnMethods = "testForceUpdateSaveDocumentUser")
+    public void testGetByProfileSlot(final SaveDataDocument saveDataDocument) {
+
+        var doc = getSaveDataDocumentDao().getProfileSaveDataDocumentBySlot(
+            saveDataDocument.getProfile().getId(),
+            saveDataDocument.getSlot()
+        );
+
+        assertEquals(saveDataDocument.getId(), doc.getId());
+
+    }
+
+    @Test(dataProvider = "getIntermediateProfileSaveGameData", dependsOnMethods = "testForceUpdateSaveDocumentUser")
+    public void testFindByProfileSlot(final SaveDataDocument saveDataDocument) {
+
+        final var doc = getSaveDataDocumentDao().findProfileSaveDataDocumentBySlot(
+            saveDataDocument.getProfile().getId(),
+            saveDataDocument.getSlot()
+        );
+
+        assertTrue(doc.isPresent());
+        assertEquals(saveDataDocument.getId(), doc.get().getId());
+
+    }
+
+
     @Test(dependsOnMethods = "testForceUpdateSaveDocumentUser")
     public void testFindByIdAbsent() {
         final MongoSaveDataDocumentId bogus = new MongoSaveDataDocumentId(new ObjectId(), 0);

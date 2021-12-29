@@ -6,8 +6,14 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.List;
+import java.util.Map;
 
 public class Token {
+
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The account address of the owner to be assigned when minting this token.")
+    private String owner;
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
@@ -17,43 +23,14 @@ public class Token {
     @ApiModelProperty("The description of this token.")
     private String description;
 
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The type of this token. Valid options are " +
-            "\"purchase\" : ownership is transferred to the purchaser, " +
-            "\"license\" : the minter of the token retains ownership, but grants access to the purchaser, and " +
-            "\"rent\" : same as license, but access is revoked after a certain period of time (see rentDuration).")
-    private String type;
-
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @ApiModelProperty("Any tags to assist in filtering/searching for this token.")
     private List<String> tags;
 
-    @ApiModelProperty("Defines the ownership for this token.")
-    private Ownership ownership;
-
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The quantity of copies of this token that can be distributed.")
-    private long totalQuantity;
-
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("Will this token exist as a series 1-x.")
-    private boolean series;
-
-    @ApiModelProperty("If designated as “series” in Elements, single NFTs are minted sequentially on demand up " +
-            "to the total quantity, and are numbered in sequence as minted.")
-    private long numberInSeries;
-
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The transfer options of this token. Valid values are " +
-            "\"none\" : Cannot be transferred, " +
-            "\"resale_only\" : Can be resold, but not traded, " +
-            "\"trades_only\" : Can be traded, but not resold, and " +
-            "\"resale_and_trades\" : Can be either resold or traded.")
-    private String transferOptions;
+    @ApiModelProperty("The maximum number of copies of this token that can be owned (by any number of accounts) at any one time.")
+    private long totalSupply;
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
@@ -61,7 +38,7 @@ public class Token {
             "\"public\" : Can be viewed by everyone, " +
             "\"private\" : Only the token or contract owner can view the token properties " +
             "\"preview\" : If not the token or contract owner, the asset urls cannot be viewed.")
-    private String status;
+    private String accessOption;
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
@@ -72,6 +49,39 @@ public class Token {
     @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The asset URLs of this token.")
     private List<String> assetUrls;
+
+    @ApiModelProperty("Defines the ownership for this token.")
+    private Ownership ownership;
+
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The transfer options of this token. Valid values are " +
+            "\"none\" : Cannot be transferred, " +
+            "\"resale_only\" : Can be resold, but not traded, " +
+            "\"trades_only\" : Can be traded, but not resold, and " +
+            "\"resale_and_trades\" : Can be either resold or traded.")
+    private String transferOptions;
+
+    @ApiModelProperty("Indicates whether or not the license is revocable by the owner")
+    private boolean revocable;
+
+    @ApiModelProperty("The expiration date of the license. Recorded in seconds since Unix epoch")
+    private long expiry;
+
+    @ApiModelProperty("If true, the licensee may pay a fee to extend the expiration date by the same difference " +
+            "between the original expiry and the time of minting.")
+    private boolean renewable;
+
+    @ApiModelProperty("Any meta data for this token.")
+    private Map<String, Object> metadata;
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
 
     public String getName() {
         return name;
@@ -89,12 +99,12 @@ public class Token {
         this.description = description;
     }
 
-    public String getType() {
-        return type;
+    public String getAccessOption() {
+        return accessOption;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setAccessOption(String accessOption) {
+        this.accessOption = accessOption;
     }
 
     public List<String> getTags() {
@@ -113,28 +123,12 @@ public class Token {
         this.ownership = ownership;
     }
 
-    public long getTotalQuantity() {
-        return totalQuantity;
+    public long getTotalSupply() {
+        return totalSupply;
     }
 
-    public void setTotalQuantity(long totalQuantity) {
-        this.totalQuantity = totalQuantity;
-    }
-
-    public boolean isSeries() {
-        return series;
-    }
-
-    public void setSeries(boolean series) {
-        this.series = series;
-    }
-
-    public long getNumberInSeries() {
-        return numberInSeries;
-    }
-
-    public void setNumberInSeries(long numberInSeries) {
-        this.numberInSeries = numberInSeries;
+    public void setTotalSupply(long totalSupply) {
+        this.totalSupply = totalSupply;
     }
 
     public String getTransferOptions() {
@@ -143,14 +137,6 @@ public class Token {
 
     public void setTransferOptions(String transferOptions) {
         this.transferOptions = transferOptions;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public List<String> getPreviewUrls() {
@@ -167,5 +153,37 @@ public class Token {
 
     public void setAssetUrls(List<String> assetUrls) {
         this.assetUrls = assetUrls;
+    }
+
+    public boolean isRevocable() {
+        return revocable;
+    }
+
+    public void setRevocable(boolean revocable) {
+        this.revocable = revocable;
+    }
+
+    public long getExpiry() {
+        return expiry;
+    }
+
+    public void setExpiry(long expiry) {
+        this.expiry = expiry;
+    }
+
+    public boolean isRenewable() {
+        return renewable;
+    }
+
+    public void setRenewable(boolean renewable) {
+        this.renewable = renewable;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 }

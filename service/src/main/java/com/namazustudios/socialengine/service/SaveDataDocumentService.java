@@ -55,6 +55,24 @@ public interface SaveDataDocumentService {
     Pagination<SaveDataDocument> getSaveDataDocuments(int offset, int count, String userId, String profileId);
 
     /**
+     * Gets a user-scoped saved data document by user id and slot.
+     *
+     * @param userId the user id
+     * @param slot the slot
+     * @return the {@link SaveDataDocument}, never null
+     */
+    SaveDataDocument getUserSaveDataDocumentBySlot(String userId, int slot);
+
+    /**
+     * Gets a profile-scoped saved data document by user id and slot.
+     *
+     * @param profileId the profile id
+     * @param slot the slot
+     * @return the {@link SaveDataDocument}, never null
+     */
+    SaveDataDocument getProfileSaveDataDocumentBySlot(String profileId, int slot);
+
+    /**
      * Creates a new SaveDataDocument in the database.
      *
      * @param createSaveDataDocumentRequest the creation request

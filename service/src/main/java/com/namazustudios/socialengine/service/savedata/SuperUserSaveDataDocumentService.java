@@ -47,6 +47,16 @@ public class SuperUserSaveDataDocumentService implements SaveDataDocumentService
     }
 
     @Override
+    public SaveDataDocument getUserSaveDataDocumentBySlot(String userId, int slot) {
+        return getSaveDataDocumentDao().getUserSaveDataDocumentBySlot(userId, slot);
+    }
+
+    @Override
+    public SaveDataDocument getProfileSaveDataDocumentBySlot(String profileId, int slot) {
+        return getSaveDataDocumentDao().getProfileSaveDataDocumentBySlot(profileId, slot);
+    }
+
+    @Override
     public SaveDataDocument createSaveDataDocument(final CreateSaveDataDocumentRequest createSaveDataDocumentRequest) {
 
         getValidationHelper().validateModel(createSaveDataDocumentRequest);

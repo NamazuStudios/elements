@@ -108,8 +108,16 @@ public class UserSaveDocumentApiTest {
 
         saveLocalDocument(context.getUser().getId(), slot, document);
 
-        final var fetched = client
+        var fetched = client
             .target(format("%s/save_data/%s", apiRoot, document.getId()))
+            .request()
+            .header("Authorization", format("Bearer %s", context.getSessionSecret()))
+            .get(SaveDataDocument.class);
+
+        assertEquals(document, fetched);
+
+        fetched = client
+            .target(format("%s/save_data/user/%s/%s", apiRoot, document.getUser().getId(), slot))
             .request()
             .header("Authorization", format("Bearer %s", context.getSessionSecret()))
             .get(SaveDataDocument.class);
@@ -142,8 +150,16 @@ public class UserSaveDocumentApiTest {
 
         saveLocalDocument(context.getDefaultProfile().getId(), slot, document);
 
-        final var fetched = client
+        var fetched = client
             .target(format("%s/save_data/%s", apiRoot, document.getId()))
+            .request()
+            .header("Authorization", format("Bearer %s", context.getSessionSecret()))
+            .get(SaveDataDocument.class);
+
+        assertEquals(document, fetched);
+
+        fetched = client
+            .target(format("%s/save_data/profile/%s/%s", apiRoot, document.getProfile().getId(), slot))
             .request()
             .header("Authorization", format("Bearer %s", context.getSessionSecret()))
             .get(SaveDataDocument.class);
