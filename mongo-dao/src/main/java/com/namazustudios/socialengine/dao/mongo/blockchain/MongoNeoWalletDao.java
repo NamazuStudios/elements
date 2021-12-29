@@ -168,8 +168,8 @@ public class MongoNeoWalletDao implements NeoWalletDao {
 
         query.filter(eq("_id", objectId));
         query.delete();
-    }
 
+    }
 
     public NeoWallet transform(final MongoNeoWallet input) {
 

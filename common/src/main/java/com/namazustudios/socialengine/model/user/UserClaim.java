@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.user;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
 

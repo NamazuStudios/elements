@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
+import com.namazustudios.socialengine.service.auth.StandardCryptoKeyUtility;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -26,10 +27,7 @@ import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceipt
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.health.DefaultHealthStatusService;
 import com.namazustudios.socialengine.service.inventory.*;
-import com.namazustudios.socialengine.service.leaderboard.LeaderboardServiceProvider;
-import com.namazustudios.socialengine.service.leaderboard.RankServiceProvider;
-import com.namazustudios.socialengine.service.leaderboard.ScoreServiceProvider;
-import com.namazustudios.socialengine.service.leaderboard.SuperUserLeaderboardService;
+import com.namazustudios.socialengine.service.leaderboard.*;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
@@ -89,6 +87,10 @@ public class ServicesModule extends PrivateModule {
 
         bind(Mapper.class)
             .toProvider(ServicesDozerMapperProvider.class)
+            .asEagerSingleton();
+
+        bind(CryptoKeyUtility.class)
+            .to(StandardCryptoKeyUtility.class)
             .asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
@@ -276,8 +278,8 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(AuthSchemeService.class)
-                .toProvider(AuthSchemeServiceProvider.class)
-                .in(scope);
+            .toProvider(AuthSchemeServiceProvider.class)
+            .in(scope);
         
         bind(NeoTokenService.class)
             .toProvider(NeoTokenServiceProvider.class)
@@ -370,7 +372,7 @@ public class ServicesModule extends PrivateModule {
 
         bind(ScoreService.class)
             .annotatedWith(Unscoped.class)
-            .to(ScoreService.class);
+            .to(UserScoreService.class);
 
         bind(LeaderboardService.class)
             .annotatedWith(Unscoped.class)

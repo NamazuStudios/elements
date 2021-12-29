@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.model.auth.*;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -60,14 +61,14 @@ public class AuthSchemeApiTest {
         final var createRequest = new CreateAuthSchemeRequest();
 
         createRequest.setAudience("test_aud");
-        createRequest.setUserLevel("SUPERUSER");
-        createRequest.setPubKey("test_key");
+        createRequest.setUserLevel(User.Level.SUPERUSER);
+        createRequest.setPublicKey("test_key");
 
         createAuthSchemeResponse = client
-                .target(apiRoot + "/auth_scheme")
-                .request()
-                .post(Entity.entity(createRequest, APPLICATION_JSON))
-                .readEntity(CreateAuthSchemeResponse.class);
+            .target(apiRoot + "/auth_scheme")
+            .request()
+            .post(Entity.entity(createRequest, APPLICATION_JSON))
+            .readEntity(CreateAuthSchemeResponse.class);
 
         assertNotNull(createAuthSchemeResponse);
         assertNotNull(createAuthSchemeResponse.publicKey);
@@ -75,31 +76,21 @@ public class AuthSchemeApiTest {
 
     @Test(dependsOnMethods = "createAuthScheme")
     public void updateAuthScheme() {
-        var scheme = createAuthSchemeResponse.getScheme();
-        var objectMapper = new ObjectMapper();
-
-        AuthScheme authScheme;
-        try {
-            authScheme = objectMapper.readValue(scheme, AuthScheme.class);
-        } catch (JsonProcessingException e) {
-            throw new BadRequestException(e);
-        }
 
         var allowedIssuers = new ArrayList<String>();
 
         final var updateRequest = new UpdateAuthSchemeRequest();
-        updateRequest.setAuthSchemeId(authScheme.id);
         updateRequest.setAudience("test_aud");
         updateRequest.setPubKey("test_key");
         updateRequest.setRegenerate(false);
-        updateRequest.setUserLevel("SUPERUSER");
+        updateRequest.setUserLevel(User.Level.SUPERUSER);
         updateRequest.setAllowedIssuers(allowedIssuers);
 
         updateAuthSchemeResponse = client
-                .target(apiRoot + "/auth_scheme")
-                .request()
-                .put(Entity.entity(updateRequest, APPLICATION_JSON))
-                .readEntity(UpdateAuthSchemeResponse.class);
+            .target(apiRoot + "/auth_scheme")
+            .request()
+            .put(Entity.entity(updateRequest, APPLICATION_JSON))
+            .readEntity(UpdateAuthSchemeResponse.class);
 
         assertNotNull(updateAuthSchemeResponse);
     }

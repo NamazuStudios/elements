@@ -1,0 +1,216 @@
+package com.namazustudios.socialengine.dao.mongo;
+
+import com.namazustudios.socialengine.dao.AuthSchemeDao;
+import com.namazustudios.socialengine.exception.DuplicateException;
+import com.namazustudios.socialengine.exception.auth.AuthSchemeNotFoundException;
+import com.namazustudios.socialengine.model.auth.AuthScheme;
+import com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm;
+import com.namazustudios.socialengine.model.user.User;
+import org.bson.types.ObjectId;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Guice;
+import org.testng.annotations.Test;
+
+import javax.inject.Inject;
+import java.util.Base64;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.IntStream;
+
+import static java.lang.String.format;
+import static java.util.Collections.emptyList;
+import static org.testng.Assert.*;
+
+@Guice(modules = IntegrationTestModule.class)
+public class MongoAuthSchemeDaoTest {
+
+    private static final String TEST_AUDIENCE = "test";
+
+    private static final List<String> TEST_TAGS_UPDATE = List.of("tag0", "tag1");
+
+    private static final List<String> TEST_ISSUERS = List.of("issuer0", "issuer1");
+
+    private static final List<String> TEST_ISSUERS_UPDATE = List.of("issuer2", "issuer3");
+
+    private AuthSchemeDao authSchemeDao;
+
+    private final Map<String, AuthScheme> intermediateAuthSchemes = new ConcurrentHashMap<>();
+
+    private void updateIntermediate(final AuthScheme authScheme) {
+        intermediateAuthSchemes.put(authScheme.getId(), authScheme);
+    }
+
+    private String generateMockKey() {
+        final var bytes = new byte[512];
+        ThreadLocalRandom.current().nextBytes(bytes);
+        return Base64.getEncoder().encodeToString(bytes);
+    }
+
+    @DataProvider
+    public Object[][] getAuthSchemeIteration() {
+        return IntStream
+            .range(0, 10)
+            .mapToObj(i -> new Object[]{i})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getAuthSchemeIteration")
+    public void testCreateAuthScheme(final int iteration) {
+
+        final var toCreate = new AuthScheme();
+        toCreate.setAudience(format("%s_%d", TEST_AUDIENCE, iteration));
+        toCreate.setPublicKey(generateMockKey());
+        toCreate.setAlgorithm(AuthSchemeAlgorithm.RSA_256);
+        toCreate.setTags(emptyList());
+        toCreate.setAllowedIssuers(TEST_ISSUERS);
+        toCreate.setUserLevel(User.Level.USER);
+
+        final var created = getAuthSchemeDao().createAuthScheme(toCreate);
+        assertNotNull(created.getId());
+        assertEquals(toCreate.getTags(), created.getTags());
+        assertEquals(toCreate.getAudience(), created.getAudience());
+        assertEquals(toCreate.getPublicKey(), created.getPublicKey());
+        assertEquals(toCreate.getAlgorithm(), created.getAlgorithm());
+        assertEquals(toCreate.getAllowedIssuers(), created.getAllowedIssuers());
+        assertEquals(toCreate.getUserLevel(), created.getUserLevel());
+
+        updateIntermediate(created);
+
+    }
+
+    @Test(dataProvider = "getAuthSchemeIteration",
+          dependsOnMethods = "testCreateAuthScheme",
+          expectedExceptions = DuplicateException.class)
+    public void testCreateAuthSchemeDuplicateAudience(final int iteration) {
+        final var toCreate = new AuthScheme();
+        toCreate.setTags(emptyList());
+        toCreate.setAudience(format("%s_%d", TEST_AUDIENCE, iteration));
+        toCreate.setPublicKey(generateMockKey());
+        toCreate.setAlgorithm(AuthSchemeAlgorithm.RSA_256);
+        toCreate.setAllowedIssuers(List.of("issuer0", "issuer1"));
+        toCreate.setUserLevel(User.Level.USER);
+        getAuthSchemeDao().createAuthScheme(toCreate);
+    }
+
+    @DataProvider
+    public Object[][] getIntermediates() {
+        return intermediateAuthSchemes
+            .entrySet()
+            .stream()
+            .map(e -> new Object[]{e.getKey(), e.getValue()})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dependsOnMethods = "testCreateAuthScheme", dataProvider = "getIntermediates")
+    public void testGetIndividualAuthScheme(final String authSchemeId, final AuthScheme existing) {
+        final var fetched = getAuthSchemeDao().getAuthScheme(authSchemeId);
+        assertEquals(authSchemeId, fetched.getId());
+    }
+
+    @Test(dependsOnMethods = "testCreateAuthScheme", dataProvider = "getIntermediates")
+    public void testFindIndividualAuthScheme(final String authSchemeId, final AuthScheme existing) {
+        final var fetched = getAuthSchemeDao().findAuthScheme(authSchemeId);
+        assertEquals(authSchemeId, fetched.get().getId());
+    }
+
+    @Test(dependsOnMethods = "testCreateAuthScheme", expectedExceptions = AuthSchemeNotFoundException.class)
+    public void testGetIndividualAuthSchemeFail() {
+        getAuthSchemeDao().getAuthScheme(new ObjectId().toHexString());
+    }
+
+    @Test(dependsOnMethods = "testCreateAuthScheme")
+    public void testFindIndividualAuthSchemeFail() {
+        final var fetched = getAuthSchemeDao().findAuthScheme(new ObjectId().toHexString());
+        assertTrue(fetched.isEmpty());
+    }
+
+    @Test(dependsOnMethods = {"testGetIndividualAuthScheme", "testFindIndividualAuthScheme"})
+    public void testGetAllAuthSchemes() {
+
+        final var fetched = getAuthSchemeDao().getAuthSchemes(0, 100, null);
+        assertEquals(intermediateAuthSchemes.size(), fetched.getTotal());
+
+        for (var scheme : fetched.getObjects()) {
+            assertTrue(intermediateAuthSchemes.containsKey(scheme.getId()));
+        }
+
+    }
+
+    @Test(dependsOnMethods = "testGetAllAuthSchemes", dataProvider = "getIntermediates")
+    public void updateAuthScheme(final String authSchemeId, final AuthScheme existing) {
+
+        final var toUpdate = new AuthScheme();
+        toUpdate.setId(authSchemeId);
+        toUpdate.setAudience(format("%s_updated", existing.getAudience()));
+        toUpdate.setPublicKey(generateMockKey());
+        toUpdate.setAlgorithm(AuthSchemeAlgorithm.RSA_384);
+        toUpdate.setTags(TEST_TAGS_UPDATE);
+        toUpdate.setAllowedIssuers(TEST_ISSUERS_UPDATE);
+        toUpdate.setUserLevel(User.Level.SUPERUSER);
+
+        final var updated = getAuthSchemeDao().updateAuthScheme(toUpdate);
+
+        assertEquals(toUpdate.getId(), updated.getId());
+        assertEquals(toUpdate.getTags(), updated.getTags());
+        assertEquals(toUpdate.getAudience(), updated.getAudience());
+        assertEquals(toUpdate.getPublicKey(), updated.getPublicKey());
+        assertEquals(toUpdate.getAlgorithm(), updated.getAlgorithm());
+        assertEquals(toUpdate.getAllowedIssuers(), updated.getAllowedIssuers());
+        assertEquals(toUpdate.getUserLevel(), updated.getUserLevel());
+
+        updateIntermediate(updated);
+
+    }
+
+    @Test(dependsOnMethods = "updateAuthScheme",
+          dataProvider = "getIntermediates",
+          expectedExceptions = DuplicateException.class)
+    public void updateAuthSchemeDuplicate(final String authSchemeId, final AuthScheme existing) {
+
+        // Create a valid auth scheme that has an alternative audience and try to update it to the main test scheme
+
+        final var toCreate = new AuthScheme();
+        toCreate.setTags(emptyList());
+        toCreate.setAudience(format("%s_alternative", TEST_AUDIENCE));
+        toCreate.setPublicKey(generateMockKey());
+        toCreate.setAlgorithm(AuthSchemeAlgorithm.RSA_256);
+        toCreate.setAllowedIssuers(TEST_ISSUERS);
+        toCreate.setUserLevel(User.Level.USER);
+
+        final var created = getAuthSchemeDao().createAuthScheme(toCreate);
+
+        try {
+            created.setAudience(existing.getAudience());
+            getAuthSchemeDao().updateAuthScheme(created);
+        } finally {
+            getAuthSchemeDao().deleteAuthScheme(created.getId());
+        }
+
+    }
+
+    @Test(dependsOnMethods = "updateAuthSchemeDuplicate", dataProvider = "getIntermediates")
+    public void testDeleteAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
+        getAuthSchemeDao().deleteAuthScheme(authSchemeId);
+        assertTrue(getAuthSchemeDao().findAuthScheme(authSchemeId).isEmpty());
+        intermediateAuthSchemes.remove(authSchemeId);
+    }
+
+    @Test(dependsOnMethods = "testDeleteAuthScheme")
+    public void testAllAreDeleted() {
+        final var fetched = getAuthSchemeDao().getAuthSchemes(0, 100, null);
+        assertEquals(fetched.getTotal(), 0);
+        assertEquals(fetched.getObjects().size(), 0);
+    }
+
+    public AuthSchemeDao getAuthSchemeDao() {
+        return authSchemeDao;
+    }
+
+    @Inject
+    public void setAuthSchemeDao(AuthSchemeDao authSchemeDao) {
+        this.authSchemeDao = authSchemeDao;
+    }
+
+}

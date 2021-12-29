@@ -7,9 +7,9 @@ import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.user.UserClaim;
 import com.namazustudios.socialengine.model.user.UserCreateRequest;
-import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.security.JWTCredentials;
+import com.namazustudios.socialengine.security.JWTClaims;
 import com.namazustudios.socialengine.service.SessionService;
 import com.namazustudios.socialengine.service.UserService;
 import org.dozer.Mapper;
@@ -17,6 +17,8 @@ import org.dozer.Mapper;
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+
+import java.util.HashMap;
 
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
@@ -62,24 +64,28 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
      * @param jwt token
      */
     protected void checkJWTAndSetAttributes(final ContainerRequestContext requestContext, final String jwt) {
-        var jwtCredentials = new JWTCredentials(jwt);
+
+        final var jwtCredentials = new JWTCredentials(jwt);
 
         if (!jwtCredentials.verify()) {
             throw new BadRequestException();
         }
 
-        var elm_uesrKey = jwtCredentials.getClaim("elm_userkey");
-        var elm_user = getUserService().getUser(elm_uesrKey);
+        var uesrKey = jwtCredentials.getClaim(JWTClaims.ELM_USERKEY);
+        var elm_user = getUserService().getUser(uesrKey);
 
         if (elm_user == null)
         {
-            var elm_userModelString = jwtCredentials.getClaim("elm_usermodel");
+
+            var elm_userModelString = jwtCredentials.getClaim("");
+
             if (elm_userModelString == null) {
                 throw new BadRequestException();
             }
 
             try {
-                var elm_userModel = objectMapper.readValue(elm_userModelString, UserClaim.class);
+
+                var elm_userModel = objectMapper.readValue("", UserClaim.class);
 
                 // create user
                 var toCreate = new UserCreateRequest();
@@ -133,4 +139,5 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
     public void setMapper(Mapper mapper) {
         this.mapper = mapper;
     }
+
 }

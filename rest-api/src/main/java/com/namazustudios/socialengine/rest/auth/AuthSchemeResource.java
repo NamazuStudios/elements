@@ -79,11 +79,15 @@ public class AuthSchemeResource {
     }
 
     @PUT
+    @Path("{authSchemeId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates an Auth Scheme",
             notes = "Updates an Auth Scheme with the specified data in the auth scheme request.")
-    public UpdateAuthSchemeResponse updateAuthScheme(final UpdateAuthSchemeRequest authSchemeRequest) {
-        return getAuthSchemeService().updateAuthScheme(authSchemeRequest);
+    public UpdateAuthSchemeResponse updateAuthScheme(
+            @PathParam("authSchemeId")
+            final String authSchemeId,
+            final UpdateAuthSchemeRequest authSchemeRequest) {
+        return getAuthSchemeService().updateAuthScheme(authSchemeId, authSchemeRequest);
     }
 
     @DELETE

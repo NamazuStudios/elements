@@ -1,35 +1,29 @@
 package com.namazustudios.socialengine.dao.mongo.auth;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.mongodb.DuplicateKeyException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.AuthSchemeDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.auth.MongoAuthScheme;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.InvalidDataException;
-import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.auth.AuthSchemeNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.auth.*;
-import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
-import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
 public class MongoAuthSchemeDao implements AuthSchemeDao {
 
@@ -41,8 +35,6 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
 
     private Mapper beanMapper;
 
-    private ObjectMapper objectMapper;
-
     private ValidationHelper validationHelper;
 
     @Override
@@ -51,110 +43,87 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
         final Query<MongoAuthScheme> mongoQuery = getDatastore().find(MongoAuthScheme.class);
 
         if (tags != null && !tags.isEmpty()) {
-            mongoQuery.filter(Filters.in("tags", tags));
+            mongoQuery.filter(in("tags", tags));
         }
 
-        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, input -> transform(input), new FindOptions());
+        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform, new FindOptions());
+
     }
 
     @Override
-    public AuthScheme getAuthScheme(String authSchemeId) {
+    public Optional<AuthScheme> findAuthScheme(final String authSchemeId) {
+
+        final var objectId = getMongoDBUtils().parseOrThrow(authSchemeId, AuthSchemeNotFoundException::new);
+
         var mongoAuthScheme = getDatastore().find(MongoAuthScheme.class)
-                .filter(Filters.or(
-                                Filters.eq("_id", authSchemeId)
-                        )
-                ).first();
+                .filter(eq("_id", objectId))
+                .first();
 
-        if(null == mongoAuthScheme) {
-            throw new NotFoundException("Unable to find auth scheme with an id of " + authSchemeId);
-        }
+        return Optional.ofNullable(mongoAuthScheme).map(this::transform);
 
-        return transform(mongoAuthScheme);
     }
 
     @Override
-    public UpdateAuthSchemeResponse updateAuthScheme(UpdateAuthSchemeRequest updateAuthSchemeRequest) {
+    public AuthScheme createAuthScheme(final AuthScheme authScheme) {
+        getValidationHelper().validateModel(authScheme, ValidationGroups.Insert.class);
+        final var mongoAuthScheme = getBeanMapper().map(authScheme, MongoAuthScheme.class);
+        final var result = getMongoDBUtils().perform(ds -> getDatastore().save(mongoAuthScheme));
+        getObjectIndex().index(result);
+        return transform(result);
+    }
 
-        if (updateAuthSchemeRequest == null) {
-            throw new InvalidDataException("Auth Scheme request must not be null.");
-        }
+    @Override
+    public AuthScheme updateAuthScheme(final AuthScheme authScheme) {
 
+        getValidationHelper().validateModel(authScheme, ValidationGroups.Update.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(updateAuthSchemeRequest.getAuthSchemeId());
+        final var objectId = getMongoDBUtils().parseOrThrow(
+            authScheme.getId(),
+            AuthSchemeNotFoundException::new
+        );
+
         final var query = getDatastore().find(MongoAuthScheme.class);
-
-        final var builder = new UpdateBuilder();
-
         query.filter(eq("_id", objectId));
 
+        final var builder = new UpdateBuilder();
+        builder.with(set("tags", authScheme.getTags()));
+        builder.with(set("audience", authScheme.getAudience()));
+        builder.with(set("publicKey", authScheme.getPublicKey()));
+        builder.with(set("algorithm", authScheme.getAlgorithm()));
+        builder.with(set("userLevel", authScheme.getUserLevel()));
+        builder.with(set("allowedIssuers", authScheme.getAllowedIssuers()));
+
         final MongoAuthScheme mongoAuthScheme = getMongoDBUtils().perform(ds ->
-                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoAuthScheme == null) {
-            throw new NotFoundException("auth scheme not found: " + updateAuthSchemeRequest.getAuthSchemeId());
+            throw new AuthSchemeNotFoundException("Auth scheme not found: " + authScheme.getId());
         }
 
         getObjectIndex().index(mongoAuthScheme);
 
-        var authScheme = transform(mongoAuthScheme);
-        getValidationHelper().validateModel(authScheme);
+        return transform(mongoAuthScheme);
 
-        var response = new UpdateAuthSchemeResponse();
-
-        // serialize auth scheme
-        try {
-            response.scheme = objectMapper.writeValueAsString(authScheme);
-        } catch (JsonProcessingException e) {
-            throw new BadRequestException(e);
-        }
-
-        response.publicKey = updateAuthSchemeRequest.getPubKey();
-
-        return response;
     }
 
     @Override
-    public CreateAuthSchemeResponse createAuthScheme(CreateAuthSchemeRequest authSchemeRequest) {
+    public void deleteAuthScheme(final String authSchemeId) {
 
-        if (authSchemeRequest == null) {
-            throw new InvalidDataException("Auth Scheme request must not be null.");
+        final var objectId = getMongoDBUtils().parseOrThrow(authSchemeId, AuthSchemeNotFoundException::new);
+
+        final var result = getDatastore()
+            .find(MongoAuthScheme.class)
+            .filter(eq("_id", objectId))
+            .delete();
+
+        if (result.getDeletedCount() == 0) {
+            throw new AuthSchemeNotFoundException("Auth scheme not found: " + authSchemeId);
         }
 
-        var response = new CreateAuthSchemeResponse();
-        var mongoAuthScheme = getBeanMapper().map(authSchemeRequest, MongoAuthScheme.class);
-
-        try {
-            getDatastore().save(mongoAuthScheme);
-            getObjectIndex().index(mongoAuthScheme);
-        } catch (DuplicateKeyException ex) {
-            throw new DuplicateException(ex);
-        }
-
-        var authScheme = transform(mongoAuthScheme);
-        getValidationHelper().validateModel(authScheme);
-
-        // serialize auth scheme
-        try {
-            response.scheme = objectMapper.writeValueAsString(authScheme);
-        } catch (JsonProcessingException e) {
-            throw new BadRequestException(e);
-        }
-        response.publicKey = authSchemeRequest.getPubKey();
-        return response;
     }
 
-    @Override
-    public void deleteAuthScheme(String authSchemeId) {
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(authSchemeId);
-        final var query = getDatastore().find(MongoNeoWallet.class);
-
-        query.filter(eq("_id", objectId));
-        query.delete();
-    }
-
-    private AuthScheme transform(MongoAuthScheme mongoAuthScheme)
-    {
+    private AuthScheme transform(MongoAuthScheme mongoAuthScheme) {
         return getBeanMapper().map(mongoAuthScheme, AuthScheme.class);
     }
 
@@ -164,15 +133,6 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
 
     public ValidationHelper getValidationHelper() {
         return validationHelper;
-    }
-
-    @Inject
-    public void setObjectMapper(final ObjectMapper objectMapper) {
-        this.objectMapper = objectMapper;
-    }
-
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
     }
 
     @Inject
@@ -211,4 +171,5 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     public void setObjectIndex(ObjectIndex objectIndex) {
         this.objectIndex = objectIndex;
     }
+
 }

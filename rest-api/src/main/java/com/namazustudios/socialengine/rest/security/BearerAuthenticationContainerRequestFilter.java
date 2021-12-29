@@ -6,17 +6,22 @@ import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.ext.Provider;
 import java.io.IOException;
+import java.util.regex.Pattern;
+
+import static java.util.regex.Pattern.compile;
 
 @Provider
 @PreMatching
 public class BearerAuthenticationContainerRequestFilter extends SessionIdAuthenticationContainerRequestFilter {
+
+    private static final Pattern JWT_PATTERN = compile("(^[\\w-]*\\.[\\w-]*\\.[\\w-]*$)");
 
     @Override
     public void filter(final ContainerRequestContext requestContext) throws IOException {
         AuthorizationHeader.withValueSupplier(requestContext::getHeaderString)
             .map(AuthorizationHeader::asBearerHeader)
             .ifPresent(h -> {
-                if (ValidateJWTFormat(h.getCredentials())) {
+                if (isJwt(h.getCredentials())) {
                     checkJWTAndSetAttributes(requestContext, h.getCredentials());
                 } else {
                     checkSessionAndSetAttributes(requestContext, h.getCredentials());
@@ -24,8 +29,8 @@ public class BearerAuthenticationContainerRequestFilter extends SessionIdAuthent
             });
     }
 
-    // check for JWT format {xxx.xxx.xxx}
-    private Boolean ValidateJWTFormat(String credentials) {
-        return credentials.matches("(^[\\w-]*\\.[\\w-]*\\.[\\w-]*$)");
+    private Boolean isJwt(final String credentials) {
+        return JWT_PATTERN.matcher(credentials).matches();
     }
+
 }

@@ -52,4 +52,7 @@ public class InvalidDataException extends BaseException {
         return ErrorCode.INVALID_DATA;
     }
 
+    @Override
+    public synchronized Throwable fillInStackTrace() {return this;}
+
 }

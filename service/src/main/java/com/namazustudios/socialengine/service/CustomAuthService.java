@@ -12,9 +12,11 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 @Expose({
         @ExposedModuleDefinition(value = "namazu.elements.service.custom.auth"),
         @ExposedModuleDefinition(
-                value = "namazu.elements.service.auth.unscoped.authscheme",
+                value = "namazu.elements.service.auth.unscoped.custom.auth",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )})
 public interface CustomAuthService {
+
+
 
 }
