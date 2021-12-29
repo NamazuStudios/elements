@@ -172,8 +172,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                     .fields("wallet", "wallet", customConverter(MongoNeoWalletConverter.class));
 
             mapping(NeoToken.class, MongoNeoToken.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                .fields("metadata", "metadata", customConverter(IdentityConverter.class));
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)
                 .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))
