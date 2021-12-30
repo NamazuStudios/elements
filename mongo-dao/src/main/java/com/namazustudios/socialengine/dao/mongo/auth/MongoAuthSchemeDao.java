@@ -8,12 +8,11 @@ import com.namazustudios.socialengine.dao.mongo.model.auth.MongoAuthScheme;
 import com.namazustudios.socialengine.exception.auth.AuthSchemeNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.auth.*;
+import com.namazustudios.socialengine.model.auth.AuthScheme;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.Query;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -21,9 +20,10 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.filters.Filters.in;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static java.util.stream.Collectors.toList;
 
 public class MongoAuthSchemeDao implements AuthSchemeDao {
 
@@ -62,6 +62,25 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
                 .first();
 
         return Optional.ofNullable(mongoAuthScheme).map(this::transform);
+
+    }
+
+    @Override
+    public List<AuthScheme> getAuthSchemesByAudience(final List<String> audience) {
+
+        final var mongoQuery = getDatastore()
+            .find(MongoAuthScheme.class)
+            .filter(in("audience", audience));
+
+        final var options = new FindOptions();
+
+        try (final var iterator = mongoQuery.iterator(options)) {
+            return iterator
+                .toList()
+                .stream()
+                .map(this::transform)
+                .collect(toList());
+        }
 
     }
 

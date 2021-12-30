@@ -38,6 +38,13 @@ public interface AuthSchemeDao {
     }
 
     /**
+     * Gets all {@link AuthScheme} instances with the supplied audiences.
+     *
+     * @param audience the audience
+     */
+    List<AuthScheme> getAuthSchemesByAudience(final List<String> audience);
+
+    /**
      * Updates the supplied {@link AuthScheme}
      *
      * @param authScheme the {@link UpdateAuthSchemeRequest} with the information to update the authScheme
@@ -59,4 +66,5 @@ public interface AuthSchemeDao {
      * @param authSchemeId the auth scheme ID.
      */
     void deleteAuthScheme(String authSchemeId);
+
 }

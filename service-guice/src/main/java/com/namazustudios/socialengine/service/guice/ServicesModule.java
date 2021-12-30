@@ -297,6 +297,10 @@ public class ServicesModule extends PrivateModule {
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
 
+        bind(CustomAuthSessionService.class)
+            .to(StandardCustomAuthSessionService.class)
+            .asEagerSingleton();
+
         bind(AdvancementService.class).to(StandardAdvancementService.class);
 
         bind(SessionService.class).to(DefaultSessionService.class);
@@ -359,8 +363,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserProfileService.class);
 
         bind(FollowerService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserFollowerService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserFollowerService.class);
 
         bind(ProfileOverrideService.class)
             .annotatedWith(Unscoped.class)
@@ -457,12 +461,16 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserNeoTokenService.class);
 
         bind(AuthSchemeService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserAuthSchemeService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserAuthSchemeService.class);
 
         bind(NeoSmartContractService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoSmartContractService.class);
+
+        bind(CustomAuthSessionService.class)
+            .annotatedWith(Unscoped.class)
+            .to(StandardCustomAuthSessionService.class);
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
@@ -518,6 +526,7 @@ public class ServicesModule extends PrivateModule {
         expose(NeoTokenService.class);
         expose(AuthSchemeService.class);
         expose(NeoSmartContractService.class);
+        expose(CustomAuthSessionService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -558,6 +567,7 @@ public class ServicesModule extends PrivateModule {
         expose(NeoTokenService.class).annotatedWith(Unscoped.class);
         expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
+        expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
 
     }
 

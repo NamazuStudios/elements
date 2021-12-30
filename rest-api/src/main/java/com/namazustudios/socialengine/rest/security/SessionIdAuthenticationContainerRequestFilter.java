@@ -1,36 +1,32 @@
 package com.namazustudios.socialengine.rest.security;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.user.UserClaim;
-import com.namazustudios.socialengine.model.user.UserCreateRequest;
-import com.namazustudios.socialengine.rt.exception.BadRequestException;
-import com.namazustudios.socialengine.security.JWTCredentials;
-import com.namazustudios.socialengine.security.JWTClaims;
+import com.namazustudios.socialengine.service.CustomAuthSessionService;
 import com.namazustudios.socialengine.service.SessionService;
-import com.namazustudios.socialengine.service.Unscoped;
-import com.namazustudios.socialengine.service.UserService;
-import org.dozer.Mapper;
 
 import javax.inject.Inject;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
 
-import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
 import static com.namazustudios.socialengine.model.user.User.USER_ATTRIBUTE;
+import static java.util.regex.Pattern.compile;
 
 /**
  * Defers to the {@link SessionService} in order to verify a session ID.
  */
 public abstract class SessionIdAuthenticationContainerRequestFilter implements ContainerRequestFilter {
 
+    private static final Pattern JWT_PATTERN = compile("(^[\\w-]*\\.[\\w-]*\\.[\\w-]*$)");
+
     private SessionService sessionService;
+
+    private CustomAuthSessionService customAuthSessionService;
 
     /**
      * Checks the session and sets the appropraite attributes to the {@link ContainerRequestContext}.
@@ -40,7 +36,15 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
      */
     protected void checkSessionAndSetAttributes(final ContainerRequestContext requestContext, final String sessionId) {
 
-        final Session session = getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
+        final Session session = isJwt(sessionId) ?
+            getCustomAuthSessionService().getSession(sessionId) :
+            getSessionService().checkAndRefreshSessionIfNecessary(sessionId);
+
+        setSession(requestContext, session);
+
+    }
+
+    private void setSession(final ContainerRequestContext requestContext, final Session session) {
 
         requestContext.setProperty(SESSION_ATTRIBUTE, session);
 
@@ -52,52 +56,8 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
 
     }
 
-    /**
-     * Checks the JWT and sets the appropraite attributes to the {@link ContainerRequestContext}.
-     *
-     * @param requestContext the {@link ContainerRequestContext}
-     * @param jwt token
-     */
-    protected void checkJWTAndSetAttributes(final ContainerRequestContext requestContext, final String jwt) {
-//
-//        final var jwtCredentials = new JWTCredentials(jwt);
-//
-//        if (!jwtCredentials.verify()) {
-//            throw new BadRequestException();
-//        }
-//
-//        var uesrKey = jwtCredentials.getClaim(JWTClaims.ELM_USERKEY);
-//
-//        if (elm_user == null)
-//        {
-//
-//            var elm_userModelString = jwtCredentials.getClaim("");
-//
-//            if (elm_userModelString == null) {
-//                throw new BadRequestException();
-//            }
-//
-//            try {
-//
-//                var elm_userModel = objectMapper.readValue("", UserClaim.class);
-//
-//                // create user
-//                var toCreate = new UserCreateRequest();
-//                toCreate.setName(elm_userModel.getName());
-//                toCreate.setEmail(elm_userModel.getEmail());
-//                toCreate.setLevel(elm_userModel.getLevel());
-//
-//                var createUserResponse = getUserService().createUser(toCreate);
-//                elm_user = getMapper().map(createUserResponse, User.class);
-//
-//            } catch (JsonProcessingException e) {
-//                throw new BadRequestException(e);
-//            }
-//        }
-//
-//        requestContext.setProperty(USER_ATTRIBUTE, elm_user);
-//        // TODO: How to get profile from user?
-
+    private Boolean isJwt(final String credentials) {
+        return JWT_PATTERN.matcher(credentials).matches();
     }
 
     public SessionService getSessionService() {
@@ -109,22 +69,13 @@ public abstract class SessionIdAuthenticationContainerRequestFilter implements C
         this.sessionService = sessionService;
     }
 
-//    @Inject
-//    public void setObjectMapper(final ObjectMapper objectMapper) {
-//        this.objectMapper = objectMapper;
-//    }
-//
-//    public ObjectMapper getObjectMapper() {
-//        return objectMapper;
-//    }
-//
-//    public Mapper getMapper() {
-//        return mapper;
-//    }
-//
-//    @Inject
-//    public void setMapper(Mapper mapper) {
-//        this.mapper = mapper;
-//    }
+    public CustomAuthSessionService getCustomAuthSessionService() {
+        return customAuthSessionService;
+    }
+
+    @Inject
+    public void setCustomAuthSessionService(CustomAuthSessionService customAuthSessionService) {
+        this.customAuthSessionService = customAuthSessionService;
+    }
 
 }

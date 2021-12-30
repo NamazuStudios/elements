@@ -89,7 +89,9 @@ public class JWTCredentials {
      *
      * @return the token claim with the given name
      */
-    public String getClaim(String name) { return decoded.getClaim(name).asString(); }
+    public String getStringClaim(final String name) {
+        return decoded.getClaim(name).asString();
+    }
 
     /**
      * Verifies the JWT has the required data, and that the signature matches

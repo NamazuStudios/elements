@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static java.lang.String.format;
@@ -138,7 +139,43 @@ public class MongoAuthSchemeDaoTest {
 
     }
 
-    @Test(dependsOnMethods = "testGetAllAuthSchemes", dataProvider = "getIntermediates")
+    @Test(dependsOnMethods = {"testGetIndividualAuthScheme", "testFindIndividualAuthScheme"})
+    public void testGetAllByAudience() {
+
+        final var audiences = IntStream
+            .range(0, 10)
+            .mapToObj(i -> format("%s_%d", TEST_AUDIENCE, i))
+            .collect(Collectors.toList());
+
+        final var schemes = getAuthSchemeDao().getAuthSchemesByAudience(audiences);
+        assertEquals(schemes.size(), intermediateAuthSchemes.size());
+
+        for (var scheme : schemes) {
+            assertTrue(audiences.contains(scheme.getAudience()));
+            assertTrue(intermediateAuthSchemes.containsKey(scheme.getId()));
+        }
+
+    }
+
+    @Test(dataProvider = "getAuthSchemeIteration",
+          dependsOnMethods = {"testGetIndividualAuthScheme", "testFindIndividualAuthScheme"}
+    )
+    public void testGetByAudience(final int iteration) {
+
+        final var audiences = List.of(format("%s_%d", TEST_AUDIENCE, iteration));
+        final var schemes = getAuthSchemeDao().getAuthSchemesByAudience(audiences);
+
+        assertEquals(schemes.size(), 1);
+
+        final var authScheme = schemes.get(0);
+        final var authSchemeId = authScheme.getId();
+        assertTrue(audiences.contains(authScheme.getAudience()));
+        assertTrue(intermediateAuthSchemes.containsKey(authSchemeId));
+
+    }
+
+    @Test(dependsOnMethods = {"testGetAllAuthSchemes", "testGetByAudience", "testGetAllByAudience"},
+          dataProvider = "getIntermediates")
     public void updateAuthScheme(final String authSchemeId, final AuthScheme existing) {
 
         final var toUpdate = new AuthScheme();
