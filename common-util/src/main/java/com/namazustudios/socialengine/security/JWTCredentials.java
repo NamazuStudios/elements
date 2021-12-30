@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.security;
 
 import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTDecodeException;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.namazustudios.socialengine.exception.security.AuthorizationHeaderParseException;
@@ -98,26 +99,30 @@ public class JWTCredentials {
      *
      * @return if the JWT token is valid
      */
-    public Boolean verify() {
+    public Boolean verify(final Algorithm algorithm) {
+
         var validJWT = true;
         var now = new Date();
 
         var audience = getAudience();
+
         if (audience == null) {
             validJWT = false;
         }
 
         var exp = getExpirationDate();
+
         if (exp != null && exp.before(now)) {
             validJWT = false;
         }
 
         var notBefore = getNotBefore();
+
         if (notBefore != null && notBefore.after(now)) {
             validJWT = false;
         }
 
-        // TODO verify the signature against private key
+        algorithm.verify(decoded);
 
         return validJWT;
     }
