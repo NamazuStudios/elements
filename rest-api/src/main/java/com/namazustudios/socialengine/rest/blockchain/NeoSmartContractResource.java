@@ -3,6 +3,8 @@ package com.namazustudios.socialengine.rest.blockchain;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.service.blockchain.NeoSmartContractService;
+import io.neow3j.protocol.core.response.NeoInvokeFunction;
+import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -60,19 +62,30 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Mints a token using the specified contract.",
             notes = "Mints the specified token using the specified contract id.")
-    public NeoToken mintToken(final MintTokenRequest request) {
+    public NeoSendRawTransaction mintToken(final MintTokenRequest request) {
         return getNeoSmartContractService().mintToken(request);
     }
 
     @POST
     @Path("invoke")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Mints a token using the specified contract.",
-            notes = "Mints the specified token using the specified contract id.")
-    public Object invoke(final InvokeContractRequest request,
+    @ApiOperation(value = "Invokes the specified method on the contract.",
+            notes = "Invokes the specified method using the specified contract id.")
+    public NeoSendRawTransaction invoke(final InvokeContractRequest request,
                               @QueryParam("method") String methodToInvoke,
                               @QueryParam("params") List<String> methodParams) {
         return getNeoSmartContractService().invoke(request, methodToInvoke, methodParams);
+    }
+
+    @POST
+    @Path("invoke/test")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Mints a token using the specified contract.",
+            notes = "Mints the specified token using the specified contract id.")
+    public NeoInvokeFunction testInvoke(final InvokeContractRequest request,
+                                    @QueryParam("method") String methodToInvoke,
+                                    @QueryParam("params") List<String> methodParams) {
+        return getNeoSmartContractService().testInvoke(request, methodToInvoke, methodParams);
     }
 
     @DELETE
@@ -81,7 +94,7 @@ public class NeoSmartContractResource {
     @ApiOperation(value = "Deletes a Neo Smart Contract",
             notes = "Deletes a Neo Smart Contract with the specified contractId.")
     public void deleteContract(@PathParam("contractId") String contractId) {
-        getNeoSmartContractService().deleteTemplate(contractId);
+        getNeoSmartContractService().deleteContract(contractId);
     }
 
     public NeoSmartContractService getNeoSmartContractService() {

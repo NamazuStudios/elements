@@ -15,7 +15,7 @@ public class MintTokenRequest {
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The unique ID's of the tokens to mint.")
-    private List<String> tokenId;
+    private List<String> tokenIds;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The unique ID of the wallet with funds to mint.")
@@ -29,12 +29,12 @@ public class MintTokenRequest {
         this.contractId = contractId;
     }
 
-    public List<String> getTokenId() {
-        return tokenId;
+    public List<String> getTokenIds() {
+        return tokenIds;
     }
 
-    public void setTokenId(List<String> tokenId) {
-        this.tokenId = tokenId;
+    public void setTokenIds(List<String> tokenIds) {
+        this.tokenIds = tokenIds;
     }
 
     public String getWalletId() {

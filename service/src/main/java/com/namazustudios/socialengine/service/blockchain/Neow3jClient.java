@@ -12,6 +12,7 @@ import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.Neow3j;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
+import io.neow3j.types.ContractParameter;
 import io.neow3j.types.Hash160;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.nep6.NEP6Wallet;
@@ -117,5 +118,13 @@ public interface Neow3jClient {
      * @return the {@link SmartContract}, never null
      */
     SmartContract getSmartContract(String hash);
+
+    /**
+     * Constructs a {@link ContractParameter} representing the object.
+     *
+     * @param object the Java {@link Object}.
+     * @return the {@link ContractParameter}, never null
+     */
+    ContractParameter convertObject(final Object object);
 }
 

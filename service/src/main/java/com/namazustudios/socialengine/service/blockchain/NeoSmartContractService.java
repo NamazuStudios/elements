@@ -6,6 +6,8 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
+import io.neow3j.protocol.core.response.NeoInvokeFunction;
+import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -54,12 +56,12 @@ public interface NeoSmartContractService {
         NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest);
 
         /**
-         * Mints the supplied {@link MintTokenRequest} using the supplied {@link NeoSmartContract}.
+         * Mints the token id's supplied in the {@link MintTokenRequest} using their linked {@link NeoSmartContract}.
          *
-         * @param mintTokenRequest the {@link MintTokenRequest} containing the contract id and token id for minting.
-         * @return the {@link NeoToken} as it was changed by the service.
+         * @param mintTokenRequest the {@link MintTokenRequest} containing the token id's and wallet with funds to mint.
+         * @return the {@link NeoSendRawTransaction} response from the blockchain.
          */
-        NeoToken mintToken(MintTokenRequest mintTokenRequest);
+        NeoSendRawTransaction mintToken(MintTokenRequest mintTokenRequest);
 
         /**
          * Invokes a method on the {@link NeoSmartContract} corresponding to the passed contract id.
@@ -67,15 +69,25 @@ public interface NeoSmartContractService {
          * @param invokeRequest the {@link InvokeContractRequest} with the contract and wallet id's
          * @param method the method to invoke on the contract
          * @param params optional params that may be required for the method
-         * @return the {@link Object} response from the blockchain invocation.
+         * @return the {@link NeoSendRawTransaction} response from the blockchain invocation.
          */
-        Object invoke(InvokeContractRequest invokeRequest, String method, List<String> params);
+        NeoSendRawTransaction invoke(InvokeContractRequest invokeRequest, String method, List<String> params);
+
+        /**
+         * Invokes a method on the {@link NeoSmartContract} corresponding to the passed contract id.
+         *
+         * @param invokeRequest the {@link InvokeContractRequest} with the contract and wallet id's
+         * @param method the method to invoke on the contract
+         * @param params optional params that may be required for the method
+         * @return the {@link NeoSendRawTransaction} response from the blockchain invocation.
+         */
+        NeoInvokeFunction testInvoke(InvokeContractRequest invokeRequest, String method, List<String> params);
 
         /**
          * Deletes the {@link NeoSmartContract} with the supplied contract ID.
          *
          * @param contractId the contract ID.
          */
-        void deleteTemplate(String contractId);
+        void deleteContract(String contractId);
 
 }

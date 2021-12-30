@@ -8,6 +8,8 @@ import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoSmartCo
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.NeoSmartContractNotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.*;
@@ -63,8 +65,8 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
                         )
                 ).first();
 
-        if(null == mongoContract) {
-            throw new NotFoundException("Unable to find contract with an id or name of " + contractIdOrName);
+        if(mongoContract == null) {
+            throw new NeoSmartContractNotFoundException("Unable to find contract with an id or name of " + contractIdOrName);
         }
 
         return transform(mongoContract);
@@ -94,17 +96,26 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
+        if(mongoContract == null) {
+            throw new NeoSmartContractNotFoundException("Unable to find contract with a matching script hash " + scriptHash);
+        }
+
         getObjectIndex().index(mongoContract);
         return transform(mongoContract);
     }
 
     @Override
     public void deleteNeoSmartContract(String contractId) {
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(contractId);
-        final var query = getDatastore().find(MongoNeoSmartContract.class);
+        final var objectId = getMongoDBUtils().parseOrThrow(contractId, NeoSmartContractNotFoundException::new);
 
-        query.filter(eq("_id", objectId));
-        query.delete();
+        final var result = getDatastore()
+                .find(MongoNeoSmartContract.class)
+                .filter(eq("_id", objectId))
+                .delete();
+
+        if(result.getDeletedCount() == 0){
+            throw new NeoSmartContractNotFoundException("NeoSmartContract not deleted: " + contractId);
+        }
     }
 
     private NeoSmartContract transform(MongoNeoSmartContract token) {
