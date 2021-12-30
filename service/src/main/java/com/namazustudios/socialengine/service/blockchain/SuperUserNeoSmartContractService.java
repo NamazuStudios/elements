@@ -66,12 +66,11 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                     try {
                         SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
                         var tokenIdParam = ContractParameter.string(tid);
-                        var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(token, Map.class));
-//                        var tokenMap = ContractParameter.map(getObjectMapper().convertValue(token, Map.class));
-//                        List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenString);
-//                        NeoInvokeFunction testresponse = smartContract.callInvokeFunction("mint", params, AccountSigner.calledByEntry(account));
+                        var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(token.getToken(), Map.class));
+//                        List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenMapParam);
+//                        NeoInvokeFunction testresponse = smartContract.callInvokeFunction("mintMap", params, AccountSigner.calledByEntry(account));
 
-                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenMapParam)
+                        NeoSendRawTransaction response = smartContract.invokeFunction("mintMap", tokenIdParam, tokenMapParam)
                                 .signers(AccountSigner.calledByEntry(account))
                                 .sign()
                                 .send();
