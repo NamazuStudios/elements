@@ -6,6 +6,9 @@ import com.namazustudios.socialengine.service.Services;
 import javax.inject.Inject;
 import javax.inject.Provider;
 
+import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
+import static com.namazustudios.socialengine.service.Services.forbidden;
+
 public class AuthSchemeServiceProvider implements Provider<AuthSchemeService> {
 
     private User user;
@@ -14,7 +17,13 @@ public class AuthSchemeServiceProvider implements Provider<AuthSchemeService> {
 
     @Override
     public AuthSchemeService get() {
-        return getAuthSchemeService().get();
+
+        if (SUPERUSER.equals(user.getLevel())) {
+            return getAuthSchemeService().get();
+        }
+
+        return forbidden(AuthSchemeService.class);
+
     }
 
     public User getUser() {

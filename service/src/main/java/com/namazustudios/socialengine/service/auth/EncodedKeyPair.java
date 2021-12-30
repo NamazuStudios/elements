@@ -3,24 +3,28 @@ package com.namazustudios.socialengine.service.auth;
 import java.security.KeyPair;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
-public class X509KeyPair {
+public class EncodedKeyPair {
 
     private final X509EncodedKeySpec publicKey;
 
-    private final X509EncodedKeySpec privateKey;
+    private final PKCS8EncodedKeySpec privateKey;
 
-    public X509KeyPair(final KeyPair keyPair) {
-        this(keyPair.getPublic(), keyPair.getPrivate());
+    public EncodedKeyPair(final KeyPair keyPair, final String algorithm) {
+        this(keyPair.getPublic(), keyPair.getPrivate(), algorithm);
     }
 
-    public X509KeyPair(final PublicKey publicKey, final PrivateKey privateKey) {
-        this(new X509EncodedKeySpec(publicKey.getEncoded()), new X509EncodedKeySpec(privateKey.getEncoded()));
+    public EncodedKeyPair(final PublicKey publicKey, final PrivateKey privateKey, final String algorithm) {
+        this(
+            new X509EncodedKeySpec(publicKey.getEncoded()),
+            new PKCS8EncodedKeySpec(privateKey.getEncoded(), algorithm)
+        );
     }
 
-    public X509KeyPair(final X509EncodedKeySpec publicKey, final X509EncodedKeySpec privateKey) {
+    public EncodedKeyPair(final X509EncodedKeySpec publicKey, final PKCS8EncodedKeySpec privateKey) {
         this.publicKey = publicKey;
         this.privateKey = privateKey;
     }
@@ -33,7 +37,7 @@ public class X509KeyPair {
         return Base64.getEncoder().encodeToString(getPublicKey().getEncoded());
     }
 
-    public X509EncodedKeySpec getPrivateKey() {
+    public PKCS8EncodedKeySpec getPrivateKey() {
         if (privateKey == null) throw new IllegalStateException("Private key not specified.");
         return privateKey;
     }

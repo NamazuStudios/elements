@@ -22,9 +22,11 @@ public class UpdateAuthSchemeRequest {
     public boolean regenerate;
 
     @Pattern(regexp = BASE_64)
-    @ApiModelProperty("The public key for the scheme. If null, Elements will ignore this field and regenerate the key " +
-                      "if the regenerate field is set to true.")
-    public String pubKey;
+    @ApiModelProperty(
+        "The Base64 public key that was either given or generated during creation. " +
+        "See https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/security/spec/X509EncodedKeySpec.html " +
+        "for details on the specifics of the format.")
+    private String publicKey;
 
     @NotNull
     @ApiModelProperty("The algorithm that Elements will use with the supplied key.")
@@ -33,6 +35,10 @@ public class UpdateAuthSchemeRequest {
     @NotNull
     @ApiModelProperty("The highest permitted user level this particular scheme will authorize.")
     public User.Level userLevel;
+
+    @NotNull
+    @ApiModelProperty("The list of tags for tagging the auth scheme.")
+    public List<String> tags;
 
     @NotNull
     @ApiModelProperty("The list of issuers allowed to use this scheme.")
@@ -54,12 +60,12 @@ public class UpdateAuthSchemeRequest {
         this.regenerate = regenerate;
     }
 
-    public String getPubKey() {
-        return pubKey;
+    public String getPublicKey() {
+        return publicKey;
     }
 
-    public void setPubKey(String pubKey) {
-        this.pubKey = pubKey;
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 
     public AuthSchemeAlgorithm getAlgorithm() {
@@ -78,6 +84,14 @@ public class UpdateAuthSchemeRequest {
         this.userLevel = userLevel;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
     public List<String> getAllowedIssuers() {
         return allowedIssuers;
     }
@@ -91,12 +105,11 @@ public class UpdateAuthSchemeRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateAuthSchemeRequest that = (UpdateAuthSchemeRequest) o;
-        return isRegenerate() == that.isRegenerate() && Objects.equals(getAudience(), that.getAudience()) && Objects.equals(getPubKey(), that.getPubKey()) && getAlgorithm() == that.getAlgorithm() && Objects.equals(getUserLevel(), that.getUserLevel()) && Objects.equals(getAllowedIssuers(), that.getAllowedIssuers());
+        return isRegenerate() == that.isRegenerate() && Objects.equals(getAudience(), that.getAudience()) && Objects.equals(getPublicKey(), that.getPublicKey()) && getAlgorithm() == that.getAlgorithm() && getUserLevel() == that.getUserLevel() && Objects.equals(getTags(), that.getTags()) && Objects.equals(getAllowedIssuers(), that.getAllowedIssuers());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAudience(), isRegenerate(), getPubKey(), getAlgorithm(), getUserLevel(), getAllowedIssuers());
+        return Objects.hash(getAudience(), isRegenerate(), getPublicKey(), getAlgorithm(), getUserLevel(), getTags(), getAllowedIssuers());
     }
-
 }

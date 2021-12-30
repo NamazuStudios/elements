@@ -38,9 +38,11 @@ public class MongoAuthSchemeDao implements AuthSchemeDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<AuthScheme> getAuthSchemes(int offset, int count, List<String> tags) {
+    public Pagination<AuthScheme> getAuthSchemes(final int offset,
+                                                 final int count,
+                                                 final List<String> tags) {
 
-        final Query<MongoAuthScheme> mongoQuery = getDatastore().find(MongoAuthScheme.class);
+        final var mongoQuery = getDatastore().find(MongoAuthScheme.class);
 
         if (tags != null && !tags.isEmpty()) {
             mongoQuery.filter(in("tags", tags));

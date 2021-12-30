@@ -34,10 +34,7 @@ public class AuthSchemeResource {
     public Pagination<AuthScheme> getAuthSchemes(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("tags") @DefaultValue("") final List<String> tags,
-            @QueryParam("query") String query) {
-
-        query = Strings.nullToEmpty(query).trim();
+            @QueryParam("tags") final List<String> tags) {
 
         if (offset < 0) {
             throw new InvalidParameterException("Offset must have positive value.");
@@ -45,10 +42,6 @@ public class AuthSchemeResource {
 
         if (count < 0) {
             throw new InvalidParameterException("Count must have positive value.");
-        }
-
-        if (query.isEmpty()) {
-            throw new NotFoundException();
         }
 
         return getAuthSchemeService().getAuthSchemes(offset, count, tags);

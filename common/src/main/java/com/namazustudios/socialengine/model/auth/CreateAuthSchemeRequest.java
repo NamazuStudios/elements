@@ -19,8 +19,10 @@ public class CreateAuthSchemeRequest {
     private String audience;
 
     @Pattern(regexp = BASE_64)
-    @ApiModelProperty("The public key for the scheme. If null, Elements will generate a public and private key pair " +
-                      "and return it in the response.")
+    @ApiModelProperty(
+        "The Base64 public key that was either given or generated during creation. " +
+        "See https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/security/spec/X509EncodedKeySpec.html " +
+        "for details on the specifics of the format.")
     private String publicKey;
 
     @NotNull
@@ -30,6 +32,10 @@ public class CreateAuthSchemeRequest {
     @NotNull
     @ApiModelProperty("The highest permitted user level this particular scheme will authorize.")
     private User.Level userLevel;
+
+    @NotNull
+    @ApiModelProperty("A list of tags used to index the auth scheme.")
+    private List<String> tags;
 
     @NotNull
     @ApiModelProperty("The list of issuers allowed to use this scheme.")
@@ -67,6 +73,14 @@ public class CreateAuthSchemeRequest {
         this.userLevel = userLevel;
     }
 
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
     public List<String> getAllowedIssuers() {
         return allowedIssuers;
     }
@@ -80,12 +94,12 @@ public class CreateAuthSchemeRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateAuthSchemeRequest that = (CreateAuthSchemeRequest) o;
-        return Objects.equals(getAudience(), that.getAudience()) && Objects.equals(getPublicKey(), that.getPublicKey()) && getAlgorithm() == that.getAlgorithm() && getUserLevel() == that.getUserLevel() && Objects.equals(getAllowedIssuers(), that.getAllowedIssuers());
+        return Objects.equals(getAudience(), that.getAudience()) && Objects.equals(getPublicKey(), that.getPublicKey()) && getAlgorithm() == that.getAlgorithm() && getUserLevel() == that.getUserLevel() && Objects.equals(getTags(), that.getTags()) && Objects.equals(getAllowedIssuers(), that.getAllowedIssuers());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getAudience(), getPublicKey(), getAlgorithm(), getUserLevel(), getAllowedIssuers());
+        return Objects.hash(getAudience(), getPublicKey(), getAlgorithm(), getUserLevel(), getTags(), getAllowedIssuers());
     }
 
 }

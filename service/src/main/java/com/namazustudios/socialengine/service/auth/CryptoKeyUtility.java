@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.service.auth;
 
+import com.namazustudios.socialengine.exception.auth.InvalidKeyException;
 import com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm;
 
+import java.security.PrivateKey;
 import java.security.PublicKey;
 
 /**
@@ -20,37 +22,64 @@ public interface CryptoKeyUtility {
     String ECDSA_ALGO = "EC";
 
     /**
-     * Generates a key pair (public and private) as an {@link X509KeyPair}.
+     * Generates a key pair (public and private) as an {@link EncodedKeyPair}.
      *
      * @param authSchemeAlgorithm the {@link AuthSchemeAlgorithm} to use.
      *
-     * @return the {@link X509KeyPair} including both public and private key.
+     * @return the {@link EncodedKeyPair} including both public and private key.
      */
-    X509KeyPair generateKeyPair(AuthSchemeAlgorithm authSchemeAlgorithm);
+    EncodedKeyPair generateKeyPair(AuthSchemeAlgorithm authSchemeAlgorithm);
 
     /**
+     * Loads the public key from the supplied base64 string.
      *
-     * @param authSchemeAlgorithm
-     * @param base64Representation
-     * @return
+     * @param authSchemeAlgorithm the algorithm
+     * @param base64Representation the base64 representation
+     * @return the {@link PublicKey}
      */
-    default PublicKey getPublicKey(final AuthSchemeAlgorithm authSchemeAlgorithm, final String base64Representation) {
+    default PublicKey getPublicKey(final AuthSchemeAlgorithm authSchemeAlgorithm,
+                                   final String base64Representation)  throws InvalidKeyException {
         return getPublicKey(authSchemeAlgorithm, base64Representation, PublicKey.class);
     }
 
     /**
-     * Loads the public key from the supplied
+     * Loads the public key from the supplied base64 encoded string.
      *
      * @param authSchemeAlgorithm the auth scheme algorithm
      * @param base64Representation the base64 encoded public key
      * @param publicKeyTClass the public key class
      * @param <PublicKeyT> the requested type
      * @return the public key
-     * @throws {@link com.namazustudios.socialengine.exception.auth.InvalidKeyException}
      */
     <PublicKeyT extends PublicKey> PublicKeyT getPublicKey(
             AuthSchemeAlgorithm authSchemeAlgorithm,
             String base64Representation,
-            Class<PublicKeyT> publicKeyTClass);
+            Class<PublicKeyT> publicKeyTClass) throws InvalidKeyException;
+
+    /**
+     * Loads the private key from the supplied base64 string.
+     *
+     * @param authSchemeAlgorithm the algorithm
+     * @param base64Representation the base64 representation
+     * @return the {@link PublicKey}
+     */
+    default PrivateKey getPrivateKey(final AuthSchemeAlgorithm authSchemeAlgorithm,
+                                     final String base64Representation)  throws InvalidKeyException {
+        return getPrivateKey(authSchemeAlgorithm, base64Representation, PrivateKey.class);
+    }
+
+    /**
+     * Loads the private key from the supplied base64 encoded string.
+     *
+     * @param authSchemeAlgorithm the auth scheme algorithm
+     * @param base64Representation the base64 encoded public key
+     * @param publicKeyTClass the public key class
+     * @param <PrivateKeyT> the requested type
+     * @return the {@link PrivateKey}
+     */
+    <PrivateKeyT extends PrivateKey> PrivateKeyT getPrivateKey(
+            AuthSchemeAlgorithm authSchemeAlgorithm,
+            String base64Representation,
+            Class<PrivateKeyT> publicKeyTClass) throws InvalidKeyException;
 
 }
