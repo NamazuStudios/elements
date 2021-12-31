@@ -6,42 +6,56 @@ import com.namazustudios.socialengine.dao.AuthSchemeDao;
 import com.namazustudios.socialengine.dao.CustomAuthUserDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.exception.ValidationFailureException;
+import com.namazustudios.socialengine.exception.security.AuthorizationHeaderParseException;
 import com.namazustudios.socialengine.model.auth.AuthScheme;
+import com.namazustudios.socialengine.model.auth.UserClaim;
 import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.security.CustomJWTCredentials;
 import com.namazustudios.socialengine.security.JWTCredentials;
 import com.namazustudios.socialengine.service.CustomAuthSessionService;
+import com.namazustudios.socialengine.service.NameService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 
 import javax.inject.Inject;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
+import java.util.List;
 import java.util.function.Function;
 
 public class StandardCustomAuthSessionService implements CustomAuthSessionService {
+
+    private NameService nameService;
 
     private ObjectMapper objectMapper;
 
     private AuthSchemeDao authSchemeDao;
 
-    private CustomAuthUserDao customAuthUserDao;
-
     private CryptoKeyUtility cryptoKeyUtility;
+
+    private ValidationHelper validationHelper;
+
+    private CustomAuthUserDao customAuthUserDao;
 
     @Override
     public Session getSession(final String jwt) {
 
-        final var decoded = new JWTCredentials(jwt);
-        final var schemes = getAuthSchemeDao().getAuthSchemesByAudience(decoded.getAudience());
+        final var credentials = new JWTCredentials(jwt);
+        final var audience = credentials.findAudience().orElse(List.of());
+        final var schemes = getAuthSchemeDao().getAuthSchemesByAudience(audience);
 
         return schemes
             .stream()
-            .filter(scheme -> isValid(decoded, scheme))
-            .map(scheme -> jwtToSession(decoded, scheme))
+            .filter(scheme -> isValidIssuer(credentials, scheme))
+            .filter(scheme -> isValidSignature(credentials, scheme))
             .findFirst()
+            .map(scheme -> jwtToSession(credentials.asCustomCredentials(), scheme))
             .orElseThrow(ForbiddenException::new);
 
     }
 
-    private boolean isValid(final JWTCredentials decoded, final AuthScheme scheme) {
+    private boolean isValidSignature(final JWTCredentials decoded, final AuthScheme scheme) {
         switch (scheme.getAlgorithm()) {
             case RSA_256:
                 return isValidRSA(decoded, scheme, k -> Algorithm.RSA256(k, null));
@@ -56,8 +70,15 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
             case ECDSA_512:
                 return isValidECDSA(decoded, scheme, k -> Algorithm.ECDSA512(k, null));
             default:
-                throw new InternalException("Unsupported algoirthm: " + scheme.getAlgorithm());
+                throw new InternalException("Unsupported algorithm: " + scheme.getAlgorithm());
         }
+    }
+
+    private boolean isValidIssuer(final JWTCredentials credentials, final AuthScheme scheme) {
+        final var issuer = credentials
+            .findIssuer()
+            .orElseThrow(() -> new AuthorizationHeaderParseException("Must specify issuer."));
+        return scheme.getAllowedIssuers().contains(issuer);
     }
 
     private boolean isValidRSA(final JWTCredentials decoded,
@@ -75,32 +96,72 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
 
     }
 
-    private boolean isValidECDSA(final JWTCredentials decoded,
+    private boolean isValidECDSA(final JWTCredentials credentials,
                                  final AuthScheme scheme,
                                  final Function<ECPublicKey, Algorithm> algorithmFactory) {
 
         final var key = getCryptoKeyUtility().getPublicKey(
-                scheme.getAlgorithm(),
-                scheme.getPublicKey(),
-                ECPublicKey.class
+            scheme.getAlgorithm(),
+            scheme.getPublicKey(),
+            ECPublicKey.class
         );
 
         final var algo = algorithmFactory.apply(key);
-        return decoded.verify(algo);
+        return credentials.verify(algo);
 
     }
 
-    private Session jwtToSession(final JWTCredentials decoded, final AuthScheme scheme) {
-        return null;
+    private Session jwtToSession(final CustomJWTCredentials credentials, final AuthScheme scheme) {
+
+        final var userKey = credentials.getUserKey();
+        final var subject = credentials.getSubject();
+        final var userClaim = getObjectMapper().convertValue(credentials.getUser(), UserClaim.class);
+
+        try {
+            getValidationHelper().validateModel(userClaim);
+        } catch (ValidationFailureException ex) {
+            throw new AuthorizationHeaderParseException(ex);
+        }
+
+        if (userClaim.getName() == null || userClaim.getEmail() == null) {
+            final var name = getNameService().generateQualifiedName();
+            if (userClaim.getName() == null) userClaim.setName(name);
+            if (userClaim.getEmail() == null) userClaim.setEmail(getNameService().formatAnonymousEmail(name));
+        }
+
+        if (scheme.getUserLevel().compareTo(userClaim.getLevel()) < 0)
+            throw new ForbiddenException("Cannot assign user level: " + userClaim.getLevel());
+
+        final var user = getCustomAuthUserDao().upsertUser(userKey, subject, userClaim);
+
+        final var session = new Session();
+        final var exp = credentials
+            .getCredentials()
+            .findExpirationDate()
+            .orElseThrow(() -> new AuthorizationHeaderParseException("Missing exp claim."));
+
+        session.setUser(user);
+        session.setExpiry(exp.getTime());
+
+        return session;
+    }
+
+    public NameService getNameService() {
+        return nameService;
+    }
+
+    @Inject
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
+    }
+
+    public ObjectMapper getObjectMapper() {
+        return objectMapper;
     }
 
     @Inject
     public void setObjectMapper(final ObjectMapper objectMapper) {
         this.objectMapper = objectMapper;
-    }
-
-    public ObjectMapper getObjectMapper() {
-        return objectMapper;
     }
 
     public AuthSchemeDao getAuthSchemeDao() {
@@ -112,15 +173,6 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
         this.authSchemeDao = authSchemeDao;
     }
 
-    public CustomAuthUserDao getCustomAuthUserDao() {
-        return customAuthUserDao;
-    }
-
-    @Inject
-    public void setCustomAuthUserDao(CustomAuthUserDao customAuthUserDao) {
-        this.customAuthUserDao = customAuthUserDao;
-    }
-
     public CryptoKeyUtility getCryptoKeyUtility() {
         return cryptoKeyUtility;
     }
@@ -128,6 +180,24 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
     @Inject
     public void setCryptoKeyUtility(CryptoKeyUtility cryptoKeyUtility) {
         this.cryptoKeyUtility = cryptoKeyUtility;
+    }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
+    public CustomAuthUserDao getCustomAuthUserDao() {
+        return customAuthUserDao;
+    }
+
+    @Inject
+    public void setCustomAuthUserDao(CustomAuthUserDao customAuthUserDao) {
+        this.customAuthUserDao = customAuthUserDao;
     }
 
 }

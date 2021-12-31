@@ -1,18 +1,30 @@
-package com.namazustudios.socialengine.model.user;
+package com.namazustudios.socialengine.model.auth;
+
+import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.user.User;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
+
+import static com.namazustudios.socialengine.Constants.Regexp.EMAIL_ADDRESS;
 
 /**
  * Represents a user claim from a JWT request.
  */
 public class UserClaim implements Serializable {
 
+    @NotNull
     private String name;
 
+    @Pattern(regexp = EMAIL_ADDRESS)
+    @NotNull
     private String email;
 
+    @NotNull
     private User.Level level;
 
     private String facebookId;
@@ -21,7 +33,7 @@ public class UserClaim implements Serializable {
 
     private String appleSignInId;
 
-    private List<String> externalUserIds;
+    private String externalUserId;
 
     /**
      * Gets the user's login name.
@@ -128,21 +140,39 @@ public class UserClaim implements Serializable {
         this.appleSignInId = appleSignInId;
     }
 
-    /**
-     * Gets the list of external user ids
-     *
-     * @return externalUserIds
-     */
-    public List<String> getExternalUserIds() {
-        return externalUserIds;
+    public String getExternalUserId() {
+        return externalUserId;
     }
 
-    /**
-     * Sets the list of external user ids
-     *
-     * @return externalUserIds
-     */
-    public void setExternalUserIds(List<String> externalUserIds) {
-        this.externalUserIds = externalUserIds;
+    public void setExternalUserId(String externalUserId) {
+        this.externalUserId = externalUserId;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UserClaim userClaim = (UserClaim) o;
+        return Objects.equals(getName(), userClaim.getName()) && Objects.equals(getEmail(), userClaim.getEmail()) && getLevel() == userClaim.getLevel() && Objects.equals(getFacebookId(), userClaim.getFacebookId()) && Objects.equals(getFirebaseId(), userClaim.getFirebaseId()) && Objects.equals(getAppleSignInId(), userClaim.getAppleSignInId()) && Objects.equals(getExternalUserId(), userClaim.getExternalUserId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getName(), getEmail(), getLevel(), getFacebookId(), getFirebaseId(), getAppleSignInId(), getExternalUserId());
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("UserClaim{");
+        sb.append("name='").append(name).append('\'');
+        sb.append(", email='").append(email).append('\'');
+        sb.append(", level=").append(level);
+        sb.append(", facebookId='").append(facebookId).append('\'');
+        sb.append(", firebaseId='").append(firebaseId).append('\'');
+        sb.append(", appleSignInId='").append(appleSignInId).append('\'');
+        sb.append(", externalUserId='").append(externalUserId).append('\'');
+        sb.append('}');
+        return sb.toString();
+    }
+
 }

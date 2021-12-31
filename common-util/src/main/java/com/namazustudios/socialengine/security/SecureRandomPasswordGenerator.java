@@ -1,7 +1,5 @@
 package com.namazustudios.socialengine.security;
 
-import com.namazustudios.socialengine.security.PasswordGenerator;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.security.SecureRandom;
@@ -17,7 +15,7 @@ public class SecureRandomPasswordGenerator implements PasswordGenerator {
 
     private int length;
 
-    private final SecureRandom secureRandom = new SecureRandom();
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     @Override
     public String generate() {

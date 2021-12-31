@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.service.MockSessionService;
-import com.namazustudios.socialengine.util.DisplayNameGenerator;
+import com.namazustudios.socialengine.service.NameService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -36,9 +36,9 @@ public class SuperUserMockSessionService implements MockSessionService {
 
     private int mockSessionTimeoutSeconds;
 
-    private PasswordGenerator passwordGenerator;
+    private NameService nameService;
 
-    private DisplayNameGenerator displayNameGenerator;
+    private PasswordGenerator passwordGenerator;
 
     @Override
     public MockSessionCreation createMockSession(final MockSessionRequest mockSessionRequest) {
@@ -90,7 +90,7 @@ public class SuperUserMockSessionService implements MockSessionService {
         final Profile profile = new Profile();
         profile.setUser(user);
         profile.setApplication(application);
-        profile.setDisplayName(getDisplayNameGenerator().generate());
+        profile.setDisplayName(getNameService().generateRandomName());
         return getProfileDao().createOrReactivateProfile(profile);
     }
 
@@ -139,13 +139,13 @@ public class SuperUserMockSessionService implements MockSessionService {
         this.passwordGenerator = passwordGenerator;
     }
 
-    public DisplayNameGenerator getDisplayNameGenerator() {
-        return displayNameGenerator;
+    public NameService getNameService() {
+        return nameService;
     }
 
     @Inject
-    public void setDisplayNameGenerator(DisplayNameGenerator displayNameGenerator) {
-        this.displayNameGenerator = displayNameGenerator;
+    public void setNameService(NameService nameService) {
+        this.nameService = nameService;
     }
 
 }

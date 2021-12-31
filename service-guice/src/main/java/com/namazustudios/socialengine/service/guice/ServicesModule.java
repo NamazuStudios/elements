@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
-import com.namazustudios.socialengine.service.auth.StandardCryptoKeyUtility;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -52,8 +51,6 @@ import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvid
 import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignService;
 import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
-import com.namazustudios.socialengine.util.DisplayNameGenerator;
-import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 import org.dozer.Mapper;
 
 import javax.inject.Provider;
@@ -310,7 +307,6 @@ public class ServicesModule extends PrivateModule {
         bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
 
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
-        bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
 
         bind(Neow3jClient.class).to(StandardNeow3jClient.class).asEagerSingleton();
 

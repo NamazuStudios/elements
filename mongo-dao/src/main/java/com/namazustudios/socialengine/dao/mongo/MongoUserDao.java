@@ -524,7 +524,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User validateActiveUserPassword(final String userNameOrEmail, final String password) {
+    public Optional<User> findActiveUserWithLoginAndPassword(String userNameOrEmail, String password) {
 
         final var query = getDatastore().find(MongoUser.class);
 
@@ -579,10 +579,10 @@ public class MongoUserDao implements UserDao {
         final byte[] existingPasswordHash = mongoUser.getPasswordHash();
 
         if (existingPasswordHash != null && Arrays.equals(existingPasswordHash, digest.digest())) {
-            return getDozerMapper().map(mongoUser, User.class);
+            return Optional.of(getDozerMapper().map(mongoUser, User.class));
+        } else {
+            return Optional.empty();
         }
-
-        throw new ForbiddenException("Invalid credentials for " + userNameOrEmail);
 
     }
 

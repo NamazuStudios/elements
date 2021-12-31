@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service;
 
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -61,6 +62,34 @@ public interface NameService {
      */
     default String generateQualifiedName() {
         return format("%s%s", generateRandomName(), generateQualifier());
+    }
+
+    /**
+     * Generates an email address for an anonymous user.
+     *
+     * @param name the username part of the email
+     * @return a fully formatted anonymous email
+     */
+    default String formatAnonymousEmail(final String name) {
+        return format("%s@anonymous.invalid", name);
+    }
+
+    /**
+     * Assigns a generated name and email to the supplied user, if either field is null.
+     *
+     * @param user the user
+     * @return the user as it was updated
+     */
+    default User assignNameAndEmailIfNecessary(final User user) {
+
+        if (user.getName() == null || user.getEmail() == null) {
+            final var name = generateQualifiedName();
+            if (user.getName() == null) user.setName(name);
+            if (user.getEmail() == null) user.setEmail(formatAnonymousEmail(name));
+        }
+
+        return user;
+
     }
 
 }

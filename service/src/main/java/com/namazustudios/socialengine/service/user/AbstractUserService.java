@@ -16,8 +16,6 @@ import javax.inject.Inject;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static java.lang.String.format;
-
 /**
  * Created by patricktwohig on 3/26/15.
  */
@@ -93,7 +91,7 @@ public abstract class AbstractUserService implements UserService {
     /**
      * Creates a profile from the supplied user id and {@link CreateProfileSignupRequest}.
      *
-     * @param user the user id as specified by {@link User#getId()}
+     * @param userId the user id as specified by {@link User#getId()}
      * @param createProfileSignupRequest the {@Link ProfileSignupRequest}
      * @return the created {@link Profile}
      */
@@ -109,7 +107,7 @@ public abstract class AbstractUserService implements UserService {
     /**
      * Creates several {@link Profile}s. The created {@link Profile}s will be created using the.
      *
-     * @param user the {@link User} to assocaite with the new profile.
+     * @param userId the {@link User} to assocaite with the new profile.
      * @param createProfileSignupRequests a {@link List <ProfileSignupRequest>} instance
      * @return
      */
