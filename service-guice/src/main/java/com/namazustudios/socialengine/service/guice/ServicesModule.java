@@ -26,7 +26,10 @@ import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceipt
 import com.namazustudios.socialengine.service.googleplayiap.GooglePlayIapReceiptServiceProvider;
 import com.namazustudios.socialengine.service.health.DefaultHealthStatusService;
 import com.namazustudios.socialengine.service.inventory.*;
-import com.namazustudios.socialengine.service.leaderboard.*;
+import com.namazustudios.socialengine.service.leaderboard.LeaderboardServiceProvider;
+import com.namazustudios.socialengine.service.leaderboard.RankServiceProvider;
+import com.namazustudios.socialengine.service.leaderboard.ScoreServiceProvider;
+import com.namazustudios.socialengine.service.leaderboard.SuperUserLeaderboardService;
 import com.namazustudios.socialengine.service.manifest.ManifestServiceProvider;
 import com.namazustudios.socialengine.service.match.MatchServiceProvider;
 import com.namazustudios.socialengine.service.match.StandardMatchServiceUtils;
@@ -51,6 +54,8 @@ import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvid
 import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignService;
 import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
+import com.namazustudios.socialengine.util.DisplayNameGenerator;
+import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 import org.dozer.Mapper;
 
 import javax.inject.Provider;
@@ -84,10 +89,6 @@ public class ServicesModule extends PrivateModule {
 
         bind(Mapper.class)
             .toProvider(ServicesDozerMapperProvider.class)
-            .asEagerSingleton();
-
-        bind(CryptoKeyUtility.class)
-            .to(StandardCryptoKeyUtility.class)
             .asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
@@ -294,10 +295,6 @@ public class ServicesModule extends PrivateModule {
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
 
-        bind(CustomAuthSessionService.class)
-            .to(StandardCustomAuthSessionService.class)
-            .asEagerSingleton();
-
         bind(AdvancementService.class).to(StandardAdvancementService.class);
 
         bind(SessionService.class).to(DefaultSessionService.class);
@@ -307,6 +304,7 @@ public class ServicesModule extends PrivateModule {
         bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
 
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
+        bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
 
         bind(Neow3jClient.class).to(StandardNeow3jClient.class).asEagerSingleton();
 
@@ -359,8 +357,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserProfileService.class);
 
         bind(FollowerService.class)
-            .annotatedWith(Unscoped.class)
-            .to(SuperUserFollowerService.class);
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserFollowerService.class);
 
         bind(ProfileOverrideService.class)
             .annotatedWith(Unscoped.class)
@@ -372,7 +370,7 @@ public class ServicesModule extends PrivateModule {
 
         bind(ScoreService.class)
             .annotatedWith(Unscoped.class)
-            .to(UserScoreService.class);
+            .to(ScoreService.class);
 
         bind(LeaderboardService.class)
             .annotatedWith(Unscoped.class)
@@ -464,6 +462,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoSmartContractService.class);
 
+        bind(SaveDataDocumentService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserSaveDataDocumentService.class);
+
         bind(CustomAuthSessionService.class)
             .annotatedWith(Unscoped.class)
             .to(StandardCustomAuthSessionService.class);
@@ -520,7 +522,9 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
         expose(NeoTokenService.class);
+        expose(NeoSmartContractService.class);
         expose(AuthSchemeService.class);
+        expose(SaveDataDocumentService.class);
         expose(NeoSmartContractService.class);
         expose(CustomAuthSessionService.class);
 
@@ -561,7 +565,9 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
         expose(NeoTokenService.class).annotatedWith(Unscoped.class);
+        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
+        expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
 

@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.appserve;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
 import com.namazustudios.socialengine.Headers;
 import com.namazustudios.socialengine.exception.BaseException;
@@ -16,17 +15,18 @@ import java.util.function.Consumer;
 
 public class ServiceExceptionMapper implements ExceptionMapper<BaseException> {
 
-    private static final Map<ErrorCode, HttpStatus> CODE_MAP = ImmutableMap.<ErrorCode, HttpStatus>builder()
-            .put(ErrorCode.DUPLICATE, HttpStatus.CONFLICT)
-            .put(ErrorCode.UNAUTHORIZED, HttpStatus.UNAUTHORIZED)
-            .put(ErrorCode.FORBIDDEN, HttpStatus.FORBIDDEN)
-            .put(ErrorCode.INVALID_DATA, HttpStatus.BAD_REQUEST)
-            .put(ErrorCode.INVALID_PARAMETER, HttpStatus.BAD_REQUEST)
-            .put(ErrorCode.NOT_FOUND, HttpStatus.NOT_FOUND)
-            .put(ErrorCode.OVERLOAD, HttpStatus.SERVICE_UNAVAILABLE)
-            .put(ErrorCode.UNKNOWN, HttpStatus.INTERNAL_SERVER_ERROR)
-            .put(ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED)
-        .build();
+    private static final Map<ErrorCode, HttpStatus> CODE_MAP = Map.of(
+        ErrorCode.DUPLICATE, HttpStatus.CONFLICT,
+        ErrorCode.UNAUTHORIZED, HttpStatus.UNAUTHORIZED,
+        ErrorCode.FORBIDDEN, HttpStatus.FORBIDDEN,
+        ErrorCode.CONFLICT, HttpStatus.CONFLICT,
+        ErrorCode.INVALID_DATA, HttpStatus.BAD_REQUEST,
+        ErrorCode.INVALID_PARAMETER, HttpStatus.BAD_REQUEST,
+        ErrorCode.NOT_FOUND, HttpStatus.NOT_FOUND,
+        ErrorCode.OVERLOAD, HttpStatus.SERVICE_UNAVAILABLE,
+        ErrorCode.UNKNOWN, HttpStatus.INTERNAL_SERVER_ERROR,
+        ErrorCode.NOT_IMPLEMENTED, HttpStatus.NOT_IMPLEMENTED
+    );
 
     @Override
     public void map(final BaseException exception, final Consumer<Response> responseConsumer) {

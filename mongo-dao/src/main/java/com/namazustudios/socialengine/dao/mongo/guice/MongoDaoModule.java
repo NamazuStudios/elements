@@ -9,6 +9,7 @@ import com.namazustudios.socialengine.dao.mongo.*;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInSessionDao;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInUserDao;
 import com.namazustudios.socialengine.dao.mongo.application.*;
+
 import com.namazustudios.socialengine.dao.mongo.auth.MongoAuthSchemeDao;
 import com.namazustudios.socialengine.dao.mongo.auth.MongoCustomAuthUserDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoSmartContractDao;
@@ -22,6 +23,7 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.dao.mongo.savedata.MongoSaveDataDocumentDao;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
@@ -84,6 +86,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(NeoSmartContractDao.class).to(MongoNeoSmartContractDao.class);
         bind(NeoTokenDao.class).to(MongoNeoTokenDao.class);
         bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
+        bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(CustomAuthUserDao.class).to(MongoCustomAuthUserDao.class);
 
@@ -141,6 +144,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(NeoSmartContractDao.class);
         expose(NeoTokenDao.class);
         expose(NeoWalletDao.class);
+        expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);
         expose(CustomAuthUserDao.class);
 

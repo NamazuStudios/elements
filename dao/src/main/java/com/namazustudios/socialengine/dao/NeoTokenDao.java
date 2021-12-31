@@ -4,9 +4,21 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
 
+/**
+ * Created by garrettmcspadden on 11/23/21.
+ */
+@Expose({
+        @ExposedModuleDefinition("namazu.elements.dao.neotoken"),
+        @ExposedModuleDefinition(
+                value = "namazu.socialengine.dao.neotoken",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neotoken instead"))
+})
 public interface NeoTokenDao {
 
     /**
@@ -37,6 +49,14 @@ public interface NeoTokenDao {
      * @return the {@link NeoToken} as it was changed by the service.
      */
     NeoToken updateToken(String tokenId, UpdateNeoTokenRequest updateNeoTokenRequest);
+
+    /**
+     * Updates the supplied {@link NeoToken} marking it as minted.
+     *
+     * @param tokenId the id of the token to update
+     * @return the {@link NeoToken} as it was changed by the service.
+     */
+    NeoToken mintToken(String tokenId);
 
     /**
      * Creates a new token using a pre-created template.

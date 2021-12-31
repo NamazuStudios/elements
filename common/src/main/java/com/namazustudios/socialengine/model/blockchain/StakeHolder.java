@@ -2,18 +2,18 @@ package com.namazustudios.socialengine.model.blockchain;
 
 public class StakeHolder {
 
-    private String walletId;
+    private String owner;
 
     private boolean voting;
 
     private long shares;
 
-    public String getWalletId() {
-        return walletId;
+    public String getOwner() {
+        return owner;
     }
 
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
+    public void setOwner(String owner) {
+        this.owner = owner;
     }
 
     public boolean isVoting() {

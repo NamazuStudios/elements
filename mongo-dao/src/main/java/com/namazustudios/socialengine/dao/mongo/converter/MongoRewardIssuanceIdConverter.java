@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo.converter;
 
-import com.namazustudios.socialengine.dao.mongo.model.MongoScoreId;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId;
 import org.dozer.CustomConverter;
 import org.dozer.MappingException;

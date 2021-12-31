@@ -23,7 +23,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Profile>;
   dataSource: ProfilesDataSource;
-  displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "actions"];
+  displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "edit-action", "delete-action"];
   currentProfiles: Array<Profile> = [];
   allApplications = [];
   selectAll = {id: "All", name: "All"};

@@ -7,7 +7,11 @@ textarea.jsoneditor-text{min-height:700px;}
 body {
   font-family: Roboto, Arial, sans-serif;
   margin: 0;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  background-color: #fafafa
 }
+
 
 .basic-container {
   padding: 30px;
@@ -19,13 +23,13 @@ body {
 }
 
 /** TODO: Create responsive tables **/
-mat-cell {
+/* mat-cell {
   margin-right: 10px;
 }
 
 mat-header-cell {
   margin-right: 10px;
-}
+} */
 
 .mat-card {
   background-color: rgba(207, 223, 242, 0.5);
@@ -34,3 +38,45 @@ mat-header-cell {
 .green-snackbar {
   background: #1d7c33;
 }
+
+
+/** START global for tables **/
+
+.data-table {
+  width: 100%;
+}
+
+.data-list {
+  max-width: 1200px;
+  min-width: 700px;
+}
+
+.spinner-container {
+  left: 50%;
+  top: 50%;
+  margin-left: -50px;
+  margin-top: -50px;
+  height: 100px;
+  width: 100px;
+  position: fixed;
+}
+
+.spinner-container mat-spinner {
+  margin: 0px auto 0 auto;
+}
+
+mat-cell > span.truncate-text-left {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  direction:rtl;
+  text-align:left;
+}
+
+mat-cell > span.truncate-text-right {
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+/** END global for tables **/

@@ -16,7 +16,13 @@ public class PatchNeoSmartContractRequest {
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The script hash of the contract from the blockchain.")
-    private byte[] scriptHash;
+    private String scriptHash;
+
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The blockchain where this contract lives. Valid values are " +
+            "\"NEO\" : This contract exists on the NEO blockchain network.")
+    private String blockchain;
 
     @ApiModelProperty("Any meta data for this contract.")
     private Map<String, Object> metadata;
@@ -29,12 +35,20 @@ public class PatchNeoSmartContractRequest {
         this.displayName = displayName;
     }
 
-    public byte[] getScriptHash() {
+    public String getScriptHash() {
         return scriptHash;
     }
 
-    public void setScriptHash(byte[] scriptHash) {
+    public void setScriptHash(String scriptHash) {
         this.scriptHash = scriptHash;
+    }
+
+    public String getBlockchain() {
+        return blockchain;
+    }
+
+    public void setBlockchain(String blockchain) {
+        this.blockchain = blockchain;
     }
 
     public Map<String, Object> getMetadata() {

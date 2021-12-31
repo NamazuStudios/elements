@@ -8,6 +8,8 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HashMap;
@@ -167,6 +169,14 @@ public class MongoPasswordUtils {
 
     public String getPasswordEncoding() {
         return passwordEncoding;
+    }
+
+    public Charset getPasswordEncodingCharset() {
+        try {
+            return Charset.forName(getPasswordEncoding());
+        } catch (UnsupportedCharsetException ex) {
+            throw new InternalException(ex);
+        }
     }
 
     @Inject
