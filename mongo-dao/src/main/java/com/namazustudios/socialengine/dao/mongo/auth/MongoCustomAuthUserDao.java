@@ -64,12 +64,20 @@ public class MongoCustomAuthUserDao implements CustomAuthUserDao {
             set("active", true),
             set("name", userClaim.getName()),
             set("email", userClaim.getEmail()),
-            set("level", userClaim.getLevel()),
-            set("facebookId", userClaim.getFacebookId()),
-            set("firebaseId", userClaim.getFirebaseId()),
-            set("appleSignInId", userClaim.getAppleSignInId()),
-            set("externalUserId", userClaim.getExternalUserId())
+            set("level", userClaim.getLevel())
         );
+
+        if (userClaim.getFacebookId() != null)
+            builder.with(set("facebookId", userClaim.getFacebookId()));
+
+        if (userClaim.getFirebaseId() != null)
+            builder.with(set("firebaseId", userClaim.getFirebaseId()));
+
+        if (userClaim.getAppleSignInId() != null)
+            builder.with(set("appleSignInId", userClaim.getAppleSignInId()));
+
+        if (userClaim.getExternalUserId() != null)
+            builder.with(set("externalUserId", userClaim.getExternalUserId()));
 
         getMongoPasswordUtils().scramblePasswordOnInsert(builder);
 

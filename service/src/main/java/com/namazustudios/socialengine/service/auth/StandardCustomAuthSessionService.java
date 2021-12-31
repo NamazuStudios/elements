@@ -20,7 +20,6 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import javax.inject.Inject;
 import java.security.interfaces.ECPublicKey;
 import java.security.interfaces.RSAPublicKey;
-import java.util.Date;
 import java.util.List;
 import java.util.function.Function;
 
@@ -117,16 +116,16 @@ public class StandardCustomAuthSessionService implements CustomAuthSessionServic
         final var subject = credentials.getSubject();
         final var userClaim = getObjectMapper().convertValue(credentials.getUser(), UserClaim.class);
 
-        try {
-            getValidationHelper().validateModel(userClaim);
-        } catch (ValidationFailureException ex) {
-            throw new AuthorizationHeaderParseException(ex);
-        }
-
         if (userClaim.getName() == null || userClaim.getEmail() == null) {
             final var name = getNameService().generateQualifiedName();
             if (userClaim.getName() == null) userClaim.setName(name);
             if (userClaim.getEmail() == null) userClaim.setEmail(getNameService().formatAnonymousEmail(name));
+        }
+
+        try {
+            getValidationHelper().validateModel(userClaim);
+        } catch (ValidationFailureException ex) {
+            throw new AuthorizationHeaderParseException(ex);
         }
 
         if (scheme.getUserLevel().compareTo(userClaim.getLevel()) < 0)

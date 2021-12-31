@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.model.auth;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import com.namazustudios.socialengine.model.user.User;
 
 import javax.validation.constraints.NotNull;
@@ -17,14 +19,16 @@ import static com.namazustudios.socialengine.Constants.Regexp.EMAIL_ADDRESS;
  */
 public class UserClaim implements Serializable {
 
-    @NotNull
+    @NotNull(groups = {Insert.class, Update.class})
     private String name;
 
-    @Pattern(regexp = EMAIL_ADDRESS)
     @NotNull
+    @NotNull(groups = {Insert.class, Update.class})
+    @Pattern(regexp = EMAIL_ADDRESS)
     private String email;
 
     @NotNull
+    @NotNull(groups = {Insert.class, Update.class})
     private User.Level level;
 
     private String facebookId;
