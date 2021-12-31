@@ -48,14 +48,14 @@ import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
 import com.namazustudios.socialengine.service.progress.SuperUserProgressService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
+import com.namazustudios.socialengine.service.savedata.SaveDataDocumentServiceProvider;
+import com.namazustudios.socialengine.service.savedata.SuperUserSaveDataDocumentService;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignService;
 import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
-import com.namazustudios.socialengine.util.DisplayNameGenerator;
-import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 import org.dozer.Mapper;
 
 import javax.inject.Provider;
@@ -87,12 +87,16 @@ public class ServicesModule extends PrivateModule {
 
         install(new DatabaseHealthStatusDaoAggregator());
 
+        bind(CryptoKeyUtility.class)
+            .to(StandardCryptoKeyUtility.class)
+            .asEagerSingleton();
+
         bind(Mapper.class)
             .toProvider(ServicesDozerMapperProvider.class)
             .asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
-            .toProvider(AuthServiceProvider.class)
+            .toProvider(UsernamePasswordAuthServiceProvider.class)
             .in(scope);
 
         bind(SocialCampaignService.class)
@@ -291,9 +295,16 @@ public class ServicesModule extends PrivateModule {
             .to(DefaultHealthStatusService.class)
             .in(scope);
 
+        bind(SaveDataDocumentService.class)
+            .toProvider(SaveDataDocumentServiceProvider.class)
+            .in(scope);
+
         bind(NameService.class)
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
+
+        bind(CustomAuthSessionService.class)
+            .to(StandardCustomAuthSessionService.class);
 
         bind(AdvancementService.class).to(StandardAdvancementService.class);
 
@@ -304,7 +315,6 @@ public class ServicesModule extends PrivateModule {
         bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
 
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
-        bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
 
         bind(Neow3jClient.class).to(StandardNeow3jClient.class).asEagerSingleton();
 
@@ -357,8 +367,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserProfileService.class);
 
         bind(FollowerService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserFollowerService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserFollowerService.class);
 
         bind(ProfileOverrideService.class)
             .annotatedWith(Unscoped.class)

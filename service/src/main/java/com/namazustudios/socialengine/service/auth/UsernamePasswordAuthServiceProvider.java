@@ -9,7 +9,7 @@ import javax.inject.Provider;
 /**
  * Created by patricktwohig on 4/2/15.
  */
-public class AuthServiceProvider implements Provider<UsernamePasswordAuthService> {
+public class UsernamePasswordAuthServiceProvider implements Provider<UsernamePasswordAuthService> {
 
     private User user;
 
