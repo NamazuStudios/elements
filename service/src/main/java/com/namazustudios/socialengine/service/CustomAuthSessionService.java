@@ -10,12 +10,6 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  *
  * Created by robb on 12/20/21.
  */
-@Expose({
-    @ExposedModuleDefinition(
-        value = "namazu.elements.service.auth.unscoped.custom.auth",
-        annotation = @ExposedBindingAnnotation(Unscoped.class)
-    )}
-)
 public interface CustomAuthSessionService {
 
     /**

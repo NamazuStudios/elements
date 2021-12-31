@@ -210,9 +210,10 @@ public class MongoUserDao implements UserDao {
         mongoUser.setHashAlgorithm(digest.getAlgorithm());
 
         try {
-            getDatastore().save(mongoUser);
-            getObjectIndex().index(mongoUser);
-            
+            getMongoDBUtils().performV(ds -> {
+                getDatastore().save(mongoUser);
+                getObjectIndex().index(mongoUser);
+            });
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
