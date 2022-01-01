@@ -306,16 +306,6 @@ public class CustomAuthTest {
         assertEquals(user.getExternalUserId(), externalUserId);
     }
 
-    @Test(dependsOnMethods = {"testCustomAuthHappy", "testCustomAuthEscalationIsForbidden"})
-    public void testUsersDidNotDuplicate() {
-
-        final var pagination = userDao.getActiveUsers(0, 10);
-
-        // An extra user for the superuser we created
-        assertEquals(pagination.getTotal(), schemesAndAlgorithms.size() + 1);
-
-    }
-
     private static class SchemeTuple {
 
         public final AuthScheme scheme;
