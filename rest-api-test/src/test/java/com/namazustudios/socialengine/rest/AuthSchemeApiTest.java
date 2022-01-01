@@ -463,17 +463,4 @@ public class AuthSchemeApiTest {
 
     }
 
-    @Test(dependsOnMethods = {"deleteAuthScheme"})
-    public void getAllPostDeleteReturnsNothing() {
-
-        var response = client
-            .target(format("%s/auth_scheme", apiRoot))
-            .request()
-            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
-            .get(AuthSchemePagination.class);
-
-        assertEquals(response.getTotal(), 0);
-
-    }
-
 }
