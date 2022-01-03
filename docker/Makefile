@@ -1,78 +1,70 @@
 
-.DEFAULT=push
-.PHONY=login,tag,push
+.DEFAULT=revision
+.PHONY=login,tag,push,clean
 
 TAG ?= $(shell git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
+TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
 DOCKER_TAG=docker tag
 DOCKER_PUSH=docker push 
-DOCKER_BUILD=docker build
+DOCKER_BUILD=docker buildx build
 DOCKER_LOGIN=docker login
 
-MAVEN_PROJECT_VERSION=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+MAVEN_COPY_DEPS=mvn clean generate-resources
+MAVEN_PROJECT_VERSION:=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null)
 
-WEB_UI_DIR=target/lib/dist
-APPLICATION_LIBS=target/lib/*.jar
+TARGET_ARCHITECTURES="linux/amd64"
 
 define DOCKER_BUILD_TAG
+	@echo "Building Base Image for $(1) -> $(2)"
 	$(DOCKER_BUILD) $(1) \
-		--build-arg APPLICATION_LIBS=target/lib/*.jar \
-		--tag namazu-elements-$(2) \
-		--tag namazu-elements-$(2):$(TAG) \
-		--tag docker.namazustudios.net/namazu-elements-$(2) \
+		--push \
+		--platform $(TARGET_ARCHITECTURES) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG_SHORT) \
-		--tag namazu-socialengine-$(2) \
-		--tag namazu-socialengine-$(2):$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-$(2) \
+		--tag docker.namazustudios.net/namazu-elements-$(2):$(MAVEN_PROJECT_VERSION) \
 		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG_SHORT)
+		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG_SHORT) \
+		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(MAVEN_PROJECT_VERSION)
+endef
+
+define DOCKER_BUILD_TAG_JAVA
+	@echo "Building Java Image for  $(1) -> $(2)"
+	$(DOCKER_BUILD) $(1) \
+		--push \
+		--platform $(TARGET_ARCHITECTURES) \
+		--build-arg BASE_TAG=$(TAG) \
+		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG) \
+		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG_SHORT) \
+		--tag docker.namazustudios.net/namazu-elements-$(2):$(MAVEN_PROJECT_VERSION) \
+		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG) \
+		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG_SHORT) \
+		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(MAVEN_PROJECT_VERSION)
 endef
 
 define DOCKER_PUSH_ALL
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-elements-$(1)
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-elements-$(1):$(TAG)
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-elements-$(1):$(TAG_SHORT)
-	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-$(1)
+	$(DOCKER_PUSH) docker.namazustudios.net/namazu-elements-$(1):$(MAVEN_PROJECT_VERSION)
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-$(1):$(TAG)
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-$(1):$(TAG_SHORT)
+	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-$(1):$(MAVEN_PROJECT_VERSION)
 endef
 
-push:
-	$(call DOCKER_PUSH_ALL,base)
-	$(call DOCKER_PUSH_ALL,api)
-	$(call DOCKER_PUSH_ALL,app-node)
-	$(call DOCKER_PUSH_ALL,app-serve)
-	$(call DOCKER_PUSH_ALL,code-serve)
-	$(call DOCKER_PUSH_ALL,setup)
-	$(call DOCKER_PUSH_ALL,ui)
-	$(call DOCKER_PUSH_ALL,cdn-serve)
-
 revision: login
-	$(DOCKER_BUILD) namazu-socialengine-base \
-		--tag namazu-elements-base \
-		--tag namazu-elements-base:$(TAG) \
-		--tag docker.namazustudios.net/namazu-elements-base:$(TAG) \
-		--tag docker.namazustudios.net/namazu-elements-base:$(TAG_SHORT) \
-		--tag namazu-socialengine-base:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-base:$(TAG_SHORT)
-	$(DOCKER_BUILD) namazu-socialengine-ui \
-		--build-arg WEB_UI_DIR=$(WEB_UI_DIR) \
-		--tag namazu-elements-ui \
-		--tag namazu-elements-ui:$(TAG) \
-		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG) \
-		--tag docker.namazustudios.net/namazu-elements-ui:$(TAG_SHORT) \
-		--tag namazu-socialengine-ui:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG) \
-		--tag docker.namazustudios.net/namazu-socialengine-ui:$(TAG_SHORT)
-	$(call DOCKER_BUILD_TAG,namazu-socialengine-api,api)
-	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-node,app-node)
-	$(call DOCKER_BUILD_TAG,namazu-socialengine-app-serve,app-serve)
-	$(call DOCKER_BUILD_TAG,namazu-socialengine-code-serve,code-serve)
-	$(call DOCKER_BUILD_TAG,namazu-socialengine-setup,setup)
-	$(call DOCKER_BUILD_TAG,namazu-socialengine-cdn-serve,cdn-serve)
+	$(MAVEN_COPY_DEPS)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-ui,ui)
+	$(call DOCKER_BUILD_TAG,namazu-socialengine-base,base)
+	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-api,api)
+	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-app-node,app-node)
+	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-app-serve,app-serve)
+	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-code-serve,code-serve)
+	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-setup,setup)
+	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-cdn-serve,cdn-serve)
+
+clean:
+	mvn clean
 
 login:
 	- echo $(DOCKER_PASS) | $(DOCKER_LOGIN) --username $(DOCKER_USER) --password-stdin docker.namazustudios.net

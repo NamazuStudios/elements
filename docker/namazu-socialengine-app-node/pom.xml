@@ -33,56 +33,23 @@
     </dependencies>
 
     <build>
-
         <plugins>
             <plugin>
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
-                        <phase>initialize</phase>
+                        <phase>generate-resources</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
                             <includeScope>runtime</includeScope>
                             <overWriteReleases>false</overWriteReleases>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
             </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>${exec.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>my-exec</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <inherited>false</inherited>
-                    </execution>
-                </executions>
-                <configuration>
-                    <workingDirectory>${project.basedir}</workingDirectory>
-                    <executable>docker</executable>
-                    <arguments>
-                        <argument>build</argument>
-                        <argument>${project.basedir}</argument>
-                        <argument>--build-arg</argument>
-                        <argument>APPLICATION_LIBS=target/lib/*.jar</argument>
-                        <argument>--tag</argument>
-                        <argument>${project.artifactId}:latest</argument>
-                        <argument>--tag</argument>
-                        <argument>${project.artifactId}:${project.version}</argument>
-                    </arguments>
-                </configuration>
-            </plugin>
         </plugins>
-
     </build>
 
 </project>

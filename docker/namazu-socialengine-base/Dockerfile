@@ -1,11 +1,13 @@
+FROM jwilder/dockerize:0.6.1 as dockerize
 
 FROM ubuntu:20.04
-
-RUN apt-get update && \
-    apt-get -y install openjdk-11-jdk && \
-    apt-get -y install wget
-
 ENV DOCKERIZE_VERSION v0.6.1
+
+RUN ln -s /usr/bin/dpkg-split /usr/sbin/dpkg-split && \
+    ln -s /usr/bin/dpkg-deb /usr/sbin/dpkg-deb && \
+    ln -s /bin/rm /usr/sbin/rm && \
+    ln -s /bin/tar /usr/sbin/tar && \
+    apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk-headless
 
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
@@ -39,9 +41,7 @@ ENV CLASSPATH "$ELEMENTS_CLASSPATH:$ELEMENTS_LIB/*"
 
 USER root:root
 
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+COPY --from=dockerize /usr/local/bin/dockerize /usr/local/bin/
 
 ENV PATH $ELEMENTS_BIN:$PATH
 
