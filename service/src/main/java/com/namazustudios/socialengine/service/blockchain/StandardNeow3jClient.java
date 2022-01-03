@@ -133,9 +133,14 @@ public class StandardNeow3jClient implements Neow3jClient {
 
     public ContractParameter convertObject(final Object object) {
         if (object == null) {
-            return ContractParameter.string("null");
+            return ContractParameter.any(null);
         } else if (object instanceof String) {
-            return ContractParameter.string((String)object);
+            try{
+                var hash = new Hash160((String)object);
+                return ContractParameter.hash160(hash);
+            } catch(Exception ignored) {
+                return ContractParameter.string((String)object);
+            }
         } else if (object instanceof Integer) {
             return ContractParameter.integer((Integer)object);
         } else if (object instanceof Long) {

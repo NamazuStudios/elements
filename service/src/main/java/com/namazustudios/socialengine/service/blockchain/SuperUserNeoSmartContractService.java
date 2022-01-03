@@ -65,8 +65,14 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
                     try {
                         SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
+                        var hash = account.getScriptHash();
                         var tokenIdParam = ContractParameter.string(tid);
-                        var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(token.getToken(), Map.class));
+                        var tk = token.getToken();
+                        tk.setOwner(hash.toString());
+                        for (var stkhldr : tk.getOwnership().getStakeHolders()){
+                            stkhldr.setOwner(hash.toString());
+                        }
+                        var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(tk, Map.class));
 //                        List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenMapParam);
 //                        NeoInvokeFunction testresponse = smartContract.callInvokeFunction("mintMap", params, AccountSigner.calledByEntry(account));
 
