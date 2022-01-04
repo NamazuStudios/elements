@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.remote.guice;
 import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
-import com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService;
 
 import java.util.Properties;
 import java.util.function.Supplier;

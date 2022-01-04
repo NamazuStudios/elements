@@ -3,11 +3,7 @@ FROM jwilder/dockerize:0.6.1 as dockerize
 FROM ubuntu:20.04
 ENV DOCKERIZE_VERSION v0.6.1
 
-RUN ln -s /usr/bin/dpkg-split /usr/sbin/dpkg-split && \
-    ln -s /usr/bin/dpkg-deb /usr/sbin/dpkg-deb && \
-    ln -s /bin/rm /usr/sbin/rm && \
-    ln -s /bin/tar /usr/sbin/tar && \
-    apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk-headless
+RUN apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk
 
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
