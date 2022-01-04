@@ -4,7 +4,7 @@ FROM docker.namazustudios.net/namazu-elements-base:$BASE_TAG
 
 USER root:root
 
-COPY --chown=elements:elements target/dependency/*.jar $ELEMENTS_LIB/
+COPY --chown=elements:elements target/lib/*.jar $ELEMENTS_LIB/
 COPY bin/sshd.sh $ELEMENTS_BIN
 COPY bin/hostkeys.sh $ELEMENTS_BIN
 COPY conf/sshd_config $ELEMENTS_CONF

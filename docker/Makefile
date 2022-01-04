@@ -11,7 +11,7 @@ DOCKER_PUSH=docker push
 DOCKER_BUILD=docker buildx build
 DOCKER_LOGIN=docker login
 
-MAVEN_COPY_DEPS=mvn clean generate-resources
+MAVEN_COPY_DEPS=mvn clean package
 MAVEN_PROJECT_VERSION:=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null)
 
 TARGET_ARCHITECTURES="linux/amd64"
