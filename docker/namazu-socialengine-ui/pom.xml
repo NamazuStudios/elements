@@ -46,9 +46,9 @@
                                     <includes>**/*</includes>
                                 </artifactItem>
                             </artifactItems>
-                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
                             <overWriteReleases>true</overWriteReleases>
                             <overWriteSnapshots>true</overWriteSnapshots>
+                            <outputDirectory>${project.build.directory}/lib</outputDirectory>
                         </configuration>
                     </execution>
                 </executions>
