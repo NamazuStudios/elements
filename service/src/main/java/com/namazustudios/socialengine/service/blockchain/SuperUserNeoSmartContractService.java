@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.api.client.util.ArrayMap;
 import com.namazustudios.socialengine.dao.NeoSmartContractDao;
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
+import com.namazustudios.socialengine.exception.blockchain.ContractInvocationException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import io.neow3j.contract.SmartContract;
@@ -13,14 +12,11 @@ import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.neow3j.transaction.AccountSigner;
 import io.neow3j.types.ContractParameter;
-import io.neow3j.types.ContractParameterType;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.nep6.NEP6Wallet;
-import org.dozer.DozerBeanMapper;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -53,43 +49,36 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
     @Override
     public NeoSendRawTransaction mintToken(MintTokenRequest mintTokenRequest) {
-        NeoWallet neoWallet = getNeoWalletDao().getWallet(mintTokenRequest.getWalletId());
-        NEP6Wallet nepWallet = neow3JClient.elementsWalletToNEP6(neoWallet.getWallet());
-        Account account = Account.fromNEP6Account(nepWallet.getAccounts().get(0));
+        Account mintAccount = Account.fromAddress(mintTokenRequest.getAddress());
         for (var tid : mintTokenRequest.getTokenIds()) {
             var token = getNeoTokenDao().getToken(tid);
-            NeoSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(mintTokenRequest.getContractId());
+            NeoSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(token.getContractId());
 
             switch(contract.getBlockchain()){
                 case "NEO":
-
                     try {
+                        var tkn = token.getToken();
                         SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
-                        var hash = account.getScriptHash();
+                        var ownerHash = Account.fromAddress(tkn.getOwner()).getScriptHash();
                         var tokenIdParam = ContractParameter.string(tid);
-                        var tk = token.getToken();
-                        tk.setOwner(hash.toString());
-                        for (var stkhldr : tk.getOwnership().getStakeHolders()){
-                            stkhldr.setOwner(hash.toString());
+                        tkn.setOwner(ownerHash.toString());
+                        for (var stkhldr : tkn.getOwnership().getStakeHolders()){
+                            var stkhldrHash = Account.fromAddress(stkhldr.getOwner()).getScriptHash();
+                            stkhldr.setOwner(stkhldrHash.toString());
                         }
-                        var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(tk, Map.class));
-//                        List<ContractParameter> params = Arrays.asList(tokenIdParam, tokenMapParam);
-//                        NeoInvokeFunction testresponse = smartContract.callInvokeFunction("mintMap", params, AccountSigner.calledByEntry(account));
-
-                        NeoSendRawTransaction response = smartContract.invokeFunction("mintMap", tokenIdParam, tokenMapParam)
-                                .signers(AccountSigner.calledByEntry(account))
+                        var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(tkn, Map.class));
+                        return smartContract.invokeFunction("mintMap", tokenIdParam, tokenMapParam)
+                                .signers(AccountSigner.calledByEntry(mintAccount))
                                 .sign()
                                 .send();
-
-                        return response;
-
-                    } catch (Throwable e){
-
+                    } catch (Throwable e) {
+                        throw new ContractInvocationException("Minting failed with exception: " + e);
                     }
-                    break;
+                default:
+                    throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
             }
         }
-        return null;
+        throw new ContractInvocationException("Minting failed. Maybe your token list is empty?");
     }
 
     @Override
@@ -99,25 +88,32 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         switch(contract.getBlockchain()){
             case "NEO":
                 SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
-                NeoWallet neoWallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
-                NEP6Wallet nepWallet = neow3JClient.elementsWalletToNEP6(neoWallet.getWallet());
-                Account account = Account.fromNEP6Account(nepWallet.getAccounts().get(0));
+                Account account = Account.fromAddress(invokeRequest.getAddress());
                 if (params.size() > 0){
-                    //TODO invoke method passing params
+                    List<ContractParameter> invokeParams = new ArrayList<>();
+                    for (var param : params) {
+                        invokeParams.add(getNeow3JClient().convertObject(param));
+                    }
+                    try {
+                        return smartContract.invokeFunction(method, invokeParams.toArray(new ContractParameter[0]))
+                                .signers(AccountSigner.calledByEntry(account))
+                                .sign()
+                                .send();
+                    } catch (Throwable e){
+                        throw new ContractInvocationException("Invocation failed with exception: " + e);
+                    }
                 } else {
                     try {
-                        NeoInvokeFunction response = smartContract.callInvokeFunction(method, AccountSigner.calledByEntry(account));
-//                        NeoSendRawTransaction response = smartContract.invokeFunction("mint", tokenIdParam, tokenParam)
-//                                .signers(AccountSigner.calledByEntry(account))
-//                                .sign()
-//                                .send();
+                        return smartContract.invokeFunction(method).signers(AccountSigner.calledByEntry(account))
+                                .sign()
+                                .send();
                     } catch (Throwable e){
-
+                        throw new ContractInvocationException("Invocation failed with exception: " + e);
                     }
                 }
-                break;
+            default:
+                throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
         }
-        return null;
     }
 
     @Override
@@ -127,22 +123,27 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         switch(contract.getBlockchain()){
             case "NEO":
                 SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
-                NeoWallet neoWallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
-                NEP6Wallet nepWallet = neow3JClient.elementsWalletToNEP6(neoWallet.getWallet());
-                Account account = Account.fromNEP6Account(nepWallet.getAccounts().get(0));
+                Account account = Account.fromAddress(invokeRequest.getAddress());
                 if (params.size() > 0){
-                    //TODO invoke method passing params
+                    List<ContractParameter> invokeParams = new ArrayList<>();
+                    for (var param : params) {
+                        invokeParams.add(getNeow3JClient().convertObject(param));
+                    }
+                    try {
+                        return smartContract.callInvokeFunction(method, invokeParams, AccountSigner.calledByEntry(account));
+                    } catch (Throwable e){
+                        throw new ContractInvocationException("Invocation failed with exception: " + e);
+                    }
                 } else {
                     try {
-                        NeoInvokeFunction response = smartContract.callInvokeFunction(method, AccountSigner.calledByEntry(account));
-                        return response;
+                        return smartContract.callInvokeFunction(method, AccountSigner.calledByEntry(account));
                     } catch (Throwable e){
-
+                        throw new ContractInvocationException("Invocation failed with exception: " + e);
                     }
                 }
-                break;
+            default:
+                throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
         }
-        return null;
     }
 
     @Override

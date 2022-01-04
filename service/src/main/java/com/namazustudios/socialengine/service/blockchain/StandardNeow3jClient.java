@@ -131,6 +131,7 @@ public class StandardNeow3jClient implements Neow3jClient {
         return new SmartContract(hash160, getNeow3j());
     }
 
+    @Override
     public ContractParameter convertObject(final Object object) {
         if (object == null) {
             return ContractParameter.any(null);

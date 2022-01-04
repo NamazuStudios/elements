@@ -9,12 +9,12 @@ import javax.validation.constraints.Null;
 public class InvokeContractRequest {
 
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The unique ID of the contract itself.")
+    @ApiModelProperty("The unique elements ID of the contract to invoke a method on.")
     private String contractId;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The unique ID of the wallet with funds to invoke.")
-    private String walletId;
+    @ApiModelProperty("The address of the account with funds to invoke.")
+    private String address;
 
     public String getContractId() {
         return contractId;
@@ -24,11 +24,11 @@ public class InvokeContractRequest {
         this.contractId = contractId;
     }
 
-    public String getWalletId() {
-        return walletId;
+    public String getAddress() {
+        return address;
     }
 
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

@@ -1,11 +1,22 @@
 package com.namazustudios.socialengine.model.blockchain;
 
+import com.namazustudios.socialengine.model.ValidationGroups;
+import io.swagger.annotations.ApiModelProperty;
+
+import javax.validation.constraints.NotNull;
+
 public class StakeHolder {
 
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @ApiModelProperty("The account address of the stakeholder to be assigned when minting this token.")
     private String owner;
 
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @ApiModelProperty("If true, allows for voting on any proposed change.")
     private boolean voting;
 
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @ApiModelProperty("The number of shares assigned to the Stakeholder.")
     private long shares;
 
     public String getOwner() {
