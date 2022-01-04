@@ -6,12 +6,14 @@ TAG ?= $(shell git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
+MAVEN_OPTIONS?=""
+
 DOCKER_TAG=docker tag
 DOCKER_PUSH=docker push 
 DOCKER_BUILD=docker buildx build
 DOCKER_LOGIN=docker login
 
-MAVEN_COPY_DEPS=mvn clean package
+MAVEN_COPY_DEPS=mvn $(MAVEN_OPTIONS) clean package
 MAVEN_PROJECT_VERSION:=$(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout 2>/dev/null)
 
 TARGET_ARCHITECTURES="linux/amd64"
@@ -52,8 +54,7 @@ define DOCKER_PUSH_ALL
 	$(DOCKER_PUSH) docker.namazustudios.net/namazu-socialengine-$(1):$(MAVEN_PROJECT_VERSION)
 endef
 
-revision: login
-	$(MAVEN_COPY_DEPS)
+revision: login deps
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-ui,ui)
 	$(call DOCKER_BUILD_TAG,namazu-socialengine-base,base)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-api,api)
@@ -62,6 +63,9 @@ revision: login
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-code-serve,code-serve)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-setup,setup)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-cdn-serve,cdn-serve)
+
+deps:
+	$(MAVEN_COPY_DEPS)
 
 clean:
 	mvn clean
