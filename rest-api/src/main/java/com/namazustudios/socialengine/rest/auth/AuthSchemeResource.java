@@ -29,12 +29,20 @@ public class AuthSchemeResource {
 
     @GET
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets all auth schemes in the system",
+    @ApiOperation(value = "Lists all auth schemes in the system",
             notes = "Requires SUPERUSER access. Gets a pagination of Auth Schemes for the given query.")
     public Pagination<AuthScheme> getAuthSchemes(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("tags") @DefaultValue("") final List<String> tags) {
+            @QueryParam("tags") final List<String> tags) {
+
+        if (offset < 0) {
+            throw new InvalidParameterException("Offset must have positive value.");
+        }
+
+        if (count < 0) {
+            throw new InvalidParameterException("Count must have positive value.");
+        }
 
         return getAuthSchemeService().getAuthSchemes(offset, count, tags);
     }
@@ -46,6 +54,12 @@ public class AuthSchemeResource {
             notes = "Gets a specific Auth Scheme by the authSchemeId.")
     public AuthScheme getAuthScheme(@PathParam("authSchemeId") String authSchemeId) {
 
+        authSchemeId = Strings.nullToEmpty(authSchemeId).trim();
+
+        if (authSchemeId.isEmpty()) {
+            throw new NotFoundException();
+        }
+
         return getAuthSchemeService().getAuthScheme(authSchemeId);
     }
 
@@ -54,16 +68,19 @@ public class AuthSchemeResource {
     @ApiOperation(value = "Creates a new Auth Scheme",
             notes = "Creates a new Auth Scheme, from the data in the given auth scheme request")
     public CreateAuthSchemeResponse createAuthScheme(final CreateAuthSchemeRequest authSchemeRequest) {
-
         return getAuthSchemeService().createAuthScheme(authSchemeRequest);
     }
 
     @PUT
+    @Path("{authSchemeId}")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Updates an Auth Scheme",
             notes = "Updates an Auth Scheme with the specified data in the auth scheme request.")
-    public UpdateAuthSchemeResponse updateAuthScheme(final UpdateAuthSchemeRequest authSchemeRequest) {
-        return getAuthSchemeService().updateAuthScheme(authSchemeRequest);
+    public UpdateAuthSchemeResponse updateAuthScheme(
+            @PathParam("authSchemeId")
+            final String authSchemeId,
+            final UpdateAuthSchemeRequest authSchemeRequest) {
+        return getAuthSchemeService().updateAuthScheme(authSchemeId, authSchemeRequest);
     }
 
     @DELETE

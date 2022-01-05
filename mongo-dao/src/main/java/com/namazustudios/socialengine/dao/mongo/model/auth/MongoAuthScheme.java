@@ -1,10 +1,13 @@
 package com.namazustudios.socialengine.dao.mongo.model.auth;
 
+import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm;
+import com.namazustudios.socialengine.model.user.User;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 
@@ -17,6 +20,10 @@ import java.util.List;
         extractor = ObjectIdExtractor.class,
         processors = ObjectIdProcessor.class))
 @Entity(value = "auth_scheme", useDiscriminator = false)
+@Indexes({
+    @Index(fields = @Field("tags")),
+    @Index(fields = @Field("audience"), options = @IndexOptions(unique = true))
+})
 @SearchableDocument(fields = {
         @SearchableField(name = "audience", path = "/audience"),
         @SearchableField(name = "userLevel", path = "/userLevel")
@@ -24,26 +31,40 @@ import java.util.List;
 public class MongoAuthScheme {
 
     @Id
-    public String id;
+    private ObjectId id;
 
     @Property
-    public String audience;
+    private String audience;
 
     @Property
-    public String pubKey;
+    private String publicKey;
 
     @Property
-    public String userLevel;
+    private AuthSchemeAlgorithm algorithm;
 
     @Property
-    public List<String> allowedIssuers;
+    private User.Level userLevel;
 
-    public String getId() {
+    @Property
+    private List<String> tags;
+
+    @Property
+    private List<String> allowedIssuers;
+
+    public ObjectId getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(ObjectId id) {
         this.id = id;
+    }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
     }
 
     public String getAudience() {
@@ -54,19 +75,36 @@ public class MongoAuthScheme {
         this.audience = audience;
     }
 
-    public String getPubKey() {
-        return pubKey;
+    public String getPublicKey() {
+        return publicKey;
     }
 
-    public void setPubKey(String pubKey) {
-        this.pubKey = pubKey;
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 
-    public String getUserLevel() {
+    public AuthSchemeAlgorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(AuthSchemeAlgorithm algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public List<String> getAllowedIssuers() {
+        return allowedIssuers;
+    }
+
+    public void setAllowedIssuers(List<String> allowedIssuers) {
+        this.allowedIssuers = allowedIssuers;
+    }
+
+    public User.Level getUserLevel() {
         return userLevel;
     }
 
-    public void setUserLevel(String userLevel) {
+    public void setUserLevel(User.Level userLevel) {
         this.userLevel = userLevel;
     }
+
 }

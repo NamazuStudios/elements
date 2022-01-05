@@ -43,6 +43,7 @@ import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.RSAPublicKeySpec;
 import java.util.Base64;
+import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -133,7 +134,7 @@ public class AppleSignInAuthServiceOperations {
 
         return fetchPublicKeys()
             .map(algorithm -> attemptVerify(jwt, algorithm, appleSignInConfiguration))
-            .filter(j -> j != null)
+            .filter(Objects::nonNull)
             .findFirst()
             .orElseThrow(ForbiddenException::new);
 

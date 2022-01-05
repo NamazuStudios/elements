@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
@@ -213,14 +214,27 @@ public interface UserDao {
     void softDeleteUser(String userId);
 
     /**
-     * Validates the user's password and returns the current User instance.  If the password validation fails,
-     * then this simply throws an instance of {@link com.namazustudios.socialengine.exception.ForbiddenException}
+     * Validates the user's password and returns the current User instance.  If the password validation fails, then this
+     * simply throws an instance of {@link com.namazustudios.socialengine.exception.ForbiddenException}
      *
      * @param userNameOrEmail the user's name or email address
      * @param password the password
      *
      * @return the User, never null
      */
-    User validateActiveUserPassword(String userNameOrEmail, String password);
+    default User validateActiveUserPassword(String userNameOrEmail, String password) {
+        return findActiveUserWithLoginAndPassword(userNameOrEmail, password).orElseThrow(ForbiddenException::new);
+    }
+
+    /**
+     * Finds a {@link User} given the login credentials and assword.  If the password validation fails, then this will
+     * return an empty {@link Optional}. If the password validation succeeds, then this returns the user that matched.
+     *
+     * @param userNameOrEmail the user's name or email address
+     * @param password the password
+     *
+     * @return the User, never null
+     */
+    Optional<User> findActiveUserWithLoginAndPassword(String userNameOrEmail, String password);
 
 }

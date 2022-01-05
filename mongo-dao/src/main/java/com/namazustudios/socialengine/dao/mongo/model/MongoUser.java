@@ -59,7 +59,12 @@ import static dev.morphia.utils.IndexType.TEXT;
     @Index(
         fields = @Field(value = "appleSignInId"),
         options = @IndexOptions(unique = true, sparse = true)
+    ),
+    @Index(
+        fields = @Field(value = "externalUserId"),
+        options = @IndexOptions(unique = true, sparse = true)
     )
+
 })
 public class MongoUser {
 
@@ -96,6 +101,9 @@ public class MongoUser {
 
     @Property
     private String appleSignInId;
+
+    @Property
+    private String externalUserId;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -185,6 +193,30 @@ public class MongoUser {
         this.appleSignInId = appleSignInId;
     }
 
+    public String getExternalUserId() {
+        return externalUserId;
+    }
+
+    public void setExternalUserId(String externalUserId) {
+        this.externalUserId = externalUserId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MongoUser mongoUser = (MongoUser) o;
+        return isActive() == mongoUser.isActive() && Objects.equals(getObjectId(), mongoUser.getObjectId()) && Objects.equals(getName(), mongoUser.getName()) && Objects.equals(getEmail(), mongoUser.getEmail()) && Objects.equals(getHashAlgorithm(), mongoUser.getHashAlgorithm()) && Arrays.equals(getSalt(), mongoUser.getSalt()) && Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash()) && getLevel() == mongoUser.getLevel() && Objects.equals(getFirebaseId(), mongoUser.getFirebaseId()) && Objects.equals(getFacebookId(), mongoUser.getFacebookId()) && Objects.equals(getAppleSignInId(), mongoUser.getAppleSignInId()) && Objects.equals(getExternalUserId(), mongoUser.getExternalUserId());
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(getObjectId(), getName(), getEmail(), getHashAlgorithm(), getLevel(), isActive(), getFirebaseId(), getFacebookId(), getAppleSignInId(), getExternalUserId());
+        result = 31 * result + Arrays.hashCode(getSalt());
+        result = 31 * result + Arrays.hashCode(getPasswordHash());
+        return result;
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("MongoUser{");
@@ -193,29 +225,15 @@ public class MongoUser {
         sb.append(", email='").append(email).append('\'');
         sb.append(", hashAlgorithm='").append(hashAlgorithm).append('\'');
         sb.append(", salt=").append(Arrays.toString(salt));
+        sb.append(", passwordHash=").append(Arrays.toString(passwordHash));
         sb.append(", level=").append(level);
         sb.append(", active=").append(active);
         sb.append(", firebaseId='").append(firebaseId).append('\'');
         sb.append(", facebookId='").append(facebookId).append('\'');
         sb.append(", appleSignInId='").append(appleSignInId).append('\'');
+        sb.append(", externalUserId='").append(externalUserId).append('\'');
         sb.append('}');
         return sb.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        MongoUser mongoUser = (MongoUser) o;
-        return isActive() == mongoUser.isActive() && Objects.equals(getObjectId(), mongoUser.getObjectId()) && Objects.equals(getName(), mongoUser.getName()) && Objects.equals(getEmail(), mongoUser.getEmail()) && Objects.equals(getHashAlgorithm(), mongoUser.getHashAlgorithm()) && Arrays.equals(getSalt(), mongoUser.getSalt()) && Arrays.equals(getPasswordHash(), mongoUser.getPasswordHash()) && getLevel() == mongoUser.getLevel() && Objects.equals(getFirebaseId(), mongoUser.getFirebaseId()) && Objects.equals(getFacebookId(), mongoUser.getFacebookId()) && Objects.equals(getAppleSignInId(), mongoUser.getAppleSignInId());
-    }
-
-    @Override
-    public int hashCode() {
-        int result = Objects.hash(getObjectId(), getName(), getEmail(), getHashAlgorithm(), getLevel(), isActive(), getFirebaseId(), getFacebookId(), getAppleSignInId());
-        result = 31 * result + Arrays.hashCode(getSalt());
-        result = 31 * result + Arrays.hashCode(getPasswordHash());
-        return result;
     }
 
 }

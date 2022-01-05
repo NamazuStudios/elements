@@ -2,7 +2,6 @@ FROM ubuntu:20.04
 
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
-ENV NGINX_VERSION 1.18.0-0ubuntu1.2
 
 # Sub Directories
 
@@ -15,12 +14,16 @@ ENV ELEMENTS_CONF "$ELEMENTS_HOME/conf"
 
 RUN mkdir -p $ELEMENTS_BIN && \
     mkdir -p $ELEMENTS_CONF && \
+    ln -s /usr/bin/dpkg-split /usr/sbin/dpkg-split && \
+    ln -s /usr/bin/dpkg-deb /usr/sbin/dpkg-deb && \
+    ln -s /bin/rm /usr/sbin/rm && \
+    ln -s /bin/tar /usr/sbin/tar && \
     apt-get update && \
-    apt-get install -y nginx-light=1.18.0-0ubuntu1.2 && \
-    apt-get install -y gettext=0.19.8.1-10build1
+    apt-get install -y nginx-light && \
+    apt-get install -y gettext && \
+    apt-get install -y bash
 
-ARG WEB_UI_DIR
-COPY $WEB_UI_DIR /usr/share/nginx/html
+COPY target/lib/dist /usr/share/nginx/html
 
 EXPOSE 8080
 

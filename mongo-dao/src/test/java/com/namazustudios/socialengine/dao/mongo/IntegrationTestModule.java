@@ -9,6 +9,8 @@ import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
+import com.namazustudios.socialengine.security.PasswordGenerator;
+import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import dev.morphia.Datastore;
 import org.dozer.Mapper;
 import org.slf4j.Logger;
@@ -75,6 +77,10 @@ public class IntegrationTestModule extends AbstractModule {
             final var stderr = new Thread(log(process::getErrorStream, m -> logger.error("mongod {}", m)));
             stderr.setDaemon(true);
             stderr.start();
+
+            bind(PasswordGenerator.class)
+                .to(SecureRandomPasswordGenerator.class)
+                .asEagerSingleton();
 
             hooks.add(() -> {
 

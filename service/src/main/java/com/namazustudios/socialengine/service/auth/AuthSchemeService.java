@@ -25,6 +25,7 @@ import java.util.List;
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )})
 public interface AuthSchemeService {
+
     /**
      * Lists all {@link AuthScheme} instances
      *
@@ -47,10 +48,12 @@ public interface AuthSchemeService {
     /**
      * Updates the supplied {@link AuthScheme}
      *
+     *
+     * @param authSchemeId
      * @param authSchemeRequest the {@link UpdateAuthSchemeRequest} with the information to update the authScheme
      * @return a {@link UpdateAuthSchemeResponse} as it was created
      */
-    UpdateAuthSchemeResponse updateAuthScheme(UpdateAuthSchemeRequest authSchemeRequest);
+    UpdateAuthSchemeResponse updateAuthScheme(String authSchemeId, UpdateAuthSchemeRequest authSchemeRequest);
 
     /**
      * Creates an {@link AuthScheme}
@@ -66,4 +69,5 @@ public interface AuthSchemeService {
      * @param authSchemeId the auth scheme ID.
      */
     void deleteAuthScheme(String authSchemeId);
+
 }

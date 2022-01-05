@@ -205,10 +205,15 @@ public class MongoDBUtils {
         options.skip(offset);
         options.limit(limit);
 
-        final List<ModelT> modelTList = query.iterator(options).toList()
-            .stream()
-            .map(function)
-            .collect(toList());
+        final List<ModelT> modelTList;
+
+        try (final var iterator = query.iterator(options)) {
+            modelTList = iterator
+                .toList()
+                .stream()
+                .map(function)
+                .collect(toList());
+        }
 
         pagination.setObjects(modelTList);
         return pagination;

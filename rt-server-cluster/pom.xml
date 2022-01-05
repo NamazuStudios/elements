@@ -10,7 +10,6 @@
         <version>1.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.namazustudios.socialengine</groupId>
     <artifactId>rt-server-cluster</artifactId>
     <version>1.0-SNAPSHOT</version>
     <name>rt-server-cluster</name>

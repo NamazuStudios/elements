@@ -30,8 +30,25 @@ public class UserTestFactory {
     }
 
     public User createTestUser(Consumer<User> precreateConsumer, boolean addToDB) {
+
+        final var testUser = buildTestUser(precreateConsumer);
+
+        if(addToDB) {
+            return getUserDao().createOrReactivateUser(testUser);
+        }
+
+        return testUser;
+    }
+
+    public User buildTestUser() {
+        return buildTestUser(u -> {});
+    }
+
+    public User buildTestUser(final Consumer<User> precreateConsumer) {
+
         final var testUser = new User();
         final var userName = format("testy.mctesterson.%d", suffix.getAndIncrement());
+
         testUser.setName(userName);
         testUser.setEmail(format("%s@example.com", userName));
         testUser.setLevel(USER);
@@ -41,11 +58,8 @@ public class UserTestFactory {
             precreateConsumer.accept(testUser);
         }
 
-        if(addToDB) {
-            return getUserDao().createOrReactivateUser(testUser);
-        }
-
         return testUser;
+
     }
 
     public UserDao getUserDao() {

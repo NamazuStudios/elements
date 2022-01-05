@@ -7,8 +7,7 @@ import com.namazustudios.socialengine.exception.ForbiddenException;
  */
 public class AuthorizationHeaderParseException extends ForbiddenException {
 
-    public AuthorizationHeaderParseException() {
-    }
+    public AuthorizationHeaderParseException() {}
 
     public AuthorizationHeaderParseException(String s) {
         super(s);

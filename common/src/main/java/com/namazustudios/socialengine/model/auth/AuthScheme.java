@@ -1,37 +1,51 @@
 package com.namazustudios.socialengine.model.auth;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.user.User;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import javax.validation.constraints.Pattern;
 import java.io.Serializable;
 import java.util.List;
+import java.util.Objects;
+
+import static com.namazustudios.socialengine.Constants.Regexp.BASE_64;
 
 @ApiModel
 public class AuthScheme implements Serializable {
 
+    @Null(groups = ValidationGroups.Insert.class)
     @NotNull(groups = ValidationGroups.Update.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @ApiModelProperty("The unique ID of the auth scheme.")
-    public String id;
+    private String id;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull
     @ApiModelProperty("A unique name used to identify the scheme within the instance of Elements.")
-    public String audience;
+    private String audience;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("A base-64 encoded public key.")
-    public String pubKey;
+    @NotNull
+    @Pattern(regexp = BASE_64)
+    @ApiModelProperty("A base-64 encoded string representing an x509 encoded public key.")
+    private String publicKey;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull
+    @ApiModelProperty("The digital signature matching the public key format.")
+    private AuthSchemeAlgorithm algorithm;
+
+    @NotNull
     @ApiModelProperty("The highest permitted user level this particular scheme will authorize.")
-    public String userLevel;
+    private User.Level userLevel;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull
+    @ApiModelProperty("The tags used to tag this auth scheme.")
+    private List<String> tags;
+
+    @NotNull
     @ApiModelProperty("A list of issuers allowed to use this scheme.")
-    public List<String> allowedIssuers;
+    private List<String> allowedIssuers;
 
     public String getId() {
         return id;
@@ -49,19 +63,57 @@ public class AuthScheme implements Serializable {
         this.audience = audience;
     }
 
-    public String getPubKey() {
-        return pubKey;
+    public String getPublicKey() {
+        return publicKey;
     }
 
-    public void setPubKey(String pubKey) {
-        this.pubKey = pubKey;
+    public void setPublicKey(String publicKey) {
+        this.publicKey = publicKey;
     }
 
-    public String getUserLevel() {
+    public AuthSchemeAlgorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(AuthSchemeAlgorithm algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public User.Level getUserLevel() {
         return userLevel;
     }
 
-    public void setUserLevel(String userLevel) {
+    public void setUserLevel(User.Level userLevel) {
         this.userLevel = userLevel;
     }
+
+    public List<String> getTags() {
+        return tags;
+    }
+
+    public void setTags(List<String> tags) {
+        this.tags = tags;
+    }
+
+    public List<String> getAllowedIssuers() {
+        return allowedIssuers;
+    }
+
+    public void setAllowedIssuers(List<String> allowedIssuers) {
+        this.allowedIssuers = allowedIssuers;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AuthScheme that = (AuthScheme) o;
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getAudience(), that.getAudience()) && Objects.equals(getPublicKey(), that.getPublicKey()) && getAlgorithm() == that.getAlgorithm() && getUserLevel() == that.getUserLevel() && Objects.equals(getTags(), that.getTags()) && Objects.equals(getAllowedIssuers(), that.getAllowedIssuers());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getAudience(), getPublicKey(), getAlgorithm(), getUserLevel(), getTags(), getAllowedIssuers());
+    }
+
 }
