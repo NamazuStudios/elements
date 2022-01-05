@@ -15,10 +15,6 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public class StandardCryptoKeyUtility implements CryptoKeyUtility {
 
-    private final Lock rsaLock = new ReentrantLock();
-
-    private final Lock ecdsaLock = new ReentrantLock();
-
     private final LockedPair<KeyFactory> rsaKeyFactory;
 
     private final LockedPair<KeyFactory> ecdsaKeyFactory;

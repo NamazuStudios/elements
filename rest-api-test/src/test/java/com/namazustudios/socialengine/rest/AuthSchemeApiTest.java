@@ -300,6 +300,40 @@ public class AuthSchemeApiTest {
 
     }
 
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"createAuthSchemeGeneratingPublicKey", "createAuthSchemeSupplyingPublicKey"})
+    public void testUpdateWithNoKeyChange(final String authSchemeId, final AuthScheme authScheme) {
+
+        final var updateRequest = new UpdateAuthSchemeRequest();
+        updateRequest.setRegenerate(false);
+        updateRequest.setUserLevel(SUPERUSER);
+        updateRequest.setTags(authScheme.getTags());
+        updateRequest.setAudience(authScheme.getAudience());
+        updateRequest.setAlgorithm(authScheme.getAlgorithm());
+        updateRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .put(Entity.entity(updateRequest, APPLICATION_JSON))
+            .readEntity(UpdateAuthSchemeResponse.class);
+
+        assertNotNull(response);
+        assertNull(response.getPrivateKey());
+        assertNotNull(response.getPublicKey());
+        cryptoKeyUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
+
+        final var scheme = response.getScheme();
+        assertEquals(scheme.getAlgorithm(), updateRequest.getAlgorithm());
+        assertEquals(scheme.getPublicKey(), response.getPublicKey());
+        assertEquals(scheme.getTags(), updateRequest.getTags());
+        assertEquals(scheme.getAllowedIssuers(), updateRequest.getAllowedIssuers());
+
+        updateIntermediate(scheme);
+
+    }
+
     @DataProvider
     public Object[][] getIntermediates() {
         return intermediateAuthSchemes
@@ -360,7 +394,11 @@ public class AuthSchemeApiTest {
 
     }
 
-    @Test(dependsOnMethods = {"updateAuthSchemeSupplyingPublicKey", "updateAuthSchemeGeneratingPublicKey"})
+    @Test(dependsOnMethods = {
+        "testUpdateWithNoKeyChange",
+        "updateAuthSchemeSupplyingPublicKey",
+        "updateAuthSchemeGeneratingPublicKey"
+    })
     public void getAllAuthSchemes() {
 
         final var response = client
@@ -375,7 +413,11 @@ public class AuthSchemeApiTest {
     }
 
     @Test(dataProvider = "getIntermediates",
-          dependsOnMethods = {"updateAuthSchemeSupplyingPublicKey", "updateAuthSchemeGeneratingPublicKey"})
+          dependsOnMethods = {
+              "testUpdateWithNoKeyChange",
+              "updateAuthSchemeSupplyingPublicKey",
+              "updateAuthSchemeGeneratingPublicKey"
+    })
     public void getSingleAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
 
         final var response = client
@@ -390,7 +432,7 @@ public class AuthSchemeApiTest {
     }
 
     @Test(dataProvider = "getIntermediates",
-            dependsOnMethods = {"getAllAuthSchemes", "getSingleAuthScheme"})
+          dependsOnMethods = {"getAllAuthSchemes", "getSingleAuthScheme"})
     public void testUserIsForbiddenToDeleteAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
 
         final var response = client

@@ -109,7 +109,7 @@ public class SuperUserAuthSchemeService implements AuthSchemeService {
             response.setPrivateKey(keyPair.getPrivateKeyBase64());
             authScheme.setPublicKey(keyPair.getPublicKeyBase64());
 
-        } else if (authScheme.getPublicKey() != null) {
+        } else if (authSchemeRequest.getPublicKey() != null) {
 
             final var publicKey = getJwtCryptoUtility().getPublicKey(
                 authSchemeRequest.getAlgorithm(),
