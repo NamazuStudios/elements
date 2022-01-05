@@ -15,7 +15,7 @@ export interface UpdateNeoTokenRequest {
   listed: boolean;
 
   /**
-   * description:	Any meta data for this token.
+   * The elements contract id to mint this token with.
    */
-  metadata?: { [key: string]: any };
+  contractId: string;
 }

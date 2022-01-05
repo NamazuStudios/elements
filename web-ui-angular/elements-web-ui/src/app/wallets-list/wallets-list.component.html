@@ -3,24 +3,32 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <mat-form-field>
-    <input matInput placeholder="Search wallets" #input>
-  </mat-form-field>
+  <section style="display: flex; justify-content: space-between; margin: 10px auto;">
+    <div>
+      <mat-form-field>
+        <input matInput placeholder="Search wallets" #input disabled="true">
+      </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="addWallet()">Create Wallet</button>
-  <button mat-raised-button color="primary" (click)="deleteSelectedWallets()" [disabled]="!hasSelection">Remove Selected
-    Wallets</button>
+      <button mat-raised-button color="primary" (click)="addWallet()">Create Wallet</button>
+      <button mat-raised-button color="primary" (click)="deleteSelectedWallets()" [disabled]="!hasSelection">Remove
+        Selected
+        Wallets</button>
+      <span *ngIf="currentUser?.level === 'SUPERUSER'">
+        <mat-button-toggle-group disabled="true" value="All">
+          <mat-button-toggle value="Yours">Yours</mat-button-toggle>
+          <mat-button-toggle value="Superusers">Superusers</mat-button-toggle>
+          <mat-button-toggle value="Users">Users</mat-button-toggle>
+          <mat-button-toggle value="All">All</mat-button-toggle>
+        </mat-button-toggle-group>
+      </span>
 
-  <!-- <mat-button-toggle-group>
-    <mat-button-toggle value="Yours">Yours</mat-button-toggle>
-    <mat-button-toggle value="Superusers">Superusers</mat-button-toggle>
-    <mat-button-toggle value="Users">Users</mat-button-toggle>
-    <mat-button-toggle value="All">All</mat-button-toggle>
-  </mat-button-toggle-group> -->
+    </div>
 
-  <!-- <span style="float:right">
-    Active Wallet: <a routerLink="/">Wallet</a>
-  </span> -->
+    <span style="align-self: center;">
+      Active Wallet: <a routerLink="/">Wallet</a>
+    </span>
+
+  </section>
 
   <mat-table class="data-table mat-elevation-z8" [dataSource]="dataSource">
 
@@ -37,24 +45,19 @@
       </mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="id">
-      <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
-      <mat-cell *matCellDef="let wallet"><span class="truncate-text-left">{{wallet.id}}</span></mat-cell>
-    </ng-container>
-
     <ng-container matColumnDef="owner">
       <mat-header-cell *matHeaderCellDef>Owner</mat-header-cell>
       <mat-cell *matCellDef="let wallet">{{wallet.user.name}}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="level">
-      <mat-header-cell *matHeaderCellDef>Level</mat-header-cell>
-      <mat-cell *matCellDef="let wallet">{{wallet.user.level}}</mat-cell>
-    </ng-container>
-
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
       <mat-cell *matCellDef="let wallet"><span class="truncate-text-right">{{wallet.displayName}}</span></mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="network">
+      <mat-header-cell *matHeaderCellDef>Network</mat-header-cell>
+      <mat-cell *matCellDef="let wallet">NEO</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="content">
@@ -65,10 +68,20 @@
       </mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="active">
+      <mat-header-cell *matHeaderCellDef>Active</mat-header-cell>
+      <mat-cell *matCellDef="let wallet">?</mat-cell>
+    </ng-container>
+
+    <ng-container matColumnDef="level">
+      <mat-header-cell *matHeaderCellDef>Level</mat-header-cell>
+      <mat-cell *matCellDef="let wallet">{{wallet.user.level}}</mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="content-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let wallet">
-        <button mat-raised-button color="primary" (click)="editWallet(wallet)">Contents</button>
+        <button mat-raised-button color="primary" (click)="editWallet(wallet)" disabled="true">Contents</button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="edit-action">
