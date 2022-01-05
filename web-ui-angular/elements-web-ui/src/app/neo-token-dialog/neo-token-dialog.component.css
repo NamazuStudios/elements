@@ -9,7 +9,6 @@
 
 .names {
   display: flex;
-  justify-content: space-between;
 }
 
 .item {
@@ -17,11 +16,19 @@
   padding: 10px;
 }
 
+.full {
+  width: 100%;
+}
+
+.one-third {
+  width: 32%;
+}
+
+.type {
+  margin: auto 4px;
+}
+
 .number {
   width: 75px;
   padding: 10px;
-}
-
-.mat-dialog-actions {
-  justify-content: space-between;
 }

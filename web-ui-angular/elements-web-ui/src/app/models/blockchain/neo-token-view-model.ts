@@ -1,7 +1,7 @@
-import { Token } from "./token";
+import { NeoToken } from "src/app/api/models/blockchain/neo-token";
+import { Token } from "src/app/api/models/blockchain/token";
 
-/* tslint:disable */
-export interface NeoToken {
+export class NeoTokenViewModel implements NeoToken {
   /**
    * The unique ID of the token itself.
    */
