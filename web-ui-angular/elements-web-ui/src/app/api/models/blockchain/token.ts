@@ -1,9 +1,11 @@
+import { Ownership } from "./ownership";
+
 /* tslint:disable */
 export interface Token {
   /**
-   * The unique ID of the token itself.
+   * The account address of the owner to be assigned when minting this token.
    */
-  id: string;
+  owner: string;
 
   /**
    * The name given to this token
@@ -16,29 +18,31 @@ export interface Token {
   description?: string;
 
   /**
-   * The type of this token. Valid options are "purchase" : ownership is transferred to the purchaser, "license" : the minter of the token retains ownership, but grants access to the purchaser, and "rent" : same as license, but access is revoked after a certain period of time (see rentDuration).
-   */
-  type: "purchase" | "license" | "rent";
-
-  /**
    * Any tags to assist in filtering/searching for this token.
    */
-  tags: string[];
+  tags: Array<string>;
 
   /**
-   * The royalty percentage to be processed on resale, if any.
+   * The maximum number of copies of this token that can be owned (by any number of accounts) at any one time.
    */
-  royaltyPercentage?: number;
+  totalSupply: number;
 
   /**
-   * The duration of the rental before it is automatically returned (in seconds). Only valid for rent type tokens
+   * The status of this token. Valid values are "public" : Can be viewed by everyone, "private" : Only the token or contract owner can view the token properties "preview" : If not the token or contract owner, the asset urls cannot be viewed.
    */
-  rentDuration?: number;
+  accessOption: "public" | "private" | "preview";
 
   /**
-   * The quantity of copies of this token that can be distributed.
+   * The URL pointed at any preview of the contents of this token.
    */
-  quantity?: number;
+  previewUrls: Array<string>;
+
+  /**
+   * The asset URLs of this token.
+   */
+  assetUrls: Array<string>;
+
+  ownership?: Ownership;
 
   /**
    * The transfer options of this token. Valid values are "none" : Cannot be transferred, "resale_only" : Can be resold, but not traded, "trades_only" : Can be traded, but not resold, and "resale_and_trades" : Can be either resold or traded.
@@ -46,17 +50,22 @@ export interface Token {
   transferOptions: "none" | "resale_only" | "trades_only" | "resale_and_trades";
 
   /**
-   * Indicates whether or not this can be viewed publicly. If false, only the previewUrl can be viewed publicly.
+   * Indicates whether or not the license is revocable by the owner
    */
-  publiclyAccessible: boolean;
+  revocable?: boolean;
 
   /**
-   * The URL pointed at any preview of the contents of this token.
+   * The expiration date of the license. Recorded in seconds since Unix epoch
    */
-  previewUrl?: string;
+  expiry?: number;
 
   /**
-   * The asset URLs of this token.
+   * If true, the licensee may pay a fee to extend the expiration date by the same difference between the original expiry and the time of minting.
    */
-  assetUrls: string[];
+  renewable?: boolean;
+
+  /**
+   * description:	Any meta data for this token.
+   */
+  metadata?: { [key: string]: any };
 }

@@ -26,13 +26,14 @@ export class WalletsListComponent implements OnInit, AfterViewInit {
   selection: SelectionModel<NeoWallet>;
   dataSource: NeoWalletsDataSource;
 
-  displayedColumns : Array<string> = [
+  displayedColumns: Array<string> = [
     "select",
-    "id",
     "owner",
     "name",
     "level",
+    "network",
     "content",
+    "active",
     "content-action",
     "edit-action",
     "remove-action",
@@ -159,7 +160,7 @@ export class WalletsListComponent implements OnInit, AfterViewInit {
     let neoWalletViewModel: NeoWalletViewModel = neoWallet;
 
     this.dialog.open(WalletDialogComponent, {
-      width: "500px",
+      width: "700px",
       data: {
         isNew: isNew,
         wallet: neoWalletViewModel,

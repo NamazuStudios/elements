@@ -60,6 +60,10 @@ import { ItemSelectDialogComponent } from './inventory-dialog/item-select-dialog
 import { ModifyInventoryComponent } from './inventory-dialog/modify-inventory/modify-inventory.component';
 import { WalletsListComponent } from './wallets-list/wallets-list.component';
 import { WalletDialogComponent } from './wallets-dialog/wallet-dialog.component';
+import { NeoTokensListComponent } from './neo-tokens-list/neo-tokens-list.component';
+import { NeoTokenDialogComponent } from './neo-token-dialog/neo-token-dialog.component';
+import { YesNoPipe } from './neo-tokens-list/yesNo.pipe';
+import { TokensMenuComponent } from './tokens-menu/tokens-menu.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -84,7 +88,8 @@ export function initialize(configService: ConfigService) {
     UserSelectDialogComponent,
     LeaderboardDialogComponent,
     InventoryDialogComponent,
-    ItemSelectDialogComponent,
+    ItemSelectDialogComponent
+    
   ],
   declarations: [
     AppComponent,
@@ -129,6 +134,10 @@ export function initialize(configService: ConfigService) {
     AddInventoryComponent,
     ItemSelectDialogComponent,
     ModifyInventoryComponent,
+    NeoTokensListComponent,
+    NeoTokenDialogComponent,
+    YesNoPipe,
+    TokensMenuComponent
   ],
   imports: [
     BrowserModule,

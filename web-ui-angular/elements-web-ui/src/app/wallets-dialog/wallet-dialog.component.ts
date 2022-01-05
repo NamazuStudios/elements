@@ -12,6 +12,7 @@ import { User } from "../api/models";
 import { CreateNeoWalletRequest } from "../api/models/blockchain/create-neo-wallet-request";
 import { UserSelectDialogComponent } from "../user-select-dialog/user-select-dialog.component";
 import { UpdateNeoWalletRequest } from "../api/models/blockchain/update-neo-wallet-request";
+import { Clipboard } from "@angular/cdk/clipboard";
 
 export interface TimeStrategyType {
   key: string;
@@ -30,6 +31,7 @@ export interface ScoreStrategyType {
 })
 export class WalletDialogComponent implements OnInit, AfterViewInit {
   private confirmNewPassword: string = "";
+  privateKeyDisplayed: boolean = false;
 
   // TODO: make sure "wallet exists" validator implemented
 
@@ -57,6 +59,7 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
     private neoWalletsService: NeoWalletsService,
     private usersService: UsersService,
     public dialog: MatDialog,
+    private clipboard: Clipboard,
     private snackBar: MatSnackBar
   ) {}
 
@@ -134,6 +137,17 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
     updateWalletData.walletId = this.data.wallet.id;
 
     return updateWalletData;
+  }
+
+  copyKeyToClipboard(data: string) {
+    this.clipboard.copy(data);
+    this.snackBar.open("Key has been copied to clipboard.", "Dismiss", {
+      duration: 3000,
+    });
+  }
+
+  showPrivateKey() {
+    this.privateKeyDisplayed = true;
   }
 
   close(saveChanges?: boolean) {

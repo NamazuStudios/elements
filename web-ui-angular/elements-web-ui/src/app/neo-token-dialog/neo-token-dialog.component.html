@@ -1,0 +1,166 @@
+<h1 mat-dialog-title>{{data.isNew ? "New" : "Edit"}} Definition</h1>
+
+<div mat-dialog-content>
+  <form [formGroup]="tokenForm">
+    <div class="form-container">
+
+      <mat-tab-group>
+        <mat-tab label="General">
+          <div style="margin: 16px 0px;">
+
+            <mat-form-field>
+              <input autofocus matInput placeholder="Active Wallet" name="activeWallet" disabled="true"
+                value="Wallet A">
+            </mat-form-field>
+
+            <mat-form-field appearance="fill">
+              <mat-label>Contract</mat-label>
+              <mat-select disabled="true" value="ContractA">
+                <mat-option value="ContractA">
+                  Contract A
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+
+            <mat-button-toggle-group name="accessOption" formControlName="accessOption">
+              <mat-button-toggle value="public" matTooltip="Can be viewed by everyone.">Public</mat-button-toggle>
+              <mat-button-toggle value="private"
+                matTooltip="Only the token or contract owner can view the token properties.">Private</mat-button-toggle>
+              <mat-button-toggle value="preview"
+                matTooltip="If not the token or contract owner, the asset urls cannot be viewed.">Preview
+              </mat-button-toggle>
+            </mat-button-toggle-group>
+
+
+            <mat-form-field class="full">
+              <input autofocus matInput placeholder="Name" name="name" formControlName="name"
+                matTooltip="The name given to this token.">
+              <!-- <mat-error *ngIf="itemForm.controls.name.hasError('required')">Name is required</mat-error>
+                  <mat-error *ngIf="itemForm.controls.name.hasError('pattern')">Name must consist only of alphanumeric characters</mat-error> -->
+            </mat-form-field>
+
+            <mat-form-field class="full">
+              <mat-label>Owner URL</mat-label>
+              <input autofocus matInput placeholder="Ex. http://www.owner.com/" name="owner" formControlName="owner"
+                matTooltip="The account address of the owner to be assigned when minting this token.">
+              <!-- <mat-error *ngIf="itemForm.controls.name.hasError('required')">Name is required</mat-error>
+                  <mat-error *ngIf="itemForm.controls.name.hasError('pattern')">Name must consist only of alphanumeric characters</mat-error> -->
+            </mat-form-field>
+
+            <mat-form-field class="full">
+              <input autofocus matInput placeholder="Description" name="description" formControlName="description"
+                matTooltip="The description of this token.">
+            </mat-form-field>
+
+            <mat-form-field style="width: 99%;">
+              <mat-chip-list #itemsTagList>
+                <mat-chip *ngFor="let tag of data.neoToken?.token?.tags" [selectable]="selectable"
+                  [removable]="removable" (removed)="remove(tag)">
+                  {{tag}}
+                  <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                </mat-chip>
+                <input formControlName="tags" name="tags" placeholder="Add tags..." [matChipInputFor]="itemsTagList"
+                  [matChipInputSeparatorKeyCodes]="separatorKeyCodes" (matChipInputTokenEnd)="addTag($event)"
+                  [matChipInputAddOnBlur]="addOnBlur"
+                  matTooltip="Any tags to assist in filtering/searching for this token.">
+              </mat-chip-list>
+            </mat-form-field>
+
+            <section>
+              <mat-form-field class="one-third">
+                <mat-select name="transferOptions" placeholder="Transfer Options" formControlName="transferOptions">
+                  <mat-option *ngFor="let transferOption of transferOptionType" [value]="transferOption.key"
+                    [matTooltip]="transferOption.toolTip" matTooltipPosition="left">
+                    {{transferOption.label}}
+                  </mat-option>
+                </mat-select>
+                <!-- <mat-error *ngIf="tokenForm.controls.timeStrategyType.hasError('required')">Transfer Options is required</mat-error> -->
+              </mat-form-field>
+            </section>
+
+            <section>
+              <mat-form-field class="one-third">
+                <input autofocus matInput placeholder="Total Supply" name="totalSupply" formControlName="totalSupply"
+                  type="number" min="0"
+                  matTooltip="The maximum number of copies of this token that can be owned (by any number of accounts) at any one time.">
+              </mat-form-field>
+            </section>
+
+            <section>
+              <mat-checkbox formControlName="renewable"
+                matTooltip="If true, the licensee may pay a fee to extend the expiration date by the same difference between the original expiry and the time of minting.">
+                Renewable</mat-checkbox>
+
+              <mat-checkbox formControlName="revocable"
+                matTooltip="Indicates whether or not the license is revocable by the owner">Revocable</mat-checkbox>
+
+              <mat-checkbox name="listed" formControlName="listed" matTooltip="Is this token listed.">Listed
+              </mat-checkbox>
+            </section>
+          </div>
+        </mat-tab>
+
+        <mat-tab label="Ownership">
+          ownership works
+        </mat-tab>
+
+        <mat-tab label="Previews">
+          <mat-card style="margin: 10px;">
+            <section>
+              <div class="metadata-row full" *ngFor="let previewUrl of data.neoToken.token.previewUrls; let i = index;">
+                <mat-form-field>
+                  <input #existingValue required matInput placeholder="Preview URL" name="value" value="{{previewUrl}}"
+                    (change)="editPreviewUrl(previewUrl, i)">
+                </mat-form-field>
+                <button type="button" mat-raised-button color="primary" (click)="removePreviewUrlAtIndex(i)">-</button>
+              </div>
+
+              <div class="metadata-row full">
+                <mat-form-field>
+                  <input matInput #newValue placeholder="Preview URL" name="newUrl"
+                    (keyup.enter)="addPreviewUrl(newValue.value); newValue.value = '';">
+                </mat-form-field>
+                <button class="add-button" type="button" mat-raised-button color="primary"
+                  (click)="addPreviewUrl(newValue.value); newValue.value = '';" [disabled]="!newValue.value">+</button>
+              </div>
+            </section>
+          </mat-card>
+        </mat-tab>
+
+        <mat-tab label="Assets">
+          <mat-card style="margin: 10px;">
+            <section>
+              <div class="metadata-row full" *ngFor="let assetUrl of data.neoToken.token.assetUrls; let i = index;">
+                <mat-form-field>
+                  <input #existingValue required matInput placeholder="Asset URL" name="value" value="{{assetUrl}}"
+                    (change)="editAssetUrl(assetUrl, i)">
+                </mat-form-field>
+                <button type="button" mat-raised-button color="primary" (click)="removeAssetUrlAtIndex(i)">-</button>
+              </div>
+
+              <div class="metadata-row full">
+                <mat-form-field>
+                  <input matInput #newAssetValue placeholder="Asset URL" name="newUrl"
+                    (keyup.enter)="addAssetUrl(newAssetValue.value); newAssetValue.value = '';">
+                </mat-form-field>
+                <button class="add-button" type="button" mat-raised-button color="primary"
+                  (click)="addAssetUrl(newAssetValue.value); newAssetValue.value = '';"
+                  [disabled]="!newAssetValue.value">+</button>
+              </div>
+            </section>
+          </mat-card>
+
+        </mat-tab>
+        <mat-tab label="Metadata">
+          Metadata works
+        </mat-tab>
+      </mat-tab-group>
+
+    </div>
+  </form>
+</div>
+
+<div mat-dialog-actions>
+  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!tokenForm.valid">OK</button>
+  <button type="button" mat-raised-button (click)="close(false)">Cancel</button>
+</div>
