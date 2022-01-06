@@ -2,7 +2,7 @@
 /**
  * Represents a request to create an Auth Scheme for an Application.
  */
-export interface UpdateAuthSchemeRequest {
+export interface CreateAuthSchemeRequest {
   /**
    * The JWT audience for the scheme. Must be unique.
    */
