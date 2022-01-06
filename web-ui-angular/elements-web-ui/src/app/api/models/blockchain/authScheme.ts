@@ -14,7 +14,7 @@ export interface AuthScheme {
    * A base-64 encoded string representing an x509 encoded public key.
 pattern: ^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$
    */
-  pubKey: string;
+publicKey: string;
 
   /**
    * The digital signature matching the public key format.

@@ -38,6 +38,7 @@
       <a mat-button routerLink="/leaderboards"
         *ngIf="(this.authenticationService.isLoggedIn() | async)">Leaderboards</a>
       <a mat-button routerLink="/tokens" *ngIf="(this.authenticationService.isLoggedIn() | async)">Tokens</a>
+      <a mat-button routerLink="/auth-schemes" *ngIf="(this.authenticationService.isLoggedIn() | async)">Auth</a>
 
       <span class="fill-remaining-space"></span>
 

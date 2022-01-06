@@ -96,7 +96,7 @@ class AuthSchemesService extends BaseService {
 
   /**
    * Updates a Auth Schemes with the specified AuthScheme id.
-   * @param params The `AuthSchemesService.UpdateTokenParams` containing the following parameters:
+   * @param params The `AuthSchemesService.UpdateAuthSchemeParams` containing the following parameters:
    *
    * - `id`:
    *
@@ -133,7 +133,7 @@ class AuthSchemesService extends BaseService {
 
   /**
    * Updates a Auth Scheme with the specified AuthScheme id.
-   * @param params The `AuthSchemesService.UpdateTokenParams` containing the following parameters:
+   * @param params The `AuthSchemesService.UpdateAuthSchemeParams` containing the following parameters:
    *
    * - `id`:
    *
@@ -181,7 +181,7 @@ class AuthSchemesService extends BaseService {
    * Deletes a Auth Scheme with the specified id.
    * @param authSchemeId undefined
    */
-  deleteToken(authSchemeId: string): Observable<void> {
+  deleteAuthScheme(authSchemeId: string): Observable<void> {
     return this.deleteAuthSchemeResponse(authSchemeId).pipe(
       __map((_r) => _r.body)
     );
@@ -223,7 +223,7 @@ class AuthSchemesService extends BaseService {
    * @param authSchemeId undefined
    * @return successful operation
    */
-  getToken(authSchemeId: string): Observable<AuthScheme> {
+  getAuthScheme(authSchemeId: string): Observable<AuthScheme> {
     return this.getAuthSchemeResponse(authSchemeId).pipe(
       __map((_r) => _r.body)
     );
@@ -243,7 +243,7 @@ class AuthSchemesService extends BaseService {
     __body = body;
     let req = new HttpRequest<any>(
       "POST",
-      this.rootUrl + `/blockchain/neo/token`,
+      this.rootUrl + `/auth_scheme`,
       __body,
       {
         headers: __headers,
@@ -272,7 +272,7 @@ class AuthSchemesService extends BaseService {
 
 module AuthSchemesService {
   /**
-   * Parameters for updateToken
+   * Parameters for updateAuthScheme
    */
   export interface UpdateAuthSchemeParams {
     id: string;
