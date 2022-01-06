@@ -8,12 +8,15 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.UnsupportedCharsetException;
 import java.security.MessageDigest;
 import java.security.SecureRandom;
 import java.util.HashMap;
 import java.util.Map;
 
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.setOnInsert;
 
 /**
  * Created by patricktwohig on 6/25/17.
@@ -70,15 +73,13 @@ public class MongoPasswordUtils {
      */
     public UpdateBuilder scramblePassword(final UpdateBuilder builder) {
 
-        final var secureRandom = new SecureRandom();
-
         byte[] tmp;
 
         tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
+        generator.nextBytes(tmp);
 
         tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
+        generator.nextBytes(tmp);
 
         final MessageDigest digest = getMessageDigestProvider().get();
 
@@ -107,22 +108,31 @@ public class MongoPasswordUtils {
      */
     public Map<String, Object> scramblePasswordOnInsert(final Map<String, Object> insertMap) {
 
-        final SecureRandom secureRandom = new SecureRandom();
-
         byte[] tmp;
 
         tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
+        generator.nextBytes(tmp);
         insertMap.put("salt", tmp);
 
         tmp = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
+        generator.nextBytes(tmp);
         insertMap.put("passwordHash", tmp);
 
         final MessageDigest digest = getMessageDigestProvider().get();
         insertMap.put("hashAlgorithm", digest.getAlgorithm());
 
         return insertMap;
+    }
+
+
+    /**
+     * Scrambles both the salt and the password.
+     *
+     * @param builder the {@link UpdateBuilder}
+     */
+    public UpdateBuilder scramblePasswordOnInsert(final UpdateBuilder builder) {
+        final var fields = scramblePasswordOnInsert();
+        return builder.with(setOnInsert(fields));
     }
 
     /**
@@ -133,16 +143,14 @@ public class MongoPasswordUtils {
      */
     public void scramblePassword(final MongoUser mongoUser) {
 
-        final SecureRandom secureRandom = new SecureRandom();
-
         byte[] tmp;
 
         tmp = new byte[MongoPasswordUtils.SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
+        generator.nextBytes(tmp);
         mongoUser.setSalt(tmp);
 
         tmp = new byte[MongoPasswordUtils.SALT_LENGTH];
-        secureRandom.nextBytes(tmp);
+        generator.nextBytes(tmp);
         mongoUser.setPasswordHash(tmp);
 
         final MessageDigest digest = newPasswordMessageDigest();
@@ -161,6 +169,14 @@ public class MongoPasswordUtils {
 
     public String getPasswordEncoding() {
         return passwordEncoding;
+    }
+
+    public Charset getPasswordEncodingCharset() {
+        try {
+            return Charset.forName(getPasswordEncoding());
+        } catch (UnsupportedCharsetException ex) {
+            throw new InternalException(ex);
+        }
     }
 
     @Inject

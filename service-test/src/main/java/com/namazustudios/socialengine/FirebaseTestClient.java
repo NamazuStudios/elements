@@ -22,7 +22,7 @@ public class FirebaseTestClient {
         final var req = new FirebaseEmailPasswordSignUpRequest();
         final var random = ThreadLocalRandom.current();
 
-        final var username = format("testy.mctesterson.%s@namazustudios.com", randomUUID());
+        final var username = format("tester.%s@namazustudios.com", randomUUID());
 
         final var password = new StringBuilder();
         for (int i = 0; i < 4; ++i) password.append((char)random.nextInt('a', 'z'));

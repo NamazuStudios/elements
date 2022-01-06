@@ -10,7 +10,6 @@ echo ""
 # Converts the dot-environment variable syntax to the ENVIRONMENT_VARIABLE convention. This honors only
 # those environment variables which start with com.namazustudios
 
-# Default values for the environment variables.
 # shellcheck disable=SC2034
 
 export com_namazustudios_socialengine_dollar='$'

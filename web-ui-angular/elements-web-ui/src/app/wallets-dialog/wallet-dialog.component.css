@@ -1,22 +1,27 @@
 .form-container {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .form-container > * {
-    width: 100%;
-  }
+  display: flex;
+  flex-direction: column;
+}
 
-  .names {
-    display: flex;
-  }
+.form-container > * {
+  width: 100%;
+}
 
-  .item {
-    width: 100%;
-    padding: 10px;
-  }
+.names {
+  display: flex;
+  justify-content: space-between;
+}
 
-  .number {
-    width: 75px;
-    padding: 10px;
-  }
+.item {
+  width: 100%;
+  padding: 10px;
+}
+
+.number {
+  width: 75px;
+  padding: 10px;
+}
+
+.mat-dialog-actions {
+  justify-content: space-between;
+}

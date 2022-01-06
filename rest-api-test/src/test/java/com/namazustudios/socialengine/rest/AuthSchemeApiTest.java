@@ -1,10 +1,11 @@
 package com.namazustudios.socialengine.rest;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.auth.*;
-import com.namazustudios.socialengine.rt.exception.BadRequestException;
+import com.namazustudios.socialengine.rest.model.AuthSchemePagination;
+import com.namazustudios.socialengine.service.auth.CryptoKeyUtility;
+import com.namazustudios.socialengine.service.auth.StandardCryptoKeyUtility;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -13,16 +14,26 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
-import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Stream;
 
-import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
-import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.exception.ErrorCode.FORBIDDEN;
+import static com.namazustudios.socialengine.model.auth.AuthSchemeAlgorithm.ECDSA_256;
+import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
-import static com.namazustudios.socialengine.security.AuthorizationHeader.AUTH_HEADER;
+import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 public class AuthSchemeApiTest {
+
+    private static final String TAG_SUPPLIED = "supplied";
+
+    private static final String TAG_GENERATED = "generated";
+
+    private static final List<String> TEST_ALLOWED_ISSUERS = List.of("issuer0", "issuer1");
 
     @Factory
     public Object[] getTests() {
@@ -40,79 +51,458 @@ public class AuthSchemeApiTest {
     private Client client;
 
     @Inject
-    private ClientContext clientContext;
+    private ClientContext user;
 
-    CreateAuthSchemeResponse createAuthSchemeResponse;
+    @Inject
+    private ClientContext superUser;
 
-    UpdateAuthSchemeResponse updateAuthSchemeResponse;
+    private CryptoKeyUtility cryptoKeyUtility;
+
+    @BeforeClass
+    public void setupSuperuser() {
+
+        user.createUser("luser")
+            .createSession();
+
+        superUser.createSuperuser("root")
+                 .createSession();
+
+    }
+
+    private final Map<String, AuthScheme> intermediateAuthSchemes = new ConcurrentHashMap<>();
+
+    private void updateIntermediate(final AuthScheme authScheme) {
+        intermediateAuthSchemes.put(authScheme.getId(), authScheme);
+    }
+
+    @BeforeClass
+    public void setup() throws Exception {
+        cryptoKeyUtility = new StandardCryptoKeyUtility();
+    }
 
     @DataProvider
-    public Object[][] getAuthHeader() {
-        return new Object[][] {
-                new Object[] { AUTH_HEADER, "%s" },
-                new Object[] { AUTH_HEADER, "Bearer %s" },
-                new Object[] { SESSION_SECRET, "%s" },
-                new Object[] { SOCIALENGINE_SESSION_SECRET, "%s" }
-        };
+    private Object[][] getAlgorithms() {
+        return Stream.of(AuthSchemeAlgorithm.values())
+            .map(algo -> new Object[]{algo})
+            .toArray(Object[][]::new);
     }
 
-    @Test()
-    public void createAuthScheme() {
+    @Test(dataProvider = "getAlgorithms")
+    public void createAuthSchemeGeneratingPublicKey(final AuthSchemeAlgorithm algorithm) {
+
         final var createRequest = new CreateAuthSchemeRequest();
 
-        createRequest.setAudience("test_aud");
-        createRequest.setUserLevel("SUPERUSER");
-        createRequest.setPubKey("test_key");
+        createRequest.setAlgorithm(algorithm);
+        createRequest.setUserLevel(SUPERUSER);
+        createRequest.setAudience(format("aud_gen_%d", algorithm.ordinal()));
+        createRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+        createRequest.setTags(List.of(algorithm.toString(), TAG_GENERATED));
 
-        createAuthSchemeResponse = client
-                .target(apiRoot + "/auth_scheme")
-                .request()
-                .post(Entity.entity(createRequest, APPLICATION_JSON))
-                .readEntity(CreateAuthSchemeResponse.class);
+        final var response = client
+            .target(apiRoot + "/auth_scheme")
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .post(Entity.entity(createRequest, APPLICATION_JSON))
+            .readEntity(CreateAuthSchemeResponse.class);
 
-        assertNotNull(createAuthSchemeResponse);
-        assertNotNull(createAuthSchemeResponse.publicKey);
+        assertNotNull(response);
+        assertNotNull(response.getPublicKey());
+        assertNotNull(response.getPrivateKey());
+        cryptoKeyUtility.getPublicKey(algorithm, response.getPublicKey());
+        cryptoKeyUtility.getPrivateKey(algorithm, response.getPrivateKey());
+
+        final var scheme = response.getScheme();
+        assertEquals(scheme.getAlgorithm(), algorithm);
+        assertEquals(scheme.getPublicKey(), response.getPublicKey());
+        assertEquals(scheme.getTags(), createRequest.getTags());
+        assertEquals(scheme.getAllowedIssuers(), createRequest.getAllowedIssuers());
+
+        updateIntermediate(scheme);
+
     }
 
-    @Test(dependsOnMethods = "createAuthScheme")
-    public void updateAuthScheme() {
-        var scheme = createAuthSchemeResponse.getScheme();
-        var objectMapper = new ObjectMapper();
+    @Test(dataProvider = "getAlgorithms")
+    public void createAuthSchemeSupplyingPublicKey(final AuthSchemeAlgorithm algorithm) {
 
-        AuthScheme authScheme;
-        try {
-            authScheme = objectMapper.readValue(scheme, AuthScheme.class);
-        } catch (JsonProcessingException e) {
-            throw new BadRequestException(e);
-        }
+        final var createRequest = new CreateAuthSchemeRequest();
+        final var keyPair = cryptoKeyUtility.generateKeyPair(algorithm);
 
-        var allowedIssuers = new ArrayList<String>();
+        createRequest.setAlgorithm(algorithm);
+        createRequest.setUserLevel(SUPERUSER);
+        createRequest.setAudience(format("aud_supplied_%d", algorithm.ordinal()));
+        createRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+        createRequest.setTags(List.of(algorithm.toString(), TAG_SUPPLIED));
+        createRequest.setPublicKey(keyPair.getPublicKeyBase64());
+
+        final var response = client
+            .target(apiRoot + "/auth_scheme")
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .post(Entity.entity(createRequest, APPLICATION_JSON))
+            .readEntity(CreateAuthSchemeResponse.class);
+
+        assertNotNull(response);
+        assertNull(response.getPrivateKey());
+        assertNotNull(response.getPublicKey());
+        cryptoKeyUtility.getPublicKey(algorithm, response.getPublicKey());
+
+        final var scheme = response.getScheme();
+        assertEquals(scheme.getAlgorithm(), algorithm);
+        assertEquals(scheme.getPublicKey(), response.getPublicKey());
+        assertEquals(scheme.getTags(), createRequest.getTags());
+        assertEquals(scheme.getAllowedIssuers(), createRequest.getAllowedIssuers());
+
+        updateIntermediate(scheme);
+
+    }
+
+    @Test
+    public void testUserIsForbiddenCreate() {
+
+        final var createRequest = new CreateAuthSchemeRequest();
+        final var keyPair = cryptoKeyUtility.generateKeyPair(ECDSA_256);
+
+        createRequest.setAlgorithm(ECDSA_256);
+        createRequest.setUserLevel(SUPERUSER);
+        createRequest.setAudience(format("aud_supplied_%d", ECDSA_256.ordinal()));
+        createRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+        createRequest.setTags(List.of(ECDSA_256.toString(), TAG_GENERATED));
+        createRequest.setPublicKey(keyPair.getPublicKeyBase64());
+
+        final var response = client
+            .target(apiRoot + "/auth_scheme")
+            .request()
+            .header("Authorization", format("Bearer %s", user.getSessionSecret()))
+            .post(Entity.entity(createRequest, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 403);
+
+        final var error = response.readEntity(ErrorResponse.class);
+        assertEquals(error.getCode(), FORBIDDEN.toString());
+
+    }
+
+    @Test
+    public void testAnonymousUserIsForbiddenCreate() {
+
+        final var createRequest = new CreateAuthSchemeRequest();
+        final var keyPair = cryptoKeyUtility.generateKeyPair(ECDSA_256);
+
+        createRequest.setAlgorithm(ECDSA_256);
+        createRequest.setUserLevel(SUPERUSER);
+        createRequest.setAudience(format("aud_supplied_%d", ECDSA_256.ordinal()));
+        createRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+        createRequest.setTags(List.of(ECDSA_256.toString(), TAG_GENERATED));
+        createRequest.setPublicKey(keyPair.getPublicKeyBase64());
+
+        final var response = client
+            .target(apiRoot + "/auth_scheme")
+            .request()
+            .post(Entity.entity(createRequest, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 403);
+
+        final var error = response.readEntity(ErrorResponse.class);
+        assertEquals(error.getCode(), FORBIDDEN.toString());
+
+    }
+
+    @DataProvider
+    public Object[][] getIntermediatesGenerated() {
+        return intermediateAuthSchemes
+            .entrySet()
+            .stream()
+            .filter(e -> e.getValue().getTags().contains(TAG_GENERATED))
+            .map(e -> new Object[]{e.getKey(), e.getValue()})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getIntermediatesGenerated", dependsOnMethods = "createAuthSchemeGeneratingPublicKey")
+    public void updateAuthSchemeGeneratingPublicKey(final String authSchemeId, final AuthScheme authScheme) {
 
         final var updateRequest = new UpdateAuthSchemeRequest();
-        updateRequest.setAuthSchemeId(authScheme.id);
-        updateRequest.setAudience("test_aud");
-        updateRequest.setPubKey("test_key");
+
+        updateRequest.setRegenerate(true);
+        updateRequest.setUserLevel(SUPERUSER);
+        updateRequest.setTags(authScheme.getTags());
+        updateRequest.setAudience(authScheme.getAudience());
+        updateRequest.setAlgorithm(authScheme.getAlgorithm());
+        updateRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .put(Entity.entity(updateRequest, APPLICATION_JSON))
+            .readEntity(UpdateAuthSchemeResponse.class);
+
+        assertNotNull(response);
+        assertNotNull(response.getPublicKey());
+        assertNotNull(response.getPrivateKey());
+        assertNotEquals(response.getPublicKey(), authScheme.getPublicKey());
+
+        cryptoKeyUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
+        cryptoKeyUtility.getPrivateKey(authScheme.getAlgorithm(), response.getPrivateKey());
+
+        final var scheme = response.getScheme();
+        assertEquals(scheme.getAlgorithm(), updateRequest.getAlgorithm());
+        assertEquals(scheme.getPublicKey(), response.getPublicKey());
+        assertEquals(scheme.getTags(), updateRequest.getTags());
+        assertEquals(scheme.getAllowedIssuers(), updateRequest.getAllowedIssuers());
+
+        updateIntermediate(scheme);
+
+    }
+
+    @DataProvider
+    public Object[][] getIntermediatesSupplied() {
+        return intermediateAuthSchemes
+            .entrySet()
+            .stream()
+            .filter(e -> e.getValue().getTags().contains(TAG_SUPPLIED))
+            .map(e -> new Object[]{e.getKey(), e.getValue()})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getIntermediatesSupplied", dependsOnMethods = "createAuthSchemeSupplyingPublicKey")
+    public void updateAuthSchemeSupplyingPublicKey(final String authSchemeId, final AuthScheme authScheme) {
+
+        final var keyPair = cryptoKeyUtility.generateKeyPair(authScheme.getAlgorithm());
+
+        final var updateRequest = new UpdateAuthSchemeRequest();
         updateRequest.setRegenerate(false);
-        updateRequest.setUserLevel("SUPERUSER");
-        updateRequest.setAllowedIssuers(allowedIssuers);
+        updateRequest.setUserLevel(SUPERUSER);
+        updateRequest.setTags(authScheme.getTags());
+        updateRequest.setAudience(authScheme.getAudience());
+        updateRequest.setAlgorithm(authScheme.getAlgorithm());
+        updateRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+        updateRequest.setPublicKey(keyPair.getPublicKeyBase64());
 
-        updateAuthSchemeResponse = client
-                .target(apiRoot + "/auth_scheme")
-                .request()
-                .put(Entity.entity(updateRequest, APPLICATION_JSON))
-                .readEntity(UpdateAuthSchemeResponse.class);
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .put(Entity.entity(updateRequest, APPLICATION_JSON))
+            .readEntity(UpdateAuthSchemeResponse.class);
 
-        assertNotNull(updateAuthSchemeResponse);
+        assertNotNull(response);
+        assertNull(response.getPrivateKey());
+        assertNotNull(response.getPublicKey());
+        cryptoKeyUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
+
+        final var scheme = response.getScheme();
+        assertEquals(scheme.getAlgorithm(), updateRequest.getAlgorithm());
+        assertEquals(scheme.getPublicKey(), response.getPublicKey());
+        assertEquals(scheme.getTags(), updateRequest.getTags());
+        assertEquals(scheme.getAllowedIssuers(), updateRequest.getAllowedIssuers());
+
+        updateIntermediate(scheme);
+
     }
 
-    @Test(dependsOnMethods = "createAuthScheme")
-    public void getAuthSchemes() {
-        var authSchemes = client
-                .target(apiRoot + "/auth_scheme")
-                .request()
-                .get()
-                .readEntity(Pagination.class);
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"createAuthSchemeGeneratingPublicKey", "createAuthSchemeSupplyingPublicKey"})
+    public void testUpdateWithNoKeyChange(final String authSchemeId, final AuthScheme authScheme) {
 
-        assertNotNull(authSchemes);
+        final var updateRequest = new UpdateAuthSchemeRequest();
+        updateRequest.setRegenerate(false);
+        updateRequest.setUserLevel(SUPERUSER);
+        updateRequest.setTags(authScheme.getTags());
+        updateRequest.setAudience(authScheme.getAudience());
+        updateRequest.setAlgorithm(authScheme.getAlgorithm());
+        updateRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .put(Entity.entity(updateRequest, APPLICATION_JSON))
+            .readEntity(UpdateAuthSchemeResponse.class);
+
+        assertNotNull(response);
+        assertNull(response.getPrivateKey());
+        assertNotNull(response.getPublicKey());
+        cryptoKeyUtility.getPublicKey(authScheme.getAlgorithm(), response.getPublicKey());
+
+        final var scheme = response.getScheme();
+        assertEquals(scheme.getAlgorithm(), updateRequest.getAlgorithm());
+        assertEquals(scheme.getPublicKey(), response.getPublicKey());
+        assertEquals(scheme.getTags(), updateRequest.getTags());
+        assertEquals(scheme.getAllowedIssuers(), updateRequest.getAllowedIssuers());
+
+        updateIntermediate(scheme);
+
     }
+
+    @DataProvider
+    public Object[][] getIntermediates() {
+        return intermediateAuthSchemes
+                .entrySet()
+                .stream()
+                .map(e -> new Object[]{e.getKey(), e.getValue()})
+                .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"createAuthSchemeGeneratingPublicKey", "createAuthSchemeSupplyingPublicKey"})
+    public void testUserIsForbiddenUpdate(final String authSchemeId, final AuthScheme authScheme) {
+
+        final var updateRequest = new UpdateAuthSchemeRequest();
+
+        updateRequest.setRegenerate(true);
+        updateRequest.setUserLevel(SUPERUSER);
+        updateRequest.setTags(authScheme.getTags());
+        updateRequest.setAudience(authScheme.getAudience());
+        updateRequest.setAlgorithm(authScheme.getAlgorithm());
+        updateRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", user.getSessionSecret()))
+            .put(Entity.entity(updateRequest, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 403);
+
+        final var error = response.readEntity(ErrorResponse.class);
+        assertEquals(error.getCode(), FORBIDDEN.toString());
+
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"createAuthSchemeGeneratingPublicKey", "createAuthSchemeSupplyingPublicKey"})
+    public void testAnonymousUserIsForbiddenUpdate(final String authSchemeId, final AuthScheme authScheme) {
+
+        final var updateRequest = new UpdateAuthSchemeRequest();
+
+        updateRequest.setRegenerate(true);
+        updateRequest.setUserLevel(SUPERUSER);
+        updateRequest.setTags(authScheme.getTags());
+        updateRequest.setAudience(authScheme.getAudience());
+        updateRequest.setAlgorithm(authScheme.getAlgorithm());
+        updateRequest.setAllowedIssuers(TEST_ALLOWED_ISSUERS);
+
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .put(Entity.entity(updateRequest, APPLICATION_JSON));
+
+        assertEquals(response.getStatus(), 403);
+
+        final var error = response.readEntity(ErrorResponse.class);
+        assertEquals(error.getCode(), FORBIDDEN.toString());
+
+    }
+
+    @Test(dependsOnMethods = {
+        "testUpdateWithNoKeyChange",
+        "updateAuthSchemeSupplyingPublicKey",
+        "updateAuthSchemeGeneratingPublicKey"
+    })
+    public void getAllAuthSchemes() {
+
+        final var response = client
+            .target(apiRoot + "/auth_scheme?offset=0&count=100")
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .get()
+            .readEntity(AuthSchemePagination.class);
+
+        assertTrue(response.getTotal() > 0);
+
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {
+              "testUpdateWithNoKeyChange",
+              "updateAuthSchemeSupplyingPublicKey",
+              "updateAuthSchemeGeneratingPublicKey"
+    })
+    public void getSingleAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
+
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .get()
+            .readEntity(AuthScheme.class);
+
+        assertEquals(response, authScheme);
+
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"getAllAuthSchemes", "getSingleAuthScheme"})
+    public void testUserIsForbiddenToDeleteAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
+
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", user.getSessionSecret()))
+            .delete();
+
+        assertEquals(response.getStatus(), 403);
+
+        final var error = response.readEntity(ErrorResponse.class);
+        assertEquals(error.getCode(), FORBIDDEN.toString());
+
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"getAllAuthSchemes", "getSingleAuthScheme"})
+    public void testAnonymousUserIsForbiddenToDeleteAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
+        final var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .delete();
+
+        assertEquals(response.getStatus(), 403);
+
+        final var error = response.readEntity(ErrorResponse.class);
+        assertEquals(error.getCode(), FORBIDDEN.toString());
+
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"getAllAuthSchemes", "getSingleAuthScheme"})
+    public void deleteAuthScheme(final String authSchemeId, final AuthScheme authScheme) {
+
+        var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .delete();
+
+        assertEquals(response.getStatus(), 204);
+
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"deleteAuthScheme"})
+    public void doubleDeleteAuthSchemeReturns404(final String authSchemeId, final AuthScheme authScheme) {
+
+        var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .delete();
+
+        assertEquals(response.getStatus(), 404);
+
+    }
+
+    @Test(dataProvider = "getIntermediates",
+          dependsOnMethods = {"deleteAuthScheme"})
+    public void getPostDeleteReturns404(final String authSchemeId, final AuthScheme authScheme) {
+
+        var response = client
+            .target(format("%s/auth_scheme/%s", apiRoot, authSchemeId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUser.getSessionSecret()))
+            .get();
+
+        assertEquals(response.getStatus(), 404);
+
+    }
+
 }

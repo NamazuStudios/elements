@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { ItemsListComponent } from './items-list.component';
 import {ItemsService} from "../api/services/items.service";
@@ -14,7 +14,7 @@ describe('ItemsListComponent', () => {
   let component: ItemsListComponent;
   let fixture: ComponentFixture<ItemsListComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ ItemsListComponent ],
       imports: [HttpClientTestingModule, RouterTestingModule, MatDialogModule, MatPaginatorModule, BrowserAnimationsModule],

@@ -9,7 +9,12 @@ export interface CreateNeoTokenRequest {
   token: Token;
 
   /**
-   * description:	Any meta data for this token.
+   * Is this token listed.
    */
-  metadata?: { [key: string]: any };
+  listed: boolean;
+
+  /**
+   * The elements contract id to mint this token with.
+   */
+  contractId: string;
 }

@@ -9,11 +9,12 @@ export interface NeoToken {
 
   token?: Token;
 
-  metadata?: { [key: string]: any };
+  /**
+   * The elements contract id to mint this token with.
+   */
+  contractId: string;
 
-  contract?: string;
+  listed: boolean;
 
-  listed?: boolean;
-
-  minted?: boolean;
+  minted: boolean;
 }

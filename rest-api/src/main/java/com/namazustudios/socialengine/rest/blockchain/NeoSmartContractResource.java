@@ -1,7 +1,9 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.NeoSmartContract;
+import com.namazustudios.socialengine.model.blockchain.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.PatchNeoSmartContractRequest;
 import com.namazustudios.socialengine.service.blockchain.NeoSmartContractService;
 import io.swagger.annotations.Api;
@@ -52,6 +54,15 @@ public class NeoSmartContractResource {
             notes = "Patches a Neo Smart Contract entry, associated with the specified deployed script hash.")
     public NeoSmartContract patchContract(final PatchNeoSmartContractRequest request) {
         return getNeoSmartContractService().patchNeoSmartContract(request);
+    }
+
+    @POST
+    @Path("mint")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Mints a token using the specified contract.",
+            notes = "Mints the specified token using the specified contract id.")
+    public NeoToken mintToken(final MintTokenRequest request) {
+        return getNeoSmartContractService().mintToken(request);
     }
 
     @DELETE

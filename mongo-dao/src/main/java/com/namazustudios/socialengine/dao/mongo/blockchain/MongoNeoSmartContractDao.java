@@ -59,7 +59,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
         var mongoContract = getDatastore().find(MongoNeoSmartContract.class)
                 .filter(Filters.or(
                                 Filters.eq("_id", objectId),
-                                Filters.eq("name", contractIdOrName)
+                                Filters.eq("displayName", contractIdOrName)
                         )
                 ).first();
 
@@ -80,8 +80,9 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
         query.filter(eq("scriptHash", scriptHash));
 
         final var builder = new UpdateBuilder().with(
-                set("displayname", patchNeoSmartContractRequest.getDisplayName()),
-                set("scriptHash", scriptHash)
+                set("displayName", patchNeoSmartContractRequest.getDisplayName()),
+                set("scriptHash", scriptHash),
+                set("blockchain", patchNeoSmartContractRequest.getBlockchain())
         );
 
         var metadata = patchNeoSmartContractRequest.getMetadata();

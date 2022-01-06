@@ -1,43 +1,59 @@
-<h1 mat-dialog-title>{{data.isNew ? "New" : "Edit"}} Wallet</h1>
+<div style="display: flex; justify-content: space-between;">
+  <h1 mat-dialog-title>{{data.isNew ? "New" : "Edit"}} Wallet</h1>
+  <mat-checkbox disabled="true">Set Active</mat-checkbox>
+</div>
 
 <div mat-dialog-content>
   <form [formGroup]="walletForm">
     <div class="form-container">
 
       <div class="names">
-        <mat-form-field class="item">
-          <input matInput placeholder="Wallet Name" name="displayName" formControlName="displayName">
+        <mat-form-field>
+          <mat-label>Wallet Name</mat-label>
+          <input matInput placeholder="Ex. Name" name="displayName" formControlName="displayName">
           <!-- <mat-error *ngIf="walletForm.controls.name.hasError('required')">Wallet name is required</mat-error>
           <mat-error *ngIf="walletForm.controls.name.hasError('unique') && data.isNew">Wallet name must unique
           </mat-error> -->
+        </mat-form-field>
+
+        <mat-form-field appearance="fill">
+          <mat-label>Network</mat-label>
+          <mat-select disabled="true" value="NEO">
+            <mat-option value="NEO">
+              NEO
+            </mat-option>
+          </mat-select>
         </mat-form-field>
       </div>
 
       <div class="names">
         <mat-form-field class="item">
-          <input matInput placeholder="Wallet Owner Username" name="walletUserName" formControlName="walletUserName"
-            #owner>
+          <mat-label>Owner Username</mat-label>
+          <input matInput placeholder="Owner Username" name="walletUserName" formControlName="walletUserName" #owner>
           <!-- <mat-error *ngIf="walletForm.controls.title.hasError('required')">Owner username is required
         </mat-error> -->
         </mat-form-field>
 
         <div mat-dialog-actions>
-          <button type="button" (click)="showSelectUserDialog()" mat-raised-button>Select User</button>
+          <button type="button" (click)="showSelectUserDialog()" mat-raised-button [disabled]="!data.isNew">Select
+            User</button>
         </div>
 
       </div>
 
       <div class="names">
         <mat-form-field class="item">
-          <input matInput placeholder="Wallet Password (optional)" name="walletPassword"
-            formControlName="walletPassword" type="password" autocomplete="new-password">
+          <mat-label>{{!data.isNew ? "Current Wallet Password" : "Wallet Password"}}</mat-label>
+          <input matInput placeholder="Ex. Password1234" name="walletPassword" formControlName="walletPassword"
+            type="password" autocomplete="new-password">
           <!-- <mat-error *ngIf="walletForm.controls.password.hasError('required')">Password is required</mat-error> -->
         </mat-form-field>
       </div>
 
       <div class="names" *ngIf="data.isNew">
         <mat-form-field class="item">
-          <input matInput placeholder="Wallet Password Confirmation (optional)" name="walletConfirmPassword"
+          <mat-label>Confirm Wallet Password</mat-label>
+          <input matInput placeholder="Ex. Password1234" name="walletConfirmPassword"
             formControlName="walletConfirmPassword" type="password" autocomplete="new-password">
           <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('required')">Password confirmation is required</mat-error> -->
           <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('passwordMatch')">Password confirmation does not match</mat-error> -->
@@ -46,18 +62,46 @@
 
       <div class="names" *ngIf="!data.isNew">
         <mat-form-field class="item">
-          <input matInput placeholder="NEW Wallet Password (optional)" name="newWalletPassword"
-            formControlName="newWalletPassword" type="password" autocomplete="new-password">
+          <mat-label>New Wallet Password</mat-label>
+          <input matInput placeholder="Ex. Password1234" name="newWalletPassword" formControlName="newWalletPassword"
+            type="password" autocomplete="new-password">
           <!-- <mat-error *ngIf="walletForm.controls.password.hasError('required')">Password is required</mat-error> -->
         </mat-form-field>
       </div>
 
       <div class="names" *ngIf="!data.isNew">
         <mat-form-field class="item">
-          <input matInput placeholder="NEW Wallet Password Confirmation (optional)" name="walletConfirmPassword"
+          <mat-label>Confirm New Wallet Password</mat-label>
+          <input matInput placeholder="Ex. Password1234" name="walletConfirmPassword"
             formControlName="walletConfirmPassword" type="password" autocomplete="new-password">
           <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('required')">Password confirmation is required</mat-error> -->
           <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('passwordMatch')">Password confirmation does not match</mat-error> -->
+        </mat-form-field>
+      </div>
+
+      <div class="names" *ngIf="!data.isNew">
+        <mat-form-field class="item">
+          <mat-label>Public Key</mat-label>
+          <div style="display: flex; justify-content: space-between;">
+            <input matInput name="publicKey" [value]="data?.wallet.wallet?.accounts[0]?.address" disabled="true">
+            <button style="transform: scale(0.85);"
+              (click)="copyKeyToClipboard(data?.wallet.wallet?.accounts[0]?.address)" mat-stroked-button>Copy</button>
+          </div>
+        </mat-form-field>
+      </div>
+
+      <div class="names" *ngIf="!data.isNew">
+        <mat-form-field class="item">
+          <mat-label>Private Key</mat-label>
+          <div style="display: flex; justify-content: space-between;">
+            <input matInput name="privateKey"
+              [value]="privateKeyDisplayed ? data?.wallet.wallet?.accounts[0]?.key : 'Click on display key button to reveal public key'"
+              disabled="true">
+            <button *ngIf="!privateKeyDisplayed" style="transform: scale(0.85);" mat-stroked-button
+              (click)="showPrivateKey()">Display Key &nbsp;&nbsp;</button>
+            <button *ngIf="privateKeyDisplayed" style="transform: scale(0.85);" mat-stroked-button
+              (click)="copyKeyToClipboard(data?.wallet.wallet?.accounts[0]?.key)">Copy</button>
+          </div>
         </mat-form-field>
       </div>
 
@@ -66,6 +110,11 @@
 </div>
 
 <div mat-dialog-actions>
-  <button type="button" mat-raised-button (click)="close(true)" [disabled]="!walletForm.valid">OK</button>
-  <button type="button" mat-raised-button (click)="close(false)">Cancel</button>
+  <span>
+    <button type="button" mat-raised-button (click)="close(true)" [disabled]="!walletForm.valid">OK</button>
+    <button type="button" mat-raised-button (click)="close(false)">Cancel</button>
+  </span>
+  <span *ngIf="!data.isNew" style="display: flex; flex-direction: column;" class="mat-small">
+    <span>id: {{!data.isNew ? data.wallet.id : ""}}</span>
+  </span>
 </div>

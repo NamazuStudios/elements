@@ -21,10 +21,10 @@ public class NeoToken {
     @ApiModelProperty("The base token properties used by the blockchain.")
     private Token token;
 
-    @ApiModelProperty("Any meta data for this token.")
-    private Map<String, Object> metadata;
-
-    private String contract;
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The elements contract id to mint this token with.")
+    private String contractId;
 
     private boolean listed;
 
@@ -46,22 +46,6 @@ public class NeoToken {
         this.token = token;
     }
 
-    public Map<String, Object> getMetadata() {
-        return metadata;
-    }
-
-    public void setMetadata(Map<String, Object> metadata) {
-        this.metadata = metadata;
-    }
-
-    public String getContract() {
-        return contract;
-    }
-
-    public void setContract(String contract) {
-        this.contract = contract;
-    }
-
     public boolean isListed() {
         return listed;
     }
@@ -76,5 +60,13 @@ public class NeoToken {
 
     public void setMinted(boolean minted) {
         this.minted = minted;
+    }
+
+    public String getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
     }
 }

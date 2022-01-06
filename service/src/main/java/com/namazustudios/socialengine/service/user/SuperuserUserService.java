@@ -15,7 +15,6 @@ import javax.inject.Inject;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
 import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.service.UserService.formatAnonymousEmail;
 import static java.util.Collections.emptyList;
 
 /**
@@ -57,11 +56,7 @@ public class SuperuserUserService extends AbstractUserService implements UserSer
         user.setName(userCreateRequest.getName());
         user.setLevel(userCreateRequest.getLevel());
 
-        if (user.getName() == null || user.getEmail() == null) {
-            final var name = getNameService().generateQualifiedName();
-            if (user.getName() == null) user.setName(name);
-            if (user.getEmail() == null) user.setEmail(formatAnonymousEmail(name));
-        }
+        getNameService().assignNameAndEmailIfNecessary(user);
 
         // reuse existing DAO method
         final var password = isNullOrEmpty(userCreateRequest.getPassword())

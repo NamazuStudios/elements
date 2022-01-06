@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { IosApplicationConfigurationDialogComponent } from './ios-application-configuration-dialog.component';
 import {MAT_DIALOG_DATA, MatDialogModule, MatDialogRef} from "@angular/material/dialog";
@@ -11,7 +11,7 @@ describe('IosApplicationConfigurationDialogComponent', () => {
   let component: IosApplicationConfigurationDialogComponent;
   let fixture: ComponentFixture<IosApplicationConfigurationDialogComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ IosApplicationConfigurationDialogComponent ],
       imports: [MatDialogModule, FormsModule, ReactiveFormsModule, RouterTestingModule],

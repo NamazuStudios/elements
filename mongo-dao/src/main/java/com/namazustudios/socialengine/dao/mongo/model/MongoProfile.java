@@ -32,7 +32,12 @@ import java.util.Objects;
     })
 @Entity(value = "profile", useDiscriminator = false)
 @Indexes({
-    @Index(fields = {@Field("user"), @Field("application")}),
+    @Index(fields = {
+            @Field("user"),
+            @Field("application"),
+            @Field("active")
+        }
+    ),
     @Index(fields = @Field(value = "displayName", type = IndexType.TEXT))
 })
 public class MongoProfile {
@@ -40,15 +45,12 @@ public class MongoProfile {
     @Id
     private ObjectId objectId;
 
-    @Indexed
     @Property
     private boolean active;
 
-    @Indexed
     @Reference
     private MongoUser user;
 
-    @Indexed
     @Reference
     private MongoApplication application;
 

@@ -1,13 +1,18 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
+import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
+import com.namazustudios.socialengine.security.PasswordGenerator;
+import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import dev.morphia.Datastore;
+import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
@@ -28,6 +33,8 @@ import static java.util.UUID.randomUUID;
 public class IntegrationTestModule extends AbstractModule {
 
     private static final Logger logger = LoggerFactory.getLogger(IntegrationTestModule.class);
+
+    public static final String TEST_COMPONENT = "com.namazustudios.socialengine.dao.mongo.IntegrationTestModule.test";
 
     private static final int TEST_MONGO_PORT = 45000;
 
@@ -71,6 +78,10 @@ public class IntegrationTestModule extends AbstractModule {
             stderr.setDaemon(true);
             stderr.start();
 
+            bind(PasswordGenerator.class)
+                .to(SecureRandomPasswordGenerator.class)
+                .asEagerSingleton();
+
             hooks.add(() -> {
 
                 logger.info("Destroying mongo process.");
@@ -108,7 +119,13 @@ public class IntegrationTestModule extends AbstractModule {
             }
         });
 
+        bind(Mapper.class)
+            .annotatedWith(Names.named(TEST_COMPONENT))
+            .toProvider(MongoDozerMapperProvider.class);
+
         bind(UserTestFactory.class).asEagerSingleton();
+        bind(ProfileTestFactory.class).asEagerSingleton();
+        bind(ApplicationTestFactory.class).asEagerSingleton();
 
         install(new MongoCoreModule());
         install(new MongoSearchModule());
