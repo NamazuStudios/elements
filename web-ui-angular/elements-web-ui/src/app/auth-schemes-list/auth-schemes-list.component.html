@@ -51,7 +51,10 @@
         <mat-header-cell *matHeaderCellDef>
           
           Public Key</mat-header-cell>
-        <mat-cell *matCellDef="let authScheme"><span class="truncate-text-right">{{authScheme.publicKey}}</span>
+        <mat-cell *matCellDef="let authScheme">
+          <span class="truncate-text-right">{{authScheme.publicKey}}</span>
+          <span><button style="transform: scale(0.75);" mat-stroked-button
+            (click)="copyKeyToClipboard(authScheme.publicKey)">Copy</button></span>
         </mat-cell>
       </ng-container>
 

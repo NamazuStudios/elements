@@ -64,6 +64,8 @@ import { NeoTokensListComponent } from './neo-tokens-list/neo-tokens-list.compon
 import { NeoTokenDialogComponent } from './neo-token-dialog/neo-token-dialog.component';
 import { YesNoPipe } from './neo-tokens-list/yesNo.pipe';
 import { TokensMenuComponent } from './tokens-menu/tokens-menu.component';
+import { AuthSchemesListComponent } from './auth-schemes-list/auth-schemes-list.component';
+import { AuthSchemeDialogComponent } from './auth-scheme-dialog/auth-scheme-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -137,7 +139,9 @@ export function initialize(configService: ConfigService) {
     NeoTokensListComponent,
     NeoTokenDialogComponent,
     YesNoPipe,
-    TokensMenuComponent
+    TokensMenuComponent,
+    AuthSchemesListComponent,
+    AuthSchemeDialogComponent
   ],
   imports: [
     BrowserModule,

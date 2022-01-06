@@ -16,6 +16,8 @@ import { UpdateAuthSchemeRequest } from "../api/models/blockchain/update-auth-sc
 import { CreateAuthSchemeRequest } from "../api/models/blockchain/create-auth-scheme-request";
 import { AuthSchemeDialogComponent } from "../auth-scheme-dialog/auth-scheme-dialog.component";
 import { AuthSchemeViewModel } from "../models/blockchain/auth-scheme-view-model";
+import { Clipboard } from "@angular/cdk/clipboard";
+import { MatSnackBar } from "@angular/material/snack-bar";
 
 @Component({
   selector: "app-auth-schemes-list",
@@ -48,6 +50,8 @@ export class AuthSchemesListComponent implements OnInit, AfterViewInit {
     private alertService: AlertService,
     private dialogService: ConfirmationDialogService,
     public dialog: MatDialog,
+    private clipboard: Clipboard,
+    private snackBar: MatSnackBar,
     public userService: UsersService
   ) {}
 
@@ -158,7 +162,7 @@ export class AuthSchemesListComponent implements OnInit, AfterViewInit {
 
   showDialog(isNew: boolean, authScheme: AuthScheme, next) {
     this.dialog.open(AuthSchemeDialogComponent, {
-      width: "900px",
+      width: "600px",
       data: {
         isNew: isNew,
         authScheme,
@@ -199,4 +203,12 @@ export class AuthSchemesListComponent implements OnInit, AfterViewInit {
       }
     );
   }
+
+  copyKeyToClipboard(data: string) {
+    this.clipboard.copy(data);
+    this.snackBar.open("Key has been copied to clipboard.", "Dismiss", {
+      duration: 3000,
+    });
+  }
+
 }
