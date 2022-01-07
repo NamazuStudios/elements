@@ -3,7 +3,7 @@
   <form [formGroup]="authSchemeForm">
     <mat-checkbox name="regenerate" formControlName="regenerate"
       matTooltip="If set to true, Elements will regenerate the key, and public key input will be disabled."
-      (click)="disableEnablePublicKeyInput()">
+      (click)="regenerateKeys()">
       {{data.isNew ? "Generate Key" : "Regenerate Key"}}
     </mat-checkbox>
   </form>

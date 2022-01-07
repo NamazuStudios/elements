@@ -15,6 +15,7 @@ import { AuthScheme } from "../api/models/blockchain/authScheme";
 import { CreateAuthSchemeRequest } from "../api/models/blockchain/create-auth-scheme-request";
 import { UpdateAuthSchemeRequest } from "../api/models/blockchain/update-auth-scheme-request";
 import { UserLevel } from "../user-dialog/user-dialog.component";
+import { RegenerateKeysDialogComponent } from "./regenerate-keys-dialog/regenerate-keys-dialog.component";
 
 @Component({
   selector: "app-auth-scheme-dialog",
@@ -175,10 +176,25 @@ export class AuthSchemeDialogComponent implements OnInit, AfterViewInit {
     return updateAuthSchemeData;
   }
 
-  disableEnablePublicKeyInput() {
-    this.authSchemeForm.get("publicKey").enabled
-      ? this.authSchemeForm.get("publicKey").disable()
-      : this.authSchemeForm.get("publicKey").enable();
+  showDialog(next: (regenerate: boolean) => void) {
+    this.dialog.open(RegenerateKeysDialogComponent, {
+      width: "600px",
+      data: {
+        next: next,
+      },
+    });
+  }
+
+  regenerateKeys() {
+    if (!this.authSchemeForm.get("regenerate").value) {
+      this.showDialog((regenerate: boolean) => {
+        this.authSchemeForm.get("regenerate").setValue(regenerate);
+
+        regenerate
+          ? this.authSchemeForm.get("publicKey").disable()
+          : this.authSchemeForm.get("publicKey").enable();
+      });
+    }
   }
 
   close(saveChanges?: boolean) {

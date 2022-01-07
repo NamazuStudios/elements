@@ -66,6 +66,7 @@ import { YesNoPipe } from './neo-tokens-list/yesNo.pipe';
 import { TokensMenuComponent } from './tokens-menu/tokens-menu.component';
 import { AuthSchemesListComponent } from './auth-schemes-list/auth-schemes-list.component';
 import { AuthSchemeDialogComponent } from './auth-scheme-dialog/auth-scheme-dialog.component';
+import { RegenerateKeysDialogComponent } from './auth-scheme-dialog/regenerate-keys-dialog/regenerate-keys-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -141,7 +142,8 @@ export function initialize(configService: ConfigService) {
     YesNoPipe,
     TokensMenuComponent,
     AuthSchemesListComponent,
-    AuthSchemeDialogComponent
+    AuthSchemeDialogComponent,
+    RegenerateKeysDialogComponent
   ],
   imports: [
     BrowserModule,
