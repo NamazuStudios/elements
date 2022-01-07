@@ -94,7 +94,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
     }
 
-    private List<Node> doStartNodes(List<Node.Startup> startupList, final Consumer<Exception> exceptionConsumer) {
+    private List<Node> doStartNodes(List<Node.Startup> startupList, Consumer<Exception> exceptionConsumer) {
 
         startupList = startupList.stream().map(s -> {
             try {
@@ -151,6 +151,10 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
     }
 
+    private List<Node> doShutdownNodes(List<Node.Shutdown> shutdownList, Consumer<Exception> exceptionConsumer) {
+
+    }
+
     @Override
     protected void preClose(final Consumer<Exception> exceptionConsumer) {
 
@@ -201,7 +205,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 SimpleWorkerInstance.logger.error("Error closing binding {}.", binding, ex);
                 return ex;
             }
-        }).filter(ex -> ex != null).forEach(exceptionConsumer::accept);
+        }).filter(Objects::nonNull).forEach(exceptionConsumer::accept);
 
     }
 
@@ -257,6 +261,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
             @Override
             public Set<Node> getNodeSet() {
+                check();
                 return new HashSet<>(nodeSet);
             }
 
@@ -282,7 +287,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
         wLock.lock();
 
         final var toAdd = new HashSet<ApplicationId>();
-        final var toRestart = new HashSet<NodeId>();
+        final var toRemove = new HashSet<NodeId>();
         final var existing = new HashSet<ApplicationId>();
 
         final Runnable refresh = () -> {
@@ -317,8 +322,18 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             }
 
             @Override
-            public void restart(final NodeId nodeId) {
+            public Mutator restart(final NodeId nodeId) {
 
+                if (!existing.contains(nodeId.getApplicationId())) {
+                    throw new IllegalArgumentException("Node for application does not exist: "  + nodeId);
+                } else if (toAdd.contains(nodeId.getApplicationId())) {
+                    throw new IllegalArgumentException("Attempting to add and restart in one mutation: "  + nodeId);
+                } else if (!toRemove.add(nodeId)) {
+                    throw new IllegalArgumentException("Restarted already requested for the supplied node: " + nodeId);
+                }
+
+                toAdd.add(nodeId.getApplicationId());
+                return this;
             }
 
             @Override
@@ -327,6 +342,15 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 check();
 
                 final var exceptions = new ArrayList<Exception>();
+
+                final var toStop = nodeSet
+                    .stream()
+                    .filter(n -> toRemove.contains(n.getNodeId()))
+                    .map(Node::beginShutdown)
+                    .collect(toList());
+
+                final var stopped = doShutdownNodes(toStop, exceptions::add);
+
                 final var toStart = toAdd.stream()
                     .map(getNodeFactory()::create)
                     .map(Node::beginStartup)

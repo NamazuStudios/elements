@@ -91,15 +91,18 @@ public interface Worker {
         /**
          * Restarts the supplied {@link Node}s with the supplied {@link NodeId}.
          * @param toRestart the {@link NodeId} to restart
+         * @return this instance
          */
-        void restart(final NodeId toRestart);
+        Mutator restart(final NodeId toRestart);
 
         /**
          * Restarts the supplied {@link Node}s with the supplied {@link NodeId}.
          * @param toRestart a {@link Collection<NodeId>} to restart in succession
-         */
-        default void restart(final Collection<NodeId> toRestart) {
+         * @return this instance
+         **/
+        default Mutator restart(final Collection<NodeId> toRestart) {
             toRestart.forEach(this::restart);
+            return this;
         }
 
         /**

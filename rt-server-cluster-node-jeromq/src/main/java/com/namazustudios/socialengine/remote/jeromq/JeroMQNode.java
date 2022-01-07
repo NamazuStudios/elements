@@ -16,7 +16,6 @@ import org.zeromq.ZMsg;
 
 import javax.inject.Inject;
 import javax.inject.Named;
-import java.net.IDN;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
