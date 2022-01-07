@@ -10,6 +10,7 @@ import { MissionsListComponent } from "./missions-list/missions-list.component";
 import { ProfilesListComponent } from "./profiles-list/profiles-list.component";
 import { LeaderboardsListComponent } from "./leaderboards-list/leaderboards-list.component";
 import { TokensMenuComponent } from "./tokens-menu/tokens-menu.component";
+import { AuthSchemesListComponent } from "./auth-schemes-list/auth-schemes-list.component";
 
 const appRoutes: Routes = [
   { path: "login", component: LoginComponent },
@@ -48,6 +49,11 @@ const appRoutes: Routes = [
   {
     path: "tokens",
     component: TokensMenuComponent,
+    canActivate: [AuthenticationGuard],
+  },
+  {
+    path: "auth-schemes",
+    component: AuthSchemesListComponent,
     canActivate: [AuthenticationGuard],
   },
   // { path: 'applications/:id', component: ApplicationDetailComponent, canActivate: [AuthenticationGuard] },
