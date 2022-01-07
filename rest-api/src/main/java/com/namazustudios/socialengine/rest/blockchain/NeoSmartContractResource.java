@@ -71,10 +71,8 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Invokes the specified method on the contract.",
             notes = "Invokes the specified method using the specified contract id.")
-    public NeoSendRawTransaction invoke(final InvokeContractRequest request,
-                              @QueryParam("method") String methodToInvoke,
-                              @QueryParam("params") List<String> methodParams) {
-        return getNeoSmartContractService().invoke(request, methodToInvoke, methodParams);
+    public NeoSendRawTransaction invoke(final InvokeContractRequest request) {
+        return getNeoSmartContractService().invoke(request);
     }
 
     @POST
@@ -82,10 +80,8 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Mints a token using the specified contract.",
             notes = "Mints the specified token using the specified contract id.")
-    public NeoInvokeFunction testInvoke(final InvokeContractRequest request,
-                                    @QueryParam("method") String methodToInvoke,
-                                    @QueryParam("params") List<String> methodParams) {
-        return getNeoSmartContractService().testInvoke(request, methodToInvoke, methodParams);
+    public NeoInvokeFunction testInvoke(final InvokeContractRequest request) {
+        return getNeoSmartContractService().testInvoke(request);
     }
 
     @DELETE

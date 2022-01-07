@@ -66,22 +66,18 @@ public interface NeoSmartContractService {
         /**
          * Invokes a method on the {@link NeoSmartContract} corresponding to the passed contract id.
          *
-         * @param invokeRequest the {@link InvokeContractRequest} with the contract and wallet id's
-         * @param method the method to invoke on the contract
-         * @param params optional params that may be required for the method
+         * @param invokeRequest the {@link InvokeContractRequest} with the information to invoke
          * @return the {@link NeoSendRawTransaction} response from the blockchain invocation.
          */
-        NeoSendRawTransaction invoke(InvokeContractRequest invokeRequest, String method, List<String> params);
+        NeoSendRawTransaction invoke(InvokeContractRequest invokeRequest);
 
         /**
          * Invokes a method on the {@link NeoSmartContract} corresponding to the passed contract id.
          *
-         * @param invokeRequest the {@link InvokeContractRequest} with the contract and wallet id's
-         * @param method the method to invoke on the contract
-         * @param params optional params that may be required for the method
+         * @param invokeRequest the {@link InvokeContractRequest} with the information to invoke
          * @return the {@link NeoSendRawTransaction} response from the blockchain invocation.
          */
-        NeoInvokeFunction testInvoke(InvokeContractRequest invokeRequest, String method, List<String> params);
+        NeoInvokeFunction testInvoke(InvokeContractRequest invokeRequest);
 
         /**
          * Deletes the {@link NeoSmartContract} with the supplied contract ID.

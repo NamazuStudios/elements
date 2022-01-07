@@ -30,6 +30,7 @@ import javax.inject.Inject;
 
 import java.util.Base64;
 import java.util.List;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static com.google.common.base.Strings.nullToEmpty;
@@ -99,7 +100,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         query.filter(and(
                 eq("_id", objectId),
-                eq("minted", false)
+                eq("mintStatus", NeoToken.MintStatus.MINTED).not()
         ));
 
         final var builder = new UpdateBuilder().with(
@@ -123,14 +124,14 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
     @Override
-    public NeoToken mintToken(String tokenId) {
+    public NeoToken setMintStatusForToken(String tokenId, NeoToken.MintStatus status) {
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
         final var query = getDatastore().find(MongoNeoToken.class);
 
         query.filter(eq("_id", objectId));
 
         final var builder = new UpdateBuilder().with(
-                set("minted", true)
+                set("mintStatus", status)
         );
 
         final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
@@ -160,16 +161,55 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         final var builder = new UpdateBuilder().with(
                 set("name", name),
+                set("tokenUUID", UUID.randomUUID().toString()),
                 set("tags", tags),
                 set("token", token),
                 set("listed", tokenRequest.isListed()),
-                set("minted", false),
-                set("contractId", tokenRequest.getContractId())
+                set("mintStatus", NeoToken.MintStatus.NOT_MINTED),
+                set("contractId", tokenRequest.getContractId()),
+                set("seriesId", UUID.randomUUID().toString()),
+                set("totalMintedQuantity", 0)
         );
 
         final var mongoToken = getMongoDBUtils().perform(
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
+
+        getObjectIndex().index(mongoToken);
+        return transform(mongoToken);
+    }
+
+    @Override
+    public NeoToken cloneNeoToken(NeoToken neoToken) {
+        getValidationHelper().validateModel(neoToken.getToken(), ValidationGroups.Insert.class);
+
+        final var query = getDatastore().find(MongoNeoToken.class);
+        final var totalMintedQuantity = neoToken.getTotalMintedQuantity() + 1;
+        final var token = neoToken.getToken();
+        final var name = token.getName() + "_" + totalMintedQuantity;
+        token.setName(name);
+        final var tags = token.getTags();
+        tags.remove("");
+
+        query.filter(exists("name").not());
+
+        final var builder = new UpdateBuilder().with(
+                set("name", name),
+                set("tokenUUID", UUID.randomUUID().toString()),
+                set("tags", tags),
+                set("token", token),
+                set("listed", neoToken.isListed()),
+                set("mintStatus", NeoToken.MintStatus.NOT_MINTED),
+                set("contractId", neoToken.getContractId()),
+                set("seriesId", neoToken.getSeriesId()),
+                set("totalMintedQuantity", totalMintedQuantity)
+        );
+
+        final var mongoToken = getMongoDBUtils().perform(
+                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+        );
+
+        setTotalMintedQuantity(neoToken.getId(), totalMintedQuantity);
 
         getObjectIndex().index(mongoToken);
         return transform(mongoToken);
@@ -192,6 +232,25 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     private NeoToken transform(MongoNeoToken token)
     {
         return getBeanMapper().map(token, NeoToken.class);
+    }
+
+    public void setTotalMintedQuantity(String tokenId, long quantity) {
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
+        final var query = getDatastore().find(MongoNeoToken.class);
+
+        query.filter(eq("_id", objectId));
+
+        final var builder = new UpdateBuilder().with(
+                set("totalMintedQuantity", quantity)
+        );
+
+        final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
+                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+        );
+
+        if (mongoNeoToken == null) {
+            throw new NeoTokenNotFoundException("NeoToken not found: " + tokenId);
+        }
     }
 
     public MongoDBUtils getMongoDBUtils() {
