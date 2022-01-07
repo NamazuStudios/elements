@@ -17,12 +17,14 @@ import com.namazustudios.socialengine.rt.git.FilesystemGitLoaderModule;
 import com.namazustudios.socialengine.rt.guice.ResourceScope;
 import com.namazustudios.socialengine.rt.guice.SimpleExecutorsModule;
 import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.SimpleWatchdogServiceModule;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.rt.remote.guice.ClusterContextFactoryModule;
 import com.namazustudios.socialengine.rt.remote.guice.InstanceDiscoveryServiceModule;
 import com.namazustudios.socialengine.rt.remote.guice.PersistentInstanceIdModule;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleRemoteInvokerRegistryModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.*;
+import com.namazustudios.socialengine.rt.remote.watchdog.WatchdogService;
 import com.namazustudios.socialengine.service.guice.*;
 import com.namazustudios.socialengine.service.guice.firebase.FirebaseAppFactoryModule;
 import com.namazustudios.socialengine.util.AppleDateFormat;
@@ -43,6 +45,8 @@ public class ApplicationNode {
     private Worker worker;
 
     private Instance instance;
+
+    private WatchdogService watchdogService;
 
     private final Injector injector;
 
@@ -68,6 +72,7 @@ public class ApplicationNode {
 
         injector = Guice.createInjector(
             storageDriverModule,
+            new SimpleWatchdogServiceModule(),
             new ClusterContextFactoryModule(),
             new ConfigurationModule(defaultConfigurationSupplier),
             new InstanceDiscoveryServiceModule(defaultConfigurationSupplier),
@@ -134,17 +139,21 @@ public class ApplicationNode {
 
             worker = injector.getInstance(Worker.class);
             instance = injector.getInstance(Instance.class);
+            watchdogService = injector.getInstance(WatchdogService.class);
 
             try {
 
                 logger.info("Starting Instance.");
                 instance.start();
+                watchdogService.start();
 
                 logger.info("Instance started.");
 
             } catch (Exception ex) {
                 worker = null;
                 instance = null;
+                watchdogService.stop();
+                watchdogService = null;
                 logger.error("Could not start ApplicationNode", ex);
                 throw ex;
             }
@@ -164,6 +173,8 @@ public class ApplicationNode {
             try {
                 logger.info("Starting Instance.");
                 instance.close();
+                if (watchdogService != null) watchdogService.stop();
+                watchdogService = null;
                 logger.info("Instance started.");
             } catch (Exception ex) {
                 logger.error("Could not start ApplicationNode", ex);

@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 
 import java.util.Collection;
 import java.util.Map;
@@ -57,6 +58,13 @@ public interface Worker {
         Set<Node> getNodeSet();
 
         /**
+         * Gets all active {@link InstanceBinding}s.
+         *
+         * @return the binding set
+         */
+        Set<InstanceBinding> getBindingSet();
+
+        /**
          * Releases any resources associated with the {@link Mutator}.
          */
         void close();
@@ -89,18 +97,18 @@ public interface Worker {
         }
 
         /**
-         * Restarts the supplied {@link Node}s with the supplied {@link NodeId}.
-         * @param toRestart the {@link NodeId} to restart
+         * Restarts the supplied {@link Node} with the supplied {@link ApplicationId}.
+         * @param applicationId the {@link ApplicationId} to restart
          * @return this instance
          */
-        Mutator restart(final NodeId toRestart);
+        Mutator restart(ApplicationId applicationId);
 
         /**
-         * Restarts the supplied {@link Node}s with the supplied {@link NodeId}.
-         * @param toRestart a {@link Collection<NodeId>} to restart in succession
+         * Restarts the supplied {@link Node}s with the supplied {@link ApplicationId}s.
+         * @param toRestart a {@link Collection<ApplicationId>} to restart in succession
          * @return this instance
          **/
-        default Mutator restart(final Collection<NodeId> toRestart) {
+        default Mutator restart(final Collection<ApplicationId> toRestart) {
             toRestart.forEach(this::restart);
             return this;
         }

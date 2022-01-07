@@ -1,4 +1,7 @@
-package com.namazustudios.socialengine.rt.remote;
+package com.namazustudios.socialengine.rt.remote.watchdog;
+
+import com.namazustudios.socialengine.rt.remote.Worker;
+import org.slf4j.Logger;
 
 /**
  * Represents a watchdog service which is designed to perform operations against the {@link Worker} on a regular basis,
@@ -22,6 +25,6 @@ public interface WorkerWatchdog {
      * Executes the rules for this {@link WorkerWatchdog}
      * @param worker the {@link Worker} against which to operate
      */
-    void watch(Worker worker);
+    void watch(Logger logger, Worker worker);
 
 }

@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.rt.Persistence;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
-import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.InstanceBinding;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,11 +17,12 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
-import static com.namazustudios.socialengine.rt.remote.NodeState.HEALTHY;
 import static java.util.concurrent.TimeUnit.MINUTES;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
 
@@ -151,16 +151,14 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
     }
 
-    private List<Node> doShutdownNodes(List<Node.Shutdown> shutdownList, Consumer<Exception> exceptionConsumer) {
-
-    }
-
     @Override
     protected void preClose(final Consumer<Exception> exceptionConsumer) {
+        doShutdownNodes(concat(of(getMasterNode()), getNodeSet().stream()), exceptionConsumer);
+    }
 
-        final List<Node.Shutdown> shutdownList;
+    private void doShutdownNodes(Stream<Node> shutdownStream, Consumer<Exception> exceptionConsumer) {
 
-        shutdownList = concat(of(getMasterNode()), getNodeSet().stream()).map(node -> {
+        final var shutdownList = shutdownStream.map(node -> {
             try {
                 return node.beginShutdown();
             } catch (Exception ex) {
@@ -205,7 +203,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 SimpleWorkerInstance.logger.error("Error closing binding {}.", binding, ex);
                 return ex;
             }
-        }).filter(Objects::nonNull).forEach(exceptionConsumer::accept);
+        }).filter(Objects::nonNull).forEach(exceptionConsumer);
 
     }
 
@@ -266,6 +264,12 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             }
 
             @Override
+            public Set<InstanceBinding> getBindingSet() {
+                check();
+                return new HashSet<>(bindingSet);
+            }
+
+            @Override
             public void close() {
                 if (locked) {
                     locked = false;
@@ -286,25 +290,29 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
         final var wLock = rwLock.writeLock();
         wLock.lock();
 
-        final var toAdd = new HashSet<ApplicationId>();
-        final var toRemove = new HashSet<NodeId>();
-        final var existing = new HashSet<ApplicationId>();
-
-        final Runnable refresh = () -> {
-            toAdd.clear();
-            existing.clear();
-            nodeSet.forEach(n -> existing.add(n.getNodeId().getApplicationId()));
-        };
-
-        refresh.run();
 
         return new Mutator() {
 
             boolean locked = true;
 
+            final Set<ApplicationId> toAdd = new HashSet<>();
+
+            final Set<ApplicationId> toRemove = new HashSet<>();
+
+            final Set<ApplicationId> existing = nodeSet
+                .stream()
+                .map(n -> n.getNodeId().getApplicationId())
+                .collect(toSet());
+
             @Override
             public Set<Node> getNodeSet() {
                 return new HashSet<>(nodeSet);
+            }
+
+            @Override
+            public Set<InstanceBinding> getBindingSet() {
+                check();
+                return new HashSet<>(bindingSet);
             }
 
             @Override
@@ -319,20 +327,21 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 }
 
                 return this;
+
             }
 
             @Override
-            public Mutator restart(final NodeId nodeId) {
+            public Mutator restart(final ApplicationId applicationId) {
 
-                if (!existing.contains(nodeId.getApplicationId())) {
-                    throw new IllegalArgumentException("Node for application does not exist: "  + nodeId);
-                } else if (toAdd.contains(nodeId.getApplicationId())) {
-                    throw new IllegalArgumentException("Attempting to add and restart in one mutation: "  + nodeId);
-                } else if (!toRemove.add(nodeId)) {
-                    throw new IllegalArgumentException("Restarted already requested for the supplied node: " + nodeId);
+                if (!existing.contains(applicationId)) {
+                    throw new IllegalArgumentException("Node for application does not exist: "  + applicationId);
+                } else if (!toAdd.contains(applicationId)) {
+                    throw new IllegalArgumentException("Attempting to add and restart in one mutation: "  + applicationId);
+                } else if (!toRemove.add(applicationId)) {
+                    throw new IllegalArgumentException("Restarted already requested for the supplied node: " + applicationId);
                 }
 
-                toAdd.add(nodeId.getApplicationId());
+                toAdd.add(applicationId);
                 return this;
             }
 
@@ -345,11 +354,10 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
                 final var toStop = nodeSet
                     .stream()
-                    .filter(n -> toRemove.contains(n.getNodeId()))
-                    .map(Node::beginShutdown)
+                    .filter(n -> toRemove.contains(n.getNodeId().getApplicationId()))
                     .collect(toList());
 
-                final var stopped = doShutdownNodes(toStop, exceptions::add);
+                doShutdownNodes(toStop.stream(), exceptions::add);
 
                 final var toStart = toAdd.stream()
                     .map(getNodeFactory()::create)
@@ -358,12 +366,13 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
                 final var started = doStartNodes(toStart, exceptions::add);
 
+                nodeSet.removeAll(toStop);
+                nodeSet.addAll(started);
+                refresh();
+
                 if (!exceptions.isEmpty()) {
                     throw new MultiException(exceptions);
                 }
-
-                nodeSet.addAll(started);
-                refresh.run();
 
                 return this;
 
@@ -375,6 +384,13 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                     wLock.unlock();
                     locked = false;
                 }
+            }
+
+            private void refresh() {
+                toAdd.clear();
+                toRemove.clear();
+                existing.clear();
+                nodeSet.forEach(n -> existing.add(n.getNodeId().getApplicationId()));
             }
 
             private void check() {

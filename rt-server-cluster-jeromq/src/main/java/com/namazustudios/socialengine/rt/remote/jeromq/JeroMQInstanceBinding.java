@@ -32,6 +32,11 @@ public class JeroMQInstanceBinding implements InstanceBinding {
     }
 
     @Override
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+
+    @Override
     public String getBindAddress() {
         return nodeBindAddress;
     }
