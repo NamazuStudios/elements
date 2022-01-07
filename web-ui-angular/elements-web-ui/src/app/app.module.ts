@@ -67,6 +67,7 @@ import { TokensMenuComponent } from './tokens-menu/tokens-menu.component';
 import { AuthSchemesListComponent } from './auth-schemes-list/auth-schemes-list.component';
 import { AuthSchemeDialogComponent } from './auth-scheme-dialog/auth-scheme-dialog.component';
 import { RegenerateKeysDialogComponent } from './auth-scheme-dialog/regenerate-keys-dialog/regenerate-keys-dialog.component';
+import { GeneratedKeysDialogComponent } from './auth-scheme-dialog/generated-keys-dialog/generated-keys-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -143,7 +144,8 @@ export function initialize(configService: ConfigService) {
     TokensMenuComponent,
     AuthSchemesListComponent,
     AuthSchemeDialogComponent,
-    RegenerateKeysDialogComponent
+    RegenerateKeysDialogComponent,
+    GeneratedKeysDialogComponent
   ],
   imports: [
     BrowserModule,

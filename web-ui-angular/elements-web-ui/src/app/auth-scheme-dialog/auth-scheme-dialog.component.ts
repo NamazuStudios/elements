@@ -16,6 +16,8 @@ import { CreateAuthSchemeRequest } from "../api/models/blockchain/create-auth-sc
 import { UpdateAuthSchemeRequest } from "../api/models/blockchain/update-auth-scheme-request";
 import { UserLevel } from "../user-dialog/user-dialog.component";
 import { RegenerateKeysDialogComponent } from "./regenerate-keys-dialog/regenerate-keys-dialog.component";
+import { GeneratedKeysDialogComponent } from "./generated-keys-dialog/generated-keys-dialog.component";
+import { keyframes } from "@angular/animations";
 
 @Component({
   selector: "app-auth-scheme-dialog",
@@ -185,6 +187,16 @@ export class AuthSchemeDialogComponent implements OnInit, AfterViewInit {
     });
   }
 
+  showKeysDialog(publicKey: string, privateKey: string) {
+    this.dialog.open(GeneratedKeysDialogComponent, {
+      width: "600px",
+      data: {
+        publicKey,
+        privateKey
+      },
+    });
+  }
+
   regenerateKeys() {
     if (!this.authSchemeForm.get("regenerate").value) {
       this.showDialog((regenerate: boolean) => {
@@ -209,7 +221,12 @@ export class AuthSchemeDialogComponent implements OnInit, AfterViewInit {
       : (authSchemeData = this.getUpdateAuthSchemeData());
 
     this.data.next(authSchemeData).subscribe(
-      (r) => {
+      (authResponse) => {
+
+        if(authResponse.privateKey){
+          this.showKeysDialog(authResponse.publicKey, authResponse.privateKey);
+        }
+
         this.dialogRef.close();
         if (this.data.refresher) {
           this.data.refresher.refresh();

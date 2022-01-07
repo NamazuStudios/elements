@@ -200,6 +200,7 @@ export class AuthSchemesListComponent implements OnInit, AfterViewInit {
           id: authScheme.id,
           body: updateAuthSchemeRequest,
         });
+
       }
     );
   }
