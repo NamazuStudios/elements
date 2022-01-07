@@ -1,23 +1,14 @@
 /* tslint:disable */
-export interface PatchNeoSmartContractRequest {
+export interface MintTokenRequest {
 
   /**
-   * The name given to this contract.
+   * description:The unique ID's of the tokens to mint.
    */
-  displayName: string;
+   tokenIds: Array<string>;
 
   /**
-   * The script hash of the contract from the blockchain.
+   * The public address of the account with funds to mint.
    */
-  scriptHash: string;
+   address: string;
 
-  /**
-   * The blockchain where this contract lives. Valid values are "NEO" : This contract exists on the NEO blockchain network.
-   */
-  blockchain: string;
-
-  /**
-   * description:	Any meta data for this contract.
-   */
-  metadata?: { [key: string]: any };
 }
