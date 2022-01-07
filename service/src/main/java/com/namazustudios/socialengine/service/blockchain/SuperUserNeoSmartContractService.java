@@ -8,12 +8,16 @@ import com.namazustudios.socialengine.exception.blockchain.ContractInvocationExc
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import io.neow3j.contract.SmartContract;
+import io.neow3j.crypto.exceptions.CipherException;
+import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
+import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.core.response.NeoCloseWallet;
 import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.neow3j.transaction.AccountSigner;
 import io.neow3j.types.ContractParameter;
 import io.neow3j.wallet.Account;
+import io.neow3j.wallet.Wallet;
 import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
@@ -53,12 +57,18 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     public NeoSendRawTransaction mintToken(MintTokenRequest mintTokenRequest) {
         var wallet = getNeoWalletDao().getWallet(mintTokenRequest.getWalletId());
         var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
+        Wallet wallet1 = Wallet.fromNEP6Wallet(nepWallet);
         try {
-            getNeow3JClient().getNeow3j().openWallet(nepWallet.toString(), mintTokenRequest.getPassword()).send();
-        } catch (IOException e) {
-            throw new ContractInvocationException("Failed to open wallet. Error message: " + e);
+            wallet1.decryptAllAccounts("");
+        } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
+            e.printStackTrace();
         }
-        Account mintAccount = Account.fromAddress(nepWallet.getAccounts().get(0).getAddress());
+//        try {
+//            getNeow3JClient().getNeow3j().openWallet(nepWallet.toString(), mintTokenRequest.getPassword()).send();
+//        } catch (IOException e) {
+//            throw new ContractInvocationException("Failed to open wallet. Error message: " + e);
+//        }
+        Account mintAccount = Account.fromAddress(wallet1.getAccounts().get(0).getAddress());
         for (var tid : mintTokenRequest.getTokenIds()) {
             var token = getNeoTokenDao().getToken(tid);
             if (token.getTotalMintedQuantity() < token.getToken().getTotalSupply()) {
@@ -92,11 +102,11 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                 throw new ContractInvocationException("Minting failed with error: " + response.getError().toString());
                             }
                         } catch (Throwable e) {
-                            try {
-                                getNeow3JClient().getNeow3j().closeWallet().send();
-                            } catch (IOException ex) {
-                                throw new ContractInvocationException("Failed to close the wallet. Error message: " + ex);
-                            }
+//                            try {
+//                                getNeow3JClient().getNeow3j().closeWallet().send();
+//                            } catch (IOException ex) {
+//                                throw new ContractInvocationException("Failed to close the wallet. Error message: " + ex);
+//                            }
                             getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINT_FAILED);
                             throw new ContractInvocationException("Minting failed with exception: " + e);
                         }
@@ -104,19 +114,19 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                         throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
                 }
             } else {
-                try {
-                    getNeow3JClient().getNeow3j().closeWallet().send();
-                } catch (IOException ex) {
-                    throw new ContractInvocationException("Failed to close the wallet. Error message: " + ex);
-                }
+//                try {
+//                    getNeow3JClient().getNeow3j().closeWallet().send();
+//                } catch (IOException ex) {
+//                    throw new ContractInvocationException("Failed to close the wallet. Error message: " + ex);
+//                }
                 throw new ContractInvocationException(String.format("The token %s is out of supply. Create a new definition, or add to the total supply, to mint more.", token.getId()));
             }
         }
-        try {
-            getNeow3JClient().getNeow3j().closeWallet().send();
-        } catch (IOException ex) {
-            throw new ContractInvocationException("Failed to close the wallet. Error message: " + ex);
-        }
+//        try {
+//            getNeow3JClient().getNeow3j().closeWallet().send();
+//        } catch (IOException ex) {
+//            throw new ContractInvocationException("Failed to close the wallet. Error message: " + ex);
+//        }
         throw new ContractInvocationException("Minting failed. Maybe your token list is empty?");
     }
 
