@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Inject, OnInit } from "@angular/core";
+import { Component, Inject, OnInit } from "@angular/core";
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -17,14 +17,14 @@ import { UpdateAuthSchemeRequest } from "../api/models/blockchain/update-auth-sc
 import { UserLevel } from "../user-dialog/user-dialog.component";
 import { RegenerateKeysDialogComponent } from "./regenerate-keys-dialog/regenerate-keys-dialog.component";
 import { GeneratedKeysDialogComponent } from "./generated-keys-dialog/generated-keys-dialog.component";
-import { keyframes } from "@angular/animations";
+
 
 @Component({
   selector: "app-auth-scheme-dialog",
   templateUrl: "./auth-scheme-dialog.component.html",
   styleUrls: ["./auth-scheme-dialog.component.css"],
 })
-export class AuthSchemeDialogComponent implements OnInit, AfterViewInit {
+export class AuthSchemeDialogComponent implements OnInit {
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -97,10 +97,6 @@ export class AuthSchemeDialogComponent implements OnInit, AfterViewInit {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
     });
-  }
-
-  ngAfterViewInit() {
-    console.log("Data: ", this.data);
   }
 
   addTag(event: MatChipInputEvent): void {
@@ -198,7 +194,7 @@ export class AuthSchemeDialogComponent implements OnInit, AfterViewInit {
   }
 
   regenerateKeys() {
-    if (!this.authSchemeForm.get("regenerate").value) {
+    if (!this.authSchemeForm.get("regenerate").value && !this.data.isNew) {
       this.showDialog((regenerate: boolean) => {
         this.authSchemeForm.get("regenerate").setValue(regenerate);
 
