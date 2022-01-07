@@ -4,6 +4,8 @@ import com.google.inject.Module;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.remote.InstanceDiscoveryService;
 import com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Properties;
 import java.util.function.Supplier;
@@ -11,6 +13,8 @@ import java.util.function.Supplier;
 import static com.namazustudios.socialengine.rt.Constants.INSTANCE_DISCOVERY_SERVICE;
 
 public class InstanceDiscoveryServiceModule extends PrivateModule {
+
+    private static final Logger logger = LoggerFactory.getLogger(InstanceDiscoveryServiceModule.class);
 
     private final Supplier<Properties> configurationSupplier;
 
@@ -32,7 +36,8 @@ public class InstanceDiscoveryServiceModule extends PrivateModule {
         final DiscoveryType discoveryType;
 
         try {
-            discoveryType = DiscoveryType.valueOf(discoveryTypeString);
+            logger.info("Using discovery type {}", discoveryTypeString.trim());
+            discoveryType = DiscoveryType.valueOf(discoveryTypeString.trim());
         } catch (IllegalArgumentException ex) {
             addError(ex);
             return;

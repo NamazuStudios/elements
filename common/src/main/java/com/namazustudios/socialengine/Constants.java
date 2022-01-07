@@ -193,12 +193,16 @@ public interface Constants {
         String WHOLE_WORD_ONLY = "[^_]\\w+";
 
         //language=JSRegexp
+        /**
+         * A very simple validator for valid email addresses
+         */
+        String EMAIL_ADDRESS = "^(.+)@(.+)$";
 
         //language=JSRegexp
         /**
-         * A very simple validator
+         * Checks for valid base64.
          */
-        String EMAIL_ADDRESS = "^(.+)@(.+)$";
+        String BASE_64 = "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$";
 
     }
 

@@ -2,16 +2,10 @@ package com.namazustudios.socialengine.setup.commands;
 
 import com.namazustudios.socialengine.service.Unscoped;
 import com.namazustudios.socialengine.service.VersionService;
-import com.namazustudios.socialengine.setup.SecureReader;
 import com.namazustudios.socialengine.setup.SetupCommand;
 import com.namazustudios.socialengine.setup.SetupCommands;
-import com.namazustudios.socialengine.setup.jline.ShellCompleter;
 import org.jline.reader.EndOfFileException;
 import org.jline.reader.LineReader;
-import org.jline.reader.LineReaderBuilder;
-import org.jline.reader.impl.DefaultHighlighter;
-import org.jline.reader.impl.DefaultParser;
-import org.jline.terminal.Attributes;
 import org.jline.terminal.Terminal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +18,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Stream;
 
-import static java.lang.String.format;
 import static java.lang.Thread.interrupted;
-import static org.jline.reader.LineReader.Option.*;
 
 public class SetupShell implements SetupCommand {
 

@@ -16,36 +16,4 @@
     <artifactId>namazu-socialengine-base</artifactId>
     <version>1.0-SNAPSHOT</version>
 
-    <build>
-        <plugins>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>${exec.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>my-exec</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <inherited>false</inherited>
-                    </execution>
-                </executions>
-                <configuration>
-                    <workingDirectory>${project.basedir}</workingDirectory>
-                    <executable>docker</executable>
-                    <arguments>
-                        <argument>build</argument>
-                        <argument>${project.basedir}</argument>
-                        <argument>--tag</argument>
-                        <argument>${project.artifactId}:latest</argument>
-                        <argument>--tag</argument>
-                        <argument>${project.artifactId}:${project.version}</argument>
-                    </arguments>
-                </configuration>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>

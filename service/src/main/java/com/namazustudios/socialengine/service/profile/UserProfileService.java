@@ -39,8 +39,6 @@ public class UserProfileService implements ProfileService {
 
     private UserService userService;
 
-    private NameService nameService;
-
     private ProfileDao profileDao;
 
     private ApplicationDao applicationDao;
@@ -173,15 +171,6 @@ public class UserProfileService implements ProfileService {
     @Inject
     public void setUserService(UserService userService) {
         this.userService = userService;
-    }
-
-    public NameService getNameService() {
-        return nameService;
-    }
-
-    @Inject
-    public void setNameService(NameService nameService) {
-        this.nameService = nameService;
     }
 
     public ProfileDao getProfileDao() {
