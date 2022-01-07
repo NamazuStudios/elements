@@ -7,19 +7,16 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.security.InsufficientPermissionException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateNeoWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
-import io.neow3j.wallet.Wallet;
-import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
-import java.util.Base64;
 
 public class UserNeoWalletService implements NeoWalletService {
 

@@ -7,7 +7,12 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.Map;
 
-public class PatchNeoSmartContractRequest {
+public class SmartContract {
+
+    @NotNull(groups = ValidationGroups.Update.class)
+    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
+    @ApiModelProperty("The unique ID of the contract itself.")
+    private String id;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The name given to this contract.")
@@ -26,6 +31,14 @@ public class PatchNeoSmartContractRequest {
 
     @ApiModelProperty("Any meta data for this contract.")
     private Map<String, Object> metadata;
+
+    public String getId() {
+        return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
+    }
 
     public String getDisplayName() {
         return displayName;

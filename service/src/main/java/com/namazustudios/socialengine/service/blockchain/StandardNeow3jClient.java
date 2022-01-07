@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.model.blockchain.neo.*;
 import io.neow3j.contract.SmartContract;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
@@ -109,7 +109,7 @@ public class StandardNeow3jClient implements Neow3jClient {
 
     @Override
     public Nep6Wallet nep6ToElementsWallet(NEP6Wallet wallet) {
-        var scryptParams = new com.namazustudios.socialengine.model.blockchain.ScryptParams(wallet.getScrypt().getN(), wallet.getScrypt().getR(), wallet.getScrypt().getP());
+        var scryptParams = new ScryptParams(wallet.getScrypt().getN(), wallet.getScrypt().getR(), wallet.getScrypt().getP());
         List<Nep6Account> nep6Accounts = new ArrayList<>();
         for (NEP6Account acc : wallet.getAccounts()) {
             List<Nep6Parameter> nep6Parameters = new ArrayList<>();

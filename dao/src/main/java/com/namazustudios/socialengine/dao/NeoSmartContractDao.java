@@ -18,34 +18,34 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 public interface NeoSmartContractDao {
 
     /**
-     * Lists all {@link NeoSmartContract} instances, specifying a search query.
+     * Lists all {@link SmartContract} instances, specifying a search query.
      *
      * @param offset
      * @param count
      * @param search
-     * @return a {@link Pagination} of {@link NeoSmartContract} instances
+     * @return a {@link Pagination} of {@link SmartContract} instances
      */
-    Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search);
+    Pagination<SmartContract> getNeoSmartContracts(int offset, int count, String search);
 
     /**
-     * Fetches a specific {@link NeoSmartContract} instance based on ID or name.  If not found, an
+     * Fetches a specific {@link SmartContract} instance based on ID or name.  If not found, an
      * exception is raised.
      *
      * @param contractIdOrName the contract ID
-     * @return the {@link NeoSmartContract}, never null
+     * @return the {@link SmartContract}, never null
      */
-    NeoSmartContract getNeoSmartContract(String contractIdOrName);
+    SmartContract getNeoSmartContract(String contractIdOrName);
 
     /**
-     * Updates the supplied {@link NeoSmartContract}.
+     * Updates the supplied {@link SmartContract}.
      *
-     * @param patchNeoSmartContractRequest the {@link PatchNeoSmartContractRequest} with the information to update
-     * @return the {@link NeoSmartContract} as it was changed by the service.
+     * @param patchSmartContractRequest the {@link PatchSmartContractRequest} with the information to update
+     * @return the {@link SmartContract} as it was changed by the service.
      */
-    NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest);
+    SmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest);
 
     /**
-     * Deletes the {@link NeoSmartContract} with the supplied contract ID.
+     * Deletes the {@link SmartContract} with the supplied contract ID.
      *
      * @param contractId the contract ID.
      */

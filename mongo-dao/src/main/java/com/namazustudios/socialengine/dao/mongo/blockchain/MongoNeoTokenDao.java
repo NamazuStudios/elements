@@ -1,34 +1,26 @@
 package com.namazustudios.socialengine.dao.mongo.blockchain;
 
-import com.mongodb.DuplicateKeyException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
-import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
-import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
-import com.namazustudios.socialengine.exception.DuplicateException;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.blockchain.NeoTokenNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import io.neow3j.wallet.Wallet;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Pattern;

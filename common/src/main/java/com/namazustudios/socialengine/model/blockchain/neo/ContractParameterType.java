@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.model.blockchain.neo;
 
 
 public enum ContractParameterType {

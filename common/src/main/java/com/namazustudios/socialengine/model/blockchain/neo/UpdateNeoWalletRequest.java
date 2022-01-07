@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.model.blockchain.neo;
 
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
 import io.swagger.annotations.ApiModel;

@@ -2,11 +2,10 @@ package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
-import com.namazustudios.socialengine.exception.NotImplementedException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
 import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;

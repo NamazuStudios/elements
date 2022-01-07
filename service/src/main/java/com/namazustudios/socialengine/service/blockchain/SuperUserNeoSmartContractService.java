@@ -7,13 +7,12 @@ import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.exception.blockchain.ContractInvocationException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
-import io.neow3j.contract.SmartContract;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.neow3j.transaction.AccountSigner;
 import io.neow3j.types.ContractParameter;
 import io.neow3j.wallet.Account;
-import io.neow3j.wallet.nep6.NEP6Wallet;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -33,18 +32,18 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     private ObjectMapper objectMapper;
 
     @Override
-    public Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search) {
+    public Pagination<SmartContract> getNeoSmartContracts(int offset, int count, String search) {
         return getNeoSmartContractDao().getNeoSmartContracts(offset, count, search);
     }
 
     @Override
-    public NeoSmartContract getNeoSmartContract(String contractIdOrName) {
+    public SmartContract getNeoSmartContract(String contractIdOrName) {
         return getNeoSmartContractDao().getNeoSmartContract(contractIdOrName);
     }
 
     @Override
-    public NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest) {
-        return getNeoSmartContractDao().patchNeoSmartContract(patchNeoSmartContractRequest);
+    public SmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest) {
+        return getNeoSmartContractDao().patchNeoSmartContract(patchSmartContractRequest);
     }
 
     @Override
@@ -53,14 +52,14 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         for (var tid : mintTokenRequest.getTokenIds()) {
             var token = getNeoTokenDao().getToken(tid);
             if (token.getTotalMintedQuantity() < token.getToken().getTotalSupply()) {
-                NeoSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(token.getContractId());
+                SmartContract contract = getNeoSmartContractDao().getNeoSmartContract(token.getContractId());
                 var tokenClone = getNeoTokenDao().cloneNeoToken(token);
 
                 switch (contract.getBlockchain()) {
                     case "NEO":
                         try {
                             var tkn = tokenClone.getToken();
-                            SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
+                            io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
                             var ownerHash = Account.fromAddress(tkn.getOwner()).getScriptHash();
                             var tokenIdParam = ContractParameter.string(tokenClone.getTokenUUID());
                             tkn.setOwner(ownerHash.toString());
@@ -96,11 +95,11 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
     @Override
     public NeoSendRawTransaction invoke(InvokeContractRequest invokeRequest) {
-        NeoSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
+        SmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
 
         switch(contract.getBlockchain()){
             case "NEO":
-                SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
+                io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
                 Account account = Account.fromAddress(invokeRequest.getAddress());
                 if (invokeRequest.getParameters().size() > 0){
                     List<ContractParameter> invokeParams = new ArrayList<>();
@@ -131,11 +130,11 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
     @Override
     public NeoInvokeFunction testInvoke(InvokeContractRequest invokeRequest) {
-        NeoSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
+        SmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
 
         switch(contract.getBlockchain()){
             case "NEO":
-                SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
+                io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
                 Account account = Account.fromAddress(invokeRequest.getAddress());
                 if (invokeRequest.getParameters().size() > 0){
                     List<ContractParameter> invokeParams = new ArrayList<>();

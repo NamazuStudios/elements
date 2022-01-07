@@ -13,8 +13,6 @@ import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import java.util.List;
-
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 /**
@@ -32,7 +30,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets Neo contracts.",
             notes = "Gets a pagination of Neo Contracts.")
-    public Pagination<NeoSmartContract> getContracts(
+    public Pagination<SmartContract> getContracts(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("search") @DefaultValue("") String search) {
@@ -45,7 +43,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Neo Smart Contract",
             notes = "Gets a specific Neo Smart Contract by contractId.")
-    public NeoSmartContract getContract(@PathParam("contractId") String contractId) {
+    public SmartContract getContract(@PathParam("contractId") String contractId) {
         return getNeoSmartContractService().getNeoSmartContract(contractId);
     }
 
@@ -53,7 +51,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Patches a Neo Smart Contract",
             notes = "Patches a Neo Smart Contract entry, associated with the specified deployed script hash.")
-    public NeoSmartContract patchContract(final PatchNeoSmartContractRequest request) {
+    public SmartContract patchContract(final PatchSmartContractRequest request) {
         return getNeoSmartContractService().patchNeoSmartContract(request);
     }
 

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-import com.namazustudios.socialengine.model.blockchain.Nep6Wallet;
+import com.namazustudios.socialengine.model.blockchain.neo.Nep6Wallet;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;

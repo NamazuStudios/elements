@@ -5,11 +5,7 @@ import com.namazustudios.socialengine.dao.NeoSmartContractDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoSmartContract;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.blockchain.NeoSmartContractNotFoundException;
-import com.namazustudios.socialengine.exception.blockchain.NeoWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.*;
@@ -43,7 +39,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search) {
+    public Pagination<SmartContract> getNeoSmartContracts(int offset, int count, String search) {
         final String trimmedSearch = nullToEmpty(search).trim();
         final Query<MongoNeoSmartContract> mongoQuery = getDatastore().find(MongoNeoSmartContract.class);
 
@@ -55,7 +51,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     }
 
     @Override
-    public NeoSmartContract getNeoSmartContract(String contractIdOrName) {
+    public SmartContract getNeoSmartContract(String contractIdOrName) {
         final var objectId = getMongoDBUtils().parseOrReturnNull(contractIdOrName);
 
         var mongoContract = getDatastore().find(MongoNeoSmartContract.class)
@@ -73,21 +69,21 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     }
 
     @Override
-    public NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest) {
-        getValidationHelper().validateModel(patchNeoSmartContractRequest, ValidationGroups.Insert.class);
+    public SmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest) {
+        getValidationHelper().validateModel(patchSmartContractRequest, ValidationGroups.Insert.class);
 
         final var query = getDatastore().find(MongoNeoSmartContract.class);
-        final var scriptHash = patchNeoSmartContractRequest.getScriptHash();
+        final var scriptHash = patchSmartContractRequest.getScriptHash();
 
         query.filter(eq("scriptHash", scriptHash));
 
         final var builder = new UpdateBuilder().with(
-                set("displayName", patchNeoSmartContractRequest.getDisplayName()),
+                set("displayName", patchSmartContractRequest.getDisplayName()),
                 set("scriptHash", scriptHash),
-                set("blockchain", patchNeoSmartContractRequest.getBlockchain())
+                set("blockchain", patchSmartContractRequest.getBlockchain())
         );
 
-        var metadata = patchNeoSmartContractRequest.getMetadata();
+        var metadata = patchSmartContractRequest.getMetadata();
         if (metadata != null) {
             builder.with(set("metadata", metadata));
         }
@@ -118,8 +114,8 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
         }
     }
 
-    private NeoSmartContract transform(MongoNeoSmartContract token) {
-        return getBeanMapper().map(token, NeoSmartContract.class);
+    private SmartContract transform(MongoNeoSmartContract token) {
+        return getBeanMapper().map(token, SmartContract.class);
     }
 
     public MongoDBUtils getMongoDBUtils() {

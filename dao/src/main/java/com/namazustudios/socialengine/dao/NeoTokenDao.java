@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateNeoTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
