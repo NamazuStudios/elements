@@ -51,12 +51,13 @@ public interface NeoTokenDao {
     NeoToken updateToken(String tokenId, UpdateNeoTokenRequest updateNeoTokenRequest);
 
     /**
-     * Updates the supplied {@link NeoToken} marking it as minted.
+     * Updates the mint status of the supplied {@link NeoToken}.
      *
      * @param tokenId the id of the token to update
+     * @param status the mint status of the token
      * @return the {@link NeoToken} as it was changed by the service.
      */
-    NeoToken mintToken(String tokenId);
+    NeoToken setMintStatusForToken(String tokenId, NeoToken.MintStatus status);
 
     /**
      * Creates a new token using a pre-created template.
@@ -65,6 +66,14 @@ public interface NeoTokenDao {
      * @return the {@link NeoToken} as it was created by the service.
      */
     NeoToken createToken(CreateNeoTokenRequest tokenRequest);
+
+    /**
+     * Creates a new token by cloning an existing {@link NeoToken} definition.
+     *
+     * @param neoToken the {@link NeoToken} with the information to clone
+     * @return the {@link NeoToken} as it was created by the service.
+     */
+    NeoToken cloneNeoToken(NeoToken neoToken);
 
     /**
      * Deletes the {@link NeoToken} with the supplied profile ID.

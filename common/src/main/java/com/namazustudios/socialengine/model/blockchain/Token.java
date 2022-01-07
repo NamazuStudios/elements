@@ -34,6 +34,11 @@ public class Token {
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The maximum number of usages this nft will have if applicable.")
+    private long usages;
+
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The status of this token. Valid values are " +
             "\"public\" : Can be viewed by everyone, " +
             "\"private\" : Only the token or contract owner can view the token properties " +
@@ -129,6 +134,14 @@ public class Token {
 
     public void setTotalSupply(long totalSupply) {
         this.totalSupply = totalSupply;
+    }
+
+    public long getUsages() {
+        return usages;
+    }
+
+    public void setUsages(long usages) {
+        this.usages = usages;
     }
 
     public String getTransferOptions() {

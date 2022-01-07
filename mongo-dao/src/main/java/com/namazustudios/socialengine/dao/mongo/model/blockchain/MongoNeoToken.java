@@ -5,6 +5,7 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import com.namazustudios.socialengine.model.blockchain.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.Ownership;
 import com.namazustudios.socialengine.model.blockchain.Token;
 import dev.morphia.annotations.*;
@@ -23,7 +24,8 @@ import java.util.Map;
 @Entity(value = "token", useDiscriminator = false)
 @SearchableDocument(fields = {
         @SearchableField(name = "name", path = "/name"),
-        @SearchableField(name = "tags", path = "/tags")
+        @SearchableField(name = "tags", path = "/tags"),
+        @SearchableField(name = "tokenUUID", path ="/tokenUUID")
 })
 @Indexes({
         @Index(fields = @Field(value = "name", type = IndexType.TEXT), options = @IndexOptions(unique = true))
@@ -32,6 +34,9 @@ public class MongoNeoToken {
 
     @Id
     private ObjectId objectId;
+
+    @Property
+    private String tokenUUID;
 
     @Property
     private String name;
@@ -46,10 +51,16 @@ public class MongoNeoToken {
     private boolean listed;
 
     @Property
-    private boolean minted;
+    private NeoToken.MintStatus mintStatus;
 
     @Property
     private String contractId;
+
+    @Property
+    private String seriesId;
+
+    @Property
+    private long totalMintedQuantity;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -57,6 +68,14 @@ public class MongoNeoToken {
 
     public void setObjectId(ObjectId objectId) {
         this.objectId = objectId;
+    }
+
+    public String getTokenUUID() {
+        return tokenUUID;
+    }
+
+    public void setTokenUUID(String tokenUUID) {
+        this.tokenUUID = tokenUUID;
     }
 
     public String getName() {
@@ -91,12 +110,12 @@ public class MongoNeoToken {
         this.listed = listed;
     }
 
-    public boolean isMinted() {
-        return minted;
+    public NeoToken.MintStatus getMintStatus() {
+        return mintStatus;
     }
 
-    public void setMinted(boolean minted) {
-        this.minted = minted;
+    public void setMintStatus(NeoToken.MintStatus mintStatus) {
+        this.mintStatus = mintStatus;
     }
 
     public String getContractId() {
@@ -105,5 +124,21 @@ public class MongoNeoToken {
 
     public void setContractId(String contractId) {
         this.contractId = contractId;
+    }
+
+    public String getSeriesId() {
+        return seriesId;
+    }
+
+    public void setSeriesId(String seriesId) {
+        this.seriesId = seriesId;
+    }
+
+    public long getTotalMintedQuantity() {
+        return totalMintedQuantity;
+    }
+
+    public void setTotalMintedQuantity(long totalMintedQuantity) {
+        this.totalMintedQuantity = totalMintedQuantity;
     }
 }

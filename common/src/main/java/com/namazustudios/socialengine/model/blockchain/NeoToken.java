@@ -17,6 +17,11 @@ public class NeoToken {
     @ApiModelProperty("The unique ID of the token itself.")
     private String id;
 
+    @NotNull(groups = ValidationGroups.Update.class)
+    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
+    @ApiModelProperty("The unique blockchain ID of the token.")
+    private String tokenUUID;
+
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @ApiModelProperty("The base token properties used by the blockchain.")
     private Token token;
@@ -26,9 +31,19 @@ public class NeoToken {
     @ApiModelProperty("The elements contract id to mint this token with.")
     private String contractId;
 
+    @Null(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @ApiModelProperty("The unique id of th series the token belongs to.")
+    private String seriesId;
+
+    @Null(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
+    @ApiModelProperty("How many instances of this token have been minted.")
+    private long totalMintedQuantity;
+
+    @ApiModelProperty("Whether this token is listed for sale.")
     private boolean listed;
 
-    private boolean minted;
+    @ApiModelProperty("The minting status of this token.")
+    private MintStatus mintStatus;
 
     public String getId() {
         return id;
@@ -36,6 +51,14 @@ public class NeoToken {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getTokenUUID() {
+        return tokenUUID;
+    }
+
+    public void setTokenUUID(String tokenUUID) {
+        this.tokenUUID = tokenUUID;
     }
 
     public Token getToken() {
@@ -46,6 +69,30 @@ public class NeoToken {
         this.token = token;
     }
 
+    public String getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
+    }
+
+    public String getSeriesId() {
+        return seriesId;
+    }
+
+    public void setSeriesId(String seriesId) {
+        this.seriesId = seriesId;
+    }
+
+    public long getTotalMintedQuantity() {
+        return totalMintedQuantity;
+    }
+
+    public void setTotalMintedQuantity(long totalMintedQuantity) {
+        this.totalMintedQuantity = totalMintedQuantity;
+    }
+
     public boolean isListed() {
         return listed;
     }
@@ -54,19 +101,18 @@ public class NeoToken {
         this.listed = listed;
     }
 
-    public boolean isMinted() {
-        return minted;
+    public MintStatus getMintStatus() {
+        return mintStatus;
     }
 
-    public void setMinted(boolean minted) {
-        this.minted = minted;
+    public void setMintStatus(MintStatus mintStatus) {
+        this.mintStatus = mintStatus;
     }
 
-    public String getContractId() {
-        return contractId;
-    }
-
-    public void setContractId(String contractId) {
-        this.contractId = contractId;
+    public enum MintStatus {
+        NOT_MINTED,
+        MINTED,
+        MINT_FAILED,
+        MINT_PENDING
     }
 }
