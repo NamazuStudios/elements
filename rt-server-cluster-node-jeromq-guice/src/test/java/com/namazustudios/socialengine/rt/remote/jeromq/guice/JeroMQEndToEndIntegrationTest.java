@@ -586,6 +586,10 @@ public class JeroMQEndToEndIntegrationTest {
                     .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
                     .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
 
+            bind(Integer.class)
+                    .annotatedWith(named(IO_THREADS))
+                    .toInstance(Runtime.getRuntime().availableProcessors());
+
         }
 
     }
