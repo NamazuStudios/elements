@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, Inject, OnInit } from "@angular/core";
+import { Component, Inject, OnInit } from "@angular/core";
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -28,7 +28,7 @@ export interface OptionType {
   templateUrl: "./neo-token-dialog.component.html",
   styleUrls: ["./neo-token-dialog.component.css"],
 })
-export class NeoTokenDialogComponent implements OnInit, AfterViewInit {
+export class NeoTokenDialogComponent implements OnInit {
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -160,10 +160,6 @@ export class NeoTokenDialogComponent implements OnInit, AfterViewInit {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
     });
-  }
-
-  ngAfterViewInit() {
-    console.log("Data: ", this.data);
   }
 
   addTag(event: MatChipInputEvent): void {
