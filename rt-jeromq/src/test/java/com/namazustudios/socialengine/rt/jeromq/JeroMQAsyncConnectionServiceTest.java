@@ -198,7 +198,7 @@ public class JeroMQAsyncConnectionServiceTest {
             bind(Integer.class)
                 .annotatedWith(named(IO_THREADS))
                 .toInstance(Runtime.getRuntime().availableProcessors());
-            
+
         }
     }
 
