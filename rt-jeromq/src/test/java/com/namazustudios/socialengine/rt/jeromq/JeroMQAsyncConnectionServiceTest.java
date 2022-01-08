@@ -18,7 +18,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
+import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
 import static java.util.concurrent.ConcurrentHashMap.newKeySet;
@@ -193,6 +195,10 @@ public class JeroMQAsyncConnectionServiceTest {
             bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
                 .to(JeroMQAsyncConnectionService.class).asEagerSingleton();
 
+            bind(Integer.class)
+                .annotatedWith(named(IO_THREADS))
+                .toInstance(Runtime.getRuntime().availableProcessors());
+            
         }
     }
 
