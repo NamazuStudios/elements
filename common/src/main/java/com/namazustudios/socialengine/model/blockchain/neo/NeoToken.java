@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.model.blockchain.neo;
 
+import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.Token;
 import io.swagger.annotations.ApiModel;
@@ -7,8 +8,6 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
-import java.util.List;
-import java.util.Map;
 
 @ApiModel
 public class NeoToken {
@@ -44,7 +43,7 @@ public class NeoToken {
     private boolean listed;
 
     @ApiModelProperty("The minting status of this token.")
-    private MintStatus mintStatus;
+    private BlockchainConstants.MintStatus mintStatus;
 
     public String getId() {
         return id;
@@ -102,18 +101,12 @@ public class NeoToken {
         this.listed = listed;
     }
 
-    public MintStatus getMintStatus() {
+    public BlockchainConstants.MintStatus getMintStatus() {
         return mintStatus;
     }
 
-    public void setMintStatus(MintStatus mintStatus) {
+    public void setMintStatus(BlockchainConstants.MintStatus mintStatus) {
         this.mintStatus = mintStatus;
     }
 
-    public enum MintStatus {
-        NOT_MINTED,
-        MINTED,
-        MINT_FAILED,
-        MINT_PENDING
-    }
 }

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.dao.NeoSmartContractDao;
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
@@ -68,7 +69,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                 var tokenClone = getNeoTokenDao().cloneNeoToken(token);
 
                 switch (contract.getBlockchain()) {
-                    case "NEO":
+                    case BlockchainConstants.Names.NEO:
                         try {
                             var tkn = tokenClone.getToken();
                             io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
@@ -80,17 +81,17 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                 stkhldr.setOwner(stkhldrHash.toString());
                             }
                             var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(tkn, Map.class));
-                            getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINT_PENDING);
+                            getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_PENDING);
                             var response = smartContract.invokeFunction("mint", tokenIdParam, tokenMapParam)
                                     .signers(AccountSigner.calledByEntry(mintAccount))
                                     .sign()
                                     .send();
                             mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
                             if (!response.hasError()) {
-                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINTED);
+                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINTED);
                                 responses.add(response);
                             } else {
-                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINT_FAILED);
+                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_FAILED);
                                 throw new ContractInvocationException("Minting failed with error: " + response.getError().toString());
                             }
                         } catch (Throwable e) {
@@ -99,7 +100,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                             } catch (CipherException er) {
                                 throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
                             }
-                            getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINT_FAILED);
+                            getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_FAILED);
                             throw new ContractInvocationException("Minting failed with exception: " + e);
                         }
                     default:
@@ -139,7 +140,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
             throw new ContractInvocationException("Decrypting the account keys failed: " + e);
         }
         switch(contract.getBlockchain()){
-            case "NEO":
+            case BlockchainConstants.Names.NEO:
                 io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
                 Account account = Account.fromAddress(invokeRequest.getAddress());
                 if (invokeRequest.getParameters().size() > 0){
@@ -201,7 +202,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         }
 
         switch(contract.getBlockchain()){
-            case "NEO":
+            case BlockchainConstants.Names.NEO:
                 io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
                 Account account = Account.fromAddress(invokeRequest.getAddress());
                 if (invokeRequest.getParameters().size() > 0){

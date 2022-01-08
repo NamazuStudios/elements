@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.blockchain;
 
 import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
@@ -92,7 +93,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         query.filter(and(
                 eq("_id", objectId),
-                eq("mintStatus", NeoToken.MintStatus.MINTED).not()
+                eq("mintStatus", BlockchainConstants.MintStatus.MINTED).not()
         ));
 
         final var builder = new UpdateBuilder().with(
@@ -116,7 +117,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
     @Override
-    public NeoToken setMintStatusForToken(String tokenId, NeoToken.MintStatus status) {
+    public NeoToken setMintStatusForToken(String tokenId, BlockchainConstants.MintStatus status) {
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
         final var query = getDatastore().find(MongoNeoToken.class);
 
@@ -157,7 +158,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                 set("tags", tags),
                 set("token", token),
                 set("listed", tokenRequest.isListed()),
-                set("mintStatus", NeoToken.MintStatus.NOT_MINTED),
+                set("mintStatus", BlockchainConstants.MintStatus.NOT_MINTED),
                 set("contractId", tokenRequest.getContractId()),
                 set("seriesId", UUID.randomUUID().toString()),
                 set("totalMintedQuantity", 0)
@@ -191,7 +192,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
                 set("tags", tags),
                 set("token", token),
                 set("listed", neoToken.isListed()),
-                set("mintStatus", NeoToken.MintStatus.NOT_MINTED),
+                set("mintStatus", BlockchainConstants.MintStatus.NOT_MINTED),
                 set("contractId", neoToken.getContractId()),
                 set("seriesId", neoToken.getSeriesId()),
                 set("totalMintedQuantity", totalMintedQuantity)

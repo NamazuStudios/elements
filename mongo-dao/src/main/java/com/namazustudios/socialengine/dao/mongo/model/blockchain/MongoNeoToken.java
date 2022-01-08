@@ -3,9 +3,9 @@ package com.namazustudios.socialengine.dao.mongo.model.blockchain;
 import com.namazustudios.elements.fts.annotation.SearchableDocument;
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
+import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.Token;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
@@ -49,7 +49,7 @@ public class MongoNeoToken {
     private boolean listed;
 
     @Property
-    private NeoToken.MintStatus mintStatus;
+    private BlockchainConstants.MintStatus mintStatus;
 
     @Property
     private String contractId;
@@ -108,11 +108,11 @@ public class MongoNeoToken {
         this.listed = listed;
     }
 
-    public NeoToken.MintStatus getMintStatus() {
+    public BlockchainConstants.MintStatus getMintStatus() {
         return mintStatus;
     }
 
-    public void setMintStatus(NeoToken.MintStatus mintStatus) {
+    public void setMintStatus(BlockchainConstants.MintStatus mintStatus) {
         this.mintStatus = mintStatus;
     }
 

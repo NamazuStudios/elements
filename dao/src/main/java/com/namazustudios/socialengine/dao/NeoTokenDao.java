@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao;
 
+import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
@@ -57,7 +58,7 @@ public interface NeoTokenDao {
      * @param status the mint status of the token
      * @return the {@link NeoToken} as it was changed by the service.
      */
-    NeoToken setMintStatusForToken(String tokenId, NeoToken.MintStatus status);
+    NeoToken setMintStatusForToken(String tokenId, BlockchainConstants.MintStatus status);
 
     /**
      * Creates a new token using a pre-created template.
