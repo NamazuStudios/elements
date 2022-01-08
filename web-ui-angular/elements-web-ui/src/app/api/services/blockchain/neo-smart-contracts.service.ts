@@ -18,7 +18,7 @@ import { PaginationNeoSmartContract } from "../../models/blockchain/pagination-n
 @Injectable({
   providedIn: "root",
 })
-class SmartContractsService extends BaseService {
+class NeoSmartContractsService extends BaseService {
   constructor(config: ApiConfiguration, http: HttpClient) {
     super(config, http);
   }
@@ -71,8 +71,6 @@ class SmartContractsService extends BaseService {
   /**
    * Gets a pagination of Neo Contracts.
    * @param params The `NeoSmartContractsService.GetNeoSmartContractsParams` containing the following parameters:
-   *
-   * - `tags`:
    *
    * - `query`:
    *

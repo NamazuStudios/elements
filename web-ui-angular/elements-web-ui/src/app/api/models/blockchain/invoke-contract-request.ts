@@ -6,12 +6,17 @@ export interface PatchNeoSmartContractRequest {
   /**
    * The unique elements ID of the contract to invoke a method on.
    */
-   contractId: string;
+   contractId?: string;
 
   /**
-   * The address of the account with funds to invoke.
+   * The elements wallet Id with funds to invoke the method. This will always use the default account of the wallet.
    */
-   address: string;
+   walletId: string;
+
+  /**
+   * The password of the wallet with funds to mint.
+   */
+   password: string;
 
   /**
    * The name of the method to invoke.
@@ -21,6 +26,6 @@ export interface PatchNeoSmartContractRequest {
   /**
    * description:The parameters for the method.
    */
-   parameters?: Array<ContractParameter>
+   parameters?: Array<Object>
   
 }
