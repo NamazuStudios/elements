@@ -14,6 +14,7 @@ import org.testng.annotations.Test;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static java.lang.String.format;
 
@@ -56,8 +57,8 @@ public class TestLiveWorkerMutation {
     @Factory
     public static Object[] getIntegrationTests() {
         return new Object[] {
-            getXodusTest(TestLiveWorkerMutation::new)
-//            getUnixFSTest(TestLiveWorkerMutation::new)
+            getXodusTest(TestLiveWorkerMutation::new),
+            getUnixFSTest(TestLiveWorkerMutation::new)
         };
     }
 
@@ -72,15 +73,20 @@ public class TestLiveWorkerMutation {
         this.embeddedTestService = embeddedTestService;
     }
 
-    @DataProvider
-    public Object[][] getApplicationNames() {
+    public Stream<String> getApplicationNames() {
         return IntStream
             .range(0, 5)
-            .mapToObj(i -> new Object[] {format("Mock Application %d", i)})
+            .mapToObj(i ->format("Mock Application %d", i));
+    }
+
+    @DataProvider
+    public Object[][] getApplicationNamesProvider() {
+        return getApplicationNames()
+            .map(s -> new Object[]{s})
             .toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "getApplicationNames")
+    @Test(dataProvider = "getApplicationNamesProvider")
     public void testAddNodeIndividually(final String mockApplicationName) {
         try (var mutator = worker.beginMutation()) {
             mutator.addNode(mockApplicationName);
@@ -88,7 +94,7 @@ public class TestLiveWorkerMutation {
         }
     }
 
-    @Test(dataProvider = "getApplicationNames", dependsOnMethods = "testAddNodeIndividually")
+    @Test(dataProvider = "getApplicationNamesProvider", dependsOnMethods = "testAddNodeIndividually")
     public void testRestartNodeIndividually(final String mockApplicationName) {
         try (var mutator = worker.beginMutation()) {
             mutator.restartNode(mockApplicationName);
@@ -96,10 +102,34 @@ public class TestLiveWorkerMutation {
         }
     }
 
-    @Test(dataProvider = "getApplicationNames", dependsOnMethods = "testRestartNodeIndividually")
+    @Test(dataProvider = "getApplicationNamesProvider", dependsOnMethods = "testRestartNodeIndividually")
     public void testStopNodeIndividually(final String mockApplicationName) {
         try (var mutator = worker.beginMutation()) {
             mutator.removeNode(mockApplicationName);
+            mutator.commit();
+        }
+    }
+
+    @Test(dependsOnMethods = "testStopNodeIndividually")
+    public void testStartAll() {
+        try (var mutator = worker.beginMutation()) {
+            getApplicationNames().forEach(mutator::addNode);
+            mutator.commit();
+        }
+    }
+
+    @Test(dependsOnMethods = "testStartAll")
+    public void testRestartAll() {
+        try (var mutator = worker.beginMutation()) {
+            getApplicationNames().forEach(mutator::restartNode);
+            mutator.commit();
+        }
+    }
+
+    @Test(dependsOnMethods = "testRestartAll")
+    public void testStopAll() {
+        try (var mutator = worker.beginMutation()) {
+            getApplicationNames().forEach(mutator::removeNode);
             mutator.commit();
         }
     }

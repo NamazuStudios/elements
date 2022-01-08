@@ -8,8 +8,7 @@ public class SimpleInstanceModule extends PrivateModule {
 
     @Override
     protected void configure() {
-        bind(SimpleInstance.class).asEagerSingleton();
-        bind(Instance.class).to(SimpleInstance.class);
+        bind(Instance.class).to(SimpleInstance.class).asEagerSingleton();
         expose(Instance.class);
     }
 

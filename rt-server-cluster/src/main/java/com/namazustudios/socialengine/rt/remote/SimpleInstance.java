@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 
 public class SimpleInstance implements Instance {
@@ -28,8 +29,13 @@ public class SimpleInstance implements Instance {
 
     private AsyncConnectionService<?, ?> asyncConnectionService;
 
+    private final AtomicBoolean closed = new AtomicBoolean();
+
     @Override
     public void start() {
+
+        if (closed.get())
+            throw new IllegalStateException("Instance is closed.");
 
         final List<Exception> exceptionList = new ArrayList<>();
         hooks.add(this::close);
@@ -90,6 +96,9 @@ public class SimpleInstance implements Instance {
 
     @Override
     public void close() {
+
+        if (!closed.compareAndSet(false, true))
+            return;
 
         final List<Exception> exceptionList = new ArrayList<>();
 

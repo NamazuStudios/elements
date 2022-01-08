@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.remote;
 
 import com.namazustudios.socialengine.rt.PersistenceEnvironment;
+import com.namazustudios.socialengine.rt.SchedulerEnvironment;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -39,6 +40,8 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
     private Set<Node> nodeSet;
 
+    private SchedulerEnvironment schedulerEnvironment;
+
     private PersistenceEnvironment persistenceEnvironment;
 
     private ExecutorService executorService;
@@ -60,9 +63,16 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
     protected void postStart(final Consumer<Exception> exceptionConsumer) {
 
         try {
-            getPersistence().start();
+            getSchedulerEnvironment().start();
         } catch (Exception ex) {
-            logger.error("Could not start worker instance persistence.", ex);
+            logger.error("Could not start worker instance scheduler environment.", ex);
+            exceptionConsumer.accept(ex);
+        }
+
+        try {
+            getPersistenceEnvironment().start();
+        } catch (Exception ex) {
+            logger.error("Could not start worker instance persistence environment.", ex);
             exceptionConsumer.accept(ex);
         }
 
@@ -153,12 +163,25 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
     @Override
     protected void preClose(final Consumer<Exception> exceptionConsumer) {
-        doShutdownNodes(concat(of(getMasterNode()), getNodeSet().stream()), exceptionConsumer);
+
+        final var wLock = rwLock.writeLock();
+        wLock.lock();
+
+        try {
+            doShutdownNodes(concat(of(getMasterNode()), getNodeSet().stream()), exceptionConsumer);
+        } finally {
+            wLock.unlock();
+        }
+
     }
 
-    private void doShutdownNodes(Stream<Node> shutdownStream, Consumer<Exception> exceptionConsumer) {
+    private void doShutdownNodes(final Stream<Node> shutdownStream, final Consumer<Exception> exceptionConsumer) {
 
-        final var shutdownList = shutdownStream.map(node -> {
+        final var nodeList = shutdownStream.collect(toList());
+
+        final var shutdownList = nodeList
+                .stream()
+                .map(node -> {
             try {
                 return node.beginShutdown();
             } catch (Exception ex) {
@@ -194,6 +217,11 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 exceptionConsumer.accept(ex);
             }
         });
+
+        final var bindingSet = this.bindingSet
+            .stream()
+            .filter(b -> nodeList.stream().anyMatch(n -> n.getNodeId().equals(b.getNodeId())))
+            .collect(toSet());
 
         bindingSet.stream().map(binding -> {
             try {
@@ -239,7 +267,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
         }
 
         try {
-            getPersistence().stop();
+            getPersistenceEnvironment().stop();
         } catch (Exception ex) {
             logger.error("Could not stop worker instance persistence.", ex);
             exceptionConsumer.accept(ex);
@@ -289,7 +317,6 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
         final var wLock = rwLock.writeLock();
         wLock.lock();
-
 
         return new Mutator() {
 
@@ -421,12 +448,21 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
         return nodeSet;
     }
 
-    public PersistenceEnvironment getPersistence() {
+    public SchedulerEnvironment getSchedulerEnvironment() {
+        return schedulerEnvironment;
+    }
+
+    @Inject
+    public void setSchedulerEnvironment(SchedulerEnvironment schedulerEnvironment) {
+        this.schedulerEnvironment = schedulerEnvironment;
+    }
+
+    public PersistenceEnvironment getPersistenceEnvironment() {
         return persistenceEnvironment;
     }
 
     @Inject
-    public void setPersistence(PersistenceEnvironment persistenceEnvironment) {
+    public void setPersistenceEnvironment(PersistenceEnvironment persistenceEnvironment) {
         this.persistenceEnvironment = persistenceEnvironment;
     }
 

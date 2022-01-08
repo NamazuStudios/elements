@@ -18,8 +18,8 @@ public class TestWorkerInstanceModule extends PrivateModule {
     protected void configure() {
 
         bind(SimpleWorkerInstance.class).asEagerSingleton();
-        bind(Worker.class).to(SimpleWorkerInstance.class);
-        bind(Instance.class).to(SimpleWorkerInstance.class);
+        bind(Worker.class).to(SimpleWorkerInstance.class).asEagerSingleton();
+        bind(Instance.class).to(SimpleWorkerInstance.class).asEagerSingleton();
 
         expose(Worker.class);
         expose(Instance.class);

@@ -46,6 +46,8 @@ public class ApplicationNode {
 
     private Instance instance;
 
+    private WatchdogService watchdogService;
+
     private final Injector injector;
 
     private final Object lock = new Object();
@@ -137,6 +139,7 @@ public class ApplicationNode {
 
             worker = injector.getInstance(Worker.class);
             instance = injector.getInstance(Instance.class);
+            watchdogService = injector.getInstance(WatchdogService.class);
 
             try {
                 logger.info("Starting Instance.");
@@ -145,6 +148,7 @@ public class ApplicationNode {
             } catch (Exception ex) {
                 worker = null;
                 instance = null;
+                watchdogService.stop();
                 logger.error("Could not start ApplicationNode", ex);
                 throw ex;
             }
@@ -171,6 +175,8 @@ public class ApplicationNode {
             } finally {
                 worker = null;
                 instance = null;
+                watchdogService.stop();
+                watchdogService = null;
             }
 
         }
