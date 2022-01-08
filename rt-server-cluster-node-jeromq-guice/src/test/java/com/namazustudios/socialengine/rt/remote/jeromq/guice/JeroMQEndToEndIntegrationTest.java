@@ -34,6 +34,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
+import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.*;
 import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.DEFAULT_TOTAL_REFRESH_TIMEOUT;
 import static java.lang.String.format;
@@ -375,6 +376,10 @@ public class JeroMQEndToEndIntegrationTest {
                 .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
                 .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
 
+            bind(Integer.class)
+                .annotatedWith(named(IO_THREADS))
+                .toInstance(Runtime.getRuntime().availableProcessors());
+
         }
 
     }
@@ -498,6 +503,10 @@ public class JeroMQEndToEndIntegrationTest {
             bind(Node.Factory.class).toInstance(Node.Factory.unsupported());
             bind(Instance.class).annotatedWith(instanceNamedAnnotation).to(SimpleWorkerInstance.class);
             expose(Instance.class).annotatedWith(instanceNamedAnnotation);
+
+            bind(Integer.class)
+                .annotatedWith(named(IO_THREADS))
+                .toInstance(Runtime.getRuntime().availableProcessors());
 
         }
 
