@@ -49,6 +49,13 @@
       <mat-cell *matCellDef="let neoSmartContract">{{neoSmartContract.blockchain}}</mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="edit-action">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let neoSmartContract">
+        <button mat-raised-button color="primary" (click)="editNeoSmartContract(neoSmartContract)">Edit
+          </button>
+      </mat-cell>
+    </ng-container>
     <ng-container matColumnDef="define-nft-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let neoSmartContract">

@@ -17,6 +17,11 @@ input[type="button"] {
   padding: auto 10px;
 }
 
+.mat-column-edit-action {
+  max-width: 80px;
+  min-width: 80px;
+}
+
 .mat-column-define-nft-action {
   max-width: 120px;
   min-width: 120px;

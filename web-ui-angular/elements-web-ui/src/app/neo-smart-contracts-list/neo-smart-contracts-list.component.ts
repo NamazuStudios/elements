@@ -42,6 +42,7 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
     "select",
     "name",
     "network",
+    "edit-action",
     "define-nft-action",
     "manifest-action",
     "remove-action",
@@ -189,6 +190,18 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
     this.showDialog(
       true,
       new NeoSmartContractViewModel(),
+      (patchNeoSmartContractRequest: PatchNeoSmartContractRequest) => {
+        return this.neoSmartContractsService.patchNeoSmartContract(
+          patchNeoSmartContractRequest
+        );
+      }
+    );
+  }
+
+  editNeoSmartContract(neoSmartContract: NeoSmartContract) {
+    this.showDialog(
+      false,
+      neoSmartContract,
       (patchNeoSmartContractRequest: PatchNeoSmartContractRequest) => {
         return this.neoSmartContractsService.patchNeoSmartContract(
           patchNeoSmartContractRequest
