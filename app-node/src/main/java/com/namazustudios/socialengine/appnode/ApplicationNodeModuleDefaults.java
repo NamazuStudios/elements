@@ -9,6 +9,7 @@ import static com.namazustudios.socialengine.remote.jeromq.JeroMQNode.JEROMQ_NOD
 import static com.namazustudios.socialengine.rt.Constants.*;
 import static com.namazustudios.socialengine.rt.HandlerContext.HANDLER_TIMEOUT_MSEC;
 import static com.namazustudios.socialengine.rt.git.Constants.GIT_STORAGE_DIRECTORY;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
 import static com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService.SRV_AUTHORITATIVE;
@@ -54,6 +55,7 @@ public class ApplicationNodeModuleDefaults implements ModuleDefaults {
         properties.setProperty(SCHEDULER_ENVIRONMENT_PATH, "script-storage/storage.xodus.scheduler");
         properties.setProperty(UNIXFS_STORAGE_ROOT_DIRECTORY, "script-storage/storage.unixfs");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
+        properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(GIT_STORAGE_DIRECTORY, "script-repos/git");
         properties.setProperty(SRV_QUERY, "_elements._tcp.internal");

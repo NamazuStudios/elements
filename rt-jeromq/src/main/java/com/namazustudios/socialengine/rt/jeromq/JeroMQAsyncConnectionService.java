@@ -19,7 +19,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
 import static java.util.stream.Collectors.toList;
@@ -31,6 +30,8 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
     private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncConnectionService.class);
 
     private static final int POLL_INTERVAL = 1000;
+
+    public static final String ASYNC_CONNECTION_IO_THREADS = "com.namazustudios.socialengine.rt.jeromq.async.connection.service.io.threads";
 
     private final AtomicReference<SimpleAsyncConnectionServiceContext> context = new AtomicReference<>();
 
@@ -98,7 +99,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
     }
 
     @Inject
-    public void setThreadPoolSize(@Named(IO_THREADS) int threadPoolSize) {
+    public void setThreadPoolSize(@Named(ASYNC_CONNECTION_IO_THREADS) int threadPoolSize) {
         this.threadPoolSize = threadPoolSize;
     }
 

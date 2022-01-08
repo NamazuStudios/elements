@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static java.lang.Thread.interrupted;
 import static java.util.UUID.randomUUID;
@@ -196,8 +197,8 @@ public class JeroMQAsyncConnectionServiceTest {
                 .to(JeroMQAsyncConnectionService.class).asEagerSingleton();
 
             bind(Integer.class)
-                .annotatedWith(named(IO_THREADS))
-                .toInstance(Runtime.getRuntime().availableProcessors());
+                .annotatedWith(named(ASYNC_CONNECTION_IO_THREADS))
+                .toInstance(Runtime.getRuntime().availableProcessors() + 1);
 
         }
     }

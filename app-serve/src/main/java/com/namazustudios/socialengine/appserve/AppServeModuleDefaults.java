@@ -7,6 +7,7 @@ import java.util.Properties;
 import static com.namazustudios.socialengine.Constants.*;
 import static com.namazustudios.socialengine.appserve.DispatcherAppProvider.*;
 import static com.namazustudios.socialengine.rt.Constants.*;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
 import static com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService.SRV_AUTHORITATIVE;
@@ -32,6 +33,7 @@ public class AppServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(HTTP_TIMEOUT_MSEC, "180000");
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
+        properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "");
         properties.setProperty(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.setProperty(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());

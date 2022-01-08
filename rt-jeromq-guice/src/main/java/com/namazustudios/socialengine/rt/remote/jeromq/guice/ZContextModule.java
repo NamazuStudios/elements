@@ -29,14 +29,12 @@ public class ZContextModule extends PrivateModule {
     }
 
     public ZContextModule withIoThreads(final int ioThreads) {
-
-        ioThreadsAction = () -> {
-            bind(Integer.class).annotatedWith(named(IO_THREADS)).toInstance(ioThreads);
-            expose(Integer.class).annotatedWith(named(IO_THREADS));
-        };
-
+        ioThreadsAction = () -> bind(Integer.class).annotatedWith(named(IO_THREADS)).toInstance(ioThreads);
         return this;
+    }
 
+    public ZContextModule withDefaultMaxSockets() {
+        return withMaxSockets(zmq.ZMQ.ZMQ_MAX_SOCKETS_DFLT);
     }
 
     public ZContextModule withMaxSockets(int maxSockets) {

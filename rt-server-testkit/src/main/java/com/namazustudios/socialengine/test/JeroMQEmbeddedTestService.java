@@ -174,7 +174,6 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
     public JeroMQEmbeddedTestService withUnixFSWorker() {
 
         withWorker().worker.withInstanceModules(
-            new CommonTestModule(),
             new JournalTransactionalResourceServicePersistenceModule(),
             new UnixFSTransactionalPersistenceContextModule().withTestingDefaults(),
             new XodusEnvironmentModule()
@@ -194,7 +193,7 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
     public JeroMQEmbeddedTestService withXodusWorker() {
 
         withWorker().worker.withInstanceModules(
-            new CommonTestModule(),
+//            new CommonTestModule(),
             new XodusEnvironmentModule()
                 .withTempSchedulerEnvironment()
                 .withTempResourceEnvironment(),
@@ -292,15 +291,6 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
         }
 
         if (!exceptionList.isEmpty()) throw new MultiException(exceptionList);
-
-    }
-
-    public static class CommonTestModule extends AbstractModule {
-
-        @Override
-        protected void configure() {
-            bind(String.class).annotatedWith(named(IO_THREADS)).toInstance("1");
-        }
 
     }
 

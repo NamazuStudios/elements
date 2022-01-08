@@ -33,7 +33,7 @@ import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
-import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.EMPTY_DELIMITER;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.OK;
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQInstanceConnectionService.JEROMQ_CLUSTER_BIND_ADDRESS;
@@ -330,7 +330,7 @@ public class JeroMQInstanceConnectionServiceIntegrationTest {
             bind(InstanceDiscoveryService.class).to(MockInstanceDiscoveryService.class);
 
             bind(Integer.class)
-                .annotatedWith(named(IO_THREADS))
+                .annotatedWith(named(ASYNC_CONNECTION_IO_THREADS))
                 .toInstance(Runtime.getRuntime().availableProcessors());
 
             install(new PrivateModule() {
