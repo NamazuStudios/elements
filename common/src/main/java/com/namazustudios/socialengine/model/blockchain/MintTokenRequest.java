@@ -14,7 +14,7 @@ public class MintTokenRequest {
     private List<String> tokenIds;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The elements wallet Id with funds to mint. Currently always uses the first account in the wallet.")
+    @ApiModelProperty("The elements wallet Id with funds to invoke the method. This will always use the default account of the wallet.")
     private String walletId;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
