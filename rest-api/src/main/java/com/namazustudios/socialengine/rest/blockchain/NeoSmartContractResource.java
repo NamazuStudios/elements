@@ -60,12 +60,12 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Mints a token using the specified contract.",
             notes = "Mints the specified token using the specified contract id.")
-    public NeoSendRawTransaction mintToken(final MintTokenRequest request) {
+    public List<NeoSendRawTransaction> mintToken(final MintTokenRequest request) {
         return getNeoSmartContractService().mintToken(request);
     }
 
     @POST
-    @Path("invoke")
+    @Path("invocation")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Invokes the specified method on the contract.",
             notes = "Invokes the specified method using the specified contract id.")
@@ -74,10 +74,10 @@ public class NeoSmartContractResource {
     }
 
     @POST
-    @Path("invoke/test")
+    @Path("invocation_test")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Mints a token using the specified contract.",
-            notes = "Mints the specified token using the specified contract id.")
+    @ApiOperation(value = "Tests the invocation of the specified method on the contract without incurring GAS fees.",
+            notes = "Invokes the specified method using the specified contract id.")
     public NeoInvokeFunction testInvoke(final InvokeContractRequest request) {
         return getNeoSmartContractService().testInvoke(request);
     }

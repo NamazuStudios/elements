@@ -14,8 +14,12 @@ public class MintTokenRequest {
     private List<String> tokenIds;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The public address of the account with funds to mint.")
-    private String address;
+    @ApiModelProperty("The elements wallet Id with funds to invoke the method. This will always use the default account of the wallet.")
+    private String walletId;
+
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @ApiModelProperty("The password of the wallet with funds to mint.")
+    private String password;
 
     public List<String> getTokenIds() {
         return tokenIds;
@@ -25,11 +29,19 @@ public class MintTokenRequest {
         this.tokenIds = tokenIds;
     }
 
-    public String getAddress() {
-        return address;
+    public String getWalletId() {
+        return walletId;
     }
 
-    public void setAddress(String address) {
-        this.address = address;
+    public void setWalletId(String walletId) {
+        this.walletId = walletId;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
     }
 }

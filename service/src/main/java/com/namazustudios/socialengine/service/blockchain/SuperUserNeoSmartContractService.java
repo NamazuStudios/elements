@@ -7,12 +7,16 @@ import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.exception.blockchain.ContractInvocationException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
-import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
+import io.neow3j.contract.SmartContract;
+import io.neow3j.crypto.exceptions.CipherException;
+import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
+import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.neow3j.transaction.AccountSigner;
 import io.neow3j.types.ContractParameter;
 import io.neow3j.wallet.Account;
+import io.neow3j.wallet.Wallet;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
@@ -47,8 +51,16 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     }
 
     @Override
-    public NeoSendRawTransaction mintToken(MintTokenRequest mintTokenRequest) {
-        Account mintAccount = Account.fromAddress(mintTokenRequest.getAddress());
+    public List<NeoSendRawTransaction> mintToken(MintTokenRequest mintTokenRequest) {
+        var wallet = getNeoWalletDao().getWallet(mintTokenRequest.getWalletId());
+        var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
+        Account mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
+        try {
+            mintAccount.decryptPrivateKey(mintTokenRequest.getPassword());
+        } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
+            throw new ContractInvocationException("Decrypting the account keys failed: " + e);
+        }
+        List<NeoSendRawTransaction> responses = new ArrayList<>();
         for (var tid : mintTokenRequest.getTokenIds()) {
             var token = getNeoTokenDao().getToken(tid);
             if (token.getTotalMintedQuantity() < token.getToken().getTotalSupply()) {
@@ -73,30 +85,59 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                     .signers(AccountSigner.calledByEntry(mintAccount))
                                     .sign()
                                     .send();
+                            mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
                             if (!response.hasError()) {
                                 getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINTED);
+                                responses.add(response);
                             } else {
                                 getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINT_FAILED);
                                 throw new ContractInvocationException("Minting failed with error: " + response.getError().toString());
                             }
                         } catch (Throwable e) {
+                            try {
+                                mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
+                            } catch (CipherException er) {
+                                throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                            }
                             getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), NeoToken.MintStatus.MINT_FAILED);
                             throw new ContractInvocationException("Minting failed with exception: " + e);
                         }
                     default:
+                        try {
+                            mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
+                        } catch (CipherException er) {
+                            throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                        }
                         throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
                 }
             } else {
+                try {
+                    mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
+                } catch (CipherException er) {
+                    throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                }
                 throw new ContractInvocationException(String.format("The token %s is out of supply. Create a new definition, or add to the total supply, to mint more.", token.getId()));
             }
         }
-        throw new ContractInvocationException("Minting failed. Maybe your token list is empty?");
+        try {
+            mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
+        } catch (CipherException er) {
+            throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+        }
+        return responses;
     }
 
     @Override
     public NeoSendRawTransaction invoke(InvokeContractRequest invokeRequest) {
         SmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
-
+        var wallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
+        var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
+        Account mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
+        try {
+            mintAccount.decryptPrivateKey(invokeRequest.getPassword());
+        } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
+            throw new ContractInvocationException("Decrypting the account keys failed: " + e);
+        }
         switch(contract.getBlockchain()){
             case "NEO":
                 io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
@@ -107,23 +148,42 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                         invokeParams.add(getNeow3JClient().convertObject(param));
                     }
                     try {
-                        return smartContract.invokeFunction(invokeRequest.getMethodName(), invokeParams.toArray(new ContractParameter[0]))
-                                .signers(AccountSigner.calledByEntry(account))
+                        var response = smartContract.invokeFunction(invokeRequest.getMethodName(), invokeParams.toArray(new ContractParameter[0]))
+                                .signers(AccountSigner.calledByEntry(mintAccount))
                                 .sign()
                                 .send();
-                    } catch (Throwable e){
+                        mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        return response;
+                    } catch (Throwable e) {
+                        try {
+                            mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        } catch (CipherException er) {
+                            throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                        }
                         throw new ContractInvocationException("Invocation failed with exception: " + e);
                     }
                 } else {
                     try {
-                        return smartContract.invokeFunction(invokeRequest.getMethodName()).signers(AccountSigner.calledByEntry(account))
+                        var response = smartContract.invokeFunction(invokeRequest.getMethodName()).signers(AccountSigner.calledByEntry(mintAccount))
                                 .sign()
                                 .send();
-                    } catch (Throwable e){
+                        mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        return response;
+                    } catch (Throwable e) {
+                        try {
+                            mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        } catch (CipherException er) {
+                            throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                        }
                         throw new ContractInvocationException("Invocation failed with exception: " + e);
                     }
                 }
             default:
+                try {
+                    mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                } catch (CipherException er) {
+                    throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                }
                 throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
         }
     }
@@ -131,6 +191,14 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     @Override
     public NeoInvokeFunction testInvoke(InvokeContractRequest invokeRequest) {
         SmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
+        var wallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
+        var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
+        Account mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
+        try {
+            mintAccount.decryptPrivateKey(invokeRequest.getPassword());
+        } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
+            throw new ContractInvocationException("Decrypting the account keys failed: " + e);
+        }
 
         switch(contract.getBlockchain()){
             case "NEO":
@@ -142,18 +210,37 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                         invokeParams.add(getNeow3JClient().convertObject(param));
                     }
                     try {
-                        return smartContract.callInvokeFunction(invokeRequest.getMethodName(), invokeParams, AccountSigner.calledByEntry(account));
+                        var response = smartContract.callInvokeFunction(invokeRequest.getMethodName(), invokeParams, AccountSigner.calledByEntry(mintAccount));
+                        mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        return response;
                     } catch (Throwable e){
+                        try {
+                            mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        } catch (CipherException er) {
+                            throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                        }
                         throw new ContractInvocationException("Invocation failed with exception: " + e);
                     }
                 } else {
                     try {
-                        return smartContract.callInvokeFunction(invokeRequest.getMethodName(), AccountSigner.calledByEntry(account));
+                        var response = smartContract.callInvokeFunction(invokeRequest.getMethodName(), AccountSigner.calledByEntry(mintAccount));
+                        mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        return response;
                     } catch (Throwable e){
+                        try {
+                            mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                        } catch (CipherException er) {
+                            throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                        }
                         throw new ContractInvocationException("Invocation failed with exception: " + e);
                     }
                 }
             default:
+                try {
+                    mintAccount.encryptPrivateKey(invokeRequest.getPassword());
+                } catch (CipherException er) {
+                    throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                }
                 throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
         }
     }
