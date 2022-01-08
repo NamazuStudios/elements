@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
-import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSJournalTransactionalPersistenceDriver;
-import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 
@@ -12,7 +12,7 @@ import java.util.function.Function;
 public class TestUtils {
 
     /**
-     * Creates a test case with the {@link XodusTransactionalResourceServicePersistence}
+     * Creates a test case with the {@link XodusTransactionalResourceServicePersistenceEnvironment}
      *
      * @param ctor the constructor reference for the test case
      * @param <T> the type to return
@@ -36,7 +36,7 @@ public class TestUtils {
     }
 
     /**
-     * Creates a test case with the {@link JournalTransactionalResourceServicePersistence} backed by the
+     * Creates a test case with the {@link JournalTransactionalResourceServicePersistenceEnvironment} backed by the
      * {@link UnixFSJournalTransactionalPersistenceDriver}
      *
      * @param ctor the constructor reference for the test case

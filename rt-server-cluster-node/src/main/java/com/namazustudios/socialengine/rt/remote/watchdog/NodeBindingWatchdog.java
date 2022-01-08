@@ -46,7 +46,7 @@ public class NodeBindingWatchdog implements WorkerWatchdog {
                 .collect(toSet());
 
             unhealthy.forEach(applicationId -> logger.error("Node {} is unhealthy. Restarting.", applicationId));
-            mutator.restart(unhealthy);
+            mutator.restartNode(unhealthy);
             mutator.commit();
 
         }

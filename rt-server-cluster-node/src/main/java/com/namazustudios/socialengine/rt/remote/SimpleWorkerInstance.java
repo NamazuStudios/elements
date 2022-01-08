@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.exception.MultiException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -39,7 +39,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
     private Set<Node> nodeSet;
 
-    private Persistence persistence;
+    private PersistenceEnvironment persistenceEnvironment;
 
     private ExecutorService executorService;
 
@@ -331,18 +331,35 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             }
 
             @Override
-            public Mutator restart(final ApplicationId applicationId) {
+            public Mutator restartNode(final ApplicationId applicationId) {
 
                 if (!existing.contains(applicationId)) {
-                    throw new IllegalArgumentException("Node for application does not exist: "  + applicationId);
-                } else if (!toAdd.contains(applicationId)) {
-                    throw new IllegalArgumentException("Attempting to add and restart in one mutation: "  + applicationId);
+                    throw new IllegalArgumentException("Application does not exist: "  + applicationId);
+                } else if (toAdd.contains(applicationId)) {
+                    throw new IllegalArgumentException("Application already slated for addition: "  + applicationId);
                 } else if (!toRemove.add(applicationId)) {
-                    throw new IllegalArgumentException("Restarted already requested for the supplied node: " + applicationId);
+                    throw new IllegalArgumentException("Application already slated for removal: " + applicationId);
+                } else {
+                    toAdd.add(applicationId);
                 }
 
-                toAdd.add(applicationId);
                 return this;
+
+            }
+
+            @Override
+            public Mutator removeNode(final ApplicationId applicationId) {
+
+                if (!existing.contains(applicationId)) {
+                    throw new IllegalArgumentException("Application does not exist: "  + applicationId);
+                } else if (toAdd.contains(applicationId)) {
+                    throw new IllegalArgumentException("Application already slated for addition: "  + applicationId);
+                } else if (!toRemove.add(applicationId)) {
+                    throw new IllegalArgumentException("Application already slated for removal: " + applicationId);
+                }
+
+                return this;
+
             }
 
             @Override
@@ -404,13 +421,13 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
         return nodeSet;
     }
 
-    public Persistence getPersistence() {
-        return persistence;
+    public PersistenceEnvironment getPersistence() {
+        return persistenceEnvironment;
     }
 
     @Inject
-    public void setPersistence(Persistence persistence) {
-        this.persistence = persistence;
+    public void setPersistence(PersistenceEnvironment persistenceEnvironment) {
+        this.persistenceEnvironment = persistenceEnvironment;
     }
 
     @Inject

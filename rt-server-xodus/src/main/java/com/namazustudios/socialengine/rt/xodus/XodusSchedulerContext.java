@@ -27,8 +27,6 @@ public class XodusSchedulerContext implements SchedulerContext {
 
     public static final String SCHEDULER_ENVIRONMENT = "com.namazustudios.socialengine.rt.xodus.scheduler";
 
-    public static final String SCHEDULER_ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.scheduler.path";
-
     private static final Logger logger = LoggerFactory.getLogger(XodusSchedulerContext.class);
 
     private ResourceService resourceService;

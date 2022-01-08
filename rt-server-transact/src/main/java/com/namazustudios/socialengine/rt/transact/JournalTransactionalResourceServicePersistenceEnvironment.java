@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.namazustudios.socialengine.rt.Path;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
-import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore.PendingRevisionChange;
@@ -23,9 +22,11 @@ import java.util.stream.Stream;
 
 import static org.slf4j.LoggerFactory.getLogger;
 
-public class JournalTransactionalResourceServicePersistence implements Persistence, TransactionalResourceServicePersistence {
+public class JournalTransactionalResourceServicePersistenceEnvironment implements
+        PersistenceEnvironment,
+        TransactionalResourceServicePersistence {
 
-    private static final Logger logger = getLogger(JournalTransactionalResourceServicePersistence.class);
+    private static final Logger logger = getLogger(JournalTransactionalResourceServicePersistenceEnvironment.class);
 
     private final Lock lock;
 
@@ -38,7 +39,7 @@ public class JournalTransactionalResourceServicePersistence implements Persisten
     private final JournalTransactionalPersistenceDriver journalTransactionalPersistenceDriver;
 
     @Inject
-    public JournalTransactionalResourceServicePersistence(
+    public JournalTransactionalResourceServicePersistenceEnvironment(
             final RevisionDataStore revisionDataStore,
             final TransactionJournal transactionJournal,
             final JournalTransactionalPersistenceDriver journalTransactionalPersistenceDriver) {

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
 
 /**
- * Implements the garbage collection for the {@link JournalTransactionalResourceServicePersistence}.
+ * Implements the garbage collection for the {@link JournalTransactionalResourceServicePersistenceEnvironment}.
  */
 public class UnixFSGarbageCollector {
 

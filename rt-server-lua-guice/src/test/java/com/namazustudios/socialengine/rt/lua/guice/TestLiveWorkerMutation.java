@@ -1,0 +1,112 @@
+package com.namazustudios.socialengine.rt.lua.guice;
+
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.remote.Worker;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.DataProvider;
+import org.testng.annotations.Factory;
+import org.testng.annotations.Test;
+
+import java.util.List;
+import java.util.function.Function;
+import java.util.stream.IntStream;
+
+import static java.lang.String.format;
+
+public class TestLiveWorkerMutation {
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
+
+    private static TestLiveWorkerMutation getXodusTest(final Function<EmbeddedTestService, TestLiveWorkerMutation> ctor) {
+        final var embeddedTestService = new JeroMQEmbeddedTestService()
+                .withClient()
+                .withNodeModuleFactory(nodeId -> List.of(
+                        new LuaModule(),
+                        new JavaEventModule(),
+                        new ClasspathAssetLoaderModule().withDefaultPackageRoot()
+                ))
+                .withXodusWorker()
+                .withDefaultHttpClient()
+                .start();
+
+        return ctor.apply(embeddedTestService);
+    }
+
+    private static TestLiveWorkerMutation getUnixFSTest(final Function<EmbeddedTestService, TestLiveWorkerMutation> ctor) {
+
+        final var embeddedTestService = new JeroMQEmbeddedTestService()
+                .withClient()
+                .withNodeModuleFactory(nodeId -> List.of(
+                        new LuaModule(),
+                        new JavaEventModule(),
+                        new ClasspathAssetLoaderModule().withDefaultPackageRoot()
+                ))
+                .withXodusWorker()
+                .withDefaultHttpClient()
+                .start();
+
+        return ctor.apply(embeddedTestService);
+
+    }
+
+    @Factory
+    public static Object[] getIntegrationTests() {
+        return new Object[] {
+            getXodusTest(TestLiveWorkerMutation::new)
+//            getUnixFSTest(TestLiveWorkerMutation::new)
+        };
+    }
+
+    private final Worker worker;
+
+    private final EmbeddedTestService embeddedTestService;
+
+    public TestLiveWorkerMutation(final EmbeddedTestService embeddedTestService) {
+        this.worker = embeddedTestService
+            .getWorker()
+            .getWorker();
+        this.embeddedTestService = embeddedTestService;
+    }
+
+    @DataProvider
+    public Object[][] getApplicationNames() {
+        return IntStream
+            .range(0, 5)
+            .mapToObj(i -> new Object[] {format("Mock Application %d", i)})
+            .toArray(Object[][]::new);
+    }
+
+    @Test(dataProvider = "getApplicationNames")
+    public void testAddNodeIndividually(final String mockApplicationName) {
+        try (var mutator = worker.beginMutation()) {
+            mutator.addNode(mockApplicationName);
+            mutator.commit();
+        }
+    }
+
+    @Test(dataProvider = "getApplicationNames", dependsOnMethods = "testAddNodeIndividually")
+    public void testRestartNodeIndividually(final String mockApplicationName) {
+        try (var mutator = worker.beginMutation()) {
+            mutator.restartNode(mockApplicationName);
+            mutator.commit();
+        }
+    }
+
+    @Test(dataProvider = "getApplicationNames", dependsOnMethods = "testRestartNodeIndividually")
+    public void testStopNodeIndividually(final String mockApplicationName) {
+        try (var mutator = worker.beginMutation()) {
+            mutator.removeNode(mockApplicationName);
+            mutator.commit();
+        }
+    }
+
+    @AfterClass
+    public void shutdownService() {
+        embeddedTestService.close();
+    }
+
+}

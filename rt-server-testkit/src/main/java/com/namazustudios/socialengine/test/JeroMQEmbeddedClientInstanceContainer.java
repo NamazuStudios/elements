@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.remote.guice.SimpleInstanceModule;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
+import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService.CommonTestModule;
 import com.namazustudios.socialengine.test.guice.TestClientContextFactoryModule;
 import org.zeromq.ZContext;
 
@@ -16,6 +17,7 @@ public class JeroMQEmbeddedClientInstanceContainer extends JeroMQEmbeddedInstanc
         withInstanceModules(new AbstractModule() {
             @Override
             protected void configure() {
+                install(new CommonTestModule());
                 install(new SimpleInstanceModule());
                 install(new TestClientContextFactoryModule());
                 install(new JeroMQInstanceConnectionServiceModule()

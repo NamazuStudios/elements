@@ -488,8 +488,8 @@ public class JeroMQEndToEndIntegrationTest {
             bind(new TypeLiteral<Set<Node>>(){}).toProvider(() -> singleton(nodeProvider.get()));
 
             // Sets up the worker instance
-            final Persistence pMock = mock(Persistence.class);
-            bind(Persistence.class).toInstance(pMock);
+            final PersistenceEnvironment pMock = mock(PersistenceEnvironment.class);
+            bind(PersistenceEnvironment.class).toInstance(pMock);
 
             install(new SimpleExecutorsModule().withDefaultSchedulerThreads());
 

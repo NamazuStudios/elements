@@ -1,5 +1,5 @@
 package com.namazustudios.socialengine.rt.xodus;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.transact.*;
 import jetbrains.exodus.env.Environment;
@@ -14,9 +14,11 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class XodusTransactionalResourceServicePersistence implements Persistence, TransactionalResourceServicePersistence {
+public class XodusTransactionalResourceServicePersistenceEnvironment implements
+        PersistenceEnvironment,
+        TransactionalResourceServicePersistence {
 
-    private static final Logger logger = LoggerFactory.getLogger(XodusTransactionalResourceServicePersistence.class);
+    private static final Logger logger = LoggerFactory.getLogger(XodusTransactionalResourceServicePersistenceEnvironment.class);
 
     public static final String RESOURCE_ENVIRONMENT = "com.namazustudios.socialengine.rt.xodus.resource";
 
@@ -72,11 +74,10 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
         final var environment = environmentContext.environment;
 
         return open(environment::beginReadonlyTransaction, txn -> {
-
             final var stores = new XodusResourceStores(txn, environmentContext.environment);
-
             return new XodusReadOnlyTransaction(nodeId, stores, environmentContext.virtualFileSystem, txn);
         });
+
     }
 
     @Override
@@ -85,12 +86,11 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
         final var environment = getEnvironmentContext().environment;
 
         return open(environment::beginTransaction, txn -> {
-
             final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
             final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
-
             return new XodusReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
         });
+
     }
     @Override
     public ExclusiveReadWriteTransaction openExclusiveRW(NodeId nodeId) {
@@ -98,13 +98,11 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
         final var environment = getEnvironmentContext().environment;
 
         return open(environment::beginExclusiveTransaction, txn -> {
-
             final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
             final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
-
             return new XodusExclusiveReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
-
         });
+
     }
     private <T extends ReadOnlyTransaction> T open(final Supplier<Transaction> xodusTransactionSupplier,
                                                    final Function<Transaction, T> persistenceTransactionSupplier) {
@@ -118,6 +116,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
             logger.error("Could not open transaction.", ex);
             throw ex;
         }
+
     }
 
     private EnvironmentContext getEnvironmentContext() {
@@ -158,5 +157,7 @@ public class XodusTransactionalResourceServicePersistence implements Persistence
             virtualFileSystem.shutdown();
             environment.close();
         }
+
     }
+
 }

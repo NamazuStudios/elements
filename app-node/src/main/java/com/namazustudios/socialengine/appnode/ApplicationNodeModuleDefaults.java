@@ -1,7 +1,6 @@
 package com.namazustudios.socialengine.appnode;
 
 import com.namazustudios.socialengine.config.ModuleDefaults;
-import com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry;
 
 import java.util.Properties;
 
@@ -26,9 +25,9 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSRevisionTabl
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_COUNT;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_SIZE;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.UNIXFS_STORAGE_ROOT_DIRECTORY;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_BLOCK_SIZE;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT_PATH;
-import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_BLOCK_SIZE;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerEnvironment.SCHEDULER_ENVIRONMENT_PATH;
 import static java.lang.Runtime.getRuntime;
 
 public class ApplicationNodeModuleDefaults implements ModuleDefaults {
