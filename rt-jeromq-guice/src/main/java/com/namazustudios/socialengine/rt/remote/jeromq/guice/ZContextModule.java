@@ -20,6 +20,7 @@ public class ZContextModule extends PrivateModule {
         ioThreadsAction.run();
         maxSocketsAction.run();
         bind(ZContext.class).toProvider(ZContextProvider.class).asEagerSingleton();
+        expose(ZContext.class);
     }
 
     public ZContextModule withDefaultIoThreads() {
@@ -28,8 +29,14 @@ public class ZContextModule extends PrivateModule {
     }
 
     public ZContextModule withIoThreads(final int ioThreads) {
-        ioThreadsAction = () -> bind(Integer.class).annotatedWith(named(IO_THREADS)).toInstance(ioThreads);
+
+        ioThreadsAction = () -> {
+            bind(Integer.class).annotatedWith(named(IO_THREADS)).toInstance(ioThreads);
+            expose(Integer.class).annotatedWith(named(IO_THREADS));
+        };
+
         return this;
+
     }
 
     public ZContextModule withMaxSockets(int maxSockets) {

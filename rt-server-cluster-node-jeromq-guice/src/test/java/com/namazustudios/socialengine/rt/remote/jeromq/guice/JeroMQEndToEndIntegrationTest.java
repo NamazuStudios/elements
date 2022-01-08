@@ -31,6 +31,7 @@ import java.util.stream.IntStream;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
+import static com.namazustudios.socialengine.rt.SchedulerEnvironment.noopSchedulerEnvironment;
 import static com.namazustudios.socialengine.rt.id.ApplicationId.randomApplicationId;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.id.NodeId.forInstanceAndApplication;
@@ -69,13 +70,13 @@ public class JeroMQEndToEndIntegrationTest {
                     @Override
                     protected void configure() {
 
-                        final Provider<JeroMQAsyncConnectionService> provider = getProvider(JeroMQAsyncConnectionService.class);
+                        final var provider = getProvider(JeroMQAsyncConnectionService.class);
 
                         bind(JeroMQAsyncConnectionService.class).asEagerSingleton();
 
                         bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){})
-                                .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))
-                                .asEagerSingleton();
+                            .toProvider(() -> new SharedAsyncConnectionService<>(provider.get()))
+                            .asEagerSingleton();
 
                         bind(new TypeLiteral<AsyncConnectionService<?,?>>(){})
                             .to(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){});
@@ -83,8 +84,8 @@ public class JeroMQEndToEndIntegrationTest {
                     }
                 });
 
-        final ZContext zContext = sharedInjector.getInstance(ZContext.class);
-        final AsyncConnectionService<ZContext, ZMQ.Socket> asyncConnectionService = sharedInjector
+        final var zContext = sharedInjector.getInstance(ZContext.class);
+        final var asyncConnectionService = sharedInjector
             .getInstance(Key.get(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){}));
 
         final ApplicationId applicationId = randomApplicationId();
@@ -92,11 +93,11 @@ public class JeroMQEndToEndIntegrationTest {
             .mapToObj(i -> randomInstanceId())
             .collect(toList());
 
-        final Injector clientInjector = createInjector(new ClientModule(zContext, asyncConnectionService, applicationId, instanceIdList));
+        final var clientInjector = createInjector(new ClientModule(zContext, asyncConnectionService, applicationId, instanceIdList));
         setTestServiceInterface(clientInjector.getInstance(TestServiceInterface.class));
         client = clientInjector.getInstance(Instance.class);
 
-        final Injector workerInjector = createInjector(new WorkerInstanceModule(zContext, asyncConnectionService, applicationId, instanceIdList));
+        final var workerInjector = createInjector(new WorkerInstanceModule(zContext, asyncConnectionService, applicationId, instanceIdList));
         workers = instanceIdList.stream()
             .map(instanceId -> workerInjector.getInstance(Key.get(Instance.class, named(instanceId.asString()))))
             .collect(toList());
@@ -349,6 +350,7 @@ public class JeroMQEndToEndIntegrationTest {
         @Override
         protected void configure() {
 
+            bind(SchedulerEnvironment.class).toInstance(noopSchedulerEnvironment());
             bind(new TypeLiteral<AsyncConnectionService<?, ?>>(){}).toInstance(asyncConnectionService);
             bind(new TypeLiteral<AsyncConnectionService<ZContext, ZMQ.Socket>>(){}).toInstance(asyncConnectionService);
 
@@ -375,10 +377,6 @@ public class JeroMQEndToEndIntegrationTest {
             bind(Long.class)
                 .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
                 .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
-
-            bind(Integer.class)
-                .annotatedWith(named(IO_THREADS))
-                .toInstance(Runtime.getRuntime().availableProcessors());
 
         }
 
@@ -504,10 +502,6 @@ public class JeroMQEndToEndIntegrationTest {
             bind(Instance.class).annotatedWith(instanceNamedAnnotation).to(SimpleWorkerInstance.class);
             expose(Instance.class).annotatedWith(instanceNamedAnnotation);
 
-            bind(Integer.class)
-                .annotatedWith(named(IO_THREADS))
-                .toInstance(Runtime.getRuntime().availableProcessors());
-
         }
 
     }
@@ -575,20 +569,16 @@ public class JeroMQEndToEndIntegrationTest {
             bind(String.class).annotatedWith(named(RemoteInvoker.REMOTE_INVOKER_MAX_CONNECTIONS)).toInstance("25");
 
             bind(Long.class)
-                    .annotatedWith(named(REFRESH_RATE_SECONDS))
-                    .toInstance(DEFAULT_REFRESH_RATE);
+                .annotatedWith(named(REFRESH_RATE_SECONDS))
+                .toInstance(DEFAULT_REFRESH_RATE);
 
             bind(Long.class)
-                    .annotatedWith(named(REFRESH_TIMEOUT_SECONDS))
-                    .toInstance(DEFAULT_REFRESH_TIMEOUT);
+                .annotatedWith(named(REFRESH_TIMEOUT_SECONDS))
+                .toInstance(DEFAULT_REFRESH_TIMEOUT);
 
             bind(Long.class)
-                    .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
-                    .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
-
-            bind(Integer.class)
-                    .annotatedWith(named(IO_THREADS))
-                    .toInstance(Runtime.getRuntime().availableProcessors());
+                .annotatedWith(named(TOTAL_REFRESH_TIMEOUT_SECONDS))
+                .toInstance(DEFAULT_TOTAL_REFRESH_TIMEOUT);
 
         }
 

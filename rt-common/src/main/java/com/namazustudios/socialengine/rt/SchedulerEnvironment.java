@@ -17,4 +17,19 @@ public interface SchedulerEnvironment {
      */
     void stop();
 
+    /**
+     * Used when there is no need for a {@link SchedulerEnvironment}, such as when doing in-memory integration tests.
+     *
+     * @return a {@link SchedulerEnvironment} that has no-ops for start and stop
+     */
+    static SchedulerEnvironment noopSchedulerEnvironment() {
+        return new SchedulerEnvironment() {
+            @Override
+            public void start() {}
+
+            @Override
+            public void stop() {}
+        };
+    }
+
 }
