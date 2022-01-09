@@ -11,9 +11,15 @@ import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 /**
  * Created by keithhudnall on 9/21/21.
@@ -30,7 +36,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets Neo contracts.",
             notes = "Gets a pagination of Neo Contracts.")
-    public Pagination<SmartContract> getContracts(
+    public Pagination<ElementsSmartContract> getContracts(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("search") @DefaultValue("") String search) {
@@ -43,7 +49,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Neo Smart Contract",
             notes = "Gets a specific Neo Smart Contract by contractId.")
-    public SmartContract getContract(@PathParam("contractId") String contractId) {
+    public ElementsSmartContract getContract(@PathParam("contractId") String contractId) {
         return getNeoSmartContractService().getNeoSmartContract(contractId);
     }
 
@@ -51,7 +57,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Patches a Neo Smart Contract",
             notes = "Patches a Neo Smart Contract entry, associated with the specified deployed script hash.")
-    public SmartContract patchContract(final PatchSmartContractRequest request) {
+    public ElementsSmartContract patchContract(final PatchSmartContractRequest request) {
         return getNeoSmartContractService().patchNeoSmartContract(request);
     }
 
@@ -68,9 +74,15 @@ public class NeoSmartContractResource {
     @Path("invocation")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Invokes the specified method on the contract.",
-            notes = "Invokes the specified method using the specified contract id.")
-    public NeoSendRawTransaction invoke(final InvokeContractRequest request) {
-        return getNeoSmartContractService().invoke(request);
+            notes = "Invokes the specified method using the specified contract id.",
+            response = NeoSendRawTransaction.class)
+    public void invoke(final InvokeContractRequest request,
+                       @Suspended final AsyncResponse asyncResponse) {
+
+        getNeoSmartContractService().invoke(
+                request,
+                m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
+                ex -> asyncResponse.resume(ex));
     }
 
     @POST
@@ -78,7 +90,12 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Tests the invocation of the specified method on the contract without incurring GAS fees.",
             notes = "Invokes the specified method using the specified contract id.")
-    public NeoInvokeFunction testInvoke(final InvokeContractRequest request) {
+    public NeoInvokeFunction testInvoke(
+            final InvokeContractRequest request,
+
+            @Suspended
+            final AsyncResponse asyncResponse) {
+
         return getNeoSmartContractService().testInvoke(request);
     }
 

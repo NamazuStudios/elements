@@ -39,7 +39,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<SmartContract> getNeoSmartContracts(int offset, int count, String search) {
+    public Pagination<ElementsSmartContract> getNeoSmartContracts(int offset, int count, String search) {
         final String trimmedSearch = nullToEmpty(search).trim();
         final Query<MongoNeoSmartContract> mongoQuery = getDatastore().find(MongoNeoSmartContract.class);
 
@@ -51,7 +51,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     }
 
     @Override
-    public SmartContract getNeoSmartContract(String contractIdOrName) {
+    public ElementsSmartContract getNeoSmartContract(String contractIdOrName) {
         final var objectId = getMongoDBUtils().parseOrReturnNull(contractIdOrName);
 
         var mongoContract = getDatastore().find(MongoNeoSmartContract.class)
@@ -69,7 +69,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     }
 
     @Override
-    public SmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest) {
+    public ElementsSmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest) {
         getValidationHelper().validateModel(patchSmartContractRequest, ValidationGroups.Insert.class);
 
         final var query = getDatastore().find(MongoNeoSmartContract.class);
@@ -114,8 +114,8 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
         }
     }
 
-    private SmartContract transform(MongoNeoSmartContract token) {
-        return getBeanMapper().map(token, SmartContract.class);
+    private ElementsSmartContract transform(MongoNeoSmartContract token) {
+        return getBeanMapper().map(token, ElementsSmartContract.class);
     }
 
     public MongoDBUtils getMongoDBUtils() {

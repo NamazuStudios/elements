@@ -18,34 +18,34 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 public interface NeoSmartContractDao {
 
     /**
-     * Lists all {@link SmartContract} instances, specifying a search query.
+     * Lists all {@link ElementsSmartContract} instances, specifying a search query.
      *
      * @param offset
      * @param count
      * @param search
-     * @return a {@link Pagination} of {@link SmartContract} instances
+     * @return a {@link Pagination} of {@link ElementsSmartContract} instances
      */
-    Pagination<SmartContract> getNeoSmartContracts(int offset, int count, String search);
+    Pagination<ElementsSmartContract> getNeoSmartContracts(int offset, int count, String search);
 
     /**
-     * Fetches a specific {@link SmartContract} instance based on ID or name.  If not found, an
+     * Fetches a specific {@link ElementsSmartContract} instance based on ID or name.  If not found, an
      * exception is raised.
      *
      * @param contractIdOrName the contract ID
-     * @return the {@link SmartContract}, never null
+     * @return the {@link ElementsSmartContract}, never null
      */
-    SmartContract getNeoSmartContract(String contractIdOrName);
+    ElementsSmartContract getNeoSmartContract(String contractIdOrName);
 
     /**
-     * Updates the supplied {@link SmartContract}.
+     * Updates the supplied {@link ElementsSmartContract}.
      *
      * @param patchSmartContractRequest the {@link PatchSmartContractRequest} with the information to update
-     * @return the {@link SmartContract} as it was changed by the service.
+     * @return the {@link ElementsSmartContract} as it was changed by the service.
      */
-    SmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest);
+    ElementsSmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest);
 
     /**
-     * Deletes the {@link SmartContract} with the supplied contract ID.
+     * Deletes the {@link ElementsSmartContract} with the supplied contract ID.
      *
      * @param contractId the contract ID.
      */
