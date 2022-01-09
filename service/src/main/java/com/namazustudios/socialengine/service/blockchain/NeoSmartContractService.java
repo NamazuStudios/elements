@@ -62,7 +62,9 @@ public interface NeoSmartContractService {
          * @param mintTokenRequest the {@link MintTokenRequest} containing the token id's and wallet with funds to mint.
          * @return the {@link List<NeoSendRawTransaction>} responses from the blockchain.
          */
-        List<NeoSendRawTransaction> mintToken(MintTokenRequest mintTokenRequest);
+        void mintToken(final MintTokenRequest mintTokenRequest,
+                       final Consumer<List<NeoApplicationLog>> applicationLogConsumer,
+                       final Consumer<Exception> exceptionConsumer);
 
         /**
          * Invokes a method on the {@link ElementsSmartContract} corresponding to the passed contract id

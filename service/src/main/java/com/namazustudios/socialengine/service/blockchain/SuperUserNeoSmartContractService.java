@@ -7,34 +7,31 @@ import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.dao.NeoWalletDao;
 import com.namazustudios.socialengine.exception.blockchain.ContractInvocationException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.*;
-import com.namazustudios.socialengine.model.match.Match;
-import com.namazustudios.socialengine.service.Topic;
+import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
+import com.namazustudios.socialengine.model.blockchain.InvokeContractRequest;
+import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
 import com.namazustudios.socialengine.service.TopicService;
-import io.neow3j.contract.SmartContract;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
-import io.neow3j.protocol.core.response.*;
+import io.neow3j.protocol.core.response.NeoApplicationLog;
+import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.AccountSigner;
-import io.neow3j.transaction.Transaction;
 import io.neow3j.transaction.TransactionBuilder;
 import io.neow3j.types.ContractParameter;
 import io.neow3j.types.Hash160;
+import io.neow3j.types.NeoVMStateType;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.Wallet;
+import io.neow3j.wallet.exceptions.AccountStateException;
 
 import javax.inject.Inject;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.Future;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.function.Consumer;
-
-import static java.util.concurrent.Executors.newScheduledThreadPool;
 
 public class SuperUserNeoSmartContractService implements NeoSmartContractService {
 
@@ -51,117 +48,121 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     private TopicService topicService;
 
     @Override
-    public Pagination<ElementsSmartContract> getNeoSmartContracts(int offset, int count, String search) {
+    public Pagination<ElementsSmartContract> getNeoSmartContracts(final int offset, final int count, final String search) {
         return getNeoSmartContractDao().getNeoSmartContracts(offset, count, search);
     }
 
     @Override
-    public ElementsSmartContract getNeoSmartContract(String contractIdOrName) {
+    public ElementsSmartContract getNeoSmartContract(final String contractIdOrName) {
         return getNeoSmartContractDao().getNeoSmartContract(contractIdOrName);
     }
 
     @Override
-    public ElementsSmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest) {
+    public ElementsSmartContract patchNeoSmartContract(final PatchSmartContractRequest patchSmartContractRequest) {
         return getNeoSmartContractDao().patchNeoSmartContract(patchSmartContractRequest);
     }
 
     @Override
-    public List<NeoSendRawTransaction> mintToken(MintTokenRequest mintTokenRequest) {
+    public void mintToken(final MintTokenRequest mintTokenRequest,
+                          final Consumer<List<NeoApplicationLog>> applicationLogConsumer,
+                          final Consumer<Exception> exceptionConsumer) {
 
-        var wallet = getNeoWalletDao().getWallet(mintTokenRequest.getWalletId());
-        var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
-        var mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
-        var tokenIds = mintTokenRequest.getTokenIds();
-        List<NeoSendRawTransaction> responses = new ArrayList<>();
-
-        if(tokenIds.size() == 0) {
-            return responses;
-        }
+        final var wallet = getNeoWalletDao().getWallet(mintTokenRequest.getWalletId());
+        final var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
+        final var mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
+        final var tokenIds = mintTokenRequest.getTokenIds();
+        final var numTokens = tokenIds.size();
+        final List<NeoApplicationLog> responses = new ArrayList<>();
 
         try {
             mintAccount.decryptPrivateKey(mintTokenRequest.getPassword());
         } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
-            throw new ContractInvocationException("Decrypting the account keys failed: " + e);
+            exceptionConsumer.accept(new ContractInvocationException("Decrypting the account keys failed: " + e));
         }
 
-        for (var tid : tokenIds) {
+        try {
 
-            var token = getNeoTokenDao().getToken(tid);
+            for (final var tid : tokenIds) {
 
-            if (token.getTotalMintedQuantity() < token.getToken().getTotalSupply()) {
+                final var token = getNeoTokenDao().getToken(tid);
 
-                var contract = getNeoSmartContractDao().getNeoSmartContract(token.getContractId());
-                var tokenClone = getNeoTokenDao().cloneNeoToken(token);
+                if (token.getTotalMintedQuantity() < token.getToken().getTotalSupply()) {
 
-                switch (contract.getBlockchain()) {
+                    final var contract = getNeoSmartContractDao().getNeoSmartContract(token.getContractId());
+                    final var tokenClone = getNeoTokenDao().cloneNeoToken(token);
 
-                    case BlockchainConstants.Names.NEO:
+                    switch (contract.getBlockchain()) {
 
-                        try {
-                            var tkn = tokenClone.getToken();
-                            var smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
-                            var ownerHash = Account.fromAddress(tkn.getOwner()).getScriptHash();
-                            var tokenIdParam = ContractParameter.string(tokenClone.getTokenUUID());
+                        case BlockchainConstants.Names.NEO:
 
-                            tkn.setOwner(ownerHash.toString());
-
-                            for (var stkhldr : tkn.getOwnership().getStakeHolders()) {
-                                var stkhldrHash = Account.fromAddress(stkhldr.getOwner()).getScriptHash();
-                                stkhldr.setOwner(stkhldrHash.toString());
-                            }
-
-                            var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(tkn, Map.class));
-                            getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_PENDING);
-
-                            var response = smartContract.invokeFunction("mint", tokenIdParam, tokenMapParam)
-                                    .signers(AccountSigner.calledByEntry(mintAccount))
-                                    .sign()
-                                    .send();
-
-                            if (!response.hasError()) {
-                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINTED);
-                                responses.add(response);
-                            } else {
-                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_FAILED);
-                                throw new ContractInvocationException("Minting failed with error: " + response.getError().toString());
-                            }
-
-                        } catch (Throwable e) {
-
-                            getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_FAILED);
-
-                            throw new ContractInvocationException("Minting failed with exception: " + e);
-                        } finally {
                             try {
+
+                                final var tkn = tokenClone.getToken();
+                                final var smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
+                                final var ownerHash = Account.fromAddress(tkn.getOwner()).getScriptHash();
+                                final var tokenIdParam = ContractParameter.string(tokenClone.getTokenUUID());
+
+                                tkn.setOwner(ownerHash.toString());
+
+                                for (var stakeHolder : tkn.getOwnership().getStakeHolders()) {
+                                    final var stakeHolderHash = Account.fromAddress(stakeHolder.getOwner()).getScriptHash();
+                                    stakeHolder.setOwner(stakeHolderHash.toString());
+                                }
+
+                                final var tokenMapParam = getNeow3JClient().convertObject(getObjectMapper().convertValue(tkn, Map.class));
+                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_PENDING);
+
+                                final var tx = smartContract.invokeFunction("mint", tokenIdParam, tokenMapParam)
+                                        .signers(AccountSigner.calledByEntry(mintAccount))
+                                        .sign();
+
+                                tx.send();
+
+                                tx.track().subscribe(blockIndex ->
+                                {
+                                    final var appLog = tx.getApplicationLog();
+                                    final var hasFault = appLog.getExecutions().stream().anyMatch(e -> e.getState() == NeoVMStateType.FAULT);
+                                    responses.add(tx.getApplicationLog());
+
+                                    if (!hasFault) {
+                                        getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINTED);
+                                    } else {
+                                        getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_FAILED);
+                                    }
+
+                                    //We want to wait until all transactions are complete
+                                    if (responses.size() == numTokens) {
+                                        applicationLogConsumer.accept(responses);
+                                    }
+                                });
+
+                            } catch (Throwable e) {
+
+                                getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_FAILED);
                                 mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
-                            } catch (CipherException er) {
-                                throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+
+                                exceptionConsumer.accept(new ContractInvocationException("Minting failed with exception: " + e));
                             }
-                        }
 
-                        break;
+                            break;
 
-                    default:
+                        default:
 
-                        try {
                             mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
-                        } catch (CipherException er) {
-                            throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
-                        }
-
-                        throw new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
-                }
-            } else {
-                try {
+                            exceptionConsumer.accept(new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain())));
+                            break;
+                    }
+                } else { //Out of supply for this token
                     mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
-                } catch (CipherException er) {
-                    throw new ContractInvocationException("Re-encrypting the account keys failed: " + er);
+                    exceptionConsumer.accept(new ContractInvocationException(String.format("The token %s is out of supply. Create a new definition, or add to the total supply, to mint more.", token.getId())));
                 }
-                throw new ContractInvocationException(String.format("The token %s is out of supply. Create a new definition, or add to the total supply, to mint more.", token.getId()));
             }
-        }
 
-        return responses;
+            mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
+
+        } catch (CipherException er) {
+            exceptionConsumer.accept(new ContractInvocationException("Re-encrypting the account keys failed: " + er));
+        } catch (AccountStateException ex) {}
     }
 
     @Override
@@ -208,11 +209,11 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                             .signers(AccountSigner.calledByEntry(mintAccount))
                             .sign();
 
+                    tx.send();
+
                     tx.track().subscribe(blockIndex -> {
                         applicationLogConsumer.accept(tx.getApplicationLog());
                     });
-
-                    tx.send();
 
                 } catch (Throwable e) {
                     var ex = new ContractInvocationException("Invocation failed with exception: " + e);
@@ -244,7 +245,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     }
 
     @Override
-    public NeoInvokeFunction testInvoke(InvokeContractRequest invokeRequest) {
+    public NeoInvokeFunction testInvoke(final InvokeContractRequest invokeRequest) {
         ElementsSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
         var wallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
         var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
