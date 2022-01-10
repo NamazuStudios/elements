@@ -1,17 +1,20 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoSmartContract;
-import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.PatchNeoSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
+import io.neow3j.protocol.core.response.NeoApplicationLog;
+import io.neow3j.protocol.core.response.NeoInvokeFunction;
+import io.neow3j.protocol.core.response.NeoSendRawTransaction;
+
+import java.util.List;
+import java.util.function.Consumer;
 
 /**
- * Manages instances of {@link NeoSmartContract}.
+ * Manages instances of {@link ElementsSmartContract}.
  *
  * Created by keithhudnall on 9/22/21.
  */
@@ -25,47 +28,69 @@ import com.namazustudios.socialengine.service.Unscoped;
 public interface NeoSmartContractService {
 
         /**
-         * Lists all {@link NeoSmartContract} instances, specifying a search query.
+         * Lists all {@link ElementsSmartContract} instances, specifying a search query.
          *
          * @param offset
          * @param count
          * @param search
-         * @return a {@link Pagination} of {@link NeoSmartContract} instances
+         * @return a {@link Pagination} of {@link ElementsSmartContract} instances
          */
-        Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search);
+        Pagination<ElementsSmartContract> getNeoSmartContracts(int offset, int count, String search);
 
         /**
-         * Fetches a specific {@link NeoSmartContract} instance based on ID. If not found, an
+         * Fetches a specific {@link ElementsSmartContract} instance based on ID. If not found, an
          * exception is raised.
          *
          * @param contractId the contract ID
-         * @return the {@link NeoSmartContract}, never null
+         * @return the {@link ElementsSmartContract}, never null
          */
-        NeoSmartContract getNeoSmartContract(String contractId);
+        ElementsSmartContract getNeoSmartContract(String contractId);
 
         /**
-         * Updates the supplied {@link NeoSmartContract}.  The
-         * {@link PatchNeoSmartContractRequest} method is used to key the
-         * {@link NeoSmartContract}.
+         * Updates the supplied {@link ElementsSmartContract}.  The
+         * {@link PatchSmartContractRequest} method is used to key the
+         * {@link ElementsSmartContract}.
          *
-         * @param patchNeoSmartContractRequest the {@link PatchNeoSmartContractRequest} with the information to update
-         * @return the {@link NeoSmartContract} as it was changed by the service.
+         * @param patchSmartContractRequest the {@link PatchSmartContractRequest} with the information to update
+         * @return the {@link ElementsSmartContract} as it was changed by the service.
          */
-        NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest);
+        ElementsSmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest);
 
         /**
-         * Mints the supplied {@link MintTokenRequest} using the supplied {@link NeoSmartContract}.
+         * Mints the token id's supplied in the {@link MintTokenRequest} using their linked {@link ElementsSmartContract}.
          *
-         * @param mintTokenRequest the {@link MintTokenRequest} containing the contract id and token id for minting.
-         * @return the {@link NeoToken} as it was changed by the service.
+         * @param mintTokenRequest the {@link MintTokenRequest} containing the token id's and wallet with funds to mint.
+         * @return the {@link List<NeoSendRawTransaction>} responses from the blockchain.
          */
-        NeoToken mintToken(MintTokenRequest mintTokenRequest);
+        void mintToken(final MintTokenRequest mintTokenRequest,
+                       final Consumer<List<NeoApplicationLog>> applicationLogConsumer,
+                       final Consumer<Exception> exceptionConsumer);
 
         /**
-         * Deletes the {@link NeoSmartContract} with the supplied contract ID.
+         * Invokes a method on the {@link ElementsSmartContract} corresponding to the passed contract id
+         * in a transactional manner. This will always incur a GAS fee.
+         *
+         * @param invokeRequest the {@link InvokeContractRequest} with the information to invoke
+         * @return the {@link NeoSendRawTransaction} response from the blockchain invocation.
+         */
+        void invoke(final InvokeContractRequest invokeRequest,
+                    final Consumer<NeoApplicationLog> applicationLogConsumer,
+                    final Consumer<Exception> exceptionConsumer);
+
+
+        /**
+         * Invokes a method on the {@link ElementsSmartContract} corresponding to the passed contract id.
+         *
+         * @param invokeRequest the {@link InvokeContractRequest} with the information to invoke
+         * @return the {@link NeoSendRawTransaction} response from the blockchain invocation.
+         */
+        NeoInvokeFunction testInvoke(InvokeContractRequest invokeRequest);
+
+        /**
+         * Deletes the {@link ElementsSmartContract} with the supplied contract ID.
          *
          * @param contractId the contract ID.
          */
-        void deleteTemplate(String contractId);
+        void deleteContract(String contractId);
 
 }

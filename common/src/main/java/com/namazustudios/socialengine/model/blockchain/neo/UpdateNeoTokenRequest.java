@@ -1,6 +1,7 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.model.blockchain.neo;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.blockchain.Token;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -9,21 +10,18 @@ import javax.validation.constraints.Null;
 import java.util.List;
 import java.util.Map;
 
-@ApiModel(description = "Represents a request to create a NeoToken definition.")
-public class CreateNeoTokenRequest {
+@ApiModel(description = "Represents a request to update a NeoToken.")
+public class UpdateNeoTokenRequest {
 
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The token definition to create.")
+    @NotNull(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The updated token definition.")
     private Token token;
 
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("Is this token listed.")
+    @NotNull(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("Is this token listed for sale?")
     private boolean listed;
 
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
+    @NotNull(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The elements contract id to mint this token with.")
     private String contractId;
 

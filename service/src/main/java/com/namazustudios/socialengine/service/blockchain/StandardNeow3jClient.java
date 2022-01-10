@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.Constants;
-import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.model.blockchain.neo.*;
 import io.neow3j.contract.SmartContract;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
@@ -10,6 +10,7 @@ import io.neow3j.protocol.Neow3j;
 import io.neow3j.protocol.http.HttpService;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
+import io.neow3j.types.ContractParameter;
 import io.neow3j.types.Hash160;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.Wallet;
@@ -20,10 +21,14 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 public class StandardNeow3jClient implements Neow3jClient {
 
@@ -104,7 +109,7 @@ public class StandardNeow3jClient implements Neow3jClient {
 
     @Override
     public Nep6Wallet nep6ToElementsWallet(NEP6Wallet wallet) {
-        var scryptParams = new com.namazustudios.socialengine.model.blockchain.ScryptParams(wallet.getScrypt().getN(), wallet.getScrypt().getR(), wallet.getScrypt().getP());
+        var scryptParams = new ScryptParams(wallet.getScrypt().getN(), wallet.getScrypt().getR(), wallet.getScrypt().getP());
         List<Nep6Account> nep6Accounts = new ArrayList<>();
         for (NEP6Account acc : wallet.getAccounts()) {
             List<Nep6Parameter> nep6Parameters = new ArrayList<>();
@@ -124,6 +129,46 @@ public class StandardNeow3jClient implements Neow3jClient {
     public SmartContract getSmartContract(String hash) {
         var hash160 = new Hash160(hash);
         return new SmartContract(hash160, getNeow3j());
+    }
+
+    @Override
+    public ContractParameter convertObject(final Object object) {
+        if (object == null) {
+            return ContractParameter.any(null);
+        } else if (object instanceof String) {
+            try{
+                var hash = new Hash160((String)object);
+                return ContractParameter.hash160(hash);
+            } catch(Exception ignored) {
+                return ContractParameter.string((String)object);
+            }
+        } else if (object instanceof Integer) {
+            return ContractParameter.integer((Integer)object);
+        } else if (object instanceof Long) {
+            return ContractParameter.integer(BigInteger.valueOf((long) object));
+        } else if (object instanceof Boolean) {
+            return ContractParameter.bool((Boolean) object);
+        }  else if (object instanceof Map) {
+            return ContractParameter.map(convertMap((Map<?,?>)object));
+        } else if (object instanceof List) {
+            return ContractParameter.array(convertList((List<?>) object));
+        }else {
+            throw new IllegalArgumentException("Invalid object: " + object);
+        }
+    }
+
+    private List<ContractParameter> convertList(final List<?> list) {
+        return list
+                .stream()
+                .map(this::convertObject)
+                .collect(toList());
+    }
+
+    private Map<ContractParameter, ContractParameter> convertMap(final Map<?, ?> map) {
+        return map
+                .entrySet()
+                .stream()
+                .collect(toMap(e -> convertObject(e.getKey()), e -> convertObject(e.getValue())));
     }
 
     private String getNeoHost() {

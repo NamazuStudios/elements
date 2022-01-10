@@ -9,8 +9,7 @@ COPY bin/sshd.sh $ELEMENTS_BIN
 COPY bin/hostkeys.sh $ELEMENTS_BIN
 COPY conf/sshd_config $ELEMENTS_CONF
 
-RUN echo exit 0 > /usr/sbin/policy-rc.d && \
-    RUNLEVEL=1 apt-get install -f -y ssh python3-minimal- && \
+RUN apt-get update && apt-get install -y ssh && \
     touch "$ELEMENTS_CONF/authorized_keys" && \
     chmod u+x "$ELEMENTS_BIN/sshd.sh" && \
     chmod u+x "$ELEMENTS_BIN/hostkeys.sh" && \

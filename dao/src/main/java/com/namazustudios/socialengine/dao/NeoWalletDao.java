@@ -2,9 +2,9 @@ package com.namazustudios.socialengine.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.Nep6Wallet;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.neo.Nep6Wallet;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;

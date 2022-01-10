@@ -6,7 +6,7 @@ TAG ?= $(shell git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
-MAVEN_OPTIONS?=""
+MAVEN_OPTIONS?=
 
 DOCKER_TAG=docker tag
 DOCKER_PUSH=docker push 

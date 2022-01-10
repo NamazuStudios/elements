@@ -5,10 +5,8 @@ import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.model.blockchain.Nep6Wallet;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
-import io.neow3j.wallet.nep6.NEP6Wallet;
 import org.bson.types.ObjectId;
 
 @SearchableIdentity(@SearchableField(

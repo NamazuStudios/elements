@@ -7,19 +7,27 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.List;
 
-public class MintTokenRequest {
+public class BulkMintTokenRequest {
+
+    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @ApiModelProperty("The unique ID of the contract to mint the tokens with.")
+    private String contractId;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The unique ID's of the tokens to mint.")
     private List<String> tokenIds;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The elements wallet Id with funds to invoke the method. This will always use the default account of the wallet.")
-    private String walletId;
+    @ApiModelProperty("The public address of the account with funds to mint.")
+    private String address;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The password of the wallet with funds to mint.")
-    private String password;
+    public String getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
+    }
 
     public List<String> getTokenIds() {
         return tokenIds;
@@ -29,19 +37,11 @@ public class MintTokenRequest {
         this.tokenIds = tokenIds;
     }
 
-    public String getWalletId() {
-        return walletId;
+    public String getAddress() {
+        return address;
     }
 
-    public void setWalletId(String walletId) {
-        this.walletId = walletId;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

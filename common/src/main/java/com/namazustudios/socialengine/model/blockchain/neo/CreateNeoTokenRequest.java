@@ -1,6 +1,7 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.model.blockchain.neo;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.blockchain.Token;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -9,34 +10,23 @@ import javax.validation.constraints.Null;
 import java.util.List;
 import java.util.Map;
 
-@ApiModel
-public class NeoToken {
+@ApiModel(description = "Represents a request to create a NeoToken definition.")
+public class CreateNeoTokenRequest {
 
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
-    @ApiModelProperty("The unique ID of the token itself.")
-    private String id;
-
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The base token properties used by the blockchain.")
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The token definition to create.")
     private Token token;
+
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("Is this token listed.")
+    private boolean listed;
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The elements contract id to mint this token with.")
     private String contractId;
-
-    private boolean listed;
-
-    private boolean minted;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 
     public Token getToken() {
         return token;
@@ -52,14 +42,6 @@ public class NeoToken {
 
     public void setListed(boolean listed) {
         this.listed = listed;
-    }
-
-    public boolean isMinted() {
-        return minted;
-    }
-
-    public void setMinted(boolean minted) {
-        this.minted = minted;
     }
 
     public String getContractId() {
