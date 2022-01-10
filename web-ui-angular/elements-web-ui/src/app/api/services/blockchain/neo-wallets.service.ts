@@ -83,6 +83,8 @@ class NeoWalletsService extends BaseService {
     let __headers = new HttpHeaders();
     let __body: any = null;
 
+    delete params.body.walletId;
+
     __body = params.body;
     let req = new HttpRequest<any>(
       "PUT",
