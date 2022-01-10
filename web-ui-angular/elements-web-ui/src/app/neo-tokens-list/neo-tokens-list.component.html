@@ -4,7 +4,7 @@
   </div>
 
   <mat-form-field>
-    <input matInput placeholder="Search NFTs" #input>
+    <input matInput placeholder="Search NFTs" #input disabled="true">
   </mat-form-field>
 
   <button mat-raised-button color="primary" (click)="addToken()">Define NFT</button>
@@ -85,7 +85,7 @@
     <ng-container matColumnDef="mint-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button mat-raised-button color="primary" (click)="editToken(token)">Mint</button>
+        <button mat-raised-button color="primary" (click)="editToken(token)" disabled="true">Mint</button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="list-action">
@@ -100,7 +100,7 @@
     <ng-container matColumnDef="view-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button mat-raised-button color="primary" (click)="deleteToken(token)">View</button>
+        <button mat-raised-button color="primary" (click)="deleteToken(token)" disabled="true">View</button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="edit-action">

@@ -38,9 +38,9 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
   walletForm = this.formBuilder.group({
     displayName: [this.data.wallet.displayName, [Validators.required]],
     walletUserName: [{ value: this.data.wallet.user?.name, disabled: true }],
-    walletPassword: [this.data.wallet.password],
-    newWalletPassword: [this.data.wallet.newPassword],
-    walletConfirmPassword: [this.confirmNewPassword],
+    walletPassword: [""],
+    newWalletPassword: [""],
+    walletConfirmPassword: [""],
   });
 
   get displayName(): string {
@@ -49,6 +49,10 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
 
   get walletPassword(): string {
     return this.walletForm.get("walletPassword").value;
+  }
+
+  get newWalletPassword(): string {
+    return this.walletForm.get("newWalletPassword").value;
   }
 
   constructor(
@@ -132,8 +136,8 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
     updateWalletData.displayName = this.displayName;
     updateWalletData.userId = this.data.wallet.userId;
     updateWalletData.newUserId = this.data.wallet.user.id;
-    updateWalletData.password = this.data.wallet.password;
-    updateWalletData.newPassword = this.data.wallet.newPassword;
+    updateWalletData.password = this.walletPassword;
+    updateWalletData.newPassword = this.newWalletPassword;
     updateWalletData.walletId = this.data.wallet.id;
 
     return updateWalletData;
