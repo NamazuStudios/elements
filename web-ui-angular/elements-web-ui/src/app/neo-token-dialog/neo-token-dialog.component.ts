@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from "@angular/core";
+import { Component, Inject, OnInit, ViewChild } from "@angular/core";
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -16,6 +16,7 @@ import { MatChipInputEvent } from "@angular/material/chips";
 import { COMMA, ENTER } from "@angular/cdk/keycodes";
 import { NeoTokenViewModel } from "../models/blockchain/neo-token-view-model";
 import { NeoToken } from "../api/models/blockchain/neo-token";
+import { JsonEditorCardComponent } from "../json-editor-card/json-editor-card.component";
 
 export interface OptionType {
   key: string;
@@ -29,6 +30,11 @@ export interface OptionType {
   styleUrls: ["./neo-token-dialog.component.css"],
 })
 export class NeoTokenDialogComponent implements OnInit {
+
+  @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+
+  originalMetadata = JSON.parse(JSON.stringify(this.data.neoToken.token.metadata || {}));
+
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -66,6 +72,8 @@ export class NeoTokenDialogComponent implements OnInit {
 
     // ownership: // TODO: ADD TO FORM (optional for now) <<<<<<<<<<<<<<<<<<<<<<<<
 
+    
+
     transferOptions: [
       this.data.neoToken?.token?.transferOptions,
       [Validators.required],
@@ -78,8 +86,12 @@ export class NeoTokenDialogComponent implements OnInit {
     listed: [this.data.neoToken?.listed], // DONE <>
 
     contractId: [this.data.neoToken?.contractId] // TODO: link this to form later.... <<<<<<<<<<<
- 
-    //  metadata: [this.data.neoToken?.metadata, [Validators.required]], // TODO: ADD TO FORM <<<<<<<<<
+
+
+
+    // TODO: look at item-dialog to see how TAGS and META DATA are done.... there are some special cases especially for metadata...
+    // ALSO, when eventually doing the validation... add a copy of the validation errors next to the "ok" and "cancel button"... so something like.. "Errors on 'ownership' tab".....
+    // ALSO, for tabs validation... look at the way the icons are added... you might be able to make tabs red in that same way... if there is an error, make them red....
 
   });
 
@@ -270,9 +282,12 @@ export class NeoTokenDialogComponent implements OnInit {
 
   close(saveChanges?: boolean) {
     if (!saveChanges) {
+      this.data.neoToken.token.metadata = this.originalMetadata;
       this.dialogRef.close();
       return;
     }
+
+    this.editorCard.validateMetadata(true);
 
     let tokenData;
     this.data.isNew

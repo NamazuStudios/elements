@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from "@angular/core";
+import { Component, Inject, OnInit, ViewChild } from "@angular/core";
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -11,6 +11,7 @@ import { COMMA, ENTER } from "@angular/cdk/keycodes";
 import { UserLevel } from "../user-dialog/user-dialog.component";
 import { NeoSmartContract } from "../api/models/blockchain/neo-smart-contract";
 import { PatchNeoSmartContractRequest } from "../api/models/blockchain/patch-neo-smart-contract-request";
+import { JsonEditorCardComponent } from "../json-editor-card/json-editor-card.component";
 
 @Component({
   selector: 'app-neo-smart-contracts-dialog',
@@ -19,26 +20,31 @@ import { PatchNeoSmartContractRequest } from "../api/models/blockchain/patch-neo
 })
 export class NeoSmartContractsDialogComponent implements OnInit {
 
+  @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+
   selectable = true;
   removable = true;
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
-  public blockchainDisabled: boolean = true;
-  selectedBlockchain = "NEO";
 
   blockchainOptions: UserLevel[] = [
-    { key: "NEO", description: "NEO Blockchain" },
-    { key: "NONE", description: "None selected" },
+    { key: "NEO", description: "NEO Blockchain" }
   ];
+
+  originalMetadata = JSON.parse(JSON.stringify(this.data.neoSmartContract.metadata || {}));
 
   neoSmartContractForm = this.formBuilder.group({
     displayName: [this.data.neoSmartContract.displayName],
-    scriptHash: [this.data.neoSmartContract.scriptHash],
+    scriptHash: [{
+      value: this.data.neoSmartContract.scriptHash,
+      disabled: !this.data.isNew
+    }],
+      
 
     blockchain: [
       {
         value: this.data.neoSmartContract.blockchain,
-        disabled: this.blockchainDisabled,
+        disabled: false,
       },
     ],
     // TODO: Metadata
@@ -85,8 +91,9 @@ export class NeoSmartContractsDialogComponent implements OnInit {
     let newNeoSmartContractData: PatchNeoSmartContractRequest = {
       displayName: this.displayName,
       scriptHash: this.scriptHash,
-      blockchain: "NEO",
-      // todo: metadata
+      blockchain: this.blockchain,
+      metadata: JSON.parse(
+        JSON.stringify(this.data.neoSmartContract.metadata))
     };
 
     return newNeoSmartContractData;
@@ -98,7 +105,8 @@ export class NeoSmartContractsDialogComponent implements OnInit {
       displayName: this.displayName,
       scriptHash: this.scriptHash,
       blockchain: this.blockchain,
-      // todo: metadata
+      metadata: JSON.parse(
+        JSON.stringify(this.data.neoSmartContract.metadata))
     };
 
     return updateNeoSmartContractData;
@@ -106,9 +114,12 @@ export class NeoSmartContractsDialogComponent implements OnInit {
 
   close(saveChanges?: boolean) {
     if (!saveChanges) {
+      this.data.neoSmartContract.metadata = this.originalMetadata;
       this.dialogRef.close();
       return;
     }
+
+    this.editorCard.validateMetadata(true);
 
     let neoSmartContractData;
     this.data.isNew

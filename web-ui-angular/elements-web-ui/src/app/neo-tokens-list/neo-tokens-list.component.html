@@ -18,9 +18,9 @@
       <mat-button-toggle value="All">All</mat-button-toggle>
     </mat-button-toggle-group> -->
 
-  <!-- <span style="float:right">
+  <span style="float:right">
       Active Wallet: <a routerLink="/">Wallet</a>
-    </span> -->
+    </span>
 
   <mat-table class="data-table mat-elevation-z8" [dataSource]="dataSource">
 
@@ -44,7 +44,7 @@
 
     <ng-container matColumnDef="totalSupply">
       <mat-header-cell *matHeaderCellDef>Total Supply</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.token.totalSupply}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.totalMintedQuantity}} / {{token.token.totalSupply}}</span></mat-cell>
     </ng-container>
     <!-- <ng-container matColumnDef="spec">
         <mat-header-cell *matHeaderCellDef>Spec</mat-header-cell>
@@ -56,8 +56,8 @@
     </ng-container>
     <ng-container matColumnDef="transferOptions">
       <mat-header-cell *matHeaderCellDef>Transfer</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.token.transferOptions |
-          titlecase}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span [matTooltip]="getTransferOptionsToolTip(token.token.transferOptions)" class="truncate-text-right">{{token.token.transferOptions |
+          transferOptions: "label"}}</span></mat-cell>
     </ng-container>
     <ng-container matColumnDef="accessOption">
       <mat-header-cell *matHeaderCellDef>Public</mat-header-cell>

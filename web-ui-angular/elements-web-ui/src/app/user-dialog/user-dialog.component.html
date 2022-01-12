@@ -14,6 +14,9 @@
         <mat-error *ngIf="userForm.controls.email.hasError('email')">Email must be a valid email address</mat-error>
       </mat-form-field>
       <mat-form-field>
+        <input matInput placeholder="Email" name="email" formControlName="email">
+      </mat-form-field>
+      <mat-form-field>
         <input matInput placeholder="Password" name="password" formControlName="password" type="password">
         <mat-error *ngIf="userForm.controls.password.hasError('required')">Password is required</mat-error>
       </mat-form-field>

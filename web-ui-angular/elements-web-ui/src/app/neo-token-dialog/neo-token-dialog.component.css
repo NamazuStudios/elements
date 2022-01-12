@@ -32,3 +32,13 @@
   width: 75px;
   padding: 10px;
 }
+
+
+.metadata-row {
+  display: flex;
+  justify-content:space-between;
+}
+
+.url-data {
+  width: 720px;
+}

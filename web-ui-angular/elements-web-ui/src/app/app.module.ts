@@ -63,6 +63,7 @@ import { WalletDialogComponent } from './wallets-dialog/wallet-dialog.component'
 import { NeoTokensListComponent } from './neo-tokens-list/neo-tokens-list.component';
 import { NeoTokenDialogComponent } from './neo-token-dialog/neo-token-dialog.component';
 import { YesNoPipe } from './neo-tokens-list/yesNo.pipe';
+import { TransferOptionsPipe } from './neo-tokens-list/transferOptions.pipe';
 import { TokensMenuComponent } from './tokens-menu/tokens-menu.component';
 import { AuthSchemesListComponent } from './auth-schemes-list/auth-schemes-list.component';
 import { AuthSchemeDialogComponent } from './auth-scheme-dialog/auth-scheme-dialog.component';
@@ -143,6 +144,7 @@ export function initialize(configService: ConfigService) {
     NeoTokensListComponent,
     NeoTokenDialogComponent,
     YesNoPipe,
+    TransferOptionsPipe,
     TokensMenuComponent,
     AuthSchemesListComponent,
     AuthSchemeDialogComponent,
