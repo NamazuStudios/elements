@@ -71,6 +71,7 @@ import { RegenerateKeysDialogComponent } from './auth-scheme-dialog/regenerate-k
 import { GeneratedKeysDialogComponent } from './auth-scheme-dialog/generated-keys-dialog/generated-keys-dialog.component';
 import { NeoSmartContractsListComponent } from './neo-smart-contracts-list/neo-smart-contracts-list.component';
 import { NeoSmartContractsDialogComponent } from './neo-smart-contracts-dialog/neo-smart-contracts-dialog.component';
+import { NeoSmartContractSelectDialogComponent } from './neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -151,7 +152,8 @@ export function initialize(configService: ConfigService) {
     RegenerateKeysDialogComponent,
     GeneratedKeysDialogComponent,
     NeoSmartContractsListComponent,
-    NeoSmartContractsDialogComponent
+    NeoSmartContractsDialogComponent,
+    NeoSmartContractSelectDialogComponent
   ],
   imports: [
     BrowserModule,

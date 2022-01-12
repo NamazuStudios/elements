@@ -7,21 +7,8 @@
       <mat-tab-group>
         <mat-tab label="General">
           <div style="margin: 16px 0px;">
-
-            <mat-form-field>
-              <input autofocus matInput placeholder="Active Wallet" name="activeWallet" disabled="true"
-                value="Wallet A">
-            </mat-form-field>
-
-            <mat-form-field appearance="fill">
-              <mat-label>Contract</mat-label>
-              <mat-select disabled="true" value="ContractA">
-                <mat-option value="ContractA">
-                  Contract A
-                </mat-option>
-              </mat-select>
-            </mat-form-field>
-
+            
+           <div class="full">
             <mat-button-toggle-group name="accessOption" formControlName="accessOption">
               <mat-button-toggle value="public" matTooltip="Can be viewed by everyone.">Public</mat-button-toggle>
               <mat-button-toggle value="private"
@@ -29,8 +16,22 @@
               <mat-button-toggle value="preview"
                 matTooltip="If not the token or contract owner, the asset urls cannot be viewed.">Preview
               </mat-button-toggle>
-            </mat-button-toggle-group>
+            </mat-button-toggle-group>              
+            </div>
 
+            <mat-form-field>
+              <input autofocus matInput placeholder="Active Wallet" name="activeWallet" disabled="true"
+                value="Wallet A">
+            </mat-form-field>
+
+
+            <mat-form-field appearance="fill">
+              <mat-label>Contract</mat-label>
+              <input autofocus matInput placeholder="Smart Contract A" name="contractId" formControlName="contractId"
+              matTooltip="The name given to this Smart Contract.">
+            </mat-form-field>
+
+            <button color="primary" type="button" mat-raised-button (click)="showSelectSmartContractDialog()">Select Smart Contract</button>
 
             <mat-form-field class="full">
               <input autofocus matInput placeholder="Name" name="name" formControlName="name"
