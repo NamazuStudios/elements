@@ -19,6 +19,9 @@ import {
   NeoTokenDialogComponent, OptionType,
 } from "../neo-token-dialog/neo-token-dialog.component";
 import { TransferOptionsPipe } from "./transferOptions.pipe";
+import { MintTokenRequest } from "../api/models/blockchain/mint-token-request";
+import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
+import { NeoSmartContractMintDialogComponent } from "../neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component";
 
 
 @Component({
@@ -60,6 +63,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private neoTokensService: NeoTokensService,
+    private neoSmartContractService: NeoSmartContractsService,
     private alertService: AlertService,
     private dialogService: ConfirmationDialogService,
     public dialog: MatDialog,
@@ -221,6 +225,26 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
       token,
       (createTokenRequest: CreateNeoTokenRequest) => {
         return this.neoTokensService.createToken(createTokenRequest);
+      }
+    );
+  }
+
+  showMintDialog(neoToken: NeoToken, next) {
+    this.dialog.open(NeoSmartContractMintDialogComponent, {
+      width: "850px",
+      data: {
+        neoToken,
+        next: next,
+        refresher: this,
+      },
+    });
+  }
+
+  mintToken(token: NeoToken){
+    this.showMintDialog(
+      token,
+      (mintTokenRequest: MintTokenRequest) => {
+        return this.neoSmartContractService.mintToken(mintTokenRequest);
       }
     );
   }
