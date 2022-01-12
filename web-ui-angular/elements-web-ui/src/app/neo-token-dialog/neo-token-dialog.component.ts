@@ -1,4 +1,4 @@
-import { Component, Inject, OnInit } from "@angular/core";
+import { Component, Inject, OnInit, ViewChild } from "@angular/core";
 import {
   MAT_DIALOG_DATA,
   MatDialogRef,
@@ -16,6 +16,10 @@ import { MatChipInputEvent } from "@angular/material/chips";
 import { COMMA, ENTER } from "@angular/cdk/keycodes";
 import { NeoTokenViewModel } from "../models/blockchain/neo-token-view-model";
 import { NeoToken } from "../api/models/blockchain/neo-token";
+import { JsonEditorCardComponent } from "../json-editor-card/json-editor-card.component";
+import { NeoSmartContract } from "../api/models/blockchain/neo-smart-contract";
+import { NeoSmartContractsDialogComponent } from "../neo-smart-contracts-dialog/neo-smart-contracts-dialog.component";
+import { NeoSmartContractSelectDialogComponent } from "../neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component";
 
 export interface OptionType {
   key: string;
@@ -29,6 +33,12 @@ export interface OptionType {
   styleUrls: ["./neo-token-dialog.component.css"],
 })
 export class NeoTokenDialogComponent implements OnInit {
+  @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+
+  originalMetadata = JSON.parse(
+    JSON.stringify(this.data.neoToken.token.metadata || {})
+  );
+
   selectable = true;
   removable = true;
   addOnBlur = true;
@@ -54,13 +64,15 @@ export class NeoTokenDialogComponent implements OnInit {
   ];
 
   tokenForm = this.formBuilder.group({
-
     owner: [this.data.neoToken.token.owner], // DONE <>
     name: [this.data.neoToken.token.name, [Validators.required]], // DONE <>
     description: [this.data.neoToken.token.description],
     tags: [[]], // DONE <>
     totalSupply: [this.data.neoToken?.token?.totalSupply], // DONE <>
-    accessOption: [this.data.neoToken.token.accessOption, [Validators.required]], // DONE <>
+    accessOption: [
+      this.data.neoToken.token.accessOption,
+      [Validators.required],
+    ], // DONE <>
     previewUrls: [this.data.neoToken?.token?.previewUrls], // DONE <>
     assetUrls: [this.data.neoToken?.token?.assetUrls], // DONE <>
 
@@ -70,23 +82,21 @@ export class NeoTokenDialogComponent implements OnInit {
       this.data.neoToken?.token?.transferOptions,
       [Validators.required],
     ], // DONE <>
-    revocable: [this.data.neoToken?.token?.revocable, ], // DONE <>
+    revocable: [this.data.neoToken?.token?.revocable], // DONE <>
 
-    expiry: [this.data.neoToken?.token?.expiry, ], // TODO: link this to form <<<<<<<<<<<<<<<<
+    expiry: [this.data.neoToken?.token?.expiry], // TODO: link this to form <<<<<<<<<<<<<<<<
 
-    renewable: [this.data.neoToken?.token?.renewable, ], // DONE <>
+    renewable: [this.data.neoToken?.token?.renewable], // DONE <>
     listed: [this.data.neoToken?.listed], // DONE <>
 
-    contractId: [this.data.neoToken?.contractId] // TODO: link this to form later.... <<<<<<<<<<<
- 
-    //  metadata: [this.data.neoToken?.metadata, [Validators.required]], // TODO: ADD TO FORM <<<<<<<<<
+    contractId: [{ value: this.data.neoToken?.contractId, disabled: true }], // TODO: link this to form later.... <<<<<<<<<<<
 
   });
 
   get owner(): string {
     return this.tokenForm.get("owner").value;
   }
-  
+
   get name(): string {
     return this.tokenForm.get("name").value;
   }
@@ -219,7 +229,7 @@ export class NeoTokenDialogComponent implements OnInit {
   getNewTokenData(): CreateNeoTokenRequest {
     let newTokenData: CreateNeoTokenRequest = {
       token: {
-        owner: this.owner, 
+        owner: this.owner,
         name: this.name,
         description: this.description,
         tags: this.data.neoToken.token.tags,
@@ -229,14 +239,13 @@ export class NeoTokenDialogComponent implements OnInit {
         assetUrls: this.assetUrls,
         ownership: null, // TODO link this to the form <<<<<<<<<<<<<<<<<<<<
         transferOptions: this.transferOptions,
-        revocable: this.revocable, 
+        revocable: this.revocable,
         expiry: 0, // TODO link this to form <<<<<<<<<<<<<<<<<<<<<<<<<
-        renewable: this.renewable, 
-        metadata: JSON.parse(
-          JSON.stringify(this.data.neoToken.token.metadata))
+        renewable: this.renewable,
+        metadata: JSON.parse(JSON.stringify(this.data.neoToken.token.metadata)),
       },
       listed: this.listed,
-      contractId: this.contractId
+      contractId: this.contractId,
     };
 
     return newTokenData;
@@ -245,34 +254,48 @@ export class NeoTokenDialogComponent implements OnInit {
   getUpdateTokenData(): UpdateNeoTokenRequest {
     let updateWalletData: UpdateNeoTokenRequest = {
       token: {
-        owner: this.owner, 
+        owner: this.owner,
         name: this.name,
         description: this.description,
         tags: this.data.neoToken.token.tags,
-        totalSupply: this.totalSupply, 
+        totalSupply: this.totalSupply,
         accessOption: this.accessOption,
         previewUrls: this.previewUrls,
         assetUrls: this.assetUrls,
         ownership: null, // TODO link this to the form!!!!!!!
         transferOptions: this.transferOptions,
-        revocable: this.revocable, 
+        revocable: this.revocable,
         expiry: 0, // TODO link this to form
-        renewable: this.renewable, 
-        metadata: JSON.parse(
-          JSON.stringify(this.data.neoToken.token.metadata))
+        renewable: this.renewable,
+        metadata: JSON.parse(JSON.stringify(this.data.neoToken.token.metadata)),
       },
       listed: this.listed,
-      contractId: this.contractId
+      contractId: this.contractId,
     };
 
     return updateWalletData;
   }
 
+  showSelectSmartContractDialog() {
+    this.dialog.open(NeoSmartContractSelectDialogComponent, {
+      width: "700px",
+      data: {
+        next: (result: NeoSmartContract) => {
+          this.tokenForm.get("contractId").setValue(result.id);
+          // TODO: make sure not to use number... use the name...
+        },
+      },
+    });
+  }
+
   close(saveChanges?: boolean) {
     if (!saveChanges) {
+      this.data.neoToken.token.metadata = this.originalMetadata;
       this.dialogRef.close();
       return;
     }
+
+    this.editorCard.validateMetadata(true);
 
     let tokenData;
     this.data.isNew

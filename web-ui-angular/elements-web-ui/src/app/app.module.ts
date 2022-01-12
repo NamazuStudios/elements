@@ -63,6 +63,7 @@ import { WalletDialogComponent } from './wallets-dialog/wallet-dialog.component'
 import { NeoTokensListComponent } from './neo-tokens-list/neo-tokens-list.component';
 import { NeoTokenDialogComponent } from './neo-token-dialog/neo-token-dialog.component';
 import { YesNoPipe } from './neo-tokens-list/yesNo.pipe';
+import { TransferOptionsPipe } from './neo-tokens-list/transferOptions.pipe';
 import { TokensMenuComponent } from './tokens-menu/tokens-menu.component';
 import { AuthSchemesListComponent } from './auth-schemes-list/auth-schemes-list.component';
 import { AuthSchemeDialogComponent } from './auth-scheme-dialog/auth-scheme-dialog.component';
@@ -70,6 +71,9 @@ import { RegenerateKeysDialogComponent } from './auth-scheme-dialog/regenerate-k
 import { GeneratedKeysDialogComponent } from './auth-scheme-dialog/generated-keys-dialog/generated-keys-dialog.component';
 import { NeoSmartContractsListComponent } from './neo-smart-contracts-list/neo-smart-contracts-list.component';
 import { NeoSmartContractsDialogComponent } from './neo-smart-contracts-dialog/neo-smart-contracts-dialog.component';
+import { NeoSmartContractSelectDialogComponent } from './neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component';
+import { NeoSmartContractMintDialogComponent } from './neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component';
+import { WalletSelectDialogComponent } from './wallet-select-dialog/wallet-select-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -143,13 +147,17 @@ export function initialize(configService: ConfigService) {
     NeoTokensListComponent,
     NeoTokenDialogComponent,
     YesNoPipe,
+    TransferOptionsPipe,
     TokensMenuComponent,
     AuthSchemesListComponent,
     AuthSchemeDialogComponent,
     RegenerateKeysDialogComponent,
     GeneratedKeysDialogComponent,
     NeoSmartContractsListComponent,
-    NeoSmartContractsDialogComponent
+    NeoSmartContractsDialogComponent,
+    NeoSmartContractSelectDialogComponent,
+    NeoSmartContractMintDialogComponent,
+    WalletSelectDialogComponent
   ],
   imports: [
     BrowserModule,

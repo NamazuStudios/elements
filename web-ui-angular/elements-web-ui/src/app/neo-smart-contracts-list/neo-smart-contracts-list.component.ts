@@ -187,9 +187,17 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
   }
 
   addNeoSmartContract() {
+
+    let neoSmartContractViewModel = new NeoSmartContractViewModel();
+
+    neoSmartContractViewModel.blockchain = "";
+    neoSmartContractViewModel.displayName = "";
+    neoSmartContractViewModel.metadata = {};
+    neoSmartContractViewModel.scriptHash = "";
+
     this.showDialog(
       true,
-      new NeoSmartContractViewModel(),
+      neoSmartContractViewModel,
       (patchNeoSmartContractRequest: PatchNeoSmartContractRequest) => {
         return this.neoSmartContractsService.patchNeoSmartContract(
           patchNeoSmartContractRequest

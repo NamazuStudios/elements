@@ -14,6 +14,8 @@ import { map as __map, filter as __filter } from "rxjs/operators";
 import { NeoSmartContract } from "../../models/blockchain/neo-smart-contract";
 import { PatchNeoSmartContractRequest } from "../../models/blockchain/patch-neo-smart-contract-request";
 import { PaginationNeoSmartContract } from "../../models/blockchain/pagination-neo-smart-contract";
+import { MintTokenRequest } from "../../models/blockchain/mint-token-request";
+import { NeoSendRawTransaction } from "../../models/blockchain/neo-send-raw-transaction";
 
 @Injectable({
   providedIn: "root",
@@ -213,7 +215,59 @@ class NeoSmartContractsService extends BaseService {
       __map((_r) => _r.body)
     );
   }
+
+
+
+  /**
+   * Mints the specified token using the specified contract id.
+   * @param body undefined
+   * @return successful operation
+   */
+   mintTokenResponse(
+    body?: MintTokenRequest
+  ): Observable<StrictHttpResponse<NeoSendRawTransaction>> {
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+    let __body: any = null;
+    __body = body;
+    let req = new HttpRequest<any>(
+      "POST",
+      this.rootUrl + `/blockchain/neo/contract/mint`,
+      __body,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: "json",
+      }
+    );
+
+    return this.http.request<any>(req).pipe(
+      __filter((_r) => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
+        return _r as StrictHttpResponse<NeoSendRawTransaction>;
+      })
+    );
+  }
+
+  /**
+   * Mints the specified token using the specified contract id.
+   * @param body undefined
+   * @return successful operation
+   */
+   mintToken(
+    body?: MintTokenRequest
+  ): Observable<NeoSendRawTransaction> {
+    return this.mintTokenResponse(body).pipe(
+      __map((_r) => _r.body)
+    );
+  }
+
+
+
+
 }
+
+
 
 module NeoSmartContractsService {
   /**

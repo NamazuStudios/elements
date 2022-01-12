@@ -24,13 +24,15 @@
 
                 <mat-form-field>
                     <mat-label>Network</mat-label>
-                    <mat-select placeholder="NEO blockchain" name="blockchain" formControlName="blockchain" value="NEO"
+                    <mat-select placeholder="NEO blockchain" name="blockchain" formControlName="blockchain" 
                         matTooltip="The blockchain where this contract lives.">
                         <mat-option *ngFor="let blockchain of blockchainOptions" [value]="blockchain.key">
                             {{blockchain.description}}
                         </mat-option>
                     </mat-select>
                 </mat-form-field>
+
+                <app-json-editor-card topic="Item" [editTarget]="data.neoSmartContract"></app-json-editor-card>
             </div>
         </div>
     </form>
