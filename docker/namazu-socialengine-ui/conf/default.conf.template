@@ -10,6 +10,7 @@ server {
 
     location = /${com_namazustudios_socialengine_http_path_prefix}/ui/version {
         add_header Content-Type text/plain;
+        try_files $uri $uri/ /index.html?$args;
         return 200 'angular:1.0';
     }
 
