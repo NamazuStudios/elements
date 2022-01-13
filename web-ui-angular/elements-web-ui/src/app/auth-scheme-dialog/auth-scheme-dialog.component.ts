@@ -18,7 +18,6 @@ import { UserLevel } from "../user-dialog/user-dialog.component";
 import { RegenerateKeysDialogComponent } from "./regenerate-keys-dialog/regenerate-keys-dialog.component";
 import { GeneratedKeysDialogComponent } from "./generated-keys-dialog/generated-keys-dialog.component";
 
-
 @Component({
   selector: "app-auth-scheme-dialog",
   templateUrl: "./auth-scheme-dialog.component.html",
@@ -35,6 +34,15 @@ export class AuthSchemeDialogComponent implements OnInit {
     { key: "UNPRIVILEGED", description: "Unprivileged" },
     { key: "USER", description: "User" },
     { key: "SUPERUSER", description: "Superuser" },
+  ];
+
+  algorithms: UserLevel[] = [
+    { key: "RSA_256", description: "RSA 256" },
+    { key: "RSA_384", description: "RSA 384" },
+    { key: "RSA_512", description: "RSA 512" },
+    { key: "ECDSA_256", description: "ECDSA 256" },
+    { key: "ECDSA_384", description: "ECDSA 384" },
+    { key: "ECDSA_512", description: "ECDSA 512" },
   ];
 
   authSchemeForm = this.formBuilder.group({
@@ -188,7 +196,7 @@ export class AuthSchemeDialogComponent implements OnInit {
       width: "600px",
       data: {
         publicKey,
-        privateKey
+        privateKey,
       },
     });
   }
@@ -204,10 +212,9 @@ export class AuthSchemeDialogComponent implements OnInit {
       });
     }
 
-    (!this.authSchemeForm.get("regenerate").value && this.data.isNew)
-    ? this.authSchemeForm.get("publicKey").disable()
-    : this.authSchemeForm.get("publicKey").enable();
-
+    !this.authSchemeForm.get("regenerate").value && this.data.isNew
+      ? this.authSchemeForm.get("publicKey").disable()
+      : this.authSchemeForm.get("publicKey").enable();
   }
 
   close(saveChanges?: boolean) {
@@ -223,8 +230,7 @@ export class AuthSchemeDialogComponent implements OnInit {
 
     this.data.next(authSchemeData).subscribe(
       (authResponse) => {
-
-        if(authResponse.privateKey){
+        if (authResponse.privateKey) {
           this.showKeysDialog(authResponse.publicKey, authResponse.privateKey);
         }
 
