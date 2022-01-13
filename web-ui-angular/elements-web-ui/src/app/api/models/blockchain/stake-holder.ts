@@ -1,8 +1,17 @@
 /* tslint:disable */
 export interface StakeHolder {
-  walletId?: string;
+  /**
+   * The account address of the stakeholder to be assigned when minting this token.
+   */
+  walletId: string;
 
-  voting?: boolean;
+  /**
+   * If true, allows for voting on any proposed change.
+   */
+  voting: boolean;
 
-  shares?: number;
+  /**
+   * The number of shares assigned to the Stakeholder.
+   */
+  shares: number;
 }

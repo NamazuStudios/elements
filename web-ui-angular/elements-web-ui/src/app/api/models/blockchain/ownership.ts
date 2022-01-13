@@ -2,7 +2,13 @@ import { StakeHolder } from "./stake-holder";
 
 /* tslint:disable */
 export interface Ownership {
-  stakeHolders?: Array<StakeHolder>;
+  /**
+   * description:The list of stakeholders that will be assigned when minting this token.
+   */
+  stakeHolders: Array<StakeHolder>;
 
-  capitalization?: number;
+  /**
+   * The total number of shares allocated to this token.
+   */
+  capitalization: number;
 }
