@@ -33,7 +33,7 @@ export class WalletsListComponent implements OnInit, AfterViewInit {
     "level",
     "network",
     "content",
-    "active",
+    //"active",
     "content-action",
     "edit-action",
     "remove-action",
