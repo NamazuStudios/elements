@@ -81,7 +81,7 @@
 
       <div class="names" *ngIf="!data.isNew">
         <mat-form-field class="item">
-          <mat-label>Public Key</mat-label>
+          <mat-label>Public Key (Wallet Address)</mat-label>
           <div style="display: flex; justify-content: space-between;">
             <input matInput name="publicKey" [value]="data?.wallet.wallet?.accounts[0]?.address" disabled="true">
             <button style="transform: scale(0.85);"
