@@ -24,6 +24,10 @@ export class UserDialogComponent implements OnInit {
 
   userForm = this.formBuilder.group({
     id: [ this.data.user.id ],
+    facebookId: [ {value: this.data.user.facebookId, disabled: true} ],
+    firebaseId: [ {value: this.data.user.firebaseId, disabled: true} ],
+    appleSignInId: [ {value: this.data.user.appleSignInId, disabled: true} ],
+    externalUserId: [ {value: this.data.user.externalUserId, disabled: true} ],
     name: [ this.data.user.name, [ Validators.required, Validators.pattern('^\\S+$') ]],
     email: [ this.data.user.email, [ Validators.required, Validators.email ]],
     password: [ '', [ Validators.pattern('^\\S+$') ]],
