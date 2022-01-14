@@ -59,7 +59,7 @@
     <ng-container matColumnDef="define-nft-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let neoSmartContract">
-        <button mat-raised-button color="primary" (click)="addToken()">Define
+        <button mat-raised-button color="primary" (click)="addToken(neoSmartContract)">Define
           NFT</button>
       </mat-cell>
     </ng-container>
