@@ -3,7 +3,7 @@ export interface StakeHolder {
   /**
    * The account address of the stakeholder to be assigned when minting this token.
    */
-  walletId: string;
+  owner: string;
 
   /**
    * If true, allows for voting on any proposed change.
