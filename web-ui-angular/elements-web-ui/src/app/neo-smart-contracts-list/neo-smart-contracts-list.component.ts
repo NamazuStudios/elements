@@ -237,7 +237,7 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  public addToken() {
+  public addToken(neoSmartContract: NeoSmartContract) {
     let neoTokenViewModel = new NeoTokenViewModel();
 
     neoTokenViewModel.id = "";
@@ -257,7 +257,7 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
       renewable: false,
       metadata: {},
     };
-    neoTokenViewModel.contractId = "";
+    neoTokenViewModel.contractId = neoSmartContract.id;
     neoTokenViewModel.listed = false;
     neoTokenViewModel.minted = false;
 
