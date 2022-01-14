@@ -249,13 +249,13 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
     );
   }
 
-  listToken(token: NeoToken) {
+  listToken(token: NeoToken, listed: boolean) {
     this.neoTokensService
       .updateToken({
         id: token.id,
         body: {
           token: token.token,
-          listed: true,
+          listed,
           contractId: token.contractId,
         },
       })

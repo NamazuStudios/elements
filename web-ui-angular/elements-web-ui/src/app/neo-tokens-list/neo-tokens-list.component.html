@@ -91,9 +91,17 @@
     <ng-container matColumnDef="list-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button [disabled]="token.listed" mat-raised-button color="primary" (click)="listToken(token)" matTooltip="List"
+        <button *ngIf="!token.listed && !(token.totalMintedQuantity === token.token.totalSupply)" [disabled]="(token.totalMintedQuantity === token.token.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, true)" matTooltip="List"
           matTooltipPosition="above">
-          <mat-icon>publish</mat-icon>
+          <mat-icon>vertical_align_top</mat-icon>
+        </button>
+        <button *ngIf="token.listed && !(token.totalMintedQuantity === token.token.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+          matTooltipPosition="above">
+          <mat-icon>vertical_align_bottom</mat-icon>
+        </button>
+        <button *ngIf="(token.totalMintedQuantity === token.token.totalSupply)" disabled="true" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+          matTooltipPosition="above">
+          <mat-icon>not_interested</mat-icon>
         </button>
       </mat-cell>
     </ng-container>
