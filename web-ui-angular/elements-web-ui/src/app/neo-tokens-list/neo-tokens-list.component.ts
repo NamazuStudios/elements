@@ -231,7 +231,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
 
   showMintDialog(neoToken: NeoToken, next) {
     this.dialog.open(NeoSmartContractMintDialogComponent, {
-      width: "850px",
+      width: "500px",
       data: {
         neoToken,
         next: next,

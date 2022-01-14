@@ -24,6 +24,10 @@
   width: 32%;
 }
 
+.margin-left {
+  margin-left: 16px;
+}
+
 .type {
   margin: auto 4px;
 }
