@@ -112,8 +112,6 @@ export class NeoTokenDialogComponent implements OnInit {
     contractId: [{ value: "", disabled: true }],
   });
 
-
-
   get owner(): string {
     return this.tokenForm.get("owner").value;
   }
@@ -205,12 +203,15 @@ export class NeoTokenDialogComponent implements OnInit {
       }
     });
 
-    this.neoSmartContractService.getNeoSmartContract(this.data.neoToken.contractId).subscribe(
-      neoContract => {
+    this.neoSmartContractService
+      .getNeoSmartContract(this.data.neoToken.contractId)
+      .subscribe((neoContract) => {
         this.tokenForm.get("contractId").patchValue(neoContract.displayName);
         this.currentSmartContract = JSON.parse(JSON.stringify(neoContract));
+      });
+    if (!this.data.isNew) {
+      this.tokenForm.markAllAsTouched();
     }
-    )
   }
 
   addTag(event: MatChipInputEvent): void {
@@ -338,7 +339,9 @@ export class NeoTokenDialogComponent implements OnInit {
       data: {
         next: (result: NeoSmartContract) => {
           this.currentSmartContract = JSON.parse(JSON.stringify(result));
-          this.tokenForm.get("contractId").setValue(this.currentSmartContract.displayName);
+          this.tokenForm
+            .get("contractId")
+            .setValue(this.currentSmartContract.displayName);
         },
       },
     });

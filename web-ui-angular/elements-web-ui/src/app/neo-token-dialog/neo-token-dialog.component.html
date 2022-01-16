@@ -240,4 +240,6 @@
 <div mat-dialog-actions>
   <button type="button" mat-raised-button (click)="close(true)" [disabled]="!tokenForm.valid">OK</button>
   <button type="button" mat-raised-button (click)="close(false)">Cancel</button>
+  <mat-error *ngIf="tokenForm.status === 'INVALID'" style="margin-left: 10px;" class="mat-small">All errors must be
+    resolved before proceeding.</mat-error>
 </div>
