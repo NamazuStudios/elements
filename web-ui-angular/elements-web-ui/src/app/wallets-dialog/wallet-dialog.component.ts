@@ -37,6 +37,10 @@ export interface ScoreStrategyType {
 export class WalletDialogComponent implements OnInit, AfterViewInit {
   private confirmNewPassword: string = "";
   privateKeyDisplayed: boolean = false;
+  hidePassword1 = true;
+  hidePassword2 = true;
+  hidePassword3 = true;
+  hidePassword4 = true;
 
   // TODO: make sure "wallet exists" validator implemented
 

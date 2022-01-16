@@ -20,6 +20,9 @@ export interface UserLevel {
   styleUrls: ["./user-dialog.component.css"],
 })
 export class UserDialogComponent implements OnInit {
+  hidePassword1 = true;
+  hidePassword2 = true;
+
   userLevels: UserLevel[] = [
     { key: "UNPRIVILEGED", description: "Unprivileged" },
     { key: "USER", description: "User" },
@@ -77,11 +80,9 @@ export class UserDialogComponent implements OnInit {
   }
 
   getPasswordMatchValidator(confirmPasswordControlName: string): ValidatorFn {
-    
     return (control: AbstractControl): { [key: string]: boolean } | null => {
       let parent = control.parent;
-      if(!parent)
-        return null;
+      if (!parent) return null;
 
       if (parent.get(confirmPasswordControlName).value != control.value) {
         return { passwordMatch: true };
@@ -90,5 +91,4 @@ export class UserDialogComponent implements OnInit {
       return null;
     };
   }
-
 }

@@ -45,7 +45,10 @@
         <mat-form-field class="item">
           <mat-label>Wallet Password</mat-label>
           <input matInput placeholder="Ex. Password1234" name="walletPassword" formControlName="walletPassword"
-            type="password" autocomplete="new-password">
+            [type]="hidePassword1 ? 'password' : 'text'" autocomplete="new-password">
+          <mat-icon matSuffix (click)="hidePassword1 = !hidePassword1">
+            {{hidePassword1 ? 'visibility_off' : 'visibility'}}
+          </mat-icon>
         </mat-form-field>
       </div>
 
@@ -53,7 +56,11 @@
         <mat-form-field class="item">
           <mat-label>Confirm Wallet Password</mat-label>
           <input matInput placeholder="Ex. Password1234" name="confirmWalletPassword"
-            formControlName="confirmWalletPassword" type="password" autocomplete="new-password">
+            formControlName="confirmWalletPassword" [type]="hidePassword2 ? 'password' : 'text'"
+            autocomplete="new-password">
+          <mat-icon matSuffix (click)="hidePassword2 = !hidePassword2">
+            {{hidePassword2 ? 'visibility_off' : 'visibility'}}
+          </mat-icon>
           <mat-error *ngIf="walletForm.controls.confirmWalletPassword.hasError('passwordMatch')">Password confirmation
             does not match</mat-error>
         </mat-form-field>
@@ -63,7 +70,11 @@
         <mat-form-field class="item">
           <mat-label>Update Wallet Password</mat-label>
           <input matInput placeholder="Ex. Password1234" name="updateWalletPassword"
-            formControlName="updateWalletPassword" type="password" autocomplete="new-password">
+            formControlName="updateWalletPassword" [type]="hidePassword3 ? 'password' : 'text'"
+            autocomplete="new-password">
+          <mat-icon matSuffix (click)="hidePassword3 = !hidePassword3">
+            {{hidePassword3 ? 'visibility_off' : 'visibility'}}
+          </mat-icon>
         </mat-form-field>
       </div>
 
@@ -71,7 +82,11 @@
         <mat-form-field class="item">
           <mat-label>Confirm New Wallet Password</mat-label>
           <input matInput placeholder="Ex. Password1234" name="confirmUpdateWalletPassword"
-            formControlName="confirmUpdateWalletPassword" type="password" autocomplete="new-password">
+            formControlName="confirmUpdateWalletPassword" [type]="hidePassword4 ? 'password' : 'text'"
+            autocomplete="new-password">
+          <mat-icon matSuffix (click)="hidePassword4 = !hidePassword4">
+            {{hidePassword4 ? 'visibility_off' : 'visibility'}}
+          </mat-icon>
           <mat-error *ngIf="walletForm.controls.confirmUpdateWalletPassword.hasError('passwordMatch')">Password
             confirmation does not match</mat-error>
         </mat-form-field>
