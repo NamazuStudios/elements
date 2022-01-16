@@ -26,6 +26,7 @@ import { NeoSmartContract } from "../api/models/blockchain/neo-smart-contract";
 import { NeoSmartContractsDialogComponent } from "../neo-smart-contracts-dialog/neo-smart-contracts-dialog.component";
 import { NeoSmartContractSelectDialogComponent } from "../neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component";
 import { StakeHolder } from "../api/models/blockchain/stake-holder";
+import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
 
 export interface OptionType {
   key: string;
@@ -40,6 +41,8 @@ export interface OptionType {
 })
 export class NeoTokenDialogComponent implements OnInit {
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
+
+  currentSmartContract: NeoSmartContract;
 
   originalMetadata = JSON.parse(
     JSON.stringify(this.data.neoToken.token.metadata || {})
@@ -106,8 +109,10 @@ export class NeoTokenDialogComponent implements OnInit {
     renewable: [this.data.neoToken?.token?.renewable],
     listed: [this.data.neoToken?.listed],
 
-    contractId: [{ value: this.data.neoToken?.contractId, disabled: true }],
+    contractId: [{ value: "", disabled: true }],
   });
+
+
 
   get owner(): string {
     return this.tokenForm.get("owner").value;
@@ -187,6 +192,7 @@ export class NeoTokenDialogComponent implements OnInit {
     private formBuilder: FormBuilder,
     private alertService: AlertService,
     private neoWalletsService: NeoWalletsService,
+    private neoSmartContractService: NeoSmartContractsService,
     private usersService: UsersService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar
@@ -198,6 +204,13 @@ export class NeoTokenDialogComponent implements OnInit {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
     });
+
+    this.neoSmartContractService.getNeoSmartContract(this.data.neoToken.contractId).subscribe(
+      neoContract => {
+        this.tokenForm.get("contractId").patchValue(neoContract.displayName);
+        this.currentSmartContract = JSON.parse(JSON.stringify(neoContract));
+    }
+    )
   }
 
   addTag(event: MatChipInputEvent): void {
@@ -284,7 +297,7 @@ export class NeoTokenDialogComponent implements OnInit {
         metadata: JSON.parse(JSON.stringify(this.data.neoToken.token.metadata)),
       },
       listed: this.listed,
-      contractId: this.contractId,
+      contractId: this.currentSmartContract.id,
     };
 
     return newTokenData;
@@ -313,7 +326,7 @@ export class NeoTokenDialogComponent implements OnInit {
         metadata: JSON.parse(JSON.stringify(this.data.neoToken.token.metadata)),
       },
       listed: this.listed,
-      contractId: this.contractId,
+      contractId: this.currentSmartContract.id,
     };
 
     return updateWalletData;
@@ -324,8 +337,8 @@ export class NeoTokenDialogComponent implements OnInit {
       width: "700px",
       data: {
         next: (result: NeoSmartContract) => {
-          this.tokenForm.get("contractId").setValue(result.id);
-          // TODO: make sure not to use number... use the name...
+          this.currentSmartContract = JSON.parse(JSON.stringify(result));
+          this.tokenForm.get("contractId").setValue(this.currentSmartContract.displayName);
         },
       },
     });
