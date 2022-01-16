@@ -43,39 +43,37 @@
 
       <div class="names">
         <mat-form-field class="item">
-          <mat-label>{{!data.isNew ? "Current Wallet Password" : "Wallet Password"}}</mat-label>
+          <mat-label>Wallet Password</mat-label>
           <input matInput placeholder="Ex. Password1234" name="walletPassword" formControlName="walletPassword"
             type="password" autocomplete="new-password">
-          <!-- <mat-error *ngIf="walletForm.controls.password.hasError('required')">Password is required</mat-error> -->
         </mat-form-field>
       </div>
 
       <div class="names" *ngIf="data.isNew">
         <mat-form-field class="item">
           <mat-label>Confirm Wallet Password</mat-label>
-          <input matInput placeholder="Ex. Password1234" name="walletConfirmPassword"
-            formControlName="walletConfirmPassword" type="password" autocomplete="new-password">
-          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('required')">Password confirmation is required</mat-error> -->
-          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('passwordMatch')">Password confirmation does not match</mat-error> -->
+          <input matInput placeholder="Ex. Password1234" name="confirmWalletPassword"
+            formControlName="confirmWalletPassword" type="password" autocomplete="new-password">
+          <mat-error *ngIf="walletForm.controls.confirmWalletPassword.hasError('passwordMatch')">Password confirmation
+            does not match</mat-error>
         </mat-form-field>
       </div>
 
       <div class="names" *ngIf="!data.isNew">
         <mat-form-field class="item">
-          <mat-label>New Wallet Password</mat-label>
-          <input matInput placeholder="Ex. Password1234" name="newWalletPassword" formControlName="newWalletPassword"
-            type="password" autocomplete="new-password">
-          <!-- <mat-error *ngIf="walletForm.controls.password.hasError('required')">Password is required</mat-error> -->
+          <mat-label>Update Wallet Password</mat-label>
+          <input matInput placeholder="Ex. Password1234" name="updateWalletPassword"
+            formControlName="updateWalletPassword" type="password" autocomplete="new-password">
         </mat-form-field>
       </div>
 
       <div class="names" *ngIf="!data.isNew">
         <mat-form-field class="item">
           <mat-label>Confirm New Wallet Password</mat-label>
-          <input matInput placeholder="Ex. Password1234" name="walletConfirmPassword"
-            formControlName="walletConfirmPassword" type="password" autocomplete="new-password">
-          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('required')">Password confirmation is required</mat-error> -->
-          <!-- <mat-error *ngIf="walletForm.controls.passwordConfirmation.hasError('passwordMatch')">Password confirmation does not match</mat-error> -->
+          <input matInput placeholder="Ex. Password1234" name="confirmUpdateWalletPassword"
+            formControlName="confirmUpdateWalletPassword" type="password" autocomplete="new-password">
+          <mat-error *ngIf="walletForm.controls.confirmUpdateWalletPassword.hasError('passwordMatch')">Password
+            confirmation does not match</mat-error>
         </mat-form-field>
       </div>
 

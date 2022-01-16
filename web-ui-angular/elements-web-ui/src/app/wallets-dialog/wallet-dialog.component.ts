@@ -5,7 +5,12 @@ import {
   MatDialog,
 } from "@angular/material/dialog";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { FormBuilder, Validators } from "@angular/forms";
+import {
+  AbstractControl,
+  FormBuilder,
+  ValidatorFn,
+  Validators,
+} from "@angular/forms";
 import { AlertService } from "../alert.service";
 import { NeoWalletsService, UsersService } from "../api/services";
 import { User } from "../api/models";
@@ -39,8 +44,15 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
     displayName: [this.data.wallet.displayName, [Validators.required]],
     walletUserName: [{ value: this.data.wallet.user?.name, disabled: true }],
     walletPassword: [""],
-    newWalletPassword: [""],
-    walletConfirmPassword: [""],
+    confirmWalletPassword: [
+      "",
+      this.getPasswordMatchValidator("walletPassword"),
+    ],
+    updateWalletPassword: [""],
+    confirmUpdateWalletPassword: [
+      "",
+      this.getPasswordMatchValidator("updateWalletPassword"),
+    ],
   });
 
   get displayName(): string {
@@ -51,8 +63,16 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
     return this.walletForm.get("walletPassword").value;
   }
 
-  get newWalletPassword(): string {
-    return this.walletForm.get("newWalletPassword").value;
+  get confirmWalletPassword(): string {
+    return this.walletForm.get("confirmWalletPassword").value;
+  }
+
+  get updateWalletPassword(): string {
+    return this.walletForm.get("updateWalletPassword").value;
+  }
+
+  get confirmUpdateWalletPassword(): string {
+    return this.walletForm.get("confirmUpdateWalletPassword").value;
   }
 
   constructor(
@@ -137,7 +157,7 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
     updateWalletData.userId = this.data.wallet.userId;
     updateWalletData.newUserId = this.data.wallet.user.id;
     updateWalletData.password = this.walletPassword;
-    updateWalletData.newPassword = this.newWalletPassword;
+    updateWalletData.newPassword = this.updateWalletPassword;
     updateWalletData.walletId = this.data.wallet.id;
 
     return updateWalletData;
@@ -152,6 +172,19 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
 
   showPrivateKey() {
     this.privateKeyDisplayed = true;
+  }
+
+  getPasswordMatchValidator(confirmPasswordControlName: string): ValidatorFn {
+    return (control: AbstractControl): { [key: string]: boolean } | null => {
+      let parent = control.parent;
+      if (!parent) return null;
+
+      if (parent.get(confirmPasswordControlName).value != control.value) {
+        return { passwordMatch: true };
+      }
+
+      return null;
+    };
   }
 
   close(saveChanges?: boolean) {
