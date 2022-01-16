@@ -105,6 +105,10 @@
         </mat-tab>
 
         <mat-tab label="Ownership">
+          <div style="margin: 20px 10px;">
+            Set shares for resale royalties for each wallet and total capitalization.
+          </div>
+
           <mat-card style="margin: 10px;">
             <section>
               <div *ngIf="data.neoToken.token?.ownership?.stakeHolders">
@@ -129,7 +133,7 @@
 
                   <div class="margin-left">
                     <button type="button" mat-raised-button color="primary"
-                      (click)="removeStakeHolderAtIndex(i)">-</button>
+                      (click)="removeStakeHolderAtIndex(i); tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched();">-</button>
                   </div>
                 </div>
               </div>
@@ -143,22 +147,26 @@
                   formControlName="voting">Voting</mat-checkbox>
                 <mat-form-field class="margin-left">
                   <mat-label>Shares</mat-label>
-                  <input matInput #shares placeholder="Ex. 5" name="shares" type="number" min="0">
+                  <input matInput #shares placeholder="Ex. 5" name="shares" type="number" min="1" step="1"
+                    onkeypress="return event.charCode >= 48 && event.charCode <= 57">
                 </mat-form-field>
                 <div>
 
                   <button class="add-button margin-left" type="button" mat-raised-button color="primary"
-                    (click)="addStakeHolder(owner.value, shares.value); owner.value = ''; votingControl.setValue(false); shares.value = 0;"
+                    (click)="addStakeHolder(owner.value, shares.value); owner.value = ''; votingControl.setValue(false); shares.value = 0; tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched()"
                     [disabled]="!owner.value">+</button>
                 </div>
               </div>
             </section>
 
           </mat-card>
-          <mat-form-field class="url-data" style="margin: 0px 16px 0px 0px; width: 268px; float: right;">
+          <mat-form-field class="url-data" style="margin: 0px 16px 30px 0px; width: 268px; float: right;">
             <mat-label>Capitalization Shares</mat-label>
             <input matInput #capitalization placeholder="Ex. 100" name="capitalization" formControlName="capitalization"
-              type="number" min="0">
+              type="number" min="1" step="1">
+            <mat-error *ngIf="tokenForm.controls.capitalization.hasError('capitalizationError')">The summation of owner
+              (stakeholder) shares cannot equal more than capitalization shares (the number of allotted shares)
+            </mat-error>
           </mat-form-field>
         </mat-tab>
 

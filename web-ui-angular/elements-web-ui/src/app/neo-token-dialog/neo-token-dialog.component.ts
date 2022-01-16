@@ -5,7 +5,12 @@ import {
   MatDialog,
 } from "@angular/material/dialog";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { AbstractControl, FormBuilder, Validators } from "@angular/forms";
+import {
+  AbstractControl,
+  FormBuilder,
+  ValidatorFn,
+  Validators,
+} from "@angular/forms";
 import { AlertService } from "../alert.service";
 import { NeoWalletsService, UsersService } from "../api/services";
 
@@ -49,7 +54,6 @@ export class NeoTokenDialogComponent implements OnInit {
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
 
-
   transferOptionType: OptionType[] = [
     { key: "none", label: "None", toolTip: "Cannot be transferred." },
     {
@@ -72,28 +76,35 @@ export class NeoTokenDialogComponent implements OnInit {
   tokenForm = this.formBuilder.group({
     voting: [false],
     existingVoting: [],
-    capitalization: [this.data.neoToken.token.ownership.capitalization],
-    owner: [this.data.neoToken.token.owner], 
-    name: [this.data.neoToken.token.name, [Validators.required]], 
+    capitalization: [
+      this.data.neoToken.token.ownership.capitalization,
+      [
+        this.getCapitalizationSharesValidator(
+          this.data.neoToken.token.ownership.stakeHolders
+        ),
+      ],
+    ],
+    owner: [this.data.neoToken.token.owner],
+    name: [this.data.neoToken.token.name, [Validators.required]],
     description: [this.data.neoToken.token.description],
-    tags: [[]], 
-    totalSupply: [this.data.neoToken?.token?.totalSupply], 
+    tags: [[]],
+    totalSupply: [this.data.neoToken?.token?.totalSupply],
     accessOption: [
       this.data.neoToken.token.accessOption,
       [Validators.required],
-    ], 
+    ],
     previewUrls: [this.data.neoToken?.token?.previewUrls],
     assetUrls: [this.data.neoToken?.token?.assetUrls],
     transferOptions: [
       this.data.neoToken?.token?.transferOptions,
       [Validators.required],
-    ], 
-    revocable: [this.data.neoToken?.token?.revocable], 
+    ],
+    revocable: [this.data.neoToken?.token?.revocable],
 
     expiry: [this.data.neoToken?.token?.expiry], // TODO: link this to form <<<<<<<<<<<<<<<<
 
-    renewable: [this.data.neoToken?.token?.renewable], 
-    listed: [this.data.neoToken?.listed], 
+    renewable: [this.data.neoToken?.token?.renewable],
+    listed: [this.data.neoToken?.listed],
 
     contractId: [{ value: this.data.neoToken?.contractId, disabled: true }],
   });
@@ -213,14 +224,15 @@ export class NeoTokenDialogComponent implements OnInit {
     }
   }
 
-
   addStakeHolder(owner: string, shares: number) {
-
-    console.log("ADD: owner: ", owner, "voting: ", this.voting, "shares: ", shares )
     if (!this.data.neoToken.token.ownership.stakeHolders) {
       this.data.neoToken.token.ownership.stakeHolders = [];
     }
-    this.data.neoToken.token.ownership.stakeHolders.push({owner: owner, voting: this.voting, shares: shares});
+    this.data.neoToken.token.ownership.stakeHolders.push({
+      owner: owner,
+      voting: this.voting,
+      shares: shares,
+    });
   }
 
   removeStakeHolderAtIndex(index: number) {
@@ -280,7 +292,7 @@ export class NeoTokenDialogComponent implements OnInit {
 
   getUpdateTokenData(): UpdateNeoTokenRequest {
     this.data.neoToken.token.ownership.capitalization = this.capitalization;
-    
+
     let updateWalletData: UpdateNeoTokenRequest = {
       token: {
         owner: this.owner,
@@ -317,6 +329,33 @@ export class NeoTokenDialogComponent implements OnInit {
         },
       },
     });
+  }
+
+  getCapitalizationSharesValidator(
+    stakeholders: Array<StakeHolder>
+  ): ValidatorFn {
+    return (control: AbstractControl): { [key: string]: boolean } | null => {
+      let initialValue = 0;
+      let sumOfStakeholderShares = stakeholders.reduce(
+        (previousValue, currentValue) =>
+          (previousValue += +currentValue.shares),
+        initialValue
+      );
+
+      let capitalization = control.value;
+
+      if (sumOfStakeholderShares > capitalization) {
+        console.log(
+          "Sum of stakeholder shares: ",
+          sumOfStakeholderShares,
+          " capitalization: ",
+          capitalization
+        );
+        return { capitalizationError: true };
+      }
+
+      return null;
+    };
   }
 
   close(saveChanges?: boolean) {
