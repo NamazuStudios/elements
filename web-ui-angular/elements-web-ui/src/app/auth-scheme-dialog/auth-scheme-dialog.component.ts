@@ -206,15 +206,21 @@ export class AuthSchemeDialogComponent implements OnInit {
       this.showDialog((regenerate: boolean) => {
         this.authSchemeForm.get("regenerate").setValue(regenerate);
 
-        regenerate
-          ? this.authSchemeForm.get("publicKey").disable()
-          : this.authSchemeForm.get("publicKey").enable();
+          if(regenerate){
+            this.authSchemeForm.get("publicKey").disable();
+            this.authSchemeForm.get("publicKey").patchValue("");
+          } else {
+            this.authSchemeForm.get("publicKey").enable();
+          }
       });
     }
 
-    !this.authSchemeForm.get("regenerate").value && this.data.isNew
-      ? this.authSchemeForm.get("publicKey").disable()
-      : this.authSchemeForm.get("publicKey").enable();
+      if(!this.authSchemeForm.get("regenerate").value && this.data.isNew){
+        this.authSchemeForm.get("publicKey").disable();
+        this.authSchemeForm.get("publicKey").patchValue("");
+      } else {
+        this.authSchemeForm.get("publicKey").enable();
+      }
   }
 
   close(saveChanges?: boolean) {
