@@ -27,6 +27,11 @@ import { PatchNeoSmartContractRequest } from "../api/models/blockchain/patch-neo
 import { NeoSmartContractViewModel } from "../models/blockchain/neo-smart-contract-view-model";
 import { NeoSmartContractsDialogComponent } from "../neo-smart-contracts-dialog/neo-smart-contracts-dialog.component";
 import { fromEvent } from "rxjs";
+import { NeoTokenDialogComponent } from "../neo-token-dialog/neo-token-dialog.component";
+import { NeoTokenViewModel } from "../models/blockchain/neo-token-view-model";
+import { CreateNeoTokenRequest } from "../api/models/blockchain/create-neo-token-request";
+import { NeoToken } from "../api/models/blockchain/neo-token";
+import { NeoTokensService } from "../api/services/blockchain/neo-tokens.service";
 
 @Component({
   selector: "app-neo-smart-contracts-list",
@@ -59,6 +64,7 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
     private alertService: AlertService,
     private dialogService: ConfirmationDialogService,
     public dialog: MatDialog,
+    public neoTokensService: NeoTokensService,
     public userService: UsersService
   ) {}
 
@@ -217,4 +223,51 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
       }
     );
   }
+
+  //TODO: refactor this code out...
+  showTokenDialog(isNew: boolean, neoToken: NeoToken, next) {
+    this.dialog.open(NeoTokenDialogComponent, {
+      width: "850px",
+      data: {
+        isNew: isNew,
+        neoToken,
+        next: next,
+        refresher: this,
+      },
+    });
+  }
+
+  public addToken(neoSmartContract: NeoSmartContract) {
+    let neoTokenViewModel = new NeoTokenViewModel();
+
+    neoTokenViewModel.id = "";
+    neoTokenViewModel.token = {
+      owner: "",
+      name: "",
+      description: "",
+      tags: [],
+      totalSupply: 0,
+      accessOption: "private",
+      previewUrls: [],
+      assetUrls: [],
+      ownership: { stakeHolders: [], capitalization: 0 },
+      transferOptions: "none",
+      revocable: false,
+      expiry: 0,
+      renewable: false,
+      metadata: {},
+    };
+    neoTokenViewModel.contractId = neoSmartContract.id;
+    neoTokenViewModel.listed = false;
+    neoTokenViewModel.minted = false;
+
+    this.showTokenDialog(
+      true,
+      neoTokenViewModel,
+      (createTokenRequest: CreateNeoTokenRequest) => {
+        return this.neoTokensService.createToken(createTokenRequest);
+      }
+    );
+  }
+
 }

@@ -20,9 +20,11 @@ import { NeoWallet } from "../api/models/blockchain/neo-wallet";
 })
 export class NeoSmartContractMintDialogComponent implements OnInit {
   mintForm = this.formBuilder.group({
-    walletId: [{value: "", disabled: true}],
+    walletId: [{ value: "", disabled: true }],
     password: [""],
   });
+
+  currentWallet: NeoWallet;
 
   constructor(
     public dialogRef: MatDialogRef<NeoSmartContractMintDialogComponent>,
@@ -53,7 +55,8 @@ export class NeoSmartContractMintDialogComponent implements OnInit {
 
   showSelectWalletDialog() {
     this.showDialog((wallet: NeoWallet) => {
-      this.mintForm.get("walletId").setValue(wallet.id);
+      this.currentWallet = JSON.parse(JSON.stringify(wallet));
+      this.mintForm.get("walletId").setValue(this.currentWallet.displayName);
     });
   }
 
@@ -65,7 +68,7 @@ export class NeoSmartContractMintDialogComponent implements OnInit {
 
     let mintTokenRequest: MintTokenRequest = {
       tokenIds: [this.data.neoToken.id],
-      walletId: this.mintForm.get("walletId").value,
+      walletId: this.currentWallet.id,
       password: this.mintForm.get("password").value,
     };
 

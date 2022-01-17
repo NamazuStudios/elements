@@ -6,7 +6,7 @@
 
       <div style="display: flex; justify-content: space-between; ">
         <mat-form-field>
-          <input matInput placeholder="Wallet ID" name="walletId" formControlName="walletId">
+          <input matInput placeholder="Ex. Wallet Name" name="walletId" formControlName="walletId">
         </mat-form-field>
         <div mat-dialog-actions>
           <button type="button" (click)="showSelectWalletDialog()" mat-raised-button>Select
@@ -14,9 +14,8 @@
         </div>
       </div>
 
-
       <mat-form-field>
-          <mat-label>Wallet Password</mat-label>
+        <mat-label>Wallet Password</mat-label>
         <input matInput placeholder="Wallet Password" name="password" formControlName="password">
       </mat-form-field>
     </div>

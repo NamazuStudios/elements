@@ -8,32 +8,36 @@
         <mat-tab label="General">
           <div style="margin: 16px 0px;">
 
-            <div class="full">
-              <mat-button-toggle-group name="accessOption" formControlName="accessOption">
-                <mat-button-toggle value="public" matTooltip="Can be viewed by everyone.">Public</mat-button-toggle>
-                <mat-button-toggle value="private"
-                  matTooltip="Only the token or contract owner can view the token properties.">Private
-                </mat-button-toggle>
-                <mat-button-toggle value="preview"
-                  matTooltip="If not the token or contract owner, the asset urls cannot be viewed.">Preview
-                </mat-button-toggle>
-              </mat-button-toggle-group>
+            <div style="display: flex; justify-content: space-between;">
+              <div>
+                <mat-form-field appearance="fill">
+                  <mat-label>Contract</mat-label>
+                  <input autofocus matInput placeholder="Smart Contract A" name="contractId"
+                    formControlName="contractId" matTooltip="The name given to this Smart Contract.">
+                </mat-form-field>
+
+                <button class="margin" color="primary" type="button" mat-raised-button
+                  (click)="showSelectSmartContractDialog()">Select
+                  Smart Contract</button>
+              </div>
+
+              <div class="public-private-preview">
+                <mat-button-toggle-group name="accessOption" formControlName="accessOption">
+                  <mat-button-toggle value="public" matTooltip="Can be viewed by everyone.">Public</mat-button-toggle>
+                  <mat-button-toggle value="private"
+                    matTooltip="Only the token or contract owner can view the token properties.">Private
+                  </mat-button-toggle>
+                  <mat-button-toggle value="preview"
+                    matTooltip="If not the token or contract owner, the asset urls cannot be viewed.">Preview
+                  </mat-button-toggle>
+                </mat-button-toggle-group>
+              </div>
             </div>
 
             <!-- <mat-form-field>
               <input autofocus matInput placeholder="Active Wallet" name="activeWallet" disabled="true"
                 value="Wallet A">
             </mat-form-field> -->
-
-
-            <mat-form-field appearance="fill">
-              <mat-label>Contract</mat-label>
-              <input autofocus matInput placeholder="Smart Contract A" name="contractId" formControlName="contractId"
-                matTooltip="The name given to this Smart Contract.">
-            </mat-form-field>
-
-            <button color="primary" type="button" mat-raised-button (click)="showSelectSmartContractDialog()">Select
-              Smart Contract</button>
 
             <mat-form-field class="full">
               <input autofocus matInput placeholder="Name" name="name" formControlName="name"
@@ -101,67 +105,97 @@
         </mat-tab>
 
         <mat-tab label="Ownership">
+          <div style="margin: 20px 10px; display: flex; justify-content: space-between; align-items: center;">
+            <span *ngIf="shareView">Set shares for resale royalties for each wallet and total capitalization.</span>
+            <span *ngIf="!shareView">Set percentage points for resale royalties for each wallet.</span>
+            <button *ngIf="!shareView" type="button" mat-raised-button color="primary" (click)="shareView=true;">Set
+              royalties as shares</button>
+            <button *ngIf="shareView" type="button" mat-raised-button color="primary" (click)="shareView=false;">Set
+              royalties as percentage</button>
+          </div>
 
           <mat-card style="margin: 10px;">
             <section>
               <div *ngIf="data.neoToken.token?.ownership?.stakeHolders">
                 <div class="metadata-row full"
                   *ngFor="let stakeHolder of data.neoToken.token.ownership?.stakeHolders; let i = index;">
-
-
-
                   <mat-form-field class="url-data">
                     <mat-label>Owner URL</mat-label>
                     <input matInput #existingOwner placeholder="Ex. www.owner.com" name="existingOwner"
-                      value="{{stakeHolder.owner}}"
-                      disabled="true">
+                      value="{{stakeHolder.owner}}" disabled="true">
                   </mat-form-field>
 
-                  <mat-checkbox class="margin-left" #existingVoting name="existingVoting" [checked]="stakeHolder.voting"
-                  disabled="true">
+                  <mat-checkbox class="margin-left" style="align-self: center;" #existingVoting name="existingVoting"
+                    [checked]="stakeHolder.voting" disabled="true">
                     Voting
                   </mat-checkbox>
 
-
-                  <mat-form-field class="margin-left">
+                  <mat-form-field class="margin-left" *ngIf="shareView">
                     <mat-label>Shares</mat-label>
                     <input matInput #existingShares placeholder="Ex. 5" type="number" min="0" name="existingShares"
-                      value="{{stakeHolder.shares}}"
-                      disabled="true">
+                      value="{{stakeHolder.shares}}" disabled="true">
                   </mat-form-field>
+
+                  <mat-form-field class="margin-left" *ngIf="!shareView">
+                    <mat-label>Shares</mat-label>
+                    <input matInput #existingShares placeholder="Ex. 5" type="text" name="existingShares"
+                      value="{{(stakeHolder.shares / capitalizationShares) | percent:'1.0-2'}}" disabled="true">
+                  </mat-form-field>
+
+
 
                   <div class="margin-left">
                     <button type="button" mat-raised-button color="primary"
-                      (click)="removeStakeHolderAtIndex(i)">-</button>
+                      (click)="removeStakeHolderAtIndex(i); tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched();">-</button>
                   </div>
                 </div>
-
               </div>
-
 
               <div class="metadata-row full">
                 <mat-form-field class="url-data">
                   <mat-label>Owner URL</mat-label>
                   <input matInput #owner placeholder="Ex. www.owner.com" name="owner">
                 </mat-form-field>
-                <mat-checkbox class="margin-left" #voting name="voting" formControlName="voting">Voting</mat-checkbox>
-                <mat-form-field class="margin-left">
-                  <mat-label>Shares</mat-label>
-                  <input matInput #shares placeholder="Ex. 5" name="shares" type="number" min="0">
-                </mat-form-field>
-                <div>
+                <mat-checkbox class="margin-left" style="align-self: center;" #voting name="voting"
+                  formControlName="voting">Voting</mat-checkbox>
 
-                  <button class="add-button margin-left" type="button" mat-raised-button color="primary"
-                    (click)="addStakeHolder(owner.value, shares.value); owner.value = ''; votingControl.setValue(false); shares.value = 0;"
-                    [disabled]="!owner.value">+</button>
+                <div *ngIf="shareView" style="display: flex; justify-content: space-between;">
+                  <mat-form-field class="margin-left">
+                    <mat-label>Shares</mat-label>
+                    <input matInput #shares placeholder="Ex. 5" name="shares" type="number" min="1" step="1"
+                      [max]="capitalizationShares" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                  </mat-form-field>
+
+                  <div>
+                    <button class="add-button margin-left" type="button" mat-raised-button color="primary"
+                      (click)="addStakeHolder(owner.value, shares.value); owner.value = ''; votingControl.setValue(false); shares.value = 0; tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched()"
+                      [disabled]="!owner.value">+</button>
+                  </div>
+                </div>
+
+                <div *ngIf="!shareView" style="display: flex; justify-content: space-between;">
+                  <mat-form-field class="margin-left">
+                    <mat-label>Percentage</mat-label>
+                    <input matInput #shares placeholder="Ex. 5.00" name="shares" type="textbox" min="0.01" max="100"
+                      step=".01" appPercentageDirective>
+                  </mat-form-field>
+
+                  <div>
+                    <button class="add-button margin-left" type="button" mat-raised-button color="primary"
+                      (click)="addStakeHolder(owner.value, (shares.value*100)); owner.value = ''; votingControl.setValue(false); shares.value = 0; tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched()"
+                      [disabled]="!owner.value">+</button>
+                  </div>
                 </div>
               </div>
             </section>
-
+            <mat-error class="mat-small" *ngIf="tokenForm.hasError('capitalizationError')">The summation of owner
+              (stakeholder) shares cannot equal more than capitalization shares (the number of allotted shares)
+            </mat-error>
           </mat-card>
-          <mat-form-field class="url-data" style="display: flex; justify-content: flex-end;">
-            <mat-label>Capitalization</mat-label>
-            <input matInput #capitalization placeholder="Ex. 100" name="capitalization" formControlName="capitalization" type="number" min="0">
+          <mat-form-field class="url-data" style="margin: 0px 16px 0px 0px; width: 268px; float: right;">
+            <mat-label>Capitalization Shares</mat-label>
+            <input matInput #capitalization placeholder="Ex. 100" name="capitalization" formControlName="capitalization"
+              type="number" min="1" step="1">
           </mat-form-field>
         </mat-tab>
 
@@ -171,7 +205,7 @@
               <div class="metadata-row full" *ngFor="let previewUrl of data.neoToken.token.previewUrls; let i = index;">
                 <mat-form-field class="url-data">
                   <input #existingValue required matInput placeholder="Preview URL" name="value" value="{{previewUrl}}"
-                  disabled="true">
+                    disabled="true">
                 </mat-form-field>
                 <div>
                   <button type="button" mat-raised-button color="primary"
@@ -200,7 +234,7 @@
               <div class="metadata-row full" *ngFor="let assetUrl of data.neoToken.token.assetUrls; let i = index;">
                 <mat-form-field class="url-data">
                   <input #existingValue required matInput placeholder="Asset URL" name="value" value="{{assetUrl}}"
-                  disabled="true">
+                    disabled="true">
                 </mat-form-field>
                 <div>
                   <button type="button" mat-raised-button color="primary" (click)="removeAssetUrlAtIndex(i)">-</button>
@@ -235,4 +269,6 @@
 <div mat-dialog-actions>
   <button type="button" mat-raised-button (click)="close(true)" [disabled]="!tokenForm.valid">OK</button>
   <button type="button" mat-raised-button (click)="close(false)">Cancel</button>
+  <mat-error *ngIf="tokenForm.status === 'INVALID'" style="margin-left: 10px;" class="mat-small">All errors must be
+    resolved before proceeding.</mat-error>
 </div>

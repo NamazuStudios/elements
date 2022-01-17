@@ -5,7 +5,12 @@ import {
   MatDialog,
 } from "@angular/material/dialog";
 import { MatSnackBar } from "@angular/material/snack-bar";
-import { AbstractControl, FormBuilder, Validators } from "@angular/forms";
+import {
+  AbstractControl,
+  FormBuilder,
+  ValidatorFn,
+  Validators,
+} from "@angular/forms";
 import { AlertService } from "../alert.service";
 import { NeoWalletsService, UsersService } from "../api/services";
 
@@ -21,6 +26,7 @@ import { NeoSmartContract } from "../api/models/blockchain/neo-smart-contract";
 import { NeoSmartContractsDialogComponent } from "../neo-smart-contracts-dialog/neo-smart-contracts-dialog.component";
 import { NeoSmartContractSelectDialogComponent } from "../neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component";
 import { StakeHolder } from "../api/models/blockchain/stake-holder";
+import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
 
 export interface OptionType {
   key: string;
@@ -36,6 +42,9 @@ export interface OptionType {
 export class NeoTokenDialogComponent implements OnInit {
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
 
+  currentSmartContract: NeoSmartContract;
+  shareView: boolean = true;
+
   originalMetadata = JSON.parse(
     JSON.stringify(this.data.neoToken.token.metadata || {})
   );
@@ -48,7 +57,7 @@ export class NeoTokenDialogComponent implements OnInit {
   removable = true;
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
-
+  readonly capitalizationShares: number = 10000;
 
   transferOptionType: OptionType[] = [
     { key: "none", label: "None", toolTip: "Cannot be transferred." },
@@ -69,34 +78,42 @@ export class NeoTokenDialogComponent implements OnInit {
     },
   ];
 
-  tokenForm = this.formBuilder.group({
-    voting: [false],
-    existingVoting: [],
-    capitalization: [this.data.neoToken.token.ownership.capitalization],
-    owner: [this.data.neoToken.token.owner], 
-    name: [this.data.neoToken.token.name, [Validators.required]], 
-    description: [this.data.neoToken.token.description],
-    tags: [[]], 
-    totalSupply: [this.data.neoToken?.token?.totalSupply], 
-    accessOption: [
-      this.data.neoToken.token.accessOption,
-      [Validators.required],
-    ], 
-    previewUrls: [this.data.neoToken?.token?.previewUrls],
-    assetUrls: [this.data.neoToken?.token?.assetUrls],
-    transferOptions: [
-      this.data.neoToken?.token?.transferOptions,
-      [Validators.required],
-    ], 
-    revocable: [this.data.neoToken?.token?.revocable], 
+  tokenForm = this.formBuilder.group(
+    {
+      voting: [false],
+      existingVoting: [],
+      capitalization: [{ value: this.capitalizationShares, disabled: true }],
+      owner: [this.data.neoToken.token.owner],
+      name: [this.data.neoToken.token.name, [Validators.required]],
+      description: [this.data.neoToken.token.description],
+      tags: [[]],
+      totalSupply: [this.data.neoToken?.token?.totalSupply],
+      accessOption: [
+        this.data.neoToken.token.accessOption,
+        [Validators.required],
+      ],
+      previewUrls: [this.data.neoToken?.token?.previewUrls],
+      assetUrls: [this.data.neoToken?.token?.assetUrls],
+      transferOptions: [
+        this.data.neoToken?.token?.transferOptions,
+        [Validators.required],
+      ],
+      revocable: [this.data.neoToken?.token?.revocable],
 
-    expiry: [this.data.neoToken?.token?.expiry], // TODO: link this to form <<<<<<<<<<<<<<<<
+      expiry: [this.data.neoToken?.token?.expiry], // TODO: link this to form <<<<<<<<<<<<<<<<
 
-    renewable: [this.data.neoToken?.token?.renewable], 
-    listed: [this.data.neoToken?.listed], 
+      renewable: [this.data.neoToken?.token?.renewable],
+      listed: [this.data.neoToken?.listed],
 
-    contractId: [{ value: this.data.neoToken?.contractId, disabled: true }],
-  });
+      contractId: [{ value: "", disabled: true }],
+    },
+    {
+      validator: this.getCapitalizationSharesValidator(
+        this.data.neoToken.token.ownership.stakeHolders,
+        this.capitalizationShares
+      ),
+    }
+  );
 
   get owner(): string {
     return this.tokenForm.get("owner").value;
@@ -104,10 +121,6 @@ export class NeoTokenDialogComponent implements OnInit {
 
   get name(): string {
     return this.tokenForm.get("name").value;
-  }
-
-  get capitalization(): number {
-    return this.tokenForm.get("capitalization").value;
   }
 
   get voting(): boolean {
@@ -176,6 +189,7 @@ export class NeoTokenDialogComponent implements OnInit {
     private formBuilder: FormBuilder,
     private alertService: AlertService,
     private neoWalletsService: NeoWalletsService,
+    private neoSmartContractService: NeoSmartContractsService,
     private usersService: UsersService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar
@@ -187,6 +201,13 @@ export class NeoTokenDialogComponent implements OnInit {
         this.snackBar.open(message.text, "Dismiss", { duration: 3000 });
       }
     });
+
+    this.neoSmartContractService
+      .getNeoSmartContract(this.data.neoToken.contractId)
+      .subscribe((neoContract) => {
+        this.tokenForm.get("contractId").patchValue(neoContract.displayName);
+        this.currentSmartContract = JSON.parse(JSON.stringify(neoContract));
+      });
   }
 
   addTag(event: MatChipInputEvent): void {
@@ -213,14 +234,15 @@ export class NeoTokenDialogComponent implements OnInit {
     }
   }
 
-
   addStakeHolder(owner: string, shares: number) {
-
-    console.log("ADD: owner: ", owner, "voting: ", this.voting, "shares: ", shares )
     if (!this.data.neoToken.token.ownership.stakeHolders) {
       this.data.neoToken.token.ownership.stakeHolders = [];
     }
-    this.data.neoToken.token.ownership.stakeHolders.push({owner: owner, voting: this.voting, shares: shares});
+    this.data.neoToken.token.ownership.stakeHolders.push({
+      owner: owner,
+      voting: this.voting,
+      shares: shares,
+    });
   }
 
   removeStakeHolderAtIndex(index: number) {
@@ -250,7 +272,8 @@ export class NeoTokenDialogComponent implements OnInit {
   }
 
   getNewTokenData(): CreateNeoTokenRequest {
-    this.data.neoToken.token.ownership.capitalization = this.capitalization;
+    this.data.neoToken.token.ownership.capitalization =
+      this.capitalizationShares;
 
     let newTokenData: CreateNeoTokenRequest = {
       token: {
@@ -272,15 +295,16 @@ export class NeoTokenDialogComponent implements OnInit {
         metadata: JSON.parse(JSON.stringify(this.data.neoToken.token.metadata)),
       },
       listed: this.listed,
-      contractId: this.contractId,
+      contractId: this.currentSmartContract.id,
     };
 
     return newTokenData;
   }
 
   getUpdateTokenData(): UpdateNeoTokenRequest {
-    this.data.neoToken.token.ownership.capitalization = this.capitalization;
-    
+    this.data.neoToken.token.ownership.capitalization =
+      this.capitalizationShares;
+
     let updateWalletData: UpdateNeoTokenRequest = {
       token: {
         owner: this.owner,
@@ -301,7 +325,7 @@ export class NeoTokenDialogComponent implements OnInit {
         metadata: JSON.parse(JSON.stringify(this.data.neoToken.token.metadata)),
       },
       listed: this.listed,
-      contractId: this.contractId,
+      contractId: this.currentSmartContract.id,
     };
 
     return updateWalletData;
@@ -312,11 +336,33 @@ export class NeoTokenDialogComponent implements OnInit {
       width: "700px",
       data: {
         next: (result: NeoSmartContract) => {
-          this.tokenForm.get("contractId").setValue(result.id);
-          // TODO: make sure not to use number... use the name...
+          this.currentSmartContract = JSON.parse(JSON.stringify(result));
+          this.tokenForm
+            .get("contractId")
+            .setValue(this.currentSmartContract.displayName);
         },
       },
     });
+  }
+
+  getCapitalizationSharesValidator(
+    stakeholders: Array<StakeHolder>,
+    capitalization: number
+  ): ValidatorFn {
+    return (control: AbstractControl): { [key: string]: boolean } | null => {
+      let initialValue = 0;
+      let sumOfStakeholderShares = stakeholders.reduce(
+        (previousValue, currentValue) =>
+          (previousValue += +currentValue.shares),
+        initialValue
+      );
+
+      if (sumOfStakeholderShares > capitalization) {
+        return { capitalizationError: true };
+      }
+
+      return null;
+    };
   }
 
   close(saveChanges?: boolean) {

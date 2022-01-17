@@ -74,6 +74,7 @@ import { NeoSmartContractsDialogComponent } from './neo-smart-contracts-dialog/n
 import { NeoSmartContractSelectDialogComponent } from './neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component';
 import { NeoSmartContractMintDialogComponent } from './neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component';
 import { WalletSelectDialogComponent } from './wallet-select-dialog/wallet-select-dialog.component';
+import { PercentageDirective } from './neo-token-dialog/percentage-directive.directive';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -157,7 +158,8 @@ export function initialize(configService: ConfigService) {
     NeoSmartContractsDialogComponent,
     NeoSmartContractSelectDialogComponent,
     NeoSmartContractMintDialogComponent,
-    WalletSelectDialogComponent
+    WalletSelectDialogComponent,
+    PercentageDirective
   ],
   imports: [
     BrowserModule,

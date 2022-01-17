@@ -1,4 +1,4 @@
-<div class="data-list">
+<div class="data-list tab">
   <div class="spinner-container" *ngIf="dataSource.loading$ | async">
     <mat-spinner></mat-spinner>
   </div>
@@ -59,7 +59,7 @@
     <ng-container matColumnDef="define-nft-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let neoSmartContract">
-        <button mat-raised-button color="primary" (click)="addNeoSmartContract(neoSmartContract)" disabled="true">Define
+        <button mat-raised-button color="primary" (click)="addToken(neoSmartContract)">Define
           NFT</button>
       </mat-cell>
     </ng-container>

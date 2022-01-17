@@ -46,3 +46,11 @@
 .url-data {
   width: 720px;
 }
+
+.margin {
+  margin-left: 10px;
+}
+
+.public-private-preview {
+  align-self:center;
+}
