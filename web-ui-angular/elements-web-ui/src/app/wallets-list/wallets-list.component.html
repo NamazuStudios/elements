@@ -62,9 +62,9 @@
 
     <ng-container matColumnDef="content">
       <mat-header-cell *matHeaderCellDef>Content</mat-header-cell>
-      <mat-cell *matCellDef="let wallet"><span style='font-weight: bold;'>N:</span>{{wallet.wallet.scrypt.n}}
-        <span style='font-weight: bold; padding-left: 4px;'>R:</span>{{wallet.wallet.scrypt.r}}
-        <span style='font-weight: bold; padding-left: 4px;'>P:</span>{{wallet.wallet.scrypt.p}}
+      <mat-cell *matCellDef="let wallet"><span style='font-weight: bold;'>N:</span>{{wallet?.wallet?.scrypt?.n}}
+        <span style='font-weight: bold; padding-left: 4px;'>R:</span>{{wallet?.wallet?.scrypt?.r}}
+        <span style='font-weight: bold; padding-left: 4px;'>P:</span>{{wallet?.wallet?.scrypt?.p}}
       </mat-cell>
     </ng-container>
 
