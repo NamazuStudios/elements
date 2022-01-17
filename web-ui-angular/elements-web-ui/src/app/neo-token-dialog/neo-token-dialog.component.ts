@@ -43,6 +43,7 @@ export class NeoTokenDialogComponent implements OnInit {
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
 
   currentSmartContract: NeoSmartContract;
+  shareView: boolean = true;
 
   originalMetadata = JSON.parse(
     JSON.stringify(this.data.neoToken.token.metadata || {})
@@ -56,6 +57,7 @@ export class NeoTokenDialogComponent implements OnInit {
   removable = true;
   addOnBlur = true;
   readonly separatorKeyCodes: number[] = [ENTER, COMMA];
+  readonly capitalizationShares: number = 10000;
 
   transferOptionType: OptionType[] = [
     { key: "none", label: "None", toolTip: "Cannot be transferred." },
@@ -76,41 +78,42 @@ export class NeoTokenDialogComponent implements OnInit {
     },
   ];
 
-  tokenForm = this.formBuilder.group({
-    voting: [false],
-    existingVoting: [],
-    capitalization: [
-      this.data.neoToken.token.ownership.capitalization,
-      [
-        this.getCapitalizationSharesValidator(
-          this.data.neoToken.token.ownership.stakeHolders
-        ),
+  tokenForm = this.formBuilder.group(
+    {
+      voting: [false],
+      existingVoting: [],
+      capitalization: [{ value: this.capitalizationShares, disabled: true }],
+      owner: [this.data.neoToken.token.owner],
+      name: [this.data.neoToken.token.name, [Validators.required]],
+      description: [this.data.neoToken.token.description],
+      tags: [[]],
+      totalSupply: [this.data.neoToken?.token?.totalSupply],
+      accessOption: [
+        this.data.neoToken.token.accessOption,
+        [Validators.required],
       ],
-    ],
-    owner: [this.data.neoToken.token.owner],
-    name: [this.data.neoToken.token.name, [Validators.required]],
-    description: [this.data.neoToken.token.description],
-    tags: [[]],
-    totalSupply: [this.data.neoToken?.token?.totalSupply],
-    accessOption: [
-      this.data.neoToken.token.accessOption,
-      [Validators.required],
-    ],
-    previewUrls: [this.data.neoToken?.token?.previewUrls],
-    assetUrls: [this.data.neoToken?.token?.assetUrls],
-    transferOptions: [
-      this.data.neoToken?.token?.transferOptions,
-      [Validators.required],
-    ],
-    revocable: [this.data.neoToken?.token?.revocable],
+      previewUrls: [this.data.neoToken?.token?.previewUrls],
+      assetUrls: [this.data.neoToken?.token?.assetUrls],
+      transferOptions: [
+        this.data.neoToken?.token?.transferOptions,
+        [Validators.required],
+      ],
+      revocable: [this.data.neoToken?.token?.revocable],
 
-    expiry: [this.data.neoToken?.token?.expiry], // TODO: link this to form <<<<<<<<<<<<<<<<
+      expiry: [this.data.neoToken?.token?.expiry], // TODO: link this to form <<<<<<<<<<<<<<<<
 
-    renewable: [this.data.neoToken?.token?.renewable],
-    listed: [this.data.neoToken?.listed],
+      renewable: [this.data.neoToken?.token?.renewable],
+      listed: [this.data.neoToken?.listed],
 
-    contractId: [{ value: "", disabled: true }],
-  });
+      contractId: [{ value: "", disabled: true }],
+    },
+    {
+      validator: this.getCapitalizationSharesValidator(
+        this.data.neoToken.token.ownership.stakeHolders,
+        this.capitalizationShares
+      ),
+    }
+  );
 
   get owner(): string {
     return this.tokenForm.get("owner").value;
@@ -118,10 +121,6 @@ export class NeoTokenDialogComponent implements OnInit {
 
   get name(): string {
     return this.tokenForm.get("name").value;
-  }
-
-  get capitalization(): number {
-    return this.tokenForm.get("capitalization").value;
   }
 
   get voting(): boolean {
@@ -209,9 +208,6 @@ export class NeoTokenDialogComponent implements OnInit {
         this.tokenForm.get("contractId").patchValue(neoContract.displayName);
         this.currentSmartContract = JSON.parse(JSON.stringify(neoContract));
       });
-    if (!this.data.isNew) {
-      this.tokenForm.markAllAsTouched();
-    }
   }
 
   addTag(event: MatChipInputEvent): void {
@@ -276,7 +272,8 @@ export class NeoTokenDialogComponent implements OnInit {
   }
 
   getNewTokenData(): CreateNeoTokenRequest {
-    this.data.neoToken.token.ownership.capitalization = this.capitalization;
+    this.data.neoToken.token.ownership.capitalization =
+      this.capitalizationShares;
 
     let newTokenData: CreateNeoTokenRequest = {
       token: {
@@ -305,7 +302,8 @@ export class NeoTokenDialogComponent implements OnInit {
   }
 
   getUpdateTokenData(): UpdateNeoTokenRequest {
-    this.data.neoToken.token.ownership.capitalization = this.capitalization;
+    this.data.neoToken.token.ownership.capitalization =
+      this.capitalizationShares;
 
     let updateWalletData: UpdateNeoTokenRequest = {
       token: {
@@ -348,7 +346,8 @@ export class NeoTokenDialogComponent implements OnInit {
   }
 
   getCapitalizationSharesValidator(
-    stakeholders: Array<StakeHolder>
+    stakeholders: Array<StakeHolder>,
+    capitalization: number
   ): ValidatorFn {
     return (control: AbstractControl): { [key: string]: boolean } | null => {
       let initialValue = 0;
@@ -358,15 +357,7 @@ export class NeoTokenDialogComponent implements OnInit {
         initialValue
       );
 
-      let capitalization = control.value;
-
       if (sumOfStakeholderShares > capitalization) {
-        console.log(
-          "Sum of stakeholder shares: ",
-          sumOfStakeholderShares,
-          " capitalization: ",
-          capitalization
-        );
         return { capitalizationError: true };
       }
 

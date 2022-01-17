@@ -105,8 +105,13 @@
         </mat-tab>
 
         <mat-tab label="Ownership">
-          <div style="margin: 20px 10px;">
-            Set shares for resale royalties for each wallet and total capitalization.
+          <div style="margin: 20px 10px; display: flex; justify-content: space-between; align-items: center;">
+            <span *ngIf="shareView">Set shares for resale royalties for each wallet and total capitalization.</span>
+            <span *ngIf="!shareView">Set percentage points for resale royalties for each wallet.</span>
+            <button *ngIf="!shareView" type="button" mat-raised-button color="primary" (click)="shareView=true;">Set
+              royalties as shares</button>
+            <button *ngIf="shareView" type="button" mat-raised-button color="primary" (click)="shareView=false;">Set
+              royalties as percentage</button>
           </div>
 
           <mat-card style="margin: 10px;">
@@ -125,11 +130,19 @@
                     Voting
                   </mat-checkbox>
 
-                  <mat-form-field class="margin-left">
+                  <mat-form-field class="margin-left" *ngIf="shareView">
                     <mat-label>Shares</mat-label>
                     <input matInput #existingShares placeholder="Ex. 5" type="number" min="0" name="existingShares"
                       value="{{stakeHolder.shares}}" disabled="true">
                   </mat-form-field>
+
+                  <mat-form-field class="margin-left" *ngIf="!shareView">
+                    <mat-label>Shares</mat-label>
+                    <input matInput #existingShares placeholder="Ex. 5" type="text" name="existingShares"
+                      value="{{(stakeHolder.shares / capitalizationShares) | percent:'1.0-2'}}" disabled="true">
+                  </mat-form-field>
+
+
 
                   <div class="margin-left">
                     <button type="button" mat-raised-button color="primary"
@@ -145,28 +158,44 @@
                 </mat-form-field>
                 <mat-checkbox class="margin-left" style="align-self: center;" #voting name="voting"
                   formControlName="voting">Voting</mat-checkbox>
-                <mat-form-field class="margin-left">
-                  <mat-label>Shares</mat-label>
-                  <input matInput #shares placeholder="Ex. 5" name="shares" type="number" min="1" step="1"
-                    onkeypress="return event.charCode >= 48 && event.charCode <= 57">
-                </mat-form-field>
-                <div>
 
-                  <button class="add-button margin-left" type="button" mat-raised-button color="primary"
-                    (click)="addStakeHolder(owner.value, shares.value); owner.value = ''; votingControl.setValue(false); shares.value = 0; tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched()"
-                    [disabled]="!owner.value">+</button>
+                <div *ngIf="shareView" style="display: flex; justify-content: space-between;">
+                  <mat-form-field class="margin-left">
+                    <mat-label>Shares</mat-label>
+                    <input matInput #shares placeholder="Ex. 5" name="shares" type="number" min="1" step="1"
+                      [max]="capitalizationShares" onkeypress="return event.charCode >= 48 && event.charCode <= 57">
+                  </mat-form-field>
+
+                  <div>
+                    <button class="add-button margin-left" type="button" mat-raised-button color="primary"
+                      (click)="addStakeHolder(owner.value, shares.value); owner.value = ''; votingControl.setValue(false); shares.value = 0; tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched()"
+                      [disabled]="!owner.value">+</button>
+                  </div>
+                </div>
+
+                <div *ngIf="!shareView" style="display: flex; justify-content: space-between;">
+                  <mat-form-field class="margin-left">
+                    <mat-label>Percentage</mat-label>
+                    <input matInput #shares placeholder="Ex. 5.00" name="shares" type="textbox" min="0.01" max="100"
+                      step=".01" appPercentageDirective>
+                  </mat-form-field>
+
+                  <div>
+                    <button class="add-button margin-left" type="button" mat-raised-button color="primary"
+                      (click)="addStakeHolder(owner.value, (shares.value*100)); owner.value = ''; votingControl.setValue(false); shares.value = 0; tokenForm.controls['capitalization'].updateValueAndValidity(); tokenForm.controls['capitalization'].markAsTouched()"
+                      [disabled]="!owner.value">+</button>
+                  </div>
                 </div>
               </div>
             </section>
-
+            <mat-error class="mat-small" *ngIf="tokenForm.hasError('capitalizationError')">The summation of owner
+              (stakeholder) shares cannot equal more than capitalization shares (the number of allotted shares)
+            </mat-error>
           </mat-card>
-          <mat-form-field class="url-data" style="margin: 0px 16px 30px 0px; width: 268px; float: right;">
+          <mat-form-field class="url-data" style="margin: 0px 16px 0px 0px; width: 268px; float: right;">
             <mat-label>Capitalization Shares</mat-label>
             <input matInput #capitalization placeholder="Ex. 100" name="capitalization" formControlName="capitalization"
               type="number" min="1" step="1">
-            <mat-error *ngIf="tokenForm.controls.capitalization.hasError('capitalizationError')">The summation of owner
-              (stakeholder) shares cannot equal more than capitalization shares (the number of allotted shares)
-            </mat-error>
           </mat-form-field>
         </mat-tab>
 
