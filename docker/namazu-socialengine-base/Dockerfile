@@ -3,7 +3,7 @@ FROM jwilder/dockerize:0.6.1 as dockerize
 FROM ubuntu:20.04
 ENV DOCKERIZE_VERSION v0.6.1
 
-RUN apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk
+RUN apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk musl
 
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
@@ -49,8 +49,7 @@ RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_SCRIPT_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_STORAGE" && \
     useradd elements -M --shell /usr/bin/bash --base-dir /opt --home "$ELEMENTS_HOME" && \
-    chown -R elements:elements "$ELEMENTS_HOME" && \
-    apt-get update && apt-get -y install dnsutils curl musl
+    chown -R elements:elements "$ELEMENTS_HOME"
 
 WORKDIR $ELEMENTS_HOME
 USER elements:elements

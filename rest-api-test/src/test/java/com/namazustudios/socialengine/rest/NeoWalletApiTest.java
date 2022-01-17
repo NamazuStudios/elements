@@ -1,18 +1,10 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.model.blockchain.CreateNeoWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoWallet;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
-import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.session.Session;
-import com.namazustudios.socialengine.model.session.SessionCreation;
-import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;
-import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.user.UserCreateRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
@@ -20,8 +12,6 @@ import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
-
-import java.util.HashMap;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;

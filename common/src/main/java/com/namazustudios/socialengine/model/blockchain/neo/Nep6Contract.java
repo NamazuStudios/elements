@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.blockchain;
+package com.namazustudios.socialengine.model.blockchain.neo;
 
 import io.swagger.annotations.ApiModelProperty;
 

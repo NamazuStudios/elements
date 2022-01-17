@@ -32,21 +32,32 @@
           </mat-form-field>
         </div>
 
+        <div style="display: flex; justify-content: space-between;">
+          <mat-form-field style="width: 350px;">
+            <mat-label>Allowed Issuers</mat-label>
+            <mat-chip-list #itemsAllowedIssuersList>
+              <mat-chip *ngFor="let tag of data.authScheme?.allowedIssuers" [selectable]="selectable"
+                [removable]="removable" (removed)="removeAllowedIssuers(tag)">
+                {{tag}}
+                <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+              </mat-chip>
+              <input formControlName="allowedIssuers" name="allowedIssuers" placeholder="Add Allowed Issuers..."
+                [matChipInputFor]="itemsAllowedIssuersList" [matChipInputSeparatorKeyCodes]="separatorKeyCodes"
+                (matChipInputTokenEnd)="addAllowedIssuers($event)" [matChipInputAddOnBlur]="addOnBlur"
+                matTooltip="The list of issuers allowed to use this scheme.">
+            </mat-chip-list>
+          </mat-form-field>
 
-        <mat-form-field style="width: 99%;">
-          <mat-label>Allowed Issuers</mat-label>
-          <mat-chip-list #itemsAllowedIssuersList>
-            <mat-chip *ngFor="let tag of data.authScheme?.allowedIssuers" [selectable]="selectable"
-              [removable]="removable" (removed)="removeAllowedIssuers(tag)">
-              {{tag}}
-              <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
-            </mat-chip>
-            <input formControlName="allowedIssuers" name="allowedIssuers" placeholder="Add Allowed Issuers..."
-              [matChipInputFor]="itemsAllowedIssuersList" [matChipInputSeparatorKeyCodes]="separatorKeyCodes"
-              (matChipInputTokenEnd)="addAllowedIssuers($event)" [matChipInputAddOnBlur]="addOnBlur"
-              matTooltip="The list of issuers allowed to use this scheme.">
-          </mat-chip-list>
-        </mat-form-field>
+          <mat-form-field>
+            <mat-select placeholder="Algorithm" name="algorithm" formControlName="algorithm"
+              matTooltip="The digital signature matching the public key format.">
+              <mat-option *ngFor="let algorithm of algorithms" [value]="algorithm.key">
+                {{algorithm.description}}
+              </mat-option>
+            </mat-select>
+            <mat-error *ngIf="authSchemeForm.controls.algorithm.hasError('required')">Algorithm is required</mat-error>
+          </mat-form-field>
+        </div>
 
         <mat-form-field style="width: 99%;">
           <mat-label>Tags</mat-label>
