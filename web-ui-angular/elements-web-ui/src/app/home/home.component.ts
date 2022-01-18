@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import {SeverVersionMetadataService} from "../api/services/sever-version-metadata.service";
 import {Version} from "../api/models/version";
 import {BehaviorSubject, Observable} from "rxjs";
-import { VERSION as gitVersion } from '../../environments/version';
 
 @Component({
   selector: 'app-home',
@@ -14,8 +13,6 @@ export class HomeComponent implements OnInit {
   version = new BehaviorSubject<string>("...");
   revision = new BehaviorSubject<string>("...");
   timestamp = new BehaviorSubject<string>("...");
-
-  currentGitHash = gitVersion.hash;
 
   constructor(private severVersionMetadataService: SeverVersionMetadataService) { }
 

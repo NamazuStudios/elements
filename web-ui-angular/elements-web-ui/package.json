@@ -7,8 +7,7 @@
     "build": "ng build",
     "test": "ng test",
     "lint": "ng lint",
-    "e2e": "ng e2e",
-    "postinstall": "node script/version.ts"
+    "e2e": "ng e2e"
   },
   "private": true,
   "dependencies": {
@@ -25,8 +24,6 @@
     "@vvo/tzdb": "^6.39.0",
     "ang-jsoneditor": "^1.10.5",
     "core-js": "^2.5.4",
-    "fs-extra": "^10.0.0",
-    "git-describe": "^4.1.0",
     "jsoneditor": "^9.5.8",
     "luxon": "^2.2.0",
     "rxjs": "^6.6.7",
