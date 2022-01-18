@@ -18,6 +18,8 @@ MAVEN_PROJECT_VERSION:=$(shell mvn help:evaluate -Dexpression=project.version -q
 
 TARGET_ARCHITECTURES="linux/amd64"
 
+UI_VERSION_JSON=namazu-socialengine-ui/target/lib/dist/assets/version.json
+
 define DOCKER_BUILD_TAG
 	@echo "Building Base Image for $(1) -> $(2)"
 	$(DOCKER_BUILD) $(1) \
@@ -66,6 +68,12 @@ revision: login deps
 
 deps:
 	$(MAVEN_COPY_DEPS)
+	- rm -f $(UI_VERSION_JSON)
+	@echo '{' >> $(UI_VERSION_JSON)
+	@echo '  version:"$(TAG_MAVEN_VERSION)",' >> $(UI_VERSION_JSON)
+	@echo '  revision:"$(shell git rev-parse --verify HEAD)",' >> $(UI_VERSION_JSON)
+	@echo '  timestamp:"$(shell date "+%m-%d-%Y %T")"' >> $(UI_VERSION_JSON)
+	@echo '}' >> $(UI_VERSION_JSON)
 
 clean:
 	mvn clean
