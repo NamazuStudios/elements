@@ -25,6 +25,7 @@ define DOCKER_BUILD_TAG
 	@echo "Building Base Image for $(1) -> $(2)"
 	$(DOCKER_BUILD) $(1) \
 		--push \
+		--pull \
 		--platform $(TARGET_ARCHITECTURES) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(REV) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG) \
