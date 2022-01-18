@@ -27,6 +27,8 @@ import { NeoSmartContractsDialogComponent } from "../neo-smart-contracts-dialog/
 import { NeoSmartContractSelectDialogComponent } from "../neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component";
 import { StakeHolder } from "../api/models/blockchain/stake-holder";
 import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
+import { WalletSelectDialogComponent } from "../wallet-select-dialog/wallet-select-dialog.component";
+import { NeoWallet } from "../api/models/blockchain/neo-wallet";
 
 export interface OptionType {
   key: string;
@@ -43,6 +45,7 @@ export class NeoTokenDialogComponent implements OnInit {
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
 
   currentSmartContract: NeoSmartContract;
+  currentWallet: NeoWallet;
   shareView: boolean = true;
 
   originalMetadata = JSON.parse(
@@ -83,7 +86,7 @@ export class NeoTokenDialogComponent implements OnInit {
       voting: [false],
       existingVoting: [],
       capitalization: [{ value: this.capitalizationShares, disabled: true }],
-      owner: [this.data.neoToken.token.owner],
+      owner: [{ value: this.data.neoToken.token.owner, disabled: true }],
       name: [this.data.neoToken.token.name, [Validators.required]],
       description: [this.data.neoToken.token.description],
       tags: [[]],
@@ -277,7 +280,7 @@ export class NeoTokenDialogComponent implements OnInit {
 
     let newTokenData: CreateNeoTokenRequest = {
       token: {
-        owner: this.owner,
+        owner: this.currentWallet.wallet?.accounts[0]?.address,
         name: this.name,
         description: this.description,
         tags: this.data.neoToken.token.tags,
@@ -307,7 +310,7 @@ export class NeoTokenDialogComponent implements OnInit {
 
     let updateWalletData: UpdateNeoTokenRequest = {
       token: {
-        owner: this.owner,
+        owner: this.currentWallet.wallet?.accounts[0]?.address,
         name: this.name,
         description: this.description,
         tags: this.data.neoToken.token.tags,
@@ -363,6 +366,25 @@ export class NeoTokenDialogComponent implements OnInit {
 
       return null;
     };
+  }
+
+  showDialog(next) {
+    this.dialog.open(WalletSelectDialogComponent, {
+      width: "850px",
+      data: {
+        next: next,
+        refresher: this,
+      },
+    });
+  }
+
+  showSelectWalletDialog() {
+    this.showDialog((wallet: NeoWallet) => {
+      this.currentWallet = JSON.parse(JSON.stringify(wallet));
+      this.tokenForm
+        .get("owner")
+        .setValue(this.currentWallet.wallet?.accounts[0]?.address);
+    });
   }
 
   close(saveChanges?: boolean) {
