@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.Constants;
+import com.namazustudios.socialengine.exception.blockchain.Neow3jClientException;
 import com.namazustudios.socialengine.model.blockchain.neo.*;
 import io.neow3j.contract.SmartContract;
 import io.neow3j.crypto.exceptions.CipherException;
@@ -21,6 +22,7 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import java.io.IOException;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,8 +42,32 @@ public class StandardNeow3jClient implements Neow3jClient {
 
     @Override
     public Neow3j getNeow3j() {
-        if (neow3j == null){
+        if (neow3j == null) {
             neow3j = Neow3j.build(new HttpService(format("%s:%s", getNeoHost(), getNeoPort())));
+        }
+        try {
+            var response = neow3j.getConnectionCount().send();
+            if (response.hasError()) {
+                neow3j = Neow3j.build(new HttpService(format("%s:%s", getNeoHost(), getNeoPort())));
+            }
+            response = neow3j.getConnectionCount().send();
+            if (response.hasError()) {
+                throw new Neow3jClientException("Neow3j encountered an error " + response.getError());
+            }
+        } catch (IOException e) { // This will catch if we are not connected, so we will attempt to reconnect and try again before throwing an exception.
+            neow3j = Neow3j.build(new HttpService(format("%s:%s", getNeoHost(), getNeoPort())));
+            try {
+                var response = neow3j.getConnectionCount().send();
+                if (response.hasError()) {
+                    neow3j = Neow3j.build(new HttpService(format("%s:%s", getNeoHost(), getNeoPort())));
+                }
+                response = neow3j.getConnectionCount().send();
+                if (response.hasError()) {
+                    throw new Neow3jClientException("Neow3j encountered and error " + response.getError());
+                }
+            } catch (IOException ex) {
+                throw new Neow3jClientException("Neow3j client exception: " + ex);
+            }
         }
         return neow3j;
     }
