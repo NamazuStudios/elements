@@ -19,6 +19,17 @@
                 <button class="margin" color="primary" type="button" mat-raised-button
                   (click)="showSelectSmartContractDialog()">Select
                   Smart Contract</button>
+
+                <mat-form-field appearance="fill">
+                  <mat-label>Owner's Wallet Address</mat-label>
+                  <input autofocus matInput placeholder="Ex. NWcpQimYmcUeVFUhdshGpEwVQohyJW4WdV" name="owner"
+                    formControlName="owner"
+                    matTooltip="The account address of the owner to be assigned when minting this token.">
+                </mat-form-field>
+
+                <button class="margin" color="primary" type="button" mat-raised-button
+                  (click)="showSelectWalletDialog()">
+                  Select Wallet</button>
               </div>
 
               <div class="public-private-preview">
@@ -42,14 +53,6 @@
             <mat-form-field class="full">
               <input autofocus matInput placeholder="Name" name="name" formControlName="name"
                 matTooltip="The name given to this token.">
-              <!-- <mat-error *ngIf="itemForm.controls.name.hasError('required')">Name is required</mat-error>
-                  <mat-error *ngIf="itemForm.controls.name.hasError('pattern')">Name must consist only of alphanumeric characters</mat-error> -->
-            </mat-form-field>
-
-            <mat-form-field class="full">
-              <mat-label>Owner URL</mat-label>
-              <input autofocus matInput placeholder="Ex. http://www.owner.com/" name="owner" formControlName="owner"
-                matTooltip="The account address of the owner to be assigned when minting this token.">
               <!-- <mat-error *ngIf="itemForm.controls.name.hasError('required')">Name is required</mat-error>
                   <mat-error *ngIf="itemForm.controls.name.hasError('pattern')">Name must consist only of alphanumeric characters</mat-error> -->
             </mat-form-field>

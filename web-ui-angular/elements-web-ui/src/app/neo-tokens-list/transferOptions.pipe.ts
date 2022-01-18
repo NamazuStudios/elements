@@ -26,11 +26,14 @@ export class TransferOptionsPipe implements PipeTransform {
   
   transform(key: string, option: string): string {
     const data: OptionType[] = this.transferOptionType.filter(option => option.key === key);
+    if(!data[0]){
+      return "";
+    }
 
     if(option === "label"){
-      return data[0].label;
+      return data[0]?.label;
     } else if (option === "toolTip") {
-      return data[0].toolTip;
+      return data[0]?.toolTip;
     }
     
   }
