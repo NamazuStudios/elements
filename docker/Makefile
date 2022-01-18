@@ -70,9 +70,9 @@ deps:
 	$(MAVEN_COPY_DEPS)
 	- rm -f $(UI_VERSION_JSON)
 	@echo '{' >> $(UI_VERSION_JSON)
-	@echo '  version:"$(TAG_MAVEN_VERSION)",' >> $(UI_VERSION_JSON)
-	@echo '  revision:"$(shell git rev-parse --verify HEAD)",' >> $(UI_VERSION_JSON)
-	@echo '  timestamp:"$(shell date "+%m-%d-%Y %T")"' >> $(UI_VERSION_JSON)
+	@echo '  "version":"$(TAG_MAVEN_VERSION)",' >> $(UI_VERSION_JSON)
+	@echo '  "revision":"$(shell git rev-parse --verify HEAD)",' >> $(UI_VERSION_JSON)
+	@echo '  "timestamp":"$(shell date "+%m-%d-%Y %T")"' >> $(UI_VERSION_JSON)
 	@echo '}' >> $(UI_VERSION_JSON)
 
 clean:
