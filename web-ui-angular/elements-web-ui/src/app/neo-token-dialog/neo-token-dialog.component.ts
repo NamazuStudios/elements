@@ -280,7 +280,7 @@ export class NeoTokenDialogComponent implements OnInit {
 
     let newTokenData: CreateNeoTokenRequest = {
       token: {
-        owner: this.currentWallet.wallet?.accounts[0]?.address,
+        owner: this.owner,
         name: this.name,
         description: this.description,
         tags: this.data.neoToken.token.tags,
@@ -310,7 +310,7 @@ export class NeoTokenDialogComponent implements OnInit {
 
     let updateWalletData: UpdateNeoTokenRequest = {
       token: {
-        owner: this.currentWallet.wallet?.accounts[0]?.address,
+        owner: this.owner,
         name: this.name,
         description: this.description,
         tags: this.data.neoToken.token.tags,
