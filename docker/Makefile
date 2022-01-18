@@ -2,6 +2,7 @@
 .DEFAULT=revision
 .PHONY=login,tag,push,clean
 
+REV ?= $(shell git rev-parse --verify HEAD)
 TAG ?= $(shell git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
@@ -25,9 +26,11 @@ define DOCKER_BUILD_TAG
 	$(DOCKER_BUILD) $(1) \
 		--push \
 		--platform $(TARGET_ARCHITECTURES) \
+		--tag docker.namazustudios.net/namazu-elements-$(2):$(REV) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG_SHORT) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(MAVEN_PROJECT_VERSION) \
+		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(REV) \
 		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG) \
 		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG_SHORT) \
 		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(MAVEN_PROJECT_VERSION)
