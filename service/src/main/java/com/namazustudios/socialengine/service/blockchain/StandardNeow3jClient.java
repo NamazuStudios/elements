@@ -7,11 +7,13 @@ import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.Neow3j;
+import io.neow3j.protocol.Neow3jConfig;
 import io.neow3j.protocol.http.HttpService;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
 import io.neow3j.types.ContractParameter;
 import io.neow3j.types.Hash160;
+import io.neow3j.utils.Async;
 import io.neow3j.wallet.Account;
 import io.neow3j.wallet.Wallet;
 import io.neow3j.wallet.nep6.NEP6Account;
@@ -25,6 +27,7 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ScheduledExecutorService;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
@@ -32,18 +35,17 @@ import static java.util.stream.Collectors.toMap;
 
 public class StandardNeow3jClient implements Neow3jClient {
 
-    private Neow3j neow3j;
+    private HttpService httpService;
 
-    private String neoHost;
+    private final ScheduledExecutorService executorService = Async.defaultExecutorService();
 
-    private String neoPort;
+    private final Neow3jConfig neow3jConfig = new Neow3jConfig().setScheduledExecutorService(executorService);
+
+    private final ThreadLocal<Neow3j> neow3jThreadLocal = ThreadLocal.withInitial(() -> Neow3j.build(httpService, neow3jConfig));
 
     @Override
     public Neow3j getNeow3j() {
-        if (neow3j == null){
-            neow3j = Neow3j.build(new HttpService(format("%s:%s", getNeoHost(), getNeoPort())));
-        }
-        return neow3j;
+        return neow3jThreadLocal.get();
     }
 
     @Override
@@ -171,21 +173,9 @@ public class StandardNeow3jClient implements Neow3jClient {
                 .collect(toMap(e -> convertObject(e.getKey()), e -> convertObject(e.getValue())));
     }
 
-    private String getNeoHost() {
-        return neoHost;
-    }
-
     @Inject
-    private void setNeoHost(@Named(Constants.NEO_BLOCKCHAIN_HOST)String neoHost) {
-        this.neoHost = neoHost;
-    }
-
-    private String getNeoPort() {
-        return neoPort;
-    }
-
-    @Inject
-    private void setNeoPort(@Named(Constants.NEO_BLOCKCHAIN_PORT)String neoPort) {
-        this.neoPort = neoPort;
+    private void setHttpService(@Named(Constants.NEO_BLOCKCHAIN_HOST)String neoHost,
+                                @Named(Constants.NEO_BLOCKCHAIN_PORT)String neoPort) {
+        httpService = new HttpService(format("%s:%s", neoHost, neoPort));
     }
 }
