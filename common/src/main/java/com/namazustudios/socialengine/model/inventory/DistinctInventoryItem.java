@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
+import java.util.Map;
 import java.util.Objects;
 
 @ApiModel
@@ -24,6 +25,8 @@ public class DistinctInventoryItem {
     private User user;
 
     private Profile profile;
+
+    private Map<String, Object> metadata;
 
     public String getId() {
         return id;
@@ -57,17 +60,25 @@ public class DistinctInventoryItem {
         this.profile = profile;
     }
 
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         DistinctInventoryItem that = (DistinctInventoryItem) o;
-        return Objects.equals(id, that.id) && Objects.equals(item, that.item) && Objects.equals(user, that.user) && Objects.equals(profile, that.profile);
+        return Objects.equals(getId(), that.getId()) && Objects.equals(getItem(), that.getItem()) && Objects.equals(getUser(), that.getUser()) && Objects.equals(getProfile(), that.getProfile()) && Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, item, user, profile);
+        return Objects.hash(getId(), getItem(), getUser(), getProfile(), getMetadata());
     }
 
 }

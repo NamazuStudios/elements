@@ -60,8 +60,8 @@ public class SaveDataDocumentResource {
         final String query = nullToEmpty(search).trim();
 
         return query.isEmpty() ?
-                getSaveDataDocumentService().getSaveDataDocuments(offset, count, userId, profileId) :
-                getSaveDataDocumentService().getSaveDataDocuments(offset, count, query);
+            getSaveDataDocumentService().getSaveDataDocuments(offset, count, userId, profileId) :
+            getSaveDataDocumentService().getSaveDataDocuments(offset, count, query);
 
     }
 

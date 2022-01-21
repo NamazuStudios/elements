@@ -3,16 +3,14 @@ package com.namazustudios.socialengine.model.inventory;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
-import javax.validation.constraints.NotNull;
+import java.math.BigInteger;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @ApiModel
 public class UpdateDistinctInventoryItemRequest {
-
-    @NotNull
-    @ApiModelProperty("The digital goods item id.")
-    private String itemId;
 
     @ApiModelProperty("The id of the User owning this inventory item id.")
     private String userId;
@@ -21,14 +19,6 @@ public class UpdateDistinctInventoryItemRequest {
     private String profileId;
 
     private Map<String, Object> metadata;
-
-    public String getItemId() {
-        return itemId;
-    }
-
-    public void setItemId(String itemId) {
-        this.itemId = itemId;
-    }
 
     public String getUserId() {
         return userId;
@@ -59,12 +49,12 @@ public class UpdateDistinctInventoryItemRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         UpdateDistinctInventoryItemRequest that = (UpdateDistinctInventoryItemRequest) o;
-        return Objects.equals(getItemId(), that.getItemId()) && Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getMetadata(), that.getMetadata());
+        return Objects.equals(getUserId(), that.getUserId()) && Objects.equals(getProfileId(), that.getProfileId()) && Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getItemId(), getUserId(), getProfileId(), getMetadata());
+        return Objects.hash(getUserId(), getProfileId(), getMetadata());
     }
 
 }

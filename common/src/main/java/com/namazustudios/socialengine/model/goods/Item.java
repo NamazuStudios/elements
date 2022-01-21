@@ -34,6 +34,9 @@ public class Item implements Serializable, Taggable {
     @NotNull
     private String description;
 
+    @NotNull
+    private ItemCategory category;
+
     private Map<String, Object> metadata;
 
     /**
@@ -153,6 +156,24 @@ public class Item implements Serializable, Taggable {
      */
     public void setMetadata(Map<String, Object> metadata) {
         this.metadata = metadata != null ? metadata : Collections.emptyMap();
+    }
+
+    /**
+     * Gets the {@link ItemCategory} of this item.
+     *
+     * @return the item category
+     */
+    public ItemCategory getCategory() {
+        return category;
+    }
+
+    /**
+     * Sets the {@link ItemCategory} of this item.
+     *
+     * @param category the item category
+     */
+    public void setCategory(ItemCategory category) {
+        this.category = category;
     }
 
     public void addMetadata(final String name, final Object value) {

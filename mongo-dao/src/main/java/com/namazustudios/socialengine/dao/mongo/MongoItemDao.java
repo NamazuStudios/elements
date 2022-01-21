@@ -55,7 +55,7 @@ public class MongoItemDao implements ItemDao {
         final MongoItem item = getMongoItemByNameOrId(identifier);
 
         if (item == null) {
-            throw new NotFoundException("Unable to find item with an id or name of " + identifier);
+            throw new ItemNotFoundException("Unable to find item with an id or name of " + identifier);
         }
 
         return getDozerMapper().map(item, Item.class);

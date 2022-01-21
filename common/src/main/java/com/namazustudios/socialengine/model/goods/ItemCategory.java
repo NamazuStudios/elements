@@ -1,5 +1,8 @@
 package com.namazustudios.socialengine.model.goods;
 
+/**
+ * Identifies the category of an {@link Item} for sale.
+ */
 public enum ItemCategory {
 
     /**
