@@ -4,24 +4,68 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
-import java.util.Map;
-
+/**
+ * Distinct inventory item Dao.
+ */
 public interface DistinctInventoryItemDao {
 
+    /**
+     * Creates a distinct inventory item.
+     *
+     * @param distinctInventoryItem the distinct inventory item.
+     * @return a distinct inventory item
+     */
     DistinctInventoryItem createDistinctInventoryItem(DistinctInventoryItem distinctInventoryItem);
 
+    /**
+     * Creates a distinct inventory item.
+     *
+     * @param itemNameOrId the distinct inventory item.
+     * @return a distinct inventory item
+     */
     DistinctInventoryItem getDistinctInventoryItem(String itemNameOrId);
 
+    /**
+     * Gets a listing distinct inventory tiems.
+     *
+     * @param offset the offset from the beginning of the dataset
+     * @param count the number of items to return
+     * @param userId the user id, if specified. Otherwise null.
+     * @param profileId the profile id, if specified. Otherwise null.
+     * @return a {@link Pagination<InventoryItem>}
+     */
     Pagination<InventoryItem> getDistinctInventoryItems(
             int offset, int count,
             String userId, String profileId);
 
-    Pagination<InventoryItem> getDistinctInventoryItems(
+    /**
+     * Gets a listing distinct inventory items filtering by query string.
+     *
+     * @param offset the offset from the beginning of the dataset
+     * @param count the number of items to return
+     * @param userId the user id, if specified. Otherwise null.
+     * @param profileId the profile id, if specified. Otherwise null.
+     * @return a {@link Pagination<InventoryItem>}
+     */
+    default Pagination<InventoryItem> getDistinctInventoryItems(
             int offset, int count,
-            String userId, String profileId, String query);
+            String userId, String profileId, String query) {
+        return getDistinctInventoryItems(offset, count, userId, profileId);
+    }
 
+    /**
+     * Updates a distinct inventory item.
+     *
+     * @param distinctInventoryItem the distinct inventory item
+     * @retur the item, as written to the database
+     */
     DistinctInventoryItem updateDistinctInventoryItem(DistinctInventoryItem distinctInventoryItem);
 
+    /**
+     * Deletes a distinct inventory item.
+     *
+     * @param inventoryItemId the distinct inventory item
+     */
     void deleteDistinctInventoryItem(String inventoryItemId);
-    
+
 }

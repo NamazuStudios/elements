@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.model.inventory;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
@@ -15,13 +16,15 @@ import java.util.Objects;
 @ApiModel
 public class DistinctInventoryItem {
 
-    @Null(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = {ValidationGroups.Create.class, Insert.class})
     @NotNull(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The unique ID of the inventory item itself.")
     private String id;
 
+    @NotNull(groups = {Insert.class})
     private Item item;
 
+    @NotNull(groups = {Insert.class})
     private User user;
 
     private Profile profile;

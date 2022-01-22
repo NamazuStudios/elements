@@ -25,6 +25,7 @@ import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import javax.swing.text.html.Option;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -63,6 +64,10 @@ public class MongoProfileDao implements ProfileDao {
     @Override
     public Optional<Profile> findActiveProfile(final String profileId) {
         return findActiveMongoProfile(profileId).map(this::transform);
+    }
+
+    public Optional<MongoProfile> findActiveMongoProfile(final Profile profile) {
+        return profile == null ? Optional.empty() : findActiveMongoProfile(profile.getId());
     }
 
     public Optional<MongoProfile> findActiveMongoProfile(final String profileId) {

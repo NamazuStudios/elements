@@ -9,6 +9,7 @@ import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 
@@ -60,7 +61,8 @@ public class MongoProfile {
     @Property
     private String displayName;
 
-    private Map<String, Object> metadata;
+    @Property
+    private Map<String, Object> metadata = new HashMap<>();
 
     @Indexed
     @Property

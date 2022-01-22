@@ -1,11 +1,15 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.goods;
 
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
+import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
+import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;

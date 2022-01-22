@@ -17,6 +17,8 @@ import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
+import com.namazustudios.socialengine.dao.mongo.goods.MongoInventoryItemDao;
+import com.namazustudios.socialengine.dao.mongo.goods.MongoItemDao;
 import com.namazustudios.socialengine.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import com.namazustudios.socialengine.dao.mongo.match.MongoMatchDao;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
