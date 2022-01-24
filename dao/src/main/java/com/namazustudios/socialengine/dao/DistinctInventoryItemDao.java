@@ -20,10 +20,10 @@ public interface DistinctInventoryItemDao {
     /**
      * Creates a distinct inventory item.
      *
-     * @param itemNameOrId the distinct inventory item.
+     * @param id the distinct inventory item.
      * @return a distinct inventory item
      */
-    DistinctInventoryItem getDistinctInventoryItem(String itemNameOrId);
+    DistinctInventoryItem getDistinctInventoryItem(String id);
 
     /**
      * Gets a listing distinct inventory tiems.
@@ -34,7 +34,7 @@ public interface DistinctInventoryItemDao {
      * @param profileId the profile id, if specified. Otherwise null.
      * @return a {@link Pagination<InventoryItem>}
      */
-    Pagination<InventoryItem> getDistinctInventoryItems(
+    Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
             String userId, String profileId);
 
@@ -47,7 +47,7 @@ public interface DistinctInventoryItemDao {
      * @param profileId the profile id, if specified. Otherwise null.
      * @return a {@link Pagination<InventoryItem>}
      */
-    default Pagination<InventoryItem> getDistinctInventoryItems(
+    default Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             int offset, int count,
             String userId, String profileId, String query) {
         return getDistinctInventoryItems(offset, count, userId, profileId);

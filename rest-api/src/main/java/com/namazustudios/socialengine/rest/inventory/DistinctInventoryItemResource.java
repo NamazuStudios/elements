@@ -47,7 +47,7 @@ public class DistinctInventoryItemResource {
     @ApiOperation(value = "Search inventory items",
             notes = "Searches all inventory items in the system and returns the metadata for all matches against " +
                     "the given search filter.")
-    public Pagination<InventoryItem> getDistinctInventoryItems(
+    public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("userId") final String userId,

@@ -2,15 +2,12 @@ package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.dao.DistinctInventoryItemDao;
 import com.namazustudios.socialengine.dao.ItemDao;
-import com.namazustudios.socialengine.dao.ProfileDao;
-import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.exception.profile.ProfileNotFoundException;
 import com.namazustudios.socialengine.exception.user.UserNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
-import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.service.util.UserProfileUtility;
 
 import javax.inject.Inject;
@@ -60,7 +57,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
     }
 
     @Override
-    public Pagination<InventoryItem> getDistinctInventoryItems(
+    public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             final int offset,
             final int count,
             final String userId,
@@ -69,7 +66,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
     }
 
     @Override
-    public Pagination<InventoryItem> getDistinctInventoryItems(
+    public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             final int offset,
             final int count,
             final String userId,

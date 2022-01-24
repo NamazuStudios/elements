@@ -30,7 +30,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
     }
 
     @Override
-    public Pagination<InventoryItem> getDistinctInventoryItems(
+    public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             final int offset,
             final int count,
             final String userId,
@@ -39,7 +39,7 @@ public class UserDistinctInventoryItemService implements DistinctInventoryItemSe
     }
 
     @Override
-    public Pagination<InventoryItem> getDistinctInventoryItems(
+    public Pagination<DistinctInventoryItem> getDistinctInventoryItems(
             final int offset,
             final int count,
             final String userId,

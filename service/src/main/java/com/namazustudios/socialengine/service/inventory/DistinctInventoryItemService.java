@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.service.inventory;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
-import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
 import java.util.Map;
 
@@ -44,7 +43,7 @@ public interface DistinctInventoryItemService {
      * @param userId the userid, may be null,
      * @return a pagination of inventory items.
      */
-    Pagination<InventoryItem> getDistinctInventoryItems(int offset, int count,
+    Pagination<DistinctInventoryItem> getDistinctInventoryItems(int offset, int count,
                                                         String userId, String profileId);
 
     /**
@@ -55,7 +54,7 @@ public interface DistinctInventoryItemService {
      * @param userId the userid, may be null,
      * @return a pagination of inventory items.
      */
-    Pagination<InventoryItem> getDistinctInventoryItems(int offset, int count,
+    Pagination<DistinctInventoryItem> getDistinctInventoryItems(int offset, int count,
                                                         String userId, String profileId, String query);
 
     /**
