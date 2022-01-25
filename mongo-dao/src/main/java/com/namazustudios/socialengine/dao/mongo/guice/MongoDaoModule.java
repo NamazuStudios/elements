@@ -17,6 +17,7 @@ import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
+import com.namazustudios.socialengine.dao.mongo.goods.MongoDistinctInventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.goods.MongoInventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.goods.MongoItemDao;
 import com.namazustudios.socialengine.dao.mongo.health.MongoDatabaseHealthStatusDao;
@@ -91,6 +92,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(CustomAuthUserDao.class).to(MongoCustomAuthUserDao.class);
+        bind(DistinctInventoryItemDao.class).to(MongoDistinctInventoryItemDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -149,6 +151,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);
         expose(CustomAuthUserDao.class);
+        expose(DistinctInventoryItemDao.class);
 
     }
 

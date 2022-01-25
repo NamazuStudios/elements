@@ -15,5 +15,15 @@ public enum ItemCategory {
      * Distinct items are uniquely instantiated and are essentially copies of items derived from base digital goods that
      * reference back to the original item.
      */
-    DISTINCT
+    DISTINCT;
+
+    /**
+     * Gets the default item category.
+     *
+     * @return the default item category.
+     */
+    public static ItemCategory getDefault() {
+        return FUNGIBLE;
+    }
+
 }
