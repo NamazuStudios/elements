@@ -182,7 +182,8 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("version", "version", customConverter(HexStringByteConverter.class));
 
             mapping(DistinctInventoryItem.class, MongoDistinctInventoryItem.class)
-                .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));;
 
             }
         };

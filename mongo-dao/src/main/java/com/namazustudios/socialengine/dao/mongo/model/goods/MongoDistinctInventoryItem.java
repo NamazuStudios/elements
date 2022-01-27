@@ -16,7 +16,7 @@ import java.util.Map;
 public class MongoDistinctInventoryItem {
 
     @Id
-    private ObjectId id;
+    private ObjectId objectId;
 
     @Reference
     private MongoUser user;
@@ -30,12 +30,12 @@ public class MongoDistinctInventoryItem {
     @Property
     private Map<String, Object> metadata;
 
-    public ObjectId getId() {
-        return id;
+    public ObjectId getObjectId() {
+        return objectId;
     }
 
-    public void setId(ObjectId id) {
-        this.id = id;
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
     }
 
     public MongoUser getUser() {

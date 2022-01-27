@@ -26,4 +26,8 @@ public enum ItemCategory {
         return FUNGIBLE;
     }
 
+    public static ItemCategory getOrDefault(final ItemCategory category) {
+        return category == null ? getDefault() : category;
+    }
+
 }

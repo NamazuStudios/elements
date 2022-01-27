@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
@@ -161,7 +162,7 @@ public class MongoItemDao implements ItemDao {
     @Override
     public Item updateItem(final Item item) {
 
-        validate(item);
+        getValidationHelper().validateModel(item, ValidationGroups.Update.class);
         normalize(item);
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
@@ -189,7 +190,8 @@ public class MongoItemDao implements ItemDao {
 
     @Override
     public Item createItem(Item item) {
-        validate(item);
+
+        getValidationHelper().validateModel(item, ValidationGroups.Insert.class);
         normalize(item);
 
         final MongoItem mongoItem = getDozerMapper().map(item, MongoItem.class);
@@ -205,13 +207,6 @@ public class MongoItemDao implements ItemDao {
         query.filter(eq("_id", mongoItem.getObjectId()));
 
         return getDozerMapper().map(query.first(), Item.class);
-    }
-
-    private void validate(Item item) {
-        if (item == null) {
-            throw new InvalidDataException("Item must not be null.");
-        }
-        getValidationHelper().validateModel(item);
     }
 
     private void normalize(Item item) {

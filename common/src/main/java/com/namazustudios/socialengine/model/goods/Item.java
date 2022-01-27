@@ -22,7 +22,7 @@ public class Item implements Serializable, Taggable {
     @Null(groups = {Create.class, Insert.class})
     private String id;
 
-    @NotNull(groups = {Create.class, Insert.class, Update.class})
+    @NotNull
     @Pattern(regexp = Constants.Regexp.WHOLE_WORD_ONLY)
     private String name;
 

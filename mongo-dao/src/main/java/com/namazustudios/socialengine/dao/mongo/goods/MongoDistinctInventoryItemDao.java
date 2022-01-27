@@ -10,19 +10,25 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoDistinctInvento
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.inventory.DistinctInventoryItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
-import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
+import dev.morphia.UpdateOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
+import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
@@ -50,6 +56,11 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         final var mongoItem = getMongoItemDao()
             .findMongoItem(distinctInventoryItem.getItem())
             .orElseThrow(() -> new InvalidDataException("No such item."));
+
+        if (!DISTINCT.equals(mongoItem.getCategory())) {
+            var category = ItemCategory.getOrDefault(mongoItem.getCategory());
+            throw new InvalidDataException("Invalid item category: " + category);
+        }
 
         final var mongoUser = getMongoUserDao()
             .findActiveMongoUser(distinctInventoryItem.getUser())
@@ -111,6 +122,8 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     @Override
     public DistinctInventoryItem updateDistinctInventoryItem(final DistinctInventoryItem distinctInventoryItem) {
 
+        validationHelper.validateModel(distinctInventoryItem, ValidationGroups.Update.class);
+
         final var objectId = getMongoDBUtils().parseOrThrow(
                 distinctInventoryItem.getId(),
                 DistinctInventoryItemNotFoundException::new);
@@ -119,23 +132,42 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             .find(MongoDistinctInventoryItem.class)
             .filter(eq("_id", objectId));
 
+        final var mongoItem = getMongoItemDao()
+            .findMongoItem(distinctInventoryItem.getItem())
+            .orElseThrow(() -> new InvalidDataException("No such item."));
+
+        if (!DISTINCT.equals(mongoItem.getCategory())) {
+            var category = ItemCategory.getOrDefault(mongoItem.getCategory());
+            throw new InvalidDataException("Invalid item category: " + category);
+        }
+
+        final var mongoUser = getMongoUserDao()
+            .findActiveMongoUser(distinctInventoryItem.getUser())
+            .orElseThrow(() -> new InvalidDataException("No such user."));
+
+        final var optionalMongoProfile = Optional.ofNullable(distinctInventoryItem.getProfile())
+            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p));
+
         final var builder = new UpdateBuilder();
 
-        getMongoItemDao()
-            .findMongoItem(distinctInventoryItem.getItem())
-            .map(i -> builder.with(set("item", i)))
-            .orElseThrow(() -> new InvalidDataException("No such item."));
+        // We aren't able to use modify here because of a bug in 2.1.4. We also can't update to 2.2.0 which fixes the bug
+        // because of another bug interfering with other parts of the code. This makes this operation two round trips to the
+        // database but there's no other way to do it.
+        //
+        // https://github.com/MorphiaOrg/morphia/issues/1809 - Issue in 2.1.4
+        // https://github.com/MorphiaOrg/morphia/issues/1614 - Issue in 2.2.0
 
-        getMongoUserDao()
-            .findActiveMongoUser(distinctInventoryItem.getUser())
-            .map(u -> builder.with(set("user", u)))
-            .orElseThrow(() -> new InvalidDataException("No such item."));
-
-        Optional.ofNullable(distinctInventoryItem.getProfile())
-            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p))
-            .map(p -> builder.with(set("profile", p)))
-            .orElse(builder)
-            .with(set("metadata", distinctInventoryItem.getMetadata()));
+        builder.with(
+            set("item", mongoItem),
+            distinctInventoryItem.getMetadata() == null
+                ? set("metadata", Map.of())
+                : set("metadata", distinctInventoryItem.getMetadata())
+//                ,
+//                set("user", mongoUser),
+//                optionalMongoProfile
+//                    .map(p -> set("profile", p))
+//                    .orElseGet(() -> unset("profile"))
+        );
 
         final var options = new ModifyOptions()
             .upsert(false)
@@ -172,6 +204,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         return mapper;
     }
 
+    @Inject
     public void setMapper(Mapper mapper) {
         this.mapper = mapper;
     }
