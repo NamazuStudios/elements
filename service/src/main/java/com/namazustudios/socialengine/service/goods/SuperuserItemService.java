@@ -3,11 +3,14 @@ package com.namazustudios.socialengine.service.goods;
 import com.namazustudios.socialengine.dao.ItemDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.service.ItemService;
 
 import javax.inject.Inject;
 import java.util.List;
 import java.util.Set;
+
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 
 public class SuperuserItemService implements ItemService {
 
@@ -25,6 +28,8 @@ public class SuperuserItemService implements ItemService {
 
     @Override
     public Item updateItem(Item item) {
+        final var category = item.getCategory();
+        if (category == null) item.setCategory(FUNGIBLE);
         return itemDao.updateItem(item);
     }
 

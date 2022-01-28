@@ -13,12 +13,14 @@ import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanc
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId;
 import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 
 import static com.mongodb.client.model.ReturnDocument.AFTER;
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.*;
 import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.*;
@@ -29,6 +31,8 @@ import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
 import dev.morphia.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.sql.Timestamp;
@@ -45,6 +49,8 @@ import static java.util.UUID.randomUUID;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
 public class MongoRewardIssuanceDao implements RewardIssuanceDao {
+
+    private static final Logger logger = LoggerFactory.getLogger(MongoRewardIssuanceDao.class);
 
     private Mapper dozerMapper;
 
@@ -134,28 +140,36 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     @Override
     public RewardIssuance getOrCreateRewardIssuance(final RewardIssuance rewardIssuance) {
-        final MongoUser mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
-        final MongoItem mongoItem = getMongoItemDao().getMongoItemByNameOrId(rewardIssuance.getItem().getId());
-        final String context = rewardIssuance.getContext();
-        final MongoRewardIssuanceId mongoRewardIssuanceId =
-                new MongoRewardIssuanceId(
-                        mongoUser.getObjectId(),
-                        mongoItem.getObjectId(),
-                        rewardIssuance.getItemQuantity(),
-                        context
-                );
+
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(rewardIssuance.getUser().getId());
+        final var mongoItem = getMongoItemDao().getMongoItemByNameOrId(rewardIssuance.getItem().getId());
+        final var mongoItemCategory = mongoItem.getCategory();
+
+        if (!FUNGIBLE.equals(mongoItemCategory)) {
+            throw new InternalException("Rewards only support fungible items.");
+        }
+
+        final var context = rewardIssuance.getContext();
+
+        final var mongoRewardIssuanceId =
+            new MongoRewardIssuanceId(
+                mongoUser.getObjectId(),
+                mongoItem.getObjectId(),
+                rewardIssuance.getItemQuantity(),
+                context
+            );
 
         try {
-            final MongoRewardIssuance existingIssuance = getMongoRewardIssuance(mongoRewardIssuanceId);
+            final var existingIssuance = getMongoRewardIssuance(mongoRewardIssuanceId);
             return getDozerMapper().map(existingIssuance, RewardIssuance.class);
-        }
-        catch (NotFoundException e) {
-
+        } catch (NotFoundException e) {
+            logger.trace("Isusance not found.", e);
         }
 
         if (rewardIssuance.getType() == null) {
             rewardIssuance.setType(NON_PERSISTENT);
         }
+
         rewardIssuance.setState(ISSUED);
         rewardIssuance.setUuid(randomUUID().toString());
         if (rewardIssuance.getType() == PERSISTENT) {
@@ -165,7 +179,7 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
         getValidationHelper().validateModel(rewardIssuance, ValidationGroups.Insert.class);
         rewardIssuance.validateTags();
 
-        final MongoRewardIssuance mongoRewardIssuance = getDozerMapper().map(rewardIssuance, MongoRewardIssuance.class);
+        final var mongoRewardIssuance = getDozerMapper().map(rewardIssuance, MongoRewardIssuance.class);
 
 
         mongoRewardIssuance.setObjectId(mongoRewardIssuanceId);

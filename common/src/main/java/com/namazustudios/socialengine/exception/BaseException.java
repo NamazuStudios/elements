@@ -18,7 +18,7 @@ public abstract class BaseException extends RuntimeException {
             "false")
         );
 
-        tracer = enabled ? BaseException::doFillInStackTrace : t -> t;
+        tracer = enabled ? BaseException::forceFillInStackTrace : t -> t;
 
     }
 
@@ -52,7 +52,7 @@ public abstract class BaseException extends RuntimeException {
      */
     public abstract ErrorCode getCode();
 
-    private Throwable doFillInStackTrace() {
+    protected Throwable forceFillInStackTrace() {
         return super.fillInStackTrace();
     }
 

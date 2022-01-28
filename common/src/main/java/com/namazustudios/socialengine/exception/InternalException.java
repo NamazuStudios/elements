@@ -28,4 +28,9 @@ public class InternalException extends BaseException {
         return ErrorCode.UNKNOWN;
     }
 
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+        return forceFillInStackTrace();
+    }
+
 }

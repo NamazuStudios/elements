@@ -31,7 +31,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.filters.Filters.or;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -169,13 +171,29 @@ public class MongoItemDao implements ItemDao {
         final var query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", objectId));
 
+        switch (item.getCategory()) {
+            case FUNGIBLE:
+                query.filter(or(
+                        eq("category", null),
+                        eq("category", item.getCategory())
+                    )
+                );
+                break;
+            case DISTINCT:
+                query.filter(eq("category", DISTINCT));
+                break;
+            default:
+                throw new InvalidDataException("Unsupported item category: " + item.getCategory());
+        }
+
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
             query.modify(
                 set("name", item.getName()),
                 set("displayName", item.getDisplayName()),
                 set("metadata", item.getMetadata()),
                 set("tags", item.getTags()),
-                set("description", item.getDescription())
+                set("description", item.getDescription()),
+                set("category", item.getCategory())
             ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
         );
 
