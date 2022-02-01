@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Consumer;
 
 /**
  * Walks set of data that is managed through a {@link Pagination}.
@@ -91,6 +92,20 @@ public class PaginationWalker {
         return aggregate(new ArrayList<>(), walkFunction, (l, p) -> {
             l.addAll(p.getObjects());
             return l;
+        });
+    }
+
+    /**
+     * Walks a dataset passing each object from each page into the
+     * @param walkFunction
+     * @param tConsumer
+     * @param <PaginatedT>
+     */
+    public <PaginatedT> void forEach(final WalkFunction<PaginatedT> walkFunction,
+                                     final Consumer<PaginatedT> tConsumer) {
+        aggregate(null, walkFunction, (o, p) -> {
+            p.forEach(tConsumer);
+            return o;
         });
     }
 

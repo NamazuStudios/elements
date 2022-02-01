@@ -38,7 +38,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
         }
 
         try {
-            final var record = getUserProfileUtility().getAndCheckForMatch(userId, profileId);
+            final var record = getUserProfileUtility().getAndCheckForMatch(profileId, userId);
             distinctInventoryItem.setUser(record.user);
             distinctInventoryItem.setProfile(record.profile);
         } catch (UserNotFoundException | ProfileNotFoundException ex) {
@@ -85,7 +85,7 @@ public class SuperUserDistinctInventoryItemService implements DistinctInventoryI
         final var distinctInventoryItem = getDistinctInventoryItemDao().getDistinctInventoryItem(distinctInventoryItemId);
 
         try {
-            final var record = getUserProfileUtility().getAndCheckForMatch(userId, profileId);
+            final var record = getUserProfileUtility().getAndCheckForMatch(profileId, userId);
             distinctInventoryItem.setUser(record.user);
             distinctInventoryItem.setProfile(record.profile);
         } catch (UserNotFoundException | ProfileNotFoundException ex) {

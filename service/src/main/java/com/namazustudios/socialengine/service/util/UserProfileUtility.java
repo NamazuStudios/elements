@@ -9,17 +9,31 @@ import com.namazustudios.socialengine.model.user.User;
 
 import javax.inject.Inject;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 public class UserProfileUtility {
+
+    private User user;
 
     private UserDao userDao;
 
     private ProfileDao profileDao;
 
-    public UsernameProfileRecord getAndCheckForMatch(final String userId, final String profileId) {
+    public UsernameProfileRecord getAndCheckForMatch(final String profileId, final String userId) {
+        return getAndCheckForMatch(
+            profileId,
+            userId,
+            () -> new InvalidDataException("Must specify either user or profile.")
+        );
+    }
+
+    public <ExceptionT extends Throwable> UsernameProfileRecord getAndCheckForMatch(
+        final String profileId,
+        final String userId,
+        final Supplier<ExceptionT> exceptionTSupplier) throws ExceptionT {
 
         if (userId == null && profileId == null) {
-            throw new InvalidDataException("Must specify either user or profile.");
+            throw exceptionTSupplier.get();
         }
 
         var user = userId == null ? null : getUserDao().getActiveUser(userId);
@@ -34,9 +48,18 @@ public class UserProfileUtility {
         } else if (user != null) {
             return new UsernameProfileRecord(user, null);
         } else {
-            throw new InvalidDataException("Must specify either user or profile.");
+            throw exceptionTSupplier.get();
         }
 
+    }
+
+    public User getUser() {
+        return user;
+    }
+
+    @Inject
+    public void setUser(User user) {
+        this.user = user;
     }
 
     public UserDao getUserDao() {

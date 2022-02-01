@@ -8,29 +8,21 @@ import com.namazustudios.socialengine.dao.mongo.goods.MongoItemDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
-import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuance;
 import com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId;
 import com.namazustudios.socialengine.exception.*;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.goods.ItemCategory;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
-
-import static com.mongodb.client.model.ReturnDocument.AFTER;
-import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
-import static com.namazustudios.socialengine.model.reward.RewardIssuance.State;
-import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.*;
-import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.*;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -40,8 +32,15 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static com.namazustudios.socialengine.dao.InventoryItemDao.SIMPLE_PRIORITY;
 import static com.namazustudios.socialengine.dao.mongo.model.mission.MongoRewardIssuanceId.parseOrThrowNotFoundException;
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.State;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.ISSUED;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.State.REDEEMED;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.NON_PERSISTENT;
+import static com.namazustudios.socialengine.model.reward.RewardIssuance.Type.PERSISTENT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.*;
 import static java.lang.System.currentTimeMillis;
@@ -338,7 +337,6 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
 
     }
 
-
     @Override
     public void delete(String id) {
         final MongoRewardIssuanceId mongoRewardIssuanceId = parseOrThrowNotFoundException(id);
@@ -412,4 +410,5 @@ public class MongoRewardIssuanceDao implements RewardIssuanceDao {
     public void setValidationHelper(ValidationHelper validationHelper) {
         this.validationHelper = validationHelper;
     }
+
 }

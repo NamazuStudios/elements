@@ -74,7 +74,7 @@ public class DistinctInventoryItemResource {
     @Path("{distinctInventoryItemId}")
     @ApiOperation(value = "Updates an inventory item for the specified item",
             notes = "Updates an inventory item for the specified item")
-    public DistinctInventoryItem updateSimpleInventoryItem(
+    public DistinctInventoryItem updateDistinctInventoryItem(
             @PathParam("distinctInventoryItemId")
             final String distinctInventoryItemId,
             final UpdateDistinctInventoryItemRequest updateInventoryItemRequest) {
