@@ -26,6 +26,7 @@ import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
+import static java.util.stream.Collectors.toSet;
 import static org.testng.AssertJUnit.*;
 
 public class SuperUserDistinctInventoryItemApiTest {
@@ -124,6 +125,17 @@ public class SuperUserDistinctInventoryItemApiTest {
                 new Object[] {userClientContextA},
                 new Object[] {userClientContextB}
         };
+    }
+
+    @DataProvider
+    public Object[][] getAllIntermediates() {
+        return Stream.of(intermediatesByUser, intermediatesByProfile)
+            .flatMap(m -> m.values().stream())
+            .flatMap(s -> s.stream().map(DistinctInventoryItem::getId))
+            .collect(toSet())
+            .stream()
+            .map(s -> new Object[]{s})
+            .toArray(Object[][]::new);
     }
 
     @DataProvider
@@ -277,7 +289,7 @@ public class SuperUserDistinctInventoryItemApiTest {
         "testCreateItemUser",
         "testCreateItemProfile"
     })
-    public void testGetAllUserSpecifyingUser(final ClientContext userClientContext) {
+    public void testGetAllSpecifyingUser(final ClientContext userClientContext) {
 
         final PaginationWalker.WalkFunction<DistinctInventoryItem> walkFunction = (offset, count) -> client
             .target(format("%s/inventory/distinct?offset=%d&count=%d&userId=%s",
@@ -333,7 +345,7 @@ public class SuperUserDistinctInventoryItemApiTest {
         final var item = client
                 .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItem.getId()))
                 .request()
-                .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
                 .get(DistinctInventoryItem.class);
 
         assertEquals(userClientContext.getUser().getId(), item.getUser().getId());
@@ -350,14 +362,55 @@ public class SuperUserDistinctInventoryItemApiTest {
         final var item = client
                 .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItem.getId()))
                 .request()
-                .header("Authorization", format("Bearer %s", userClientContext.getSessionSecret()))
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
                 .get(DistinctInventoryItem.class);
 
         assertEquals(userClientContext.getDefaultProfile().getId(), item.getProfile().getId());
 
     }
 
-    public void testDeleteItem() {
+    @Test(dataProvider = "getAllIntermediates", dependsOnMethods = {
+        "testGetAllSpecifyingUser",
+        "testGetAllSpecifyingProfile",
+        "testUserGetSingle",
+        "testProfileGetSingle"
+    })
+    public void testDeleteItem(final String distinctInventoryItemId) {
+
+        final var response = client
+            .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItemId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+            .delete();
+
+        assertEquals(204, response.getStatus());
+
+    }
+
+    @Test(dataProvider = "getAllIntermediates", dependsOnMethods = "testDeleteItem")
+    public void testDeletedItemThrows404(final String distinctInventoryItemId) {
+
+        final var response = client
+            .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItemId))
+            .request()
+            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+            .delete();
+
+        assertEquals(404, response.getStatus());
+
+    }
+
+
+    @Test(dataProvider = "getAllIntermediates", dependsOnMethods = "testDeletedItemThrows404")
+    public void testItemsAreDeleted(final String distinctInventoryItemId) {
+
+        final var response = client
+                .target(format("%s/inventory/distinct/%s", apiRoot, distinctInventoryItemId))
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .get();
+
+        assertEquals(404, response.getStatus());
 
     }
 

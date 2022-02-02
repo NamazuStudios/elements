@@ -44,11 +44,13 @@ public class ItemResource {
                 "with a unique identifier signed and with its fields properly normalized.  The supplied item object " +
                 "submitted with the request must have a name property that is unique across all items.")
     public Item createItem(final CreateItemRequest itemToBeCreated) {
+
         getValidationHelper().validateModel(itemToBeCreated);
 
         final Item item = new Item();
         item.setName(itemToBeCreated.getName());
         item.setTags(itemToBeCreated.getTags());
+        item.setCategory(itemToBeCreated.getCategory());
         item.setMetadata(itemToBeCreated.getMetadata());
         item.setDescription(itemToBeCreated.getDescription());
         item.setDisplayName(itemToBeCreated.getDisplayName());
