@@ -40,7 +40,7 @@ public class UserProfileUtility {
         var profile = profileId == null ? null : getProfileDao().getActiveProfile(profileId);
 
         if (user != null && profile != null) {
-            if (Objects.equals(user.getId(), profile.getUser().getId()))
+            if (!Objects.equals(user.getId(), profile.getUser().getId()))
                 throw new ConflictException("User and profile do not match.");
             return new UsernameProfileRecord(user, profile);
         } else if (profile != null) {
