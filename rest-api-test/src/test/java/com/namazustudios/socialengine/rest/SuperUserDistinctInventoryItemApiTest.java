@@ -223,7 +223,7 @@ public class SuperUserDistinctInventoryItemApiTest {
     }
 
 
-    @Test(dataProvider = "getUserIntermediates", dependsOnMethods = {"testCreateItemUser"})
+    @Test(dataProvider = "getUserIntermediates", dependsOnMethods = "testCreateItemUser")
     public void testPutUserItem(final ClientContext clientContext,
                                 final DistinctInventoryItem distinctInventoryItem) {
 
@@ -243,12 +243,12 @@ public class SuperUserDistinctInventoryItemApiTest {
         assertEquals(distinctInventoryItem.getId(), updated.getId());
         assertEquals(distinctInventoryItem.getUser(), updated.getUser());
         assertEquals(distinctInventoryItem.getProfile(), updated.getProfile());
-        assertEquals(distinctInventoryItem.getMetadata(), updated.getMetadata());
+        assertEquals(request.getMetadata(), updated.getMetadata());
         updateIntermediate(updated);
 
     }
 
-    @Test(dataProvider = "getProfileIntermediates", dependsOnMethods = {"testCreateItemProfile"})
+    @Test(dataProvider = "getProfileIntermediates", dependsOnMethods = "testCreateItemProfile")
     public void testPutProfileItem(final ClientContext clientContext,
                                    final DistinctInventoryItem distinctInventoryItem) {
 
@@ -268,7 +268,7 @@ public class SuperUserDistinctInventoryItemApiTest {
         assertEquals(distinctInventoryItem.getId(), updated.getId());
         assertEquals(distinctInventoryItem.getUser(), updated.getUser());
         assertEquals(distinctInventoryItem.getProfile(), updated.getProfile());
-        assertEquals(distinctInventoryItem.getMetadata(), updated.getMetadata());
+        assertEquals(request.getMetadata(), updated.getMetadata());
         updateIntermediate(updated);
 
     }
@@ -354,6 +354,10 @@ public class SuperUserDistinctInventoryItemApiTest {
                 .get(DistinctInventoryItem.class);
 
         assertEquals(userClientContext.getDefaultProfile().getId(), item.getProfile().getId());
+
+    }
+
+    public void testDeleteItem() {
 
     }
 
