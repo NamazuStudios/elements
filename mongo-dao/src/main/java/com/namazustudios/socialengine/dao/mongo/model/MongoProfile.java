@@ -62,7 +62,7 @@ public class MongoProfile {
     private String displayName;
 
     @Property
-    private Map<String, Object> metadata    ;
+    private Map<String, Object> metadata;
 
     @Indexed
     @Property
