@@ -25,6 +25,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoNeoSmartContractDao implements NeoSmartContractDao {
 
@@ -83,9 +84,29 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
                 set("blockchain", patchSmartContractRequest.getBlockchain())
         );
 
-        var metadata = patchSmartContractRequest.getMetadata();
+        final var walletId = patchSmartContractRequest.getWalletId();
+        if(walletId != null) {
+
+            builder.with(set("walletId", walletId));
+
+            final var accountAddress = patchSmartContractRequest.getAccountAddress();
+
+            if(accountAddress != null) {
+                builder.with(set("accountAddress", accountAddress));
+            } else {
+                builder.with(unset("accountAddress"));
+            }
+
+        } else {
+            builder.with(unset("walletId"));
+            builder.with(unset("accountAddress"));
+        }
+
+        final var metadata = patchSmartContractRequest.getMetadata();
         if (metadata != null) {
             builder.with(set("metadata", metadata));
+        } else {
+            builder.with(unset("metadata"));
         }
 
         final var mongoContract = getMongoDBUtils().perform(
