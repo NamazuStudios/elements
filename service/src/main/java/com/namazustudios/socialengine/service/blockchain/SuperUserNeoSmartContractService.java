@@ -28,6 +28,7 @@ import io.neow3j.wallet.Wallet;
 import io.neow3j.wallet.exceptions.AccountStateException;
 
 import javax.inject.Inject;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -246,6 +247,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
     @Override
     public NeoInvokeFunction testInvoke(final InvokeContractRequest invokeRequest) {
+
         ElementsSmartContract contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
         var wallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
         var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
@@ -259,7 +261,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         switch(contract.getBlockchain()){
             case BlockchainConstants.Names.NEO:
                 io.neow3j.contract.SmartContract smartContract = getNeow3JClient().getSmartContract(contract.getScriptHash());
-                if (invokeRequest.getParameters().size() > 0){
+                if (invokeRequest.getParameters() != null && invokeRequest.getParameters().size() > 0){
                     List<ContractParameter> invokeParams = new ArrayList<>();
                     for (var param : invokeRequest.getParameters()) {
                         invokeParams.add(getNeow3JClient().convertObject(param));
