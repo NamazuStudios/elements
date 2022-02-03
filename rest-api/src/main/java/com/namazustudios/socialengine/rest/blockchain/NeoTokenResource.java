@@ -50,7 +50,6 @@ public class NeoTokenResource {
     @ApiOperation(value = "Gets a specific Neo NeoToken",
             notes = "Gets a specific NeoToken by token name or Id.")
     public NeoToken getToken(@PathParam("tokenNameOrId") String tokenNameOrId) {
-
         return getTokenService().getToken(tokenNameOrId);
     }
 
@@ -95,4 +94,5 @@ public class NeoTokenResource {
     public void setTokenService(NeoTokenService neoTokenService) {
         this.neoTokenService = neoTokenService;
     }
+
 }

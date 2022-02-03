@@ -20,6 +20,9 @@ public class CreateItemRequest {
     @NotNull
     private String description;
 
+    @NotNull
+    private ItemCategory category;
+
     private List<String> tags;
 
     private Map<String, Object> metadata;
@@ -105,6 +108,24 @@ public class CreateItemRequest {
     }
 
     /**
+     * Gets the item category.
+     *
+     * @return the item category
+     */
+    public ItemCategory getCategory() {
+        return category;
+    }
+
+    /**
+     * Sets the item category.
+     *
+     * @param category
+     */
+    public void setCategory(ItemCategory category) {
+        this.category = category;
+    }
+
+    /**
      * Gets a copy of metadata of string key-value pairs for this Item.  Changes to the returned Map are not reflected
      * on this Item.
      *
@@ -139,12 +160,12 @@ public class CreateItemRequest {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         CreateItemRequest that = (CreateItemRequest) o;
-        return Objects.equals(getName(), that.getName()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getDescription(), that.getDescription()) && Objects.equals(getTags(), that.getTags()) && Objects.equals(getMetadata(), that.getMetadata());
+        return Objects.equals(getName(), that.getName()) && Objects.equals(getDisplayName(), that.getDisplayName()) && Objects.equals(getDescription(), that.getDescription()) && getCategory() == that.getCategory() && Objects.equals(getTags(), that.getTags()) && Objects.equals(getMetadata(), that.getMetadata());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getDisplayName(), getDescription(), getTags(), getMetadata());
+        return Objects.hash(getName(), getDisplayName(), getDescription(), getCategory(), getTags(), getMetadata());
     }
 
     @Override

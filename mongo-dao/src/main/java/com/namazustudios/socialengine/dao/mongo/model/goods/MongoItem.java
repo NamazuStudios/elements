@@ -5,6 +5,7 @@ import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import org.bson.types.ObjectId;
 import dev.morphia.annotations.*;
 
@@ -45,6 +46,9 @@ public class MongoItem {
     @Indexed
     @Property
     private List<String> tags = new ArrayList<>();
+
+    @Property
+    private ItemCategory category;
 
     public ObjectId getObjectId() {
         return objectId;
@@ -94,45 +98,25 @@ public class MongoItem {
         this.tags = tags;
     }
 
+    public ItemCategory getCategory() {
+        return category;
+    }
+
+    public void setCategory(ItemCategory category) {
+        this.category = category;
+    }
+
     @Override
     public boolean equals(Object o) {
-        if (this == o) {
-            return true;
-        }
-        if (o == null || getClass() != o.getClass()) {
-            return false;
-        }
-
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
         MongoItem mongoItem = (MongoItem) o;
-
-        if (getObjectId() != null ? !getObjectId().equals(mongoItem.getObjectId()) : mongoItem.getObjectId() != null) {
-            return false;
-        }
-        if (getName() != null ? !getName().equals(mongoItem.getName()) : mongoItem.getName() != null) {
-            return false;
-        }
-        if (getDisplayName() != null ? !getDisplayName().equals(mongoItem.getDisplayName()) :
-            mongoItem.getDisplayName() != null) {
-            return false;
-        }
-        if (getDescription() != null ? !getDescription().equals(mongoItem.getDescription()) :
-            mongoItem.getDescription() != null) {
-            return false;
-        }
-        if (getMetadata() != null ? !getMetadata().equals(mongoItem.getMetadata()) : mongoItem.getMetadata() != null) {
-            return false;
-        }
-        return getTags() != null ? getTags().equals(mongoItem.getTags()) : mongoItem.getTags() == null;
+        return Objects.equals(getObjectId(), mongoItem.getObjectId()) && Objects.equals(getName(), mongoItem.getName()) && Objects.equals(getDisplayName(), mongoItem.getDisplayName()) && Objects.equals(getDescription(), mongoItem.getDescription()) && Objects.equals(getMetadata(), mongoItem.getMetadata()) && Objects.equals(getTags(), mongoItem.getTags()) && getCategory() == mongoItem.getCategory();
     }
 
     @Override
     public int hashCode() {
-        int result = getObjectId() != null ? getObjectId().hashCode() : 0;
-        result = 31 * result + (getName() != null ? getName().hashCode() : 0);
-        result = 31 * result + (getDisplayName() != null ? getDisplayName().hashCode() : 0);
-        result = 31 * result + (getDescription() != null ? getDescription().hashCode() : 0);
-        result = 31 * result + (getMetadata() != null ? getMetadata().hashCode() : 0);
-        result = 31 * result + (getTags() != null ? getTags().hashCode() : 0);
-        return result;
+        return Objects.hash(getObjectId(), getName(), getDisplayName(), getDescription(), getMetadata(), getTags(), getCategory());
     }
+
 }

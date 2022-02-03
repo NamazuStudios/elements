@@ -1,18 +1,24 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.goods;
 
 import com.mongodb.WriteConcern;
 import com.mongodb.client.model.ReturnDocument;
 import com.mongodb.client.result.DeleteResult;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.InventoryItemDao;
+import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoConcurrentUtils.ContentionException;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
+import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
+import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
+import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.TooBusyException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.ValidationGroups.Update;
@@ -27,7 +33,10 @@ import dev.morphia.query.Query;
 
 import javax.inject.Inject;
 
+import java.util.Optional;
+
 import static com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId.parseOrThrowNotFoundException;
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static java.lang.Integer.max;
@@ -104,7 +113,8 @@ public class MongoInventoryItemDao implements InventoryItemDao {
     public Pagination<InventoryItem> getInventoryItems(final int offset, final int count, final User user,
                                                        final String search) {
 
-        final var query = getDatastore().find(MongoInventoryItem.class)
+        final var query = getDatastore()
+            .find(MongoInventoryItem.class)
             .filter(eq("user", getDozerMapper().map(user, MongoUser.class)));
 
         return getMongoDBUtils().paginationFromQuery(
@@ -132,6 +142,13 @@ public class MongoInventoryItemDao implements InventoryItemDao {
         normalize(inventoryItem);
 
         final var mongoItem = getMongoItemDao().getMongoItem(inventoryItem.getItem());
+
+        final var mongoItemCategory = mongoItem.getCategory();
+
+        if (mongoItemCategory != null && !FUNGIBLE.equals(mongoItemCategory)) {
+            throw new InvalidDataException("Item must be of type: " + FUNGIBLE);
+        }
+
         final var mongoUser = getMongoUserDao().getActiveMongoUser(inventoryItem.getUser());
 
         final MongoInventoryItem mongoInventoryItem = getDozerMapper().map(inventoryItem, MongoInventoryItem.class);

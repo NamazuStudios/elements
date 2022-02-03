@@ -1,35 +1,39 @@
-package com.namazustudios.socialengine.dao.mongo;
+package com.namazustudios.socialengine.dao.mongo.goods;
 
 import com.mongodb.DuplicateKeyException;
 import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.ItemDao;
+import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.util.ValidationHelper;
+import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
+import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
-import dev.morphia.query.experimental.updates.UpdateOperators;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.queryparser.flexible.standard.StandardQueryParser;
 import org.bson.types.ObjectId;
 import org.dozer.Mapper;
-import dev.morphia.Datastore;
-import dev.morphia.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.List;
+import java.util.Optional;
 
 import static com.google.common.base.Strings.nullToEmpty;
+import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
+import static dev.morphia.query.experimental.filters.Filters.or;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 
@@ -55,28 +59,38 @@ public class MongoItemDao implements ItemDao {
         final MongoItem item = getMongoItemByNameOrId(identifier);
 
         if (item == null) {
-            throw new NotFoundException("Unable to find item with an id or name of " + identifier);
+            throw new ItemNotFoundException("Unable to find item with an id or name of " + identifier);
         }
 
         return getDozerMapper().map(item, Item.class);
     }
 
+    public Optional<MongoItem> findMongoItem(final Item item) {
+        return Optional.ofNullable(item).flatMap(i -> findMongoItem(i.getId()));
+    }
+
+    public Optional<MongoItem> findMongoItem(final String id) {
+        return Optional.ofNullable(id)
+            .flatMap(i -> getMongoDBUtils().parse(i))
+            .flatMap(this::findMongoItem);
+    }
+
+    public Optional<MongoItem> findMongoItem(final ObjectId objectId) {
+        final var item = getDatastore()
+            .find(MongoItem.class)
+            .filter(eq("_id", objectId)).first();
+        return Optional.ofNullable(item);
+    }
+
     public MongoItem getMongoItem(final Item item) {
-        final ObjectId objectId = getMongoDBUtils().parseOrThrowNotFoundException(item == null ? null : item.getId());
+        final var id = item == null ? null : item.getId();
+        final var objectId = getMongoDBUtils().parseOrThrow(id, ItemNotFoundException::new);
         return getMongoItem(objectId);
     }
 
     public MongoItem getMongoItem(final ObjectId objectId) {
-
-        final MongoItem mongoItem = getDatastore().find(MongoItem.class)
-                .filter(eq("_id", objectId)).first();
-
-        if(null == mongoItem) {
-            throw new NotFoundException("Unable to find item with an id of " + objectId);
-        }
-
-        return mongoItem;
-
+        return findMongoItem(objectId)
+            .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
     }
 
     public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
@@ -150,12 +164,27 @@ public class MongoItemDao implements ItemDao {
     @Override
     public Item updateItem(final Item item) {
 
-        validate(item);
+        getValidationHelper().validateModel(item, ValidationGroups.Update.class);
         normalize(item);
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(item.getId());
         final var query = getDatastore().find(MongoItem.class);
         query.filter(eq("_id", objectId));
+
+        switch (item.getCategory()) {
+            case FUNGIBLE:
+                query.filter(or(
+                        eq("category", null),
+                        eq("category", item.getCategory())
+                    )
+                );
+                break;
+            case DISTINCT:
+                query.filter(eq("category", DISTINCT));
+                break;
+            default:
+                throw new InvalidDataException("Unsupported item category: " + item.getCategory());
+        }
 
         final var updatedMongoItem = getMongoDBUtils().perform(ds ->
             query.modify(
@@ -163,7 +192,8 @@ public class MongoItemDao implements ItemDao {
                 set("displayName", item.getDisplayName()),
                 set("metadata", item.getMetadata()),
                 set("tags", item.getTags()),
-                set("description", item.getDescription())
+                set("description", item.getDescription()),
+                set("category", item.getCategory())
             ).execute(new ModifyOptions().upsert(false).returnDocument(ReturnDocument.AFTER))
         );
 
@@ -178,7 +208,8 @@ public class MongoItemDao implements ItemDao {
 
     @Override
     public Item createItem(Item item) {
-        validate(item);
+
+        getValidationHelper().validateModel(item, ValidationGroups.Insert.class);
         normalize(item);
 
         final MongoItem mongoItem = getDozerMapper().map(item, MongoItem.class);
@@ -194,13 +225,6 @@ public class MongoItemDao implements ItemDao {
         query.filter(eq("_id", mongoItem.getObjectId()));
 
         return getDozerMapper().map(query.first(), Item.class);
-    }
-
-    private void validate(Item item) {
-        if (item == null) {
-            throw new InvalidDataException("Item must not be null.");
-        }
-        getValidationHelper().validateModel(item);
     }
 
     private void normalize(Item item) {
@@ -263,4 +287,5 @@ public class MongoItemDao implements ItemDao {
     public void setObjectIndex(ObjectIndex objectIndex) {
         this.objectIndex = objectIndex;
     }
+
 }

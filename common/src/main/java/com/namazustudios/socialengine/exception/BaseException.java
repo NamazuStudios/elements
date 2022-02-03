@@ -1,9 +1,26 @@
 package com.namazustudios.socialengine.exception;
 
+import java.util.function.Function;
+
+import static java.lang.String.format;
+
 /**
  * Created by patricktwohig on 3/25/15.
  */
-public abstract  class BaseException extends RuntimeException {
+public abstract class BaseException extends RuntimeException {
+
+    private static final Function<BaseException, Throwable> tracer;
+
+    static {
+
+        final var enabled = Boolean.parseBoolean(System.getProperty(
+            format("%s.%s", BaseException.class.getName(), "trace.enabled"),
+            "false")
+        );
+
+        tracer = enabled ? BaseException::forceFillInStackTrace : t -> t;
+
+    }
 
     public BaseException() {}
 
@@ -23,11 +40,20 @@ public abstract  class BaseException extends RuntimeException {
         super(message, cause, enableSuppression, writableStackTrace);
     }
 
+    @Override
+    public synchronized Throwable fillInStackTrace() {
+        return tracer.apply(this);
+    }
+
     /**
      * Gets the error code.
      *
-     * @return
+     * @return the {@link ErrorCode}
      */
     public abstract ErrorCode getCode();
+
+    protected Throwable forceFillInStackTrace() {
+        return super.fillInStackTrace();
+    }
 
 }

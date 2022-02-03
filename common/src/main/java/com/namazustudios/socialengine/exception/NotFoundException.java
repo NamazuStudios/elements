@@ -28,9 +28,4 @@ public class NotFoundException extends BaseException {
         return ErrorCode.NOT_FOUND;
     }
 
-    @Override
-    public synchronized Throwable fillInStackTrace() {
-        return this;
-    }
-
 }

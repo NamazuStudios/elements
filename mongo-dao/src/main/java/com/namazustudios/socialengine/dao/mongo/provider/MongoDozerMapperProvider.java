@@ -8,6 +8,7 @@ import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
+import com.namazustudios.socialengine.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItem;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
@@ -22,6 +23,7 @@ import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.model.leaderboard.Score;
@@ -178,6 +180,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))
                 .fields("slot", "saveDataDocumentId.slot", customConverter(IdentityConverter.class))
                 .fields("version", "version", customConverter(HexStringByteConverter.class));
+
+            mapping(DistinctInventoryItem.class, MongoDistinctInventoryItem.class)
+                .fields("id", "objectId", customConverter(ObjectIdConverter.class))
+                .fields("metadata","metadata", customConverter(IdentityConverter.class));;
 
             }
         };

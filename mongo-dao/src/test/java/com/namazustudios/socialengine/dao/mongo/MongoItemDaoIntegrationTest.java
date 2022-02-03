@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import dev.morphia.Datastore;
 import dev.morphia.DeleteOptions;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -17,6 +18,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -143,6 +145,7 @@ public class MongoItemDaoIntegrationTest {
         item.setMetadata(mockMetadata);
         item.setDescription("A Fooable Item.  Don't foo me bro");
         item.setTags(Lists.newArrayList("barkable", "hideable"));
+        item.setCategory(FUNGIBLE);
         return item;
     }
 
@@ -186,6 +189,7 @@ public class MongoItemDaoIntegrationTest {
         item.setDescription(description);
         item.setTags(tags);
         item.setMetadata(metadata);
+        item.setCategory(FUNGIBLE);
         return item;
     }
 
