@@ -200,6 +200,11 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
     }
 
+    @Override
+    public Optional<DistinctInventoryItem> findDistinctInventoryItem(final String ownerId, final String itemName) {
+        return Optional.empty();
+    }
+
     public Mapper getMapper() {
         return mapper;
     }

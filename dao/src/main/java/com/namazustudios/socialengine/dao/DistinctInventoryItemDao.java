@@ -4,6 +4,8 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 
+import java.util.Optional;
+
 /**
  * Distinct inventory item Dao.
  */
@@ -67,5 +69,15 @@ public interface DistinctInventoryItemDao {
      * @param inventoryItemId the distinct inventory item
      */
     void deleteDistinctInventoryItem(String inventoryItemId);
+
+    /**
+     * Finds the distinct inventory item by the name.
+     *
+     * @param ownerId the owner of the ID (either user or profile)
+     * @param itemName the item's name or ID
+     *
+     * @return the item
+     */
+    Optional<DistinctInventoryItem> findDistinctInventoryItem(String ownerId, String itemName);
 
 }
