@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoProfileDao;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
+import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.inventory.DistinctInventoryItemNotFoundException;
@@ -14,6 +15,8 @@ import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
+import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -201,8 +204,25 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     }
 
     @Override
-    public Optional<DistinctInventoryItem> findDistinctInventoryItem(final String ownerId, final String itemName) {
-        return Optional.empty();
+    public Optional<DistinctInventoryItem> findDistinctInventoryItem(
+            final String ownerId,
+            final String itemName) {
+
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
+
+        getMongoUserDao()
+                .findActiveMongoUser(ownerId)
+                .ifPresent(u -> query.filter(eq("user", u)));
+
+        getMongoProfileDao()
+                .findActiveMongoProfile(ownerId)
+                .map(MongoProfile::getUser)
+                .ifPresent(u -> query.filter(eq("user", u)));
+
+        return Optional
+                .ofNullable(query.first())
+                .map(u -> getMapper().map(u, DistinctInventoryItem.class));
+
     }
 
     public Mapper getMapper() {
