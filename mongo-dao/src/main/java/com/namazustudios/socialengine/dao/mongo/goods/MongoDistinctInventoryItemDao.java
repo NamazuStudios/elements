@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.dao.mongo.goods;
 
-import com.google.common.base.Strings;
 import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.socialengine.dao.DistinctInventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
@@ -15,7 +14,6 @@ import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -112,7 +110,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             }
 
             user.ifPresent(u -> query.filter(eq("user", u)));
-            
+
         }
 
         if (profileId != null && !profileId.isBlank()) {
@@ -153,12 +151,13 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             throw new InvalidDataException("Invalid item category: " + category);
         }
 
-        final var mongoUser = getMongoUserDao()
-            .findActiveMongoUser(distinctInventoryItem.getUser())
-            .orElseThrow(() -> new InvalidDataException("No such user."));
-
-        final var optionalMongoProfile = Optional.ofNullable(distinctInventoryItem.getProfile())
-            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p));
+// See Comment Below
+//        final var mongoUser = getMongoUserDao()
+//            .findActiveMongoUser(distinctInventoryItem.getUser())
+//            .orElseThrow(() -> new InvalidDataException("No such user."));
+//
+//        final var optionalMongoProfile = Optional.ofNullable(distinctInventoryItem.getProfile())
+//            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p));
 
         final var builder = new UpdateBuilder();
 
