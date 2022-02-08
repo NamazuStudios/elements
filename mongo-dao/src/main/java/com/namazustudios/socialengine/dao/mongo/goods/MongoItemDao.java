@@ -108,7 +108,7 @@ public class MongoItemDao implements ItemDao {
     }
 
     public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
-        return findMongoItem(itemNameOrId).orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + itemNameOrId));
+        return findMongoItemByNameOrId(itemNameOrId).orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + itemNameOrId));
     }
 
     public MongoItem refresh(final MongoItem mongoItem) {
