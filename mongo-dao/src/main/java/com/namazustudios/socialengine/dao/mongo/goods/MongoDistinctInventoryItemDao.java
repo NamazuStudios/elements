@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.goods;
 
+import com.google.common.base.Strings;
 import com.mongodb.client.model.ReturnDocument;
 import com.namazustudios.socialengine.dao.DistinctInventoryItemDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
@@ -14,6 +15,7 @@ import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
+import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -101,16 +103,29 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
-        final var user = userId == null
-            ? Optional.empty()
-            : getMongoUserDao().findActiveMongoUser(userId);
+        if (userId != null && !userId.isBlank()) {
 
-        final var profile = profileId == null
-            ? Optional.empty()
-            : getMongoProfileDao().findActiveMongoProfile(profileId);
+            var user = getMongoUserDao().findActiveUser(userId);
 
-        user.ifPresent(u -> query.filter(eq("user", u)));
-        profile.ifPresent(p -> query.filter(eq("profile", p)));
+            if (user.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            user.ifPresent(u -> query.filter(eq("user", u)));
+            
+        }
+
+        if (profileId != null && !profileId.isBlank()) {
+
+            var profile = getMongoUserDao().findActiveUser(userId);
+
+            if (profile.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            profile.ifPresent(p -> query.filter(eq("profile", p)));
+
+        }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
 
