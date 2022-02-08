@@ -71,14 +71,13 @@ public interface DistinctInventoryItemDao {
     void deleteDistinctInventoryItem(String inventoryItemId);
 
     /**
-     * Finds the distinct inventory item by the name.
+     * Finds the distinct inventory item with the owner ID and owner ID. This can be used for an ownership check of
+     * the specified item.
      *
      * @Param itemId the {@link DistinctInventoryItem#getId()}
      * @param ownerId the owner of the ID (either user or profile)
-     * @param itemNameOrId the item's name or ID
-     *
      * @return the item
      */
-    Optional<DistinctInventoryItem> findDistinctInventoryItem(String itemId, String ownerId, String itemNameOrId);
+    Optional<DistinctInventoryItem> findDistinctInventoryItemForOwner(String itemId, String ownerId);
 
 }

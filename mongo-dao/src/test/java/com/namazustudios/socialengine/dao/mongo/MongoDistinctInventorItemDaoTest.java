@@ -202,7 +202,7 @@ public class MongoDistinctInventorItemDaoTest {
 
         @SuppressWarnings("OptionalGetWithoutIsPresent")
         final var fetched = underTest
-            .findDistinctInventoryItem(id, owner, item.getItem().getId())
+            .findDistinctInventoryItemForOwner(id, owner)
             .get();
 
         assertEquals(fetched, item);
@@ -216,7 +216,7 @@ public class MongoDistinctInventorItemDaoTest {
 
         @SuppressWarnings("OptionalGetWithoutIsPresent")
         final var fetched = underTest
-            .findDistinctInventoryItem(id, owner, item.getItem().getName())
+            .findDistinctInventoryItemForOwner(id, owner)
             .get();
 
         assertEquals(fetched, item);

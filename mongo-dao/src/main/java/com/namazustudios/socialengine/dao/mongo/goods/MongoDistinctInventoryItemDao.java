@@ -6,7 +6,6 @@ import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoProfileDao;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
-import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoDistinctInventoryItem;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.inventory.DistinctInventoryItemNotFoundException;
@@ -15,23 +14,18 @@ import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.ValidationGroups.Insert;
 import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
-import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
@@ -204,21 +198,14 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
     }
 
     @Override
-    public Optional<DistinctInventoryItem> findDistinctInventoryItem(
+    public Optional<DistinctInventoryItem> findDistinctInventoryItemForOwner(
             final String id,
-            final String ownerId,
-            final String itemNameOrId) {
+            final String ownerId) {
 
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
         final var objectId = getMongoDBUtils().parseOrThrow(id, DistinctInventoryItemNotFoundException::new);
         query.filter(eq("_id", objectId));
-
-        var item = getMongoItemDao().findMongoItemByNameOrId(itemNameOrId);
-
-        if (item.isEmpty()) {
-            return Optional.empty();
-        }
 
         var user = getMongoUserDao().findActiveMongoUser(ownerId);
         var profile  = getMongoProfileDao().findActiveMongoProfile(ownerId);
