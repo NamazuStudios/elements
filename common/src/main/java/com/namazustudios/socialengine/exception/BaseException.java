@@ -14,7 +14,8 @@ public abstract class BaseException extends RuntimeException {
     static {
 
         final var enabled = Boolean.parseBoolean(System.getProperty(
-            format("%s.%s", BaseException.class.getName(), "trace.enabled"),
+            format("%s.%s", BaseException.class.getName(),
+                "trace.enabled"),
             "false")
         );
 
@@ -52,6 +53,11 @@ public abstract class BaseException extends RuntimeException {
      */
     public abstract ErrorCode getCode();
 
+    /**
+     * Forcibly fills in the exception's stack trace, overriding any system flags.
+     *
+     * @return the stack trace
+     */
     protected Throwable forceFillInStackTrace() {
         return super.fillInStackTrace();
     }

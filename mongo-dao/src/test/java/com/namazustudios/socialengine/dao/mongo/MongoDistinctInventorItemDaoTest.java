@@ -196,21 +196,7 @@ public class MongoDistinctInventorItemDaoTest {
     }
 
     @Test(dataProvider = "getIntermediates", dependsOnMethods = "testCreateDistinctUserInventoryItem")
-    public void testFindDistinctInventoryItemByOwnerAndItemId(final String id, final DistinctInventoryItem item) {
-
-        final var owner = item.getProfile() == null ? item.getUser().getId() : item.getProfile().getId();
-
-        @SuppressWarnings("OptionalGetWithoutIsPresent")
-        final var fetched = underTest
-            .findDistinctInventoryItemForOwner(id, owner)
-            .get();
-
-        assertEquals(fetched, item);
-
-    }
-
-    @Test(dataProvider = "getIntermediates", dependsOnMethods = "testCreateDistinctUserInventoryItem")
-    public void testFindDistinctInventoryItemByOwnerAndItemName(final String id, final DistinctInventoryItem item) {
+    public void testFindDistinctInventoryItemByOwnerAndId(final String id, final DistinctInventoryItem item) {
 
         final var owner = item.getProfile() == null ? item.getUser().getId() : item.getProfile().getId();
 
@@ -227,8 +213,7 @@ public class MongoDistinctInventorItemDaoTest {
             dependsOnMethods = {
                     "testGetAllItems",
                     "testGetSingleDistinctInventoryItem",
-                    "testFindDistinctInventoryItemByOwnerAndItemId",
-                    "testFindDistinctInventoryItemByOwnerAndItemName"
+                    "testFindDistinctInventoryItemByOwnerAndId"
             })
     public void testUpdate(final String owner, final DistinctInventoryItem item) {
         final var toUpdate = new DistinctInventoryItem();
