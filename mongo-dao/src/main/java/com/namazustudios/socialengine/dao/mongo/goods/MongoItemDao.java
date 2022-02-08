@@ -93,7 +93,7 @@ public class MongoItemDao implements ItemDao {
             .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
     }
 
-    public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
+    public Optional<MongoItem> findMongoItemByNameOrId(final String itemNameOrId) {
 
         if (isEmpty(nullToEmpty(itemNameOrId).trim())) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
@@ -108,13 +108,12 @@ public class MongoItemDao implements ItemDao {
         }
 
         final MongoItem mongoItem = itemQuery.first();
+        return Optional.ofNullable(mongoItem);
 
-        if(null == mongoItem) {
-            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
-        }
+    }
 
-        return mongoItem;
-
+    public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
+        return findMongoItem(itemNameOrId).orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + itemNameOrId));
     }
 
     public MongoItem refresh(final MongoItem mongoItem) {

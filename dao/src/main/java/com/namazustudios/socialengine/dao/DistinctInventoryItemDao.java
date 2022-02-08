@@ -73,11 +73,12 @@ public interface DistinctInventoryItemDao {
     /**
      * Finds the distinct inventory item by the name.
      *
+     * @Param itemId the {@link DistinctInventoryItem#getId()}
      * @param ownerId the owner of the ID (either user or profile)
-     * @param itemName the item's name or ID
+     * @param itemNameOrId the item's name or ID
      *
      * @return the item
      */
-    Optional<DistinctInventoryItem> findDistinctInventoryItem(String ownerId, String itemName);
+    Optional<DistinctInventoryItem> findDistinctInventoryItem(String itemId, String ownerId, String itemNameOrId);
 
 }

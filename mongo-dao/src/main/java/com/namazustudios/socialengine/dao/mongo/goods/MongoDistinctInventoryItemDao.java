@@ -205,23 +205,35 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
     @Override
     public Optional<DistinctInventoryItem> findDistinctInventoryItem(
+            final String id,
             final String ownerId,
-            final String itemName) {
+            final String itemNameOrId) {
 
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
-        getMongoUserDao()
-                .findActiveMongoUser(ownerId)
-                .ifPresent(u -> query.filter(eq("user", u)));
+        final var objectId = getMongoDBUtils().parseOrThrow(id, DistinctInventoryItemNotFoundException::new);
+        query.filter(eq("_id", objectId));
 
-        getMongoProfileDao()
-                .findActiveMongoProfile(ownerId)
-                .map(MongoProfile::getUser)
-                .ifPresent(u -> query.filter(eq("user", u)));
+        var item = getMongoItemDao().findMongoItemByNameOrId(itemNameOrId);
+
+        if (item.isEmpty()) {
+            return Optional.empty();
+        }
+
+        var user = getMongoUserDao().findActiveMongoUser(ownerId);
+        var profile  = getMongoProfileDao().findActiveMongoProfile(ownerId);
+
+        if (user.isPresent()) {
+            query.filter(eq("user", user.get()));
+        } else if (profile.isPresent()) {
+            query.filter(eq("profile", profile.get()));
+        } else {
+            return Optional.empty();
+        }
 
         return Optional
-                .ofNullable(query.first())
-                .map(u -> getMapper().map(u, DistinctInventoryItem.class));
+            .ofNullable(query.first())
+            .map(u -> getMapper().map(u, DistinctInventoryItem.class));
 
     }
 
