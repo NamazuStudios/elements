@@ -17,18 +17,15 @@ import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
@@ -197,6 +194,33 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         if (query.delete().getDeletedCount() == 0) {
             throw new DistinctInventoryItemNotFoundException("No such inventory item.");
         }
+
+    }
+
+    @Override
+    public Optional<DistinctInventoryItem> findDistinctInventoryItemForOwner(
+            final String id,
+            final String ownerId) {
+
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
+
+        final var objectId = getMongoDBUtils().parseOrThrow(id, DistinctInventoryItemNotFoundException::new);
+        query.filter(eq("_id", objectId));
+
+        var user = getMongoUserDao().findActiveMongoUser(ownerId);
+        var profile  = getMongoProfileDao().findActiveMongoProfile(ownerId);
+
+        if (user.isPresent()) {
+            query.filter(eq("user", user.get()));
+        } else if (profile.isPresent()) {
+            query.filter(eq("profile", profile.get()));
+        } else {
+            return Optional.empty();
+        }
+
+        return Optional
+            .ofNullable(query.first())
+            .map(u -> getMapper().map(u, DistinctInventoryItem.class));
 
     }
 

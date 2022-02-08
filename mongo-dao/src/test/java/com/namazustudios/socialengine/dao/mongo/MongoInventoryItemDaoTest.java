@@ -144,8 +144,8 @@ public class MongoInventoryItemDaoTest {
     @Test(dependsOnMethods = "testCreateInventoryItem", dataProvider = "getUsersAndPriorities")
     public void testUpdateInventoryItem(final User user, final int priority) {
 
-        final InventoryItem inventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getId(), priority);
-        final InventoryItem nameInventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getName(), priority);
+        final var inventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getId(), priority);
+        final var nameInventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getName(), priority);
         assertEquals(inventoryItem, nameInventoryItem);
         assertEquals(inventoryItem.getId(), nameInventoryItem.getId());
 

@@ -55,14 +55,9 @@ public class MongoItemDao implements ItemDao {
 
     @Override
     public Item getItemByIdOrName(final String identifier) {
-
-        final MongoItem item = getMongoItemByNameOrId(identifier);
-
-        if (item == null) {
-            throw new ItemNotFoundException("Unable to find item with an id or name of " + identifier);
-        }
-
-        return getDozerMapper().map(item, Item.class);
+        return findMongoItemByNameOrId(identifier)
+            .map(mi -> getDozerMapper().map(mi, Item.class))
+            .orElseThrow(() -> new ItemNotFoundException("Unable to find item with an id or name of " + identifier));
     }
 
     public Optional<MongoItem> findMongoItem(final Item item) {
@@ -93,7 +88,7 @@ public class MongoItemDao implements ItemDao {
             .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
     }
 
-    public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
+    public Optional<MongoItem> findMongoItemByNameOrId(final String itemNameOrId) {
 
         if (isEmpty(nullToEmpty(itemNameOrId).trim())) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
@@ -108,13 +103,12 @@ public class MongoItemDao implements ItemDao {
         }
 
         final MongoItem mongoItem = itemQuery.first();
+        return Optional.ofNullable(mongoItem);
 
-        if(null == mongoItem) {
-            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
-        }
+    }
 
-        return mongoItem;
-
+    public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
+        return findMongoItemByNameOrId(itemNameOrId).orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + itemNameOrId));
     }
 
     public MongoItem refresh(final MongoItem mongoItem) {
