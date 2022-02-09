@@ -115,7 +115,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         if (profileId != null && !profileId.isBlank()) {
 
-            var profile = getMongoProfileDao().findActiveMongoProfile(userId);
+            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
 
             if (profile.isEmpty()) {
                 return Pagination.empty();
