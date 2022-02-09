@@ -103,7 +103,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         if (userId != null && !userId.isBlank()) {
 
-            var user = getMongoUserDao().findActiveUser(userId);
+            var user = getMongoUserDao().findActiveMongoUser(userId);
 
             if (user.isEmpty()) {
                 return Pagination.empty();
@@ -115,7 +115,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         if (profileId != null && !profileId.isBlank()) {
 
-            var profile = getMongoUserDao().findActiveUser(userId);
+            var profile = getMongoProfileDao().findActiveMongoProfile(userId);
 
             if (profile.isEmpty()) {
                 return Pagination.empty();
