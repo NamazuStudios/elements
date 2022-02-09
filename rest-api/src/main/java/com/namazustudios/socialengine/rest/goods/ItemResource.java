@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest.goods;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.CreateItemRequest;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.goods.UpdateItemRequest;
 import com.namazustudios.socialengine.service.ItemService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -24,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("item")
@@ -44,6 +46,12 @@ public class ItemResource {
                 "with a unique identifier signed and with its fields properly normalized.  The supplied item object " +
                 "submitted with the request must have a name property that is unique across all items.")
     public Item createItem(final CreateItemRequest itemToBeCreated) {
+
+        // This is to support legacy clients which may not be aware of the category requirement.
+
+        if (itemToBeCreated.getCategory() == null) {
+            itemToBeCreated.setCategory(FUNGIBLE);
+        }
 
         getValidationHelper().validateModel(itemToBeCreated);
 

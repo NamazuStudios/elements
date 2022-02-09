@@ -101,16 +101,29 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
-        final var user = userId == null
-            ? Optional.empty()
-            : getMongoUserDao().findActiveMongoUser(userId);
+        if (userId != null && !userId.isBlank()) {
 
-        final var profile = profileId == null
-            ? Optional.empty()
-            : getMongoProfileDao().findActiveMongoProfile(profileId);
+            var user = getMongoUserDao().findActiveMongoUser(userId);
 
-        user.ifPresent(u -> query.filter(eq("user", u)));
-        profile.ifPresent(p -> query.filter(eq("profile", p)));
+            if (user.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            user.ifPresent(u -> query.filter(eq("user", u)));
+
+        }
+
+        if (profileId != null && !profileId.isBlank()) {
+
+            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+            if (profile.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            profile.ifPresent(p -> query.filter(eq("profile", p)));
+
+        }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
 
@@ -138,12 +151,13 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             throw new InvalidDataException("Invalid item category: " + category);
         }
 
-        final var mongoUser = getMongoUserDao()
-            .findActiveMongoUser(distinctInventoryItem.getUser())
-            .orElseThrow(() -> new InvalidDataException("No such user."));
-
-        final var optionalMongoProfile = Optional.ofNullable(distinctInventoryItem.getProfile())
-            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p));
+// See Comment Below
+//        final var mongoUser = getMongoUserDao()
+//            .findActiveMongoUser(distinctInventoryItem.getUser())
+//            .orElseThrow(() -> new InvalidDataException("No such user."));
+//
+//        final var optionalMongoProfile = Optional.ofNullable(distinctInventoryItem.getProfile())
+//            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p));
 
         final var builder = new UpdateBuilder();
 

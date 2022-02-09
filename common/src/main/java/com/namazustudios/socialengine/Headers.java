@@ -64,7 +64,12 @@ public interface Headers {
 
     String AC_ALLOW_HEADERS = "Access-Control-Allow-Headers";
 
-    String AC_ALLOW_HEADERS_VALUE = "X-HTTP-Method-Override, Content-Type, SocialEngine-SessionSecret, Elements-SessionSecret";
+    String AC_ALLOW_HEADERS_VALUE =
+        "X-HTTP-Method-Override, " +
+        "Content-Type, " +
+        "SocialEngine-SessionSecret, " +
+        "Elements-SessionSecret, " +
+        "Authorization";
 
     String AC_ALLOW_CREDENTIALS = "Access-Control-Allow-Credentials";
 

@@ -27,7 +27,7 @@ public class SuperuserItemService implements ItemService {
     }
 
     @Override
-    public Item updateItem(Item item) {
+    public Item updateItem(final Item item) {
         final var category = item.getCategory();
         if (category == null) item.setCategory(FUNGIBLE);
         return itemDao.updateItem(item);
