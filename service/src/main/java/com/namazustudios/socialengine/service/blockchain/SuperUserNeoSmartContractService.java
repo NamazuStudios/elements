@@ -135,7 +135,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                                 applicationLogConsumer.accept(responses);
                                             }
                                         },
-                                        exceptionConsumer
+                                        exceptionConsumer::accept
                                     );
 
                                     tx.send();
@@ -217,7 +217,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
                         tx.track().subscribe(
                             blockIndex -> applicationLogConsumer.accept(tx.getApplicationLog()),
-                            exceptionConsumer);
+                            exceptionConsumer::accept);
 
                         tx.send();
 
@@ -251,7 +251,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         });
     }
 
-    private void doAsync(final Consumer<Exception> exceptionConsumer, final Runnable operation) {
+    private void doAsync(final Consumer<Throwable> exceptionConsumer, final Runnable operation) {
         try {
             operation.run();
         } catch (Exception ex) {
