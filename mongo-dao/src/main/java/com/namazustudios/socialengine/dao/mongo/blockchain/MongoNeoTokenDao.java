@@ -93,7 +93,8 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         query.filter(and(
                 eq("_id", objectId),
-                eq("mintStatus", BlockchainConstants.MintStatus.MINTED).not()
+                eq("mintStatus", BlockchainConstants.MintStatus.MINTED).not(),
+                lt("totalMintedQuantity", 1)
         ));
 
         final var builder = new UpdateBuilder().with(
