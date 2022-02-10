@@ -34,6 +34,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.util.FinallyAction.logger;
+
 public class SuperUserNeoSmartContractService implements NeoSmartContractService {
 
     private NeoSmartContractDao neoSmartContractDao;
@@ -67,7 +69,10 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     public void mintToken(final MintTokenRequest mintTokenRequest,
                           final Consumer<List<NeoApplicationLog>> applicationLogConsumer,
                           final Consumer<Throwable> exceptionConsumer) {
-        doAsync(exceptionConsumer, () -> {
+
+        var consumeAndLog = exceptionConsumer.andThen(ex -> logger.error("Minting Error.", ex));
+
+        doAsync(consumeAndLog, () -> {
 
             final var wallet = getNeoWalletDao().getWallet(mintTokenRequest.getWalletId());
             final var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
@@ -79,7 +84,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
             try {
                 mintAccount.decryptPrivateKey(mintTokenRequest.getPassword());
             } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
-                exceptionConsumer.accept(new ContractInvocationException("Decrypting the account keys failed: " + e));
+                consumeAndLog.accept(new ContractInvocationException("Decrypting the account keys failed: " + e));
             }
 
             try {
@@ -118,6 +123,8 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                             .signers(AccountSigner.calledByEntry(mintAccount))
                                             .sign();
 
+                                    tx.send();
+
                                     tx.track().subscribe(blockIndex ->
                                         {
                                             final var appLog = tx.getApplicationLog();
@@ -135,17 +142,15 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                                 applicationLogConsumer.accept(responses);
                                             }
                                         },
-                                        exceptionConsumer::accept
+                                        consumeAndLog::accept
                                     );
-
-                                    tx.send();
 
                                 } catch (Throwable e) {
 
                                     getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), BlockchainConstants.MintStatus.MINT_FAILED);
                                     mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
 
-                                    exceptionConsumer.accept(new ContractInvocationException("Minting failed with exception: " + e));
+                                    consumeAndLog.accept(new ContractInvocationException("Minting failed with exception: " + e));
                                 }
 
                                 break;
@@ -153,19 +158,19 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                             default:
 
                                 mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
-                                exceptionConsumer.accept(new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain())));
+                                consumeAndLog.accept(new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain())));
                                 break;
                         }
                     } else { //Out of supply for this token
                         mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
-                        exceptionConsumer.accept(new ContractInvocationException(String.format("The token %s is out of supply. Create a new definition, or add to the total supply, to mint more.", token.getId())));
+                        consumeAndLog.accept(new ContractInvocationException(String.format("The token %s is out of supply. Create a new definition, or add to the total supply, to mint more.", token.getId())));
                     }
                 }
 
                 mintAccount.encryptPrivateKey(mintTokenRequest.getPassword());
 
             } catch (CipherException | AccountStateException er) {
-                exceptionConsumer.accept(new ContractInvocationException("Re-encrypting the account keys failed: " + er));
+                consumeAndLog.accept(new ContractInvocationException("Re-encrypting the account keys failed: " + er));
             }
 
         });
@@ -175,7 +180,10 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
     public void invoke(final InvokeContractRequest invokeRequest,
                        final Consumer<NeoApplicationLog> applicationLogConsumer,
                        final Consumer<Throwable> exceptionConsumer) {
-        doAsync(exceptionConsumer, () -> {
+        
+        var consumeAndLog = exceptionConsumer.andThen(ex -> logger.error("Invocation error.", ex));
+
+        doAsync(consumeAndLog, () -> {
             final var contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
             final var wallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
             final var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
@@ -185,7 +193,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                 mintAccount.decryptPrivateKey(invokeRequest.getPassword());
             } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
                 var ex = new ContractInvocationException("Decrypting the account keys failed: " + e);
-                exceptionConsumer.accept(ex);
+                consumeAndLog.accept(ex);
                 throw ex;
             }
 
@@ -215,21 +223,21 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                 .signers(AccountSigner.calledByEntry(mintAccount))
                                 .sign();
 
+                        tx.send();
+
                         tx.track().subscribe(
                             blockIndex -> applicationLogConsumer.accept(tx.getApplicationLog()),
-                            exceptionConsumer::accept);
-
-                        tx.send();
+                            consumeAndLog::accept);
 
                     } catch (Throwable e) {
                         var ex = new ContractInvocationException("Invocation failed with exception: " + e);
-                        exceptionConsumer.accept(ex);
+                        consumeAndLog.accept(ex);
                     } finally {
                         try {
                             mintAccount.encryptPrivateKey(invokeRequest.getPassword());
                         } catch (CipherException er) {
                             var ex = new ContractInvocationException("Re-encrypting the account keys failed: " + er);
-                            exceptionConsumer.accept(ex);
+                            consumeAndLog.accept(ex);
                         }
                     }
 
@@ -240,13 +248,13 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                         mintAccount.encryptPrivateKey(invokeRequest.getPassword());
                     } catch (CipherException er) {
                         var ex = new ContractInvocationException("Re-encrypting the account keys failed: " + er);
-                        exceptionConsumer.accept(ex);
+                        consumeAndLog.accept(ex);
                     }
 
                     var ex = new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain()));
-                    exceptionConsumer.accept(ex);
-
+                    consumeAndLog.accept(ex);
                     break;
+
             }
         });
     }
