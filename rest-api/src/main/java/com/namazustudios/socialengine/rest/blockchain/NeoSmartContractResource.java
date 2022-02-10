@@ -41,7 +41,6 @@ public class NeoSmartContractResource {
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("search") @DefaultValue("") String search) {
-
         return getNeoSmartContractService().getNeoSmartContracts(offset, count, search);
     }
 
@@ -70,11 +69,10 @@ public class NeoSmartContractResource {
             response = List.class)
     public void mintToken(final MintTokenRequest request,
                           @Suspended final AsyncResponse asyncResponse) {
-
         getNeoSmartContractService().mintToken(
-                request,
-                m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
-                ex -> asyncResponse.resume(ex));
+            request,
+            m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
+            asyncResponse::resume);
     }
 
     @POST
@@ -85,11 +83,10 @@ public class NeoSmartContractResource {
             response = NeoSendRawTransaction.class)
     public void invoke(final InvokeContractRequest request,
                        @Suspended final AsyncResponse asyncResponse) {
-
         getNeoSmartContractService().invoke(
-                request,
-                m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
-                ex -> asyncResponse.resume(ex));
+            request,
+            m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
+            asyncResponse::resume);
     }
 
     @POST
@@ -99,10 +96,8 @@ public class NeoSmartContractResource {
             notes = "Invokes the specified method using the specified contract id.")
     public NeoInvokeFunction testInvoke(
             final InvokeContractRequest request,
-
             @Suspended
             final AsyncResponse asyncResponse) {
-
         return getNeoSmartContractService().testInvoke(request);
     }
 

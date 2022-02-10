@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.dao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
-import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 

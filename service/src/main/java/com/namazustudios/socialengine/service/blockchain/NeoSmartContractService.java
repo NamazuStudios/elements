@@ -60,23 +60,24 @@ public interface NeoSmartContractService {
          * Mints the token id's supplied in the {@link MintTokenRequest} using their linked {@link ElementsSmartContract}.
          *
          * @param mintTokenRequest the {@link MintTokenRequest} containing the token id's and wallet with funds to mint.
+         * @param exceptionConsumer
          * @return the {@link List<NeoSendRawTransaction>} responses from the blockchain.
          */
         void mintToken(final MintTokenRequest mintTokenRequest,
                        final Consumer<List<NeoApplicationLog>> applicationLogConsumer,
-                       final Consumer<Exception> exceptionConsumer);
+                       final Consumer<Throwable> exceptionConsumer);
 
         /**
          * Invokes a method on the {@link ElementsSmartContract} corresponding to the passed contract id
          * in a transactional manner. This will always incur a GAS fee.
          *
          * @param invokeRequest the {@link InvokeContractRequest} with the information to invoke
+         * @param exceptionConsumer
          * @return the {@link NeoSendRawTransaction} response from the blockchain invocation.
          */
         void invoke(final InvokeContractRequest invokeRequest,
                     final Consumer<NeoApplicationLog> applicationLogConsumer,
-                    final Consumer<Exception> exceptionConsumer);
-
+                    final Consumer<Throwable> exceptionConsumer);
 
         /**
          * Invokes a method on the {@link ElementsSmartContract} corresponding to the passed contract id.
