@@ -462,7 +462,8 @@ public class ServicesModule extends PrivateModule {
 
         bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
-            .to(StandardNeow3jClient.class);
+            .to(StandardNeow3jClient.class)
+            .asEagerSingleton();
 
         bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
