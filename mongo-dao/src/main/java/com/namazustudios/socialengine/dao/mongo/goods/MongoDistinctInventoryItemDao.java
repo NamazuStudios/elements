@@ -233,7 +233,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         } else if (profile.isPresent()) {
             query.filter(eq("profile", profile.get()));
         } else {
-            return Optional.empty();
+             return Optional.empty();
         }
 
         return Optional
