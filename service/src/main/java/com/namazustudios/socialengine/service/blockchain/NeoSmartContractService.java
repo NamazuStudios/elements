@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
@@ -64,7 +65,7 @@ public interface NeoSmartContractService {
          * @return the {@link List<NeoSendRawTransaction>} responses from the blockchain.
          */
         void mintToken(final MintTokenRequest mintTokenRequest,
-                       final Consumer<List<NeoApplicationLog>> applicationLogConsumer,
+                       final Consumer<NeoToken> applicationLogConsumer,
                        final Consumer<Throwable> exceptionConsumer);
 
         /**
