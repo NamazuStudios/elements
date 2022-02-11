@@ -99,6 +99,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                 mintAccount.decryptPrivateKey(mintTokenRequest.getPassword());
             } catch (NEP2InvalidPassphrase | NEP2InvalidFormat | CipherException e) {
                 consumeAndLog.accept(new ContractInvocationException("Decrypting the account keys failed: " + e));
+              	return;
             }
 
             final var tokenClone = getNeoTokenDao().cloneNeoToken(token);
