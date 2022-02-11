@@ -22,8 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static java.util.Collections.unmodifiableList;
 import static java.util.UUID.randomUUID;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoDistinctInventorItemDaoTest {
@@ -207,6 +206,28 @@ public class MongoDistinctInventorItemDaoTest {
 
         assertEquals(fetched, item);
 
+    }
+
+    @Test
+    public void testFindDistinctInventoryItemByOwnerAndIdNotFound() {
+
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        final var fetched = underTest.findDistinctInventoryItemForOwner(
+            new ObjectId().toHexString(),
+            new ObjectId().toHexString()
+        );
+
+        assertNotNull(fetched);
+        assertTrue(fetched.isEmpty());
+
+    }
+
+    @Test
+    public void testFindDistinctInventoryItemByOwnerAndIdNotFoundWithBadId() {
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        final var fetched = underTest.findDistinctInventoryItemForOwner("asdf","asdf");
+        assertNotNull(fetched);
+        assertTrue(fetched.isEmpty());
     }
 
     @Test(dataProvider = "getIntermediates",
