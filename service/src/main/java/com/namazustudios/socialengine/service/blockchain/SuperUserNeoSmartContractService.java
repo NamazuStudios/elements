@@ -79,7 +79,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         final var token = getNeoTokenDao().getToken(tokenId);
         final var contract = getNeoSmartContractDao().getNeoSmartContract(token.getContractId());
 
-        if(contract.getBlockchain() != BlockchainConstants.Names.NEO) {
+        if(!contract.getBlockchain().equals(BlockchainConstants.Names.NEO)) {
             consumeAndLog.accept(new ContractInvocationException(String.format("Contract Blockchain %s is not a supported type.", contract.getBlockchain())));
             return;
         }
@@ -127,30 +127,34 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                         .signers(AccountSigner.calledByEntry(mintAccount))
                         .sign();
 
-                tx.send();
+                final var rawTx = tx.send();
 
-                tx.track().subscribe(blockIndex -> doAsync(consumeAndLog, () -> {
+                if(rawTx.hasError()) {
+                    consumeAndLog.accept(new ContractInvocationException("Minting failed with exception: " + rawTx.getError().getMessage()));
+                } else {
 
-                    final var appLog = tx.getApplicationLog();
+                    tx.track().subscribe(blockIndex -> doAsync(consumeAndLog, () -> {
 
-                    final var hasFault = appLog
-                            .getExecutions()
-                            .stream()
-                            .anyMatch(e -> e.getState() == NeoVMStateType.FAULT);
+                        final var appLog = tx.getApplicationLog();
 
-                    if (hasFault) {
-                        tokenClone.setMintStatus(MINT_FAILED);
-                    } else {
-                        tokenClone.setMintStatus(MINTED);
-                    }
+                        final var hasFault = appLog
+                                .getExecutions()
+                                .stream()
+                                .anyMatch(e -> e.getState() == NeoVMStateType.FAULT);
 
-                    getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), tokenClone.getMintStatus());
+                        if (hasFault) {
+                            tokenClone.setMintStatus(MINT_FAILED);
+                        } else {
+                            tokenClone.setMintStatus(MINTED);
+                        }
 
-                    applicationLogConsumer.accept(tokenClone);
-                }),
-                consumeAndLog::accept,
-                () -> logger.debug("Completed for token {}.", tokenClone.getId()));
+                        getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), tokenClone.getMintStatus());
 
+                        applicationLogConsumer.accept(tokenClone);
+                    }),
+                    consumeAndLog::accept,
+                    () -> logger.debug("Completed for token {}.", tokenClone.getId()));
+                }
             } catch (Throwable e) {
                 getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), MINT_FAILED);
                 consumeAndLog.accept(new ContractInvocationException("Minting failed with exception: " + e));
@@ -214,12 +218,16 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                 .signers(AccountSigner.calledByEntry(mintAccount))
                                 .sign();
 
-                        tx.send();
+                        final var rawTx = tx.send();
 
-                        tx.track().subscribe(
-                            blockIndex -> applicationLogConsumer.accept(tx.getApplicationLog()),
-                            consumeAndLog::accept,
-                            () -> logger.debug("Completed."));
+                        if(rawTx.hasError()) {
+                            consumeAndLog.accept(new ContractInvocationException("Minting failed with exception: " + rawTx.getError().getMessage()));
+                        } else {
+                            tx.track().subscribe(
+                                blockIndex -> applicationLogConsumer.accept(tx.getApplicationLog()),
+                                consumeAndLog::accept,
+                                () -> logger.debug("Completed."));
+                        }
 
                     } catch (Throwable e) {
                         var ex = new ContractInvocationException("Invocation failed with exception: " + e);
