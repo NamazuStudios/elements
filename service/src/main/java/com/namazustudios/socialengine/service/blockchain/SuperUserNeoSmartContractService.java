@@ -11,6 +11,7 @@ import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
 import com.namazustudios.socialengine.model.blockchain.InvokeContractRequest;
 import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.MintNeoTokenResponse;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.service.TopicService;
 import io.neow3j.crypto.exceptions.CipherException;
@@ -70,7 +71,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
     @Override
     public void mintToken(final MintTokenRequest mintTokenRequest,
-                          final Consumer<NeoToken> applicationLogConsumer,
+                          final Consumer<MintNeoTokenResponse> applicationLogConsumer,
                           final Consumer<Throwable> exceptionConsumer) {
 
         var consumeAndLog = exceptionConsumer.andThen(ex -> logger.error("Minting Error.", ex));
@@ -150,7 +151,11 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
                         getNeoTokenDao().setMintStatusForToken(tokenClone.getId(), tokenClone.getMintStatus());
 
-                        applicationLogConsumer.accept(tokenClone);
+                        final var response = new MintNeoTokenResponse();
+                        response.setBlockIndex(blockIndex);
+                        response.setToken(tokenClone);
+                        
+                        applicationLogConsumer.accept(response);
                     }),
                     consumeAndLog::accept,
                     () -> logger.debug("Completed for token {}.", tokenClone.getId()));

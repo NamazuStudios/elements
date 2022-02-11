@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.model.blockchain.neo.MintNeoTokenResponse;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.service.blockchain.NeoSmartContractService;
 import io.neow3j.protocol.core.response.NeoApplicationLog;
@@ -67,7 +68,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Mints a token using the specified contract.",
             notes = "Mints the specified token using the specified contract id.",
-            response = NeoToken.class)
+            response = MintNeoTokenResponse.class)
     public void mintToken(final MintTokenRequest request,
                           @Suspended final AsyncResponse asyncResponse) {
         getNeoSmartContractService().mintToken(
