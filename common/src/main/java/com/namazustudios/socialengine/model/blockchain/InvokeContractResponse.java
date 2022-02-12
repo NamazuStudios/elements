@@ -1,7 +1,16 @@
 package com.namazustudios.socialengine.model.blockchain;
 
+import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
+
+/**
+ * Result of the invocation response.
+ */
+@ApiModel
 public class InvokeContractResponse {
 
+    @ApiModelProperty("The block which handled the invocation. This is the network's block identifier, whatever that " +
+                      "may be. This is not an identifier of an Elements database ID.")
     private String blockNetworkId;
 
     public String getBlockNetworkId() {
