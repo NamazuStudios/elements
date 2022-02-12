@@ -9,23 +9,22 @@ import java.util.List;
 
 public class InvokeContractRequest {
 
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class})
     @ApiModelProperty("The unique elements ID of the contract to invoke a method on.")
     private String contractId;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class})
     @ApiModelProperty("The elements wallet Id with funds to invoke the method. This will always use the default account of the wallet.")
     private String walletId;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class})
     @ApiModelProperty("The password of the wallet with funds to mint.")
     private String password;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @NotNull(groups = {ValidationGroups.Create.class})
     @ApiModelProperty("The name of the method to invoke.")
     private String methodName;
 
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The parameters for the method.")
     private List<Object> parameters;
 
