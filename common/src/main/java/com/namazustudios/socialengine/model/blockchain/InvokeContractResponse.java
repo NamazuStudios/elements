@@ -2,14 +2,14 @@ package com.namazustudios.socialengine.model.blockchain;
 
 public class InvokeContractResponse {
 
-    private String blockId;
+    private String blockNetworkId;
 
-    public String getBlockId() {
-        return blockId;
+    public String getBlockNetworkId() {
+        return blockNetworkId;
     }
 
-    public void setBlockId(String blockId) {
-        this.blockId = blockId;
+    public void setBlockNetworkId(String blockNetworkId) {
+        this.blockNetworkId = blockNetworkId;
     }
 
 }

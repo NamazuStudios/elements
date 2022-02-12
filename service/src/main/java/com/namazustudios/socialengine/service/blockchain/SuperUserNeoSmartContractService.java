@@ -135,7 +135,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                    final Consumer<Throwable> exceptionConsumer) {
         return doInvoke(invokeRequest, (blockIndex, tx) -> {
             final var invokeContractResponse = new InvokeContractResponse();
-            invokeContractResponse.setBlockId(blockIndex.toString());
+            invokeContractResponse.setBlockNetworkId(blockIndex.toString());
             applicationLogConsumer.accept(blockIndex, invokeContractResponse);
         }, exceptionConsumer);
     }
@@ -183,10 +183,11 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
                 if(rawTx.hasError()) {
 
-                    final var msg = format("Neo Transaction Failed: %s (Code %d). - %s",
-                            rawTx.getError().getMessage(),
-                            rawTx.getError().getCode(),
-                            rawTx.getError().getData()
+                    final var msg = format(
+                        "Neo Transaction Failed: %s (Code %d). - %s",
+                        rawTx.getError().getMessage(),
+                        rawTx.getError().getCode(),
+                        rawTx.getError().getData()
                     );
 
                     throw new ContractInvocationException(msg);
