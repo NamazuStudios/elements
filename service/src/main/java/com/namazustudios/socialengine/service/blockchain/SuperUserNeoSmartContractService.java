@@ -85,10 +85,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
             stakeHolder.setOwner(stakeHolderHash.toString());
         }
 
-        final var tokenIdParam = ContractParameter.string(clone.getTokenUUID());
-
         final var tokenMap = getObjectMapper().convertValue(neoToken.getToken(), Map.class);
-        final var tokenMapParam = getNeow3JClient().convertObject(tokenMap);
         getNeoTokenDao().setMintStatusForToken(clone.getId(), MINT_PENDING);
 
         final var invokeContractRequest = new InvokeContractRequest();
@@ -96,7 +93,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         invokeContractRequest.setContractId(clone.getContractId());
         invokeContractRequest.setPassword(mintTokenRequest.getPassword());
         invokeContractRequest.setWalletId(mintTokenRequest.getWalletId());
-        invokeContractRequest.setParameters(List.of(tokenIdParam, tokenMapParam));
+        invokeContractRequest.setParameters(List.of(clone.getTokenUUID(), tokenMap));
 
         return doInvoke(invokeContractRequest, (blockIndex, tx) -> {
 

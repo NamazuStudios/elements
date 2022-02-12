@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 /**
- * Result of the invocation response.
+ * Result of the invocation response when calling methods on a smart contract.
  */
 @ApiModel
 public class InvokeContractResponse {
