@@ -142,15 +142,18 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                                       final Consumer<Throwable> exceptionConsumer) {
         return asyncUtils.doNoThrow(exceptionConsumer, () -> {
 
-            final var contract = getNeoSmartContractDao().getNeoSmartContract(invokeRequest.getContractId());
+            final var contractMetadata = getNeoSmartContractDao()
+                .getNeoSmartContract(invokeRequest.getContractId());
+
+            if(!contractMetadata.getBlockchain().equals(BlockchainConstants.Names.NEO)) {
+                final var msg = format("Contract Blockchain %s is not a supported type.", contractMetadata.getBlockchain());
+                throw new ContractInvocationException(msg);
+            }
+
             final var wallet = getNeoWalletDao().getWallet(invokeRequest.getWalletId());
             final var nepWallet = getNeow3JClient().elementsWalletToNEP6(wallet.getWallet());
             final var mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
-
-            if(!contract.getBlockchain().equals(BlockchainConstants.Names.NEO)) {
-                final var msg = format("Contract Blockchain %s is not a supported type.", contract.getBlockchain());
-                throw new ContractInvocationException(msg);
-            }
+            final var smartContract = getNeow3JClient().getSmartContract(contractMetadata.getScriptHash());
 
             try {
                 mintAccount.decryptPrivateKey(invokeRequest.getPassword());
@@ -165,14 +168,10 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
                         .getParameters()
                         .stream()
                         .map(getNeow3JClient()::convertObject)
-                        .collect(toList());
+                        .toArray(ContractParameter[]::new);
 
-                final byte[] script = new ScriptBuilder()
-                    .contractCall(new Hash160(contract.getScriptHash()), invokeRequest.getMethodName(), params)
-                    .toArray();
-
-                final var tx = new TransactionBuilder(getNeow3JClient().getNeow3j())
-                    .script(script)
+                final var tx = smartContract
+                    .invokeFunction(invokeRequest.getMethodName(), params)
                     .signers(AccountSigner.calledByEntry(mintAccount))
                     .sign();
 
