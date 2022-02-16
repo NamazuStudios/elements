@@ -78,6 +78,13 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
 
         final var clone = getNeoTokenDao().cloneNeoToken(neoToken);
 
+        if(clone.getToken().getOwner() != null) {
+            final var ownerHash = Account
+                    .fromAddress(clone.getToken().getOwner())
+                    .getScriptHash();
+            clone.getToken().setOwner(ownerHash.toString());
+        }
+
         for (var stakeHolder : clone.getToken().getOwnership().getStakeHolders()) {
             final var stakeHolderHash = Account
                 .fromAddress(stakeHolder.getOwner())
@@ -85,7 +92,7 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
             stakeHolder.setOwner(stakeHolderHash.toString());
         }
 
-        final var tokenMap = getObjectMapper().convertValue(neoToken.getToken(), Map.class);
+        final var tokenMap = getObjectMapper().convertValue(clone.getToken(), Map.class);
         getNeoTokenDao().setMintStatusForToken(clone.getId(), MINT_PENDING);
 
         final var invokeContractRequest = new InvokeContractRequest();
