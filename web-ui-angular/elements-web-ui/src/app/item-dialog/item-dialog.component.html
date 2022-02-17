@@ -15,6 +15,14 @@
           <input matInput placeholder="Display Name" name="displayName" formControlName="displayName">
           <mat-error *ngIf="itemForm.controls.name.hasError('required')">Display name is required</mat-error>
         </mat-form-field>
+        <mat-form-field class="item">
+          <mat-select [disabled]='!data.isNew' name="category" placeholder="Item Category" formControlName="category">
+            <mat-option *ngFor="let itemCategory of itemCategories" [value]="itemCategory.key">
+              {{itemCategory.description}}
+            </mat-option>
+          </mat-select>
+          <mat-error *ngIf="itemForm.controls.category.hasError('required')">Item Category is Required</mat-error>
+        </mat-form-field>
       </div>
       <mat-form-field>
         <input matInput placeholder="Description" name="description" formControlName="description" >
@@ -25,8 +33,13 @@
             {{tag}}
             <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
           </mat-chip>
-          <input formControlName="tags" name="tags" placeholder="Add tags..." [matChipInputFor]="itemsTagList"
-                 [matChipInputSeparatorKeyCodes]="separatorKeyCodes" (matChipInputTokenEnd)="addTag($event)" [matChipInputAddOnBlur]="addOnBlur">
+          <input formControlName="tags"
+                 name="tags"
+                 placeholder="Add tags..."
+                 [matChipInputFor]="itemsTagList"
+                 [matChipInputSeparatorKeyCodes]="separatorKeyCodes"
+                 (matChipInputTokenEnd)="addTag($event)"
+                 [matChipInputAddOnBlur]="addOnBlur">
         </mat-chip-list>
       </mat-form-field>
       <app-json-editor-card topic="Item" [editTarget]="data.item"></app-json-editor-card>

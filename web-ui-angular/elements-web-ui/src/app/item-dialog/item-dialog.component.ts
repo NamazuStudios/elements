@@ -4,9 +4,13 @@ import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
 import {ENTER, COMMA} from '@angular/cdk/keycodes';
-import {JsonEditorOptions, JsonEditorComponent} from 'ang-jsoneditor';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {AlertService} from '../alert.service';
+
+export interface ItemCategory {
+  key: string;
+  description: string;
+}
 
 @Component({
   selector: 'app-item-dialog',
@@ -14,6 +18,11 @@ import {AlertService} from '../alert.service';
   styleUrls: ['./item-dialog.component.css']
 })
 export class ItemDialogComponent implements OnInit {
+
+  itemCategories: ItemCategory[] = [
+    { key: "FUNGIBLE", description: "Fungible" },
+    { key: "DISTINCT", description: "Distinct" }
+  ];
 
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
 
@@ -27,7 +36,8 @@ export class ItemDialogComponent implements OnInit {
   itemForm = this.formBuilder.group({
     name: [ this.data.item.name, [Validators.required, Validators.pattern('^[_a-zA-Z0-9]+$') ]],
     displayName: [ this.data.item.displayName, [Validators.required]],
-    description: [ this.data.item.description, [Validators.required] ],
+    description: [ this.data.item.description, [Validators.required]],
+    category: [ this.data.item.category, [Validators.required] ],
     tags: []
   });
 
