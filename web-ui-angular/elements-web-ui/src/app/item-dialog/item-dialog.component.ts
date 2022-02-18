@@ -3,11 +3,12 @@ import {FormBuilder, Validators} from '@angular/forms';
 import {MAT_DIALOG_DATA, MatDialogRef} from '@angular/material/dialog';
 import {MatChipInputEvent} from '@angular/material/chips';
 import {MatSnackBar} from '@angular/material/snack-bar';
-import {ENTER, COMMA} from '@angular/cdk/keycodes';
+import {COMMA, ENTER} from '@angular/cdk/keycodes';
 import {JsonEditorCardComponent} from '../json-editor-card/json-editor-card.component';
 import {AlertService} from '../alert.service';
+import {ItemCategory} from "../api/models/item";
 
-export interface ItemCategory {
+export interface ItemCategoryPair {
   key: string;
   description: string;
 }
@@ -19,9 +20,9 @@ export interface ItemCategory {
 })
 export class ItemDialogComponent implements OnInit {
 
-  itemCategories: ItemCategory[] = [
-    { key: "FUNGIBLE", description: "Fungible" },
-    { key: "DISTINCT", description: "Distinct" }
+  itemCategories: ItemCategoryPair[] = [
+    { key: ItemCategory.FUNGIBLE, description: "Fungible" },
+    { key: ItemCategory.DISTINCT, description: "Distinct" }
   ];
 
   @ViewChild(JsonEditorCardComponent) editorCard: JsonEditorCardComponent;
@@ -90,6 +91,10 @@ export class ItemDialogComponent implements OnInit {
       formData.metadata = this.data.item.metadata;
     }
 
+    if (!this.data.isNew && formData.category !== undefined) {
+      delete formData.category
+    }
+
     this.data.next(formData).subscribe(r => {
       this.dialogRef.close();
       this.data.refresher.refresh();
@@ -104,6 +109,12 @@ export class ItemDialogComponent implements OnInit {
         this.snackBar.open(message.text, 'Dismiss', { duration: 3000 });
       }
     });
+  }
+
+  currentItemCategory() {
+    return this.data.category == null
+      ? this.itemCategories[0].description
+      : this.itemCategories.find(value => this.data.category == value.key).description
   }
 
 }

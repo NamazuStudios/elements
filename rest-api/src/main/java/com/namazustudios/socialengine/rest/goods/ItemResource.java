@@ -75,8 +75,9 @@ public class ItemResource {
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count") @DefaultValue("20") final int count,
             @QueryParam("tags") final List<String> tags,
+            @QueryParam("category") final String category,
             @QueryParam("search") final String search) {
-        return getItemService().getItems(offset, count, tags, search);
+        return getItemService().getItems(offset, count, tags, category, search);
     }
 
     @GET

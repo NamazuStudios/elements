@@ -4,6 +4,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Item } from 'src/app/api/models';
 import { InventoryService } from 'src/app/api/services/inventory.service';
 import { ItemSelectDialogComponent } from '../item-select-dialog/item-select-dialog.component';
+import {ItemCategory} from "../../api/models/item";
 
 
 @Component({
@@ -15,8 +16,8 @@ export class AddInventoryComponent implements OnInit {
 
   @Input()
   userId: string;
-  
-  @Output("refresh") 
+
+  @Output("refresh")
   refresh: EventEmitter<any> = new EventEmitter();
 
   selectedItem: Item;
@@ -55,9 +56,9 @@ export class AddInventoryComponent implements OnInit {
     this.dialog.open(ItemSelectDialogComponent, {
       width: '500px',
       data: {
+        category: ItemCategory.FUNGIBLE,
         next: result => {
           this.selectedItem = result;
-          
         }
       }
     });

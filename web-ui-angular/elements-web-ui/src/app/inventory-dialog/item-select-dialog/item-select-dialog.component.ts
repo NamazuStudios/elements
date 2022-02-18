@@ -16,6 +16,7 @@ import { ItemsDataSource } from 'src/app/items.datasource';
   styleUrls: ['./item-select-dialog.component.css']
 })
 export class ItemSelectDialogComponent implements OnInit, AfterViewInit {
+
   dataSource: ItemsDataSource;
   displayedColumns = ["name", "actions"];
   currentItems: Item[];
@@ -24,8 +25,12 @@ export class ItemSelectDialogComponent implements OnInit, AfterViewInit {
   @ViewChild('input') input: ElementRef;
   @ViewChild(MatTable) table: MatTable<Item>;
 
-  constructor(public dialogRef: MatDialogRef<ItemSelectDialogComponent>, public dialog: MatDialog, @Inject(MAT_DIALOG_DATA) public data: any,
-              private itemsService: ItemsService, private alertService: AlertService, private snackBar: MatSnackBar) { }
+  constructor(public dialogRef: MatDialogRef<ItemSelectDialogComponent>,
+              public dialog: MatDialog,
+              @Inject(MAT_DIALOG_DATA) public data: any,
+              private itemsService: ItemsService,
+              private alertService: AlertService,
+              private snackBar: MatSnackBar) { }
 
   ngOnInit() {
     this.dataSource = new ItemsDataSource(this.itemsService);
