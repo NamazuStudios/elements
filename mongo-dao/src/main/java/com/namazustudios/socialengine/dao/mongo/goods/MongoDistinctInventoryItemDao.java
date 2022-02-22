@@ -218,8 +218,12 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrow(id, DistinctInventoryItemNotFoundException::new);
-        query.filter(eq("_id", objectId));
+        final var objectId = getMongoDBUtils().parse(id);
+
+        if (objectId.isEmpty())
+            return Optional.empty();
+
+        query.filter(eq("_id", objectId.get()));
 
         var user = getMongoUserDao().findActiveMongoUser(ownerId);
         var profile  = getMongoProfileDao().findActiveMongoProfile(ownerId);
@@ -229,7 +233,7 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         } else if (profile.isPresent()) {
             query.filter(eq("profile", profile.get()));
         } else {
-            return Optional.empty();
+             return Optional.empty();
         }
 
         return Optional
