@@ -71,10 +71,14 @@ public class NeoSmartContractResource {
             response = MintNeoTokenResponse.class)
     public void mintToken(final MintTokenRequest request,
                           @Suspended final AsyncResponse asyncResponse) {
-        getNeoSmartContractService().mintToken(
+
+        final var operation = getNeoSmartContractService().mintToken(
             request,
             m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
             asyncResponse::resume);
+
+        asyncResponse.setTimeoutHandler(response -> operation.close());
+
     }
 
     @POST
@@ -84,11 +88,16 @@ public class NeoSmartContractResource {
             notes = "Invokes the specified method using the specified contract id.",
             response = NeoSendRawTransaction.class)
     public void invoke(final InvokeContractRequest request,
-                       @Suspended final AsyncResponse asyncResponse) {
-        getNeoSmartContractService().invoke(
+                       @Suspended
+                       final AsyncResponse asyncResponse) {
+
+        final var operation = getNeoSmartContractService().invoke(
             request,
-            m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
+            (blockId, response) -> asyncResponse.resume(response),
             asyncResponse::resume);
+
+        asyncResponse.setTimeoutHandler(response -> operation.close());
+
     }
 
     @POST
