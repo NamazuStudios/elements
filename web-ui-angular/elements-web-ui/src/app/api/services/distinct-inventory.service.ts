@@ -9,6 +9,7 @@ import {filter as __filter} from "rxjs/operators";
 import {map as __map} from "rxjs/internal/operators/map";
 import {FungibleInventoryItem} from "../models/fungible-inventory-item";
 import {DistinctInventoryItem} from "../models/distinct-inventory-item";
+import {PaginationFungibleInventoryItem} from "../models/pagination-fungible-inventory-item";
 
 @Injectable({
   providedIn: 'root'
@@ -19,6 +20,26 @@ export class DistinctInventoryService extends BaseService {
       config: ApiConfiguration,
       http: HttpClient) {
     super(config, http);
+  }
+
+  /**
+   * Searches all inventory items in the system and returns the metadata for all matches against the given search filter.
+   * @param params The `InventoryService.GetInventoryParams` containing the following parameters:
+   *
+   * - `search`:
+   *
+   * - `offset`:
+   *
+   * - `count`:
+   *
+   * - `userId`:
+   *
+   * @return successful operation
+   */
+  getInventory(params: DistinctInventoryService.GetInventoryParams): Observable<PaginationDistinctInventoryItem> {
+    return this.getInventoryResponse(params).pipe(
+      __map(_r => _r.body)
+    );
   }
 
   /**
@@ -66,9 +87,34 @@ export class DistinctInventoryService extends BaseService {
 
   }
 
-  createInventoryItem(param: { itemId: string; userId: string; profileId?: string }) : Observable<StrictHttpResponse<DistinctInventoryItem>> {
-    // TODO: Implement This Method
-    return null;
+  createInventoryItem(body: { itemId: string; userId: string; profileId: string, metadata: any }) : Observable<StrictHttpResponse<DistinctInventoryItem>> {
+
+    let __body: any = body;
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+
+    let req = new HttpRequest<any>(
+      'POST',
+      this.rootUrl + `/inventory/distinct`,
+      __body,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: 'json'
+      }
+    );
+
+    return this.http.request<any>(req).pipe(
+      __filter(_r => {
+        //console.log(_r);
+        return _r instanceof HttpResponse;
+      }),
+      __map((_r: HttpResponse<any>) => {
+        //console.log(_r);
+        return _r as StrictHttpResponse<DistinctInventoryItem>;
+      })
+    );
+
   }
 
 }

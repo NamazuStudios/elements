@@ -12,7 +12,10 @@ import { JsonEditorCardComponent } from '../json-editor-card/json-editor-card.co
 export class InventoryDialogComponent implements OnInit {
 
   dataHolder: any = {metadata: null};
+
   userId: string;
+
+  profileId: string;
 
   profileForm = this.formBuilder.group({
     userId: [{value: this.data.user.id, disabled: true}],
@@ -23,11 +26,11 @@ export class InventoryDialogComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA) public data: any,
     private formBuilder: FormBuilder,
     public dialogRef: MatDialogRef<InventoryDialogComponent>
-
   ) { }
 
   ngOnInit(): void {
     this.userId = this.data.user.id;
+    this.profileId = this.data.profile?.id;
   }
 
   close(saveChanges?: boolean): void {

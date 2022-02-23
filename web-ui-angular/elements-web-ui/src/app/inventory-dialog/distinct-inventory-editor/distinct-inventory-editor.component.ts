@@ -7,10 +7,14 @@ import {DistinctInventoryService} from "../../api/services/distinct-inventory.se
   styleUrls: ['./distinct-inventory-editor.component.css']
 })
 export class DistinctInventoryEditorComponent implements OnInit {
+
   inventoryItems: [];
 
   @Input()
   userId: string;
+
+  @Input()
+  profileId: string;
 
   constructor(
     private inventoryService: DistinctInventoryService
@@ -20,19 +24,18 @@ export class DistinctInventoryEditorComponent implements OnInit {
     this.refresh();
   }
 
-  refresh(){
-    this.inventoryService.getInventoryResponse({userId: this.userId}).subscribe(
+  refresh() {
+    this.inventoryService.getInventory({userId: this.userId}).subscribe(
       inventoryItems => {
         this.inventoryItems =
           (JSON.parse(JSON.stringify(inventoryItems)))
           .objects.map( inventoryItem => {
             return {
-              inventoryItemId: inventoryItem.id,
-              priority: inventoryItem.priority,
-              quantity: inventoryItem.quantity,
+              id: inventoryItem.id,
               userId: inventoryItem.user.id,
               itemId: inventoryItem.item.id,
               name: inventoryItem.item.name,
+              metadata: inventoryItem.metadata
             }
           });
       }

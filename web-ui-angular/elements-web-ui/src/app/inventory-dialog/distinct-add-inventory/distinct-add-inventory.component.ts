@@ -15,7 +15,12 @@ import {ItemCategory} from "../../api/models/item";
 export class DistinctAddInventoryComponent implements OnInit {
 
   @Input()
-  item: DistinctInventoryItemCreateRequest;
+  userId: string;
+
+  @Input()
+  profileId: string;
+
+  item: any;
 
   @Output("refresh")
   refresh: EventEmitter<any> = new EventEmitter();
@@ -30,17 +35,16 @@ export class DistinctAddInventoryComponent implements OnInit {
 
   ngOnInit() {
     this.item = {
-      itemId: null,
-      userId: null,
-      profileId: null,
       metadata: null
     }
   }
 
-  createInventory(name: string){
+  createInventory(itemId: string){
     this.inventoryService.createInventoryItem({
-      userId: this.item.userId,
-      itemId: name
+      itemId: itemId,
+      userId: this.userId,
+      profileId: this.profileId,
+      metadata: this.item.metadata
     }).subscribe(
       data => {
         this.refresh.emit();
@@ -68,11 +72,4 @@ export class DistinctAddInventoryComponent implements OnInit {
     });
   }
 
-}
-
-interface DistinctInventoryItemCreateRequest {
-  itemId: string,
-  userId: string,
-  profileId: string,
-  metadata: any
 }

@@ -40,7 +40,6 @@ export class FungibleInventoryService extends BaseService {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
-    //(params.tags || []).forEach((val, index) => {if (val != null) __params = __params.append('tags', val.toString())});
     if (params.offset != null) __params = __params.set('offset', params.offset.toString());
     if (params.count != null) __params = __params.set('count', params.count.toString());
     if (params.userId != null) __params = __params.set('userId', params.userId.toString());

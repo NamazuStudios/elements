@@ -1,9 +1,27 @@
 <h4>Modify Existing Inventory</h4>
 
-<div class="metadata-row" *ngFor="let item of inventoryItems?.sort(compare)">
-  <mat-form-field>
-    <input readonly=true disabled=true matInput placeholder="Name" name="name" value="{{item.name}}">
-    <input readonly=true disabled=true matInput placeholder="Profile" name="name" value="{{item.profile}}">
-  </mat-form-field>
-  <button type="button" mat-raised-button color="primary" (click)="deleteInventory(item.inventoryItemId)">-</button>
+<div class="distinct-item-row" *ngFor="let item of inventoryItems?.sort(compare)">
+  <div class="distinct-item-metadata">
+    <mat-expansion-panel>
+      <mat-expansion-panel-header>
+        <mat-panel-tile>
+          <mat-form-field>
+            <div class="distinct-item-header">
+              <mat-form-field>
+                <input readonly=true disabled=true matInput placeholder="ID" name="id" value="{{item.id}}">
+              </mat-form-field>
+              <mat-form-field>
+                <input readonly=true disabled=true matInput placeholder="Name" name="name" value="{{item.name}}">
+              </mat-form-field>
+              <mat-form-field>
+                <input readonly=true disabled=true matInput placeholder="Profile" name="profile" value="{{getProfileLabel(item)}}">
+              </mat-form-field>
+            </div>
+          </mat-form-field>
+        </mat-panel-tile>
+      </mat-expansion-panel-header>
+      <app-json-editor-card [editTarget]="item" topic="Metadata"></app-json-editor-card>
+      <button type="button" mat-raised-button color="primary" (click)="deleteInventory(item.id)">-</button>
+    </mat-expansion-panel>
+  </div>
 </div>

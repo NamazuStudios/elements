@@ -47,12 +47,6 @@ public class ItemResource {
                 "submitted with the request must have a name property that is unique across all items.")
     public Item createItem(final CreateItemRequest itemToBeCreated) {
 
-        // This is to support legacy clients which may not be aware of the category requirement.
-
-        if (itemToBeCreated.getCategory() == null) {
-            itemToBeCreated.setCategory(FUNGIBLE);
-        }
-
         getValidationHelper().validateModel(itemToBeCreated);
 
         final Item item = new Item();

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { FungibleInventoryService } from 'src/app/api/services/fungible-inventory.service';
+import {DistinctInventoryService} from "../../api/services/distinct-inventory.service";
 
 @Component({
   selector: 'distinct-app-modify-inventory',
@@ -15,23 +15,27 @@ export class DistinctModifyInventoryComponent implements OnInit {
   refresh: EventEmitter<any> = new EventEmitter();
 
   constructor(
-    private inventoryService: FungibleInventoryService
+    private inventoryService: DistinctInventoryService
   ) { }
 
   ngOnInit() {}
 
   editInventoryQuantity(inventoryItemId, quantity){
-    this.inventoryService.updateInventoryItemAdvanced({identifier: inventoryItemId, body: {quantity}}).subscribe(
-      data => this.refresh.emit()
-    );
+    // this.inventoryService.updateInventoryItemAdvanced({identifier: inventoryItemId, body: {quantity}}).subscribe(
+    //   data => this.refresh.emit()
+    // );
   }
 
   deleteInventory(inventoryItemId: string) {
-    this.inventoryService.deleteInventoryItemAdvanced(inventoryItemId).subscribe(
-      data => this.refresh.emit()
-    );
+    // this.inventoryService.deleteInventoryItemAdvanced(inventoryItemId).subscribe(
+    //   data => this.refresh.emit()
+    // );
   }
 
   compare = (a, b) => a.name.localeCompare(b.name) || a.priority - b.priority;
+
+  getProfileLabel(item): string {
+    return item.profile?.name ?? "(No Profile)";
+  }
 
 }

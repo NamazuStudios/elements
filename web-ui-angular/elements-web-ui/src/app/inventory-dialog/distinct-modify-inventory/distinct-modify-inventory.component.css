@@ -1,13 +1,29 @@
-.metadata-row {
+
+  .distinct-item-row {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .distinct-item-header {
     display: flex;
     justify-content: left;
   }
-  
+
+  .distinct-item-metadata {
+    display: flex;
+    justify-content: left;
+  }
+
+  mat-expansion-panel {
+    flex-grow: 1;
+    margin-right: 0px;
+  }
+
   mat-form-field {
     flex-grow: 1;
     margin-right: 0px;
   }
-  
+
   .key-field {
     min-width: 150px;
     margin-right: 10px;
@@ -18,10 +34,14 @@
     max-width: 100px;
   }
 
+  mat-expansion-panel-header {
+    margin: 10px
+  }
+
   mat-form-field, button {
       margin: 5px;
   }
-  
+
   button {
     box-sizing: border-box;
     /* min-width: 0; */
