@@ -66,7 +66,8 @@ export class ItemSelectDialogComponent implements OnInit, AfterViewInit {
       this.dataSource.loadItems(
         this.input.nativeElement.value,
         this.paginator.pageIndex * this.paginator.pageSize,
-        this.paginator.pageSize);
+        this.paginator.pageSize,
+        this.data.category);
     }, delay);
   }
 

@@ -6,15 +6,15 @@ import {BaseService} from '../base-service';
 import {Observable} from 'rxjs';
 import {StrictHttpResponse} from '../strict-http-response';
 import {filter as __filter, map as __map} from 'rxjs/operators';
-import {InventoryItem} from '../models/inventory-item';
-import {PaginationInventoryItem} from '../models/pagination-inventory-item';
+import {FungibleInventoryItem} from '../models/fungible-inventory-item';
+import {PaginationFungibleInventoryItem} from '../models/pagination-fungible-inventory-item';
 import {User} from '../models/user';
 import { InventoryItemAdvanced } from '../models/inventory-item-advanced';
 
 @Injectable({
   providedIn: 'root'
 })
-export class InventoryService extends BaseService {
+export class FungibleInventoryService extends BaseService {
   constructor(
     config: ApiConfiguration,
     http: HttpClient
@@ -24,7 +24,7 @@ export class InventoryService extends BaseService {
 
   /**
    * Searches all inventory items in the system and returns the metadata for all matches against the given search filter.
-   * @param params The 'InventoryService.GetInventoryParams' containing the following parameters:
+   * @param params The 'FungibleInventoryService.GetInventoryParams' containing the following parameters:
    *
    * - 'offset':
    *
@@ -36,7 +36,7 @@ export class InventoryService extends BaseService {
    *
    * @return successful operation
    */
-  getInventoryResponseAdvanced(params: InventoryService.GetInventoryParams): Observable<StrictHttpResponse<PaginationInventoryItem>> {
+  getInventoryResponseAdvanced(params: FungibleInventoryService.GetInventoryParams): Observable<StrictHttpResponse<PaginationFungibleInventoryItem>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -58,7 +58,7 @@ export class InventoryService extends BaseService {
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
-        return _r as StrictHttpResponse<PaginationInventoryItem>;
+        return _r as StrictHttpResponse<PaginationFungibleInventoryItem>;
       })
     );
   }
@@ -77,12 +77,12 @@ export class InventoryService extends BaseService {
    *
    * @return successful operation
    */
-  getInventoryAdvanced(params: InventoryService.GetInventoryParams): Observable<PaginationInventoryItem> {
+  getInventoryAdvanced(params: FungibleInventoryService.GetInventoryParams): Observable<PaginationFungibleInventoryItem> {
     return this.getInventoryResponseAdvanced(params).pipe(
       __map(_r => _r.body)
     );
   }
-  
+
   /**
    * Supplying an inventoryItems listing object, this will create a new inventoryItems listing with a newly assigned unique id.
    * The InventoryItemViewModel representation returned in the response body is a representation of the InventoryItemViewModel as persisted with a unique identifier
@@ -90,7 +90,7 @@ export class InventoryService extends BaseService {
    * @param body undefined
    * @return successful operation
    */
-  createInventoryItemResponseAdvanced(body?: InventoryItemAdvanced): Observable<StrictHttpResponse<InventoryItem>> {
+  createInventoryItemResponseAdvanced(body?: InventoryItemAdvanced): Observable<StrictHttpResponse<FungibleInventoryItem>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -114,7 +114,7 @@ export class InventoryService extends BaseService {
       }),
       __map((_r: HttpResponse<any>) => {
         //console.log(_r);
-        return _r as StrictHttpResponse<InventoryItem>;
+        return _r as StrictHttpResponse<FungibleInventoryItem>;
       })
     );
   }
@@ -126,7 +126,7 @@ export class InventoryService extends BaseService {
    * @param body undefined
    * @return successful operation
    */
-  createInventoryItemAdvanced(body?: InventoryItemAdvanced): Observable<InventoryItem> {
+  createInventoryItemAdvanced(body?: InventoryItemAdvanced): Observable<FungibleInventoryItem> {
     return this.createInventoryItemResponseAdvanced(body).pipe(
       __map(_r => _r.body)
     );
@@ -144,7 +144,7 @@ export class InventoryService extends BaseService {
    *
    * @return successful operation
    */
- updateInventoryItemResponseAdvanced(params: InventoryService.UpdateInventoryAdvancedParams): Observable<StrictHttpResponse<InventoryItem>> {
+ updateInventoryItemResponseAdvanced(params: FungibleInventoryService.UpdateInventoryAdvancedParams): Observable<StrictHttpResponse<FungibleInventoryItem>> {
   let __params = this.newParams();
   let __headers = new HttpHeaders();
   let __body: any = null;
@@ -163,7 +163,7 @@ export class InventoryService extends BaseService {
   return this.http.request<any>(req).pipe(
     __filter(_r => _r instanceof HttpResponse),
     __map((_r: HttpResponse<any>) => {
-      return _r as StrictHttpResponse<InventoryItem>;
+      return _r as StrictHttpResponse<FungibleInventoryItem>;
     })
   );
 }
@@ -178,7 +178,7 @@ export class InventoryService extends BaseService {
  *
  * @return successful operation
  */
- updateInventoryItemAdvanced(params: InventoryService.UpdateInventoryAdvancedParams): Observable<InventoryItem> {
+ updateInventoryItemAdvanced(params: FungibleInventoryService.UpdateInventoryAdvancedParams): Observable<FungibleInventoryItem> {
   return this.updateInventoryItemResponseAdvanced(params).pipe(
     __map(_r => _r.body)
   );
@@ -194,7 +194,7 @@ export class InventoryService extends BaseService {
    *
    * @return successful operation
    */
- adjustInventoryItemResponseAdvanced(params: InventoryService.AdjustInventoryAdvancedParams): Observable<StrictHttpResponse<InventoryItem>> {
+ adjustInventoryItemResponseAdvanced(params: FungibleInventoryService.AdjustInventoryAdvancedParams): Observable<StrictHttpResponse<FungibleInventoryItem>> {
   let __params = this.newParams();
   let __headers = new HttpHeaders();
   let __body: any = null;
@@ -213,7 +213,7 @@ export class InventoryService extends BaseService {
   return this.http.request<any>(req).pipe(
     __filter(_r => _r instanceof HttpResponse),
     __map((_r: HttpResponse<any>) => {
-      return _r as StrictHttpResponse<InventoryItem>;
+      return _r as StrictHttpResponse<FungibleInventoryItem>;
     })
   );
 }
@@ -228,7 +228,7 @@ export class InventoryService extends BaseService {
  *
  * @return successful operation
  */
- adjustInventoryItemAdvanced(params: InventoryService.AdjustInventoryAdvancedParams): Observable<InventoryItem> {
+ adjustInventoryItemAdvanced(params: FungibleInventoryService.AdjustInventoryAdvancedParams): Observable<FungibleInventoryItem> {
   return this.adjustInventoryItemResponseAdvanced(params).pipe(
     __map(_r => _r.body)
   );
@@ -240,7 +240,7 @@ export class InventoryService extends BaseService {
    * @param identifier undefined
    * @return successful operation
    */
-  getInventoryItemByIdentifierResponseAdvanced(identifier: string): Observable<StrictHttpResponse<InventoryItem>> {
+  getInventoryItemByIdentifierResponseAdvanced(identifier: string): Observable<StrictHttpResponse<FungibleInventoryItem>> {
     let __params = this.newParams();
     let __headers = new HttpHeaders();
     let __body: any = null;
@@ -258,7 +258,7 @@ export class InventoryService extends BaseService {
     return this.http.request<any>(req).pipe(
       __filter(_r => _r instanceof HttpResponse),
       __map((_r: HttpResponse<any>) => {
-        return _r as StrictHttpResponse<InventoryItem>;
+        return _r as StrictHttpResponse<FungibleInventoryItem>;
       })
     );
   }
@@ -268,7 +268,7 @@ export class InventoryService extends BaseService {
    * @param identifier undefined
    * @return successful operation
    */
-  getInventoryItemByIdentifierAdvanced(identifier: string): Observable<InventoryItem> {
+  getInventoryItemByIdentifierAdvanced(identifier: string): Observable<FungibleInventoryItem> {
     return this.getInventoryItemByIdentifierResponseAdvanced(identifier).pipe(
       __map(_r => _r.body)
     );
@@ -313,13 +313,13 @@ export class InventoryService extends BaseService {
   }
 }
 
-module InventoryService {
+module FungibleInventoryService {
 
   /**
    * Parameters for getInventory
    */
   export interface GetInventoryParams {
-    //tags?: Array<string>;  // TODO: delete this as it is no longer in API and is probably depricated. 
+    //tags?: Array<string>;  // TODO: delete this as it is no longer in API and is probably depricated.
     search?: string;
     offset?: number;
     count?: number;

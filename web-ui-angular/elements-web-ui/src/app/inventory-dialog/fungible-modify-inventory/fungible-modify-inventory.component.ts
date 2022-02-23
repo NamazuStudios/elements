@@ -1,25 +1,24 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { InventoryService } from 'src/app/api/services/inventory.service';
+import { FungibleInventoryService } from 'src/app/api/services/fungible-inventory.service';
 
 @Component({
-  selector: 'app-modify-inventory',
-  templateUrl: './modify-inventory.component.html',
-  styleUrls: ['./modify-inventory.component.css']
+  selector: 'fungible-app-modify-inventory',
+  templateUrl: './fungible-modify-inventory.component.html',
+  styleUrls: ['./fungible-modify-inventory.component.css']
 })
-export class ModifyInventoryComponent implements OnInit {
+export class FungibleModifyInventoryComponent implements OnInit {
 
   @Input()
   inventoryItems: [];
 
-  @Output("refresh") 
+  @Output("refresh")
   refresh: EventEmitter<any> = new EventEmitter();
 
   constructor(
-    private inventoryService: InventoryService
+    private inventoryService: FungibleInventoryService
   ) { }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   editInventoryQuantity(inventoryItemId, quantity){
     this.inventoryService.updateInventoryItemAdvanced({identifier: inventoryItemId, body: {quantity}}).subscribe(
@@ -34,4 +33,5 @@ export class ModifyInventoryComponent implements OnInit {
   }
 
   compare = (a, b) => a.name.localeCompare(b.name) || a.priority - b.priority;
+
 }

@@ -1,0 +1,9 @@
+<h4>Modify Existing Inventory</h4>
+
+<div class="metadata-row" *ngFor="let item of inventoryItems?.sort(compare)">
+  <mat-form-field>
+    <input readonly=true disabled=true matInput placeholder="Name" name="name" value="{{item.name}}">
+    <input readonly=true disabled=true matInput placeholder="Profile" name="name" value="{{item.profile}}">
+  </mat-form-field>
+  <button type="button" mat-raised-button color="primary" (click)="deleteInventory(item.inventoryItemId)">-</button>
+</div>

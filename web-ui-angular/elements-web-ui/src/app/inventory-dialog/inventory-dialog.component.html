@@ -1,5 +1,8 @@
 <div class="inventory-dialog">
   <h1 mat-dialog-title>Edit Inventory</h1>
+
+
+
   <div mat-dialog-content>
     <form [formGroup]="profileForm">
       <div class="prof-form-container">
@@ -10,14 +13,28 @@
           <mat-form-field>
             <input matInput [readonly]=true placeholder="User Name" name="userName" formControlName="userName" [value]="data.user ? data.user.name : ''">
           </mat-form-field>
+          <mat-form-field *ngIf="data.profile !== undefined">
+            <input matInput [readonly]=true placeholder="Profile Id" name="userName" formControlName="userName" [value]="data.profile ? data.profile.name : ''">
+          </mat-form-field>
+          <mat-form-field *ngIf="data.profile !== undefined">
+            <input matInput [readonly]=true placeholder="Profile Name" name="userName" formControlName="userName" [value]="data.profile ? data.profile.name : ''">
+          </mat-form-field>
         </div>
       </div>
     </form>
   </div>
-  <app-inventory-editor [userId]="userId"></app-inventory-editor>
+
+  <mat-tab-group>
+    <mat-tab label="Fungible">
+      <fungible-app-inventory-editor [userId]="userId"></fungible-app-inventory-editor>
+    </mat-tab>
+    <mat-tab label="Distinct">
+      <distinct-app-inventory-editor [userId]="userId"></distinct-app-inventory-editor>
+    </mat-tab>
+  </mat-tab-group>
+
   <div mat-dialog-actions>
     <button type="button" mat-raised-button (click)="close()">Done</button>
   </div>
-</div>
 
-  
+</div>

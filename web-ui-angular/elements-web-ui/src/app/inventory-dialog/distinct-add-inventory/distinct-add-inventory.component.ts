@@ -2,20 +2,20 @@ import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { Item } from 'src/app/api/models';
-import { InventoryService } from 'src/app/api/services/inventory.service';
+import { DistinctInventoryService } from 'src/app/api/services/distinct-inventory.service';
 import { ItemSelectDialogComponent } from '../item-select-dialog/item-select-dialog.component';
 import {ItemCategory} from "../../api/models/item";
 
 
 @Component({
-  selector: 'app-add-inventory',
-  templateUrl: './add-inventory.component.html',
-  styleUrls: ['./add-inventory.component.css']
+  selector: 'distinct-app-add-inventory',
+  templateUrl: './distinct-add-inventory.component.html',
+  styleUrls: ['./distinct-add-inventory.component.css']
 })
-export class AddInventoryComponent implements OnInit {
+export class DistinctAddInventoryComponent implements OnInit {
 
   @Input()
-  userId: string;
+  item: DistinctInventoryItemCreateRequest;
 
   @Output("refresh")
   refresh: EventEmitter<any> = new EventEmitter();
@@ -23,20 +23,24 @@ export class AddInventoryComponent implements OnInit {
   selectedItem: Item;
 
   constructor(
-    private inventoryService: InventoryService,
+    private inventoryService: DistinctInventoryService,
     public dialog: MatDialog,
     private snackBar: MatSnackBar
-  ) { }
+  ) {}
 
   ngOnInit() {
+    this.item = {
+      itemId: null,
+      userId: null,
+      profileId: null,
+      metadata: null
+    }
   }
 
-  createInventory(name: string, priority: number, quantity: number){
-    this.inventoryService.createInventoryItemAdvanced({
-      userId: this.userId,
-      itemId: name,
-      quantity,
-      priority
+  createInventory(name: string){
+    this.inventoryService.createInventoryItem({
+      userId: this.item.userId,
+      itemId: name
     }).subscribe(
       data => {
         this.refresh.emit();
@@ -56,7 +60,7 @@ export class AddInventoryComponent implements OnInit {
     this.dialog.open(ItemSelectDialogComponent, {
       width: '500px',
       data: {
-        category: ItemCategory.FUNGIBLE,
+        category: ItemCategory.DISTINCT,
         next: result => {
           this.selectedItem = result;
         }
@@ -64,4 +68,11 @@ export class AddInventoryComponent implements OnInit {
     });
   }
 
+}
+
+interface DistinctInventoryItemCreateRequest {
+  itemId: string,
+  userId: string,
+  profileId: string,
+  metadata: any
 }

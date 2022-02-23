@@ -1,19 +1,19 @@
 import {Component, Input, OnInit} from '@angular/core';
-import { InventoryService } from 'src/app/api/services/inventory.service';
+import {DistinctInventoryService} from "../../api/services/distinct-inventory.service";
 
 @Component({
-  selector: 'app-inventory-editor',
-  templateUrl: './inventory-editor.component.html',
-  styleUrls: ['./inventory-editor.component.css']
+  selector: 'distinct-app-inventory-editor',
+  templateUrl: './distinct-inventory-editor.component.html',
+  styleUrls: ['./distinct-inventory-editor.component.css']
 })
-export class InventoryEditorComponent implements OnInit {
+export class DistinctInventoryEditorComponent implements OnInit {
   inventoryItems: [];
 
   @Input()
   userId: string;
 
   constructor(
-    private inventoryService: InventoryService
+    private inventoryService: DistinctInventoryService
     ) { }
 
   ngOnInit() {
@@ -21,9 +21,9 @@ export class InventoryEditorComponent implements OnInit {
   }
 
   refresh(){
-    this.inventoryService.getInventoryAdvanced({userId: this.userId}).subscribe(
+    this.inventoryService.getInventoryResponse({userId: this.userId}).subscribe(
       inventoryItems => {
-        this.inventoryItems = 
+        this.inventoryItems =
           (JSON.parse(JSON.stringify(inventoryItems)))
           .objects.map( inventoryItem => {
             return {

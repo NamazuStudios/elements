@@ -35,7 +35,7 @@ import { MockSessionsService } from './services/mock-sessions.service';
 import { SessionAndLoginService } from './services/session-and-login.service';
 import { UsernamePasswordSessionService } from './services/username-password-session.service';
 import { MissionsService } from './services/missions.service';
-import { InventoryService } from './services/inventory.service';
+import { FungibleInventoryService } from './services/fungible-inventory.service';
 import { NeoWalletsService } from './services/blockchain/neo-wallets.service';
 
 /**
@@ -84,7 +84,7 @@ import { NeoWalletsService } from './services/blockchain/neo-wallets.service';
     SessionAndLoginService,
     UsernamePasswordSessionService,
     MissionsService,
-    InventoryService
+    FungibleInventoryService
   ],
 })
 export class ApiModule { }
