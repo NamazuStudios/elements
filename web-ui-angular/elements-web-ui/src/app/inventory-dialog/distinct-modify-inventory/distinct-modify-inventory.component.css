@@ -6,12 +6,25 @@
 
   .distinct-item-header {
     display: flex;
-    justify-content: left;
+    justify-content: stretch;
   }
 
   .distinct-item-metadata {
     display: flex;
     justify-content: left;
+  }
+
+  .distinct-editor-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .distinct-editor-button-panel {
+    display: flex;
+  }
+
+  .distinct-edit-button {
+    min-width: 75px;
   }
 
   mat-expansion-panel {

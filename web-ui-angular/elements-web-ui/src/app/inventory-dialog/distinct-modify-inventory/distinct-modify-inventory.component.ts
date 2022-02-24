@@ -20,16 +20,20 @@ export class DistinctModifyInventoryComponent implements OnInit {
 
   ngOnInit() {}
 
-  editInventoryQuantity(inventoryItemId, quantity){
-    // this.inventoryService.updateInventoryItemAdvanced({identifier: inventoryItemId, body: {quantity}}).subscribe(
-    //   data => this.refresh.emit()
-    // );
+  saveInventory(item){
+    this.inventoryService.updateInventoryItem(item.id, {
+      userId: item.userId,
+      profileId: item.profileId,
+      metadata: item.metadata,
+    }).subscribe(
+      data => this.refresh.emit()
+    );
   }
 
-  deleteInventory(inventoryItemId: string) {
-    // this.inventoryService.deleteInventoryItemAdvanced(inventoryItemId).subscribe(
-    //   data => this.refresh.emit()
-    // );
+  deleteInventory(item) {
+    this.inventoryService.deleteInventoryItem(item.id).subscribe(
+      data => this.refresh.emit()
+    );
   }
 
   compare = (a, b) => a.name.localeCompare(b.name) || a.priority - b.priority;

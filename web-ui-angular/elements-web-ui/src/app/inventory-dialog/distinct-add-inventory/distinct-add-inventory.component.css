@@ -26,7 +26,11 @@ button {
     flex-wrap: wrap;
 }
 
-mat-card {
-    width: 500px;
+.distinct-add-panel {
+  display: flex;
+  flex-direction: column;
 }
 
+mat-card {
+    width: available;
+}

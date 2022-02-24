@@ -10,6 +10,7 @@ import {map as __map} from "rxjs/internal/operators/map";
 import {FungibleInventoryItem} from "../models/fungible-inventory-item";
 import {DistinctInventoryItem} from "../models/distinct-inventory-item";
 import {PaginationFungibleInventoryItem} from "../models/pagination-fungible-inventory-item";
+import UpdateInventoryParams = DistinctInventoryService.UpdateInventoryParams;
 
 @Injectable({
   providedIn: 'root'
@@ -117,6 +118,68 @@ export class DistinctInventoryService extends BaseService {
 
   }
 
+  updateInventoryItem(id: string, params: UpdateInventoryParams): Observable<DistinctInventoryItem> {
+    return this.updateInventoryItemResponse(id, params).pipe(
+      __map(r => r.body)
+    )
+  }
+
+  updateInventoryItemResponse(id: string, params: UpdateInventoryParams): Observable<StrictHttpResponse<DistinctInventoryItem>> {
+
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+
+    let req = new HttpRequest<any>(
+      'PUT',
+      this.rootUrl + `/inventory/distinct/${id}`,
+      params,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: 'json'
+      }
+    );
+
+    return this.http.request<any>(req).pipe(
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
+        return _r as StrictHttpResponse<DistinctInventoryItem>;
+      })
+    );
+
+  }
+
+  deleteInventoryItem(id: string):  Observable<void> {
+    return this.deleteInventoryItemResponse(id).pipe(
+      __map(r => r.body)
+    )
+  }
+
+  deleteInventoryItemResponse(id: string):  Observable<StrictHttpResponse<void>> {
+    let __params = this.newParams();
+    let __headers = new HttpHeaders();
+
+    let req = new HttpRequest<any>(
+      'DELETE',
+      this.rootUrl + `/inventory/distinct/${id}`,
+      null,
+      {
+        headers: __headers,
+        params: __params,
+        responseType: 'json'
+      }
+    );
+
+    return this.http.request<any>(req).pipe(
+      __filter(_r => _r instanceof HttpResponse),
+      __map((_r: HttpResponse<any>) => {
+        return _r as StrictHttpResponse<void>;
+      })
+    );
+
+  }
+
+
 }
 
 module DistinctInventoryService {
@@ -127,6 +190,12 @@ module DistinctInventoryService {
     count?: number;
     userId?: string;
     profileId?: string;
+  }
+
+  export interface UpdateInventoryParams {
+    userId: string;
+    profileId: string;
+    metadata: any;
   }
 
 }

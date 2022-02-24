@@ -10,6 +10,7 @@ local ioc = require "namazu.ioc.resolver"
 local service = ioc:inject("com.namazustudios.socialengine.rt.lua.guice.TestJavaService")
 local provider = ioc:provider("com.namazustudios.socialengine.rt.lua.guice.TestJavaService")
 
+
 local ioc_resolve = {}
 
 function ioc_resolve.test_resolve()

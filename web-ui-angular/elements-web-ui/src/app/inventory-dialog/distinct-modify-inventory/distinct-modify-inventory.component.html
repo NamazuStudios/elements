@@ -4,24 +4,29 @@
   <div class="distinct-item-metadata">
     <mat-expansion-panel>
       <mat-expansion-panel-header>
-        <mat-panel-tile>
+        <mat-panel-title>
           <mat-form-field>
             <div class="distinct-item-header">
               <mat-form-field>
                 <input readonly=true disabled=true matInput placeholder="ID" name="id" value="{{item.id}}">
               </mat-form-field>
               <mat-form-field>
-                <input readonly=true disabled=true matInput placeholder="Name" name="name" value="{{item.name}}">
+                <input readonly=true disabled=true matInput placeholder="Item Name" name="name" value="{{item.name}}">
               </mat-form-field>
               <mat-form-field>
                 <input readonly=true disabled=true matInput placeholder="Profile" name="profile" value="{{getProfileLabel(item)}}">
               </mat-form-field>
             </div>
           </mat-form-field>
-        </mat-panel-tile>
+        </mat-panel-title>
       </mat-expansion-panel-header>
-      <app-json-editor-card [editTarget]="item" topic="Metadata"></app-json-editor-card>
-      <button type="button" mat-raised-button color="primary" (click)="deleteInventory(item.id)">-</button>
+      <div class="distinct-editor-panel">
+        <app-json-editor-card [editTarget]="item" topic="Distinct Item"></app-json-editor-card>
+        <div class="distinct-editor-button-panel">
+          <button class="distinct-edit-button" type="button" mat-raised-button color="primary" (click)="saveInventory(item)">Save</button>
+          <button class="distinct-edit-button" type="button" mat-raised-button color="primary" (click)="deleteInventory(item)">Delete</button>
+        </div>
+      </div>
     </mat-expansion-panel>
   </div>
 </div>

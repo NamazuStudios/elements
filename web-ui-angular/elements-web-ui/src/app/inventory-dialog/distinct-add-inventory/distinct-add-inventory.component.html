@@ -7,7 +7,9 @@
     <button class="find-button" type="button" mat-raised-button color="primary" (click)="showFindItemDialog()">
       <mat-icon>search</mat-icon> Find Item by Name
     </button>
-    <app-json-editor-card [editTarget]="item" topic="Profile"></app-json-editor-card>
+  </div>
+  <div class="distinct-add-panel">
+    <app-json-editor-card [editTarget]="item" topic="Distinct Item"></app-json-editor-card>
     <button type="button" mat-raised-button color="primary" [disabled]="!newName.value" (click)="createInventory(selectedItem.id)"><mat-icon>add</mat-icon> Add Item</button>
   </div>
 </mat-card>
