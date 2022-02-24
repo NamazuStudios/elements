@@ -1,19 +1,19 @@
 import {Component, Input, OnInit} from '@angular/core';
-import { InventoryService } from 'src/app/api/services/inventory.service';
+import { FungibleInventoryService } from 'src/app/api/services/fungible-inventory.service';
 
 @Component({
-  selector: 'app-inventory-editor',
-  templateUrl: './inventory-editor.component.html',
-  styleUrls: ['./inventory-editor.component.css']
+  selector: 'fungible-app-inventory-editor',
+  templateUrl: './fungible-inventory-editor.component.html',
+  styleUrls: ['./fungible-inventory-editor.component.css']
 })
-export class InventoryEditorComponent implements OnInit {
+export class FungibleInventoryEditorComponent implements OnInit {
   inventoryItems: [];
 
   @Input()
   userId: string;
 
   constructor(
-    private inventoryService: InventoryService
+    private inventoryService: FungibleInventoryService
     ) { }
 
   ngOnInit() {
@@ -23,7 +23,7 @@ export class InventoryEditorComponent implements OnInit {
   refresh(){
     this.inventoryService.getInventoryAdvanced({userId: this.userId}).subscribe(
       inventoryItems => {
-        this.inventoryItems = 
+        this.inventoryItems =
           (JSON.parse(JSON.stringify(inventoryItems)))
           .objects.map( inventoryItem => {
             return {

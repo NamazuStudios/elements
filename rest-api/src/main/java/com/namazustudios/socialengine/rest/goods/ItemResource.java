@@ -47,12 +47,6 @@ public class ItemResource {
                 "submitted with the request must have a name property that is unique across all items.")
     public Item createItem(final CreateItemRequest itemToBeCreated) {
 
-        // This is to support legacy clients which may not be aware of the category requirement.
-
-        if (itemToBeCreated.getCategory() == null) {
-            itemToBeCreated.setCategory(FUNGIBLE);
-        }
-
         getValidationHelper().validateModel(itemToBeCreated);
 
         final Item item = new Item();
@@ -75,8 +69,9 @@ public class ItemResource {
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count") @DefaultValue("20") final int count,
             @QueryParam("tags") final List<String> tags,
+            @QueryParam("category") final String category,
             @QueryParam("search") final String search) {
-        return getItemService().getItems(offset, count, tags, search);
+        return getItemService().getItems(offset, count, tags, category, search);
     }
 
     @GET

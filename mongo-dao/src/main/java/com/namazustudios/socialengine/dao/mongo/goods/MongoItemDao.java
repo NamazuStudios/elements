@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -138,7 +139,8 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Pagination<Item> getItems(final int offset, final int count, List<String> tags, final String query) {
+    public Pagination<Item> getItems(final int offset, final int count, List<String> tags, String category, final String query) {
+
         if (StringUtils.isNotEmpty(query)) {
             LOGGER.warn(" getItems(int offset, int count, List<String> tags, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values after filtering " +
@@ -151,8 +153,27 @@ public class MongoItemDao implements ItemDao {
             mongoQuery.filter(Filters.in("tags", tags));
         }
 
-        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Item.class), new FindOptions());
+        if (category != null && !category.isBlank()) {
+
+            final ItemCategory categoryEnum;
+
+            try {
+                categoryEnum = ItemCategory.valueOf(category);
+            } catch (IllegalArgumentException ex) {
+                return Pagination.empty();
+            }
+
+            mongoQuery.filter(eq("category", categoryEnum));
+
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+            mongoQuery,
+            offset, count,
+            mongoItem -> getDozerMapper().map(mongoItem, Item.class),
+            new FindOptions()
+        );
+
     }
 
     @Override

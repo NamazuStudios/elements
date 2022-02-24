@@ -1,7 +1,7 @@
 import {User} from './user';
 import {Item} from './item';
 
-export interface InventoryItem {
+export interface FungibleInventoryItem {
   id: string;
   user: User;
   item: Item;

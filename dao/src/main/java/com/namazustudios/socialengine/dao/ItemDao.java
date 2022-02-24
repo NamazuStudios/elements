@@ -39,12 +39,13 @@ public interface ItemDao {
      *     a maximum amount of items to be returned, which should be a positive integer greater than 0
      * @param tags
      *     A set of tags to filter items by
+     * @param category
      * @param query
      *     A search query to filter items by
      * @return A {@link Pagination} of all {@link Item} records within the range specified by the offset and count
      * parameters.
      */
-    Pagination<Item> getItems(int offset, int count, List<String> tags, String query);
+    Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query);
 
     /**
      * Updates a given Item.
@@ -56,7 +57,6 @@ public interface ItemDao {
      *     if the state of the passed in Item is invalid
      */
     Item updateItem(Item item);
-
 
     /**
      * Creates a new Item. All properties except for the Id property must be set to valid values. The name property must
