@@ -112,9 +112,9 @@ export class ItemDialogComponent implements OnInit {
   }
 
   currentItemCategory() {
-    return this.data.category == null
+    return this.data.item.category == null
       ? this.itemCategories[0].description
-      : this.itemCategories.find(value => this.data.category == value.key).description
+      : this.itemCategories.find(value => this.data.item.category == value.key).description
   }
 
 }

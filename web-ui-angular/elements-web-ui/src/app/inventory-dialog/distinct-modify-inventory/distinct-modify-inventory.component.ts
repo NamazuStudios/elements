@@ -39,7 +39,7 @@ export class DistinctModifyInventoryComponent implements OnInit {
   compare = (a, b) => a.name.localeCompare(b.name) || a.priority - b.priority;
 
   getProfileLabel(item): string {
-    return item.profile?.name ?? "(No Profile)";
+    return item.profile?.displayName ?? "(No Profile)";
   }
 
 }

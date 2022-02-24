@@ -1,8 +1,6 @@
 import { Component, Inject, OnInit, ViewChild } from '@angular/core';
 import {FormBuilder, Validators} from '@angular/forms';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { User } from '../api/models';
-import { JsonEditorCardComponent } from '../json-editor-card/json-editor-card.component';
 
 @Component({
   selector: 'app-inventory-dialog',
@@ -20,6 +18,8 @@ export class InventoryDialogComponent implements OnInit {
   profileForm = this.formBuilder.group({
     userId: [{value: this.data.user.id, disabled: true}],
     userName: [{value: this.data.user.name, disabled: true}],
+    profileId: [{value: this.data.user.id, disabled: true}],
+    profileName: [{value: this.data.user.name, disabled: true}],
   });
 
   constructor(

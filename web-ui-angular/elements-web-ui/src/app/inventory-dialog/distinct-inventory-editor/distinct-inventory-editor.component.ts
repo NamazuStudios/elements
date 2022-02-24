@@ -25,7 +25,7 @@ export class DistinctInventoryEditorComponent implements OnInit {
   }
 
   refresh() {
-    this.inventoryService.getInventory({userId: this.userId}).subscribe(
+    this.inventoryService.getInventory({userId: this.userId, profileId: this.profileId }).subscribe(
       inventoryItems => {
         this.inventoryItems =
           (JSON.parse(JSON.stringify(inventoryItems)))
@@ -34,6 +34,7 @@ export class DistinctInventoryEditorComponent implements OnInit {
               id: inventoryItem.id,
               userId: inventoryItem.user.id,
               itemId: inventoryItem.item.id,
+              profile: inventoryItem.profile,
               name: inventoryItem.item.name,
               metadata: inventoryItem.metadata
             }
