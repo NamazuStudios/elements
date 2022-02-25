@@ -1,5 +1,7 @@
 server {
 
+    error_page 404 =200 /${com_namazustudios_socialengine_http_path_prefix}/index.html;
+
     listen	${com_namazustudios_socialengine_http_port};
     server_name  ${com_namazustudios_socialengine_dns_name};
 
@@ -16,14 +18,6 @@ server {
     location ~ ^/${com_namazustudios_socialengine_http_path_prefix}(?:/(.*))?$ {
         alias   /usr/share/nginx/html/$1;
         index  index.html;
-    }
-
-    #error_page  404              /404.html;
-    # redirect server error pages to the static page /50x.html
-
-    error_page   500 502 503 504  /50x.html;
-    location = /50x.html {
-        root   /usr/share/nginx/html;
     }
 
 }
