@@ -1,13 +1,11 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.dao.ItemDao;
-import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.Item;
 import dev.morphia.Datastore;
-import dev.morphia.DeleteOptions;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.bson.types.ObjectId;
 import org.testng.annotations.*;
@@ -17,6 +15,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static java.lang.String.format;
 import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertNotNull;
@@ -120,12 +119,12 @@ public class MongoItemDaoIntegrationTest {
 
         //Call Pagination and verify that all items are returned
         Set<ObjectId> seen = new HashSet<>();
-        Pagination<Item> itemPagination = itemDao.getItems(0, Integer.MAX_VALUE, tagsToFilterBy, null);
+        Pagination<Item> itemPagination = itemDao.getItems(0, Integer.MAX_VALUE, tagsToFilterBy, null, null);
         while (itemPagination.getOffset() < itemPagination.getTotal()) {
             int nextOffset = itemPagination.getObjects().size() + itemPagination.getOffset();
             seen.addAll(itemPagination.getObjects().stream()
                 .map(item -> new ObjectId(item.getId())).collect(Collectors.toList()));
-            itemPagination = itemDao.getItems(nextOffset, Integer.MAX_VALUE, tagsToFilterBy, null);
+            itemPagination = itemDao.getItems(nextOffset, Integer.MAX_VALUE, tagsToFilterBy, null, null);
         }
 
         assertEquals(seen, expectedObjectIds);
@@ -143,6 +142,7 @@ public class MongoItemDaoIntegrationTest {
         item.setMetadata(mockMetadata);
         item.setDescription("A Fooable Item.  Don't foo me bro");
         item.setTags(Lists.newArrayList("barkable", "hideable"));
+        item.setCategory(FUNGIBLE);
         return item;
     }
 
@@ -186,6 +186,7 @@ public class MongoItemDaoIntegrationTest {
         item.setDescription(description);
         item.setTags(tags);
         item.setMetadata(metadata);
+        item.setCategory(FUNGIBLE);
         return item;
     }
 

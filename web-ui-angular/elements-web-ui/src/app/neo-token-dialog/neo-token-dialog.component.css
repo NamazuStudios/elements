@@ -24,6 +24,10 @@
   width: 32%;
 }
 
+.margin-left {
+  margin-left: 16px;
+}
+
 .type {
   margin: auto 4px;
 }
@@ -31,4 +35,22 @@
 .number {
   width: 75px;
   padding: 10px;
+}
+
+
+.metadata-row {
+  display: flex;
+  justify-content:space-between;
+}
+
+.url-data {
+  width: 720px;
+}
+
+.margin {
+  margin-left: 10px;
+}
+
+.public-private-preview {
+  align-self:center;
 }

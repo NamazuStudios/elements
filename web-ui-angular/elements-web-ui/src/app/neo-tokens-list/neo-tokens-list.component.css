@@ -22,3 +22,7 @@ input[type="button"] {
   max-width: 99px;
   min-width: 99px;
 }
+
+.tab {
+  margin-left: 10px;
+}

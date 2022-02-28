@@ -138,5 +138,8 @@
       }
     }
   },
-  "defaultProject": "elements-web-ui"
+  "defaultProject": "elements-web-ui",
+  "cli": {
+    "analytics": false
+  }
 }

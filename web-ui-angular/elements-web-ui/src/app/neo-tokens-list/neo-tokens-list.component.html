@@ -1,10 +1,10 @@
-<div class="data-list">
+<div class="data-list tab">
   <div class="spinner-container" *ngIf="dataSource.loading$ | async">
     <mat-spinner></mat-spinner>
   </div>
 
   <mat-form-field>
-    <input matInput placeholder="Search NFTs" #input>
+    <input matInput placeholder="Search NFTs" #input disabled="true">
   </mat-form-field>
 
   <button mat-raised-button color="primary" (click)="addToken()">Define NFT</button>
@@ -44,7 +44,7 @@
 
     <ng-container matColumnDef="totalSupply">
       <mat-header-cell *matHeaderCellDef>Total Supply</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.token.totalSupply}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.totalMintedQuantity}} / {{token.token.totalSupply}}</span></mat-cell>
     </ng-container>
     <!-- <ng-container matColumnDef="spec">
         <mat-header-cell *matHeaderCellDef>Spec</mat-header-cell>
@@ -56,8 +56,8 @@
     </ng-container>
     <ng-container matColumnDef="transferOptions">
       <mat-header-cell *matHeaderCellDef>Transfer</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.token.transferOptions |
-          titlecase}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span [matTooltip]="getTransferOptionsToolTip(token.token.transferOptions)" class="truncate-text-right">{{token.token.transferOptions |
+          transferOptions: "label"}}</span></mat-cell>
     </ng-container>
     <ng-container matColumnDef="accessOption">
       <mat-header-cell *matHeaderCellDef>Public</mat-header-cell>
@@ -85,22 +85,30 @@
     <ng-container matColumnDef="mint-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button mat-raised-button color="primary" (click)="editToken(token)">Mint</button>
+        <button mat-raised-button color="primary" (click)="mintToken(token)">Mint</button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="list-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button [disabled]="token.listed" mat-raised-button color="primary" (click)="listToken(token)" matTooltip="List"
+        <button *ngIf="!token.listed && !(token.totalMintedQuantity === token.token.totalSupply)" [disabled]="(token.totalMintedQuantity === token.token.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, true)" matTooltip="List"
           matTooltipPosition="above">
-          <mat-icon>publish</mat-icon>
+          <mat-icon>vertical_align_top</mat-icon>
+        </button>
+        <button *ngIf="token.listed && !(token.totalMintedQuantity === token.token.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+          matTooltipPosition="above">
+          <mat-icon>vertical_align_bottom</mat-icon>
+        </button>
+        <button *ngIf="(token.totalMintedQuantity === token.token.totalSupply)" disabled="true" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+          matTooltipPosition="above">
+          <mat-icon>not_interested</mat-icon>
         </button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="view-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button mat-raised-button color="primary" (click)="deleteToken(token)">View</button>
+        <button mat-raised-button color="primary" (click)="deleteToken(token)" disabled="true">View</button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="edit-action">

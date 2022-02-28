@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.CreateItemRequest;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.inventory.CreateSimpleInventoryItemRequest;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.model.inventory.SimpleInventoryItemQuantityAdjustment;
@@ -20,6 +21,7 @@ import javax.ws.rs.core.Response;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -66,6 +68,7 @@ public class SimpleInventoryApiTest {
     public void createDigitalGoods() {
 
         final var aRequest = new CreateItemRequest();
+        aRequest.setCategory(FUNGIBLE);
         aRequest.setName("simple_inventory_test_item_a");
         aRequest.setDisplayName("Test Item A");
         aRequest.setDescription("Test Item A (More)");
@@ -76,6 +79,7 @@ public class SimpleInventoryApiTest {
         aRequest.setMetadata(aMetadata);
 
         final var bRequest = new CreateItemRequest();
+        bRequest.setCategory(FUNGIBLE);
         bRequest.setName("simple_inventory_test_item_b");
         bRequest.setDisplayName("Test Item B");
         bRequest.setDescription("Test Item B (More)");

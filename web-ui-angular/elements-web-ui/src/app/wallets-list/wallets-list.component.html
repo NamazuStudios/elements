@@ -1,4 +1,4 @@
-<div class="data-list">
+<div class="data-list tab">
   <div class="spinner-container" *ngIf="dataSource.loading$ | async">
     <mat-spinner></mat-spinner>
   </div>
@@ -6,7 +6,7 @@
   <section style="display: flex; justify-content: space-between; margin: 10px auto;">
     <div>
       <mat-form-field>
-        <input matInput placeholder="Search wallets" #input disabled="true">
+        <input matInput placeholder="Search wallets by User ID" #input disabled="true">
       </mat-form-field>
 
       <button mat-raised-button color="primary" (click)="addWallet()">Create Wallet</button>
@@ -24,9 +24,9 @@
 
     </div>
 
-    <span style="align-self: center;">
+    <!-- <span style="align-self: center;">
       Active Wallet: <a routerLink="/">Wallet</a>
-    </span>
+    </span> -->
 
   </section>
 
@@ -62,9 +62,9 @@
 
     <ng-container matColumnDef="content">
       <mat-header-cell *matHeaderCellDef>Content</mat-header-cell>
-      <mat-cell *matCellDef="let wallet"><span style='font-weight: bold;'>N:</span>{{wallet.wallet.scrypt.n}}
-        <span style='font-weight: bold; padding-left: 4px;'>R:</span>{{wallet.wallet.scrypt.r}}
-        <span style='font-weight: bold; padding-left: 4px;'>P:</span>{{wallet.wallet.scrypt.p}}
+      <mat-cell *matCellDef="let wallet"><span style='font-weight: bold;'>N:</span>{{wallet?.wallet?.scrypt?.n}}
+        <span style='font-weight: bold; padding-left: 4px;'>R:</span>{{wallet?.wallet?.scrypt?.r}}
+        <span style='font-weight: bold; padding-left: 4px;'>P:</span>{{wallet?.wallet?.scrypt?.p}}
       </mat-cell>
     </ng-container>
 

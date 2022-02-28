@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Allows for accessing of the various {@link Item}s in the database.
@@ -34,7 +33,7 @@ public interface ItemService {
      *
      * @return the {@link Item}
      */
-    Pagination<Item> getItems(int offset, int count, List<String> tags, String query);
+    Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query);
 
     /**
      * Updates the specific {@link Item}.

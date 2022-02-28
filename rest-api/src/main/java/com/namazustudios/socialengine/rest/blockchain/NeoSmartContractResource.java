@@ -1,20 +1,28 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoSmartContract;
-import com.namazustudios.socialengine.model.blockchain.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.PatchNeoSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.model.blockchain.neo.MintNeoTokenResponse;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.service.blockchain.NeoSmartContractService;
+import io.neow3j.protocol.core.response.NeoApplicationLog;
+import io.neow3j.protocol.core.response.NeoInvokeFunction;
+import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
 
 import javax.inject.Inject;
 import javax.ws.rs.*;
+import javax.ws.rs.container.AsyncResponse;
+import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
+import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
 /**
  * Created by keithhudnall on 9/21/21.
@@ -31,11 +39,10 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets Neo contracts.",
             notes = "Gets a pagination of Neo Contracts.")
-    public Pagination<NeoSmartContract> getContracts(
+    public Pagination<ElementsSmartContract> getContracts(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("search") @DefaultValue("") String search) {
-
         return getNeoSmartContractService().getNeoSmartContracts(offset, count, search);
     }
 
@@ -44,7 +51,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Neo Smart Contract",
             notes = "Gets a specific Neo Smart Contract by contractId.")
-    public NeoSmartContract getContract(@PathParam("contractId") String contractId) {
+    public ElementsSmartContract getContract(@PathParam("contractId") String contractId) {
         return getNeoSmartContractService().getNeoSmartContract(contractId);
     }
 
@@ -52,7 +59,7 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Patches a Neo Smart Contract",
             notes = "Patches a Neo Smart Contract entry, associated with the specified deployed script hash.")
-    public NeoSmartContract patchContract(final PatchNeoSmartContractRequest request) {
+    public ElementsSmartContract patchContract(final PatchSmartContractRequest request) {
         return getNeoSmartContractService().patchNeoSmartContract(request);
     }
 
@@ -60,9 +67,49 @@ public class NeoSmartContractResource {
     @Path("mint")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Mints a token using the specified contract.",
-            notes = "Mints the specified token using the specified contract id.")
-    public NeoToken mintToken(final MintTokenRequest request) {
-        return getNeoSmartContractService().mintToken(request);
+            notes = "Mints the specified token using the specified contract id.",
+            response = MintNeoTokenResponse.class)
+    public void mintToken(final MintTokenRequest request,
+                          @Suspended final AsyncResponse asyncResponse) {
+
+        final var operation = getNeoSmartContractService().mintToken(
+            request,
+            m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
+            asyncResponse::resume);
+
+        asyncResponse.setTimeoutHandler(response -> operation.close());
+
+    }
+
+    @POST
+    @Path("invocation")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Invokes the specified method on the contract.",
+            notes = "Invokes the specified method using the specified contract id.",
+            response = NeoSendRawTransaction.class)
+    public void invoke(final InvokeContractRequest request,
+                       @Suspended
+                       final AsyncResponse asyncResponse) {
+
+        final var operation = getNeoSmartContractService().invoke(
+            request,
+            (blockId, response) -> asyncResponse.resume(response),
+            asyncResponse::resume);
+
+        asyncResponse.setTimeoutHandler(response -> operation.close());
+
+    }
+
+    @POST
+    @Path("invocation_test")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Tests the invocation of the specified method on the contract without incurring GAS fees.",
+            notes = "Invokes the specified method using the specified contract id.")
+    public NeoInvokeFunction testInvoke(
+            final InvokeContractRequest request,
+            @Suspended
+            final AsyncResponse asyncResponse) {
+        return getNeoSmartContractService().testInvoke(request);
     }
 
     @DELETE
@@ -71,7 +118,7 @@ public class NeoSmartContractResource {
     @ApiOperation(value = "Deletes a Neo Smart Contract",
             notes = "Deletes a Neo Smart Contract with the specified contractId.")
     public void deleteContract(@PathParam("contractId") String contractId) {
-        getNeoSmartContractService().deleteTemplate(contractId);
+        getNeoSmartContractService().deleteContract(contractId);
     }
 
     public NeoSmartContractService getNeoSmartContractService() {

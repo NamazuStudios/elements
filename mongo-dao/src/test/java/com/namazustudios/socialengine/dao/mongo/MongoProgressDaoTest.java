@@ -4,6 +4,7 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.namazustudios.socialengine.dao.*;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
@@ -100,6 +101,7 @@ public class MongoProgressDaoTest  {
         testItem.setDescription("Magical Coins for Magic!");
         testItem.setTags(of("a").collect(toList()));
         testItem.addMetadata("consumable", true);
+        testItem.setCategory(ItemCategory.FUNGIBLE);
         return getItemDao().createItem(testItem);
     }
 
@@ -110,6 +112,7 @@ public class MongoProgressDaoTest  {
         testItem.setDescription("Magical Coins for Magic!");
         testItem.setTags(of("repeat").collect(toList()));
         testItem.addMetadata("consumable", true);
+        testItem.setCategory(ItemCategory.FUNGIBLE);
         return getItemDao().createItem(testItem);
     }
 

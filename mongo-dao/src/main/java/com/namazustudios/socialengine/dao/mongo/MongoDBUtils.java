@@ -21,6 +21,7 @@ import dev.morphia.query.Query;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -132,6 +133,15 @@ public class MongoDBUtils {
 
     }
 
+    /**
+     * Tries to parse a string into an {@link ObjectId}.
+     *
+     * @param idString the id string
+     * @return the {@link Optional<ObjectId>}
+     */
+    public Optional<ObjectId> parse(final String idString) {
+        return Optional.ofNullable(parseOrReturnNull(idString));
+    }
 
     /**
      * Parses the given ObjectID string using {@link ObjectId}.  If this fails, this throws the appropriate exception

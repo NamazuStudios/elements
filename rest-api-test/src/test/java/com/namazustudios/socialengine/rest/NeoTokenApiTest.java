@@ -1,16 +1,13 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.blockchain.*;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
-import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.model.session.Session;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
 import com.namazustudios.socialengine.model.session.SessionCreation;
-import com.namazustudios.socialengine.model.session.UsernamePasswordSessionRequest;
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
-import org.testng.annotations.Guice;
 import org.testng.annotations.Test;
 
 import javax.inject.Inject;
@@ -20,7 +17,6 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;

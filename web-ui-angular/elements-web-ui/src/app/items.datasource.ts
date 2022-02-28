@@ -1,5 +1,5 @@
 import {CollectionViewer, DataSource} from '@angular/cdk/collections';
-import {Item} from './api/models/item';
+import {Item, ItemCategory} from './api/models/item';
 import {ItemsService} from './api/services/items.service';
 import {BehaviorSubject, Observable, of} from 'rxjs';
 import {catchError, finalize} from 'rxjs/operators';
@@ -13,7 +13,7 @@ export class ItemsDataSource implements DataSource<Item> {
   public totalCount$ = this.totalCountSubject.asObservable();
   public items$ = this.itemsSubject.asObservable();
 
-  constructor(private itemsService: ItemsService) { }
+  constructor(private itemsService: ItemsService) {}
 
   connect(collectionViewer: CollectionViewer): Observable<Item[] | ReadonlyArray<Item>> {
     return this.items$;
@@ -25,11 +25,11 @@ export class ItemsDataSource implements DataSource<Item> {
   }
 
   // add in search when ready
-  loadItems(search: string, offset: number, count: number) {
+  loadItems(search: string, offset: number, count: number, category?: ItemCategory) {
     this.loadingSubject.next(true);
 
     // add search when ready
-    this.itemsService.getItems({offset: offset, count: count, search: search})
+    this.itemsService.getItems({offset: offset, count: count, search: search, category: category})
       .pipe(
         catchError(() => of({objects: [], total: 0})),
         finalize(() => this.loadingSubject.next(false)))

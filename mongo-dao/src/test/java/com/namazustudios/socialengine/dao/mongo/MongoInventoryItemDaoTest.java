@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.UserDao;
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -53,6 +54,7 @@ public class MongoInventoryItemDaoTest {
         testItemA.setDescription("A simple test item.");
         testItemA.setTags(of("a").collect(toList()));
         testItemA.addMetadata("key", "a");
+        testItemA.setCategory(ItemCategory.FUNGIBLE);
 
         testItemB = new Item();
         testItemB.setName("item_b");
@@ -60,8 +62,10 @@ public class MongoInventoryItemDaoTest {
         testItemB.setDescription("A simple test item.");
         testItemB.setTags(of("a").collect(toList()));
         testItemB.addMetadata("key", "b");
+        testItemB.setCategory(ItemCategory.FUNGIBLE);
 
         testItemInsertOnUpdateQuantity = new Item();
+        testItemInsertOnUpdateQuantity.setCategory(ItemCategory.FUNGIBLE);
         testItemInsertOnUpdateQuantity.setName("item_testItemInsertOnUpdateQuantity");
         testItemInsertOnUpdateQuantity.setDisplayName("Test Item testItemInsertOnUpdateQuantity.");
         testItemInsertOnUpdateQuantity.setDescription("A simple test item.");
@@ -140,8 +144,8 @@ public class MongoInventoryItemDaoTest {
     @Test(dependsOnMethods = "testCreateInventoryItem", dataProvider = "getUsersAndPriorities")
     public void testUpdateInventoryItem(final User user, final int priority) {
 
-        final InventoryItem inventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getId(), priority);
-        final InventoryItem nameInventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getName(), priority);
+        final var inventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getId(), priority);
+        final var nameInventoryItem = getInventoryItemDao().getInventoryItemByItemNameOrId(user, testItemA.getName(), priority);
         assertEquals(inventoryItem, nameInventoryItem);
         assertEquals(inventoryItem.getId(), nameInventoryItem.getId());
 

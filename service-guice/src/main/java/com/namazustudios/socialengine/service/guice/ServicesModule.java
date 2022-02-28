@@ -299,6 +299,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(SaveDataDocumentServiceProvider.class)
             .in(scope);
 
+        bind(DistinctInventoryItemService.class)
+            .toProvider(DistinctInventoryItemServiceProvider.class)
+            .in(scope);
+
         bind(NameService.class)
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
@@ -458,7 +462,8 @@ public class ServicesModule extends PrivateModule {
 
         bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
-            .to(StandardNeow3jClient.class);
+            .to(StandardNeow3jClient.class)
+            .asEagerSingleton();
 
         bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
@@ -479,6 +484,10 @@ public class ServicesModule extends PrivateModule {
         bind(CustomAuthSessionService.class)
             .annotatedWith(Unscoped.class)
             .to(StandardCustomAuthSessionService.class);
+
+        bind(DistinctInventoryItemService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserDistinctInventoryItemService.class);
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
@@ -537,6 +546,7 @@ public class ServicesModule extends PrivateModule {
         expose(SaveDataDocumentService.class);
         expose(NeoSmartContractService.class);
         expose(CustomAuthSessionService.class);
+        expose(DistinctInventoryItemService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -580,6 +590,7 @@ public class ServicesModule extends PrivateModule {
         expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
+        expose(DistinctInventoryItemService.class).annotatedWith(Unscoped.class);
 
     }
 

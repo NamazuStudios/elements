@@ -18,34 +18,34 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 public interface NeoSmartContractDao {
 
     /**
-     * Lists all {@link NeoSmartContract} instances, specifying a search query.
+     * Lists all {@link ElementsSmartContract} instances, specifying a search query.
      *
      * @param offset
      * @param count
      * @param search
-     * @return a {@link Pagination} of {@link NeoSmartContract} instances
+     * @return a {@link Pagination} of {@link ElementsSmartContract} instances
      */
-    Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search);
+    Pagination<ElementsSmartContract> getNeoSmartContracts(int offset, int count, String search);
 
     /**
-     * Fetches a specific {@link NeoSmartContract} instance based on ID or name.  If not found, an
+     * Fetches a specific {@link ElementsSmartContract} instance based on ID or name.  If not found, an
      * exception is raised.
      *
      * @param contractIdOrName the contract ID
-     * @return the {@link NeoSmartContract}, never null
+     * @return the {@link ElementsSmartContract}, never null
      */
-    NeoSmartContract getNeoSmartContract(String contractIdOrName);
+    ElementsSmartContract getNeoSmartContract(String contractIdOrName);
 
     /**
-     * Updates the supplied {@link NeoSmartContract}.
+     * Updates the supplied {@link ElementsSmartContract}.
      *
-     * @param patchNeoSmartContractRequest the {@link PatchNeoSmartContractRequest} with the information to update
-     * @return the {@link NeoSmartContract} as it was changed by the service.
+     * @param patchSmartContractRequest the {@link PatchSmartContractRequest} with the information to update
+     * @return the {@link ElementsSmartContract} as it was changed by the service.
      */
-    NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest);
+    ElementsSmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest);
 
     /**
-     * Deletes the {@link NeoSmartContract} with the supplied contract ID.
+     * Deletes the {@link ElementsSmartContract} with the supplied contract ID.
      *
      * @param contractId the contract ID.
      */

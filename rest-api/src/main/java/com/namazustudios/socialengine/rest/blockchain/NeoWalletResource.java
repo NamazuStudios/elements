@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.CreateNeoWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoWallet;
-import com.namazustudios.socialengine.model.blockchain.UpdateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.service.blockchain.NeoWalletService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

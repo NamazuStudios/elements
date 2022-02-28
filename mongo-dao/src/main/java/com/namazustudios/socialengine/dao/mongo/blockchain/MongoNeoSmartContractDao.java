@@ -5,9 +5,7 @@ import com.namazustudios.socialengine.dao.NeoSmartContractDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoSmartContract;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
-import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.NeoSmartContractNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.*;
@@ -27,6 +25,7 @@ import static com.google.common.base.Strings.nullToEmpty;
 import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
+import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoNeoSmartContractDao implements NeoSmartContractDao {
 
@@ -41,7 +40,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<NeoSmartContract> getNeoSmartContracts(int offset, int count, String search) {
+    public Pagination<ElementsSmartContract> getNeoSmartContracts(int offset, int count, String search) {
         final String trimmedSearch = nullToEmpty(search).trim();
         final Query<MongoNeoSmartContract> mongoQuery = getDatastore().find(MongoNeoSmartContract.class);
 
@@ -53,7 +52,7 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
     }
 
     @Override
-    public NeoSmartContract getNeoSmartContract(String contractIdOrName) {
+    public ElementsSmartContract getNeoSmartContract(String contractIdOrName) {
         final var objectId = getMongoDBUtils().parseOrReturnNull(contractIdOrName);
 
         var mongoContract = getDatastore().find(MongoNeoSmartContract.class)
@@ -63,36 +62,60 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
                         )
                 ).first();
 
-        if(null == mongoContract) {
-            throw new NotFoundException("Unable to find contract with an id or name of " + contractIdOrName);
+        if(mongoContract == null) {
+            throw new NeoSmartContractNotFoundException("Unable to find contract with an id or name of " + contractIdOrName);
         }
 
         return transform(mongoContract);
     }
 
     @Override
-    public NeoSmartContract patchNeoSmartContract(PatchNeoSmartContractRequest patchNeoSmartContractRequest) {
-        getValidationHelper().validateModel(patchNeoSmartContractRequest, ValidationGroups.Insert.class);
+    public ElementsSmartContract patchNeoSmartContract(PatchSmartContractRequest patchSmartContractRequest) {
+        getValidationHelper().validateModel(patchSmartContractRequest, ValidationGroups.Insert.class);
 
         final var query = getDatastore().find(MongoNeoSmartContract.class);
-        final var scriptHash = patchNeoSmartContractRequest.getScriptHash();
+        final var scriptHash = patchSmartContractRequest.getScriptHash();
 
         query.filter(eq("scriptHash", scriptHash));
 
         final var builder = new UpdateBuilder().with(
-                set("displayName", patchNeoSmartContractRequest.getDisplayName()),
+                set("displayName", patchSmartContractRequest.getDisplayName()),
                 set("scriptHash", scriptHash),
-                set("blockchain", patchNeoSmartContractRequest.getBlockchain())
+                set("blockchain", patchSmartContractRequest.getBlockchain())
         );
 
-        var metadata = patchNeoSmartContractRequest.getMetadata();
+        final var walletId = patchSmartContractRequest.getWalletId();
+        if(walletId != null) {
+
+            builder.with(set("walletId", walletId));
+
+            final var accountAddress = patchSmartContractRequest.getAccountAddress();
+
+            if(accountAddress != null) {
+                builder.with(set("accountAddress", accountAddress));
+            } else {
+                builder.with(unset("accountAddress"));
+            }
+
+        } else {
+            builder.with(unset("walletId"));
+            builder.with(unset("accountAddress"));
+        }
+
+        final var metadata = patchSmartContractRequest.getMetadata();
         if (metadata != null) {
             builder.with(set("metadata", metadata));
+        } else {
+            builder.with(unset("metadata"));
         }
 
         final var mongoContract = getMongoDBUtils().perform(
                 ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
+
+        if(mongoContract == null) {
+            throw new NeoSmartContractNotFoundException("Unable to find contract with a matching script hash " + scriptHash);
+        }
 
         getObjectIndex().index(mongoContract);
         return transform(mongoContract);
@@ -100,15 +123,20 @@ public class MongoNeoSmartContractDao implements NeoSmartContractDao {
 
     @Override
     public void deleteNeoSmartContract(String contractId) {
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(contractId);
-        final var query = getDatastore().find(MongoNeoSmartContract.class);
+        final var objectId = getMongoDBUtils().parseOrThrow(contractId, NeoSmartContractNotFoundException::new);
 
-        query.filter(eq("_id", objectId));
-        query.delete();
+        final var result = getDatastore()
+                .find(MongoNeoSmartContract.class)
+                .filter(eq("_id", objectId))
+                .delete();
+
+        if(result.getDeletedCount() == 0){
+            throw new NeoSmartContractNotFoundException("NeoSmartContract not deleted: " + contractId);
+        }
     }
 
-    private NeoSmartContract transform(MongoNeoSmartContract token) {
-        return getBeanMapper().map(token, NeoSmartContract.class);
+    private ElementsSmartContract transform(MongoNeoSmartContract token) {
+        return getBeanMapper().map(token, ElementsSmartContract.class);
     }
 
     public MongoDBUtils getMongoDBUtils() {

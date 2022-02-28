@@ -16,13 +16,19 @@ import { NeoTokenViewModel } from "../models/blockchain/neo-token-view-model";
 import { CreateNeoTokenRequest } from "../api/models/blockchain/create-neo-token-request";
 import { UpdateNeoTokenRequest } from "../api/models/blockchain/update-neo-token-request";
 import {
-  NeoTokenDialogComponent,
+  NeoTokenDialogComponent, OptionType,
 } from "../neo-token-dialog/neo-token-dialog.component";
+import { TransferOptionsPipe } from "./transferOptions.pipe";
+import { MintTokenRequest } from "../api/models/blockchain/mint-token-request";
+import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
+import { NeoSmartContractMintDialogComponent } from "../neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component";
+
 
 @Component({
   selector: "app-neo-tokens-list",
   templateUrl: "./neo-tokens-list.component.html",
   styleUrls: ["./neo-tokens-list.component.css"],
+  providers: [TransferOptionsPipe]
 })
 export class NeoTokensListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
@@ -57,9 +63,11 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
 
   constructor(
     private neoTokensService: NeoTokensService,
+    private neoSmartContractService: NeoSmartContractsService,
     private alertService: AlertService,
     private dialogService: ConfirmationDialogService,
     public dialog: MatDialog,
+    public transferOptionsPipe: TransferOptionsPipe,
     public userService: UsersService
   ) {}
 
@@ -168,7 +176,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
 
   showDialog(isNew: boolean, neoToken: NeoToken, next) {
     this.dialog.open(NeoTokenDialogComponent, {
-      width: "900px",
+      width: "850px",
       data: {
         isNew: isNew,
         neoToken,
@@ -221,13 +229,33 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
     );
   }
 
-  listToken(token: NeoToken) {
+  showMintDialog(neoToken: NeoToken, next) {
+    this.dialog.open(NeoSmartContractMintDialogComponent, {
+      width: "500px",
+      data: {
+        neoToken,
+        next: next,
+        refresher: this,
+      },
+    });
+  }
+
+  mintToken(token: NeoToken){
+    this.showMintDialog(
+      token,
+      (mintTokenRequest: MintTokenRequest) => {
+        return this.neoSmartContractService.mintToken(mintTokenRequest);
+      }
+    );
+  }
+
+  listToken(token: NeoToken, listed: boolean) {
     this.neoTokensService
       .updateToken({
         id: token.id,
         body: {
           token: token.token,
-          listed: true,
+          listed,
           contractId: token.contractId,
         },
       })
@@ -247,5 +275,9 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
         });
       }
     );
+  }
+
+  getTransferOptionsToolTip(data){
+    return this.transferOptionsPipe.transform(data, 'toolTip');
   }
 }

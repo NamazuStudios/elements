@@ -5,5 +5,11 @@ export interface Item {
   tags?: Array<string>;
   displayName: string;
   description: string;
+  category: string;
   metadata?: {[key: string]: any};
+}
+
+export enum ItemCategory {
+  FUNGIBLE = "FUNGIBLE",
+  DISTINCT = "DISTINCT"
 }

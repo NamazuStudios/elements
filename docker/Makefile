@@ -2,11 +2,12 @@
 .DEFAULT=revision
 .PHONY=login,tag,push,clean
 
+REV ?= $(shell git rev-parse --verify HEAD)
 TAG ?= $(shell git rev-parse --verify HEAD)
 TAG_SHORT ?= $(shell git rev-parse --short --verify HEAD)
 TAG_MAVEN_VERSION = $(shell mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
 
-MAVEN_OPTIONS?=""
+MAVEN_OPTIONS?=
 
 DOCKER_TAG=docker tag
 DOCKER_PUSH=docker push 
@@ -18,14 +19,19 @@ MAVEN_PROJECT_VERSION:=$(shell mvn help:evaluate -Dexpression=project.version -q
 
 TARGET_ARCHITECTURES="linux/amd64"
 
+UI_VERSION_JSON=namazu-socialengine-ui/target/lib/dist/assets/version.json
+
 define DOCKER_BUILD_TAG
 	@echo "Building Base Image for $(1) -> $(2)"
 	$(DOCKER_BUILD) $(1) \
 		--push \
+		--pull \
 		--platform $(TARGET_ARCHITECTURES) \
+		--tag docker.namazustudios.net/namazu-elements-$(2):$(REV) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(TAG_SHORT) \
 		--tag docker.namazustudios.net/namazu-elements-$(2):$(MAVEN_PROJECT_VERSION) \
+		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(REV) \
 		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG) \
 		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(TAG_SHORT) \
 		--tag docker.namazustudios.net/namazu-socialengine-$(2):$(MAVEN_PROJECT_VERSION)
@@ -66,6 +72,12 @@ revision: login deps
 
 deps:
 	$(MAVEN_COPY_DEPS)
+	- rm -f $(UI_VERSION_JSON)
+	@echo '{' >> $(UI_VERSION_JSON)
+	@echo '  "version":"$(TAG_MAVEN_VERSION)",' >> $(UI_VERSION_JSON)
+	@echo '  "revision":"$(shell git rev-parse --verify HEAD)",' >> $(UI_VERSION_JSON)
+	@echo '  "timestamp":"$(shell date "+%m-%d-%Y %T")"' >> $(UI_VERSION_JSON)
+	@echo '}' >> $(UI_VERSION_JSON)
 
 clean:
 	mvn clean

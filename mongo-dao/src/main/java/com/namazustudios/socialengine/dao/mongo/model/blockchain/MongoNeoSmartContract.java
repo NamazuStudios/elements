@@ -26,16 +26,22 @@ import java.util.Map;
 public class MongoNeoSmartContract {
 
     @Id
-    public String id;
+    private String id;
 
     @Property
-    public String displayName;
+    private String displayName;
 
     @Property
-    public String scriptHash;
+    private String scriptHash;
 
     @Property
-    public String blockchain;
+    private String blockchain;
+
+    @Property
+    private String walletId;
+
+    @Property
+    private String accountAddress;
 
     @Property
     private Map<String, Object> metadata;
@@ -70,6 +76,22 @@ public class MongoNeoSmartContract {
 
     public void setBlockchain(String blockchain) {
         this.blockchain = blockchain;
+    }
+
+    public String getWalletId() {
+        return walletId;
+    }
+
+    public void setWalletId(String walletId) {
+        this.walletId = walletId;
+    }
+
+    public String getAccountAddress() {
+        return accountAddress;
+    }
+
+    public void setAccountAddress(String accountAddress) {
+        this.accountAddress = accountAddress;
     }
 
     public Map<String, Object> getMetadata() {

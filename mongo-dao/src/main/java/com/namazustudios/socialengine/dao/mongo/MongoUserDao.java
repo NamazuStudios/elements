@@ -72,6 +72,12 @@ public class MongoUserDao implements UserDao {
         return getActiveMongoUser(user.getId());
     }
 
+    public Optional<MongoUser> findActiveMongoUser(final User user) {
+        return Optional
+            .ofNullable(user)
+            .flatMap(u -> findActiveMongoUser(u.getId()));
+    }
+
     public Optional<MongoUser> findActiveMongoUser(final String userId) {
         final var mongoUserId = getMongoDBUtils().parseOrReturnNull(userId);
         return mongoUserId == null ? Optional.empty() : findActiveMongoUser(mongoUserId);
