@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
@@ -13,6 +14,8 @@ import io.swagger.annotations.Authorization;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+
+import java.util.List;
 
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
@@ -76,6 +79,19 @@ public class NeoWalletResource {
             notes = "Deletes a Neo Wallet with the specified id.")
     public void deleteTemplate(@PathParam("walletId") String walletId) {
         getWalletService().deleteWallet(walletId);
+    }
+
+
+    @GET
+    @Path("{walletNameOrId}/nft")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Gets the NFT contents",
+            notes = "Gets the NFT (NEP-11) contents of a specific Neo Wallet.")
+    public List<Token> getWalletNFTContents(@PathParam("walletNameOrId") String walletNameOrId) {
+
+        walletNameOrId = Strings.nullToEmpty(walletNameOrId).trim();
+
+        return getWalletService().getWalletNFTContents(walletNameOrId);
     }
 
     public NeoWalletService getWalletService() {

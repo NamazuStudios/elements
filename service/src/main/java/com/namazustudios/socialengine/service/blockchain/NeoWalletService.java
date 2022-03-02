@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
@@ -8,6 +9,8 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
+
+import java.util.List;
 
 /**
  * Manages instances of {@link NeoWallet}.
@@ -58,6 +61,15 @@ public interface NeoWalletService {
      * @return the {@link NeoWallet} as it was created by the service.
      */
     NeoWallet createWallet(CreateNeoWalletRequest walletRequest);
+
+    /**
+     * Fetches a specific {@link NeoWallet} instance based on ID or name and then the NFT contents therein.
+     * If not found, an exception is raised.
+     *
+     * @param walletNameOrId the wallet Id or name
+     * @return the {@link NeoWallet}, never null
+     */
+    List<Token> getWalletNFTContents(String walletNameOrId);
 
     /**
      * Deletes the {@link NeoWallet} with the supplied wallet ID.
