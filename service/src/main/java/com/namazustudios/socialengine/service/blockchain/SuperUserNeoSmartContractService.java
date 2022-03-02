@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.dao.NeoSmartContractDao;
@@ -92,45 +93,52 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
             stakeHolder.setOwner(stakeHolderHash.toString());
         }
 
-        final var tokenMap = getObjectMapper().convertValue(clone.getToken(), Map.class);
-        getNeoTokenDao().setMintStatusForToken(clone.getId(), MINT_PENDING);
+        try {
 
-        final var invokeContractRequest = new InvokeContractRequest();
-        invokeContractRequest.setMethodName("mint");
-        invokeContractRequest.setContractId(clone.getContractId());
-        invokeContractRequest.setPassword(mintTokenRequest.getPassword());
-        invokeContractRequest.setWalletId(mintTokenRequest.getWalletId());
-        invokeContractRequest.setParameters(List.of(clone.getTokenUUID(), tokenMap));
+            final var tokenMap = getObjectMapper().writeValueAsString(clone.getToken());
 
-        return doInvoke(invokeContractRequest, (blockIndex, tx) -> {
+            getNeoTokenDao().setMintStatusForToken(clone.getId(), MINT_PENDING);
 
-                final var appLog = tx.getApplicationLog();
+            final var invokeContractRequest = new InvokeContractRequest();
+            invokeContractRequest.setMethodName("mint");
+            invokeContractRequest.setContractId(clone.getContractId());
+            invokeContractRequest.setPassword(mintTokenRequest.getPassword());
+            invokeContractRequest.setWalletId(mintTokenRequest.getWalletId());
+            invokeContractRequest.setParameters(List.of(clone.getTokenUUID(), tokenMap));
 
-                final var hasFault = appLog
-                    .getExecutions()
-                    .stream()
-                    .anyMatch(e -> e.getState() == NeoVMStateType.FAULT);
+            return doInvoke(invokeContractRequest, (blockIndex, tx) -> {
 
-                if (hasFault) {
-                    clone.setMintStatus(MINT_FAILED);
-                } else {
-                    clone.setMintStatus(MINTED);
-                }
+                        final var appLog = tx.getApplicationLog();
 
-                var fullyMinted = getNeoTokenDao().setMintStatusForToken(
-                    clone.getId(),
-                    clone.getMintStatus()
-                );
+                        final var hasFault = appLog
+                                .getExecutions()
+                                .stream()
+                                .anyMatch(e -> e.getState() == NeoVMStateType.FAULT);
 
-                final var response = new MintNeoTokenResponse();
-                response.setToken(fullyMinted);
-                response.setBlockIndex(blockIndex);
-                tokenResponseConsumer.accept(response);
+                        if (hasFault) {
+                            clone.setMintStatus(MINT_FAILED);
+                        } else {
+                            clone.setMintStatus(MINTED);
+                        }
 
-            },
-            exceptionConsumer
-        );
+                        var fullyMinted = getNeoTokenDao().setMintStatusForToken(
+                                clone.getId(),
+                                clone.getMintStatus()
+                        );
 
+                        final var response = new MintNeoTokenResponse();
+                        response.setToken(fullyMinted);
+                        response.setBlockIndex(blockIndex);
+                        tokenResponseConsumer.accept(response);
+
+                    },
+                    exceptionConsumer
+            );
+        } catch (final JsonProcessingException e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 
     @Override

@@ -10,6 +10,7 @@ import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.Neow3j;
+import io.neow3j.protocol.Neow3jService;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
 import io.neow3j.types.ContractParameter;
@@ -36,6 +37,12 @@ public interface Neow3jClient {
      * @return the {@link Neow3j}, never null
      */
     Neow3j getNeow3j();
+
+    /**
+     * Gets the {@link Neow3jService} instance for making raw requests.
+     * @return the {@link Neow3jService}, never null
+     */
+    Neow3jService getNeow3jService();
 
     /**
      * Gets the {@link Account} instance.
@@ -69,6 +76,17 @@ public interface Neow3jClient {
      * @return the {@link NEP6Wallet}
      */
     NEP6Wallet createWallet(String name, String password) throws CipherException;
+
+    /**
+     * Creates an encrypted {@link NEP6Wallet}.
+     *
+     * @param name the name for the wallet
+     * @param password the password for the wallet
+     * @param privateKey the key for the account to be imported into this wallet
+     * @return the {@link NEP6Wallet}
+     * @throws CipherException
+     */
+    NEP6Wallet createWallet(String name, String password, String privateKey) throws CipherException;
 
     /**
      * Creates an encrypted {@link NEP6Wallet}.

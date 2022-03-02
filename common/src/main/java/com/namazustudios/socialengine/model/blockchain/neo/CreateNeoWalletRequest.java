@@ -20,6 +20,9 @@ public class CreateNeoWalletRequest {
     @ApiModelProperty("Password to encrypt the wallet.")
     private String password;
 
+    @ApiModelProperty("Private key (WIF) for existing account to import into wallet. If not specified, a new account will be created.")
+    private String privateKey;
+
     public String getDisplayName() {
         return displayName;
     }
@@ -42,5 +45,13 @@ public class CreateNeoWalletRequest {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public String getPrivateKey() {
+        return privateKey;
+    }
+
+    public void setPrivateKey(String privateKey) {
+        this.privateKey = privateKey;
     }
 }

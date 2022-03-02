@@ -8,6 +8,7 @@ import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
 import io.neow3j.protocol.Neow3j;
 import io.neow3j.protocol.Neow3jConfig;
+import io.neow3j.protocol.Neow3jService;
 import io.neow3j.protocol.http.HttpService;
 import io.neow3j.script.ScriptBuilder;
 import io.neow3j.transaction.TransactionBuilder;
@@ -49,6 +50,11 @@ public class StandardNeow3jClient implements Neow3jClient {
     }
 
     @Override
+    public Neow3jService getNeow3jService() {
+        return httpService;
+    }
+
+    @Override
     public Account getAccount(String wif) {
         return Account.fromWIF(wif);
     }
@@ -66,6 +72,16 @@ public class StandardNeow3jClient implements Neow3jClient {
     @Override
     public NEP6Wallet createWallet(String name, String password) throws CipherException {
         return Wallet.create(password).name(name).toNEP6Wallet();
+    }
+
+    @Override
+    public NEP6Wallet createWallet(String name, String password, String privateKey) throws CipherException {
+        final var importedAccount = Account.fromWIF(privateKey);
+        final var wallet = Wallet.withAccounts(importedAccount).name(name);
+
+        wallet.encryptAllAccounts(password);
+
+        return wallet.toNEP6Wallet();
     }
 
     @Override
@@ -176,6 +192,6 @@ public class StandardNeow3jClient implements Neow3jClient {
     @Inject
     private void setHttpService(@Named(Constants.NEO_BLOCKCHAIN_HOST)String neoHost,
                                 @Named(Constants.NEO_BLOCKCHAIN_PORT)String neoPort) {
-        httpService = new HttpService(format("%s:%s", neoHost, neoPort));
+        httpService = new HttpService(format("%s:%s", neoHost, neoPort), true);
     }
 }
