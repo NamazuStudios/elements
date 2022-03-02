@@ -47,12 +47,12 @@
 
     <ng-container matColumnDef="owner">
       <mat-header-cell *matHeaderCellDef>Owner</mat-header-cell>
-      <mat-cell *matCellDef="let wallet">{{wallet.user.name}}</mat-cell>
+      <mat-cell *matCellDef="let wallet">{{wallet?.user?.name}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-      <mat-cell *matCellDef="let wallet"><span class="truncate-text-right">{{wallet.displayName}}</span></mat-cell>
+      <mat-cell *matCellDef="let wallet"><span class="truncate-text-right">{{wallet?.displayName}}</span></mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="network">
@@ -75,7 +75,7 @@
 
     <ng-container matColumnDef="level">
       <mat-header-cell *matHeaderCellDef>Level</mat-header-cell>
-      <mat-cell *matCellDef="let wallet">{{wallet.user.level}}</mat-cell>
+      <mat-cell *matCellDef="let wallet">{{wallet?.user?.level}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="content-action">
