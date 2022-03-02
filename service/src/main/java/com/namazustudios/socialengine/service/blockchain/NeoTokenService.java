@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
@@ -31,10 +32,11 @@ public interface NeoTokenService {
      * @param offset
      * @param count
      * @param tags
+     * @param mintStatus
      * @param search
      * @return a {@link Pagination} of {@link NeoToken} instances
      */
-    Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search);
+    Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, BlockchainConstants.MintStatus mintStatus, String search);
 
     /**
      * Fetches a specific {@link NeoToken} instance based on ID or name.  If not found, an

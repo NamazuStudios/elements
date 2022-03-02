@@ -21,6 +21,7 @@ public interface BlockchainConstants {
          * The name of the NEO blockchain
          */
         String NEO = "NEO";
+
     }
 
     interface Topics {
@@ -30,4 +31,5 @@ public interface BlockchainConstants {
          */
         String NEO_APPLICATION_LOG = "neoapplicationlog";
     }
+
 }

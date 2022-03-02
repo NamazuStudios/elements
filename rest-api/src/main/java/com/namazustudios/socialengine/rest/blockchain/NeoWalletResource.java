@@ -34,8 +34,8 @@ public class NeoWalletResource {
     public Pagination<NeoWallet> getWallets(
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
-            @QueryParam("userId") String userId,
-            @QueryParam("format") @DefaultValue("NONE") String format) {
+            @QueryParam("userId") final String userId,
+            @QueryParam("format") @DefaultValue("NONE") final String format) {
 
         return getWalletService().getWallets(offset, count, userId);
     }
