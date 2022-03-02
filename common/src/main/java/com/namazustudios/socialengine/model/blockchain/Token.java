@@ -40,9 +40,9 @@ public class Token {
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The status of this token. Valid values are " +
-            "\"public\" : Can be viewed by everyone, " +
-            "\"private\" : Only the token or contract owner can view the token properties " +
-            "\"preview\" : If not the token or contract owner, the asset urls cannot be viewed.")
+        "\"public\" : Can be viewed by everyone, " +
+        "\"private\" : Only the token or contract owner can view the token properties " +
+        "\"preview\" : If not the token or contract owner, the asset urls cannot be viewed.")
     private String accessOption;
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})

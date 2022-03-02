@@ -1,11 +1,16 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.BlockchainConstants.MintStatus;
+import com.namazustudios.socialengine.dao.NeoTokenDao;
+import com.namazustudios.socialengine.model.blockchain.Ownership;
+import com.namazustudios.socialengine.model.blockchain.StakeHolder;
+import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
-import com.namazustudios.socialengine.model.session.SessionCreation;
-import com.namazustudios.socialengine.model.user.User;
+import com.namazustudios.socialengine.rest.model.NeoTokenPagination;
+import com.namazustudios.socialengine.util.PaginationWalker;
+import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
@@ -15,13 +20,15 @@ import javax.inject.Named;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.Response;
-
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
-import static com.namazustudios.socialengine.rest.TestUtils.*;
+import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
+import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
@@ -31,20 +38,10 @@ public class NeoTokenApiTest {
     @Factory
     public Object[] getTests() {
         return new Object[] {
-                TestUtils.getInstance().getXodusTest(NeoTokenApiTest.class),
-                TestUtils.getInstance().getUnixFSTest(NeoTokenApiTest.class)
+            TestUtils.getInstance().getXodusTest(NeoTokenApiTest.class),
+            TestUtils.getInstance().getUnixFSTest(NeoTokenApiTest.class)
         };
     }
-
-    private User user;
-
-    private SessionCreation sessionCreation;
-
-    private final String name = "testuser-name-" + randomUUID().toString();
-
-    private final String email = "testuser-email-" + randomUUID().toString() + "@example.com";
-
-    private final String password = randomUUID().toString();
 
     @Inject
     @Named(TEST_API_ROOT)
@@ -56,31 +53,52 @@ public class NeoTokenApiTest {
     @Inject
     private ClientContext superUserClientContext;
 
+    @Inject
+    private NeoTokenDao neoTokenDao;
+
+    @DataProvider
+    public static Object[][] getMintStatus() {
+        return Stream
+            .of(MintStatus.values())
+            .map(s -> new Object[] {s})
+            .toArray(Object[][]::new);
+    }
+
     @DataProvider
     public Object[][] getAuthHeader() {
         return new Object[][] {
-                new Object[] { SESSION_SECRET },
-                new Object[] { SOCIALENGINE_SESSION_SECRET }
+            new Object[] { SESSION_SECRET },
+            new Object[] { SOCIALENGINE_SESSION_SECRET }
         };
     }
 
-    @Test
+    @BeforeClass
     public void createUser() {
         superUserClientContext
-                .createSuperuser("tokenAdmin")
-                .createSession();
+            .createSuperuser("tokenAdmin")
+            .createSession();
     }
 
-    @DataProvider
-    public Object[][] credentialsProvider() {
-        return new Object[][] {
-                new Object[]{name, password},
-                new Object[]{email, password},
-                new Object[]{user.getId(), password}
-        };
+    @BeforeClass
+    public void createTestTokens() {
+        for (var status : MintStatus.values()) {
+            for (int i = 0 ; i < 10; ++ i) {
+
+                var token = newToken();
+                var request = new CreateNeoTokenRequest();
+                request.setContractId("");
+                request.setListed(true);
+                request.setToken(token);
+
+                final var created = neoTokenDao.createToken(request);
+                neoTokenDao.setMintStatusForToken(created.getId(), status);
+
+            }
+
+        }
     }
 
-    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    @Test(dataProvider = "getAuthHeader")
     public void testCreateAndDeleteToken(final String authHeader) {
 
         String tokenName = "TokenTest-" + randomUUID().toString();
@@ -91,11 +109,11 @@ public class NeoTokenApiTest {
         request.setContractId("");
 
         NeoToken neoToken = client
-                .target(apiRoot + "/blockchain/neo/token")
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .post(Entity.entity(request, APPLICATION_JSON))
-                .readEntity(NeoToken.class);
+            .target(apiRoot + "/blockchain/neo/token")
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .post(Entity.entity(request, APPLICATION_JSON))
+            .readEntity(NeoToken.class);
 
         assertNotNull(neoToken);
         assertNotNull(neoToken.getId());
@@ -110,7 +128,7 @@ public class NeoTokenApiTest {
         assertEquals(response.getStatus(), 204);
     }
 
-    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    @Test(dataProvider = "getAuthHeader")
     public void testGetToken(final String authHeader) {
 
         String tokenName = "TokenTest-" + randomUUID().toString();
@@ -121,19 +139,21 @@ public class NeoTokenApiTest {
         request.setContractId("");
 
         Response response = client
-                .target(apiRoot + "/blockchain/neo/token")
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .post(Entity.entity(request, APPLICATION_JSON));
+            .target(apiRoot + "/blockchain/neo/token")
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .post(Entity.entity(request, APPLICATION_JSON));
+
+        var created = response.readEntity(NeoToken.class);
 
         assertEquals(response.getStatus(), 200);
 
-        NeoToken neoToken = client
-                .target(apiRoot + "/blockchain/neo/token/" + tokenName)
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .get()
-                .readEntity(NeoToken.class);
+        var neoToken = client
+            .target(apiRoot + "/blockchain/neo/token/" + created.getId())
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .get()
+            .readEntity(NeoToken.class);
 
         assertNotNull(neoToken);
         assertNotNull(neoToken.getId());
@@ -146,9 +166,10 @@ public class NeoTokenApiTest {
                 .delete();
 
         assertEquals(response.getStatus(), 204);
+
     }
 
-    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    @Test(dataProvider = "getAuthHeader")
     public void testUpdateToken(final String authHeader) {
 
         String tokenName = "TokenTest-" + randomUUID().toString();
@@ -159,11 +180,11 @@ public class NeoTokenApiTest {
         request.setContractId("");
 
         NeoToken neoToken = client
-                .target(apiRoot + "/blockchain/neo/token")
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .post(Entity.entity(request, APPLICATION_JSON))
-                .readEntity(NeoToken.class);
+            .target(apiRoot + "/blockchain/neo/token")
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .post(Entity.entity(request, APPLICATION_JSON))
+            .readEntity(NeoToken.class);
 
         assertNotNull(neoToken);
         assertNotNull(neoToken.getId());
@@ -177,23 +198,76 @@ public class NeoTokenApiTest {
         updateRequest.setContractId("");
 
         var updatedNeoToken = client
-                .target(apiRoot + "/blockchain/neo/token/" + neoToken.getId())
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .put(Entity.entity(updateRequest, APPLICATION_JSON))
-                .readEntity(NeoToken.class);
+            .target(apiRoot + "/blockchain/neo/token/" + neoToken.getId())
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .put(Entity.entity(updateRequest, APPLICATION_JSON))
+            .readEntity(NeoToken.class);
 
         assertNotNull(updatedNeoToken);
         assertNotNull(updatedNeoToken.getId());
         assertEquals(updatedNeoToken.getToken().getName(), updatedTokenName);
 
-        Response response = client
-                .target(apiRoot + "/blockchain/neo/token/" + updatedNeoToken.getId())
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .delete();
+        var response = client
+            .target(apiRoot + "/blockchain/neo/token/" + updatedNeoToken.getId())
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .delete();
 
         assertEquals(response.getStatus(), 204);
+
+    }
+
+    @Test
+    public void testGetTokens() {
+
+        final var called = new AtomicBoolean();
+
+        final PaginationWalker.WalkFunction<NeoToken> walkFunction = (offset, count) -> {
+            final var response = client.target(format("%s/blockchain/neo/token?offset=%d&count=%d",
+                    apiRoot,
+                    offset,
+                    count)
+            )
+            .request()
+            .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+            .get(NeoTokenPagination.class);
+            called.set(true);
+            return response;
+        };
+
+        new PaginationWalker().forEach(walkFunction, neoToken -> {});
+        assertTrue(called.get());
+
+    }
+
+    @Test(dataProvider = "getMintStatus")
+    public void testGetTokensFilterByStatus(final MintStatus mintStatus) {
+
+        final var called = new AtomicBoolean();
+
+        final PaginationWalker.WalkFunction<NeoToken> walkFunction = (offset, count) -> {
+            final var response = client.target(format("%s/blockchain/neo/token?offset=%d&count=%d&mintStatus=%s",
+                    apiRoot,
+                    offset,
+                    count,
+                    mintStatus.toString())
+                )
+                .request()
+                .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
+                .get(NeoTokenPagination.class);
+            called.set(true);
+            return response;
+        };
+
+        new PaginationWalker().forEach(walkFunction, i -> assertEquals(i.getMintStatus(), mintStatus));
+        assertTrue(called.get());
+
+    }
+
+    private Token newToken() {
+        final var tokenName = "TokenTest-" + randomUUID().toString();
+        return newToken(tokenName);
     }
 
     private Token newToken(String tokenName) {
@@ -225,4 +299,5 @@ public class NeoTokenApiTest {
         token.setTransferOptions("");
         return token;
     }
+
 }
