@@ -86,13 +86,13 @@ export class NeoTokenDialogComponent implements OnInit {
       voting: [false],
       existingVoting: [],
       capitalization: [{ value: this.capitalizationShares, disabled: true }],
-      owner: [{ value: this.data.neoToken.token.owner, disabled: true }],
-      name: [this.data.neoToken.token.name, [Validators.required]],
-      description: [this.data.neoToken.token.description],
+      owner: [{ value: this.data.neoToken?.token?.owner, disabled: true }],
+      name: [this.data.neoToken?.token?.name, [Validators.required]],
+      description: [this.data.neoToken?.token?.description],
       tags: [[]],
       totalSupply: [this.data.neoToken?.token?.totalSupply],
       accessOption: [
-        this.data.neoToken.token.accessOption,
+        this.data.neoToken?.token?.accessOption,
         [Validators.required],
       ],
       previewUrls: [this.data.neoToken?.token?.previewUrls],
@@ -112,7 +112,7 @@ export class NeoTokenDialogComponent implements OnInit {
     },
     {
       validator: this.getCapitalizationSharesValidator(
-        this.data.neoToken.token.ownership.stakeHolders,
+        this.data.neoToken?.token?.ownership?.stakeHolders,
         this.capitalizationShares
       ),
     }

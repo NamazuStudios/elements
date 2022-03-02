@@ -44,7 +44,7 @@
 
     <ng-container matColumnDef="totalSupply">
       <mat-header-cell *matHeaderCellDef>Total Supply</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.totalMintedQuantity}} / {{token?.token?.totalSupply}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.totalMintedQuantity}} / {{token?.token?.totalSupply}}</span></mat-cell>
     </ng-container>
     <!-- <ng-container matColumnDef="spec">
         <mat-header-cell *matHeaderCellDef>Spec</mat-header-cell>
@@ -79,7 +79,7 @@
     </ng-container>
     <ng-container matColumnDef="listed">
       <mat-header-cell *matHeaderCellDef>Listed</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.listed | yesNo}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.listed | yesNo}}</span></mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="mint-action">
@@ -91,15 +91,15 @@
     <ng-container matColumnDef="list-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button *ngIf="!token.listed && !(token.totalMintedQuantity === token?.token?.totalSupply)" [disabled]="(token.totalMintedQuantity === token?.token?.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, true)" matTooltip="List"
+        <button *ngIf="!token?.listed && !(token?.totalMintedQuantity === token?.token?.totalSupply)" [disabled]="(token?.totalMintedQuantity === token?.token?.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, true)" matTooltip="List"
           matTooltipPosition="above">
           <mat-icon>vertical_align_top</mat-icon>
         </button>
-        <button *ngIf="token.listed && !(token.totalMintedQuantity === token?.token?.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+        <button *ngIf="token?.listed && !(token?.totalMintedQuantity === token?.token?.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
           matTooltipPosition="above">
           <mat-icon>vertical_align_bottom</mat-icon>
         </button>
-        <button *ngIf="(token.totalMintedQuantity === token?.token?.totalSupply)" disabled="true" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+        <button *ngIf="(token?.totalMintedQuantity === token?.token?.totalSupply)" disabled="true" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
           matTooltipPosition="above">
           <mat-icon>not_interested</mat-icon>
         </button>
