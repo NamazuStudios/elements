@@ -192,6 +192,6 @@ public class StandardNeow3jClient implements Neow3jClient {
     @Inject
     private void setHttpService(@Named(Constants.NEO_BLOCKCHAIN_HOST)String neoHost,
                                 @Named(Constants.NEO_BLOCKCHAIN_PORT)String neoPort) {
-        httpService = new HttpService(format("%s:%s", neoHost, neoPort), true);
+        httpService = new HttpService(format("%s:%s", neoHost, neoPort));
     }
 }
