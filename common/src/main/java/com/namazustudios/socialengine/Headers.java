@@ -34,6 +34,11 @@ public interface Headers {
     String PROFILE_ID = "Elements-ProfileId";
 
     /**
+     * Specifies the Session ID used by Elements required to send any request.
+     */
+    String GLOBAL_SECRET = "Elements-GlobalSecret";
+
+    /**
      * Specifies the Session ID used by social engine.  The Session ID corresponds to {@link SessionCreation} and
      * is used for authentication.
      */

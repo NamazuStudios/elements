@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest.guice;
 
-import com.google.common.collect.ImmutableMap;
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.rest.*;
 import com.namazustudios.socialengine.rest.application.ApplicationConfigurationResource;
@@ -12,31 +11,32 @@ import com.namazustudios.socialengine.rest.security.UsernamePasswordResource;
 import com.namazustudios.socialengine.rest.support.DefaultExceptionMapper;
 import com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource;
 import com.namazustudios.socialengine.rest.user.UserResource;
+import com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter;
+import com.namazustudios.socialengine.servlet.security.HttpServletGlobalSecretHeaderFilter;
 import io.swagger.jaxrs.listing.SwaggerSerializers;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.inject.Singleton;
 import java.util.Map;
 
 /**
  * Created by patricktwohig on 3/19/15.
  */
-public abstract class JerseyModule extends ServletModule {
+public abstract class RestJerseyModule extends ServletModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(JerseyModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(RestJerseyModule.class);
 
     private final String apiRoot;
 
-    public JerseyModule(final String apiRoot) {
+    public RestJerseyModule(final String apiRoot) {
         this.apiRoot = "/" + apiRoot.replace("/.$","") + "/*";
     }
 
     @Override
     protected final void configureServlets() {
 
-        // Setup JAX-RS resources
+        // Setup JAX-RS resources.
 
         bindSwagger();
         configureResoures();
@@ -44,18 +44,19 @@ public abstract class JerseyModule extends ServletModule {
         bind(VersionResource.class);
         bind(MethodOverrideFilter.class);
         bind(DefaultExceptionMapper.class);
-        bind(CORSFilter.class);
         bind(ShortLinkForwardingFilter.class);
 
-        // Setup servlets
+        // Setup servlet and servlet-related features.
 
-        bind(ServletContainer.class).in(Singleton.class);
+        bind(ServletContainer.class).asEagerSingleton();
+        bind(HttpServletCORSFilter.class).asEagerSingleton();
+        bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
 
-        final Map<String, String> params = new ImmutableMap.Builder<String, String>()
-                .put("javax.ws.rs.Application", GuiceResourceConfig.class.getName())
-            .build();
-
+        final var params = Map.of("javax.ws.rs.Application", GuiceResourceConfig.class.getName());
         serve(apiRoot).with(ServletContainer.class, params);
+
+        filter(apiRoot).through(HttpServletCORSFilter.class);
+        filter(apiRoot).through(HttpServletGlobalSecretHeaderFilter.class);
 
     }
 
@@ -70,7 +71,7 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableUserResource() {
+    public RestJerseyModule enableUserResource() {
         bind(UserResource.class);
         return this;
     }
@@ -80,7 +81,7 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableEntrantResource() {
+    public RestJerseyModule enableEntrantResource() {
         bind(EntrantResource.class);
         return this;
     }
@@ -90,7 +91,7 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableHttpSessionResource() {
+    public RestJerseyModule enableHttpSessionResource() {
         bind(UsernamePasswordResource.class);
         return this;
     }
@@ -100,7 +101,7 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableShortLinkResource() {
+    public RestJerseyModule enableShortLinkResource() {
         bind(ShortLinkResource.class);
         return this;
     }
@@ -110,7 +111,7 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableSocialCampaignResource() {
+    public RestJerseyModule enableSocialCampaignResource() {
         bind(SocialCampaignResource.class);
         return this;
     }
@@ -120,7 +121,7 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableApplicationResource() {
+    public RestJerseyModule enableApplicationResource() {
         bind(ApplicationResource.class);
         bind(ApplicationConfigurationResource.class);
         return this;
@@ -131,12 +132,12 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enablePSNApplicationProfileResource() {
+    public RestJerseyModule enablePSNApplicationProfileResource() {
         bind(PSNApplicationConfigurationResource.class);
         return this;
     }
 
-    public JerseyModule enableItemService() {
+    public RestJerseyModule enableItemService() {
         bind(ItemResource.class);
         return this;
     }
@@ -146,7 +147,7 @@ public abstract class JerseyModule extends ServletModule {
      *
      * @return this
      */
-    public JerseyModule enableAllResources() {
+    public RestJerseyModule enableAllResources() {
         bind(VersionResource.class);
         bind(UserResource.class);
         bind(EntrantResource.class);

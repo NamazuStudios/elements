@@ -21,7 +21,7 @@ import static com.namazustudios.socialengine.model.profile.Profile.PROFILE_ATTRI
 import static com.namazustudios.socialengine.model.session.Session.SESSION_ATTRIBUTE;
 import static javax.servlet.http.HttpServletResponse.SC_FORBIDDEN;
 
-public class SessionIdAuthenticationFilter implements Filter {
+public class HttpServletSessionIdAuthenticationFilter implements Filter {
 
     private SessionService sessionService;
 
@@ -43,6 +43,7 @@ public class SessionIdAuthenticationFilter implements Filter {
                                                                   .getSessionSecret();
 
         sessionSecret.ifPresent(ss -> {
+
             final Session session;
 
             try {
