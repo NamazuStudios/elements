@@ -3,10 +3,7 @@ package com.namazustudios.socialengine.appserve;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 
-import com.namazustudios.socialengine.appserve.guice.AppServeDispatcherModule;
-import com.namazustudios.socialengine.appserve.guice.HealthServletModule;
-import com.namazustudios.socialengine.appserve.guice.RemoteInvocationDispatcherModule;
-import com.namazustudios.socialengine.appserve.guice.VersionServletModule;
+import com.namazustudios.socialengine.appserve.guice.*;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolverModule;
@@ -15,10 +12,7 @@ import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQContextModule
 import com.namazustudios.socialengine.rt.servlet.DispatcherServlet;
 import com.namazustudios.socialengine.service.ApplicationService;
 import com.namazustudios.socialengine.service.Unscoped;
-import com.namazustudios.socialengine.servlet.security.HealthServlet;
-import com.namazustudios.socialengine.servlet.security.HttpServletCORSFilter;
-import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
-import com.namazustudios.socialengine.servlet.security.VersionServlet;
+import com.namazustudios.socialengine.servlet.security.*;
 import org.eclipse.jetty.deploy.App;
 import org.eclipse.jetty.deploy.AppProvider;
 import org.eclipse.jetty.deploy.DeploymentManager;
@@ -88,12 +82,14 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         final Injector injector = getInjector().createChildInjector(
             new HealthServletModule(),
-            new VersionServletModule()
+            new VersionServletModule(),
+            new GlobalHeaderFilterModule()
         );
 
         final var healthServlet = injector.getInstance(HealthServlet.class);
         final var versionServlet = injector.getInstance(VersionServlet.class);
         final var corsFilter = injector.getInstance(HttpServletCORSFilter.class);
+        final var globalHeaderFilter = injector.getInstance(HttpServletGlobalSecretHeaderFilter.class);
 
         final ServletContextHandler servletContextHandler = new ServletContextHandler();
 
@@ -101,7 +97,9 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
         servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));
         servletContextHandler.addServlet(new ServletHolder(healthServlet), getHealthEndpoint());
         servletContextHandler.addServlet(new ServletHolder(versionServlet), getVersionEndpoint());
+
         servletContextHandler.addFilter(new FilterHolder(corsFilter), "/*", EnumSet.allOf(DispatcherType.class));
+        servletContextHandler.addFilter(new FilterHolder(globalHeaderFilter), "/*", EnumSet.allOf(DispatcherType.class));
 
         return servletContextHandler;
 
@@ -118,7 +116,7 @@ public class DispatcherAppProvider extends AbstractLifeCycle implements AppProvi
 
         // Filters
         final var corsFilter = injector.getInstance(HttpServletCORSFilter.class);
-        final var sessionIdAuthenticationFilter = injector.getInstance(SessionIdAuthenticationFilter.class);
+        final var sessionIdAuthenticationFilter = injector.getInstance(HttpServletSessionIdAuthenticationFilter.class);
 
         final var servletContextHandler = new ServletContextHandler();
         servletContextHandler.setContextPath(path.replaceAll("/{2,}", "/"));

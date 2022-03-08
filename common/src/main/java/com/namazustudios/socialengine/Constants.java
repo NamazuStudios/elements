@@ -33,6 +33,11 @@ public interface Constants {
     String SHORT_LINK_BASE = "com.namazustudios.socialengine.short.link.base";
 
     /**
+     * The global secret. If blank, no global secret will be used.
+     */
+    String GLOBAL_SECRET = "com.namazustudios.socialengine.global.secret";
+
+    /**
      * The ELEMENTS_HOME environment variable.
      */
     String ELEMENTS_HOME = "ELEMENTS_HOME";
