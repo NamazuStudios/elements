@@ -235,7 +235,7 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
 
             install(new JeroMQControlClientModule());
             install(new FSTPayloadReaderWriterModule());
-            install(new JeroMQAsyncConnectionServiceModule());
+            install(new JeroMQAsyncConnectionServiceModule().withDefaultIoThreads());
 
             instanceModules.forEach(this::install);
 

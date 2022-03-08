@@ -1,8 +1,8 @@
 package com.namazustudios.socialengine;
 
-import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSJournalTransactionalPersistenceDriver;
-import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
 
 import static com.google.inject.Guice.createInjector;
@@ -10,7 +10,7 @@ import static com.google.inject.Guice.createInjector;
 public class TestUtils {
 
     /**
-     * Creates a test case with the {@link XodusTransactionalResourceServicePersistence}
+     * Creates a test case with the {@link XodusTransactionalResourceServicePersistenceEnvironment}
      *
      * @param testClass the type to construct
      * @param <T> the type to return
@@ -23,7 +23,7 @@ public class TestUtils {
     }
 
     /**
-     * Creates a test case with the {@link JournalTransactionalResourceServicePersistence} backed by the
+     * Creates a test case with the {@link JournalTransactionalResourceServicePersistenceEnvironment} backed by the
      * {@link UnixFSJournalTransactionalPersistenceDriver}
      *
      * @param testClass the type to construct

@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
@@ -32,7 +32,7 @@ import static org.mockito.Mockito.*;
 public class XodusResourceServiceLinkingUnitTest extends AbstractResourceServiceLinkingUnitTest {
 
     @Inject
-    private Persistence persistence;
+    private PersistenceEnvironment persistence;
 
     @Inject
     private TransactionalResourceService transactionalResourceService;

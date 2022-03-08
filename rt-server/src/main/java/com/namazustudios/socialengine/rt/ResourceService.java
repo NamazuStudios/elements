@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.rt.exception.DuplicateException;
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Iterator;
@@ -40,7 +39,6 @@ public interface ResourceService extends AutoCloseable {
      * that it may need to perform its work.
      */
     default void start() {};
-
 
     /**
      * Releases all memory associated with this {@link ResourceService}.  The actual action that happens here is

@@ -47,6 +47,13 @@ public interface Node {
     NodeId getNodeId();
 
     /**
+     * Gets the state of the node.
+     *
+     * @return the {@link NodeState} indicating the state of the node.
+     */
+    NodeState getState();
+
+    /**
      * Begins the startup process by returning an instance of {@link Startup}.
      *
      * @return the pending {@link Startup} object
@@ -85,8 +92,8 @@ public interface Node {
         void preStart();
 
         /**
-         * Starts the service. This sets up any network listeners and begins accepting threads.  Once the service is up and
-         * running, the service can begin to accept connections from clients.
+         * Starts the service. This sets up any network listeners and begins accepting threads.  Once the service is up
+         * and running, the service can begin to accept connections from clients.
          *
          * @param binding an {@link InstanceBinding} representing an open connection used by this {@link Node} to communicate
          * @throws IllegalStateException if the node has already been started
@@ -102,6 +109,7 @@ public interface Node {
          * Cancels the operation.
          */
         void cancel();
+
     }
 
     /**

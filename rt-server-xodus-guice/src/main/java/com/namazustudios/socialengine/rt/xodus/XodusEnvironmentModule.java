@@ -1,7 +1,10 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.rt.SchedulerEnvironment;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.util.ProxyDelegate;
 import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
 import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider;
 import com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider;
@@ -10,11 +13,10 @@ import jetbrains.exodus.env.Environment;
 import java.io.IOException;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT_PATH;
-import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerContext.SCHEDULER_ENVIRONMENT_PATH;
-import static java.nio.file.Files.createTempDirectory;
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerEnvironment.SCHEDULER_ENVIRONMENT;
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerEnvironment.SCHEDULER_ENVIRONMENT_PATH;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_ENVIRONMENT;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_ENVIRONMENT_PATH;
 
 public class XodusEnvironmentModule extends AbstractModule {
 
@@ -78,6 +80,14 @@ public class XodusEnvironmentModule extends AbstractModule {
         bindSchedulerEnvironment.run();
         bindResourceEnvironmentPath.run();
         bindSchedulerEnvironmentPath.run();
+
+        bind(SchedulerEnvironment.class).to(XodusSchedulerEnvironment.class);
+
+        bind(new TypeLiteral<ProxyDelegate<Environment>>(){})
+            .annotatedWith(named(SCHEDULER_ENVIRONMENT))
+            .toProvider(() -> ProxyDelegate.getProxy(Environment.class))
+            .asEagerSingleton();
+
     }
 
 }

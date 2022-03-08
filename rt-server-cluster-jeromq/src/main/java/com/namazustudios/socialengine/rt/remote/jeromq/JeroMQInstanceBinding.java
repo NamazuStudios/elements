@@ -32,6 +32,11 @@ public class JeroMQInstanceBinding implements InstanceBinding {
     }
 
     @Override
+    public NodeId getNodeId() {
+        return nodeId;
+    }
+
+    @Override
     public String getBindAddress() {
         return nodeBindAddress;
     }
@@ -51,8 +56,8 @@ public class JeroMQInstanceBinding implements InstanceBinding {
         if (!(o instanceof JeroMQInstanceBinding)) return false;
         JeroMQInstanceBinding that = (JeroMQInstanceBinding) o;
         return nodeId.equals(that.nodeId) &&
-                instanceConnectAddress.equals(that.instanceConnectAddress) &&
-                nodeBindAddress.equals(that.nodeBindAddress);
+            instanceConnectAddress.equals(that.instanceConnectAddress) &&
+            nodeBindAddress.equals(that.nodeBindAddress);
     }
 
     @Override

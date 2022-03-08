@@ -8,6 +8,7 @@ import org.zeromq.ZContext;
 import org.zeromq.ZMQ;
 
 import javax.inject.Inject;
+import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -18,7 +19,6 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 import static java.lang.Thread.currentThread;
 import static java.util.stream.Collectors.toList;
@@ -31,11 +31,13 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
     private static final int POLL_INTERVAL = 1000;
 
-    static final int THREAD_POOL_SIZE = getRuntime().availableProcessors() + 1;
+    public static final String ASYNC_CONNECTION_IO_THREADS = "com.namazustudios.socialengine.rt.jeromq.async.connection.service.io.threads";
 
     private final AtomicReference<SimpleAsyncConnectionServiceContext> context = new AtomicReference<>();
 
     private ZContext zContext;
+
+    private int threadPoolSize;
 
     @Override
     public void start() {
@@ -65,7 +67,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
     @Override
     public AsyncConnectionGroup.Builder<ZContext, ZMQ.Socket> group(final String name) {
-        final SimpleAsyncConnectionServiceContext context = getContext();
+        final var context = getContext();
         return context.group(name);
     }
 
@@ -78,7 +80,7 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
     }
 
     private SimpleAsyncConnectionServiceContext getContext() {
-        final SimpleAsyncConnectionServiceContext context = this.context.get();
+        final var context = this.context.get();
         if (context == null) throw new IllegalArgumentException();
         return context;
     }
@@ -92,11 +94,22 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
         this.zContext = zContext;
     }
 
+    public int getThreadPoolSize() {
+        return threadPoolSize;
+    }
+
+    @Inject
+    public void setThreadPoolSize(@Named(ASYNC_CONNECTION_IO_THREADS) int threadPoolSize) {
+        this.threadPoolSize = threadPoolSize;
+    }
+
     class SimpleAsyncConnectionServiceContext {
 
         private List<Thread> ioThreads;
 
         private RoundRobin<JeroMQAsyncThreadContext> threadContextRoundRobin;
+
+        private final int threadPoolSize = JeroMQAsyncConnectionService.this.getThreadPoolSize();
 
         private final AtomicBoolean running = new AtomicBoolean(true);
 
@@ -108,10 +121,10 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
             final AtomicInteger threadCount = new AtomicInteger();
 
-            final CountDownLatch latch = new CountDownLatch(THREAD_POOL_SIZE);
-            threadContextRoundRobin = new ConcurrentRoundRobin<>(new JeroMQAsyncThreadContext[0], THREAD_POOL_SIZE);
+            final CountDownLatch latch = new CountDownLatch(getThreadPoolSize());
+            threadContextRoundRobin = new ConcurrentRoundRobin<>(new JeroMQAsyncThreadContext[0], getThreadPoolSize());
 
-            ioThreads = range(0, THREAD_POOL_SIZE).mapToObj(i -> {
+            ioThreads = range(0, getThreadPoolSize()).mapToObj(i -> {
                 final String name = JeroMQAsyncConnectionService.class.getSimpleName() + " " + threadCount.getAndIncrement();
                 final Thread thread = new Thread(() -> runIOThread(latch, i));
                 thread.setDaemon(true);
@@ -236,6 +249,10 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
                 socketSupplier, this);
             simpleManagedPoolList.add(pool);
             return pool;
+        }
+
+        public int getThreadPoolSize() {
+            return threadPoolSize;
         }
 
         RoundRobin<JeroMQAsyncThreadContext> getThreadContextRoundRobin() {

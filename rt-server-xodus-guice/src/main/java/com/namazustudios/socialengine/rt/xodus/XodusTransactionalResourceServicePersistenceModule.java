@@ -1,15 +1,15 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.PrivateModule;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.transact.PessimisticLockingMaster;
 import com.namazustudios.socialengine.rt.transact.SimplePessimisticLockingMaster;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServicePersistence;
 
 import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.DEFAULT_RESOURCE_BLOCK_SIZE;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.RESOURCE_BLOCK_SIZE;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.DEFAULT_RESOURCE_BLOCK_SIZE;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_BLOCK_SIZE;
 
 public class XodusTransactionalResourceServicePersistenceModule extends PrivateModule {
 
@@ -20,12 +20,12 @@ public class XodusTransactionalResourceServicePersistenceModule extends PrivateM
 
         bindBlockSize.run();
 
-        bind(Persistence.class).to(XodusTransactionalResourceServicePersistence.class);
-        bind(TransactionalResourceServicePersistence.class).to(XodusTransactionalResourceServicePersistence.class);
+        bind(PersistenceEnvironment.class).to(XodusTransactionalResourceServicePersistenceEnvironment.class);
+        bind(TransactionalResourceServicePersistence.class).to(XodusTransactionalResourceServicePersistenceEnvironment.class);
         bind(PessimisticLockingMaster.class).to(SimplePessimisticLockingMaster.class).asEagerSingleton();
-        bind(XodusTransactionalResourceServicePersistence.class).asEagerSingleton();
+        bind(XodusTransactionalResourceServicePersistenceEnvironment.class).asEagerSingleton();
 
-        expose(Persistence.class);
+        expose(PersistenceEnvironment.class);
         expose(TransactionalResourceServicePersistence.class);
 
     }
@@ -46,7 +46,7 @@ public class XodusTransactionalResourceServicePersistenceModule extends PrivateM
     /**
      * Binds the default block size when storing {@link Resource}s.
      *
-     * {@link XodusTransactionalResourceServicePersistence#DEFAULT_RESOURCE_BLOCK_SIZE}
+     * {@link XodusTransactionalResourceServicePersistenceEnvironment#DEFAULT_RESOURCE_BLOCK_SIZE}
      *
      * @return this instance
      */

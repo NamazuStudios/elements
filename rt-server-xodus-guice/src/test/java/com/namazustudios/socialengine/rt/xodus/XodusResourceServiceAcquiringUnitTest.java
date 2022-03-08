@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
 import com.namazustudios.socialengine.rt.guice.AbstractResourceServiceAcquiringUnitTest;
@@ -14,8 +14,6 @@ import org.testng.annotations.Guice;
 
 import javax.inject.Inject;
 import java.io.InputStream;
-import java.nio.ByteBuffer;
-import java.nio.channels.ReadableByteChannel;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static org.mockito.ArgumentMatchers.any;
@@ -27,7 +25,7 @@ import static org.testng.Assert.fail;
 public class XodusResourceServiceAcquiringUnitTest extends AbstractResourceServiceAcquiringUnitTest {
 
     @Inject
-    private Persistence persistence;
+    private PersistenceEnvironment persistence;
 
     @Inject
     private TransactionalResourceService transactionalResourceService;

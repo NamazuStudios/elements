@@ -128,6 +128,13 @@ public interface InstanceConnectionService {
     interface InstanceBinding extends AutoCloseable {
 
         /**
+         * Gets the {@link NodeId} this {@link InstanceBinding} represents.
+         *
+         * @return the {@link NodeId}
+         */
+        NodeId getNodeId();
+
+        /**
          * Returns the host address to which to bind when receiving incoming data.
          *
          * @return the bind address
