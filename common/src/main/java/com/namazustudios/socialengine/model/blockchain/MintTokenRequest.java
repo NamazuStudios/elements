@@ -13,6 +13,10 @@ public class MintTokenRequest {
     @ApiModelProperty("The unique ID's of the tokens to mint.")
     private List<String> tokenIds;
 
+    @ApiModelProperty("The address of the owner to assign the tokens to. If no owner has been specified, either " +
+            "here or on the token model, then the address that invoked the mint function will be assigned as the owner.")
+    private String ownerAddress;
+
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The elements wallet Id with funds to invoke the method. This will always use the default account of the wallet.")
     private String walletId;
@@ -27,6 +31,14 @@ public class MintTokenRequest {
 
     public void setTokenIds(List<String> tokenIds) {
         this.tokenIds = tokenIds;
+    }
+
+    public String getOwnerAddress() {
+        return ownerAddress;
+    }
+
+    public void setOwnerAddress(String ownerAddress) {
+        this.ownerAddress = ownerAddress;
     }
 
     public String getWalletId() {
