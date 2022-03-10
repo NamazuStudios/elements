@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.security.InsufficientPermissionException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
@@ -15,8 +16,12 @@ import com.namazustudios.socialengine.security.PasswordGenerator;
 import io.neow3j.crypto.exceptions.CipherException;
 import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
 import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
+import io.neow3j.wallet.Wallet;
 
 import javax.inject.Inject;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 public class UserNeoWalletService implements NeoWalletService {
 
@@ -107,6 +112,49 @@ public class UserNeoWalletService implements NeoWalletService {
                 throw new InternalException(e.getMessage());
             }
         }
+    }
+
+    @Override
+    public List<Token> getWalletNFTContents(final String walletNameOrId) {
+
+        final var wallet = getWalletDao().getWallet(walletNameOrId);
+        final var nepWallet = getNeow3jClient().elementsWalletToNEP6(wallet.getWallet());
+        final var mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
+
+        final var client = getNeow3jClient().getNeow3j();
+
+        final var getNep11BalanacesRequest = client.getNep11Balances(mintAccount.getScriptHash());
+
+        try {
+            final var rawRequest = getNep11BalanacesRequest.send();
+            final var response = rawRequest.getBalances();
+            final var balances = response.getBalances();
+
+            var first = balances.get(0);
+            var ft = first.getTokens().get(0);
+            var id = ft.getTokenId();
+
+            for (final var balance : balances) {
+
+                for (final var token : balance.getTokens()) {
+
+                    final var tokenProperties = client.getNep11Properties(balance.getAssetHash(), token.getTokenId());
+
+                    final var result = tokenProperties.sendAsync().get();
+
+                    final var properties = result.getProperties();
+                }
+            }
+
+        } catch (IOException e) {
+            throw new InternalException(e.getMessage());
+        } catch (ExecutionException e) {
+            throw new InternalException(e.getMessage());
+        } catch (InterruptedException e) {
+            throw new InternalException(e.getMessage());
+        }
+
+        return null;
     }
 
     @Override

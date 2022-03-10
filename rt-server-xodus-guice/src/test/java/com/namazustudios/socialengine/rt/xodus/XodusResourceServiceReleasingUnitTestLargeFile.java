@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
@@ -26,7 +26,7 @@ import java.util.zip.Adler32;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromByteBuffer;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence.DEFAULT_RESOURCE_BLOCK_SIZE;
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.DEFAULT_RESOURCE_BLOCK_SIZE;
 import static java.lang.Integer.min;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
@@ -42,7 +42,7 @@ public class XodusResourceServiceReleasingUnitTestLargeFile extends AbstractReso
     private static final int FILE_SIZE_MIN = ResourceId.getSizeInBytes() + Integer.BYTES;
 
     @Inject
-    private Persistence persistence;
+    private PersistenceEnvironment persistence;
 
     @Inject
     private TransactionalResourceService transactionalResourceService;

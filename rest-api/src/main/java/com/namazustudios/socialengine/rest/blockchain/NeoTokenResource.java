@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.google.common.base.Strings;
+import com.namazustudios.socialengine.BlockchainConstants;
+import com.namazustudios.socialengine.BlockchainConstants.MintStatus;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
@@ -39,9 +41,9 @@ public class NeoTokenResource {
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("tags") @DefaultValue("") final List<String> tags,
+            @QueryParam("mintStatus") final MintStatus mintStatus,
             @QueryParam("query") String query) {
-
-        return getTokenService().getTokens(offset, count, tags, query);
+        return getTokenService().getTokens(offset, count, tags, mintStatus, query);
     }
 
     @GET

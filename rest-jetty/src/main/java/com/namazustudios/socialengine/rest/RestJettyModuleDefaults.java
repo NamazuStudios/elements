@@ -7,6 +7,7 @@ import java.util.Properties;
 import static com.namazustudios.socialengine.Constants.*;
 import static com.namazustudios.socialengine.rest.RestAPIMain.*;
 import static com.namazustudios.socialengine.rt.Constants.*;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
 import static com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService.SRV_AUTHORITATIVE;
@@ -34,6 +35,7 @@ public class RestJettyModuleDefaults implements ModuleDefaults {
         properties.put(INSTANCE_DISCOVERY_SERVICE, STATIC.toString());
         properties.put(JEROMQ_CONNECTION_SERVICE_REFRESH_INTERVAL_SECONDS, "10");
         properties.put(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
+        properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.put(MAX_SOCKETS, "500000");
         properties.put(SRV_QUERY, "_elements._tcp.internal");
         properties.put(SRV_SERVERS, "");

@@ -24,7 +24,6 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 
 import static com.google.common.collect.Streams.concat;
-import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.THREAD_POOL_SIZE;
 import static java.lang.Math.max;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
@@ -78,7 +77,7 @@ class JeroMQAsyncConnectionPool implements AsyncConnectionPool<ZContext, ZMQ.Soc
             lock.lock();
 
             int added = 0;
-            final int toAdd = max((min - connections.size()) / THREAD_POOL_SIZE, 0);
+            final int toAdd = max((min - connections.size()) / this.context.getThreadPoolSize(), 0);
 
             while (open && connections.size() < min && connections.size() < max && (added++ < toAdd)) {
                 final var connection = context.allocateNewConnection(name, socketSupplier);

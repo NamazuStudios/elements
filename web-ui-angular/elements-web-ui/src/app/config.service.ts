@@ -7,16 +7,24 @@ export class ConfigService {
 
   private appConfig;
 
-  load() {
+  async load(): Promise<void> {
+    const storedAppConfig = JSON.parse(localStorage.getItem('appConfig'));
 
-    return this.http.get('./assets/config.json')
+    if(!storedAppConfig){
+      return this.http.get('./assets/config.json')
       .toPromise()
       .then(data => {
         this.appConfig = data;
+        localStorage.setItem('appConfig', JSON.stringify(this.appConfig));
       })
       .catch(reason => {
         console.log(reason);
-    });
+      });
+    } 
+    else {
+      this.appConfig = storedAppConfig;
+      return Promise.resolve(storedAppConfig) ;
+    }
   }
 
 

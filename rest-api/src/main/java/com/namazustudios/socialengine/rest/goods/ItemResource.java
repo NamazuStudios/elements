@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest.goods;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.CreateItemRequest;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.goods.UpdateItemRequest;
 import com.namazustudios.socialengine.service.ItemService;
 import com.namazustudios.socialengine.util.ValidationHelper;
@@ -24,6 +25,7 @@ import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 
 @Path("item")
@@ -67,8 +69,9 @@ public class ItemResource {
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count") @DefaultValue("20") final int count,
             @QueryParam("tags") final List<String> tags,
+            @QueryParam("category") final String category,
             @QueryParam("search") final String search) {
-        return getItemService().getItems(offset, count, tags, search);
+        return getItemService().getItems(offset, count, tags, category, search);
     }
 
     @GET

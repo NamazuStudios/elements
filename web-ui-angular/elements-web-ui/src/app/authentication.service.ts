@@ -44,6 +44,7 @@ export class AuthenticationService {
 
   public logout() {
     localStorage.removeItem('currentUser');
+    localStorage.removeItem('appConfig');
     this.isLoggedInSubject.next(false);
     this.currentSessionSubject.next(null);
   }

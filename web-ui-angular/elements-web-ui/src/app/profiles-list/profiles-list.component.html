@@ -68,6 +68,13 @@
       <mat-cell *matCellDef="let profile">{{profile.application.name}}</mat-cell>
     </ng-container>
 
+    <ng-container matColumnDef="inventory-action">
+      <mat-header-cell *matHeaderCellDef></mat-header-cell>
+      <mat-cell *matCellDef="let profile">
+        <button mat-raised-button color="primary" (click)="editInventory(profile)"><mat-icon>inventory</mat-icon> Inventory</button>
+      </mat-cell>
+    </ng-container>
+
     <ng-container matColumnDef="edit-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let profile">

@@ -39,12 +39,12 @@
 
     <ng-container matColumnDef="name">
       <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-      <mat-cell *matCellDef="let token">{{token.token.name}}</mat-cell>
+      <mat-cell *matCellDef="let token">{{token?.token?.name}}</mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="totalSupply">
       <mat-header-cell *matHeaderCellDef>Total Supply</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.totalMintedQuantity}} / {{token.token.totalSupply}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.totalMintedQuantity}} / {{token?.token?.totalSupply}}</span></mat-cell>
     </ng-container>
     <!-- <ng-container matColumnDef="spec">
         <mat-header-cell *matHeaderCellDef>Spec</mat-header-cell>
@@ -56,30 +56,30 @@
     </ng-container>
     <ng-container matColumnDef="transferOptions">
       <mat-header-cell *matHeaderCellDef>Transfer</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span [matTooltip]="getTransferOptionsToolTip(token.token.transferOptions)" class="truncate-text-right">{{token.token.transferOptions |
+      <mat-cell *matCellDef="let token"><span [matTooltip]="getTransferOptionsToolTip(token?.token?.transferOptions)" class="truncate-text-right">{{token?.token?.transferOptions |
           transferOptions: "label"}}</span></mat-cell>
     </ng-container>
     <ng-container matColumnDef="accessOption">
       <mat-header-cell *matHeaderCellDef>Public</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.token.accessOption |
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.token?.accessOption |
           titlecase}}</span></mat-cell>
     </ng-container>
     <ng-container matColumnDef="revocable">
       <mat-header-cell *matHeaderCellDef matTooltip="Indicates whether or not the license is revocable by the owner.">
         Revocable</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.token.revocable | yesNo}}</span>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.token?.revocable | yesNo}}</span>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="renewable">
       <mat-header-cell *matHeaderCellDef
         matTooltip="If true, the licensee may pay a fee to extend the expiration date by the same difference between the original expiry and the time of minting.">
         Renewable</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.token.renewable | yesNo}}</span>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.token?.renewable | yesNo}}</span>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="listed">
       <mat-header-cell *matHeaderCellDef>Listed</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token.listed | yesNo}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.listed | yesNo}}</span></mat-cell>
     </ng-container>
 
     <ng-container matColumnDef="mint-action">
@@ -91,15 +91,15 @@
     <ng-container matColumnDef="list-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button *ngIf="!token.listed && !(token.totalMintedQuantity === token.token.totalSupply)" [disabled]="(token.totalMintedQuantity === token.token.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, true)" matTooltip="List"
+        <button *ngIf="!token?.listed && !(token?.totalMintedQuantity === token?.token?.totalSupply)" [disabled]="(token?.totalMintedQuantity === token?.token?.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, true)" matTooltip="List"
           matTooltipPosition="above">
           <mat-icon>vertical_align_top</mat-icon>
         </button>
-        <button *ngIf="token.listed && !(token.totalMintedQuantity === token.token.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+        <button *ngIf="token?.listed && !(token?.totalMintedQuantity === token?.token?.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
           matTooltipPosition="above">
           <mat-icon>vertical_align_bottom</mat-icon>
         </button>
-        <button *ngIf="(token.totalMintedQuantity === token.token.totalSupply)" disabled="true" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
+        <button *ngIf="(token?.totalMintedQuantity === token?.token?.totalSupply)" disabled="true" mat-raised-button color="primary" (click)="listToken(token, false)" matTooltip="Unlist"
           matTooltipPosition="above">
           <mat-icon>not_interested</mat-icon>
         </button>

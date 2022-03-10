@@ -59,7 +59,7 @@ public class RestAPIModule extends AbstractModule {
         install(new InstanceDiscoveryServiceModule(configurationSupplier));
         install(new ConfigurationModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
-        install(new JerseyModule(apiRoot) {
+        install(new RestJerseyModule(apiRoot) {
             @Override
             protected void configureResoures() {
                         enableAllResources();

@@ -45,3 +45,18 @@ input[type="button"] {
 .table-bar:last-child {
   flex-grow: 0;
 }
+
+.mat-column-inventory-action {
+  max-width: 134px;
+  min-width: 134px;
+}
+
+.mat-column-edit-action {
+  max-width: 72px;
+  min-width: 72px;
+}
+
+.mat-column-delete-action {
+  max-width: 49px;
+  min-width: 49px;
+}

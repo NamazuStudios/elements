@@ -8,7 +8,6 @@ import com.namazustudios.socialengine.service.ItemService;
 
 import javax.inject.Inject;
 import java.util.List;
-import java.util.Set;
 
 public class AnonItemService implements ItemService {
 
@@ -20,8 +19,8 @@ public class AnonItemService implements ItemService {
     }
 
     @Override
-    public Pagination<Item> getItems(int offset, int count, List<String> tags, String query) {
-        return itemDao.getItems(offset, count, tags, query);
+    public Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query) {
+        return itemDao.getItems(offset, count, tags, category, query);
     }
 
     @Override

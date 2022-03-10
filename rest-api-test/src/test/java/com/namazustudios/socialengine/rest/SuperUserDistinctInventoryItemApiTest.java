@@ -39,7 +39,6 @@ public class SuperUserDistinctInventoryItemApiTest {
         };
     }
 
-
     @Inject
     @Named(TEST_API_ROOT)
     private String apiRoot;

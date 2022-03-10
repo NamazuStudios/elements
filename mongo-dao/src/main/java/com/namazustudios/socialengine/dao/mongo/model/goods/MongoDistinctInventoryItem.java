@@ -7,7 +7,7 @@ import org.bson.types.ObjectId;
 
 import java.util.Map;
 
-@Entity(value = "profile", useDiscriminator = false)
+@Entity(value = "distinct_inventory_items", useDiscriminator = false)
 @Indexes({
     @Index(fields = @Field(value = "item")),
     @Index(fields = @Field(value = "user")),

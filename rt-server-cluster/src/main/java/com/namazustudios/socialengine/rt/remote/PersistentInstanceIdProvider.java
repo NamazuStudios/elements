@@ -1,16 +1,11 @@
 package com.namazustudios.socialengine.rt.remote;
 
-import com.namazustudios.socialengine.rt.Persistence;
-import com.namazustudios.socialengine.rt.exception.InternalException;
-import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
-import java.io.*;
 
-import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static java.io.File.createTempFile;
 
 public class PersistentInstanceIdProvider implements Provider<InstanceId> {

@@ -44,12 +44,17 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
+    public Pagination<NeoToken> getTokens(final int offset,
+                                          final int count,
+                                          final List<String> tags,
+                                          final BlockchainConstants.MintStatus mintStatus,
+                                          final String search) {
 
-        final String trimmedSearch = nullToEmpty(search).trim();
-        final Query<MongoNeoToken> mongoQuery = getDatastore().find(MongoNeoToken.class);
+        final var trimmedSearch = nullToEmpty(search).trim();
+        final var mongoQuery = getDatastore().find(MongoNeoToken.class);
 
         tags.remove("");
+
         if (!tags.isEmpty()) {
             mongoQuery.filter(Filters.in("tags", tags));
         }
@@ -58,7 +63,12 @@ public class MongoNeoTokenDao implements NeoTokenDao {
             mongoQuery.filter(Filters.regex("name").pattern(Pattern.compile(trimmedSearch)));
         }
 
-        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, input -> transform(input), new FindOptions());
+        if (mintStatus != null) {
+            mongoQuery.filter(Filters.eq("mintStatus", mintStatus));
+        }
+
+        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform, new FindOptions());
+
     }
 
     @Override
@@ -66,12 +76,10 @@ public class MongoNeoTokenDao implements NeoTokenDao {
 
         final var objectId = getMongoDBUtils().parseOrReturnNull(tokenIdOrName);
 
-        var mongoToken = getDatastore().find(MongoNeoToken.class)
-                .filter(Filters.or(
-                            Filters.eq("_id", objectId),
-                            Filters.eq("name", tokenIdOrName)
-                        )
-                ).first();
+        var mongoToken = getDatastore()
+            .find(MongoNeoToken.class)
+            .filter(Filters.eq("_id", objectId))
+            .first();
 
         if(mongoToken == null) {
             throw new NeoTokenNotFoundException("Unable to find token with an id of " + tokenIdOrName);
@@ -92,16 +100,17 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         tags.remove("");
 
         query.filter(and(
-                eq("_id", objectId),
-                eq("mintStatus", BlockchainConstants.MintStatus.MINTED).not()
+            eq("_id", objectId),
+            eq("mintStatus", BlockchainConstants.MintStatus.MINTED).not(),
+            lt("totalMintedQuantity", 1)
         ));
 
         final var builder = new UpdateBuilder().with(
-                set("name", name),
-                set("tags", tags),
-                set("token", token),
-                set("listed", updateNeoTokenRequest.isListed()),
-                set("contractId", updateNeoTokenRequest.getContractId())
+            set("name", name),
+            set("tags", tags),
+            set("token", token),
+            set("listed", updateNeoTokenRequest.isListed()),
+            set("contractId", updateNeoTokenRequest.getContractId())
         );
 
         final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
@@ -117,18 +126,18 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     }
 
     @Override
-    public NeoToken setMintStatusForToken(String tokenId, BlockchainConstants.MintStatus status) {
+    public NeoToken setMintStatusForToken(final String tokenId, final BlockchainConstants.MintStatus status) {
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
         final var query = getDatastore().find(MongoNeoToken.class);
 
         query.filter(eq("_id", objectId));
 
         final var builder = new UpdateBuilder().with(
-                set("mintStatus", status)
+            set("mintStatus", status)
         );
 
         final MongoNeoToken mongoNeoToken = getMongoDBUtils().perform(ds ->
-                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
         if (mongoNeoToken == null) {
@@ -153,15 +162,15 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         query.filter(exists("name").not());
 
         final var builder = new UpdateBuilder().with(
-                set("name", name),
-                set("tokenUUID", UUID.randomUUID().toString()),
-                set("tags", tags),
-                set("token", token),
-                set("listed", tokenRequest.isListed()),
-                set("mintStatus", BlockchainConstants.MintStatus.NOT_MINTED),
-                set("contractId", tokenRequest.getContractId()),
-                set("seriesId", UUID.randomUUID().toString()),
-                set("totalMintedQuantity", 0)
+            set("name", name),
+            set("tokenUUID", UUID.randomUUID().toString()),
+            set("tags", tags),
+            set("token", token),
+            set("listed", tokenRequest.isListed()),
+            set("mintStatus", BlockchainConstants.MintStatus.NOT_MINTED),
+            set("contractId", tokenRequest.getContractId()),
+            set("seriesId", UUID.randomUUID().toString()),
+            set("totalMintedQuantity", 0)
         );
 
         final var mongoToken = getMongoDBUtils().perform(
@@ -290,4 +299,5 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     public void setObjectIndex(ObjectIndex objectIndex) {
         this.objectIndex = objectIndex;
     }
+
 }

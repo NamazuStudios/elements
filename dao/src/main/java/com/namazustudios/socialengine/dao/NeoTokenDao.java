@@ -28,10 +28,11 @@ public interface NeoTokenDao {
      * @param offset
      * @param count
      * @param tags
+     * @param mintStatus
      * @param search - name or type
      * @return a {@link Pagination} of {@link NeoToken} instances
      */
-    Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search);
+    Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, BlockchainConstants.MintStatus mintStatus, String search);
 
     /**
      * Fetches a specific {@link NeoToken} instance based on ID or name.  If not found, an

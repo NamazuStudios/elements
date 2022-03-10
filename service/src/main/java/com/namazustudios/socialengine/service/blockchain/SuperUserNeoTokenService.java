@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.service.blockchain;
 
+import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.dao.NeoTokenDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.neo.CreateNeoTokenRequest;
@@ -19,8 +20,12 @@ public class SuperUserNeoTokenService implements NeoTokenService {
     private User user;
 
     @Override
-    public Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, String search) {
-        return getNeoTokenDao().getTokens(offset, count, tags, search);
+    public Pagination<NeoToken> getTokens(
+            final int offset,
+            final int count, List<String> tags,
+            final BlockchainConstants.MintStatus mintStatus,
+            final String search) {
+        return getNeoTokenDao().getTokens(offset, count, tags, mintStatus, search);
     }
 
     @Override

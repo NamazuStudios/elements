@@ -46,7 +46,7 @@ export class WalletDialogComponent implements OnInit, AfterViewInit {
 
   walletForm = this.formBuilder.group({
     displayName: [this.data.wallet.displayName, [Validators.required]],
-    walletUserName: [{ value: this.data.wallet.user?.name, disabled: true }],
+    walletUserName: [{ value: this.data.wallet?.user?.name, disabled: true }],
     walletPassword: [""],
     confirmWalletPassword: [
       "",

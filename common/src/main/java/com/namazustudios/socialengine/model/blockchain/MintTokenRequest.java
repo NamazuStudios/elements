@@ -10,8 +10,8 @@ import java.util.List;
 public class MintTokenRequest {
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The unique ID's of the tokens to mint.")
-    private List<String> tokenIds;
+    @ApiModelProperty("The Elements Id of the token to mint.")
+    private String tokenId;
 
     @ApiModelProperty("The address of the owner to assign the tokens to. If no owner has been specified, either " +
             "here or on the token model, then the address that invoked the mint function will be assigned as the owner.")
@@ -25,12 +25,12 @@ public class MintTokenRequest {
     @ApiModelProperty("The password of the wallet with funds to mint.")
     private String password;
 
-    public List<String> getTokenIds() {
-        return tokenIds;
+    public String getTokenId() {
+        return tokenId;
     }
 
-    public void setTokenIds(List<String> tokenIds) {
-        this.tokenIds = tokenIds;
+    public void setTokenId(String tokenId) {
+        this.tokenId = tokenId;
     }
 
     public String getOwnerAddress() {

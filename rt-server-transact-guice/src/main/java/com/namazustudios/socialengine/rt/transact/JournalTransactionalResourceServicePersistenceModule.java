@@ -1,18 +1,18 @@
 package com.namazustudios.socialengine.rt.transact;
 
 import com.google.inject.PrivateModule;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 
 public class JournalTransactionalResourceServicePersistenceModule extends PrivateModule {
 
     @Override
     protected void configure() {
 
-        bind(JournalTransactionalResourceServicePersistence.class);
-        bind(Persistence.class).to(JournalTransactionalResourceServicePersistence.class);
-        bind(TransactionalResourceServicePersistence.class).to(JournalTransactionalResourceServicePersistence.class);
+        bind(JournalTransactionalResourceServicePersistenceEnvironment.class);
+        bind(PersistenceEnvironment.class).to(JournalTransactionalResourceServicePersistenceEnvironment.class);
+        bind(TransactionalResourceServicePersistence.class).to(JournalTransactionalResourceServicePersistenceEnvironment.class);
 
-        expose(Persistence.class);
+        expose(PersistenceEnvironment.class);
         expose(TransactionalResourceServicePersistence.class);
 
     }

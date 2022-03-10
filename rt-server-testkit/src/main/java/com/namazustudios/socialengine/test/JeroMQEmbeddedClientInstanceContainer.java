@@ -16,6 +16,7 @@ public class JeroMQEmbeddedClientInstanceContainer extends JeroMQEmbeddedInstanc
         withInstanceModules(new AbstractModule() {
             @Override
             protected void configure() {
+//                install(new CommonTestModule());
                 install(new SimpleInstanceModule());
                 install(new TestClientContextFactoryModule());
                 install(new JeroMQInstanceConnectionServiceModule()

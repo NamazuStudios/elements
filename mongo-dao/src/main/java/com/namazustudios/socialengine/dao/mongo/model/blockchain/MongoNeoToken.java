@@ -26,7 +26,8 @@ import java.util.List;
         @SearchableField(name = "tokenUUID", path ="/tokenUUID")
 })
 @Indexes({
-        @Index(fields = @Field(value = "name", type = IndexType.TEXT), options = @IndexOptions(unique = true))
+    @Index(fields = @Field(value = "mintStatus")),
+    @Index(fields = @Field(value = "name", type = IndexType.TEXT))
 })
 public class MongoNeoToken {
 

@@ -1,6 +1,6 @@
 package com.namazustudios.socialengine.rt.xodus.provider;
 
-import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistence;
+import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment;
 import jetbrains.exodus.env.Environment;
 import jetbrains.exodus.env.Environments;
 import org.slf4j.Logger;
@@ -9,6 +9,8 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
+
+import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.RESOURCE_ENVIRONMENT_PATH;
 
 public class ResourceEnvironmentProvider implements Provider<Environment> {
 
@@ -28,7 +30,7 @@ public class ResourceEnvironmentProvider implements Provider<Environment> {
     }
 
     @Inject
-    public void setEnvironmentPathProvider(@Named(XodusTransactionalResourceServicePersistence.RESOURCE_ENVIRONMENT_PATH) Provider<String> environmentPathProvider) {
+    public void setEnvironmentPathProvider(@Named(RESOURCE_ENVIRONMENT_PATH) Provider<String> environmentPathProvider) {
         this.environmentPathProvider = environmentPathProvider;
     }
 

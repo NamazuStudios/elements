@@ -296,7 +296,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     .collect(joining(","))
                 );
 
-                logger.info("\nKnown Hosts [{}]\nPending[{}]\nActive [{}]", known, pending, active);
+                logger.debug("\nKnown Hosts [{}]\nPending[{}]\nActive [{}]", known, pending, active);
 
             }
 
@@ -339,7 +339,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 // node and formally establish the route to the node. This way, we know the node ID and can associate
                 // its IP/endpoint address.
 
-                logger.info("Fetching instance status for {}", instanceHostInfo);
+                logger.debug("Fetching instance status for {}", instanceHostInfo);
 
                 return rClient.getInstanceStatus(response -> {
 
@@ -348,11 +348,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     try {
                         // We first attempt to get the status from the socket.
                         status = response.get();
-                        logger.info("Got status. {} -> {}", instanceHostInfo, status);
+                        logger.debug("Got status. {} -> {}", instanceHostInfo, status);
                     } catch (Exception ex) {
                         // If that fails we log it, close the client, as well as use the write lock to both remove
                         // the pending request. We also return here to bail out from processing further.
-                        logger.info("Failed to get instance status from {}. Closing.", instanceConnectAddress);
+                        logger.debug("Failed to get instance status from {}. Closing.", instanceConnectAddress);
                         rClient.close();
                         rwGuard.rw(_condition -> pending.remove(nfo));
                         return;
@@ -498,10 +498,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                         }
                     }
                 } catch (InterruptedException e) {
-                    logger.info("Interrupted refreshing.", e);
+                    logger.warn("Interrupted refreshing.", e);
                 }
 
-                logger.info("Refreshed successfully.");
+                logger.debug("Refreshed successfully.");
 
             });
         }

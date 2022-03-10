@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine.exception;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 
 import static java.lang.String.format;
@@ -9,17 +11,13 @@ import static java.lang.String.format;
  */
 public abstract class BaseException extends RuntimeException {
 
-    private static final Function<BaseException, Throwable> tracer;
+    private static final Map<Class<? extends BaseException>, Function<BaseException, Throwable>> tracers = new ConcurrentHashMap<>();
 
-    static {
-
-        final var enabled = Boolean.parseBoolean(System.getProperty(
-            format("%s.%s", BaseException.class.getName(), "trace.enabled"),
-            "false")
-        );
-
-        tracer = enabled ? BaseException::forceFillInStackTrace : t -> t;
-
+    private Function<BaseException, Throwable> getTracer(final Class<? extends BaseException> cls) {
+        return tracers.computeIfAbsent(cls, c -> {
+            final var enabled = System.getProperty(format("%s.%s", c, "trace.enabled"), "false");
+            return Boolean.parseBoolean(enabled) ? BaseException::forceFillInStackTrace : t -> t;
+        });
     }
 
     public BaseException() {}
@@ -42,7 +40,7 @@ public abstract class BaseException extends RuntimeException {
 
     @Override
     public synchronized Throwable fillInStackTrace() {
-        return tracer.apply(this);
+        return getTracer(getClass()).apply(this);
     }
 
     /**
@@ -52,6 +50,11 @@ public abstract class BaseException extends RuntimeException {
      */
     public abstract ErrorCode getCode();
 
+    /**
+     * Forcibly fills in the exception's stack trace, overriding any system flags.
+     *
+     * @return the stack trace
+     */
     protected Throwable forceFillInStackTrace() {
         return super.fillInStackTrace();
     }

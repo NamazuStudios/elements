@@ -17,18 +17,15 @@ import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
-import dev.morphia.UpdateOptions;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
 import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static dev.morphia.query.experimental.filters.Filters.eq;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
-import static dev.morphia.query.experimental.updates.UpdateOperators.unset;
 
 public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
@@ -104,16 +101,29 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
 
         final var query = getDatastore().find(MongoDistinctInventoryItem.class);
 
-        final var user = userId == null
-            ? Optional.empty()
-            : getMongoUserDao().findActiveMongoUser(userId);
+        if (userId != null && !userId.isBlank()) {
 
-        final var profile = profileId == null
-            ? Optional.empty()
-            : getMongoProfileDao().findActiveMongoProfile(profileId);
+            var user = getMongoUserDao().findActiveMongoUser(userId);
 
-        user.ifPresent(u -> query.filter(eq("user", u)));
-        profile.ifPresent(p -> query.filter(eq("profile", p)));
+            if (user.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            user.ifPresent(u -> query.filter(eq("user", u)));
+
+        }
+
+        if (profileId != null && !profileId.isBlank()) {
+
+            var profile = getMongoProfileDao().findActiveMongoProfile(profileId);
+
+            if (profile.isEmpty()) {
+                return Pagination.empty();
+            }
+
+            profile.ifPresent(p -> query.filter(eq("profile", p)));
+
+        }
 
         return getMongoDBUtils().paginationFromQuery(query, offset, count, i -> getMapper().map(i, DistinctInventoryItem.class));
 
@@ -141,12 +151,13 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
             throw new InvalidDataException("Invalid item category: " + category);
         }
 
-        final var mongoUser = getMongoUserDao()
-            .findActiveMongoUser(distinctInventoryItem.getUser())
-            .orElseThrow(() -> new InvalidDataException("No such user."));
-
-        final var optionalMongoProfile = Optional.ofNullable(distinctInventoryItem.getProfile())
-            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p));
+// See Comment Below
+//        final var mongoUser = getMongoUserDao()
+//            .findActiveMongoUser(distinctInventoryItem.getUser())
+//            .orElseThrow(() -> new InvalidDataException("No such user."));
+//
+//        final var optionalMongoProfile = Optional.ofNullable(distinctInventoryItem.getProfile())
+//            .flatMap(p -> getMongoProfileDao().findActiveMongoProfile(p));
 
         final var builder = new UpdateBuilder();
 
@@ -197,6 +208,37 @@ public class MongoDistinctInventoryItemDao implements DistinctInventoryItemDao {
         if (query.delete().getDeletedCount() == 0) {
             throw new DistinctInventoryItemNotFoundException("No such inventory item.");
         }
+
+    }
+
+    @Override
+    public Optional<DistinctInventoryItem> findDistinctInventoryItemForOwner(
+            final String id,
+            final String ownerId) {
+
+        final var query = getDatastore().find(MongoDistinctInventoryItem.class);
+
+        final var objectId = getMongoDBUtils().parse(id);
+
+        if (objectId.isEmpty())
+            return Optional.empty();
+
+        query.filter(eq("_id", objectId.get()));
+
+        var user = getMongoUserDao().findActiveMongoUser(ownerId);
+        var profile  = getMongoProfileDao().findActiveMongoProfile(ownerId);
+
+        if (user.isPresent()) {
+            query.filter(eq("user", user.get()));
+        } else if (profile.isPresent()) {
+            query.filter(eq("profile", profile.get()));
+        } else {
+             return Optional.empty();
+        }
+
+        return Optional
+            .ofNullable(query.first())
+            .map(u -> getMapper().map(u, DistinctInventoryItem.class));
 
     }
 

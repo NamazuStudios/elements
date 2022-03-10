@@ -25,6 +25,7 @@ public class CommonModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(Constants.CODE_SERVE_URL, "http://localhost:8082/code/git");
         defaultProperties.setProperty(Constants.HTTP_TUNNEL_URL, "http://localhost:8083/app");
         defaultProperties.setProperty(Constants.GENERATED_PASSWORD_LENGTH, "24");
+        defaultProperties.setProperty(Constants.GLOBAL_SECRET, "");
         return defaultProperties;
     }
 

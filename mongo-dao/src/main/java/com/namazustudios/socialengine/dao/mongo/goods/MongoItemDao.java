@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.exception.item.ItemNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -55,14 +56,9 @@ public class MongoItemDao implements ItemDao {
 
     @Override
     public Item getItemByIdOrName(final String identifier) {
-
-        final MongoItem item = getMongoItemByNameOrId(identifier);
-
-        if (item == null) {
-            throw new ItemNotFoundException("Unable to find item with an id or name of " + identifier);
-        }
-
-        return getDozerMapper().map(item, Item.class);
+        return findMongoItemByNameOrId(identifier)
+            .map(mi -> getDozerMapper().map(mi, Item.class))
+            .orElseThrow(() -> new ItemNotFoundException("Unable to find item with an id or name of " + identifier));
     }
 
     public Optional<MongoItem> findMongoItem(final Item item) {
@@ -93,7 +89,7 @@ public class MongoItemDao implements ItemDao {
             .orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + objectId));
     }
 
-    public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
+    public Optional<MongoItem> findMongoItemByNameOrId(final String itemNameOrId) {
 
         if (isEmpty(nullToEmpty(itemNameOrId).trim())) {
             throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
@@ -108,13 +104,12 @@ public class MongoItemDao implements ItemDao {
         }
 
         final MongoItem mongoItem = itemQuery.first();
+        return Optional.ofNullable(mongoItem);
 
-        if(null == mongoItem) {
-            throw new NotFoundException("Unable to find item with an id of " + itemNameOrId);
-        }
+    }
 
-        return mongoItem;
-
+    public MongoItem getMongoItemByNameOrId(final String itemNameOrId) {
+        return findMongoItemByNameOrId(itemNameOrId).orElseThrow(() -> new NotFoundException("Unable to find item with an id of " + itemNameOrId));
     }
 
     public MongoItem refresh(final MongoItem mongoItem) {
@@ -144,7 +139,8 @@ public class MongoItemDao implements ItemDao {
     }
 
     @Override
-    public Pagination<Item> getItems(final int offset, final int count, List<String> tags, final String query) {
+    public Pagination<Item> getItems(final int offset, final int count, List<String> tags, String category, final String query) {
+
         if (StringUtils.isNotEmpty(query)) {
             LOGGER.warn(" getItems(int offset, int count, List<String> tags, String query) was called with a query " +
                         "string parameter.  This field is presently ignored and will return all values after filtering " +
@@ -157,8 +153,27 @@ public class MongoItemDao implements ItemDao {
             mongoQuery.filter(Filters.in("tags", tags));
         }
 
-        return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count,
-            mongoItem -> getDozerMapper().map(mongoItem, Item.class), new FindOptions());
+        if (category != null && !category.isBlank()) {
+
+            final ItemCategory categoryEnum;
+
+            try {
+                categoryEnum = ItemCategory.valueOf(category);
+            } catch (IllegalArgumentException ex) {
+                return Pagination.empty();
+            }
+
+            mongoQuery.filter(eq("category", categoryEnum));
+
+        }
+
+        return getMongoDBUtils().paginationFromQuery(
+            mongoQuery,
+            offset, count,
+            mongoItem -> getDozerMapper().map(mongoItem, Item.class),
+            new FindOptions()
+        );
+
     }
 
     @Override

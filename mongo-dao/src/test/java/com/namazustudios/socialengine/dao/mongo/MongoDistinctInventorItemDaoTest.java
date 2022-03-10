@@ -22,8 +22,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import static com.namazustudios.socialengine.model.goods.ItemCategory.DISTINCT;
 import static java.util.Collections.unmodifiableList;
 import static java.util.UUID.randomUUID;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
 public class MongoDistinctInventorItemDaoTest {
@@ -195,10 +194,47 @@ public class MongoDistinctInventorItemDaoTest {
         assertEquals(fetched, item);
     }
 
+    @Test(dataProvider = "getIntermediates", dependsOnMethods = "testCreateDistinctUserInventoryItem")
+    public void testFindDistinctInventoryItemByOwnerAndId(final String id, final DistinctInventoryItem item) {
+
+        final var owner = item.getProfile() == null ? item.getUser().getId() : item.getProfile().getId();
+
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        final var fetched = underTest
+            .findDistinctInventoryItemForOwner(id, owner)
+            .get();
+
+        assertEquals(fetched, item);
+
+    }
+
+    @Test
+    public void testFindDistinctInventoryItemByOwnerAndIdNotFound() {
+
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        final var fetched = underTest.findDistinctInventoryItemForOwner(
+            new ObjectId().toHexString(),
+            new ObjectId().toHexString()
+        );
+
+        assertNotNull(fetched);
+        assertTrue(fetched.isEmpty());
+
+    }
+
+    @Test
+    public void testFindDistinctInventoryItemByOwnerAndIdNotFoundWithBadId() {
+        @SuppressWarnings("OptionalGetWithoutIsPresent")
+        final var fetched = underTest.findDistinctInventoryItemForOwner("asdf","asdf");
+        assertNotNull(fetched);
+        assertTrue(fetched.isEmpty());
+    }
+
     @Test(dataProvider = "getIntermediates",
             dependsOnMethods = {
                     "testGetAllItems",
-                    "testGetSingleDistinctInventoryItem"
+                    "testGetSingleDistinctInventoryItem",
+                    "testFindDistinctInventoryItemByOwnerAndId"
             })
     public void testUpdate(final String owner, final DistinctInventoryItem item) {
         final var toUpdate = new DistinctInventoryItem();

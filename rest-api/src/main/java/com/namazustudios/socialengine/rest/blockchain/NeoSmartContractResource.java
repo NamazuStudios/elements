@@ -2,6 +2,8 @@ package com.namazustudios.socialengine.rest.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.model.blockchain.neo.MintNeoTokenResponse;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.service.blockchain.NeoSmartContractService;
 import io.neow3j.protocol.core.response.NeoApplicationLog;
 import io.neow3j.protocol.core.response.NeoInvokeFunction;
@@ -41,7 +43,6 @@ public class NeoSmartContractResource {
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("search") @DefaultValue("") String search) {
-
         return getNeoSmartContractService().getNeoSmartContracts(offset, count, search);
     }
 
@@ -67,14 +68,17 @@ public class NeoSmartContractResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Mints a token using the specified contract.",
             notes = "Mints the specified token using the specified contract id.",
-            response = List.class)
+            response = MintNeoTokenResponse.class)
     public void mintToken(final MintTokenRequest request,
                           @Suspended final AsyncResponse asyncResponse) {
 
-        getNeoSmartContractService().mintToken(
-                request,
-                m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
-                ex -> asyncResponse.resume(ex));
+        final var operation = getNeoSmartContractService().mintToken(
+            request,
+            m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
+            asyncResponse::resume);
+
+        asyncResponse.setTimeoutHandler(response -> operation.close());
+
     }
 
     @POST
@@ -84,12 +88,16 @@ public class NeoSmartContractResource {
             notes = "Invokes the specified method using the specified contract id.",
             response = NeoSendRawTransaction.class)
     public void invoke(final InvokeContractRequest request,
-                       @Suspended final AsyncResponse asyncResponse) {
+                       @Suspended
+                       final AsyncResponse asyncResponse) {
 
-        getNeoSmartContractService().invoke(
-                request,
-                m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
-                ex -> asyncResponse.resume(ex));
+        final var operation = getNeoSmartContractService().invoke(
+            request,
+            (blockId, response) -> asyncResponse.resume(response),
+            asyncResponse::resume);
+
+        asyncResponse.setTimeoutHandler(response -> operation.close());
+
     }
 
     @POST
@@ -99,10 +107,8 @@ public class NeoSmartContractResource {
             notes = "Invokes the specified method using the specified contract id.")
     public NeoInvokeFunction testInvoke(
             final InvokeContractRequest request,
-
             @Suspended
             final AsyncResponse asyncResponse) {
-
         return getNeoSmartContractService().testInvoke(request);
     }
 
