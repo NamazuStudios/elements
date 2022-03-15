@@ -78,10 +78,12 @@ public class SuperUserNeoSmartContractService implements NeoSmartContractService
         final var neoToken = getNeoTokenDao().getToken(tokenId);
 
         final var clone = getNeoTokenDao().cloneNeoToken(neoToken);
+        final var ownerAddress = mintTokenRequest.getOwnerAddress() != null ?
+                mintTokenRequest.getOwnerAddress() : clone.getToken().getOwner();
 
-        if(clone.getToken().getOwner() != null) {
+        if(ownerAddress != null) {
             final var ownerHash = Account
-                    .fromAddress(clone.getToken().getOwner())
+                    .fromAddress(ownerAddress)
                     .getScriptHash();
             clone.getToken().setOwner(ownerHash.toString());
         }

@@ -10,8 +10,6 @@ import java.util.Map;
 
 public class Token {
 
-    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
-    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The account address of the owner to be assigned when minting this token.")
     private String owner;
 
