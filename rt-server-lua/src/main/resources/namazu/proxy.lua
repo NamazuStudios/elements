@@ -12,8 +12,6 @@ local namazu_resource = require "namazu.resource"
 local DISPATCH = "dispatch"
 local PROXY_MAGIC = "$_namazu_proxy$"
 
-local namazu_proxy = {}
-
 local function new_proxy(metatable)
 
     metatable[PROXY_MAGIC] = true
@@ -42,21 +40,19 @@ local function new_proxy(metatable)
 
 end
 
---- Dispatcher mode for path based invocation
--- Note: This is a function but is intended to be used internally for dispatching.
-function namazu_proxy.DISPATCH_PATH(proxy, method, ...)
+local function dispatch_path(proxy, method, ...)
     local path = getmetatable(proxy).path
     assert(path, "Proxy does not have a path.")
     return namazu_resource.invoke_path(path, method, ...)
 end
 
---- Dispatcher mode for resource id based invocation
--- Note: This is a function but is intended to be used internally for dispatching.
-function namazu_proxy.DISPATCH_RESOURCE_ID(proxy, method, ...)
+local function dispatch_resource_id(proxy, method, ...)
     local resource_id = getmetatable(proxy).resource_id
     assert(resource_id, "Proxy does not have a resource id.")
     return namazu_resource.invoke(resource_id, method, ...)
 end
+
+local namazu_proxy = {}
 
 --- Creates a new proxy for the existing resource id
 -- Creates a proxy which can make method calls to the remote proxy.
@@ -68,7 +64,7 @@ end
 -- @param resource_id the resource id
 -- @return the proxy instance
 function namazu_proxy.require_resource_id(resource_id)
-    return new_proxy{resource_id = resource_id, dispatch=namazu_proxy.DISPATCH_RESOURCE_ID}
+    return new_proxy{resource_id = resource_id, dispatch=dispatch_resource_id}
 end
 
 --- Creates a new proxy for the existing resource at the supplied path
@@ -81,7 +77,7 @@ end
 -- @param path the resource id
 -- @return the proxy instance
 function namazu_proxy.require_path(path)
-    return new_proxy{path = path, dispatch=namazu_proxy.DISPATCH_PATH}
+    return new_proxy{path = path, dispatch=dispatch_path }
 end
 
 --- Creates Resource and Returns its Proxy
@@ -148,6 +144,27 @@ function namazu_proxy.list(path, dispatch)
     end
 
     return proxies, code
+
+end
+
+--- Removes Resource Associated with the Proxy
+-- This function inspects the proxy and removes it, depending on how the proxy was created, this will either unlink
+-- or it will destroy the resource associated with it.
+--
+-- @param proxy - the proxy
+function namazu_proxy.remove(proxy)
+
+end
+
+
+--- Removes Resource Associated with the Proxy
+-- This function inspects the proxy and removes it, depending on how the proxy was created, this will either unlink
+-- or it will destroy the resource associated with it.
+--
+-- If
+--
+-- @param proxy - the proxy
+function namazu_proxy.destroy(proxy)
 
 end
 
