@@ -12,32 +12,21 @@ local namazu_resource = require "namazu.resource"
 local DISPATCH = "dispatch"
 local PROXY_MAGIC = "$_namazu_proxy$"
 
-local function mock_dispatch(type, resource_id, method, ...)
-
-    print(type .. " invoking " .. resource_id .. "." .. method)
-
-    local arguments = table.pack(...)
-
-    for i=1, arguments.n
-    do
-        local arg = arguments[i]
-        print("  argument[" .. tostring(i) .. "]=" .. tostring(arg))
-    end
-
-    return table.unpack(arguments)
-
-end
-
-local namazu_proxy = {}
-
 local function new_proxy(metatable)
 
     metatable[PROXY_MAGIC] = true
+    assert(metatable.resource_id or metatable.path, "Must have either path, resource id, or both.")
+
+    print("making Proxy")
+
+    assert(metatable, "Must specify metatable.")
+    assert(metatable.dispatch, "Must specify dispatch function.")
 
     function metatable:__index(method)
-        local dispatch = getmetatable(proxy, namazu_proxy.DISPATCH)
-        rawset(self, method, function(...) dispatch(self, method, ...) end)
-        rawget(self, method)
+        local mt = getmetatable(self)
+        local dispatch = mt[DISPATCH]
+        rawset(self, method, function(...) mt.dispatch(self, method, ...) end)
+        return rawget(self, method)
     end
 
     function metatable:__newindex(key)
@@ -51,15 +40,15 @@ local function new_proxy(metatable)
 
 end
 
---- Dispatcher mode for path based invocation
-function namazu_proxy.DISPATCH_PATH(proxy, method, ...)
+local function dispatch_path(proxy, method, ...)
     local path = getmetatable(proxy).path
+    assert(path, "Proxy does not have a path.")
     return namazu_resource.invoke_path(path, method, ...)
 end
 
---- Dispatcher mode for resource id based invocation
-function namazu_proxy.DISPATCH_RESOURCE_ID(proxy, method, ...)
+local function dispatch_resource_id(proxy, method, ...)
     local resource_id = getmetatable(proxy).resource_id
+    assert(resource_id, "Proxy does not have a resource id.")
     return namazu_resource.invoke(resource_id, method, ...)
 end
 
