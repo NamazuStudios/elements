@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.id.HasNodeId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -37,10 +38,10 @@ public interface RoutingUtility {
      */
     static NodeId reduceAddressToSingleNodeId(final List<Object> address) {
         return address.stream()
-            .filter(o -> o != null)
+            .filter(Objects::nonNull)
             .map(RoutingUtility::checkAddressComponentHasNodeId)
-            .map(h -> h.getNodeId())
-            .filter(nid -> nid != null)
+            .map(HasNodeId::getNodeId)
+            .filter(Objects::nonNull)
             .reduce((nid0, nid1) -> ensureDistinctNode(address, nid0, nid1))
             .orElseThrow(() -> new RoutingException("Could not determine NodeID from address: " + address));
     }

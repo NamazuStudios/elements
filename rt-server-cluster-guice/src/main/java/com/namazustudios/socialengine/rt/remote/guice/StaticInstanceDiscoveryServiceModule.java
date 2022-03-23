@@ -15,7 +15,6 @@ import java.util.Set;
 import static com.google.inject.matcher.Matchers.only;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.remote.StaticInstanceDiscoveryService.STATIC_HOST_INFO;
-import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 
 public class StaticInstanceDiscoveryServiceModule extends PrivateModule {

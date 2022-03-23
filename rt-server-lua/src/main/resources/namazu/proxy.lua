@@ -32,7 +32,7 @@ local namazu_proxy = {}
 
 local function new_proxy(metatable)
 
-    metatable["$_namazu_proxy"] = true
+    metatable[PROXY_MAGIC] = true
 
     function metatable:__index(method)
         local dispatch = getmetatable(proxy, namazu_proxy.DISPATCH)
@@ -156,4 +156,47 @@ function namazu_proxy.list(path, dispatch)
 
 end
 
-return proxy
+--- Gets the Path of a Proxy
+-- This returns the path associated with the proxy instance. This is the path which was issued when the resource
+-- was created or the used to create the proxy. The path is not always availble, such as when the proxy is created
+-- with a resource id. In cases where path info is not available, then the function returns nil.
+--
+-- The function throws an error if the supplied object is not a proxy.
+--
+-- @proxy the proxy instance
+-- @return the path, or nil
+function namazu_proxy.get_path(proxy)
+
+    local metatable = getmetatable(proxy)
+
+    if not metatable[PROXY_MAGIC]
+    then
+        error("Object is not a proxy.")
+    else
+        return metatable["path"]
+    end
+
+end
+
+--- Gets the Path of a Proxy
+-- This returns the resource id associated with the proxy instance. The resource id is not always availble, such as when
+-- the proxy is created with a path. In cases where resource id info is not available, then the function returns nil.
+--
+-- The function throws an error if the supplied object is not a proxy.
+--
+-- @proxy the proxy instance
+-- @return the resource_id, or nil
+function namazu_proxy.get_resource_id(proxy)
+
+    local metatable = getmetatable(proxy)
+
+    if not metatable[PROXY_MAGIC]
+    then
+        error("Object is not a proxy.")
+    else
+        return metatable["resource_id"]
+    end
+
+end
+
+return namazu_proxy
