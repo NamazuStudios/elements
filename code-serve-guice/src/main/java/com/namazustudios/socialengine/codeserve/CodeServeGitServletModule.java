@@ -19,7 +19,6 @@ public class CodeServeGitServletModule extends ServletModule {
 
         bind(VersionServlet.class).asEagerSingleton();
         bind(HttpServletBasicAuthFilter.class).asEagerSingleton();
-        bind(HttpServletGlobalSecretHeaderFilter.class).asEagerSingleton();
         bind(GitServlet.class).toProvider(GitServletProvider.class).asEagerSingleton();
 
         bind(new TypeLiteral<RepositoryResolver<HttpServletRequest>>(){}).to(CodeServeRepositoryResolver.class);
@@ -30,7 +29,6 @@ public class CodeServeGitServletModule extends ServletModule {
 
         // The basic auth filter and the global secret filter.
         filter("/git/*").through(HttpServletBasicAuthFilter.class);
-        filter("/git/*").through(HttpServletGlobalSecretHeaderFilter.class);
 
     }
 }
