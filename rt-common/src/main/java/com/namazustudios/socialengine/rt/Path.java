@@ -264,7 +264,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      *
      * @return true if the context is a wildcard context
      */
-    public boolean hasWildcardContext() {
+    public boolean isWildcardContext() {
         if (hasContext() && context.equals(WILDCARD_CONTEXT_REPRESENTATION)) {
             return true;
         }

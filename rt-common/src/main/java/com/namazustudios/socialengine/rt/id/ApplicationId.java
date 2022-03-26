@@ -132,6 +132,16 @@ public class ApplicationId implements Serializable, HasCompoundId<V1CompoundId> 
     }
 
     /**
+     * The Java standard valueOf method.
+     *
+     * @param value the value
+     * @return the {@link InstanceId}
+     */
+    public static ApplicationId valueOf(final String value) {
+        return new ApplicationId(value);
+    }
+
+    /**
      * Generates a randomly assigned {@link ApplicationId}
      *
      * @return a randomly assigned globally unique {@link ApplicationId}

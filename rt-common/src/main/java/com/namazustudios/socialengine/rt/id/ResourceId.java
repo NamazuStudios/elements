@@ -136,6 +136,16 @@ public class ResourceId implements Serializable, HasNodeId, HasCompoundId<V1Comp
     }
 
     /**
+     * The Java standard valueOf method.
+     *
+     * @param value the value
+     * @return the {@link InstanceId}
+     */
+    public static ResourceId valueOf(final String value) {
+        return resourceIdFromString(value);
+    }
+
+    /**
      * Returns the number of bytes when a {@link ResourceId} is stored as a {@link byte[]}
      *
      * @return the size, in bytes

@@ -167,6 +167,16 @@ public class NodeId implements Serializable, HasNodeId, HasCompoundId<V1Compound
     }
 
     /**
+     * The Java standard valueOf method.
+     *
+     * @param value the value
+     * @return the {@link InstanceId}
+     */
+    public static NodeId valueOf(final String value) {
+        return nodeIdFromString(value);
+    }
+
+    /**
      * Generates a completely random {@link NodeId}.  Used mostly for testing.
      *
      * @return a newly constructued {@link NodeId}

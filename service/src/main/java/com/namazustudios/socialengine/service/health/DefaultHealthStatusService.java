@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.health;
 
-import com.google.common.collect.Comparators;
 import com.namazustudios.socialengine.dao.DatabaseHealthStatusDao;
 import com.namazustudios.socialengine.model.health.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -111,7 +110,7 @@ public class DefaultHealthStatusService implements HealthStatusService {
         final var priorityComparator = comparingDouble(RemoteInvokerStatus::getPriority).reversed();
 
         final var priorities = getRemoteInvokerRegistry()
-            .getAllRemoteInvokerStatus()
+            .getAllRemoteInvokerStatuses()
             .stream()
             .sorted((s0, s1) -> {
                 final var nodeIdCmp = s0.getNodeId().compareTo(s1.getNodeId());
@@ -122,7 +121,7 @@ public class DefaultHealthStatusService implements HealthStatusService {
             .collect(toList());
 
         final var connectedPeers = getRemoteInvokerRegistry()
-            .getAllRemoteInvokerStatus()
+            .getAllRemoteInvokerStatuses()
             .stream()
             .map(s -> s.getInvoker().getConnectAddress())
             .collect(toList());

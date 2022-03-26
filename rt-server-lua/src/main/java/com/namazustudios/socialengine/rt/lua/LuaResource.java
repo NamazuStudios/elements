@@ -571,6 +571,21 @@ public class LuaResource implements Resource {
     }
 
     /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link Path}. If the supplied {@link Path} has
+     * a wildcard context or explicitly specifies a {@link NodeId}, then this method will return the remote context. If
+     * the {@link NodeId} hasn't been specified then this will return the value of {@link #getLocalContext()}.
+     *
+     * @param path the {@link Path} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getLocalContextOrContextForPath(final Path path) {
+        return path.isWildcardContext() ? getRemoteContext() : path
+            .getOptionalNodeId()
+            .map(nid -> getRemoteContext())
+            .orElseGet(this::getLocalContext);
+    }
+
+    /**
      * Gets the {@link Context} for the supplied {@link HasNodeId} and if unable to determine the NodeId it will return
      * the {@link Context} returned by the.
      *
@@ -580,7 +595,7 @@ public class LuaResource implements Resource {
      */
     public Context getContextFor(final HasNodeId hasNodeId, final Supplier<Context> contextSupplier) {
         return hasNodeId.getOptionalNodeId()
-            .map(nodeId -> nodeId.getNodeId().equals(nodeId) ? getLocalContext() : getRemoteContext())
+            .map(nodeId -> getId().getNodeId().equals(nodeId) ? getLocalContext() : getRemoteContext())
             .orElseGet(contextSupplier);
     }
 

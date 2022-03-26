@@ -56,7 +56,7 @@ public class IndexDetailBuiltin implements Builtin {
                 .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getRemoteContextOrContextFor(path)
+                .getLocalContextOrContextForPath(path)
                 .getIndexContext()
                 .listAsync(path, success, failure);
 
@@ -93,7 +93,7 @@ public class IndexDetailBuiltin implements Builtin {
                     .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getRemoteContextOrContextFor(taskId)
+                .getLocalContextOrContextFor(taskId)
                 .getIndexContext()
                 .linkAsync(resourceId, path, success, failure);
 
@@ -165,7 +165,7 @@ public class IndexDetailBuiltin implements Builtin {
                     .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getRemoteContextOrContextFor(path)
+                .getLocalContextOrContextForPath(path)
                 .getIndexContext()
                 .unlinkAsync(path, success, failure);
 

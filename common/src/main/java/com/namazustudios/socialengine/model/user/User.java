@@ -37,7 +37,7 @@ public class User implements Serializable {
     @ApiModelProperty("The user's access level.")
     private Level level;
 
-    @ApiModelProperty(hidden = true)
+    @ApiModelProperty("True if the user is active. False otherwise.")
     private boolean active;
 
     @ApiModelProperty("The user's Facebook ID.")
