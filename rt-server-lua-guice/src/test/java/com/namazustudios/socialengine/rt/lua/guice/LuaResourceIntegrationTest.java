@@ -102,17 +102,6 @@ public class LuaResourceIntegrationTest {
 //            {"test.cluster", "test_get_best_node_id_for_application_id"},
 //            {"test.cluster", "test_get_node_ids_for_application"},
 //            {"test.cluster", "test_get_node_ids_for_application_id"},
-            {"test.index", "test_list_local"},
-            {"test.index", "test_list_remote"},
-            {"test.index", "test_list_wildcard"},
-            {"test.index", "test_link_local"},
-            {"test.index", "test_link_remote"},
-            {"test.index", "test_link_path_local"},
-            {"test.index", "test_link_path_remote"},
-            {"test.index", "test_unlink_local"},
-            {"test.index", "test_unlink_remote"},
-            {"test.index", "test_unlink_and_destroy_local"},
-            {"test.index", "test_unlink_and_destroy_remote"},
 //            {"test.index", "test_link_yield_and_list"},
 //            {"test.javamodule", "test_hello_world"},
 //            {"test.javamodule", "test_return_hello_world"},
@@ -129,7 +118,7 @@ public class LuaResourceIntegrationTest {
 //            {"test.pass_table", "pass_complex_array"},
 //            {"test.pass_table", "pass_complex_table"},
 //            {"test.pass_table", "pass_complex_table_to_multiple_resources"},
-//            {"test.proxy", "pass_complex_table"},
+            {"test.proxy", "test_create"}
         };
     }
 
@@ -194,7 +183,7 @@ public class LuaResourceIntegrationTest {
     public void testPcallxThrowsUnhandled() {
 
         final Path path = new Path(randomUUID().toString());
-        final ResourceId resourceId = getContext().getResourceContext().create("test.util.java", path);
+        final ResourceId resourceId = getContext().getResourceContext().create("test.java", path);
 
         try {
             getContext().getResourceContext().invoke(resourceId, "test_pcallx_unhandled");

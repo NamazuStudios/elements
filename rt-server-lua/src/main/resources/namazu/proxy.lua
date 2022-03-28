@@ -8,6 +8,7 @@
 
 local namazu_index = require "namazu.index"
 local namazu_resource = require "namazu.resource"
+local namazu_response_code = require "namazu.response.code"
 
 local DISPATCH = "dispatch"
 local PROXY_MAGIC = "$_namazu_proxy$"
@@ -16,16 +17,12 @@ local function new_proxy(metatable)
 
     metatable[PROXY_MAGIC] = true
     assert(metatable.resource_id or metatable.path, "Must have either path, resource id, or both.")
-
-    print("making Proxy")
-
-    assert(metatable, "Must specify metatable.")
     assert(metatable.dispatch, "Must specify dispatch function.")
 
     function metatable:__index(method)
         local mt = getmetatable(self)
-        local dispatch = mt[DISPATCH]
-        rawset(self, method, function(...) mt.dispatch(self, method, ...) end)
+        local dispatch = mt.dispatch
+        rawset(self, method, function(...) dispatch(self, method, ...) end)
         return rawget(self, method)
     end
 
@@ -35,22 +32,29 @@ local function new_proxy(metatable)
 
     local object = {}
     setmetatable(object, metatable)
-
     return object
 
 end
 
 local function dispatch_path(proxy, method, ...)
     local path = getmetatable(proxy).path
-    assert(path, "Proxy does not have a path.")
     return namazu_resource.invoke_path(path, method, ...)
 end
 
 local function dispatch_resource_id(proxy, method, ...)
     local resource_id = getmetatable(proxy).resource_id
-    assert(resource_id, "Proxy does not have a resource id.")
     return namazu_resource.invoke(resource_id, method, ...)
 end
+
+-- Public Interface Table
+
+local namazu_proxy = {}
+
+--- Constant to indicate path-based dispatch.
+namazu_proxy.DISPATCH_PATH = dispatch_path
+
+--- Constant to resource id based dispatch.
+namazu_proxy.DISPATCH_RESOURCE_ID = dispatch_resource_id
 
 --- Creates a new proxy for the existing resource id
 -- Creates a proxy which can make method calls to the remote proxy.
@@ -62,7 +66,7 @@ end
 -- @param resource_id the resource id
 -- @return the proxy instance
 function namazu_proxy.require_resource_id(resource_id)
-    return new_proxy{resource_id = resource_id, dispatch=namazu_proxy.DISPATCH_PATH}
+    return new_proxy{resource_id = resource_id, dispatch=dispatch_resource_id}
 end
 
 --- Creates a new proxy for the existing resource at the supplied path
@@ -75,7 +79,7 @@ end
 -- @param path the resource id
 -- @return the proxy instance
 function namazu_proxy.require_path(path)
-    return new_proxy{path = path, dispatch=namazu_proxy.DISPATCH_RESOURCE_ID}
+    return new_proxy{path = path, dispatch=dispatch_path}
 end
 
 --- Creates Resource and Returns its Proxy
@@ -91,11 +95,7 @@ function namazu_proxy.create(module, path, attributes, ...)
     local resource_id, code = namazu_resource.create(module, path, attributes, ...)
 
     if resource_id then
-        return new_proxy{
-            path=path,
-            resource_id=resource_id,
-            dispatch=namazu_proxy.DISPATCH_RESOURCE_ID
-        }
+        return new_proxy{path=path, resource_id=resource_id, dispatch=dispatch_resource_id}, code
     else
         return nil, code
     end
@@ -104,10 +104,23 @@ end
 
 --- If availble, allows for changing the dispatch behavior of this proxy
 -- @param proxy the proxy
--- @param dispatch the
---
+-- @param dispatch a function conforming to (proxy, method, ...) which performs the actual dispatch
 function namazu_proxy.set_dispatch_type(proxy, dispatch)
-    getmetatable(proxy, namazu_proxy.DISPATCH, dispatch)
+
+    if not type(dispatch) == "function"
+    then
+        error("Must specify dispatch function.")
+    end
+
+    local metatable = getmetatable(proxy)
+
+    if not metatable[PROXY_MAGIC]
+    then
+        error("Object is not a proxy.")
+    end
+
+    metatable.dispatch = dispatch
+
 end
 
 --- Lists all Resources and Returns Proxies to Interact with Them
@@ -120,25 +133,21 @@ end
 -- @return a response code
 function namazu_proxy.list(path, dispatch)
 
-    local proxies = {}
     local listings, code = namazu_index.list(path)
 
-    if not dispatch
+    if code ~= namazu_response_code.OK
     then
-        dispatch = namazu_proxy.DISPATCH_RESOURCE_ID
+        return nil, code
     end
+
+    local proxies = {}
+
+    dispatch = dispatch or dispatch_resource_id
 
     for path, resource_id in pairs(listings)
     do
-
-        local proxy = new_proxy{
-            path=path,
-            resource_id=resource_id,
-            dispatch=namazu_proxy.DISPATCH_RESOURCE_ID
-        }
-
+        local proxy = new_proxy{path=path, resource_id=resource_id, dispatch=dispatch_resource_id}
         table.insert(proxies, proxy)
-
     end
 
     return proxies, code

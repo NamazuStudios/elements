@@ -18,6 +18,7 @@ local Path = java.require "com.namazustudios.socialengine.rt.Path"
 
 local TEST_INDEX_PREFIX = "test_index"
 local TEST_INDEX_PREFIX_ALIAS = "test_index_alias"
+local TEST_INDEX_PREFIX_UNLINK_YIELD = "test_index_unlink_yield"
 
 local test_index = {}
 
@@ -223,50 +224,86 @@ function test_index.test_unlink_and_destroy_remote()
     test_unlink_and_destroy(nid)
 end
 
-function test_index.test_link_yield_and_list()
+local function do_test_link_yield_and_list(context)
 
     local original = {}
-    local p1_id = util.uuid();
-    local p2_id = util.uuid();
+    local prefix = util.uuid()
+    local player_1 = util.uuid()
+    local player_2 = util.uuid()
+
     -- Builds the listing
 
     for i = 1,10
     do
-        local path = "test/" .. util.uuid()
-        local rid, code = resource.create("test.helloworld", path)
 
-        index.link(rid, p1_id .. "/" .. rid)
-        index.link(rid, p2_id .. "/" .. rid)
+        local rid, path, code = make_resource(context, prefix);
+        assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
+        print("Added " .. rid .. " at path " .. path)
 
+        local nid = runtime.node_id_from_resource_id(rid)
+        local node_id = runtime.node_id_from_resource_id(rid)
+        local player_1_full = Path:new(nid, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_1, util.uuid()}):toString()
+        local player_2_full = Path:new(nid, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_2, util.uuid()}):toString()
+
+        original[player_1_full] = rid
+        original[player_2_full] = rid
+
+        index.link(rid, player_1_full)
+        index.link(rid, player_2_full)
         index.unlink(path)
 
-        print("added " .. rid .. " at path " .. path)
-        assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
-        original[path] = rid
     end
 
-    -- Check player 1 listing
-    local listing = index.list("test/" .. p1_id .. "/*")
-    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+    local function do_test(query)
 
-    for path, resource_id in pairs(listing)
-    do
-        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
+        local listing = index.list(query)
+        assert(next(listing), "Expected at least one result.")
+        assert(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+
+        for path, resource_id in pairs(listing)
+        do
+            print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
+        end
+
+        for path, resource_id in pairs(listing)
+        do
+            local original_rid = original[path]
+            print("Checking path " .. path)
+            assert(original_rid == resource_id, "Path mismatch " .. tostring(original_rid) .. " does not match " .. tostring(resource_id))
+
+            local response, code = resource.invoke(original_rid, "knock_knock")
+            assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+        end
+
     end
 
-    assert(#listing == #original, "Listing for player one failed to find all resources! Expected: " .. tostring(#original) .. " Found: " .. tostring(#listing))
+    local query
 
-    -- Check player 2 listing
-    listing = index.list("test/" .. p2_id .. "/*")
-    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+    query = Path:new(context, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, "*"}):toString()
+    print("Testing query: " .. query)
+    do_test(query)
 
-    for path, resource_id in pairs(listing)
-    do
-        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
-    end
+    query = Path:new(context, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_1, "*"}):toString()
+    print("Testing query: " .. query)
+    do_test(query)
 
-    assert(#listing == #original, "Listing for player two failed to find all resources! Expected: " .. tostring(#original) .. " Found: " .. tostring(#listing))
+    query = Path:new(context, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_2, "*"}):toString()
+    print("Testing query: " .. query)
+    do_test(query)
 
+end
+
+function test_index.test_link_yield_and_list_local()
+    do_test_link_yield_and_list(nil)
+end
+
+function test_index.test_link_yield_and_list_remote()
+    local nid = runtime.node_id()
+    do_test_link_yield_and_list(nid)
+end
+
+function test_index.test_link_yield_and_list_wildcard()
+    do_test_link_yield_and_list("*")
 end
 
 return test_index
