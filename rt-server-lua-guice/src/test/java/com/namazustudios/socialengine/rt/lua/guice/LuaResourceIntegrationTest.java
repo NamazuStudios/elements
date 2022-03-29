@@ -32,7 +32,7 @@ public class LuaResourceIntegrationTest {
     public static Object[] getIntegrationTests() {
         return new Object[] {
             getXodusTest(LuaResourceIntegrationTest::new),
-//            getUnixFSTest(LuaResourceIntegrationTest::new)
+            getUnixFSTest(LuaResourceIntegrationTest::new)
         };
     }
 
