@@ -6,198 +6,109 @@
 -- To change this template use File | Settings | File Templates.
 --
 
-local log = require "namazu.log"
 local util = require "namazu.util"
-local proxy = require "namazu.proxy"
+local namazu_log = require "namazu.log"
+local namazu_proxy = require "namazu.proxy"
 local responsecode = require "namazu.response.code"
-local this_resource = require "namazu.resource.this"
+
+local TEST_PREFIX = "test_proxy"
 
 local test_proxy = {}
 
-local function make_resource()
+local function make_proxy()
 
-    local path = "/test/helloworld/" .. util.uuid()
-    local resource, code = proxy.create("test.helloworld", path)
+    local path = string.format("%s/%s", TEST_PREFIX, util.uuid())
+    local proxy, code = namazu_proxy.create("test.helloworld", path)
 
-    if resource then
-        log.info("Created resource " .. resource .. " (" .. code .. ") at path " .. path)
+    if proxy then
+        namazu_log.info("Created resource proxy with (Code: " .. tostring(code) .. ") at path " .. path)
     else
-        log.info("Failed to create clear(); (" .. code .. ") at path " .. path)
+        namazu_log.info("Failed to create resource proxy with (Code: " .. tostring(code) .. ") at path " .. path)
     end
 
-    return resource, path
+    return proxy, path
 
 end
 
 function test_proxy.test_create()
-
-    local path = "/test/helloworld/" .. util.uuid()
-
-    log.info("Making Resource.")
-    local resource = proxy.create("test.helloworld", path)
-
-    log.info("Made Resource.")
-    assert(type(resource) == "proxy", "Expected proxy for resource_id got: " .. type(resource))
-
+    local proxy = make_proxy()
+    assert(proxy, "Expected on-nil proxy.")
 end
 
 function test_proxy.test_invoke()
 
     local result, code
-    local resource = make_resource()
+    local proxy = make_proxy()
 
-    result, code = resource.knock_knock()
+    result, code = proxy.knock_knock()
     print("Got result " .. tostring(result) .. " with code " .. tostring(code))
     assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
     assert(result == "Who's there?", "Expected \"Who's there?\"  Got: " .. result)
 
-    result, code = resource.identify("Interrupting Cow - Moo!")
+    result, code = proxy.identify("Interrupting Cow - Moo!")
     print("Got result " .. tostring(result) .. " with code " .. tostring(code))
     assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
     assert(type(result) == "boolean" and result, "Expected true.  Got : "  .. tostring(result))
-
-end
-
-function test_proxy.test_invoke_fail()
-
-    local result, code
-    local resource = make_resource()
-
-    result, code = resource.knock_knock()
-    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
-    assert(code == responsecode.OK, "Expected OK response code.  Got: " .. code)
-    assert(result == "Who's there?", "Expected \"Who's there?\"  Got: " .. result)
-
-    result, code = resource.identify("Convex")
-    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
-    assert(code == responsecode.OK, "Expected OK response code.  Got: " .. tostring(code))
-    assert(type(result) == "boolean" and not result, "Expected false.  Got : " .. tostring(result))
 
 end
 
 function test_proxy.test_invoke_path()
 
     local result, code
-    local resource, path = make_resource()
-    local resource_by_path = proxy.require_path(path)
+    local proxy, path = make_proxy()
+    local proxy_by_path = namazu_proxy.require_path(path)
 
-    print("Knock Knock!")
-    result, code = resource_by_path.knock_knock()
+    result, code = proxy_by_path.knock_knock()
     print("Got result " .. tostring(result) .. " with code " .. tostring(code))
-    assert(code == responsecode.OK, "Expected OK response code.  Got: " .. code)
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
     assert(result == "Who's there?", "Expected \"Who's there?\"  Got: " .. result)
 
-    print("Interrupting Cow!")
-    result, code = resource_by_path.identify("Interrupting Cow - Moo!")
+    result, code = proxy_by_path.identify("Interrupting Cow - Moo!")
     print("Got result " .. tostring(result) .. " with code " .. tostring(code))
-    assert(code == responsecode.OK, "Expected OK response code.  Got: " .. tostring(code))
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
     assert(type(result) == "boolean" and result, "Expected true.  Got : "  .. tostring(result))
-
-end
-
-function test_proxy.test_invoke_path_fail()
-
-    local result, code
-    local rid, path = make_resource()
-    local resource_by_path = proxy.require_path(path)
-
-    print("Knock Knock!")
-    result, code = resource_by_path.knock_knock()
-    assert(code == responsecode.OK, "Expected OK response code.  Got: " .. code)
-    assert(result == "Who's there?", "Expected \"Who's there?\"  Got: " .. result)
-
-    print("Convex")
-    result, code = resource_by_path.identify("Convex!")
-    assert(code == responsecode.OK, "Expected OK response code.  Got: " .. tostring(code))
-    assert(type(result) == "boolean" and not result, "Expected false.  Got : " .. tostring(result))
-
-end
-
-function test_proxy.test_invoke_table()
-
-    local result, code
-    local resource = make_resource()
-
-    result, code = resource.full_joke()
-    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
-    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
-    assert(type(result) == "table", "Expected \"table\" for type Got: " .. type(result))
-
-    local count = 0
-    for k,v in pairs(result)
-    do
-        count = count + 1
-        print("Result key \"" .. tostring(k) .. "\" value " .. tostring(v))
-    end
-
-    assert(count == 3, "Expected specifically three results.  Got " .. tostring(count))
-    assert(result.setup == "Knock Knock", "Expected setup to be \"Knock Knock\"  Got: " .. tostring(result.setup))
-    assert(result.question == "Who's There?", "Expected setup to be \"Who's There?\"  Got: " .. tostring(result.question))
-    assert(result.punchline == "Interrupting Cow - Moo!", "Expected setup to be \"Interrupting Cow - Moo!\"  Got: " .. tostring(result.punchline))
-
-end
-
-function test_proxy.test_invoke_array()
-
-    local result, code
-    local resource = make_resource()
-
-    result, code = resource.full_joke_array()
-    print("Got result " .. tostring(result) .. " with code " .. tostring(code))
-    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
-    assert(type(result) == "table", "Expected \"table\" for type Got: " .. type(result))
-
-    assert(#result == 3, "Expected specifically three results.  Got " .. tostring(#result))
-    assert(result[1] == "Knock Knock", "Expected setup to be \"Knock Knock\"  Got: " .. tostring(result[1]))
-    assert(result[2] == "Who's There?", "Expected setup to be \"Who's There?\"  Got: " .. tostring(result[2]))
-    assert(result[3] == "Interrupting Cow - Moo!", "Expected setup to be \"Interrupting Cow - Moo!\"  Got: " .. tostring(result[3]))
-
-end
-
-function test_proxy.test_destroy()
-
-    local resource, path = make_resource()
-
-
-    local result, code
-
-    result, code = resource.knock_knock()
-    assert(result == nil, "Expected nil result.  Got" .. tostring(result))
-    assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected Error Code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " Got: " .. tostring(code));
-
-    result, code = resource.invoke_path(path, "knock_knock")
-    assert(result == nil, "Expected nil result.  Got" .. tostring(result))
-    assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected Error Code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " Got: " .. tostring(code));
 
 end
 
 function test_proxy.test_list()
 
     local original = {}
-    local prefix = util.uuid();
-    -- Builds the listing
 
-    for i = 1,5
+    for i = 1,50
     do
-        local rid, path, code = make_resource(prefix);
-        print("added " .. rid .. " at path " .. path)
-        assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
-        original[path] = rid
+        local path = string.format("%s/%s", TEST_PREFIX, util.uuid())
+        local proxy, code = namazu_proxy.create("test.helloworld", path)
+        assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
     end
 
-    local listing = proxy.list("test_list/*")
-    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+    local query = string.format("%s/*", TEST_PREFIX)
+    local listings, code = namazu_proxy.list(query)
+    assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
+    assert(next(listings), "Expected non-zero result.")
 
-    for path, resource_id in pairs(listing)
-    do
-        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
-    end
+    print("Got listings. Invoking each.")
 
-    for path, resource_id in pairs(listing)
+    local total = #listings
+    local invocation = 1
+
+    for _,proxy in ipairs(listings)
     do
-        local original_rid = original[path]
-        print("checking path " .. path)
-        assert(original_rid == resource_id, "Path mismatch " .. tostring(original_rid) .. " does not match " .. tostring(resource_id))
+
+        local result, code
+
+        print("Invocation " .. tostring(invocation) .. "/" .. tostring(total))
+        invocation = invocation + 1
+
+        result, code = proxy.knock_knock()
+        print("Got result " .. tostring(result) .. " with code " .. tostring(code))
+        assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
+        assert(result == "Who's there?", "Expected \"Who's there?\"  Got: " .. result)
+
+        result, code = proxy.identify("Interrupting Cow - Moo!")
+        print("Got result " .. tostring(result) .. " with code " .. tostring(code))
+        assert(code == responsecode.OK, "Expected " .. tostring(responsecode.OK) .. " response code.  Got: " .. tostring(code))
+        assert(type(result) == "boolean" and result, "Expected true.  Got : "  .. tostring(result))
+
     end
 
 end

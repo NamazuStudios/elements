@@ -32,7 +32,7 @@ public class LuaResourceIntegrationTest {
     public static Object[] getIntegrationTests() {
         return new Object[] {
             getXodusTest(LuaResourceIntegrationTest::new),
-            getUnixFSTest(LuaResourceIntegrationTest::new)
+//            getUnixFSTest(LuaResourceIntegrationTest::new)
         };
     }
 
@@ -118,7 +118,10 @@ public class LuaResourceIntegrationTest {
 //            {"test.pass_table", "pass_complex_array"},
 //            {"test.pass_table", "pass_complex_table"},
 //            {"test.pass_table", "pass_complex_table_to_multiple_resources"},
-            {"test.proxy", "test_create"}
+            {"test.proxy", "test_create"},
+            {"test.proxy", "test_invoke"},
+            {"test.proxy", "test_invoke_path"},
+            {"test.proxy", "test_list"}
         };
     }
 

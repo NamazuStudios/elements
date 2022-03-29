@@ -20,9 +20,11 @@ local function new_proxy(metatable)
     assert(metatable.dispatch, "Must specify dispatch function.")
 
     function metatable:__index(method)
+
         local mt = getmetatable(self)
         local dispatch = mt.dispatch
-        rawset(self, method, function(...) dispatch(self, method, ...) end)
+        assert(type(dispatch) == "function", "No dispatch function set.")
+        rawset(self, method, function(...) return dispatch(self, method, ...) end)
         return rawget(self, method)
     end
 
@@ -38,12 +40,15 @@ end
 
 local function dispatch_path(proxy, method, ...)
     local path = getmetatable(proxy).path
-    return namazu_resource.invoke_path(path, method, ...)
+    local result, code = namazu_resource.invoke_path(path, method, ...)
+    return result, code
 end
 
 local function dispatch_resource_id(proxy, method, ...)
     local resource_id = getmetatable(proxy).resource_id
-    return namazu_resource.invoke(resource_id, method, ...)
+    local result, code = namazu_resource.invoke(resource_id, method, ...)
+    print("Returning " .. tostring(result) .. " code " .. tostring(code))
+    return result, code
 end
 
 -- Public Interface Table
