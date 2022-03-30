@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.dao.mongo.converter.*;
 import com.namazustudios.socialengine.dao.mongo.model.*;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoBscToken;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
@@ -18,6 +19,7 @@ import com.namazustudios.socialengine.dao.mongo.model.savedata.MongoSaveDataDocu
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
+import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
@@ -172,9 +174,11 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(NeoWallet.class, MongoNeoWallet.class)
                     .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                     .fields("wallet", "wallet", customConverter(MongoNeoWalletConverter.class));
-
             mapping(NeoToken.class, MongoNeoToken.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(BscToken.class, MongoBscToken.class)
+                        .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)
                 .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))
