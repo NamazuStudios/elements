@@ -20,8 +20,10 @@ import zmq.ZError;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.*;
@@ -35,6 +37,8 @@ import static org.zeromq.ZMQ.SNDMORE;
 public class JeroMQRemoteInvocation {
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQRemoteInvocation.class);
+
+    private static final Deque<JeroMQRemoteInvocation> active = new ConcurrentLinkedDeque<>();
 
     private final JeroMQAsyncOperation asyncOperation;
 
@@ -102,6 +106,8 @@ public class JeroMQRemoteInvocation {
             .chain(connection.onError(this::handleSocketError))
             .chain(connection.onWrite(this::handleWrite));
 
+        active.add(this);
+
     }
 
     private void handleRead(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
@@ -140,6 +146,7 @@ public class JeroMQRemoteInvocation {
                 logger.debug("Recycled Connection.");
                 subscriptions.unsubscribe();
                 logger.debug("Unsubscribed Events.");
+                active.remove(this);
 
             }
 
@@ -183,6 +190,7 @@ public class JeroMQRemoteInvocation {
             // Cautiously we should nuke this connection because it could be placed into an undefined state.
             subscriptions.unsubscribe();
             connection.close();
+            active.remove(this);
 
         }
 

@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
+import com.google.common.base.Stopwatch;
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.id.InstanceId;
@@ -10,9 +11,12 @@ import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
+import java.security.SecureRandom;
 import java.util.Collection;
+import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.TimeUnit;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
@@ -104,11 +108,16 @@ public class JeroMQDemultiplexRouter {
     }
 
     public void forward(final ZMsg zMsg, final ZMsg identity) {
+
         final ZFrame nodeIdFrame = zMsg.removeFirst();
         final NodeId nodeId = nodeIdFromBytes(nodeIdFrame.getData());
         final ZMQ.Socket socket = getSocket(nodeId);
         pushIdentity(zMsg, identity);
-        zMsg.send(socket);
+
+        if (!zMsg.send(socket)) {
+            logger.error("Failed to send: {}", socket.errno());
+        }
+
     }
 
     private ZMQ.Socket getSocket(final NodeId nodeId) {
@@ -131,7 +140,10 @@ public class JeroMQDemultiplexRouter {
         zMsg.addFirst(nodeIdFrame);
         OK.pushResponseCode(zMsg);
         pushIdentity(zMsg, identity);
-        zMsg.send(frontend);
+
+        if (!zMsg.send(frontend)) {
+            logger.error("Failed to send: {}", frontend.errno());
+        }
 
     }
 

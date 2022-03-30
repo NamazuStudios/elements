@@ -113,7 +113,7 @@
         <jgit.version>4.8.0.201706111038-r</jgit.version>
         <mockito.version>3.5.13</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
-        <jeromq.version>0.5.1</jeromq.version>
+        <jeromq.version>0.5.2</jeromq.version>
         <javolution.version>6.0.0</javolution.version>
         <firebase.admin.version>6.2.0</firebase.admin.version>
         <netty.version>4.1.22.Final</netty.version>

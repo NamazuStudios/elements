@@ -98,7 +98,10 @@ public class JeroMQMultiplexRouter {
 
         OK.pushResponseCode(zMsg);
         pushIdentity(zMsg, identity);
-        zMsg.send(frontend);
+
+        if (!zMsg.send(frontend)) {
+            logger.error("Failed to send: {}", frontend.errno());
+        }
 
     }
 
@@ -116,7 +119,10 @@ public class JeroMQMultiplexRouter {
             zMsg.addFirst(messageFrame);
             code.pushResponseCode(zMsg);
             pushIdentity(zMsg, identity);
-            zMsg.send(frontend);
+
+            if (!zMsg.send(frontend)) {
+                logger.error("Failed to send: {}", frontend.errno());
+            }
 
         } finally {
             stats.error();
@@ -148,16 +154,29 @@ public class JeroMQMultiplexRouter {
             zMsg.addFirst(nodeIdHeader);
             FORWARD.pushCommand(zMsg);
             pushIdentity(zMsg, identity);
-            zMsg.send(backend);
+
+            if (!zMsg.send(backend)) {
+                logger.error("Failed to send: {}", backend.errno());
+            }
 
         } catch (JeroMQControlException ex) {
+
             logger.error("No such instance for node {}", nid, ex);
             final ZMsg response = exceptionError(logger, ex.getCode(), ex);
-            response.send(frontend);
+
+            if (!response.send(frontend)) {
+                logger.error("Failed to send: {}", frontend.errno());
+            }
+
         } catch (Exception ex) {
+
             logger.error("Caught exception routing outgoing message to {}", nid, ex);
             final ZMsg response = exceptionError(logger, ex);
-            response.send(frontend);
+
+            if (!response.send(frontend)) {
+                logger.error("Failed to send: {}", frontend.errno());
+            }
+
         }
 
     }
