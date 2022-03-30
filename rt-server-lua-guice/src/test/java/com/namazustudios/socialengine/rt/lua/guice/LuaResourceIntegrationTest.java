@@ -163,6 +163,12 @@ public class LuaResourceIntegrationTest {
             {"test.model", "test_object_default_remote", expected.apply(result -> assertTrue(result instanceof Map, "Expected instance of map."))},
             {"test.model", "test_nil_remote", expected.apply(result -> assertNull(result, "Expected null"))},
 
+            {"test.mongodb", "test_get_elements_database", expected.apply(result -> assertNull(result, "Expected null"))},
+            {"test.mongodb", "test_get_application_collection", expected.apply(result -> assertNull(result, "Expected null"))},
+            {"test.mongodb", "test_get_users_collection", expected.apply(result -> assertNull(result, "Expected null"))},
+            {"test.mongodb", "test_create_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
+            {"test.mongodb", "test_modify_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
+            {"test.mongodb", "test_delete_application_entries", expected.apply(result -> assertNull(result, "Expected null"))},
         };
 
     }
