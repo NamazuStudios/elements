@@ -36,7 +36,7 @@ public interface NeoTokenService {
      * @param search
      * @return a {@link Pagination} of {@link NeoToken} instances
      */
-    Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, BlockchainConstants.MintStatus mintStatus, String search);
+    Pagination<NeoToken> getTokens(int offset, int count, List<String> tags, List<BlockchainConstants.MintStatus> mintStatus, String search);
 
     /**
      * Fetches a specific {@link NeoToken} instance based on ID or name.  If not found, an

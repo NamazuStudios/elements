@@ -41,7 +41,7 @@ public class NeoTokenResource {
             @QueryParam("offset") @DefaultValue("0") final int offset,
             @QueryParam("count")  @DefaultValue("20") final int count,
             @QueryParam("tags") @DefaultValue("") final List<String> tags,
-            @QueryParam("mintStatus") final MintStatus mintStatus,
+            @QueryParam("mintStatus") final List<MintStatus> mintStatus,
             @QueryParam("query") String query) {
         return getTokenService().getTokens(offset, count, tags, mintStatus, query);
     }

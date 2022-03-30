@@ -58,10 +58,26 @@ public class NeoTokenApiTest {
 
     @DataProvider
     public static Object[][] getMintStatus() {
-        return Stream
-            .of(MintStatus.values())
-            .map(s -> new Object[] {s})
-            .toArray(Object[][]::new);
+        return new Object[][] {
+                new Object[] { new ArrayList<MintStatus>() },
+                new Object[] { new ArrayList<MintStatus>() {
+                    {
+                        add(MintStatus.MINTED);
+                    }} },
+                new Object[] { new ArrayList<MintStatus>() {
+                    {
+                        add(MintStatus.NOT_MINTED);
+                        add(MintStatus.MINT_FAILED);
+                        add(MintStatus.MINT_PENDING);
+                    }} },
+                new Object[] { new ArrayList<MintStatus>() {
+                    {
+                        add(MintStatus.NOT_MINTED);
+                        add(MintStatus.MINT_FAILED);
+                        add(MintStatus.MINT_PENDING);
+                        add(MintStatus.MINTED);
+                    }} },
+        };
     }
 
     @DataProvider
@@ -242,16 +258,22 @@ public class NeoTokenApiTest {
     }
 
     @Test(dataProvider = "getMintStatus")
-    public void testGetTokensFilterByStatus(final MintStatus mintStatus) {
+    public void testGetTokensFilterByStatus(final List<MintStatus> mintStatus) {
 
         final var called = new AtomicBoolean();
+        final var statusFilterBuilder = new StringBuilder();
+
+        for (var status : mintStatus) {
+            final var nextStatus = "&mintStatus=" + status.toString();
+            statusFilterBuilder.append(nextStatus);
+        }
 
         final PaginationWalker.WalkFunction<NeoToken> walkFunction = (offset, count) -> {
-            final var response = client.target(format("%s/blockchain/neo/token?offset=%d&count=%d&mintStatus=%s",
+            final var response = client.target(format("%s/blockchain/neo/token?offset=%d&count=%d%s",
                     apiRoot,
                     offset,
                     count,
-                    mintStatus.toString())
+                    statusFilterBuilder)
                 )
                 .request()
                 .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
@@ -260,7 +282,7 @@ public class NeoTokenApiTest {
             return response;
         };
 
-        new PaginationWalker().forEach(walkFunction, i -> assertEquals(i.getMintStatus(), mintStatus));
+        new PaginationWalker().forEach(walkFunction, i -> assertTrue(mintStatus.contains(i.getMintStatus())));
         assertTrue(called.get());
 
     }
