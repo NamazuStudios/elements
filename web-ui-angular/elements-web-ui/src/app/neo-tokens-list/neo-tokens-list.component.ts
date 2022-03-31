@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, OnInit, ViewChild } from "@angular/core";
+import { AfterViewInit, Component, Input, OnInit, ViewChild } from "@angular/core";
 import { MatPaginator } from "@angular/material/paginator";
 import { filter, tap } from "rxjs/operators";
 import { SelectionModel } from "@angular/cdk/collections";
@@ -31,6 +31,7 @@ import { NeoSmartContractMintDialogComponent } from "../neo-smart-contract-mint-
   providers: [TransferOptionsPipe]
 })
 export class NeoTokensListComponent implements OnInit, AfterViewInit {
+  @Input() isMinted = false;
   hasSelection = false;
   selection: SelectionModel<NeoToken>;
   dataSource: NeoTokensDataSource;
@@ -54,6 +55,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
     "copy-action",
     "remove-action",
   ];
+
   currentTokens: NeoToken[];
   currentUser: User;
 
@@ -79,7 +81,13 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
       );
     this.selection = new SelectionModel<NeoToken>(true, []);
     this.dataSource = new NeoTokensDataSource(this.neoTokensService);
-    this.refresh(0);
+    // this.refresh(0);
+
+    this.neoTokensService.network.subscribe(
+      () => {
+        this.refresh(0);
+      }
+    );
   }
 
   ngAfterViewInit() {
@@ -118,6 +126,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
         this.paginator.pageSize,
         //TODO: We'll need to switch these to YOURS | SUPERUSERS | USERS
         null,
+        this.isMinted ? ['MINTED'] : ['NOT_MINTED', 'MINT_FAILED', 'MINT_PENDING'],
         //this.input.nativeElement.value, // for searching...
         "None"
       );

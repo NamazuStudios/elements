@@ -9,7 +9,7 @@ import {
 import { BaseService } from "../../base-service";
 import { ApiConfiguration } from "../../api-configuration";
 import { StrictHttpResponse } from "../../strict-http-response";
-import { Observable } from "rxjs";
+import { BehaviorSubject, Observable } from "rxjs";
 import { map as __map, filter as __filter } from "rxjs/operators";
 
 import { NeoWallet } from "../../models/blockchain/neo-wallet";
@@ -24,7 +24,7 @@ class NeoWalletsService extends BaseService {
     super(config, http);
   }
 
-  readonly network = "NEO";
+  network = new BehaviorSubject('NEO');
 
   /**
    * Gets the metadata for a single wallet.  This may include more specific details not availble in the bulk-get or fetch operation.
@@ -40,7 +40,7 @@ class NeoWalletsService extends BaseService {
 
     let req = new HttpRequest<any>(
       "GET",
-      this.rootUrl + `/blockchain/neo/wallet/${walletId}`,
+      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/wallet/${walletId}`,
       __body,
       {
         headers: __headers,
@@ -88,7 +88,7 @@ class NeoWalletsService extends BaseService {
     __body = params.body;
     let req = new HttpRequest<any>(
       "PUT",
-      this.rootUrl + `/blockchain/neo/wallet/${params.id}`,
+      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/wallet/${params.id}`,
       __body,
       {
         headers: __headers,
@@ -132,7 +132,7 @@ class NeoWalletsService extends BaseService {
 
     let req = new HttpRequest<any>(
       "DELETE",
-      this.rootUrl + `/blockchain/neo/wallet/${walletId}`,
+      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/wallet/${walletId}`,
       __body,
       {
         headers: __headers,
@@ -187,7 +187,7 @@ class NeoWalletsService extends BaseService {
       __params = __params.set("format", params.format.toString());
     let req = new HttpRequest<any>(
       "GET",
-      this.rootUrl + `/blockchain/neo/wallet`,
+      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/wallet`,
       __body,
       {
         headers: __headers,
@@ -238,7 +238,7 @@ class NeoWalletsService extends BaseService {
     __body = body;
     let req = new HttpRequest<any>(
       "POST",
-      this.rootUrl + `/blockchain/neo/wallet`,
+      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/wallet`,
       __body,
       {
         headers: __headers,

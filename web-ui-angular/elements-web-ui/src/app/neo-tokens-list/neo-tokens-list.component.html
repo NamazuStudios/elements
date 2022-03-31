@@ -3,13 +3,19 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <mat-form-field>
-    <input matInput placeholder="Search NFTs" #input disabled="true">
-  </mat-form-field>
+  <div class="control-container">
+    <div>
+      <mat-form-field>
+        <input matInput placeholder="Search NFTs" #input disabled="true">
+      </mat-form-field>
 
-  <button mat-raised-button color="primary" (click)="addToken()">Define NFT</button>
-  <button mat-raised-button color="primary" (click)="deleteSelectedTokens()" [disabled]="!hasSelection">Delete
-    Selected</button>
+      <button mat-raised-button color="primary" (click)="addToken()">Define NFT</button>
+      <button mat-raised-button color="primary" (click)="deleteSelectedTokens()" [disabled]="!hasSelection">Delete
+        Selected</button>
+    </div>
+    
+    <app-blockchain-dropdown serviceType="token"></app-blockchain-dropdown>
+  </div>
 
   <!-- <mat-button-toggle-group>
       <mat-button-toggle value="Yours">Yours</mat-button-toggle>
