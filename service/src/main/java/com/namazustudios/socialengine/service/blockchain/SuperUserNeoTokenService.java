@@ -23,7 +23,7 @@ public class SuperUserNeoTokenService implements NeoTokenService {
     public Pagination<NeoToken> getTokens(
             final int offset,
             final int count, List<String> tags,
-            final BlockchainConstants.MintStatus mintStatus,
+            final List<BlockchainConstants.MintStatus> mintStatus,
             final String search) {
         return getNeoTokenDao().getTokens(offset, count, tags, mintStatus, search);
     }
