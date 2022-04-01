@@ -7,11 +7,11 @@
         </encoder>
     </appender>
 
-    <appender name="VERBOSE-FILE" class="ch.qos.logback.core.FileAppender">
-        <file>verbose.log</file>
+    <appender name="REMOTE-CALL-TRACE" class="ch.qos.logback.core.FileAppender">
+        <file>remote-call-trace.csv</file>
         <append>false</append>
         <encoder>
-            <pattern>%-4relative [%thread] %-5level %logger{35} - %msg %n</pattern>
+            <pattern>%-4relative,%X{JeroMQRemoteInvocation.uid},[%thread],%X{JeroMQRemoteInvocation.details},%msg%n</pattern>
         </encoder>
     </appender>
 
@@ -19,9 +19,8 @@
         <appender-ref ref="STDOUT" />
     </root>
 
-    <logger name="com.namazustudios.socialengine.rt.xodus.XodusResourceService.verbose" level="trace">
-        <appender-ref ref="STDOUT" />
-        <appender-ref ref="VERBOSE-FILE"/>
+    <logger name="com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvocation.trace" level="trace">
+        <appender-ref ref="REMOTE-CALL-TRACE" />
     </logger>
 
 </configuration>

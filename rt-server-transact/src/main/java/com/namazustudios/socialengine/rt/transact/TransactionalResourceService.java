@@ -72,7 +72,8 @@ public class TransactionalResourceService implements ResourceService {
     public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
         return computeRO((acm, txn) -> {
             try {
-                if (!txn.exists(resourceId)) throw new ResourceNotFoundException();
+                if (!txn.exists(resourceId))
+                    throw new ResourceNotFoundException();
                 return acm.acquire(resourceId);
             } catch (NullResourceException ex) {
                 throw new TransactionConflictException();
