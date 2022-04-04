@@ -16,8 +16,12 @@ public class ServiceModuleDefaults implements ModuleDefaults {
         final Properties properties = new Properties();
         properties.put(SESSION_TIMEOUT_SECONDS, Long.toString(SECONDS.convert(48, TimeUnit.HOURS)));
         properties.put(MOCK_SESSION_TIMEOUT_SECONDS, Long.toString(SECONDS.convert(1, TimeUnit.HOURS)));
-        properties.put(NEO_BLOCKCHAIN_HOST, "http://127.0.0.1");
-        properties.put(NEO_BLOCKCHAIN_PORT, "50012");
+//        properties.put(NEO_BLOCKCHAIN_HOST, "http://127.0.0.1");
+//        properties.put(NEO_BLOCKCHAIN_PORT, "50012");
+        properties.put(NEO_BLOCKCHAIN_HOST, "http://seed1t4.neo.org");
+        properties.put(NEO_BLOCKCHAIN_PORT, "20332");
+        properties.put(BSC_BLOCKCHAIN_HOST, "http://seed1t4.neo.org");
+        properties.put(BSC_BLOCKCHAIN_PORT, "20332");
         return properties;
     }
 

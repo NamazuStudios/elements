@@ -16,6 +16,8 @@ public class UserBscTokenService implements BscTokenService {
 
     private BscTokenDao bscTokenDao;
 
+    private Bscw3jClient bscw3JClient;
+
     private User user;
 
     @Override
@@ -66,4 +68,8 @@ public class UserBscTokenService implements BscTokenService {
         this.bscTokenDao = bscTokenDao;
     }
 
+    public Bscw3jClient getBscw3jClient(){return bscw3JClient;}
+
+    @Inject
+    public void setBscw3jClient(Bscw3jClient bscw3JClient){this.bscw3JClient = bscw3JClient;}
 }
