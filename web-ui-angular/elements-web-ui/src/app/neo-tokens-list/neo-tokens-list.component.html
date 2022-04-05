@@ -114,7 +114,7 @@
     <ng-container matColumnDef="view-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button mat-raised-button color="primary" (click)="deleteToken(token)" disabled="true">View</button>
+        <button mat-raised-button color="primary" (click)="viewToken(token)">View</button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="edit-action">

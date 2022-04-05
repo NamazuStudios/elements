@@ -79,6 +79,8 @@ import { NeoSmartContractMintDialogComponent } from './neo-smart-contract-mint-d
 import { WalletSelectDialogComponent } from './wallet-select-dialog/wallet-select-dialog.component';
 import { PercentageDirective } from './neo-token-dialog/percentage-directive.directive';
 import { BlockchainDropdownComponent } from './blockchain-dropdown/blockchain-dropdown.component';
+import { TokenViewerDialogComponent } from './token-viewer-dialog/token-viewer-dialog.component';
+import { TokenViewLightboxDialogComponent } from './token-view-lightbox-dialog/token-view-lightbox-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -167,7 +169,9 @@ export function initialize(configService: ConfigService) {
     NeoSmartContractMintDialogComponent,
     WalletSelectDialogComponent,
     PercentageDirective,
-    BlockchainDropdownComponent
+    BlockchainDropdownComponent,
+    TokenViewerDialogComponent,
+    TokenViewLightboxDialogComponent
   ],
   imports: [
     BrowserModule,

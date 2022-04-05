@@ -22,6 +22,7 @@ import { TransferOptionsPipe } from "./transferOptions.pipe";
 import { MintTokenRequest } from "../api/models/blockchain/mint-token-request";
 import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
 import { NeoSmartContractMintDialogComponent } from "../neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component";
+import { TokenViewerDialogComponent } from "../token-viewer-dialog/token-viewer-dialog.component";
 
 
 @Component({
@@ -284,6 +285,15 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
         });
       }
     );
+  }
+
+  viewToken(token: NeoToken) {
+    this.dialog.open(TokenViewerDialogComponent, {
+      width: "600px",
+      data: {
+        token
+      }
+    });
   }
 
   getTransferOptionsToolTip(data){
