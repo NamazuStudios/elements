@@ -3,11 +3,20 @@
     text-align: right;
     padding-top: 20px;
 }
-.mat-list {
+.content-container {
     height: 500px;
     overflow: hidden;
     overflow-y: auto;
 }
+.content-container::-webkit-scrollbar {
+    -webkit-appearance: none;
+    width: 10px;
+}
+.content-container::-webkit-scrollbar-thumb {
+    border-radius: 2px;
+    background-color: rgba(0, 0, 0, .4);
+}
+
 .mat-list .mat-list-item {
     font-size: 14px;
     height: unset;
