@@ -9,10 +9,8 @@ import java.io.Serializable;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -21,8 +19,9 @@ import static com.namazustudios.socialengine.rt.Path.Util.*;
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromString;
 import static java.lang.Math.min;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.*;
+import static java.util.List.copyOf;
+import static java.util.UUID.randomUUID;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Stream.concat;
 
@@ -158,7 +157,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
 
         wildcard = idx >= 0;
         maxCompareIndex = wildcard ? idx : components.size();
-        this.components = unmodifiableList(components);
+        this.components = copyOf(components);
 
         this.components.forEach(c -> {
 
@@ -185,6 +184,39 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      */
     public Path append(final Path otherPath) {
         return new Path(this, otherPath);
+    }
+
+    /**
+     * Appends components to the path and returns a new {@link Path}.
+     *
+     * @param first the first component to add
+     * @param subsequent the subsequent components
+     * @return the newly created path.
+     */
+    public Path appendComponents(final String first, final String ... subsequent) {
+        final var components = new ArrayList<>(this.components);
+        addAll(components, subsequent);
+        return new Path(context, components);
+    }
+
+    /**
+     * Appends a single component if this path is a wildcard path.
+     *
+     * @param stringSupplier a supplier for the component to add.
+     * @return the newly created path.
+     */
+    public Path appendIfWildcard(final Supplier<String> stringSupplier) {
+        return wildcard ? stripWildcard().appendComponents(stringSupplier.get()) : this;
+    }
+
+    /**
+     * Appends a UUID component if this path is a wildcard path.
+     *
+     *
+     * @return the newly created path.
+     */
+    public Path appendUUIDIfWildcard() {
+        return appendIfWildcard(() -> randomUUID().toString());
     }
 
     /**
@@ -414,27 +446,39 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
      */
     @Override
     public int compareTo(final Path other) {
-
-        final Iterator<String> o1StringIterator;
-        final Iterator<String> o2StringIterator;
-
-        if (isWildcard() || other.isWildcard()) {
-            final int limit = min(maxCompareIndex, other.maxCompareIndex);
-            o1StringIterator = getComponents().stream().limit(limit).iterator();
-            o2StringIterator = other.getComponents().stream().limit(limit).iterator();
-        } else if (getComponents().size() != other.getComponents().size()) {
-            return getComponents().size() - other.getComponents().size();
+        if (Objects.equals(getContext(), other.getContext())) {
+            if (isWildcard() || other.isWildcard()) {
+                final int limit = min(maxCompareIndex, other.maxCompareIndex);
+                final var o1Components = getComponents().subList(0, limit);
+                final var o2Components = other.getComponents().subList(0, limit);
+                return compareTo(o1Components, o2Components);
+            } else {
+                return compareTo(getComponents(), other.getComponents());
+            }
+        } else if (getContext() == null) {
+            return 1;
+        } else if (other.getContext() == null) {
+            return -1;
         } else {
-            o1StringIterator = getComponents().iterator();
-            o2StringIterator = other.getComponents().iterator();
+            return getContext().compareTo(other.getContext());
+        }
+    }
+
+    private static int compareTo(final List<String> o1Components, final List<String> o2Components) {
+
+        if (o1Components.size() != o2Components.size()) {
+            return o1Components.size() - o2Components.size();
         }
 
-        int value = 0;
+        final var o1StringIterator = o1Components.iterator();
+        final var o2StringIterator = o2Components.iterator();
+
+        var value = 0;
 
         while (o1StringIterator.hasNext() && o2StringIterator.hasNext() && value == 0) {
-            final String s1 = o1StringIterator.next();
-            final String s2 = o2StringIterator.next();
-            value = (s1 == null ? "" : s1).compareTo(s2 == null ? "" : s2);
+            final var s1 = o1StringIterator.next();
+            final var s2 = o2StringIterator.next();
+            value = s1.compareTo(s2);
         }
 
         return value;
@@ -585,8 +629,8 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
         public static String contextFromPath(final String path) {
 
             final List<String> components = Stream.of(CONTEXT_SPLIT_PATTERN.split(path))
-                  .filter(c -> c != null)
-                  .map(c -> c.trim())
+                  .filter(Objects::nonNull)
+                  .map(String::trim)
                   .filter(c -> !c.isEmpty())
                   .collect(toList());
 
@@ -613,7 +657,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
             if (!path.contains(CONTEXT_SEPARATOR)) {
 
                 final List<String> components = Stream.of(path.split(Pattern.quote(pathSeparator)))
-                    .map(c -> c.trim())
+                    .map(String::trim)
                     .filter(c -> !c.isEmpty())
                     .collect(toList());
 
@@ -622,7 +666,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
             }
 
             final List<String> contextAndPath = Stream.of(CONTEXT_SPLIT_PATTERN.split(path))
-                .map(c -> c.trim())
+                .map(String::trim)
                 .filter(c -> !c.isEmpty())
                 .collect(toList());
 
@@ -640,7 +684,7 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
             final String pathComponent = contextAndPath.get(1);
 
             final List<String> components = Stream.of(pathComponent.split(quoted))
-                .map(c -> c.trim())
+                .map(String::trim)
                 .filter(c -> ! c.isEmpty())
                 .collect(toList());
 
@@ -754,3 +798,5 @@ public class Path implements Comparable<Path>, Serializable, HasNodeId {
     }
 
 }
+
+

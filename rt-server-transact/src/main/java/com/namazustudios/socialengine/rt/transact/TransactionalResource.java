@@ -27,8 +27,6 @@ public class TransactionalResource implements Resource {
 
     public static final int NASCENT_MAGIC = MIN_VALUE;
 
-    public static final int TOMBSTONE_MAGIC = MIN_VALUE + 1;
-
     private static final TransactionalResource tombstone = new TransactionalResource() {
         @Override
         public boolean acquire() { throw new ResourceNotFoundException(); }
@@ -57,8 +55,7 @@ public class TransactionalResource implements Resource {
     }
 
     private TransactionalResource() {
-        this.acquires = new AtomicInteger(MIN_VALUE);
-        this.acquires.set(TOMBSTONE_MAGIC);
+        this.acquires = new AtomicInteger();
         this.resourceId = randomResourceId();
         this.delegate = DeadResource.getInstance();
         this.onDestroy = new AtomicReference<>(ON_DESTROY_DEAD);
@@ -161,25 +158,6 @@ public class TransactionalResource implements Resource {
 
         return value;
 
-    }
-
-    /**
-     * Checks if this {@link TransactionalResource} is in the nascent state.  That is, the {@link Resource} has
-     * recently been loaded, but not acquired for the first time.
-     *
-     * @return true if this is in a nascent state, false otherwise
-     */
-    public boolean isNascent() {
-        return acquires.get() == NASCENT_MAGIC;
-    }
-
-    /**
-     * Returns true if this instance is a tombstone, false otherwise.
-     *
-     * @return true if tombstone, false otherwise
-     */
-    public boolean isTombstone() {
-        return acquires.get() == TOMBSTONE_MAGIC;
     }
 
     @Override
