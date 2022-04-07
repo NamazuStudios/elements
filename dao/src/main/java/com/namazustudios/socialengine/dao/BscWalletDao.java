@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.dao;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
-import com.namazustudios.socialengine.model.blockchain.bsc.Nep6Wallet;
+import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
@@ -53,10 +53,10 @@ public interface BscWalletDao {
      *
      * @param walletId the id of the wallet to update
      * @param updatedWalletRequest the {@link UpdateBscWalletRequest} with the information to update
-     * @param updatedWallet the {@link Nep6Wallet} with the updated information
+     * @param updatedWallet the {@link Web3jWallet} with the updated information
      * @return the {@link BscWallet} as it was changed by the service.
      */
-    BscWallet updateWallet(String walletId, UpdateBscWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet) throws JsonProcessingException;
+    BscWallet updateWallet(String walletId, UpdateBscWalletRequest updatedWalletRequest, Web3jWallet updatedWallet) throws JsonProcessingException;
 
     /**
      * Creates a new Wallet.

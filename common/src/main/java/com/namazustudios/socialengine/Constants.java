@@ -181,14 +181,9 @@ public interface Constants {
     String NEO_BLOCKCHAIN_PORT = "com.namazustudios.socialengine.blockchain.neo.port";
 
     /**
-     * Used to specify the host for neo blockchain.
+     * Used to specify the RPC provider for bsc blockchain.
      */
-    String BSC_BLOCKCHAIN_HOST = "com.namazustudios.socialengine.blockchain.bsc.host";
-
-    /**
-     * Used to specify the port for neo blockchain.
-     */
-    String BSC_BLOCKCHAIN_PORT = "com.namazustudios.socialengine.blockchain.bsc.port";
+    String BSC_RPC_PROVIDER = "om.namazustudios.socialengine.blockchain.bsc.provider";
 
     /**
      * Defines some useful regex patterns.

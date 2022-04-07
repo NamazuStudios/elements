@@ -21,8 +21,8 @@ public class BscWallet {
     private String displayName;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The NEP6 wallet file.")
-    private Nep6Wallet wallet;
+    @ApiModelProperty("The Web3j wallet file.")
+    private Web3jWallet wallet;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The User associated with this wallet.")
@@ -44,11 +44,11 @@ public class BscWallet {
         this.displayName = displayName;
     }
 
-    public com.namazustudios.socialengine.model.blockchain.bsc.Nep6Wallet getWallet() {
+    public Web3jWallet getWallet() {
         return wallet;
     }
 
-    public void setWallet(Nep6Wallet wallet) {
+    public void setWallet(Web3jWallet wallet) {
         this.wallet = wallet;
     }
 

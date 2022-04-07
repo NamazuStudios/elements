@@ -80,19 +80,6 @@ public class BscWalletResource {
         getWalletService().deleteWallet(walletId);
     }
 
-
-    @GET
-    @Path("{walletNameOrId}/nft")
-    @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Gets the NFT contents",
-            notes = "Gets the NFT (NEP-11) contents of a specific Bsc Wallet.")
-    public List<Token> getWalletNFTContents(@PathParam("walletNameOrId") String walletNameOrId) {
-
-        walletNameOrId = Strings.nullToEmpty(walletNameOrId).trim();
-
-        return getWalletService().getWalletNFTContents(walletNameOrId);
-    }
-
     public BscWalletService getWalletService() {
         return bscWalletService;
     }

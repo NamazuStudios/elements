@@ -11,17 +11,15 @@ import com.namazustudios.socialengine.model.blockchain.Token;
 import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
+
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
-import io.neow3j.crypto.exceptions.CipherException;
-import io.neow3j.crypto.exceptions.NEP2InvalidFormat;
-import io.neow3j.crypto.exceptions.NEP2InvalidPassphrase;
-import io.neow3j.wallet.Wallet;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
+import org.web3j.crypto.CipherException;
 
 public class UserBscWalletService implements BscWalletService {
 
@@ -57,12 +55,11 @@ public class UserBscWalletService implements BscWalletService {
         var password = Strings.nullToEmpty(walletRequest.getPassword()).trim();
         var newPassword = Strings.nullToEmpty(walletRequest.getNewPassword()).trim();
 
-        var neoWallet = getWalletDao().getWallet(walletId);
+        var bscWallet = getWalletDao().getWallet(walletId);
         try {
-            var walletFromElements = getBscw3jClient().elementsWalletToNEP6(neoWallet.getWallet());
-            var wallet = getBscw3jClient().updateWallet(walletFromElements, name, password, newPassword);
-            return getWalletDao().updateWallet(walletId, walletRequest, getBscw3jClient().nep6ToElementsWallet(wallet));
-        } catch (CipherException | NEP2InvalidFormat | NEP2InvalidPassphrase | JsonProcessingException e) {
+            var wallet = getBscw3jClient().updateWallet(bscWallet.getWallet(), name, password, newPassword);
+            return getWalletDao().updateWallet(walletId, walletRequest, wallet);
+        } catch (CipherException  | JsonProcessingException e) {
             throw new InternalException(e.getMessage());
         }
     }
@@ -86,25 +83,23 @@ public class UserBscWalletService implements BscWalletService {
         if (pw.isEmpty()){
             try {
                 var wallet = getBscw3jClient().createWallet(walletRequest.getDisplayName());
-                var elementsWallet = getBscw3jClient().nep6ToElementsWallet(wallet);
                 var bscWallet = new BscWallet();
 
                 bscWallet.setDisplayName(walletRequest.getDisplayName());
-                bscWallet.setWallet(elementsWallet);
+                bscWallet.setWallet(wallet);
                 bscWallet.setUser(user);
 
                 return bscWalletDao.createWallet(bscWallet);
-            } catch (CipherException | JsonProcessingException e) {
+            } catch ( CipherException | JsonProcessingException e) {
                 throw new InternalException(e.getMessage());
             }
         } else {
             try {
                 var wallet = getBscw3jClient().createWallet(walletRequest.getDisplayName(), pw);
-                var elementsWallet = getBscw3jClient().nep6ToElementsWallet(wallet);
                 var bscWallet = new BscWallet();
 
                 bscWallet.setDisplayName(walletRequest.getDisplayName());
-                bscWallet.setWallet(elementsWallet);
+                bscWallet.setWallet(wallet);
                 bscWallet.setUser(user);
 
                 return bscWalletDao.createWallet(bscWallet);
@@ -112,49 +107,6 @@ public class UserBscWalletService implements BscWalletService {
                 throw new InternalException(e.getMessage());
             }
         }
-    }
-
-    @Override
-    public List<Token> getWalletNFTContents(final String walletNameOrId) {
-
-        final var wallet = getWalletDao().getWallet(walletNameOrId);
-        final var nepWallet = getBscw3jClient().elementsWalletToNEP6(wallet.getWallet());
-        final var mintAccount = Wallet.fromNEP6Wallet(nepWallet).getDefaultAccount();
-
-        final var client = getBscw3jClient().getNeow3j();
-
-        final var getNep11BalanacesRequest = client.getNep11Balances(mintAccount.getScriptHash());
-
-        try {
-            final var rawRequest = getNep11BalanacesRequest.send();
-            final var response = rawRequest.getBalances();
-            final var balances = response.getBalances();
-
-            var first = balances.get(0);
-            var ft = first.getTokens().get(0);
-            var id = ft.getTokenId();
-
-            for (final var balance : balances) {
-
-                for (final var token : balance.getTokens()) {
-
-                    final var tokenProperties = client.getNep11Properties(balance.getAssetHash(), token.getTokenId());
-
-                    final var result = tokenProperties.sendAsync().get();
-
-                    final var properties = result.getProperties();
-                }
-            }
-
-        } catch (IOException e) {
-            throw new InternalException(e.getMessage());
-        } catch (ExecutionException e) {
-            throw new InternalException(e.getMessage());
-        } catch (InterruptedException e) {
-            throw new InternalException(e.getMessage());
-        }
-
-        return null;
     }
 
     @Override

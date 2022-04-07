@@ -13,14 +13,13 @@ import com.namazustudios.socialengine.exception.blockchain.BscWalletNotFoundExce
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
-import com.namazustudios.socialengine.model.blockchain.bsc.Nep6Wallet;
+import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
-import io.neow3j.wallet.Wallet;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
@@ -97,8 +96,7 @@ public class MongoBscWalletDao implements BscWalletDao {
     }
 
     @Override
-    public BscWallet updateWallet(String walletId, UpdateBscWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet) throws JsonProcessingException {
-
+    public BscWallet updateWallet(String walletId, UpdateBscWalletRequest updatedWalletRequest, Web3jWallet updatedWallet) throws JsonProcessingException {
         getValidationHelper().validateModel(updatedWalletRequest, ValidationGroups.Update.class);
 
         final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletId);
@@ -118,7 +116,7 @@ public class MongoBscWalletDao implements BscWalletDao {
             builder.with(set("user", newUser));
         }
 
-        builder.with(set("wallet", Wallet.OBJECT_MAPPER.writeValueAsBytes(updatedWallet)));
+        builder.with(set("wallet", Web3jWallet.OBJECT_MAPPER.writeValueAsBytes(updatedWallet)));
 
         final MongoBscWallet mongoBscWallet = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
@@ -148,7 +146,7 @@ public class MongoBscWalletDao implements BscWalletDao {
         final var builder = new UpdateBuilder().with(
                 set("user", user),
                 set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
-                set("wallet", Wallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
+                set("wallet", Web3jWallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
         );
 
         final var mongoWallet = getMongoDBUtils().perform(

@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.namazustudios.socialengine.model.blockchain.bsc.Nep6Wallet;
-import io.neow3j.wallet.Wallet;
+import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import org.dozer.CustomConverter;
 import org.dozer.MappingException;
 
@@ -15,15 +14,15 @@ public class MongoBscWalletConverter implements CustomConverter {
                           final Class<?> destinationClass, final Class<?> sourceClass) {
         if (sourceClass == byte[].class && destinationClass == byte[].class) {
             return sourceFieldValue;
-        } else if (sourceClass == byte[].class && destinationClass == Nep6Wallet.class) {
+        } else if (sourceClass == byte[].class && destinationClass == Web3jWallet.class) {
             try {
-                return sourceFieldValue == null ? null : Wallet.OBJECT_MAPPER.readValue((byte[]) sourceFieldValue, Nep6Wallet.class);
+                return sourceFieldValue == null ? null : Web3jWallet.OBJECT_MAPPER.readValue((byte[]) sourceFieldValue, Web3jWallet.class);
             } catch (IOException e) {
                 return null;
             }
-        } else if (sourceClass == Nep6Wallet.class && destinationClass == byte[].class) {
+        } else if (sourceClass == Web3jWallet.class && destinationClass == byte[].class) {
             try {
-                return sourceFieldValue == null ? null : Wallet.OBJECT_MAPPER.writeValueAsBytes(sourceFieldValue);
+                return sourceFieldValue == null ? null : Web3jWallet.OBJECT_MAPPER.writeValueAsBytes(sourceFieldValue);
             } catch (JsonProcessingException e) {
                 return null;
             }

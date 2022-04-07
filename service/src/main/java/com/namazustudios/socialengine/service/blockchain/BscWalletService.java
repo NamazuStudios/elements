@@ -63,15 +63,6 @@ public interface BscWalletService {
     BscWallet createWallet(CreateBscWalletRequest walletRequest);
 
     /**
-     * Fetches a specific {@link BscWallet} instance based on ID or name and then the NFT contents therein.
-     * If not found, an exception is raised.
-     *
-     * @param walletNameOrId the wallet Id or name
-     * @return the {@link BscWallet}, never null
-     */
-    List<Token> getWalletNFTContents(String walletNameOrId);
-
-    /**
      * Deletes the {@link BscWallet} with the supplied wallet ID.
      *
      * @param walletId the wallet Id.
