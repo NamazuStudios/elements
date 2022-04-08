@@ -30,13 +30,14 @@ export class NeoTokensDataSource implements DataSource<NeoToken> {
     offset: number | null,
     count: number | null,
     tags: string[] | null,
+    mintStatus: string[] | ['NOT_MINTED'],
     query: string | null
   ) {
     this.loadingSubject.next(true);
 
     // add search when ready
     this.neoTokensService
-      .getTokens({ tags: tags, query: query, offset: offset, count: count })
+      .getTokens({ tags: tags, query: query, offset: offset, count: count, mintStatus: mintStatus })
       .pipe(
         catchError(() => of({ objects: [], total: 0 })),
         finalize(() => this.loadingSubject.next(false))
