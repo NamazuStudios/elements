@@ -23,7 +23,7 @@ public class SuperUserBscTokenService implements BscTokenService {
     public Pagination<BscToken> getTokens(
             final int offset,
             final int count, List<String> tags,
-            final BlockchainConstants.MintStatus mintStatus,
+            final List<BlockchainConstants.MintStatus> mintStatus,
             final String search) {
         return getBscTokenDao().getTokens(offset, count, tags, mintStatus, search);
     }

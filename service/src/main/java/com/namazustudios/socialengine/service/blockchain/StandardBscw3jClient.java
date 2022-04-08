@@ -81,7 +81,7 @@ public class StandardBscw3jClient implements Bscw3jClient {
     @Override
     public Web3jWallet updateWallet(Web3jWallet wallet, String name, String password, String newPassword) throws CipherException{
         if (wallet != null && wallet.getAccounts() != null && wallet.getAccounts().size() > 0){
-            Credentials credentials = Credentials.create(Wallet.decrypt("password", wallet.getAccounts().get(0)));
+            Credentials credentials = Credentials.create(Wallet.decrypt(password, wallet.getAccounts().get(0)));
             WalletFile walletFile = Wallet.createStandard(newPassword,credentials.getEcKeyPair());
             return new Web3jWallet( name, wallet.getVersion(), newPassword, walletFile,  wallet.getExtra());
         }else{

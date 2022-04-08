@@ -37,11 +37,6 @@
             <artifactId>contract</artifactId>
             <version>${neow3j.version}</version>
         </dependency>
-        <dependency>
-            <groupId>org.web3j</groupId>
-            <artifactId>core</artifactId>
-            <version>${web3j.version}</version>
-        </dependency>
     </dependencies>
 
 </project>
