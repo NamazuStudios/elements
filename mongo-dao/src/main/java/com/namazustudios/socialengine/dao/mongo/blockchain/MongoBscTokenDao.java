@@ -45,7 +45,7 @@ public class MongoBscTokenDao implements BscTokenDao {
     public Pagination<BscToken> getTokens(final int offset,
                                           final int count,
                                           final List<String> tags,
-                                          final BlockchainConstants.MintStatus mintStatus,
+                                          final List<BlockchainConstants.MintStatus> mintStatus,
                                           final String search) {
 
         final var trimmedSearch = nullToEmpty(search).trim();
@@ -62,7 +62,7 @@ public class MongoBscTokenDao implements BscTokenDao {
         }
 
         if (mintStatus != null) {
-            mongoQuery.filter(Filters.eq("mintStatus", mintStatus));
+            mongoQuery.filter(Filters.in("mintStatus", mintStatus));
         }
 
         return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform, new FindOptions());
