@@ -9,7 +9,7 @@ import {
 import { BaseService } from "../../base-service";
 import { ApiConfiguration } from "../../api-configuration";
 import { StrictHttpResponse } from "../../strict-http-response";
-import { BehaviorSubject, Observable } from "rxjs";
+import { Observable } from "rxjs";
 import { map as __map, filter as __filter } from "rxjs/operators";
 import { NeoSmartContract } from "../../models/blockchain/neo-smart-contract";
 import { PatchNeoSmartContractRequest } from "../../models/blockchain/patch-neo-smart-contract-request";
@@ -25,7 +25,7 @@ class NeoSmartContractsService extends BaseService {
     super(config, http);
   }
 
-  network = new BehaviorSubject('NEO');
+  readonly network = "NEO";
 
   /**
    * Gets a pagination of Neo Contracts.
@@ -53,7 +53,7 @@ class NeoSmartContractsService extends BaseService {
       __params = __params.set("count", params.count.toString());
     let req = new HttpRequest<any>(
       "GET",
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/contract`,
+      this.rootUrl + `/blockchain/neo/contract`,
       __body,
       {
         headers: __headers,
@@ -103,7 +103,7 @@ class NeoSmartContractsService extends BaseService {
 
     let req = new HttpRequest<any>(
       "DELETE",
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/contract/${contractId}`,
+      this.rootUrl + `/blockchain/neo/contract/${contractId}`,
       __body,
       {
         headers: __headers,
@@ -144,7 +144,7 @@ class NeoSmartContractsService extends BaseService {
 
     let req = new HttpRequest<any>(
       "GET",
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/contract/${contractId}`,
+      this.rootUrl + `/blockchain/neo/contract/${contractId}`,
       __body,
       {
         headers: __headers,
@@ -186,7 +186,7 @@ class NeoSmartContractsService extends BaseService {
     __body = body;
     let req = new HttpRequest<any>(
       "PATCH",
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/contract`,
+      this.rootUrl + `/blockchain/neo/contract`,
       __body,
       {
         headers: __headers,
@@ -232,7 +232,7 @@ class NeoSmartContractsService extends BaseService {
     __body = body;
     let req = new HttpRequest<any>(
       "POST",
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/contract/mint`,
+      this.rootUrl + `/blockchain/neo/contract/mint`,
       __body,
       {
         headers: __headers,

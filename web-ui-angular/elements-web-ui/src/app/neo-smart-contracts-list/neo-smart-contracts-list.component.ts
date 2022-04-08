@@ -78,13 +78,7 @@ export class NeoSmartContractsListComponent implements OnInit, AfterViewInit {
     this.dataSource = new NeoSmartContractsDataSource(
       this.neoSmartContractsService
     );
-    // this.refresh(0);
-
-    this.neoSmartContractsService.network.subscribe(
-      () => {
-        this.refresh(0);
-      }
-    );
+    this.refresh(0);
   }
 
   ngAfterViewInit() {

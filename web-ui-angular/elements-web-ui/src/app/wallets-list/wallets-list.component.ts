@@ -61,13 +61,7 @@ export class WalletsListComponent implements OnInit, AfterViewInit {
       );
     this.selection = new SelectionModel<NeoWallet>(true, []);
     this.dataSource = new NeoWalletsDataSource(this.neoWalletsService);
-    // this.refresh(0);
-
-    this.neoWalletsService.network.subscribe(
-      () => {
-        this.refresh(0);
-      }
-    );
+    this.refresh(0);
   }
 
   ngAfterViewInit() {

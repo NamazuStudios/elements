@@ -4,7 +4,7 @@ import { HttpClient, HttpRequest, HttpResponse, HttpHeaders} from '@angular/comm
 import { BaseService } from '../../base-service';
 import { ApiConfiguration } from '../../api-configuration';
 import { StrictHttpResponse } from '../../strict-http-response';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Observable } from 'rxjs';
 import { map as __map, filter as __filter } from 'rxjs/operators';
 import { UpdateNeoTokenRequest } from '../../models/blockchain/update-neo-token-request';
 import { NeoToken } from '../../models/blockchain/neo-token';
@@ -22,7 +22,7 @@ class NeoTokensService extends BaseService {
     super(config, http);
   }
 
-  network = new BehaviorSubject('NEO');
+  readonly network = 'NEO';
 
   /**
    * Gets a pagination of Neo Tokens for the given query.
@@ -46,11 +46,9 @@ class NeoTokensService extends BaseService {
     if (params.query != null) __params = __params.set('search', params.query.toString());
     if (params.offset != null) __params = __params.set('offset', params.offset.toString());
     if (params.count != null) __params = __params.set('count', params.count.toString());
-    (params.mintStatus || []).forEach((val, index) => {if (val != null) __params = __params.append('mintStatus', val.toString())});
-    
     let req = new HttpRequest<any>(
       'GET',
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/token`,
+      this.rootUrl + `/blockchain/neo/token`,
       __body,
       {
         headers: __headers,
@@ -78,8 +76,6 @@ class NeoTokensService extends BaseService {
    *
    * - `count`:
    *
-   * - `mintStatus`:
-   *
    * @return successful operation
    */
   getTokens(params: NeoTokensService.GetNeoTokensParams): Observable<PaginationNeoToken> {
@@ -106,7 +102,7 @@ class NeoTokensService extends BaseService {
     __body = params.body;
     let req = new HttpRequest<any>(
       'PUT',
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/token/${params.id}`,
+      this.rootUrl + `/blockchain/neo/token/${params.id}`,
       __body,
       {
         headers: __headers,
@@ -149,7 +145,7 @@ class NeoTokensService extends BaseService {
 
     let req = new HttpRequest<any>(
       'DELETE',
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/token/${tokenId}`,
+      this.rootUrl + `/blockchain/neo/token/${tokenId}`,
       __body,
       {
         headers: __headers,
@@ -187,7 +183,7 @@ class NeoTokensService extends BaseService {
 
     let req = new HttpRequest<any>(
       'GET',
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/token/${tokenNameOrId}`,
+      this.rootUrl + `/blockchain/neo/token/${tokenNameOrId}`,
       __body,
       {
         headers: __headers,
@@ -226,7 +222,7 @@ class NeoTokensService extends BaseService {
     __body = body;
     let req = new HttpRequest<any>(
       'POST',
-      `${this.rootUrl}/blockchain/${this.network.getValue().toLowerCase()}/token`,
+      this.rootUrl + `/blockchain/neo/token`,
       __body,
       {
         headers: __headers,
@@ -272,7 +268,6 @@ module NeoTokensService {
     offset?: number;
     count?: number;
     tags?: Array<string>;
-    mintStatus?: Array<string>;
     query?: string;
   }
 }

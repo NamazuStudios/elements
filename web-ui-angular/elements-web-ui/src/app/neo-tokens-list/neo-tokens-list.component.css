@@ -26,9 +26,3 @@ input[type="button"] {
 .tab {
   margin-left: 10px;
 }
-
-.control-container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}

@@ -3,19 +3,13 @@
     <mat-spinner></mat-spinner>
   </div>
 
-  <div class="control-container">
-    <div>
-      <mat-form-field>
-        <input matInput placeholder="Search NFTs" #input disabled="true">
-      </mat-form-field>
+  <mat-form-field>
+    <input matInput placeholder="Search NFTs" #input disabled="true">
+  </mat-form-field>
 
-      <button mat-raised-button color="primary" (click)="addToken()">Define NFT</button>
-      <button mat-raised-button color="primary" (click)="deleteSelectedTokens()" [disabled]="!hasSelection">Delete
-        Selected</button>
-    </div>
-    
-    <app-blockchain-dropdown serviceType="token"></app-blockchain-dropdown>
-  </div>
+  <button mat-raised-button color="primary" (click)="addToken()">Define NFT</button>
+  <button mat-raised-button color="primary" (click)="deleteSelectedTokens()" [disabled]="!hasSelection">Delete
+    Selected</button>
 
   <!-- <mat-button-toggle-group>
       <mat-button-toggle value="Yours">Yours</mat-button-toggle>
@@ -114,7 +108,7 @@
     <ng-container matColumnDef="view-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
-        <button mat-raised-button color="primary" (click)="viewToken(token)">View</button>
+        <button mat-raised-button color="primary" (click)="deleteToken(token)" disabled="true">View</button>
       </mat-cell>
     </ng-container>
     <ng-container matColumnDef="edit-action">
