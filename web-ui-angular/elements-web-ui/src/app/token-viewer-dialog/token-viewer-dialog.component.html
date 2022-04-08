@@ -20,12 +20,6 @@
                 <div class="content">{{currentSmartContract?.blockchain}}</div>
             </div>
         </mat-list-item>
-        <mat-list-item role="listitem">
-            <div class="item-content sub-item">
-                <div class="label">Account Address:</div>
-                <div class="content">{{currentSmartContract?.accountAddress}}</div>
-            </div>
-        </mat-list-item>
         <mat-divider></mat-divider>
         <mat-list-item role="listitem">
             <div class="item-content">
@@ -182,7 +176,7 @@
 </div>
 
 <div mat-dialog-actions>
-    <button type="button" mat-raised-button (click)="close(false)">Cancel</button>
+    <button type="button" mat-raised-button (click)="close()">Cancel</button>
 </div>
 <div id="token-id">
     ID: {{data?.token.id}}
