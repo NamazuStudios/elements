@@ -61,7 +61,6 @@ public class TransactionalResourceService implements ResourceService {
     public void stop() {
         final var context = this.context.getAndSet(null);
         if (context == null) throw new IllegalStateException("Not currently running.");
-
     }
 
     @Override
@@ -71,7 +70,7 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public Resource getAndAcquireResourceWithId(final ResourceId resourceId) {
-        try (var mutator = mutate(resourceId)) {
+        try (var mutator = getContext().cache.mutate(resourceId)) {
             return computeRO(txn -> {
 
                 // The transaction is the authority. If there is no resource with the ID, then we simply
@@ -89,7 +88,7 @@ public class TransactionalResourceService implements ResourceService {
                     // Cache miss. Load and return.
                     try (var rbc = txn.loadResourceContents(resourceId)) {
                         final var loaded = getResourceLoader().load(rbc, false);
-                        return mutator.acquireInitial(loaded);
+                        return mutator.acquire(loaded);
                     } catch (IOException e) {
                         throw new InternalException(e);
                     }
@@ -107,7 +106,7 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public Resource addAndAcquireResource(final Path path, final Resource resource) {
-        try (var mutator = mutate(resource.getId())) {
+        try (var mutator = getContext().cache.mutate(resource.getId())) {
 
             if (mutator.isPresent()) {
                 throw new InternalException("Resource already present.");
@@ -116,14 +115,14 @@ public class TransactionalResourceService implements ResourceService {
             final var destination = normalize(path).appendUUIDIfWildcard();
             executeRW((txn) -> txn.linkNewResource(destination, resource.getId()));
 
-            return mutator.acquireInitial(resource);
+            return mutator.acquire(resource);
 
         }
     }
 
     @Override
     public void addAndReleaseResource(final Path path, final Resource resource) {
-        try (var mutator = mutate(resource.getId())) {
+        try (var mutator = getContext().cache.mutate(resource.getId())) {
             executeRW(txn -> {
 
                 final var destination = normalize(path).appendUUIDIfWildcard();
@@ -140,107 +139,162 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public boolean tryRelease(final Resource resource) {
-        try (var mutator = mutate(resource.getId())) {
+
+        final var context = getContext();
+        final var resourceId = resource.getId();
+
+        try (var mutator = context.cache.mutate(resourceId)) {
 
             if (!(resource instanceof TransactionalResource) || !mutator.isPresent()) {
                 return false;
             }
 
-            return mutator.release(count -> computeRW((txn) -> {
+            final var transactionalResource = (TransactionalResource) resource;
 
-                if (txn.exists(resource.getId())) {
-
-                    if (count == 0) {
-                        try (final var wbc = txn.updateResource(resource.getId())) {
-                            resource.serialize(wbc);
-                        } catch (IOException ex) {
-                            throw new InternalException(ex);
-                        }
-                    }
-
-                    return true;
-
-                }
-
+            if (context.cache != transactionalResource.getLifecycleOwner()) {
                 return false;
+            }
 
-            }));
+            if (transactionalResource.release() == 0) {
+                // Save the resource to the database. Either unload or close. If it exists it is not
+                try {
+                    if (persist(resourceId, transactionalResource)) {
+                        resource.unload();
+                        return true;
+                    } else {
+                        resource.close();
+                        return false;
+                    }
+                } finally {
+                    mutator.purge();
+                }
+            } else if (!computeRW(txn -> txn.exists(resourceId))) {
+                try (resource) {
+                    return false;
+                } finally {
+                    mutator.purge();
+                }
+            } else {
+                return true;
+            }
 
         }
+
+    }
+
+    private boolean persist(final ResourceId resourceId, final TransactionalResource resource) {
+
+        final var raw = resource.getDelegate();
+
+        return computeRW(txn -> {
+            if (txn.exists(resourceId)) {
+                // This shouldn't happen under most circumstances.
+                try (final var wbc = txn.updateResource(resourceId)) {
+                    raw.serialize(wbc);
+                    return true;
+                } catch (IOException ex) {
+                    throw new InternalException(ex);
+                }
+            } else {
+                logger.trace("Detected orphaned resource {}", resourceId);
+                return false;
+            }
+        });
+
     }
 
     @Override
     public Spliterator<Listing> list(final Path path) {
-        return computeRO(txn -> {
-            final var normalized = normalize(path);
-            final var listings = txn.list(normalized).collect(toList());
-            return spliterator(listings, SUBSIZED | CONCURRENT | NONNULL);
-        });
+        try (var monitor = getContext().cache.readMonitor()) {
+            return computeRO(txn -> {
+                final var normalized = normalize(path);
+                final var listings = txn.list(normalized).collect(toList());
+                return spliterator(listings, SUBSIZED | CONCURRENT | NONNULL);
+            });
+        }
     }
 
     @Override
     public void link(final ResourceId sourceResourceId, final Path destination) {
-        executeRW(txn -> {
-            final Path normalized = normalize(destination);
-            txn.linkExistingResource(sourceResourceId, normalized);
-        });
+        try (var monitor = getContext().cache.readMonitor()) {
+            executeRW(txn -> {
+                final Path normalized = normalize(destination);
+                txn.linkExistingResource(sourceResourceId, normalized);
+            });
+        }
     }
 
     @Override
     public Unlink unlinkPath(final Path path, final Consumer<Resource> removed) {
 
-        final var unlink = computeRW((txn) -> {
-            final var normalized = normalize(path);
-            return txn.unlinkPath(normalized);
-        });
+        final var context = getContext();
 
-        if (unlink.isRemoved()) {
+        try (final var monitor = context.cache.readMonitor()) {
 
-            final var resourceId = unlink.getResourceId();
+            final var unlink = computeRW((txn) -> {
+                final var normalized = normalize(path);
+                return txn.unlinkPath(normalized);
+            });
 
-            try (final var mutator = mutate(resourceId)) {
-                mutator.purge();
+            if (unlink.isRemoved()) {
+
+                final var resourceId = unlink.getResourceId();
+
+                try (final var mutator = context.cache.mutate(resourceId)) {
+
+                    mutator.purge();
+
+                    try {
+                        mutator.getResource().close();
+                    } catch (Exception ex) {
+                        logger.error("Error destroying resource.", ex);
+                    }
+
+                }
+
             }
 
-        }
+            return unlink;
 
-        return unlink;
+        }
 
     }
 
     @Override
     public List<Unlink> unlinkMultiple(final Path path, final int max, final Consumer<Resource> removed) {
 
-        final var unlinks = computeRW(txn -> {
-            final var normalized = normalize(path);
-            return txn.unlinkMultiple(normalized, max);
-        });
+        final var context = getContext();
 
-        try (final var mutator = mutate(null)) {
-            mutator.purge();
-        }
+        try (final var monitor = context.cache.readMonitor()) {
 
-        for(var unlink : unlinks) {
+            final var unlinks = computeRW(txn -> {
+                final var normalized = normalize(path);
+                return txn.unlinkMultiple(normalized, max);
+            });
 
-            if (!unlink.isRemoved()) {
-                continue;
+            for(var unlink : unlinks) {
+
+                if (!unlink.isRemoved()) {
+                    continue;
+                }
+
+                final var resourceId = unlink.getResourceId();
+
+                try (final var mutator = context.cache.mutate(resourceId)) {
+                    mutator.purge();
+                }
+
             }
 
-            final var resourceId = unlink.getResourceId();
-
-            try (final var mutator = mutate(resourceId)) {
-                mutator.purge();
-            }
+            return unlinks;
 
         }
-
-        return unlinks;
 
     }
 
     @Override
     public Resource removeResource(final ResourceId resourceId) {
-        try (var mutator = mutate(resourceId)) {
+        try (var mutator = getContext().cache.mutate(resourceId)) {
             try {
                 executeRW((txn) -> txn.removeResource(resourceId));
                 mutator.purge();
@@ -255,18 +309,24 @@ public class TransactionalResourceService implements ResourceService {
     @Override
     public List<ResourceId> removeResources(final Path path, final int max, final Consumer<Resource> removed) {
 
-        final var resourceIDs = computeRW((txn) -> {
-            final Path normalized = normalize(path);
-            return txn.removeResources(normalized, max);
-        });
+        final var context = getContext();
 
-        for (final var resourceId : resourceIDs) {
-            try (var mutator = mutate(resourceId)) {
-                mutator.purge();
+        try (final var monitor = context.cache.readMonitor()) {
+
+            final var resourceIDs = computeRW((txn) -> {
+                final Path normalized = normalize(path);
+                return txn.removeResources(normalized, max);
+            });
+
+            for (final var resourceId : resourceIDs) {
+                try (var mutator = context.cache.mutate(resourceId)) {
+                    mutator.purge();
+                }
             }
-        }
 
-        return resourceIDs;
+            return resourceIDs;
+
+        }
 
     }
     @Override
@@ -288,19 +348,16 @@ public class TransactionalResourceService implements ResourceService {
         return path.hasContext() ? path : path.toPathWithContext(getNodeId().asString());
     }
 
-    private TransactionalResourceServiceCache.Mutator mutate(final ResourceId resourceId) {
-        final var context = getContext();
-        return context.cache.mutate(resourceId);
-    }
-
     public void persist(final ResourceId resourceId) {
-        try (var mutator = mutate(resourceId)) {
+        try (var mutator = getContext().cache.mutate(resourceId)) {
             executeRW((txn) -> {
                 try (var wbc = txn.updateResource(resourceId)) {
                     final var tr = mutator.getResource();
                     tr.serialize(wbc);
                 } catch (IOException ex) {
                     throw new InternalException(ex);
+                } catch (ResourceNotFoundException ex) {
+                    logger.trace("Resource not persisted because resource was not found.");
                 }
             });
         }
@@ -399,7 +456,7 @@ public class TransactionalResourceService implements ResourceService {
 
     private static class Context {
 
-        private final TransactionalResourceServiceCache cache = new SkipListTransactionalResourceServiceCache();
+        private final TransactionalResourceServiceCache cache = new SimpleTransactionalResourceServiceCache();
 
     }
 

@@ -39,6 +39,7 @@ public class XodusTransactionalResourceServicePersistenceEnvironment implements
 
         final var environment = new EnvironmentContext();
 
+
         if (this.environment.compareAndSet(null, environment)) {
             logger.info("Started Environment");
             setup(environment);

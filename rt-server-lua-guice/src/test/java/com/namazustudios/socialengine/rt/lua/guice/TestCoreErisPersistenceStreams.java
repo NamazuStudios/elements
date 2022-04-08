@@ -10,10 +10,7 @@ import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import java.io.*;
 import java.util.Objects;
@@ -22,12 +19,23 @@ import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 
+import static com.google.inject.Guice.createInjector;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
-@Guice(modules = ErisPersistenceTestModule.class)
 public class TestCoreErisPersistenceStreams {
+
+    @Factory
+    public static Object[] getIntegrationTests() {
+
+        final var injector = createInjector(new ErisPersistenceTestModule());
+
+        return new Object[] {
+                injector.getInstance(TestCoreErisPersistenceStreams.class)
+        };
+
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistenceStreams.class);
 

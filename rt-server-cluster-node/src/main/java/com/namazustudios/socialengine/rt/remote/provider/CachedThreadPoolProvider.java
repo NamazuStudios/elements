@@ -35,7 +35,7 @@ public class CachedThreadPoolProvider implements Provider<ExecutorService> {
         return newCachedThreadPool(r -> {
             final Thread thread = new Thread(r);
             thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t , e) -> logger.error("Fatal Error: {}", t, e));
+            thread.setUncaughtExceptionHandler((t , e) -> logger.error("Error: {}", t, e));
             thread.setName(format("%s %s - #%d", containing.getSimpleName(), name, threadCount.incrementAndGet()));
             return thread;
         });

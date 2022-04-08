@@ -5,6 +5,8 @@ import org.slf4j.LoggerFactory;
 
 import java.lang.ref.Reference;
 import java.lang.ref.ReferenceQueue;
+import java.lang.ref.SoftReference;
+import java.lang.ref.WeakReference;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -15,6 +17,9 @@ import java.util.function.Function;
 
 import static java.lang.Thread.interrupted;
 
+/**
+ * A reference map backed by either a {@link WeakReference} or {@link SoftReference}
+ */
 public abstract class ConcurrentReferenceMap {
 
     private static final Logger logger = LoggerFactory.getLogger(ConcurrentReferenceMap.class);
@@ -56,16 +61,43 @@ public abstract class ConcurrentReferenceMap {
         }
     }
 
+    public static class Builder<K, V> {
 
-    private static class ConcurrentMapWrapper<K, V, ReferenceT extends Reference<V>> implements Map<K, V> {
+        private Consumer<K> cleanup = v -> {};
 
-        private final ConcurrentMap<K, ReferenceWrapper<V, ReferenceT>> delegate;
+        private BiFunction<V, ReferenceQueue<Object>, Reference<V>> referenceCtor = WeakReference::new;
 
-        private final ReferenceConstructor<K, V, ReferenceT> referenceCtor;
+        public Builder<K, V> withCleanup(final Consumer<K> cleanup) {
+            this.cleanup = this.cleanup.andThen(cleanup);
+            return this;
+        }
+
+        public Builder<K, V> withWeakRef() {
+            referenceCtor = WeakReference::new;
+            return this;
+        }
+
+        public Builder<K, V> withSoftRef() {
+            referenceCtor = SoftReference::new;
+            return this;
+        }
+
+        public ConcurrentMap<K, V> build() {
+            final var delegate = new ConcurrentHashMap<K, ReferenceWrapper<V>>();
+            return new ConcurrentMapWrapper<>(delegate, referenceCtor, cleanup);
+        }
+
+    }
+
+    private static class ConcurrentMapWrapper<K, V> implements ConcurrentMap<K, V> {
+
+        private final ConcurrentMap<K, ReferenceWrapper<V>> delegate;
+
+        private final ReferenceConstructor<K, V> referenceCtor;
 
         private ConcurrentMapWrapper(
-                final ConcurrentMap<K, ReferenceWrapper<V, ReferenceT>> delegate,
-                final BiFunction<V, ReferenceQueue<Object>, ReferenceT> referenceCtor,
+                final ConcurrentMap<K, ReferenceWrapper<V>> delegate,
+                final BiFunction<V, ReferenceQueue<Object>, Reference<V>> referenceCtor,
                 final Consumer<K> cleanup) {
 
             this.delegate = delegate;
@@ -172,12 +204,22 @@ public abstract class ConcurrentReferenceMap {
         @Override
         public V merge(final K key, final V value, BiFunction<? super V, ? super V, ? extends V> remappingFunction) {
 
-            final var reference = delegate.merge(key, (k, vWrapper) -> {0
-                final var result = remappingFunction.apply(k, vWrapper == null ? null : vWrapper.get());
-                return result == null ? null : referenceCtor.wrapper(k, result);
+            final var vWrapped = referenceCtor.wrapper(key, value);
+            final var reference = delegate.merge(
+                key,
+                vWrapped,
+                (v0, v1) -> {
+
+                    final var result = remappingFunction.apply(
+                        v0 == null ? null : v0.get(),
+                        v1 == null ? null : v1.get()
+                    );
+
+                    return result == null ? null : referenceCtor.wrapper(key, result);
+
             });
 
-            return delegate.merge(key, value, remappingFunction);
+            return reference == null ? null : reference.get();
 
         }
 
@@ -241,12 +283,32 @@ public abstract class ConcurrentReferenceMap {
 
                 @Override
                 public Iterator<V> iterator() {
-                    return delegate.values().stream().map(ReferenceWrapper::get).iterator();
+                    return delegate
+                        .values()
+                        .stream()
+                        .map(ReferenceWrapper::get)
+                        .filter(Objects::nonNull)
+                        .iterator();
                 }
 
                 @Override
                 public int size() {
                     return delegate.values().size();
+                }
+
+                @Override
+                public boolean contains(final Object o) {
+                    return delegate.containsValue(o);
+                }
+
+                @Override
+                public void clear() {
+                    delegate.clear();
+                }
+
+                @Override
+                public boolean isEmpty() {
+                    return delegate.isEmpty();
                 }
 
             };
@@ -260,30 +322,19 @@ public abstract class ConcurrentReferenceMap {
                 public Iterator<Entry<K, V>> iterator() {
                     return delegate.entrySet()
                         .stream()
-                        .map(this::mapEntry)
+                        .map(ConcurrentMapWrapper.this::mapEntry)
+                        .filter(e -> e.getValue() != null)
                         .iterator();
                 }
 
-                private Entry<K, V> mapEntry(final Entry<K, ReferenceWrapper<V, ReferenceT>> original) {
-                    return new Entry<>() {
-                        @Override
-                        public K getKey() {
-                            return original.getKey();
-                        }
+                @Override
+                public void clear() {
+                    delegate.clear();
+                }
 
-                        @Override
-                        public V getValue() {
-                            final var wrapper = original.getValue();
-                            return wrapper == null ? null : wrapper.get();
-                        }
-
-                        @Override
-                        public V setValue(final V value) {
-                            final var wrapper = referenceCtor.wrapper(original.getKey(), value);
-                            final var result = original.setValue(wrapper);
-                            return result == null ? null : result.get();
-                        }
-                    };
+                @Override
+                public boolean isEmpty() {
+                    return delegate.isEmpty();
                 }
 
                 @Override
@@ -294,14 +345,35 @@ public abstract class ConcurrentReferenceMap {
             };
         }
 
+        private Entry<K, V> mapEntry(final Entry<K, ReferenceWrapper<V>> original) {
+            return new Entry<>() {
+                @Override
+                public K getKey() {
+                    return original.getKey();
+                }
+
+                @Override
+                public V getValue() {
+                    final var wrapper = original.getValue();
+                    return wrapper == null ? null : wrapper.get();
+                }
+
+                @Override
+                public V setValue(final V value) {
+                    final var wrapper = referenceCtor.wrapper(original.getKey(), value);
+                    final var result = original.setValue(wrapper);
+                    return result == null ? null : result.get();
+                }
+            };
+        }
 
     }
 
-    private static final class ReferenceWrapper<ReferentT, ReferenceT extends Reference<ReferentT>> {
+    private static final class ReferenceWrapper<ReferentT> {
 
-        private final ReferenceT reference;
+        private final Reference<ReferentT> reference;
 
-        public ReferenceWrapper(final ReferenceT reference) {
+        public ReferenceWrapper(final Reference<ReferentT> reference) {
             this.reference = reference;
         }
 
@@ -310,26 +382,28 @@ public abstract class ConcurrentReferenceMap {
         }
 
         @Override
-        public boolean equals(Object o) {
+        public boolean equals(final Object o) {
             if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return Objects.equals(get(), o);
-            ReferenceWrapper<?, ?> that = (ReferenceWrapper<?, ?>) o;
-            return Objects.equals(get(), that.get());
+            if (o == null || get() == null) return false;
+            if (getClass() != o.getClass()) return get() == o;
+            final var that = (ReferenceWrapper<?>) o;
+            return get() == that.get();
         }
 
         @Override
         public int hashCode() {
-            return Objects.hash(get());
+            final var value = get();
+            return value == null ? 0 : System.identityHashCode(get());
         }
 
     }
 
     @FunctionalInterface
-    private interface ReferenceConstructor<KeyT, ValueT, ReferenceT extends Reference<ValueT>> {
+    private interface ReferenceConstructor<KeyT, ValueT> {
 
-        ReferenceT construct(KeyT key, ValueT value, ReferenceQueue<? super ReferenceT> queue);
+        Reference<ValueT> construct(KeyT key, ValueT value, ReferenceQueue<? super Reference<ValueT>> queue);
 
-        default ReferenceWrapper<ValueT, ReferenceT> wrapper(final KeyT key, final ValueT value) {
+        default ReferenceWrapper<ValueT> wrapper(final KeyT key, final ValueT value) {
             final var reference = construct(key, value, references);
             return new ReferenceWrapper<>(reference);
         }
