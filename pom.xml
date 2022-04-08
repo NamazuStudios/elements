@@ -79,6 +79,7 @@
         <module>rest-api-test</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
+        <module>mongo-test</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
@@ -126,7 +127,6 @@
         <annotations.version>2.11.3</annotations.version>
         <neow3j.version>3.14.0</neow3j.version>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>
