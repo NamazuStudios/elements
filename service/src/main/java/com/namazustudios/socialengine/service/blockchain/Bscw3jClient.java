@@ -17,9 +17,9 @@ import org.web3j.protocol.*;
  * Created by Tuan Tran on 3/24/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.bscw3j"),
+        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.bsc.client"),
         @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.neow3j",
+                value = "namazu.elements.service.blockchain.bsc.unscoped.client",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })

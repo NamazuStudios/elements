@@ -15,10 +15,10 @@ import java.util.List;
  * Created by TuanTran on 3/24/22.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.bsctoken"),
+        @ExposedModuleDefinition("namazu.elements.dao.bsc.token"),
         @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.bsctoken",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsctoken instead"))
+                value = "namazu.socialengine.dao.bsc.token",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.token instead"))
 })
 public interface BscTokenDao {
 

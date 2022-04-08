@@ -18,9 +18,9 @@ import java.util.List;
  * Created by TuanTran on 3/24/22.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.token"),
+        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.bsc.token"),
         @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.token",
+                value = "namazu.elements.service.blockchain.bsc.unscoped.token",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })

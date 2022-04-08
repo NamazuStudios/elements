@@ -24,9 +24,9 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neow3j"),
+        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neo.client"),
         @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.neow3j",
+                value = "namazu.elements.service.blockchain.neo.unscoped.client",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })

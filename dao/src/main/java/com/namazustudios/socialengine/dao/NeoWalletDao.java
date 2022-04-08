@@ -13,10 +13,10 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
  * Created by garrettmcspadden on 11/12/21.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.neowallet"),
+        @ExposedModuleDefinition("namazu.elements.dao.neo.wallet"),
         @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.neowallet",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neowallet instead"))
+                value = "namazu.socialengine.dao.neo.wallet",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.wallet instead"))
 })
 public interface NeoWalletDao {
 
