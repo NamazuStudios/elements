@@ -148,7 +148,6 @@
             <version>${neow3j.version}</version>
         </dependency>
     </dependencies>
-
     <build>
         <plugins>
             <plugin>

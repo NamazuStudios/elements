@@ -38,5 +38,4 @@
             <version>${neow3j.version}</version>
         </dependency>
     </dependencies>
-
 </project>
