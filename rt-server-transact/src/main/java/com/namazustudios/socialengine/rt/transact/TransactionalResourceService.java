@@ -100,8 +100,10 @@ public class TransactionalResourceService implements ResourceService {
 
     @Override
     public Resource getAndAcquireResourceAtPath(final Path path) {
-        final var resourceId = computeRO(txn -> txn.getResourceId(path));
-        return getAndAcquireResourceWithId(resourceId);
+        try (final var read = getContext().cache.readMonitor()) {
+            final var resourceId = computeRO(txn -> txn.getResourceId(path));
+            return getAndAcquireResourceWithId(resourceId);
+        }
     }
 
     @Override

@@ -169,39 +169,41 @@ public class JeroMQNode implements Node {
     @Override
     public Shutdown beginShutdown() {
 
-        final NodeContext c = context.getAndSet(null);
+        final var c = context.getAndSet(null);
+        final var logger = c == null ? staticLogger : c.logger;
+
         return new Shutdown() {
 
             @Override
             public void preStop() {
                 try {
-                    c.logger.info("Issuing NodeLifecycle pre-stop command.");
+                    logger.info("Issuing NodeLifecycle pre-stop command.");
                     getNodeLifecycle().nodePreStop(JeroMQNode.this);
                     state.set(STOPPING);
                 } catch (Exception ex) {
-                    c.logger.error("Caught exception issuing pre-stop command.", ex);
+                    logger.error("Caught exception issuing pre-stop command.", ex);
                 }
             }
 
             @Override
             public void stop() {
                 try {
-                    c.stop();
-                    c.logger.info("Shutdown.  Issuing NodeLifecycle post-stop command.");
+                    if (c != null) c.stop();
+                    logger.info("Shutdown.  Issuing NodeLifecycle post-stop command.");
                     state.set(STOPPED);
                 } catch (Exception ex) {
-                    c.logger.error("Caught exception issuing stop command.", ex);
+                    logger.error("Caught exception issuing stop command.", ex);
                 }
             }
 
             @Override
             public void postStop() {
                 try {
-                    c.logger.info("Shutdown.  Issued NodeLifecycle stop command.");
+                    logger.info("Shutdown.  Issued NodeLifecycle stop command.");
                     getNodeLifecycle().nodePostStop(JeroMQNode.this);
                     state.set(READY);
                 } catch (Exception ex) {
-                    c.logger.error("Caught excpetion issuing post-stop command.", ex);
+                    logger.error("Caught excpetion issuing post-stop command.", ex);
                 }
             }
         };
