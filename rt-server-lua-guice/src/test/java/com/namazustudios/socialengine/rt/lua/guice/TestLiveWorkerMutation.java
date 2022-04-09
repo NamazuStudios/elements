@@ -13,6 +13,7 @@ import org.testng.annotations.Test;
 
 import java.util.List;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
