@@ -3,12 +3,10 @@ package com.namazustudios.socialengine.model.blockchain.bsc;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiModelProperty;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.web3j.crypto.Credentials;
-import org.web3j.crypto.WalletFile;
-import org.web3j.crypto.Wallet;
 
 import java.security.spec.KeySpec;
 import javax.crypto.Cipher;
@@ -36,7 +34,7 @@ public class Web3jWallet {
     private String seed;
 
     @ApiModelProperty("The accounts associated with this wallet.")
-    private List<WalletFile> accounts;
+    private List<String> accounts;
 
     @ApiModelProperty("The extra object data associated with this wallet.")
     private Object extra;
@@ -44,35 +42,36 @@ public class Web3jWallet {
     public Web3jWallet() {
     }
 
-    public Web3jWallet(WalletFile walletFile) {
+    public Web3jWallet(BigInteger accountSecretKey) {
+        String sPrivatekeyInHex = accountSecretKey.toString(16);
         this.accounts = new ArrayList<>();
-        this.accounts.add(walletFile);
-        this.name = walletFile.getAddress();
+        this.accounts.add(sPrivatekeyInHex);
+        this.name = sPrivatekeyInHex;
     }
 
     public Web3jWallet(String name) {
         this.name = name;
     }
 
-    public Web3jWallet(String name, WalletFile walletFile) {
+    public Web3jWallet(String name, BigInteger accountSecretKey) {
         this.name = name;
         if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(walletFile);
+        this.accounts.add(accountSecretKey.toString(16));
     }
 
-    public Web3jWallet(String name, WalletFile walletFile, String password) {
+    public Web3jWallet(String name, BigInteger accountSecretKey, String password) {
         this.name = name;
         this.seed = Web3jWallet.encrypt(password);
         if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(walletFile);
+        this.accounts.add(accountSecretKey.toString(16));
     }
 
-    public Web3jWallet(String name, String version, String password, WalletFile walletFile, Object extra) {
+    public Web3jWallet(String name, String version, String password, BigInteger accountSecretKey, Object extra) {
         this.name = name;
         this.version = version;
         this.seed = Web3jWallet.encrypt(password);
         if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(walletFile);
+        this.accounts.add(accountSecretKey.toString(16));
         this.extra = extra;
     }
 
@@ -88,7 +87,7 @@ public class Web3jWallet {
         return version;
     }
 
-    public List<WalletFile> getAccounts() {
+    public List<String> getAccounts() {
         return accounts;
     }
 

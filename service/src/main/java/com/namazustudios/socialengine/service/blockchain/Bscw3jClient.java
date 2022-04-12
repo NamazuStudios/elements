@@ -7,9 +7,9 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
-import org.web3j.crypto.WalletFile;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.*;
+import java.math.BigInteger;
 
 /**
  * Manages instances of {@link Bscw3j}.
@@ -51,7 +51,7 @@ public interface Bscw3jClient {
      * @param account the account of the wallet
      * @return the {@link Web3jWallet}, never null
      */
-    Web3jWallet getWallet(WalletFile walletFile);
+    Web3jWallet getWallet(BigInteger accountSecretKey);
 
     /**
      * Creates a {@link Web3jWallet}.
