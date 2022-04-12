@@ -40,7 +40,7 @@ public class Web3jWallet {
     }
 
     public Web3jWallet(BigInteger accountSecretKey) {
-        String sPrivatekeyInHex = accountSecretKey.toString(16);
+        String sPrivatekeyInHex = Web3jWallet.encrypt(accountSecretKey.toString(16));
         this.accounts = new ArrayList<>();
         this.accounts.add(sPrivatekeyInHex);
         this.name = sPrivatekeyInHex;
@@ -53,14 +53,14 @@ public class Web3jWallet {
     public Web3jWallet(String name, BigInteger accountSecretKey) {
         this.name = name;
         if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(accountSecretKey.toString(16));
+        this.accounts.add(Web3jWallet.encrypt(accountSecretKey.toString(16)));
     }
 
     public Web3jWallet(String name, BigInteger accountSecretKey, String password) {
         this.name = name;
         this.seed = Web3jWallet.encrypt(password);
         if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(accountSecretKey.toString(16));
+        this.accounts.add(Web3jWallet.encrypt(accountSecretKey.toString(16)));
     }
 
     public Web3jWallet(String name, String version, String password, BigInteger accountSecretKey, Object extra) {
@@ -68,7 +68,7 @@ public class Web3jWallet {
         this.version = version;
         this.seed = Web3jWallet.encrypt(password);
         if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(accountSecretKey.toString(16));
+        this.accounts.add(Web3jWallet.encrypt(accountSecretKey.toString(16)));
         this.extra = extra;
     }
 

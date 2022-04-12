@@ -81,8 +81,12 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
     @Override
     public Web3jWallet updateWallet(Web3jWallet wallet, String name, String password, String newPassword) throws CipherException{
+        if (!Web3jWallet.decrypt(wallet.getSeed()).equals(password)){
+            throw new CipherException("Invalid Password.");
+        }
         if (wallet != null && wallet.getAccounts() != null && wallet.getAccounts().size() > 0){
-            return new Web3jWallet( name, wallet.getVersion(), newPassword, new BigInteger(wallet.getAccounts().get(0), 16) ,  wallet.getExtra());
+            return new Web3jWallet( name, wallet.getVersion(), newPassword,
+                    new BigInteger(Web3jWallet.decrypt(wallet.getAccounts().get(0)), 16) ,  wallet.getExtra());
         }else{
             try{
                 ECKeyPair ecKeyPair = Keys.createEcKeyPair();
