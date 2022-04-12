@@ -617,9 +617,6 @@ public class ServicesModule extends PrivateModule {
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
         expose(DistinctInventoryItemService.class).annotatedWith(Unscoped.class);
-        expose(BscWalletService.class).annotatedWith(Unscoped.class);
-        expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
-        expose(BscTokenService.class).annotatedWith(Unscoped.class);
 
     }
 

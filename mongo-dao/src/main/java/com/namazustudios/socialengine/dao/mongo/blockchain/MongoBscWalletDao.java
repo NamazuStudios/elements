@@ -21,6 +21,7 @@ import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
+import com.namazustudios.socialengine.dao.mongo.converter.MongoBscWalletConverter;
 
 import javax.inject.Inject;
 
@@ -45,6 +46,8 @@ public class MongoBscWalletDao implements BscWalletDao {
     private MongoUserDao mongoUserDao;
 
     private MongoApplicationDao mongoApplicationDao;
+
+
 
     @Override
     public Pagination<BscWallet> getWallets(final int offset,
@@ -116,7 +119,7 @@ public class MongoBscWalletDao implements BscWalletDao {
             builder.with(set("user", newUser));
         }
 
-        builder.with(set("wallet", Web3jWallet.OBJECT_MAPPER.writeValueAsBytes(updatedWallet)));
+        builder.with(set("wallet", MongoBscWalletConverter.OBJECT_MAPPER.writeValueAsBytes(updatedWallet)));
 
         final MongoBscWallet mongoBscWallet = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
@@ -146,7 +149,7 @@ public class MongoBscWalletDao implements BscWalletDao {
         final var builder = new UpdateBuilder().with(
                 set("user", user),
                 set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
-                set("wallet", Web3jWallet.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
+                set("wallet", MongoBscWalletConverter.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
         );
 
         final var mongoWallet = getMongoDBUtils().perform(

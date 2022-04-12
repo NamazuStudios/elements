@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.model.blockchain.bsc;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.math.BigInteger;
@@ -16,8 +15,6 @@ import javax.crypto.spec.DESedeKeySpec;
 import java.util.Base64;
 
 public class Web3jWallet {
-
-    public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
     private static final String UNICODE_FORMAT = "UTF8";
     public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
