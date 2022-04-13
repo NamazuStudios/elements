@@ -147,6 +147,12 @@
             <artifactId>contract</artifactId>
             <version>${neow3j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>mongo-test</artifactId>
+            <version>${project.version}</version>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

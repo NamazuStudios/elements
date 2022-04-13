@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine;
 
 import com.google.inject.AbstractModule;
+import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
+import com.namazustudios.socialengine.guice.ConfigurationModule;
+import com.namazustudios.socialengine.rt.util.ShutdownHooks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -8,6 +11,7 @@ import java.io.*;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Properties;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -30,6 +34,10 @@ public class MongoTestModule extends AbstractModule {
     private static final String TEST_MONGO_VERSION = "3.4.5";
 
     private static final String TEST_BIND_IP = "localhost";
+
+    public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.uri";
+
+    private static final ShutdownHooks hooks = new ShutdownHooks(MongoTestModule.class);
 
     @Override
     protected void configure() {
@@ -59,10 +67,34 @@ public class MongoTestModule extends AbstractModule {
             final var stderr = new Thread(log(process::getErrorStream, m -> logger.error("mongod {}", m)));
             stderr.setDaemon(true);
             stderr.start();
-        } catch (IOException e) {
+
+            hooks.add(() -> {
+
+                logger.info("Destroying mongo process.");
+                process.destroy();
+
+                final var kill = new ProcessBuilder()
+                        .command("docker", "kill", uuid)
+                        .start();
+
+                kill.waitFor();
+
+            });
+
+            waitForConnect();
+
+        } catch (IOException | InterruptedException e) {
             addError(e);
             return;
         }
+
+        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+
+        install(new ConfigurationModule(() -> {
+            final Properties properties = defaultConfigurationSupplier.get();
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
+            return properties;
+        }));
     }
 
     private void waitForConnect() throws InterruptedException, UnknownHostException {
