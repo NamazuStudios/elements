@@ -15,10 +15,10 @@ import java.util.List;
  * Created by garrettmcspadden on 11/23/21.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.neotoken"),
+        @ExposedModuleDefinition("namazu.elements.dao.neo.token"),
         @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.neotoken",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neotoken instead"))
+                value = "namazu.socialengine.dao.neo.token",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.token instead"))
 })
 public interface NeoTokenDao {
 

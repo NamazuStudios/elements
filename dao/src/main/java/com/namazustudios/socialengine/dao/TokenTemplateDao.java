@@ -16,10 +16,10 @@ import java.util.List;
  * Created by garrettmcspadden on 11/23/21.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.tokentemplate"),
+        @ExposedModuleDefinition("namazu.elements.dao.token.template"),
         @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.tokentemplate",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.tokentemplate instead"))
+                value = "namazu.socialengine.dao.token.template",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.token.template instead"))
 })
 public interface TokenTemplateDao {
 

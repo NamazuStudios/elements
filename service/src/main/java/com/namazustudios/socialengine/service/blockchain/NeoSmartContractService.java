@@ -22,9 +22,9 @@ import java.util.function.Consumer;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neosmartcontract"),
+        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neo.smartcontract"),
         @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.neosmartcontract",
+                value = "namazu.elements.service.blockchain.unscoped.neo.smartcontract",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
