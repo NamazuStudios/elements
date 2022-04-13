@@ -13,6 +13,19 @@ public interface BlockchainConstants {
     }
 
     /**
+     * The field type of the field inside Token Template
+     */
+    enum TemplateFieldType {
+        String,
+        Number,
+        Boolean,
+        Array,
+        Enum,
+        Object,
+        Tags
+    }
+
+    /**
      * Names of the supported blockchains
      */
     interface Names {
