@@ -36,5 +36,4 @@ public class TokenTemplate {
     public void setTabs(List<TemplateTab> tabs) {
         this.tabs = tabs;
     }
-
 }
