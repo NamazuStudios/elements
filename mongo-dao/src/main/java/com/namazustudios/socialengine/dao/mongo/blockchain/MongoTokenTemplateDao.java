@@ -96,6 +96,8 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
 
         final var query = getDatastore().find(MongoTokenTemplate.class);
 
+        query.filter(exists("tabs").not());
+
         final var builder = new UpdateBuilder().with(
             set("tabs", tokenRequest.getTabs())
         );

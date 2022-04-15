@@ -179,8 +179,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(TokenTemplate.class, MongoTokenTemplate.class)
-                        .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                        .fields("tabs", "tabs");
+                        .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
             mapping(TemplateTab.class, MongoTemplateTab.class).fields("fields","fields");
 

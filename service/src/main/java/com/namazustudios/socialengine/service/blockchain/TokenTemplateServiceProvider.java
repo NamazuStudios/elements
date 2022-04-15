@@ -12,8 +12,6 @@ public class TokenTemplateServiceProvider implements Provider<TokenTemplateServi
 
     private Provider<SuperUserTokenTemplateService> superUserTokenTemplateService;
 
-    private Provider<UserTokenTemplateService> userTokenTemplateService;
-
     @Override
     public TokenTemplateService get() {
         switch (getUser().getLevel()) {
