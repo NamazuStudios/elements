@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoToken;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoBscToken;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoNeoWallet;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.*;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnRegistration;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSession;
 import com.namazustudios.socialengine.dao.mongo.model.gameon.MongoGameOnSessionId;
@@ -21,6 +22,9 @@ import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
+import com.namazustudios.socialengine.model.blockchain.template.TemplateTab;
+import com.namazustudios.socialengine.model.blockchain.template.TemplateTabField;
+import com.namazustudios.socialengine.model.blockchain.template.TokenTemplate;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
@@ -179,6 +183,13 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
 
             mapping(BscToken.class, MongoBscToken.class)
                         .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(TokenTemplate.class, MongoTokenTemplate.class)
+                        .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
+            mapping(TemplateTab.class, MongoTemplateTab.class).fields("fields","fields");
+
+            mapping(TemplateTabField.class, MongoTemplateTabField.class).fields("fieldType","fieldType");
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)
                 .fields("id", "saveDataDocumentId", customConverter(MongoHexableIdConverter.class))
