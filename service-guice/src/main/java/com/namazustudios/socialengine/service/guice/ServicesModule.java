@@ -279,6 +279,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(NeoWalletServiceProvider.class)
             .in(scope);
 
+        bind(BscWalletService.class)
+                .toProvider(BscWalletServiceProvider.class)
+                .in(scope);
+
         bind(AuthSchemeService.class)
             .toProvider(AuthSchemeServiceProvider.class)
             .in(scope);
@@ -329,6 +333,8 @@ public class ServicesModule extends PrivateModule {
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
 
         bind(Neow3jClient.class).to(StandardNeow3jClient.class).asEagerSingleton();
+
+        bind(Bscw3jClient.class).to(StandardBscw3jClient.class).asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
             .annotatedWith(Unscoped.class)
@@ -468,10 +474,19 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoWalletService.class);
 
+        bind(BscWalletService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserBscWalletService.class);
+
         bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
             .to(StandardNeow3jClient.class)
             .asEagerSingleton();
+
+        bind(Bscw3jClient.class)
+                .annotatedWith(Unscoped.class)
+                .to(StandardBscw3jClient.class)
+                .asEagerSingleton();
 
         bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
@@ -564,7 +579,10 @@ public class ServicesModule extends PrivateModule {
         expose(NeoSmartContractService.class);
         expose(CustomAuthSessionService.class);
         expose(DistinctInventoryItemService.class);
+        expose(BscWalletService.class);
+        expose(Bscw3jClient.class);
         expose(BscTokenService.class);
+
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
         expose(SocialCampaignService.class).annotatedWith(Unscoped.class);
@@ -609,6 +627,8 @@ public class ServicesModule extends PrivateModule {
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
         expose(DistinctInventoryItemService.class).annotatedWith(Unscoped.class);
+        expose(BscWalletService.class).annotatedWith(Unscoped.class);
+        expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
         expose(BscTokenService.class).annotatedWith(Unscoped.class);
 
     }

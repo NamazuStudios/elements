@@ -1,4 +1,4 @@
 package com.namazustudios.socialengine.service.blockchain;
 
-public interface NeoContractService {
+public interface BscContractService {
 }

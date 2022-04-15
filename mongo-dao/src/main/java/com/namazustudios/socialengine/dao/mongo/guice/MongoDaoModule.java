@@ -17,6 +17,7 @@ import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoTokenTemplateDao;
+import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscWalletDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
 import com.namazustudios.socialengine.dao.mongo.goods.MongoDistinctInventoryItemDao;
@@ -95,6 +96,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(BscTokenDao.class).to(MongoBscTokenDao.class);
         bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
         bind(TokenTemplateDao.class).to(MongoTokenTemplateDao.class);
+        bind(BscWalletDao.class).to(MongoBscWalletDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
         bind(CustomAuthUserDao.class).to(MongoCustomAuthUserDao.class);
@@ -156,6 +158,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(NeoWalletDao.class);
         expose(BscTokenDao.class);
         expose(TokenTemplateDao.class);
+        expose(BscWalletDao.class);
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);
         expose(CustomAuthUserDao.class);

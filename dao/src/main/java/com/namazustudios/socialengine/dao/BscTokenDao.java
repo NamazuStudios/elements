@@ -15,10 +15,10 @@ import java.util.List;
  * Created by TuanTran on 3/24/22.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.bsctoken"),
+        @ExposedModuleDefinition("namazu.elements.dao.bsc.token"),
         @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.bsctoken",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsctoken instead"))
+                value = "namazu.socialengine.dao.bsc.token",
+                deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.token instead"))
 })
 public interface BscTokenDao {
 
@@ -32,7 +32,7 @@ public interface BscTokenDao {
      * @param search - name or type
      * @return a {@link Pagination} of {@link BscToken} instances
      */
-    Pagination<BscToken> getTokens(int offset, int count, List<String> tags, BlockchainConstants.MintStatus mintStatus, String search);
+    Pagination<BscToken> getTokens(int offset, int count, List<String> tags, List<BlockchainConstants.MintStatus> mintStatus, String search);
 
     /**
      * Fetches a specific {@link BscToken} instance based on ID or name.  If not found, an

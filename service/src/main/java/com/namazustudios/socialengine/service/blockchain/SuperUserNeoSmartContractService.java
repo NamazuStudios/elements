@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.exception.blockchain.ContractInvocationExc
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.neo.MintNeoTokenResponse;
+import com.namazustudios.socialengine.model.blockchain.neo.Nep6Wallet;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
 import io.neow3j.crypto.exceptions.CipherException;

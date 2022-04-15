@@ -18,9 +18,9 @@ import java.util.List;
  * Created by TuanTran on 3/24/22.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.token"),
+        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.bsc.token"),
         @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.token",
+                value = "namazu.elements.service.blockchain.bsc.unscoped.token",
                 annotation = @ExposedBindingAnnotation(Unscoped.class)
         )
 })
@@ -36,7 +36,7 @@ public interface BscTokenService {
      * @param search
      * @return a {@link Pagination} of {@link BscToken} instances
      */
-    Pagination<BscToken> getTokens(int offset, int count, List<String> tags, BlockchainConstants.MintStatus mintStatus, String search);
+    Pagination<BscToken> getTokens(int offset, int count, List<String> tags, List<BlockchainConstants.MintStatus> mintStatus, String search);
 
     /**
      * Fetches a specific {@link BscToken} instance based on ID or name.  If not found, an

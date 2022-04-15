@@ -12,7 +12,7 @@ import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 @Expose({
         @ExposedModuleDefinition("namazu.elements.dao.neo.smartcontract"),
         @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.neosmart.contract",
+                value = "namazu.socialengine.dao.neo.smartcontract",
                 deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.smartcontract instead"))
 })
 public interface NeoSmartContractDao {
