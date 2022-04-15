@@ -60,13 +60,6 @@ public class TokenTemplateApiTest {
     @Inject
     private TokenTemplateDao tokenTemplateDao;
 
-    @DataProvider
-    public static Object[][] getMintStatus() {
-        return Stream
-            .of(MintStatus.values())
-            .map(s -> new Object[] {s})
-            .toArray(Object[][]::new);
-    }
 
     @DataProvider
     public Object[][] getAuthHeader() {
