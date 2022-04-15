@@ -29,6 +29,8 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvide
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.mongo.savedata.MongoSaveDataDocumentDao;
+import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.template.TokenTemplate;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
@@ -152,6 +154,8 @@ public class MongoDaoModule extends PrivateModule {
         expose(NeoSmartContractDao.class);
         expose(NeoTokenDao.class);
         expose(NeoWalletDao.class);
+        expose(BscTokenDao.class);
+        expose(TokenTemplateDao.class);
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);
         expose(CustomAuthUserDao.class);

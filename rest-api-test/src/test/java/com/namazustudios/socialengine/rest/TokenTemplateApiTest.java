@@ -1,10 +1,9 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.BlockchainConstants.MintStatus;
+
 import com.namazustudios.socialengine.dao.TokenTemplateDao;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.blockchain.template.*;
-import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.rest.model.TokenTemplatePagination;
 import com.namazustudios.socialengine.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
@@ -22,7 +21,6 @@ import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
