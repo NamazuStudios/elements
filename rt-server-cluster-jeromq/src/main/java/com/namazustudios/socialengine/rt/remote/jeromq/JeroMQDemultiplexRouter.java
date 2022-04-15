@@ -17,6 +17,7 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushI
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
+import static java.util.UUID.randomUUID;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
@@ -72,10 +73,10 @@ public class JeroMQDemultiplexRouter {
         final int index = poller.register(socket, POLLIN | POLLERR);
         final var item = poller.getItem(index);
 
-        final String localConnectAddress = getLocalBindAddress(nodeId);
+        final String localBindAddress = getLocalBindAddress(nodeId);
 
-        socket.connect(localConnectAddress);
-        stats.addRoute(nodeId, localConnectAddress);
+        socket.connect(localBindAddress);
+        stats.addRoute(nodeId, localBindAddress);
 
         final var existing = backends.putIfAbsent(nodeId, item);
 
@@ -88,9 +89,9 @@ public class JeroMQDemultiplexRouter {
             throw new JeroMQControlException(INTERNAL_ERROR);
         }
 
-        logger.info("Opening binding for node {} with connect address {}", nodeId, localConnectAddress);
+        logger.info("Opening binding for node {} with connect address {}", nodeId, localBindAddress);
 
-        return localConnectAddress;
+        return localBindAddress;
 
     }
 
@@ -102,18 +103,17 @@ public class JeroMQDemultiplexRouter {
                 throw new JeroMQControlException(INTERNAL_ERROR);
             }
 
-            final var index = backends.remove(nodeId);
+            final var item = backends.remove(nodeId);
 
-            if (index == null) {
+            if (item == null) {
                 logger.warn("No such binding {}", nodeId);
                 throw new JeroMQControlException(NO_SUCH_NODE_BINDING);
             } else {
-                logger.info("Removed binding for node {} at socket index {}", nodeId, index);
-                final var item = backends.get(nodeId);
+                logger.info("Removed binding for node {}.", nodeId);
                 final var socket = item.getSocket();
                 poller.unregister(socket);
                 socket.close();
-                logger.info("Closed binding for node {} at socket index {}", nodeId, index);
+                logger.info("Closed binding for node {}.", nodeId);
             }
         } finally {
             stats.removeRoute(nodeId);
@@ -141,7 +141,7 @@ public class JeroMQDemultiplexRouter {
 
     private void routeToFrontend(final NodeId nid, final ZMQ.PollItem item) {
 
-        if (!item.isReadable() && frontend.isWritable()) return;
+        if (!item.isReadable() || !frontend.isWritable()) return;
 
         final var backend = item.getSocket();
         final var frontend = this.frontend.getSocket();

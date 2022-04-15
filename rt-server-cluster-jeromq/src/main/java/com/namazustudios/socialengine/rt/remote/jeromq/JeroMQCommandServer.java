@@ -154,7 +154,7 @@ public class JeroMQCommandServer {
         final var response = new ZMsg();
         final var nodeId = nodeIdFromBytes(zMsg.removeFirst().getData());
         final var instanceBindAddress = demultiplex.openBinding(nodeId);
-        logger.info("Opened binding for node {} via {}", nodeId, instanceBindAddress);
+        logger.info("Opened binding for node {} via {} (master: {})", nodeId, instanceBindAddress, nodeId.isMaster());
         OK.pushResponseCode(response);
         response.addLast(instanceBindAddress.getBytes(CHARSET));
         return response;
