@@ -1,8 +1,5 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
-import com.google.common.base.Stopwatch;
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
@@ -11,12 +8,8 @@ import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
-import java.security.SecureRandom;
-import java.util.Collection;
-import java.util.Random;
-import java.util.SortedMap;
-import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
 import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.popIdentity;
@@ -24,12 +17,13 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushI
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
-import static java.util.UUID.randomUUID;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
 
 public class JeroMQDemultiplexRouter {
+
+    private final AtomicLong socketUniqueIds = new AtomicLong();
 
     private final InstanceId instanceId;
 
@@ -41,16 +35,14 @@ public class JeroMQDemultiplexRouter {
 
     private final ZMQ.Poller poller;
 
-    private final int frontend;
+    private final ZMQ.PollItem frontend;
 
-    private final BiMap<NodeId, Integer> backends = HashBiMap.create();
-
-    private final BiMap<Integer, NodeId> rBackends = backends.inverse();
+    private final Map<NodeId, ZMQ.PollItem> backends = new LinkedHashMap<>();
 
     public JeroMQDemultiplexRouter(final InstanceId instanceId,
                                    final ZContext zContext,
                                    final ZMQ.Poller poller,
-                                   final int frontend) {
+                                   final ZMQ.PollItem frontend) {
         this.instanceId = instanceId;
         this.logger = JeroMQRoutingServer.getLogger(getClass(), instanceId);
         this.zContext = zContext;
@@ -60,10 +52,15 @@ public class JeroMQDemultiplexRouter {
     }
 
     public void poll() {
-        rBackends.forEach((index, iid) -> routeToFrontend(index, iid));
+        backends.forEach(this::routeToFrontend);
     }
 
     public String openBinding(final NodeId nodeId) {
+
+        if (!Objects.equals(instanceId, nodeId.getInstanceId())) {
+            logger.error("Attempting to open node binding for remote node {}", nodeId);
+            throw new JeroMQControlException(INTERNAL_ERROR);
+        }
 
         logger.info("Opening binding for node {}", nodeId);
 
@@ -73,14 +70,22 @@ public class JeroMQDemultiplexRouter {
 
         final ZMQ.Socket socket = zContext.createSocket(DEALER);
         final int index = poller.register(socket, POLLIN | POLLERR);
+        final var item = poller.getItem(index);
+
         final String localConnectAddress = getLocalBindAddress(nodeId);
 
         socket.connect(localConnectAddress);
         stats.addRoute(nodeId, localConnectAddress);
 
-        if (backends.put(nodeId, index) != null) {
-            logger.error("Attempting to duplicate binding for node {}", nodeId);
-            throw new JeroMQControlException(DUPLICATE_NODE_BINDING);
+        final var existing = backends.putIfAbsent(nodeId, item);
+
+        if (existing != null) {
+            // This should not happen. If it does this means something has corrupted the map. Therefore, we will log an
+            // error, clean up, and throw an internal exception.
+            logger.error("Server has duplicate node binding: {}", nodeId);
+            poller.unregister(socket);
+            socket.close();
+            throw new JeroMQControlException(INTERNAL_ERROR);
         }
 
         logger.info("Opening binding for node {} with connect address {}", nodeId, localConnectAddress);
@@ -91,16 +96,24 @@ public class JeroMQDemultiplexRouter {
 
     public void closeBindingForNode(final NodeId nodeId) {
         try {
-            final Integer index = backends.remove(nodeId);
+
+            if (!Objects.equals(instanceId, nodeId.getInstanceId())) {
+                logger.error("Attempting to close node binding for remote node.");
+                throw new JeroMQControlException(INTERNAL_ERROR);
+            }
+
+            final var index = backends.remove(nodeId);
 
             if (index == null) {
                 logger.warn("No such binding {}", nodeId);
                 throw new JeroMQControlException(NO_SUCH_NODE_BINDING);
             } else {
-                final ZMQ.Socket socket = poller.getSocket(index);
+                logger.info("Removed binding for node {} at socket index {}", nodeId, index);
+                final var item = backends.get(nodeId);
+                final var socket = item.getSocket();
                 poller.unregister(socket);
                 socket.close();
-                logger.info("Removed binding for node {}", nodeId);
+                logger.info("Closed binding for node {} at socket index {}", nodeId, index);
             }
         } finally {
             stats.removeRoute(nodeId);
@@ -121,21 +134,20 @@ public class JeroMQDemultiplexRouter {
     }
 
     private ZMQ.Socket getSocket(final NodeId nodeId) {
-        final Integer backendIndex = backends.get(nodeId);
-        if (backendIndex == null) throw new JeroMQUnroutableNodeException(nodeId);
-        return poller.getSocket(backendIndex);
+        final var item = backends.get(nodeId);
+        if (item == null) throw new JeroMQUnroutableNodeException(nodeId);
+        return item.getSocket();
     }
 
-    private void routeToFrontend(final int index, final NodeId nid) {
+    private void routeToFrontend(final NodeId nid, final ZMQ.PollItem item) {
 
-        if (!poller.pollin(index)) return;
+        if (!item.isReadable() && frontend.isWritable()) return;
 
-        final ZMQ.Socket backend = poller.getSocket(index);
-        final ZMQ.Socket frontend = poller.getSocket(this.frontend);
-
-        final ZMsg zMsg = ZMsg.recvMsg(backend);
-        final ZMsg identity = popIdentity(zMsg);
-        final ZFrame nodeIdFrame = new ZFrame(nid.asBytes());
+        final var backend = item.getSocket();
+        final var frontend = this.frontend.getSocket();
+        final var zMsg = ZMsg.recvMsg(backend);
+        final var identity = popIdentity(zMsg);
+        final var nodeIdFrame = new ZFrame(nid.asBytes());
 
         zMsg.addFirst(nodeIdFrame);
         OK.pushResponseCode(zMsg);
@@ -152,7 +164,11 @@ public class JeroMQDemultiplexRouter {
     }
 
     public String getLocalBindAddress(final NodeId nodeId) {
-        return format("inproc://demux/%s/%s?%s", instanceId, nodeId.asString(), randomUUID());
+        return format("inproc://demux/%s/%s?uid=%016X",
+            instanceId,
+            nodeId.asString(),
+            socketUniqueIds.incrementAndGet()
+        );
     }
 
     public void log() {

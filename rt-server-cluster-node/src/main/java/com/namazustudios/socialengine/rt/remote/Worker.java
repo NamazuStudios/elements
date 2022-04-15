@@ -13,19 +13,6 @@ import java.util.concurrent.ExecutorService;
 public interface Worker {
 
     /**
-     * Used with {@link javax.inject.Named} to name an instance of {@link ExecutorService} which is a general purpose
-     * pool of threads used for performing various tasks within the system.
-     */
-    String EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.worker.executor";
-
-    /**
-     * Used with {@link javax.inject.Named} to name an instance of {@link java.util.concurrent.ScheduledExecutorService}
-     * which is a general purpose pool of threads used for performing various tasks within the system that require
-     * scheduling.
-     */
-    String SCHEDULED_EXECUTOR_SERVICE = "com.namazustudios.socialengine.rt.scheduled.executor";
-
-    /**
      * Opens a {@link Mutator} which can be used to modify the run-state of this {@link Worker}.
      *
      * @return the {@link Mutator}

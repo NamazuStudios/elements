@@ -247,7 +247,9 @@ public class TransactionalResourceService implements ResourceService {
                     mutator.purge();
 
                     try {
-                        mutator.getResource().close();
+                        if (mutator.isPresent()) {
+                            mutator.getResource().close();
+                        }
                     } catch (Exception ex) {
                         logger.error("Error destroying resource.", ex);
                     }

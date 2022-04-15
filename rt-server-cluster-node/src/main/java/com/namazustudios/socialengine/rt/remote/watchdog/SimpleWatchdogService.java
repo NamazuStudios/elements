@@ -12,7 +12,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.remote.Worker.SCHEDULED_EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.remote.Instance.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.*;
 

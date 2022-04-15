@@ -1,13 +1,11 @@
 package com.namazustudios.socialengine.rt.remote.jeromq;
 
-import com.google.common.collect.SortedSetMultimap;
 import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import org.slf4j.Logger;
 import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
-import zmq.Command;
 
 import java.util.Collection;
 import java.util.EnumMap;
@@ -31,9 +29,7 @@ public class JeroMQCommandServer {
 
     private final InstanceId instanceId;
 
-    private final ZMQ.Poller poller;
-
-    private final int frontend;
+    private final ZMQ.PollItem frontend;
 
     private final JeroMQMultiplexRouter multiplex;
 
@@ -42,12 +38,11 @@ public class JeroMQCommandServer {
     private final Stats stats;
 
     public JeroMQCommandServer(final InstanceId instanceId,
-                               final ZMQ.Poller poller, final int frontend,
+                               final ZMQ.PollItem frontend,
                                final JeroMQMultiplexRouter multiplex,
                                final JeroMQDemultiplexRouter demultiplex) {
         this.instanceId = instanceId;
         this.logger = getLogger(getClass(), instanceId);
-        this.poller = poller;
         this.frontend = frontend;
         this.multiplex = multiplex;
         this.demultiplex = demultiplex;
@@ -55,8 +50,8 @@ public class JeroMQCommandServer {
     }
 
     public void poll() {
-        if (!poller.pollin(frontend)) return;
-        final var socket = poller.getSocket(frontend);
+        if (!frontend.isReadable()) return;
+        final var socket = frontend.getSocket();
         final var zMsg = ZMsg.recvMsg(socket);
         handle(socket, zMsg);
     }

@@ -6,6 +6,7 @@ import com.namazustudios.socialengine.rt.Constants;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.util.HostList;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +21,6 @@ import java.util.*;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
@@ -47,32 +47,33 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
 
     private boolean authoritative;
 
-    private final AtomicReference<JndiSrvInstanceDiscoveryService.SrvDiscoveryContext> context = new AtomicReference<>();
+    private final Lock lock = new ReentrantLock();
+
+    private volatile JndiSrvInstanceDiscoveryService.SrvDiscoveryContext context;
 
     @Override
     public void start() {
-
-        final JndiSrvInstanceDiscoveryService.SrvDiscoveryContext context = new JndiSrvInstanceDiscoveryService.SrvDiscoveryContext();
-
-        if (this.context.compareAndSet(null, context)) {
-            context.start();
-        } else {
-            throw new IllegalStateException("Already started.");
+        try (final var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                context = new JndiSrvInstanceDiscoveryService.SrvDiscoveryContext();
+                context.start();
+            } else {
+                throw new IllegalStateException("Already started.");
+            }
         }
-
     }
 
     @Override
     public void stop() {
-
-        final SrvDiscoveryContext context = this.context.getAndSet(null);
-
-        if (context == null) {
-            throw new IllegalStateException("Not running.");
-        } else {
-            context.stop();
+        try (final var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                throw new IllegalStateException("Not running.");
+            } else {
+                final var context = this.context;
+                this.context = null;
+                context.stop();
+            }
         }
-
     }
 
     @Override
@@ -94,7 +95,6 @@ public class JndiSrvInstanceDiscoveryService implements InstanceDiscoveryService
     }
 
     private SrvDiscoveryContext getContext() {
-        final SrvDiscoveryContext context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
         return context;
     }

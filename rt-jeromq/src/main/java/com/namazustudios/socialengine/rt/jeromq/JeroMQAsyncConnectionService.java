@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.jeromq;
 
 import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -16,6 +17,8 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -33,36 +36,37 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
 
     public static final String ASYNC_CONNECTION_IO_THREADS = "com.namazustudios.socialengine.rt.jeromq.async.connection.service.io.threads";
 
-    private final AtomicReference<SimpleAsyncConnectionServiceContext> context = new AtomicReference<>();
-
     private ZContext zContext;
 
     private int threadPoolSize;
 
+    private final Lock lock = new ReentrantLock();
+
+    private volatile SimpleAsyncConnectionServiceContext context;
+
     @Override
     public void start() {
-
-        final var context = new SimpleAsyncConnectionServiceContext();
-
-        if (this.context.compareAndSet(null, context)) {
-            context.start();
-        } else {
-            throw new IllegalArgumentException("Already running.");
+        try (var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                context = new SimpleAsyncConnectionServiceContext();
+                context.start();
+            } else {
+                throw new IllegalArgumentException("Already running.");
+            }
         }
-
     }
 
     @Override
     public void stop() {
-
-        final SimpleAsyncConnectionServiceContext context = this.context.getAndSet(null);
-
-        if (context == null) {
-            throw new IllegalStateException("Not running.");
-        } else {
-            context.stop();
+        try (final var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                throw new IllegalStateException("Not running.");
+            } else {
+                final var context = this.context;
+                this.context = null;
+                context.stop();
+            }
         }
-
     }
 
     @Override
@@ -80,7 +84,6 @@ public class JeroMQAsyncConnectionService implements AsyncConnectionService<ZCon
     }
 
     private SimpleAsyncConnectionServiceContext getContext() {
-        final var context = this.context.get();
         if (context == null) throw new IllegalArgumentException();
         return context;
     }

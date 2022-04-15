@@ -59,7 +59,7 @@ public class TestLiveWorkerMutation {
     public static Object[] getIntegrationTests() {
         return new Object[] {
             getXodusTest(TestLiveWorkerMutation::new),
-            getUnixFSTest(TestLiveWorkerMutation::new)
+//            getUnixFSTest(TestLiveWorkerMutation::new)
         };
     }
 
@@ -76,7 +76,7 @@ public class TestLiveWorkerMutation {
 
     public Stream<String> getApplicationNames() {
         return IntStream
-            .range(0, 5)
+            .range(0, 2)
             .mapToObj(i ->format("Mock Application %d", i));
     }
 

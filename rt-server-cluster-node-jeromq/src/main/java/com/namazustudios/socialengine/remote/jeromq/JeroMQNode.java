@@ -88,11 +88,9 @@ public class JeroMQNode implements Node {
 
         c.logger.info("Beginning startup.");
 
-        if (!context.compareAndSet(null, c)) {
+        if (!state.compareAndSet(READY, STARTING) || !context.compareAndSet(null, c)) {
             throw new IllegalStateException("Already started.");
         }
-
-        state.set(STARTING);
 
         return new Startup() {
 
@@ -115,7 +113,7 @@ public class JeroMQNode implements Node {
             }
 
             @Override
-            public void start(InstanceBinding binding) {
+            public void start(final InstanceBinding binding) {
                 try {
                     check();
                     c.logger.info("Issuing start command with binding {}.", binding);
@@ -132,7 +130,7 @@ public class JeroMQNode implements Node {
             public void postStart() {
                 try {
                     check();
-                    c.logger.info("Issuing post-start command with binding.");
+                    c.logger.info("Issuing post-start command for node {}", nodeId);
                     getNodeLifecycle().nodePostStart(getNode());
                     state.set(HEALTHY);
                 } catch (Exception ex) {
@@ -325,7 +323,7 @@ public class JeroMQNode implements Node {
 
             getAsyncConnectionService().group(format("%s %s", JeroMQNode.class.getSimpleName(), name))
                 .connection(z -> {
-                    final Socket socket = z.createSocket(ROUTER);
+                    final var socket = z.createSocket(ROUTER);
                     socket.bind(instanceBinding.getBindAddress());
                     return socket;
                 }, connection -> {
