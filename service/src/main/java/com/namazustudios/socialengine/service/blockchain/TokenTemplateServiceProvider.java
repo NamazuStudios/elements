@@ -19,8 +19,6 @@ public class TokenTemplateServiceProvider implements Provider<TokenTemplateServi
         switch (getUser().getLevel()) {
             case SUPERUSER:
                 return getSuperUserTokenTemplateService().get();
-            case USER:
-                return getUserTokenTemplateService().get();
             default:
                 return Services.forbidden(TokenTemplateService.class);
         }
@@ -43,14 +41,5 @@ public class TokenTemplateServiceProvider implements Provider<TokenTemplateServi
     @Inject
     public void setSuperUserTokenTemplateService(Provider<SuperUserTokenTemplateService> superUserTokenTemplateService) {
         this.superUserTokenTemplateService = superUserTokenTemplateService;
-    }
-
-    public Provider<UserTokenTemplateService> getUserTokenTemplateService() {
-        return userTokenTemplateService;
-    }
-
-    @Inject
-    public void setUserTokenTemplateService(Provider<UserTokenTemplateService> userTokenTemplateService) {
-        this.userTokenTemplateService = userTokenTemplateService;
     }
 }

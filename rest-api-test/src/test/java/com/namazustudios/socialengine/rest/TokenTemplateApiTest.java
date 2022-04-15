@@ -2,7 +2,9 @@ package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.BlockchainConstants.MintStatus;
 import com.namazustudios.socialengine.dao.TokenTemplateDao;
+import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.blockchain.template.*;
+import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
 import com.namazustudios.socialengine.rest.model.TokenTemplatePagination;
 import com.namazustudios.socialengine.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
@@ -12,8 +14,10 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import javax.inject.Named;
+import javax.ws.rs.ForbiddenException;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
 import java.util.List;
@@ -22,11 +26,13 @@ import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
+import static com.namazustudios.socialengine.exception.ErrorCode.FORBIDDEN;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.assertEquals;
 
 public class TokenTemplateApiTest {
 
@@ -47,6 +53,9 @@ public class TokenTemplateApiTest {
 
     @Inject
     private ClientContext superUserClientContext;
+
+    @Inject
+    private ClientContext userClientContext;
 
     @Inject
     private TokenTemplateDao tokenTemplateDao;
@@ -70,15 +79,15 @@ public class TokenTemplateApiTest {
     @BeforeClass
     public void createUser() {
         superUserClientContext
-            .createSuperuser("tokenAdmin")
+            .createSuperuser("tokenTemplateAdmin")
             .createSession();
+        userClientContext
+                .createUser("tokenTemplateUser")
+                .createSession();
     }
 
     @Test(dataProvider = "getAuthHeader")
     public void testCreateAndDeleteTokenTemplate(final String authHeader) {
-
-        String tokenName = "TokenTest-" + randomUUID().toString();
-
         final var request = new CreateTokenTemplateRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
         List<TemplateTabField> fields = new ArrayList<>();
@@ -160,8 +169,6 @@ public class TokenTemplateApiTest {
     @Test(dataProvider = "getAuthHeader")
     public void testUpdateTokenTemplate(final String authHeader) {
 
-        String tokenName = "TokenTest-" + randomUUID().toString();
-
         final var request = new CreateTokenTemplateRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
         List<TemplateTabField> fields = new ArrayList<>();
@@ -236,6 +243,49 @@ public class TokenTemplateApiTest {
 
         new PaginationWalker().forEach(walkFunction, tokenTemplate -> {});
         assertTrue(called.get());
+
+    }
+
+    @Test(dataProvider = "getAuthHeader")
+    public void testNormalUserRestrictionAccess(final String authHeader) {
+
+        final var request = new CreateTokenTemplateRequest();
+        List<TemplateTab> tabs = new ArrayList<>() ;
+        List<TemplateTabField> fields = new ArrayList<>();
+        TemplateTabField field = new TemplateTabField();
+        field.setName("field1");
+        field.setContent("Test");
+        fields.add(field);
+        TemplateTab tab = new TemplateTab("tab1",fields);
+        tabs.add(tab);
+        request.setTabs(tabs);
+
+        final var response = client
+                .target(apiRoot + "/blockchain/token/template")
+                .request()
+                .header(authHeader, userClientContext.getSessionSecret())
+                .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
+
+        final int status = response.getStatus();
+        assertEquals(403, status);
+
+        final var error = response.readEntity(ErrorResponse.class);
+        assertEquals(FORBIDDEN.toString(), error.getCode());
+
+
+        try {
+            var responseGet = client.target(format("%s/blockchain/token/template?offset=%d&count=%d",
+                            apiRoot,
+                            0,
+                            30)
+                    )
+                    .request()
+                    .header(authHeader, userClientContext.getSessionSecret())
+                    .get(TokenTemplatePagination.class);
+        }catch(ForbiddenException e) {
+            assertEquals(403, e.getResponse().getStatus());
+        }
+
 
     }
 
