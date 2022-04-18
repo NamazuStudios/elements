@@ -23,7 +23,13 @@ public class MongoTokenTemplateDaoTest {
 
     private TokenTemplateDao tokenTemplateDao;
 
+    private String tokenName;
+
+    private String contractId;
+
     private String tabName;
+
+    private Integer tabOrder;
 
     private String fieldName;
 
@@ -34,6 +40,9 @@ public class MongoTokenTemplateDaoTest {
         this.tabName = "Tab1";
         this.fieldName="Field1";
         this.content="New content";
+        this.tokenName = "New Token";
+        this.contractId = "uu1234";
+        this.tabOrder = 1;
     }
 
     @DataProvider
@@ -46,10 +55,10 @@ public class MongoTokenTemplateDaoTest {
 
     @Test(dataProvider = "getFieldType")
     public void testCreateTokenTemplate(final BlockchainConstants.TemplateFieldType fieldType) {
-        testCreateTokenTemplate(tabName, fieldName, content, fieldType);
+        testCreateTokenTemplate(tokenName, contractId, tabOrder, tabName, fieldName, content, fieldType);
     }
 
-    private void testCreateTokenTemplate(final String tabName, final String fieldName, final String content, final BlockchainConstants.TemplateFieldType fieldType) {
+    private void testCreateTokenTemplate(final String tokenName, final String contractId, final Integer tabOrder, final String tabName, final String fieldName, final String content, final BlockchainConstants.TemplateFieldType fieldType) {
 
         final var request = new CreateTokenTemplateRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
@@ -60,13 +69,19 @@ public class MongoTokenTemplateDaoTest {
         fields.add(field);
         field.setFieldType(fieldType);
         TemplateTab tab = new TemplateTab(tabName,fields);
+        tab.setTabOrder(tabOrder);
         tabs.add(tab);
         request.setTabs(tabs);
+        request.setTokenName(tokenName);
+        request.setContractId(contractId);
 
         TokenTemplate inserted = getTokenTemplateDao().createTokenTemplate(request);
 
         TokenTemplate fetched = getTokenTemplateDao().getTokenTemplate(inserted.getId());
+        assertEquals(tokenName, fetched.getTokenName());
+        assertEquals(contractId, fetched.getContractId());
         assertEquals(tabName, fetched.getTabs().get(0).getName());
+        assertEquals(tabOrder, fetched.getTabs().get(0).getTabOrder());
         assertEquals(fieldName, fetched.getTabs().get(0).getFields().get(0).getName());
         assertEquals(content, fetched.getTabs().get(0).getFields().get(0).getContent());
         assertEquals(fieldType, fetched.getTabs().get(0).getFields().get(0).getFieldType());
@@ -104,13 +119,20 @@ public class MongoTokenTemplateDaoTest {
         field.setContent("Updated Content");
         fields.add(field);
         TemplateTab tab = new TemplateTab("Tab2",fields);
+        tab.setTabOrder(2);
         tabs.add(tab);
+
+        updateRequest.setTokenName("Updated Token Name");
+        updateRequest.setContractId("uu6789");
         updateRequest.setTabs(tabs);
 
         final TokenTemplate updatedTemplate = getTokenTemplateDao().updateTokenTemplate(tokenTemplate.getId(), updateRequest);
 
         assertEquals(updatedTemplate.getId(), tokenTemplate.getId());
-        assertEquals(updatedTemplate.getTabs().get(0).getName(), "Tab2");
+        assertEquals(updatedTemplate.getTokenName(), updateRequest.getTokenName());
+        assertEquals(updatedTemplate.getContractId(), updateRequest.getContractId());
+        assertEquals(updatedTemplate.getTabs().get(0).getName(), tab.getName());
+        assertEquals(updatedTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
         tabs = new ArrayList<>() ;
         tab = new TemplateTab("Tab3",fields);
