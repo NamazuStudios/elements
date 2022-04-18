@@ -22,7 +22,7 @@ public interface TransactionalResourceServiceCache {
      * resource in the cache, this should be acquired in advance of mutation operations. Failing to do this while
      * performing a critical operation may result unpredictable behavior of the cache.
      *
-     * @return
+     * @return a {@link Monitor} which locks the cache for read-only operations
      */
     Monitor readMonitor();
 
@@ -30,7 +30,7 @@ public interface TransactionalResourceServiceCache {
      * Opens a {@link Mutator} which obtains a snapshot or locked view of this cache. Once closed the operation will be
      * applied to the cache. This can be implemented as a lock or series of locks.
      * @param resourceId the {@link ResourceId} a {@link Mutator} may operate against only one single {@link ResourceId}
-     * @return
+     * @return a {@link Mutator} which locks the cache for read-write operations
      */
     Mutator mutate(ResourceId resourceId);
 
@@ -94,8 +94,16 @@ public interface TransactionalResourceServiceCache {
      */
     interface ExclusiveMutator extends AutoCloseable {
 
+        /**
+         * Clears all resources in the cache.
+         *
+         * @return the {@link Stream<Resource>}
+         */
         Stream<Resource> clear();
 
+        /**
+         * Closes this {@link ExclusiveMutator} and releases any locks.
+         */
         @Override
         void close();
 

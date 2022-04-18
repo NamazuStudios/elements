@@ -11,8 +11,7 @@ import java.util.function.Function;
  * This is mainly intended for testing as production level code should share a single global-instance of
  * {@link AsyncConnectionService}
  *
- * @param <ContextT>        final SrvDiscoveryContext context = this.context.get();
-
+ * @param <ContextT>
  * @param <SocketT>
  */
 public class SharedAsyncConnectionService<ContextT, SocketT> implements AsyncConnectionService<ContextT, SocketT> {

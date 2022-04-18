@@ -75,7 +75,7 @@ public interface Monitor extends AutoCloseable {
      * Generates a {@link Monitor} from the supplied {@link Lock} instance.
      *
      * @param lock the {@link Lock} instance
-     * @return a {@link Monitor} which will immediately unlock
+     * @return a new Monitor
      */
     static Monitor enter(final Lock lock) {
         lock.lock();
@@ -86,7 +86,7 @@ public interface Monitor extends AutoCloseable {
      * Generates a {@link Monitor} from the supplied {@link Semaphore} instance.
      *
      * @param semaphore the {@link Semaphore} instance
-     * @return a {@link Monitor} which will immediately unlock
+     * @return a new Monitor
      */
     static Monitor enter(final Semaphore semaphore) {
         try {

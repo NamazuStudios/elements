@@ -40,12 +40,6 @@ public interface ReadOnlyTransaction extends AutoCloseable {
      */
     boolean exists(ResourceId resourceId);
 
-    default void existsOrThrow(final ResourceId resourceId) {
-        if (!exists(resourceId)) {
-            throw new ResourceNotFoundException();
-        }
-    }
-
     /**
      * Returns a {@link Stream<Listing>} of all instances reading the current stream.  If nothing,
      * matches an empty stream is returned.
