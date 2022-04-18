@@ -16,6 +16,28 @@ public class CreateTokenTemplateRequest {
     @ApiModelProperty("The token template tabs to create.")
     List<TemplateTab> tabs;
 
+    @ApiModelProperty("The Token Name of the template.")
+    private String tokenName;
+
+    @ApiModelProperty("The contract id of the template. ")
+    private String contractId;
+
+    public String getTokenName() {
+        return tokenName;
+    }
+
+    public void setTokenName(String tokenName) {
+        this.tokenName = tokenName;
+    }
+
+    public String getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
+    }
+
     public List<TemplateTab> getTabs() {
         return tabs;
     }

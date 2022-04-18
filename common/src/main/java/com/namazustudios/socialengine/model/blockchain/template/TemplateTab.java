@@ -10,6 +10,9 @@ public class TemplateTab {
     @ApiModelProperty("name")
     private String name;
 
+    @ApiModelProperty("tabOrder")
+    private Integer tabOrder;
+
     @ApiModelProperty("fields")
     private List<TemplateTabField> fields;
 
@@ -27,6 +30,14 @@ public class TemplateTab {
 
     public void setName(String name) {
          this.name = name;
+    }
+
+    public Integer getTabOrder() {
+        return tabOrder;
+    }
+
+    public void setTabOrder(Integer tabOrder) {
+        this.tabOrder = tabOrder;
     }
 
     public List<TemplateTabField>  getFields() {

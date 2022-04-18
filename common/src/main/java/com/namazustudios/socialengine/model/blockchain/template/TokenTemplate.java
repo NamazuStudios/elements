@@ -16,6 +16,12 @@ public class TokenTemplate {
     @ApiModelProperty("The unique ID of the template itself.")
     private String id;
 
+    @ApiModelProperty("The Token Name of the template.")
+    private String tokenName;
+
+    @ApiModelProperty("The Contact Id of the template.")
+    private String contractId;
+
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
     @ApiModelProperty("The tabs of the token template.")
@@ -27,6 +33,22 @@ public class TokenTemplate {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getTokenName() {
+        return tokenName;
+    }
+
+    public void setTokenName(String tokenName) {
+        this.tokenName = tokenName;
+    }
+
+    public String getContractId() {
+        return contractId;
+    }
+
+    public void setContractId(String contractId) {
+        this.contractId = contractId;
     }
 
     public List<TemplateTab> getTabs() {
