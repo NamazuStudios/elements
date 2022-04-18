@@ -27,7 +27,6 @@ import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET
 import static com.namazustudios.socialengine.exception.ErrorCode.FORBIDDEN;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
