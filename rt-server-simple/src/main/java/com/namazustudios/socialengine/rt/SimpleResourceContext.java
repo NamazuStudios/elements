@@ -2,15 +2,17 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
-import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
-import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
+import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.provider.ExecutorServiceFactory;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 
@@ -26,60 +28,50 @@ public class SimpleResourceContext implements ResourceContext {
 
     private ExecutorService executorService;
 
-    private final AtomicReference<LatchedExecutorServiceCompletionService> completionService = new AtomicReference<>();
+    private volatile ExecutorServiceFactory<ExecutorService> executorServiceFactory;
+
+    private final Lock lock = new ReentrantLock();
 
     @Override
     public void start() {
-
-        final var service = new LatchedExecutorServiceCompletionService(getExecutorService());
-
-        if (completionService.compareAndSet(null, service)) {
-
-            logger.info("Starting.");
-
-            try {
+        try (var monitor = Monitor.enter(lock)) {
+            if (executorService == null) {
+                executorService = getExecutorServiceFactory().getService(SimpleIndexContext.class);
                 getResourceService().start();
-            } catch (Exception ex) {
-                completionService.compareAndSet(service, null);
-                throw ex;
+            } else {
+                throw new IllegalStateException("Already running.");
             }
-
-            logger.info("Started.");
-
-        } else {
-            throw new IllegalStateException("Already running.");
         }
-
     }
 
     @Override
     public void stop() {
-        final var completionService = this.completionService.getAndSet(null);
+        try (var monitor = Monitor.enter(lock)) {
+            if (executorService == null) {
+                throw new IllegalStateException("Not running.");
+            } else {
 
-        if (completionService == null) {
-            throw new IllegalStateException("Not running.");
-        } else {
+                executorService.shutdown();
 
-            try {
-                completionService.stop();
-            } catch (Exception ex) {
-                logger.error("Caught exception stopping completion service.", ex);
-            }
+                try {
+                    if (!executorService.awaitTermination(1, TimeUnit.MINUTES)) {
+                        logger.error("Timed out.");
+                    }
+                } catch (InterruptedException ex) {
+                    logger.error("Interrupted");
+                } finally {
+                    executorService = null;
+                }
 
-            try {
                 getResourceService().stop();
-            } catch (Exception ex) {
-                logger.error("Caught exception stoppping resource service.", ex);
+
             }
-
         }
-
     }
 
-    private LatchedExecutorServiceCompletionService getCompletionService() {
-        final LatchedExecutorServiceCompletionService completionService = this.completionService.get();
-        if (completionService == null) throw new IllegalStateException("Already running.");
-        return completionService;
+    private ExecutorService getExecutorService() {
+        if (executorService == null) throw new IllegalStateException("Not running.");
+        return executorService;
     }
 
     @Override
@@ -94,7 +86,7 @@ public class SimpleResourceContext implements ResourceContext {
     @Override
     public void createAttributesAsync(final Consumer<ResourceId> success, final Consumer<Throwable> failure,
                                       final String module, final Path path, final Attributes attributes, final Object... args) {
-        getCompletionService().submit(() -> {
+        getExecutorService().submit(() -> {
             try {
                 final ResourceId resourceId = createAttributes(module, path, attributes, args);
                 success.accept(resourceId);
@@ -145,6 +137,27 @@ public class SimpleResourceContext implements ResourceContext {
         }
     }
 
+    @Override
+    public void destroyAllResources() {
+        getResourceService().removeAndCloseAllResources();
+    }
+
+    @Override
+    public void destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure) {
+        getExecutorService().submit(() -> {
+
+            try {
+                getResourceService().removeAndCloseAllResources();
+                success.accept(null);
+            } catch (Throwable th) {
+                failure.accept(th);
+                throw th;
+            }
+
+            return null;
+        });
+    }
+
     public Scheduler getScheduler() {
         return scheduler;
     }
@@ -172,34 +185,13 @@ public class SimpleResourceContext implements ResourceContext {
         this.resourceService = resourceService;
     }
 
-    public ExecutorService getExecutorService() {
-        return executorService;
+    public ExecutorServiceFactory<ExecutorService> getExecutorServiceFactory() {
+        return executorServiceFactory;
     }
 
     @Inject
-    public void setExecutorService(@Named(SimpleWorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
-        this.executorService = executorService;
-    }
-
-    @Override
-    public void destroyAllResources() {
-        getResourceService().removeAndCloseAllResources();
-    }
-
-    @Override
-    public void destroyAllResourcesAsync(Consumer<Void> success, Consumer<Throwable> failure) {
-        getCompletionService().submit(() -> {
-
-            try {
-                getResourceService().removeAndCloseAllResources();
-                success.accept(null);
-            } catch (Throwable th) {
-                failure.accept(th);
-                throw th;
-            }
-
-            return null;
-        });
+    public void setExecutorServiceFactory(@Named(Instance.EXECUTOR_SERVICE) ExecutorServiceFactory<ExecutorService> executorServiceFactory) {
+        this.executorServiceFactory = executorServiceFactory;
     }
 
 }

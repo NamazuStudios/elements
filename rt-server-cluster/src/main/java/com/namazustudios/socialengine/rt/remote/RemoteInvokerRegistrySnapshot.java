@@ -53,7 +53,7 @@ class RemoteInvokerRegistrySnapshot {
 
     }
 
-    public RemoteInvoker getBestInvokerForApplication(final ApplicationId applicationId) {
+    public RemoteInvokerStatus getBestInvokerStatusForApplication(final ApplicationId applicationId) {
 
         final Lock lock = readWriteLock.readLock();
 
@@ -61,7 +61,7 @@ class RemoteInvokerRegistrySnapshot {
             lock.lock();
             final List<SnapshotEntry> byLoad = storage.invokersByApplication.get(applicationId);
             if (byLoad == null || byLoad.isEmpty()) throw new NodeNotFoundException("Unknown Application: " + applicationId);
-            return byLoad.get(0).getInvoker();
+            return byLoad.get(0);
         } finally {
             lock.unlock();
         }
@@ -78,6 +78,22 @@ class RemoteInvokerRegistrySnapshot {
             if (byLoad == null || byLoad.isEmpty())
                 throw new NodeNotFoundException("Unknown Application: " + applicationId);
             return byLoad.stream().map(SnapshotEntry::getInvoker).collect(toList());
+        } finally {
+            lock.unlock();
+        }
+
+    }
+
+    public List<RemoteInvokerStatus> getAllRemoteInvokerStatuses(final ApplicationId applicationId) {
+
+        final Lock lock = readWriteLock.readLock();
+
+        try {
+            lock.lock();
+            final List<SnapshotEntry> byLoad = storage.invokersByApplication.get(applicationId);
+            if (byLoad == null || byLoad.isEmpty())
+                throw new NodeNotFoundException("Unknown Application: " + applicationId);
+            return byLoad.stream().collect(toList());
         } finally {
             lock.unlock();
         }

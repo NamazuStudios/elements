@@ -127,7 +127,7 @@ public abstract class AbstractAggregateRoutingStrategy implements RoutingStrateg
      */
     protected List<RemoteInvoker> getRemoteInvokers(final List<Object> address) {
         if (!address.isEmpty()) logger.warn("Ignoring routing address {}", address);
-        return getRemoteInvokerRegistry().getAllRemoteInvokerStatus(getApplicationId());
+        return getRemoteInvokerRegistry().getAllRemoteInvokers(getApplicationId());
     }
 
     /**

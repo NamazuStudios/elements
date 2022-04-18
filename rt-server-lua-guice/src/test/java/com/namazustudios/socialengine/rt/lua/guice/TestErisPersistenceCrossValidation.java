@@ -4,10 +4,7 @@ import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
 import java.io.*;
@@ -15,14 +12,25 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.inject.Guice.createInjector;
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.testng.Assert.assertEquals;
 
-@Guice(modules = ErisPersistenceTestModule.class)
 public class TestErisPersistenceCrossValidation {
+
+    @Factory
+    public static Object[] getIntegrationTests() {
+
+        final var injector = createInjector(new ErisPersistenceTestModule());
+
+        return new Object[] {
+                injector.getInstance(TestErisPersistenceCrossValidation.class)
+        };
+
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(TestErisPersistenceCrossValidation.class);
 

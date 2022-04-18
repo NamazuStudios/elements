@@ -38,8 +38,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
     private final Transaction transaction;
 
-    private final PessimisticLocking pessimisticLocking;
-
     private final VirtualFileSystem virtualFileSystem;
 
     private final XodusResourceStores xodusResourceStores;
@@ -50,15 +48,12 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
             final NodeId nodeId,
             final XodusResourceStores stores,
             final VirtualFileSystem virtualFileSystem,
-            final Transaction transaction,
-            final PessimisticLocking pessimisticLocking) {
+            final Transaction transaction) {
         if (transaction.isReadonly()) throw new IllegalArgumentException("Must use read-write transaction.");
         this.virtualFileSystem = virtualFileSystem;
         this.xodusResourceStores = stores;
         this.transaction = transaction;
-        this.pessimisticLocking = pessimisticLocking;
         this.xodusReadOnlyTransaction = new XodusReadOnlyTransaction(nodeId, stores, virtualFileSystem, transaction);
-        this.xodusReadOnlyTransaction.onClose(t -> getPessimisticLocking().unlock());
         this.xodusReadOnlyTransaction.onClose(t -> {
             if (!transaction.isFinished()) {
                 transaction.revert();
@@ -94,8 +89,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
             throw new ResourceNotFoundException("Resource does not exist: " + resourceId);
         }
 
-        getPessimisticLocking().lock(resourceId);
-
         return new BlockWritableChannel(resourceId);
     }
 
@@ -128,9 +121,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         } else if (getXodusResourceStores().getReversePaths().get(getTransaction(), resourceIdKey) != null) {
             throw new DuplicateException("Resource exists with resource id " + resourceId);
         }
-
-        getPessimisticLocking().lock(qualified);
-        getPessimisticLocking().lock(resourceId);
 
         if (getXodusResourceStores().getPaths().put(getTransaction(), pathKey, resourceIdKey)) {
             logger.debug("Added new mapping {} -> {}", qualified, resourceId);
@@ -169,9 +159,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
             throw new ResourceNotFoundException("Resource does not exist " + resourceId);
         }
 
-        getPessimisticLocking().lock(qualified);
-        getPessimisticLocking().lock(resourceId);
-
         if (getXodusResourceStores().getPaths().put(getTransaction(), pathKey, resourceIdKey)) {
             logger.debug("Added existing mapping {} -> {}", qualified, resourceId);
         } else {
@@ -202,9 +189,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
                 throw new ResourceNotFoundException("No resource exists for path: " + qualified);
 
             final var resourceId = XodusUtil.resourceId(resourceIdKey);
-
-            getPessimisticLocking().lock(qualified);
-            getPessimisticLocking().lock(resourceId);
 
             pathsCursor.deleteCurrent();
 
@@ -268,11 +252,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         final var qualified = check(path);
         final var paths = list(qualified).limit(max).collect(toList());
 
-        for (final var listing : paths) {
-            getPessimisticLocking().lock(listing.getPath());
-            getPessimisticLocking().lock(listing.getResourceId());
-        }
-
         final var results = new ArrayList<ResourceService.Unlink>();
 
         for (final var listing : paths) {
@@ -301,8 +280,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
             final var paths = new ArrayList<Path>();
             final var pathKeys = new ArrayList<ByteIterable>();
-
-            getPessimisticLocking().lock(resourceId);
 
             do {
                 final var pathKey = reversePathsCursor.getValue();
@@ -356,11 +333,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
 
         final var qualified = check(path);
         final var paths = list(qualified).limit(max).collect(toList());
-
-        for (final var listing : paths) {
-            getPessimisticLocking().lock(listing.getPath());
-            getPessimisticLocking().lock(listing.getResourceId());
-        }
 
         final var results = new ArrayList<ResourceId>();
 
@@ -419,10 +391,6 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         return transaction;
     }
 
-    public PessimisticLocking getPessimisticLocking() {
-        return pessimisticLocking;
-    }
-
     public XodusReadOnlyTransaction getXodusReadOnlyTransaction() {
         return xodusReadOnlyTransaction;
     }
@@ -448,10 +416,8 @@ public class XodusReadWriteTransaction implements ReadWriteTransaction {
         });
 
         public BlockWritableChannel(ResourceId resourceId) throws IOException {
-
             file = virtualFileSystem.openFile(getTransaction(), resourceId.toString(), true);
             outputStream = virtualFileSystem.writeFile(getTransaction(), file);
-
             this.resourceId = resourceId;
         }
 

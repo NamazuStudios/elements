@@ -31,8 +31,8 @@ public class LuaResourceIntegrationTest {
     @Factory
     public static Object[] getIntegrationTests() {
         return new Object[] {
-                getXodusTest(LuaResourceIntegrationTest::new),
-                getUnixFSTest(LuaResourceIntegrationTest::new)
+            getXodusTest(LuaResourceIntegrationTest::new),
+//            getUnixFSTest(LuaResourceIntegrationTest::new)
         };
     }
 
@@ -79,10 +79,10 @@ public class LuaResourceIntegrationTest {
             {"test.request", "test_unpack_parameters"},
             {"test.request", "test_unpack_path_parameters"},
             {"test.util", "test_uuid"},
-            {"test.util.java", "test_pcallx_happy"},
-            {"test.util.java", "test_pcallx_handle_exception_1"},
-            {"test.util.java", "test_pcallx_handle_exception_2"},
-            {"test.util.java", "test_pcallx_handle_exception_3"},
+            {"test.java", "test_pcallx_happy"},
+            {"test.java", "test_pcallx_handle_exception_1"},
+            {"test.java", "test_pcallx_handle_exception_2"},
+            {"test.java", "test_pcallx_handle_exception_3"},
             {"test.resource", "test_create"},
             {"test.resource", "test_invoke"},
             {"test.resource", "test_invoke_fail"},
@@ -92,26 +92,19 @@ public class LuaResourceIntegrationTest {
             {"test.resource", "test_invoke_array"},
             {"test.resource", "test_destroy"},
             {"test.resource", "test_this"},
-            {"test.index", "test_list"},
-            {"test.index", "test_link"},
-            {"test.index", "test_link_path"},
-            {"test.index", "test_unlink"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_unlink_and_destroy"},
-            {"test.index", "test_link_yield_and_list"},
+            {"test.index", "test_list_local"},
+            {"test.index", "test_list_remote"},
+            {"test.index", "test_list_wildcard"},
+            {"test.index", "test_link_local"},
+            {"test.index", "test_link_remote"},
+            {"test.index", "test_link_path_local"},
+            {"test.index", "test_link_path_remote"},
+            {"test.index", "test_unlink_local"},
+            {"test.index", "test_unlink_remote"},
+            {"test.index", "test_unlink_and_destroy_local"},
+            {"test.index", "test_unlink_and_destroy_remote"},
+            {"test.index", "test_link_yield_and_list_local"},
+            {"test.index", "test_link_yield_and_list_remote"},
             {"test.javamodule", "test_hello_world"},
             {"test.javamodule", "test_return_hello_world"},
             {"test.javamodule", "test_overload_1"},
@@ -126,7 +119,21 @@ public class LuaResourceIntegrationTest {
             {"test.pass_table", "pass_simple_array"},
             {"test.pass_table", "pass_complex_array"},
             {"test.pass_table", "pass_complex_table"},
-            {"test.pass_table", "pass_complex_table_to_multiple_resources"}
+            {"test.pass_table", "pass_complex_table_to_multiple_resources"},
+            {"test.proxy", "test_create"},
+            {"test.proxy", "test_invoke"},
+            {"test.proxy", "test_invoke_path"},
+            {"test.proxy", "test_list"},
+            {"test.runtime", "test_instance_id"},
+            {"test.runtime", "test_application_id"},
+            {"test.runtime", "test_node_id"},
+            {"test.runtime", "test_resource_id"},
+            {"test.runtime", "test_node_id_from_resource_id"},
+            {"test.cluster", "test_get_node_ids"},
+            {"test.cluster", "test_get_best_node_id_for_application"},
+            {"test.cluster", "test_get_best_node_id_for_application_id"},
+            {"test.cluster", "test_get_node_ids_for_application"},
+            {"test.cluster", "test_get_node_ids_for_application_id"},
         };
     }
 
@@ -191,7 +198,7 @@ public class LuaResourceIntegrationTest {
     public void testPcallxThrowsUnhandled() {
 
         final Path path = new Path(randomUUID().toString());
-        final ResourceId resourceId = getContext().getResourceContext().create("test.util.java", path);
+        final ResourceId resourceId = getContext().getResourceContext().create("test.java", path);
 
         try {
             getContext().getResourceContext().invoke(resourceId, "test_pcallx_unhandled");
@@ -207,14 +214,14 @@ public class LuaResourceIntegrationTest {
 
     }
 
-    @AfterMethod
-    public void clearResourceService() {
-        try{
-            getContext().getResourceContext().destroyAllResources();
-        } catch (UnsupportedOperationException ex){
-
-        }
-    }
+//    @AfterMethod
+//    public void clearResourceService() {
+//        try{
+//            getContext().getResourceContext().destroyAllResources();
+//        } catch (UnsupportedOperationException ex){
+//
+//        }
+//    }
 
     public EmbeddedTestService getEmbeddedTestService() {
         return embeddedTestService;

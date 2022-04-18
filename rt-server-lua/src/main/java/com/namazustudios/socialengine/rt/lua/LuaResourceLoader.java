@@ -50,6 +50,7 @@ public class LuaResourceLoader implements ResourceLoader {
             preload(luaResource, verbose).deserialize(is);
             return luaResource;
         } catch (IOException ex) {
+            luaResource.close();
             throw new ResourcePersistenceException(ex);
         } catch (Exception ex) {
             luaResource.close();
@@ -68,6 +69,7 @@ public class LuaResourceLoader implements ResourceLoader {
             preload(luaResource, verbose).deserialize(rbc);
             return luaResource;
         } catch (IOException ex) {
+            luaResource.close();
             throw new ResourcePersistenceException(ex);
         } catch (Exception ex) {
             luaResource.close();

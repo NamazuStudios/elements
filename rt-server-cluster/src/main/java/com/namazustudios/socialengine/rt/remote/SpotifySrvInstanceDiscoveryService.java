@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.AsyncPublisher;
 import com.namazustudios.socialengine.rt.ConcurrentLockedPublisher;
 import com.namazustudios.socialengine.rt.Subscription;
 import com.namazustudios.socialengine.rt.util.HostList;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import com.spotify.dns.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +44,9 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
     private String srvServers;
 
-    private final AtomicReference<SrvDiscoveryContext> context = new AtomicReference<>();
+    private volatile SrvDiscoveryContext context;
+
+    private final Lock lock = new ReentrantLock();
 
     static {
         Lookup.getDefaultCache(DClass.IN).setMaxCache(0);
@@ -52,28 +55,27 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
 
     @Override
     public void start() {
-
-        final SrvDiscoveryContext context = new SrvDiscoveryContext();
-
-        if (this.context.compareAndSet(null, context)) {
-            context.start();
-        } else {
-            throw new IllegalStateException("Already started.");
+        try (final var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                context = new SrvDiscoveryContext();
+                context.start();
+            } else {
+                throw new IllegalStateException("Already running.");
+            }
         }
-
     }
 
     @Override
     public void stop() {
-
-        final SrvDiscoveryContext context = this.context.getAndSet(null);
-
-        if (context == null) {
-            throw new IllegalStateException("Not running.");
-        } else {
-            context.stop();
+        try (final var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                throw new IllegalStateException("Not running.");
+            } else {
+                final var context = this.context;
+                this.context = null;
+                context.stop();
+            }
         }
-
     }
 
     @Override
@@ -95,7 +97,6 @@ public class SpotifySrvInstanceDiscoveryService implements InstanceDiscoveryServ
     }
 
     private SrvDiscoveryContext getContext() {
-        final SrvDiscoveryContext context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
         return context;
     }

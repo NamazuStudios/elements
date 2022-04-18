@@ -17,6 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Supplier;
 
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQAsyncOperation.State.*;
+import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQRemoteInvocation.TRACE_LOGGER_NAME;
 import static java.lang.Runtime.getRuntime;
 import static java.lang.String.format;
 
@@ -25,6 +26,8 @@ public class JeroMQAsyncOperation implements AsyncOperation {
     private static final int THREAD_COUNT = getRuntime().availableProcessors() + 1;
 
     private static final Logger logger = LoggerFactory.getLogger(JeroMQAsyncOperation.class);
+
+    private static final Logger traceLogger = LoggerFactory.getLogger(TRACE_LOGGER_NAME);
 
     private static final ScheduledExecutorService cancelTimer = Executors.newScheduledThreadPool(THREAD_COUNT);
 
@@ -36,7 +39,10 @@ public class JeroMQAsyncOperation implements AsyncOperation {
     }
 
     private void doCancel(Supplier<Throwable> errorSupplier) {
-        state.updateAndGet(current -> {
+        final var result = state.updateAndGet(current -> {
+
+            traceLogger.trace("Attempting to set connection state: {} -> {}", current.state, CANCELED);
+
             switch (current.state) {
                 case CANCELED:
                 case CANCELLATION_PENDING:
@@ -56,10 +62,13 @@ public class JeroMQAsyncOperation implements AsyncOperation {
                     // state then the connection should be destroyed because we aren't able to recycle the connection.
                     return current.update(CANCELLATION_PENDING, errorSupplier.get());
                 default:
+
                     // This is here for future proofing.
                     throw new IllegalStateException("Invalid state: " + current);
             }
         }).cancel();
+
+        traceLogger.trace("Previous connection state: {}", result);
 
     }
 
@@ -76,12 +85,13 @@ public class JeroMQAsyncOperation implements AsyncOperation {
             if (logger.isDebugEnabled()) exception.setStackTrace(trace);
             return exception;
         }), time, timeUnit);
+
     }
 
     /**
      * Finishes the cancellation.
      *
-     * @return
+     * @return finished
      */
     public ConnectionState finishCancellation() {
         return state.updateAndGet(cs -> cs.state.equals(CANCELLATION_PENDING) ? cs.update(CANCELED) : cs);
@@ -118,11 +128,13 @@ public class JeroMQAsyncOperation implements AsyncOperation {
         return state.updateAndGet(current -> {
             switch (current.state) {
                 case CONNECTION_PENDING:
-                    logger.error("Called finish() from {}.", CONNECTION_PENDING);
+                    logger.error("Called finish() from {}.", current.state);
+                    traceLogger.trace("Called finish() from {}.", current.state);
                 case FINISHED:
                 case CANCELED:
                 case CONNECTION_ACQUIRED:
                 case CANCELLATION_PENDING:
+                    traceLogger.trace("No change to connection state: {} -> {}", current.state, FINISHED);
                     return current;
                 case FINISH_PENDING:
                     return current.update(FINISHED);
@@ -175,7 +187,7 @@ public class JeroMQAsyncOperation implements AsyncOperation {
 
     }
 
-    public class ConnectionState {
+    public static class ConnectionState {
 
         private final State state;
 
@@ -198,14 +210,17 @@ public class JeroMQAsyncOperation implements AsyncOperation {
         }
 
         private ConnectionState update(final State state) {
+            traceLogger.trace("Attempting to update connection to {}.", state);
             return new ConnectionState(state, error, connection);
         }
 
         private ConnectionState acquire(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            traceLogger.trace("Attempting to acquire connection state.");
             return new ConnectionState(CONNECTION_ACQUIRED, error, connection);
         }
 
         private ConnectionState update(final State state, final Throwable error) {
+            traceLogger.trace("Attempting to update connection to {} with error {}.", state, error.getMessage());
             return new ConnectionState(state, error, connection);
         }
 
@@ -240,15 +255,22 @@ public class JeroMQAsyncOperation implements AsyncOperation {
             return sb.toString();
         }
 
-        private void cancel() {
+        private ConnectionState cancel() {
+
             if (state != CANCELLATION_PENDING) {
                 logger.debug("In state {}. Nothing to do.", state);
+                traceLogger.trace("In state {}. Nothing to do.", state);
             } else if (connection == null) {
-                logger.error("Connection null in state {}.", CANCELLATION_PENDING);
+                logger.error("Connection null in state. This should never happen.");
+                traceLogger.trace("Connection null in state. Doing nothing. This should never happen.");
             } else {
-                logger.debug("Closing socket from state {}.", CANCELLATION_PENDING);
+                logger.debug("Closing socket from state {}.", state);
+                traceLogger.trace("Closing socket from state {}.", state);
                 connection.signal(Connection::close);
             }
+
+            return this;
+
         }
     }
 

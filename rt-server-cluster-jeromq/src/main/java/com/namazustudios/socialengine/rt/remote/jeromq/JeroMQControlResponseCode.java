@@ -54,6 +54,16 @@ public enum JeroMQControlResponseCode {
     PROTOCOL_ERROR,
 
     /**
+     * The system experienced an internal error. Likely caused by a bug or misconfiguration of the system.
+     */
+    INTERNAL_ERROR,
+
+    /**
+     * The system was unable to process the request due to load or other issues.
+     */
+    BUSY_ERROR,
+
+    /**
      * Indicates an unknown error.
      */
     UNKNOWN_ERROR;

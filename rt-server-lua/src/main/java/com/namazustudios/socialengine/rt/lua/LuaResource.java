@@ -555,8 +555,34 @@ public class LuaResource implements Resource {
      * @param hasNodeId the {@link HasNodeId} instance to test
      * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
      */
+    public Context getRemoteContextOrContextFor(final HasNodeId hasNodeId) {
+        return getContextFor(hasNodeId, this::getRemoteContext);
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link HasNodeId}. If the {@link NodeId}
+     * hasn't been specified then this will return the value of {@link #getLocalContext()}.
+     *
+     * @param hasNodeId the {@link HasNodeId} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
     public Context getLocalContextOrContextFor(final HasNodeId hasNodeId) {
         return getContextFor(hasNodeId, this::getLocalContext);
+    }
+
+    /**
+     * A shortcut to get the appropriate {@link Context} for the supplied {@link Path}. If the supplied {@link Path} has
+     * a wildcard context or explicitly specifies a {@link NodeId}, then this method will return the remote context. If
+     * the {@link NodeId} hasn't been specified then this will return the value of {@link #getLocalContext()}.
+     *
+     * @param path the {@link Path} instance to test
+     * @return the result of {@link #getLocalContext()} or {@link #getRemoteContext()}
+     */
+    public Context getLocalContextOrContextForPath(final Path path) {
+        return path.isWildcardContext() ? getRemoteContext() : path
+            .getOptionalNodeId()
+            .map(nid -> getRemoteContext())
+            .orElseGet(this::getLocalContext);
     }
 
     /**
@@ -569,7 +595,7 @@ public class LuaResource implements Resource {
      */
     public Context getContextFor(final HasNodeId hasNodeId, final Supplier<Context> contextSupplier) {
         return hasNodeId.getOptionalNodeId()
-            .map(nodeId -> nodeId.getNodeId().equals(nodeId) ? getLocalContext() : getRemoteContext())
+            .map(nodeId -> getId().getNodeId().equals(nodeId) ? getLocalContext() : getRemoteContext())
             .orElseGet(contextSupplier);
     }
 

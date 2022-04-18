@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.exception.ResourceNotFoundException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
+import com.namazustudios.socialengine.rt.remote.provider.ExecutorServiceFactory;
 import com.namazustudios.socialengine.rt.util.CompletionServiceLatch;
 import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
 import com.namazustudios.socialengine.rt.util.LatchedScheduledExecutorServiceCompletionService;
@@ -15,8 +16,10 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.namazustudios.socialengine.rt.remote.Worker.EXECUTOR_SERVICE;
-import static com.namazustudios.socialengine.rt.remote.Worker.SCHEDULED_EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.remote.Instance.EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.remote.Instance.SCHEDULED_EXECUTOR_SERVICE;
+import static java.lang.String.format;
+import static java.util.concurrent.TimeUnit.MINUTES;
 
 /**
  * The simple handler server is responsible for dispatching requests and events to all {@link Resource} instances
@@ -33,9 +36,9 @@ public class SimpleScheduler implements Scheduler {
 
     private ResourceService resourceService;
 
-    private ExecutorService dispatcherExecutorService;
+    private ExecutorServiceFactory<ExecutorService> executorServiceFactory;
 
-    private ScheduledExecutorService scheduledExecutorService;
+    private ExecutorServiceFactory<ScheduledExecutorService> scheduledExecutorServiceFactory;
 
     private AtomicReference<Context> context = new AtomicReference<>();
 
@@ -88,20 +91,19 @@ public class SimpleScheduler implements Scheduler {
     }
 
     private Future<Void> scheduleUnlink(final Path path) {
-        return getContext().getDispatcher().submit(() -> { getResourceService().unlinkPath(path, resource -> {
+        return getContext().getDispatcher().submit(() -> getResourceService().unlinkPath(path, resource -> {
 
             final ResourceId resourceId = resource.getId();
 
             try {
                 resource.close();
             } catch (ResourceNotFoundException ex) {
-                logger.debug("No Resource found at path {}.  Disregarding.", ex);
+                logger.debug("No Resource found at path {}.  Disregarding.", path, ex);
             } catch (Exception ex) {
                 logger.error("Caught exception unlinking resource {}", resourceId, ex);
             }
 
-        });
-        }, null);
+        }), null);
     }
 
     @Override
@@ -238,22 +240,22 @@ public class SimpleScheduler implements Scheduler {
         }
     }
 
-    public ExecutorService getDispatcherExecutorService() {
-        return dispatcherExecutorService;
+    public ExecutorServiceFactory<ExecutorService> getExecutorServiceFactory() {
+        return executorServiceFactory;
     }
 
     @Inject
-    public void setDispatcherExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService dispatcherExecutorService) {
-        this.dispatcherExecutorService = dispatcherExecutorService;
+    public void setExecutorServiceFactory(@Named(EXECUTOR_SERVICE) ExecutorServiceFactory<ExecutorService> executorServiceFactory) {
+        this.executorServiceFactory = executorServiceFactory;
     }
 
-    public ScheduledExecutorService getScheduledExecutorService() {
-        return scheduledExecutorService;
+    public ExecutorServiceFactory<ScheduledExecutorService> getScheduledExecutorServiceFactory() {
+        return scheduledExecutorServiceFactory;
     }
 
     @Inject
-    public void setScheduledExecutorService(@Named(SCHEDULED_EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
-        this.scheduledExecutorService = scheduledExecutorService;
+    public void setScheduledExecutorServiceFactory(@Named(SCHEDULED_EXECUTOR_SERVICE) ExecutorServiceFactory<ScheduledExecutorService> scheduledExecutorServiceFactory) {
+        this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
     }
 
     public ResourceService getResourceService() {
@@ -264,7 +266,6 @@ public class SimpleScheduler implements Scheduler {
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
     }
-
 
     private static FutureTask<Void> shortCircuitFuture(final Runnable runnable,
                                                        final Function<Runnable, Future<?>> delegateFutureSupplier) {
@@ -282,24 +283,39 @@ public class SimpleScheduler implements Scheduler {
 
     private class Context {
 
-        private final CompletionServiceLatch latch = new CompletionServiceLatch();
+        private final ExecutorService dispatcher = getExecutorServiceFactory()
+            .getService(format("%s.scheduler", SimpleScheduler.class.getName()));
 
-        private final LatchedExecutorServiceCompletionService dispatcher =
-            new LatchedExecutorServiceCompletionService(getDispatcherExecutorService(), latch);
+        private final ScheduledExecutorService scheduler = getScheduledExecutorServiceFactory()
+            .getService(format("%s.dispatcher", SimpleScheduler.class.getName()));
 
-        private final LatchedScheduledExecutorServiceCompletionService scheduler =
-            new LatchedScheduledExecutorServiceCompletionService(getScheduledExecutorService(), latch);
-
-        public LatchedExecutorServiceCompletionService getDispatcher() {
+        public ExecutorService getDispatcher() {
             return dispatcher;
         }
 
-        public LatchedScheduledExecutorServiceCompletionService getScheduler() {
+        public ScheduledExecutorService getScheduler() {
             return scheduler;
         }
 
         private void stop() {
-            latch.stop();
+
+            dispatcher.shutdown();
+            scheduler.shutdownNow();
+
+            try {
+
+                if (!scheduler.awaitTermination(1, MINUTES)) {
+                    logger.error("Timed out shutting down scheduler.");
+                }
+
+                if (!dispatcher.awaitTermination(1, MINUTES)) {
+                    logger.error("Timed out shutting down dispatcher.");
+                }
+
+            } catch (InterruptedException ex) {
+                logger.error("Interrupted while shutting down.");
+            }
+
         }
 
     }

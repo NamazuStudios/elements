@@ -4,8 +4,6 @@ import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -20,19 +18,17 @@ import static java.lang.String.format;
 
 public class TestLiveWorkerMutation {
 
-    private static final Logger logger = LoggerFactory.getLogger(LuaResourceLinkingAdvancedTest.class);
-
     private static TestLiveWorkerMutation getXodusTest(final Function<EmbeddedTestService, TestLiveWorkerMutation> ctor) {
         final var embeddedTestService = new JeroMQEmbeddedTestService()
-                .withClient()
-                .withNodeModuleFactory(nodeId -> List.of(
-                        new LuaModule(),
-                        new JavaEventModule(),
-                        new ClasspathAssetLoaderModule().withDefaultPackageRoot()
-                ))
-                .withXodusWorker()
-                .withDefaultHttpClient()
-                .start();
+            .withClient()
+            .withNodeModuleFactory(nodeId -> List.of(
+                    new LuaModule(),
+                    new JavaEventModule(),
+                    new ClasspathAssetLoaderModule().withDefaultPackageRoot()
+            ))
+            .withXodusWorker()
+            .withDefaultHttpClient()
+            .start();
 
         return ctor.apply(embeddedTestService);
     }
@@ -75,7 +71,7 @@ public class TestLiveWorkerMutation {
 
     public Stream<String> getApplicationNames() {
         return IntStream
-            .range(0, 5)
+            .range(0, 10)
             .mapToObj(i ->format("Mock Application %d", i));
     }
 

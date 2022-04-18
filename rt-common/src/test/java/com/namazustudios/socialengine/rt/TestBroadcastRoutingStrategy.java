@@ -57,7 +57,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
         }
 
         when(getRemoteInvokerRegistry()
-            .getAllRemoteInvokerStatus(eq(getApplicationId())))
+            .getAllRemoteInvokers(eq(getApplicationId())))
             .thenReturn(mockRemoteInvokers);
 
         final Object result = getRoutingStrategy().invokeSync(
@@ -67,7 +67,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
             invocationErrorConsumer);
 
         assertNull(result, "Expected null return.");
-        verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokerStatus(eq(getApplicationId()));
+        verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokers(eq(getApplicationId()));
 
         for (final RemoteInvoker ri : mockRemoteInvokers) {
             verify(ri, times(1)).invokeSync(
@@ -94,7 +94,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
         final RemoteInvoker mockRemoteInvoker = mock(RemoteInvoker.class);
 
         when(getRemoteInvokerRegistry()
-            .getAllRemoteInvokerStatus(eq(getApplicationId())))
+            .getAllRemoteInvokers(eq(getApplicationId())))
             .thenReturn(singletonList(mockRemoteInvoker));
 
         when(mockRemoteInvoker.invokeSync(any(), any(), any())).thenThrow(new BullshitException());
@@ -138,7 +138,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
         }
 
         when(getRemoteInvokerRegistry()
-                .getAllRemoteInvokerStatus(eq(getApplicationId())))
+                .getAllRemoteInvokers(eq(getApplicationId())))
                 .thenReturn(mockRemoteInvokers);
 
         final Object result = getRoutingStrategy().invokeAsyncV(
@@ -148,7 +148,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
                 invocationErrorConsumer);
 
         assertNull(result, "Expected null return.");
-        verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokerStatus(eq(getApplicationId()));
+        verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokers(eq(getApplicationId()));
 
         for (final RemoteInvoker ri : mockRemoteInvokers) {
             verify(ri, times(1)).invokeAsync(
@@ -203,7 +203,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
         }
 
         when(getRemoteInvokerRegistry()
-                .getAllRemoteInvokerStatus(eq(getApplicationId())))
+                .getAllRemoteInvokers(eq(getApplicationId())))
                 .thenReturn(mockRemoteInvokers);
 
         final Future<Object> result = getRoutingStrategy().invokeFuture(
@@ -213,7 +213,7 @@ public class TestBroadcastRoutingStrategy extends BaseRoutingStrategyTest {
                 invocationErrorConsumer);
 
         assertNotNull(result, "Expected null return.");
-        verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokerStatus(eq(getApplicationId()));
+        verify(getRemoteInvokerRegistry(), times(1)).getAllRemoteInvokers(eq(getApplicationId()));
 
         for (final RemoteInvoker ri : mockRemoteInvokers) {
             verify(ri, times(1)).invokeCompletionStage(

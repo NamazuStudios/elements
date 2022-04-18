@@ -31,7 +31,7 @@ public interface TypedConverter<JavaT> extends Converter {
      * @param formalType the class
      * @return true if convertible, false otherwise
      */
-    default boolean isConvertibleFromLua(LuaState luaState, int index, Class<?> formalType) {
+    default boolean isConvertibleFromLua(final LuaState luaState, int index, Class<?> formalType) {
         return false;
     }
 

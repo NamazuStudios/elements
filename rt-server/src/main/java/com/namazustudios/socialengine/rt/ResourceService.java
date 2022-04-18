@@ -280,7 +280,7 @@ public interface ResourceService extends AutoCloseable {
     /**
      * Removes a {@link Resource} instance from this resource service.
      *
-     * @param resourceId the path to the resource
+     * @param resourceId the resourceId to the resource
      *
      * @throws  ResourceNotFoundException if no resource exists at that path
      * @throws  IllegalArgumentException if the path is a wildcard path

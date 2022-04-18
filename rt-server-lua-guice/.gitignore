@@ -1,1 +1,2 @@
-verbose.log
+/verbose.log
+/remote-call-trace.csv

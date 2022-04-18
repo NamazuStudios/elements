@@ -1,42 +1,37 @@
 package com.namazustudios.socialengine.rt.remote.provider;
 
-import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
-import static java.lang.String.format;
+import static com.namazustudios.socialengine.rt.remote.Instance.THREAD_GROUP;
 import static java.util.concurrent.Executors.newScheduledThreadPool;
 
-public class ScheduledExecutorServiceProvider implements Provider<ScheduledExecutorService> {
+public class ScheduledExecutorServiceProvider implements Provider<ExecutorServiceFactory<ScheduledExecutorService>> {
+
+    private Provider<ThreadGroup>threadGroupProvider;
 
     private Provider<Integer> schedulerPoolSizeProvider;
 
     @Override
-    public ScheduledExecutorService get() {
-
-        final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(SimpleWorkerInstance.class);
-        final String name = format("%s.%s", SimpleWorkerInstance.class.getSimpleName(), " timer");
-
-        return newScheduledThreadPool(getSchedulerPoolSizeProvider().get(),
-                                      r -> newThread(r, name, threadCount, logger));
-
+    public ExecutorServiceFactory<ScheduledExecutorService> get() {
+        return name -> {
+            final var size = getSchedulerPoolSizeProvider().get();
+            final var group = getThreadGroupProvider().get();
+            final var factory = new InstanceThreadFactory(group, name);
+            return newScheduledThreadPool(size, factory);
+        };
     }
 
-    private Thread newThread(final Runnable runnable, final String name,
-                             final AtomicInteger threadCount, final Logger logger) {
-        final Thread thread = new Thread(runnable);
-        thread.setDaemon(true);
-        thread.setName(format("%s #%d", name, threadCount.incrementAndGet()));
-        thread.setUncaughtExceptionHandler((t , e) -> logger.error("Fatal Error: {}", t, e));
-        return thread;
+    public Provider<ThreadGroup> getThreadGroupProvider() {
+        return threadGroupProvider;
+    }
+
+    @Inject
+    public void setThreadGroupProvider(@Named(THREAD_GROUP) Provider<ThreadGroup> threadGroupProvider) {
+        this.threadGroupProvider = threadGroupProvider;
     }
 
     public Provider<Integer> getSchedulerPoolSizeProvider() {

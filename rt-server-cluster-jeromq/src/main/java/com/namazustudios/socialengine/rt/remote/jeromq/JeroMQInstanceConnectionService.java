@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.AsyncControlClient.Request;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import com.namazustudios.socialengine.rt.util.ReadWriteGuard;
 import com.namazustudios.socialengine.rt.util.ReentrantReadWriteGuard;
 import org.slf4j.Logger;
@@ -22,17 +23,16 @@ import javax.inject.Provider;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
@@ -63,32 +63,33 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     private AsyncControlClient.Factory asyncControlClientFactory;
 
-    private final AtomicReference<InstanceConnectionContext> context = new AtomicReference<>();
+    private final Lock lock = new ReentrantLock();
+
+    private volatile InstanceConnectionContext context;
 
     @Override
     public void start() {
-
-        final InstanceConnectionContext context = new InstanceConnectionContext();
-
-        if (this.context.compareAndSet(null, context)) {
-            context.start();
-        } else {
-            throw new IllegalStateException("Already started.");
+        try (var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                context = new InstanceConnectionContext();
+                context.start();
+            } else {
+                throw new IllegalStateException("Already started.");
+            }
         }
-
     }
 
     @Override
     public void stop() {
-
-        final InstanceConnectionContext context = this.context.getAndSet(null);
-
-        if (context == null) {
-            throw new IllegalStateException("Not running.");
-        } else {
-            context.stop();
+        try (var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                throw new IllegalStateException("Not running.");
+            } else {
+                final var context = this.context;
+                this.context = null;
+                context.stop();
+            }
         }
-
     }
 
     @Override
@@ -128,7 +129,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     }
 
     private InstanceConnectionContext getContext() {
-        final InstanceConnectionContext context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
         return context;
     }

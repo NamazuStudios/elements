@@ -28,7 +28,6 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
 
     private ResourceService resourceService;
 
-    private ResourceLockService resourceLockService;
     private final AtomicBoolean running = new AtomicBoolean();
 
     @Override
@@ -75,7 +74,7 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
         final ResourceId resourceId = resource.getId();
         final RunnableFuture<Void> unlink = getScheduler().scheduleUnlink(path, timeout, timeoutUnit);
 
-        try {  // TODO Ensure Locking isn't necessary here
+        try {
 
             final AtomicBoolean sent = new AtomicBoolean();
 
@@ -147,15 +146,6 @@ public class SimpleRetainedHandlerService implements RetainedHandlerService {
     @Inject
     public void setResourceService(ResourceService resourceService) {
         this.resourceService = resourceService;
-    }
-
-    public ResourceLockService getResourceLockService() {
-        return resourceLockService;
-    }
-
-    @Inject
-    public void setResourceLockService(ResourceLockService resourceLockService) {
-        this.resourceLockService = resourceLockService;
     }
 
 }

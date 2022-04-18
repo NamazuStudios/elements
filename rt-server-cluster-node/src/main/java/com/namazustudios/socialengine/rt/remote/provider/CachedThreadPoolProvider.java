@@ -1,45 +1,33 @@
 package com.namazustudios.socialengine.rt.remote.provider;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
+import javax.inject.Inject;
+import javax.inject.Named;
 import javax.inject.Provider;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicInteger;
 
-import static java.lang.String.format;
+import static com.namazustudios.socialengine.rt.remote.Instance.THREAD_GROUP;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 
-public class CachedThreadPoolProvider implements Provider<ExecutorService> {
+public class CachedThreadPoolProvider implements Provider<ExecutorServiceFactory<ExecutorService>> {
 
-    private final String name;
-
-    private final Class<?> containing;
-
-    public CachedThreadPoolProvider(final Class<?> containing) {
-        this.containing = containing;
-        name = containing.getSimpleName();
-    }
-
-    public CachedThreadPoolProvider(final Class<?> containing, final String qualifier) {
-        this.containing = containing;
-        this.name = format("%s.%s", containing.getSimpleName(), qualifier);
-    }
+    private Provider<ThreadGroup>threadGroupProvider;
 
     @Override
-    public ExecutorService get() {
+    public ExecutorServiceFactory<ExecutorService> get() {
+        return name -> {
+            final var group = getThreadGroupProvider().get();
+            final var factory = new InstanceThreadFactory(group, name);
+            return newCachedThreadPool(factory);
+        };
+    }
 
-        final AtomicInteger threadCount = new AtomicInteger();
-        final Logger logger = LoggerFactory.getLogger(containing);
+    public Provider<ThreadGroup> getThreadGroupProvider() {
+        return threadGroupProvider;
+    }
 
-        return newCachedThreadPool(r -> {
-            final Thread thread = new Thread(r);
-            thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t , e) -> logger.error("Fatal Error: {}", t, e));
-            thread.setName(format("%s %s - #%d", containing.getSimpleName(), name, threadCount.incrementAndGet()));
-            return thread;
-        });
-
+    @Inject
+    public void setThreadGroupProvider(@Named(THREAD_GROUP) Provider<ThreadGroup> threadGroupProvider) {
+        this.threadGroupProvider = threadGroupProvider;
     }
 
 }
