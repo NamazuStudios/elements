@@ -95,6 +95,22 @@
             <artifactId>java-jwt</artifactId>
             <version>${auth0.java.jwt.version}</version>
         </dependency>
+        <dependency>
+            <groupId>io.neow3j</groupId>
+            <artifactId>contract</artifactId>
+            <version>${neow3j.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.web3j</groupId>
+            <artifactId>core</artifactId>
+            <version>${web3j.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.fasterxml.jackson.core</groupId>
+                    <artifactId>jackson-annotations</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
     </dependencies>
 
     <build>

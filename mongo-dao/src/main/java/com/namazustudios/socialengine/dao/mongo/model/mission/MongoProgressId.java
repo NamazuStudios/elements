@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model.mission;
 
+import com.namazustudios.socialengine.dao.mongo.HexableId;
 import com.namazustudios.socialengine.dao.mongo.model.MongoProfile;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.rt.util.Hex;
@@ -14,7 +15,7 @@ import java.util.Objects;
 import static java.lang.System.arraycopy;
 
 @Embedded
-public class MongoProgressId {
+public class MongoProgressId implements HexableId {
 
     private static final int PROFILE_ID_INDEX = 0;
 
@@ -56,6 +57,7 @@ public class MongoProgressId {
         this.missionId = missionId;
         if (profileId == null || missionId == null) throw new IllegalArgumentException("Must specify both ids.");
     }
+
     public byte[] toByteArray() {
 
         final byte[] profileIdBytes = profileId.toByteArray();
@@ -69,6 +71,7 @@ public class MongoProgressId {
 
     }
 
+    @Override
     public String toHexString() {
         final byte[] bytes = toByteArray();
         return Hex.encode(bytes);

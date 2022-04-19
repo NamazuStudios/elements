@@ -8,12 +8,12 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.model.user.User;
-import com.namazustudios.socialengine.test.EmbeddedTestService;
 
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.model.user.User.Level.SUPERUSER;
 import static com.namazustudios.socialengine.model.user.User.Level.USER;
@@ -28,6 +28,8 @@ class ClientContext {
 
     public static final String CONTEXT_APPLICATION = "com.namazustudios.socialengine.rest.test.client.context.application";
 
+    private static final AtomicInteger userNameDecorator = new AtomicInteger();
+
     private UserDao userDao;
 
     private ProfileDao profileDao;
@@ -41,8 +43,6 @@ class ClientContext {
     private Application application;
 
     private SessionCreation sessionCreation;
-
-    private EmbeddedTestService embeddedTestService;
 
     public User getUser() {
         return user;
@@ -61,8 +61,9 @@ class ClientContext {
     public ClientContext createUser(final String name) {
         try {
             final var user = new User();
-            user.setName(name);
-            user.setEmail(format("%s@example.com", name));
+            final var decoratedName = format("%s.%05d", name, userNameDecorator.getAndIncrement());
+            user.setName(decoratedName);
+            user.setEmail(format("%s@example.com", decoratedName));
             user.setLevel(USER);
             user.setActive(true);
             this.user = userDao.createUserWithPasswordStrict(user, DUMMY_PASSWORD);
@@ -76,8 +77,9 @@ class ClientContext {
     public ClientContext createSuperuser(final String name) {
         try {
             final var user = new User();
-            user.setName(name);
-            user.setEmail(format("%s@example.com", name));
+            final var decoratedName = format("%s.%05d", name, userNameDecorator.getAndIncrement());
+            user.setName(decoratedName);
+            user.setEmail(format("%s@example.com", decoratedName));
             user.setLevel(SUPERUSER);
             user.setActive(true);
             this.user = userDao.createUserWithPasswordStrict(user, DUMMY_PASSWORD);

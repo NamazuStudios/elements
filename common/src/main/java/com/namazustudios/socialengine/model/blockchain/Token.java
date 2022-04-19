@@ -1,69 +1,98 @@
 package com.namazustudios.socialengine.model.blockchain;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
-import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.List;
+import java.util.Map;
 
-@ApiModel
 public class Token {
 
-    @NotNull(groups = ValidationGroups.Update.class)
-    @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
-    @ApiModelProperty("The unique ID of the token itself.")
-    public String id;
+    @ApiModelProperty("The account address of the owner to be assigned when minting this token.")
+    private String owner;
 
-    @NotNull
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The name given to this token.")
-    public String name;
+    private String name;
 
     @ApiModelProperty("The description of this token.")
-    public String description;
+    private String description;
 
-    @NotNull
-    @ApiModelProperty("The type of this token. Valid options are " +
-            "\"purchase\" : ownership is transferred to the purchaser, " +
-            "\"license\" : the minter of the token retains ownership, but grants access to the purchaser, and " +
-            "\"rent\" : same as license, but access is revoked after a certain period of time (see rentDuration).")
-    public String type;
-
-    @NotNull
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class, ValidationGroups.Update.class})
     @ApiModelProperty("Any tags to assist in filtering/searching for this token.")
-    public List<String> tags;
+    private List<String> tags;
 
-    @ApiModelProperty("The royalty percentage to be processed on resale, if any.")
-    public int royaltyPercentage;
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The maximum number of copies of this token that can be owned (by any number of accounts) at any one time.")
+    private long totalSupply;
 
-    @ApiModelProperty("The duration of the rental before it is automatically returned (in seconds). " +
-            "Only valid for rent type tokens")
-    public long rentDuration;
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The maximum number of usages this nft will have if applicable.")
+    private long usages;
 
-    @ApiModelProperty("The quantity of copies of this token that can be distributed.")
-    public long quantity;
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The status of this token. Valid values are " +
+        "\"public\" : Can be viewed by everyone, " +
+        "\"private\" : Only the token or contract owner can view the token properties " +
+        "\"preview\" : If not the token or contract owner, the asset urls cannot be viewed.")
+    private String accessOption;
 
-    @NotNull
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The URLs pointing at any preview of the contents of this token.")
+    private List<String> previewUrls;
+
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The asset URLs of this token.")
+    private List<String> assetUrls;
+
+    @ApiModelProperty("Defines the ownership for this token.")
+    private Ownership ownership;
+
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The transfer options of this token. Valid values are " +
             "\"none\" : Cannot be transferred, " +
             "\"resale_only\" : Can be resold, but not traded, " +
             "\"trades_only\" : Can be traded, but not resold, and " +
             "\"resale_and_trades\" : Can be either resold or traded.")
-    public String transferOptions;
+    private String transferOptions;
 
-    @NotNull
-    @ApiModelProperty("Indicates whether or not this can be viewed publicly. " +
-            "If false, only the previewUrl can be viewed publicly.")
-    public boolean publiclyAccessible;
+    @ApiModelProperty("Indicates whether or not the license is revocable by the owner")
+    private boolean revocable;
 
-    @ApiModelProperty("The URL pointed at any preview of the contents of this token.")
-    public String previewUrl;
+    @ApiModelProperty("The expiration date of the license. Recorded in seconds since Unix epoch")
+    private long expiry;
 
-    @NotNull
-    @ApiModelProperty("The asset URLs of this token.")
-    public List<String> assetUrls;
+    @ApiModelProperty("If true, the licensee may pay a fee to extend the expiration date by the same difference " +
+            "between the original expiry and the time of minting.")
+    private boolean renewable;
 
+    @ApiModelProperty("Any meta data for this token.")
+    private Map<String, Object> metadata;
+
+    public String getOwner() {
+        return owner;
+    }
+
+    public void setOwner(String owner) {
+        this.owner = owner;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
 
     public String getDescription() {
         return description;
@@ -73,12 +102,12 @@ public class Token {
         this.description = description;
     }
 
-    public String getType() {
-        return type;
+    public String getAccessOption() {
+        return accessOption;
     }
 
-    public void setType(String type) {
-        this.type = type;
+    public void setAccessOption(String accessOption) {
+        this.accessOption = accessOption;
     }
 
     public List<String> getTags() {
@@ -89,20 +118,28 @@ public class Token {
         this.tags = tags;
     }
 
-    public int getRoyaltyPercentage() {
-        return royaltyPercentage;
+    public Ownership getOwnership() {
+        return ownership;
     }
 
-    public void setRoyaltyPercentage(int royaltyPercentage) {
-        this.royaltyPercentage = royaltyPercentage;
+    public void setOwnership(Ownership ownership) {
+        this.ownership = ownership;
     }
 
-    public long getQuantity() {
-        return quantity;
+    public long getTotalSupply() {
+        return totalSupply;
     }
 
-    public void setQuantity(long quantity) {
-        this.quantity = quantity;
+    public void setTotalSupply(long totalSupply) {
+        this.totalSupply = totalSupply;
+    }
+
+    public long getUsages() {
+        return usages;
+    }
+
+    public void setUsages(long usages) {
+        this.usages = usages;
     }
 
     public String getTransferOptions() {
@@ -113,20 +150,12 @@ public class Token {
         this.transferOptions = transferOptions;
     }
 
-    public boolean isPubliclyAccessible() {
-        return publiclyAccessible;
+    public List<String> getPreviewUrls() {
+        return previewUrls;
     }
 
-    public void setPubliclyAccessible(boolean publiclyAccessible) {
-        this.publiclyAccessible = publiclyAccessible;
-    }
-
-    public String getPreviewUrl() {
-        return previewUrl;
-    }
-
-    public void setPreviewUrl(String previewUrl) {
-        this.previewUrl = previewUrl;
+    public void setPreviewUrls(List<String> previewUrls) {
+        this.previewUrls = previewUrls;
     }
 
     public List<String> getAssetUrls() {
@@ -137,19 +166,35 @@ public class Token {
         this.assetUrls = assetUrls;
     }
 
-    public String getId() {
-        return id;
+    public boolean isRevocable() {
+        return revocable;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setRevocable(boolean revocable) {
+        this.revocable = revocable;
     }
 
-    public String getName() {
-        return name;
+    public long getExpiry() {
+        return expiry;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setExpiry(long expiry) {
+        this.expiry = expiry;
+    }
+
+    public boolean isRenewable() {
+        return renewable;
+    }
+
+    public void setRenewable(boolean renewable) {
+        this.renewable = renewable;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(Map<String, Object> metadata) {
+        this.metadata = metadata;
     }
 }

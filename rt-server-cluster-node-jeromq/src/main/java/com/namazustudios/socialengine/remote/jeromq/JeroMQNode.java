@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.rt.remote.InstanceConnectionService.Instan
 import com.namazustudios.socialengine.rt.remote.LocalInvocationDispatcher;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.NodeLifecycle;
+import com.namazustudios.socialengine.rt.remote.NodeState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.zeromq.ZContext;
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.ERROR;
 import static com.namazustudios.socialengine.rt.AsyncConnection.Event.READ;
+import static com.namazustudios.socialengine.rt.remote.NodeState.*;
 import static java.lang.String.format;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -37,6 +39,8 @@ public class JeroMQNode implements Node {
     public static final String JEROMQ_NODE_MIN_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.min.connections";
 
     public static final String JEROMQ_NODE_MAX_CONNECTIONS = "com.namazustudios.socialengine.remote.jeromq.node.max.connections";
+
+    private final AtomicReference<NodeState> state = new AtomicReference<>(READY);
 
     private final AtomicReference<NodeContext> context = new AtomicReference<>();
 
@@ -68,6 +72,11 @@ public class JeroMQNode implements Node {
         return nodeId;
     }
 
+    @Override
+    public NodeState getState() {
+        return state.get();
+    }
+
     public String getOutboundAddr() {
         return format(OUTBOUND_ADDR_FORMAT, getNodeId().asString());
     }
@@ -79,7 +88,7 @@ public class JeroMQNode implements Node {
 
         c.logger.info("Beginning startup.");
 
-        if (!context.compareAndSet(null, c)) {
+        if (!state.compareAndSet(READY, STARTING) || !context.compareAndSet(null, c)) {
             throw new IllegalStateException("Already started.");
         }
 
@@ -97,18 +106,21 @@ public class JeroMQNode implements Node {
                     c.logger.info("Issuing pre-start command.");
                     getNodeLifecycle().nodePreStart(getNode());
                 } catch (Exception ex) {
+                    state.set(UNHEALTHY);
                     c.logger.error("Caught excpetion issuing pre-start command.", ex);
                     throw ex;
                 }
             }
 
             @Override
-            public void start(InstanceBinding binding) {
+            public void start(final InstanceBinding binding) {
                 try {
                     check();
                     c.logger.info("Issuing start command with binding {}.", binding);
                     c.start(binding);
+                    state.set(STARTED);
                 } catch (Exception ex) {
+                    state.set(UNHEALTHY);
                     c.logger.error("Caught exception issuing start command.", ex);
                     throw ex;
                 }
@@ -118,9 +130,11 @@ public class JeroMQNode implements Node {
             public void postStart() {
                 try {
                     check();
-                    c.logger.info("Issuing post-start command with binding.");
+                    c.logger.info("Issuing post-start command for node {}", nodeId);
                     getNodeLifecycle().nodePostStart(getNode());
+                    state.set(HEALTHY);
                 } catch (Exception ex) {
+                    state.set(UNHEALTHY);
                     c.logger.error("Caught exception issuing post-start command.  Terminating node.", ex);
                     throw ex;
                 }
@@ -139,6 +153,8 @@ public class JeroMQNode implements Node {
                     c.logger.error("Inconsistent state.  Startup does not reflect current state.");
                 }
 
+                state.set(READY);
+
             }
 
             private void check() {
@@ -151,36 +167,41 @@ public class JeroMQNode implements Node {
     @Override
     public Shutdown beginShutdown() {
 
-        final NodeContext c = context.getAndSet(null);
+        final var c = context.getAndSet(null);
+        final var logger = c == null ? staticLogger : c.logger;
+
         return new Shutdown() {
 
             @Override
             public void preStop() {
                 try {
-                    c.logger.info("Issuing NodeLifecycle pre-stop command.");
+                    logger.info("Issuing NodeLifecycle pre-stop command.");
                     getNodeLifecycle().nodePreStop(JeroMQNode.this);
+                    state.set(STOPPING);
                 } catch (Exception ex) {
-                    c.logger.error("Caught exception issuing pre-stop command.", ex);
+                    logger.error("Caught exception issuing pre-stop command.", ex);
                 }
             }
 
             @Override
             public void stop() {
                 try {
-                    c.stop();
-                    c.logger.info("Shutdown.  Issuing NodeLifecycle post-stop command.");
+                    if (c != null) c.stop();
+                    logger.info("Shutdown.  Issuing NodeLifecycle post-stop command.");
+                    state.set(STOPPED);
                 } catch (Exception ex) {
-                    c.logger.error("Caught exception issuing stop command.", ex);
+                    logger.error("Caught exception issuing stop command.", ex);
                 }
             }
 
             @Override
             public void postStop() {
                 try {
-                    c.logger.info("Shutdown.  Issued NodeLifecycle stop command.");
+                    logger.info("Shutdown.  Issued NodeLifecycle stop command.");
                     getNodeLifecycle().nodePostStop(JeroMQNode.this);
+                    state.set(READY);
                 } catch (Exception ex) {
-                    c.logger.error("Caught excpetion issuing post-stop command.", ex);
+                    logger.error("Caught excpetion issuing post-stop command.", ex);
                 }
             }
         };
@@ -302,7 +323,7 @@ public class JeroMQNode implements Node {
 
             getAsyncConnectionService().group(format("%s %s", JeroMQNode.class.getSimpleName(), name))
                 .connection(z -> {
-                    final Socket socket = z.createSocket(ROUTER);
+                    final var socket = z.createSocket(ROUTER);
                     socket.bind(instanceBinding.getBindAddress());
                     return socket;
                 }, connection -> {
@@ -340,6 +361,7 @@ public class JeroMQNode implements Node {
         }
 
         private void onFrontendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            state.set(UNHEALTHY);
             logger.error("Frontend Connection Error {} - errno {}", connection, connection.socket().errno());
         }
 
@@ -349,6 +371,7 @@ public class JeroMQNode implements Node {
         }
 
         private void onBackendError(final AsyncConnection<ZContext, ZMQ.Socket> connection) {
+            state.set(UNHEALTHY);
             logger.error("Backend Connection Error {} - errno {}", connection, connection.socket().errno());
         }
 

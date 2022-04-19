@@ -13,6 +13,7 @@ import {ProfileViewModel} from "../models/profile-view-model";
 import {Profile} from '../api/models';
 import {ProfilesService} from '../api/services/profiles.service';
 import {ApplicationsService} from '../api/services/applications.service';
+import {InventoryDialogComponent} from "../inventory-dialog/inventory-dialog.component";
 
 @Component({
   selector: 'app-profiles-list',
@@ -23,7 +24,7 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Profile>;
   dataSource: ProfilesDataSource;
-  displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "actions"];
+  displayedColumns = ["select", "id", "name", "userName", "userEmail", "applicationName", "inventory-action", "edit-action", "delete-action"];
   currentProfiles: Array<Profile> = [];
   allApplications = [];
   selectAll = {id: "All", name: "All"};
@@ -137,6 +138,16 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
     });
   }
 
+  editInventory(profile) {
+    this.dialog.open(InventoryDialogComponent, {
+      width: '1000px',
+      data: {
+        user: profile.user,
+        profile: profile
+      }
+    });
+  }
+
   filterByApplication(applicationId) {
     if (applicationId == "All") {
       this.refresh(0);
@@ -152,4 +163,5 @@ export class ProfilesListComponent implements OnInit, AfterViewInit {
       );
     }, 0);
   }
+
 }

@@ -1,11 +1,9 @@
+FROM jwilder/dockerize:0.6.1 as dockerize
 
 FROM ubuntu:20.04
-
-RUN apt-get update && \
-    apt-get -y install openjdk-11-jdk="11.0.11+9-0ubuntu2~20.04" && \
-    apt-get -y install wget="1.20.3-1ubuntu1"
-
 ENV DOCKERIZE_VERSION v0.6.1
+
+RUN apt-get update && apt-get -y install wget bash ca-certificates openjdk-11-jdk musl
 
 # Home Directory
 ENV ELEMENTS_HOME "/opt/elements"
@@ -41,9 +39,7 @@ ENV CLASSPATH "$ELEMENTS_CLASSPATH:$ELEMENTS_LIB/*"
 
 USER root:root
 
-RUN wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz \
-    && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+COPY --from=dockerize /usr/local/bin/dockerize /usr/local/bin/
 
 ENV PATH $ELEMENTS_BIN:$PATH
 
@@ -56,8 +52,7 @@ RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_SCRIPT_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_STORAGE" && \
     useradd elements -M --shell /usr/bin/bash --base-dir /opt --home "$ELEMENTS_HOME" && \
-    chown -R elements:elements "$ELEMENTS_HOME" && \
-    apt-get update && apt-get -y install dnsutils curl
+    chown -R elements:elements "$ELEMENTS_HOME"
 
 WORKDIR $ELEMENTS_HOME
 USER elements:elements

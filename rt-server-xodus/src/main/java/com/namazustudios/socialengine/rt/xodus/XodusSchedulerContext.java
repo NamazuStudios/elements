@@ -16,6 +16,7 @@ import javax.inject.Provider;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.namazustudios.socialengine.rt.xodus.XodusSchedulerEnvironment.SCHEDULER_ENVIRONMENT;
 import static java.lang.Math.max;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
@@ -25,38 +26,21 @@ public class XodusSchedulerContext implements SchedulerContext {
 
     public static final String STORE_TIMER = "com.namazustudios.socialengine.rt.xodus.scheduler";
 
-    public static final String SCHEDULER_ENVIRONMENT = "com.namazustudios.socialengine.rt.xodus.scheduler";
-
-    public static final String SCHEDULER_ENVIRONMENT_PATH = "com.namazustudios.socialengine.rt.xodus.scheduler.path";
-
     private static final Logger logger = LoggerFactory.getLogger(XodusSchedulerContext.class);
+
+    private Environment environment;
 
     private ResourceService resourceService;
 
     private SimpleSchedulerContext simpleSchedulerContext;
 
-    private Provider<Environment> environmentProvider;
-
-    private final AtomicReference<Environment> environment = new AtomicReference<>();
-
     @Override
     public void start() {
 
-        final var environment = getEnvironmentProvider().get();
-
-        if (this.environment.compareAndSet(null, environment)) {
-            doStart();
-            logger.info("Started.");
-        } else {
-            throw new IllegalStateException("Already running.");
-        }
-
-    }
-
-    private void doStart() {
-
         final var now = currentTimeMillis();
         final var environment = getEnvironment();
+
+        getSimpleSchedulerContext().start();
 
         getEnvironment().executeInTransaction(txn -> {
 
@@ -94,14 +78,11 @@ public class XodusSchedulerContext implements SchedulerContext {
 
         });
 
-        getSimpleSchedulerContext().start();
-
     }
 
     @Override
     public void stop() {
         getSimpleSchedulerContext().stop();
-        getEnvironment().close();
     }
 
     private void schedule(final long now, final XodusScheduledTask xodusScheduledTask) {
@@ -138,17 +119,11 @@ public class XodusSchedulerContext implements SchedulerContext {
         });
 
         getSimpleSchedulerContext().resumeTaskAfterDelay(time, timeUnit, taskId,
-                () -> environment.executeInTransaction(txn -> {
-                    final Store store = openStore(environment, txn);
-                    store.delete(txn, xodusScheduledTask.getValue());
-                }));
+            () -> environment.executeInTransaction(txn -> {
+                final Store store = openStore(environment, txn);
+                store.delete(txn, xodusScheduledTask.getValue());
+            }));
 
-    }
-
-    private Environment getEnvironment() {
-        final var environment = this.environment.get();
-        if (environment == null) throw new IllegalStateException("Not running.");
-        return environment;
     }
 
     @Override
@@ -167,13 +142,13 @@ public class XodusSchedulerContext implements SchedulerContext {
         return environment.openStore(STORE_TIMER, WITH_DUPLICATES_WITH_PREFIXING, txn);
     }
 
-    public Provider<Environment> getEnvironmentProvider() {
-        return environmentProvider;
+    private Environment getEnvironment() {
+        return environment;
     }
 
     @Inject
-    public void setEnvironmentProvider(@Named(SCHEDULER_ENVIRONMENT) Provider<Environment> environmentProvider) {
-        this.environmentProvider = environmentProvider;
+    public void setEnvironment(@Named(SCHEDULER_ENVIRONMENT) Environment environment) {
+        this.environment = environment;
     }
 
     public ResourceService getResourceService() {
@@ -193,7 +168,5 @@ public class XodusSchedulerContext implements SchedulerContext {
     public void setSimpleSchedulerContext(SimpleSchedulerContext simpleSchedulerContext) {
         this.simpleSchedulerContext = simpleSchedulerContext;
     }
-
-
 
 }

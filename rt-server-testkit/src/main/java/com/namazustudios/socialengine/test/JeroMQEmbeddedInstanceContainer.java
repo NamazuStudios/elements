@@ -28,7 +28,6 @@ import java.util.function.Consumer;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.id.InstanceId.randomInstanceId;
 import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.*;
-import static com.namazustudios.socialengine.rt.remote.SimpleRemoteInvokerRegistry.DEFAULT_TOTAL_REFRESH_TIMEOUT;
 import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 import static org.zeromq.ZContext.shadow;
@@ -160,6 +159,12 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
 
     }
 
+    protected void addConnectAddress(final String connectAddress) {
+        if (!connectAddresses.contains(connectAddress)) {
+            connectAddresses.add(connectAddress);
+        }
+    }
+
     protected Injector getInjector() {
         checkRunning();
         return injector;
@@ -235,7 +240,7 @@ public class JeroMQEmbeddedInstanceContainer implements EmbeddedInstanceContaine
 
             install(new JeroMQControlClientModule());
             install(new FSTPayloadReaderWriterModule());
-            install(new JeroMQAsyncConnectionServiceModule());
+            install(new JeroMQAsyncConnectionServiceModule().withDefaultIoThreads());
 
             instanceModules.forEach(this::install);
 

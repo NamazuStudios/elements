@@ -1,5 +1,5 @@
 .sidenav-container {
-  height: 100%;
+  height: 100vh;
 }
 
 .sidenav {
@@ -26,5 +26,11 @@
 .title a {
   text-decoration: none;
   color:white;
+  letter-spacing: 0.1em;
+}
+
+.logo {
+  height: 27px;
+  margin: auto 6px auto 4px;
 }
 

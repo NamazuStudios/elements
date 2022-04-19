@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.codeserve;
 
-import com.google.inject.Injector;
 import com.google.inject.Stage;
 import com.google.inject.servlet.GuiceFilter;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
@@ -9,26 +8,20 @@ import joptsimple.OptionException;
 import joptsimple.OptionParser;
 import joptsimple.OptionSet;
 import joptsimple.OptionSpec;
-import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.server.handler.HandlerCollection;
 import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
 import org.slf4j.Logger;
 
 import javax.servlet.DispatcherType;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.concurrent.Callable;
 
 import static com.google.inject.Guice.createInjector;
 import static com.google.inject.Stage.DEVELOPMENT;
 import static java.util.EnumSet.allOf;
-import static org.eclipse.jetty.servlet.ServletContextHandler.SESSIONS;
-import static org.eclipse.jetty.util.Loader.getResource;
 import static org.slf4j.LoggerFactory.getLogger;
 
 public class CodeServeMain implements Callable<Void>, Runnable {
@@ -78,7 +71,7 @@ public class CodeServeMain implements Callable<Void>, Runnable {
         final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
         final var injector = createInjector(stage,
-            new GitServletModule(),
+            new CodeServeGitServletModule(),
             new GitSecurityModule(),
             new CodeServeServerModule(),
             new LuaBootstrapResourcesModule(),

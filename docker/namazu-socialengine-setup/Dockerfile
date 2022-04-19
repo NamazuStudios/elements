@@ -1,18 +1,19 @@
-FROM namazu-socialengine-base:latest
+
+ARG BASE_TAG
+FROM docker.namazustudios.net/namazu-elements-base:$BASE_TAG
 
 USER root:root
 
-ARG APPLICATION_LIBS
-COPY --chown=elements:elements $APPLICATION_LIBS $ELEMENTS_LIB/
-
+COPY --chown=elements:elements target/lib/*.jar $ELEMENTS_LIB/
 COPY bin/sshd.sh $ELEMENTS_BIN
 COPY bin/hostkeys.sh $ELEMENTS_BIN
 COPY conf/sshd_config $ELEMENTS_CONF
 
-RUN apt-get update && apt-get install -y openssh-server && \
+RUN apt-get update && apt-get install -y ssh && \
     touch "$ELEMENTS_CONF/authorized_keys" && \
     chmod u+x "$ELEMENTS_BIN/sshd.sh" && \
-    chmod u+x "$ELEMENTS_BIN/hostkeys.sh" && "$ELEMENTS_BIN/hostkeys.sh"
+    chmod u+x "$ELEMENTS_BIN/hostkeys.sh" && \
+    "$ELEMENTS_BIN/hostkeys.sh"
 
 EXPOSE 2022
 

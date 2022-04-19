@@ -33,6 +33,11 @@ public interface Constants {
     String SHORT_LINK_BASE = "com.namazustudios.socialengine.short.link.base";
 
     /**
+     * The global secret. If blank, no global secret will be used.
+     */
+    String GLOBAL_SECRET = "com.namazustudios.socialengine.global.secret";
+
+    /**
      * The ELEMENTS_HOME environment variable.
      */
     String CONFIGURATION_DIRECTORY = "conf";
@@ -156,6 +161,21 @@ public interface Constants {
     String CDN_SERVE_ENDPOINT = "com.namazustudios.socialengine.cdnserve.endpoint.serve";
 
     /**
+     * Used to specify the host for neo blockchain.
+     */
+    String NEO_BLOCKCHAIN_HOST = "com.namazustudios.socialengine.blockchain.neo.host";
+
+    /**
+     * Used to specify the port for neo blockchain.
+     */
+    String NEO_BLOCKCHAIN_PORT = "com.namazustudios.socialengine.blockchain.neo.port";
+
+    /**
+     * Used to specify the RPC provider for bsc blockchain.
+     */
+    String BSC_RPC_PROVIDER = "com.namazustudios.socialengine.blockchain.bsc.provider";
+
+    /**
      * Defines some useful regex patterns.
      */
     interface Regexp {
@@ -173,12 +193,16 @@ public interface Constants {
         String WHOLE_WORD_ONLY = "[^_]\\w+";
 
         //language=JSRegexp
+        /**
+         * A very simple validator for valid email addresses
+         */
+        String EMAIL_ADDRESS = "^(.+)@(.+)$";
 
         //language=JSRegexp
         /**
-         * A very simple validator
+         * Checks for valid base64.
          */
-        String EMAIL_ADDRESS = "^(.+)@(.+)$";
+        String BASE_64 = "^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$";
 
     }
 

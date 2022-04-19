@@ -22,7 +22,7 @@ export class ItemsListComponent implements OnInit, AfterViewInit {
   hasSelection = false;
   selection: SelectionModel<Item>;
   dataSource: ItemsDataSource;
-  displayedColumns = ['select', 'id', 'name', 'actions'];
+  displayedColumns = ['select', 'id', 'name', 'edit-action', 'delete-action'];
   currentItems: Item[];
 
   @ViewChild(MatPaginator) paginator: MatPaginator;

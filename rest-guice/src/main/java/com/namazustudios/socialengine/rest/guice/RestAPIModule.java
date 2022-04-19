@@ -54,10 +54,12 @@ public class RestAPIModule extends AbstractModule {
         final Properties properties = configurationSupplier.get();
         final String apiRoot = properties.getProperty(Constants.API_PREFIX);
 
+        bind(ObjectMapper.class).asEagerSingleton();
+
         install(new InstanceDiscoveryServiceModule(configurationSupplier));
         install(new ConfigurationModule(() -> properties));
         install(new FacebookBuiltinPermissionsModule(facebookPermissionSupplier));
-        install(new JerseyModule(apiRoot) {
+        install(new RestJerseyModule(apiRoot) {
             @Override
             protected void configureResoures() {
                         enableAllResources();

@@ -72,54 +72,58 @@ public class MongoUserDao implements UserDao {
         return getActiveMongoUser(user.getId());
     }
 
-    public MongoUser findActiveMongoUser(final String userId) {
-        final ObjectId objectId = getMongoDBUtils().parseOrReturnNull(userId);
-        return objectId == null ? null : getActiveMongoUser(objectId);
+    public Optional<MongoUser> findActiveMongoUser(final User user) {
+        return Optional
+            .ofNullable(user)
+            .flatMap(u -> findActiveMongoUser(u.getId()));
+    }
+
+    public Optional<MongoUser> findActiveMongoUser(final String userId) {
+        final var mongoUserId = getMongoDBUtils().parseOrReturnNull(userId);
+        return mongoUserId == null ? Optional.empty() : findActiveMongoUser(mongoUserId);
+    }
+
+    public Optional<MongoUser> findActiveMongoUser(final ObjectId userId) {
+
+        final var query = getDatastore().find(MongoUser.class);
+
+        query.filter(and(
+            eq("_id", userId)),
+            eq("active", true)
+        );
+
+        final var mongoUser = query.first();
+        return Optional.ofNullable(mongoUser);
+
     }
 
     public MongoUser getActiveMongoUser(final String userId) {
-        final ObjectId objectId = getMongoDBUtils().parseOrThrow(userId, UserNotFoundException::new);
-        return getActiveMongoUser(objectId);
+        return findActiveMongoUser(userId)
+            .orElseThrow(() -> new UserNotFoundException("User with id " + userId + " not found."));
     }
 
     public MongoUser getActiveMongoUser(final ObjectId mongoUserId) {
-
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
-
-        query.filter(and(
-                eq("_id", mongoUserId)),
-                eq("active", true)
-        );
-
-        final MongoUser mongoUser = query.first();
-
-        if (mongoUser == null) {
-            throw new UserNotFoundException("User with id " + mongoUserId + " not found.");
-        }
-
-        return mongoUser;
-
+        return findActiveMongoUser(mongoUserId)
+            .orElseThrow(() -> new UserNotFoundException("User with id " + mongoUserId + " not found."));
     }
 
     @Override
     public Optional<User> findActiveUserByNameOrEmail(String userNameOrEmail) {
 
-        final String trimmedUserNameOrEmail = nullToEmpty(userNameOrEmail).trim();
+        final var trimmedUserNameOrEmail = nullToEmpty(userNameOrEmail).trim();
 
-        if (trimmedUserNameOrEmail.isEmpty()) {
-            throw new InvalidDataException("name/email must be specified.");
-        }
+        if (trimmedUserNameOrEmail.isEmpty()) throw new InvalidDataException("name/email must be specified.");
 
-        final Query<MongoUser> query = getDatastore().find(MongoUser.class);
+        final var query = getDatastore().find(MongoUser.class);
 
         query.filter(eq("active", true));
 
         query.filter(or(
-                eq("name", trimmedUserNameOrEmail),
-                eq("email", trimmedUserNameOrEmail)
+            eq("name", trimmedUserNameOrEmail),
+            eq("email", trimmedUserNameOrEmail)
         ));
 
-        final MongoUser mongoUser = query.first();
+        final var mongoUser = query.first();
 
         return mongoUser == null
             ? Optional.empty()
@@ -212,9 +216,10 @@ public class MongoUserDao implements UserDao {
         mongoUser.setHashAlgorithm(digest.getAlgorithm());
 
         try {
-            getDatastore().save(mongoUser);
-            getObjectIndex().index(mongoUser);
-            
+            getMongoDBUtils().performV(ds -> {
+                getDatastore().save(mongoUser);
+                getObjectIndex().index(mongoUser);
+            });
         } catch (DuplicateKeyException ex) {
             throw new DuplicateException(ex);
         }
@@ -524,7 +529,7 @@ public class MongoUserDao implements UserDao {
     }
 
     @Override
-    public User validateActiveUserPassword(final String userNameOrEmail, final String password) {
+    public Optional<User> findActiveUserWithLoginAndPassword(String userNameOrEmail, String password) {
 
         final var query = getDatastore().find(MongoUser.class);
 
@@ -579,10 +584,10 @@ public class MongoUserDao implements UserDao {
         final byte[] existingPasswordHash = mongoUser.getPasswordHash();
 
         if (existingPasswordHash != null && Arrays.equals(existingPasswordHash, digest.digest())) {
-            return getDozerMapper().map(mongoUser, User.class);
+            return Optional.of(getDozerMapper().map(mongoUser, User.class));
+        } else {
+            return Optional.empty();
         }
-
-        throw new ForbiddenException("Invalid credentials for " + userNameOrEmail);
 
     }
 

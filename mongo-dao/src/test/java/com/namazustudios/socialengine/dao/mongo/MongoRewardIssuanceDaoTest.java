@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.dao.mongo.model.goods.MongoInventoryItemId
 import com.namazustudios.socialengine.exception.DuplicateException;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.goods.Item;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
@@ -62,7 +63,7 @@ public class MongoRewardIssuanceDaoTest {
         testItem.setDescription("A simple test item.");
         testItem.setTags(of("a").collect(toList()));
         testItem.addMetadata("key", "a");
-
+        testItem.setCategory(ItemCategory.FUNGIBLE);
         testItem = getItemDao().createItem(testItem);
 
     }

@@ -1,4 +1,4 @@
-import {TestBed, async, waitForAsync} from '@angular/core/testing';
+import { TestBed, async, waitForAsync } from '@angular/core/testing';
 import { AppComponent } from './app.component';
 import {ConfigService} from './config.service';
 import {HttpClientTestingModule} from '@angular/common/http/testing';
@@ -22,10 +22,10 @@ describe('AppComponent', () => {
     expect(app).toBeTruthy();
   });
 
-  it(`should have as title 'Namazu Elements'`, () => {
+  it(`should have as title 'ELEMENTS'`, () => {
     const fixture = TestBed.createComponent(AppComponent);
     const app = fixture.debugElement.componentInstance;
-    expect(app.title).toEqual('Namazu Elements');
+    expect(app.title).toEqual('ELEMENTS');
   });
 
   it('should render title in a h1 tag', () => {

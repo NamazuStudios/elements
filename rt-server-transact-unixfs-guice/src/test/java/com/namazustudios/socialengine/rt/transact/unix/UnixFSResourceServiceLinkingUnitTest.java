@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rt.transact.unix;
 import com.google.inject.AbstractModule;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
-import com.namazustudios.socialengine.rt.Persistence;
+import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.Resource;
 import com.namazustudios.socialengine.rt.ResourceLoader;
 import com.namazustudios.socialengine.rt.ResourceService;
@@ -62,7 +62,7 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
     private boolean gcEnable;
 
     @Inject
-    private Persistence persistence;
+    private PersistenceEnvironment persistenceEnvironment;
 
     @Inject
     private UnixFSGarbageCollector garbageCollector;
@@ -77,7 +77,7 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
 
     @BeforeClass
     public void start() {
-        persistence.start();
+        persistenceEnvironment.start();
         garbageCollector.setPaused(!gcEnable);
         transactionalResourceService.start();
     }
@@ -85,7 +85,7 @@ public class UnixFSResourceServiceLinkingUnitTest extends AbstractResourceServic
     @AfterClass
     public void stop() {
         transactionalResourceService.stop();
-        persistence.stop();
+        persistenceEnvironment.stop();
     }
 
     public static class Module extends AbstractModule {

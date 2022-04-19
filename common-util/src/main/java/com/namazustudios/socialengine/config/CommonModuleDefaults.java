@@ -14,7 +14,7 @@ public class CommonModuleDefaults implements ModuleDefaults {
         final Properties defaultProperties = new Properties();
         defaultProperties.setProperty(Constants.HTTP_BIND_ADDRESS, "0.0.0.0");
         defaultProperties.setProperty(Constants.SHORT_LINK_BASE, "http://localhost:8888/l");
-        defaultProperties.setProperty(Constants.QUERY_MAX_RESULTS, Integer.valueOf(100).toString());
+        defaultProperties.setProperty(Constants.QUERY_MAX_RESULTS, "100");
         defaultProperties.setProperty(Constants.PASSWORD_DIGEST_ALGORITHM, "SHA-256");
         defaultProperties.setProperty(Constants.PASSWORD_ENCODING, "UTF-8");
         defaultProperties.setProperty(Constants.API_PREFIX, "rest");
@@ -25,6 +25,7 @@ public class CommonModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(Constants.CODE_SERVE_URL, "http://localhost:8082/code-serve/git");
         defaultProperties.setProperty(Constants.HTTP_TUNNEL_URL, "http://localhost:8083/app-serve");
         defaultProperties.setProperty(Constants.GENERATED_PASSWORD_LENGTH, "24");
+        defaultProperties.setProperty(Constants.GLOBAL_SECRET, "");
         return defaultProperties;
     }
 

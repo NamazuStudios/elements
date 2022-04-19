@@ -128,6 +128,16 @@ public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
     }
 
     /**
+     * The Java standard valueOf method.
+     *
+     * @param value the value
+     * @return the {@link InstanceId}
+     */
+    public static InstanceId valueOf(final String value) {
+        return new InstanceId(value);
+    }
+
+    /**
      * Generates a randomly-assigned unique {@link InstanceId}.
      *
      * @return the generated {@link InstanceId}

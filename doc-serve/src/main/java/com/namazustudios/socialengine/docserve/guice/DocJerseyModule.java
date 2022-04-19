@@ -3,8 +3,7 @@ package com.namazustudios.socialengine.docserve.guice;
 import com.google.common.collect.ImmutableMap;
 import com.google.inject.servlet.ServletModule;
 import com.namazustudios.socialengine.docserve.DocGuiceResourceConfig;
-import com.namazustudios.socialengine.rest.CORSFilter;
-import com.namazustudios.socialengine.servlet.security.SessionIdAuthenticationFilter;
+import com.namazustudios.socialengine.servlet.security.HttpServletSessionIdAuthenticationFilter;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 import javax.inject.Singleton;
@@ -15,13 +14,10 @@ public class DocJerseyModule extends ServletModule {
     @Override
     protected void configureServlets() {
 
-        // Setup JAX-RS resources
-        bind(CORSFilter.class);
-
         // Setup servlets
 
         bind(ServletContainer.class).in(Singleton.class);
-        bind(SessionIdAuthenticationFilter.class).asEagerSingleton();
+        bind(HttpServletSessionIdAuthenticationFilter.class).asEagerSingleton();
 
         final Map<String, String> params = new ImmutableMap.Builder<String, String>()
                 .put("javax.ws.rs.Application", DocGuiceResourceConfig.class.getName())

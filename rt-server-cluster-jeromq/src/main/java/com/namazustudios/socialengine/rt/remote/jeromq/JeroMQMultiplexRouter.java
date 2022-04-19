@@ -9,10 +9,7 @@ import org.zeromq.ZFrame;
 import org.zeromq.ZMQ;
 import org.zeromq.ZMsg;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 
 import static com.google.common.collect.Multimaps.unmodifiableSortedSetMultimap;
 import static com.namazustudios.socialengine.rt.id.NodeId.nodeIdFromBytes;
@@ -41,13 +38,11 @@ public class JeroMQMultiplexRouter {
 
     private final ZMQ.Poller poller;
 
-    private final BiMap<NodeId, Integer> frontends = HashBiMap.create();
+    private final Map<NodeId, ZMQ.PollItem> frontends = new LinkedHashMap<>();
 
-    private final BiMap<Integer, NodeId> rFrontends = frontends.inverse();
+    private final Map<InstanceId, ZMQ.PollItem> backends = new LinkedHashMap<>();
 
-    private final BiMap<InstanceId, Integer> backends = HashBiMap.create();
-
-    private final BiMap<Integer, InstanceId> rBackends = backends.inverse();
+    private final Collection<ZMQ.PollItem> backendItems = backends.values();
 
     private final SortedSetMultimap<NodeId, JeroMQInstanceConnectionId> routingTable = TreeMultimap.create();
 
@@ -60,20 +55,22 @@ public class JeroMQMultiplexRouter {
     }
 
     public void poll() {
-        rBackends.forEach((index, iid) -> routeToFrontend(index));
-        rFrontends.forEach((index, nid) -> routeToBackend(index, nid));
+        backendItems.forEach(this::routeToFrontend);
+        frontends.forEach(this::routeToBackend);
     }
     
-    private void routeToFrontend(final int index) {
+    private void routeToFrontend(final ZMQ.PollItem item) {
 
-        if (!poller.pollin(index)) return;
+        if (!item.isReadable()) {
+            return;
+        }
 
         try {
 
-            final ZMQ.Socket backend = poller.getSocket(index);
-            final ZMsg zMsg = ZMsg.recvMsg(backend);
-            final ZMsg identity = popIdentity(zMsg);
-            final JeroMQControlResponseCode code = stripCode(zMsg);
+            final var backend = item.getSocket();
+            final var zMsg = ZMsg.recvMsg(backend);
+            final var identity = popIdentity(zMsg);
+            final var code = stripCode(zMsg);
 
             switch (code) {
                 case OK:
@@ -98,7 +95,12 @@ public class JeroMQMultiplexRouter {
 
         OK.pushResponseCode(zMsg);
         pushIdentity(zMsg, identity);
-        zMsg.send(frontend);
+
+        if (zMsg.send(frontend)) {
+            logger.trace("Message sent successfully.");
+        } else {
+            logger.error("Failed to send: {}", frontend.errno());
+        }
 
     }
 
@@ -116,7 +118,10 @@ public class JeroMQMultiplexRouter {
             zMsg.addFirst(messageFrame);
             code.pushResponseCode(zMsg);
             pushIdentity(zMsg, identity);
-            zMsg.send(frontend);
+
+            if (!zMsg.send(frontend)) {
+                logger.error("Failed to send: {}", frontend.errno());
+            }
 
         } finally {
             stats.error();
@@ -124,21 +129,24 @@ public class JeroMQMultiplexRouter {
     }
 
     private ZMQ.Socket getFrontend(final NodeId nodeId) {
-        final Integer index = frontends.get(nodeId);
-        if (index == null) throw new JeroMQUnroutableNodeException(nodeId);
-        return poller.getSocket(index);
+        final var item = frontends.get(nodeId);
+        if (item == null) throw new JeroMQUnroutableNodeException(nodeId);
+        return item.getSocket();
     }
 
-    private void routeToBackend(final int index, final NodeId nid) {
+    private void routeToBackend(final NodeId nid, final ZMQ.PollItem frontendItem) {
 
-        if (!poller.pollin(index)) return;
-        final ZMQ.Socket frontend = poller.getSocket(index);
+        if (!frontendItem.isReadable()) {
+            return;
+        }
+
+        final ZMQ.Socket frontend = frontendItem.getSocket();
 
         try {
 
             // Finds the source and the route to the destination
-
-            final ZMQ.Socket backend = getBackend(nid.getInstanceId());
+            final var backendItem = getBackend(nid.getInstanceId());
+            final var backend = backendItem.getSocket();
 
             // Rebuilds the message and sends it
             final var zMsg = ZMsg.recvMsg(frontend);
@@ -148,24 +156,37 @@ public class JeroMQMultiplexRouter {
             zMsg.addFirst(nodeIdHeader);
             FORWARD.pushCommand(zMsg);
             pushIdentity(zMsg, identity);
-            zMsg.send(backend);
+
+            if (!zMsg.send(backend)) {
+                logger.error("Failed to send: {}", backend.errno());
+            }
 
         } catch (JeroMQControlException ex) {
+
             logger.error("No such instance for node {}", nid, ex);
             final ZMsg response = exceptionError(logger, ex.getCode(), ex);
-            response.send(frontend);
+
+            if (!response.send(frontend)) {
+                logger.error("Failed to send: {}", frontend.errno());
+            }
+
         } catch (Exception ex) {
+
             logger.error("Caught exception routing outgoing message to {}", nid, ex);
             final ZMsg response = exceptionError(logger, ex);
-            response.send(frontend);
+
+            if (!response.send(frontend)) {
+                logger.error("Failed to send: {}", frontend.errno());
+            }
+
         }
 
     }
 
-    private ZMQ.Socket getBackend(final InstanceId instanceId) {
-        final Integer index = backends.get(instanceId);
-        if (index == null) throw new JeroMQUnroutableInstanceException(instanceId);
-        return poller.getSocket(index);
+    private ZMQ.PollItem getBackend(final InstanceId instanceId) {
+        final var item = backends.get(instanceId);
+        if (item == null) throw new JeroMQUnroutableInstanceException(instanceId);
+        return item;
     }
 
     public String openRouteToNode(final NodeId nodeId, final String instanceConnectAddress) {
@@ -174,26 +195,25 @@ public class JeroMQMultiplexRouter {
 
         logger.info("Opening route to node {} via {}", nodeId, connectionId);
 
-        final var frontendIndex = frontends.computeIfAbsent(nodeId, nid -> {
-            final var frontend = zContext.createSocket(ROUTER);
-            return poller.register(frontend, POLLIN | POLLERR);
+        final var frontend = frontends.computeIfAbsent(nodeId, nid -> {
+            final var f = zContext.createSocket(ROUTER);
+            final var index = poller.register(f, POLLIN | POLLERR);
+            return poller.getItem(index);
         });
 
-        final var frontend = poller.getSocket(frontendIndex);
         final var localBindAddress = getLocalBindAddress(nodeId, connectionId);
-
 
         if (routingTable.put(nodeId, connectionId)) {
 
-            final var backendIndex = backends.computeIfAbsent(nodeId.getInstanceId(), iid -> {
-                final ZMQ.Socket backend = zContext.createSocket(DEALER);
+            final var backend = backends.computeIfAbsent(nodeId.getInstanceId(), iid -> {
+                final var b = zContext.createSocket(DEALER);
                 stats.addRoute(iid, connectionId);
-                return poller.register(backend, POLLIN | POLLERR);
+                final var index =  poller.register(b, POLLIN | POLLERR);
+                return poller.getItem(index);
             });
 
-            final var backend = poller.getSocket(backendIndex);
-            backend.connect(instanceConnectAddress);
-            frontend.bind(localBindAddress);
+            backend.getSocket().connect(instanceConnectAddress);
+            frontend.getSocket().bind(localBindAddress);
             stats.addRoute(nodeId);
 
         }
@@ -230,20 +250,20 @@ public class JeroMQMultiplexRouter {
 
     private boolean doCloseFrontend(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {
 
-        frontends.compute(nodeId, (nid,  idx) -> {
+        frontends.compute(nodeId, (nid,  item) -> {
 
-            if (idx == null) {
+            if (item == null) {
                 logger.warn("No route to node {} via {}", nodeId, connectionId);
             } else if (routingTable.remove(nodeId, connectionId)) {
 
                 if (routingTable.containsKey(nodeId)) {
-                    final var socket = poller.getSocket(idx);
+                    final var socket = item.getSocket();
                     final var localBindAddress = getLocalBindAddress(nodeId, connectionId);
                     socket.unbind(localBindAddress);
                     logger.debug("Other routes exist for {}. Deferring removal. Unbinding {}", nodeId, localBindAddress);
                 } else {
                     logger.debug("Removing {}.", nodeId);
-                    doClose(idx, format("Node %s", nodeId));
+                    doClose(item, format("Node %s", nodeId));
                     stats.removeRoute(nodeId);
                 }
 
@@ -261,22 +281,22 @@ public class JeroMQMultiplexRouter {
 
     private void doCloseBackend(final InstanceId instanceId) {
         try {
-            final var backendIndex = backends.remove(instanceId);
-            doClose(backendIndex, format("Instance %s", instanceId));
+            final var item = backends.remove(instanceId);
+            doClose(item, format("Instance %s", instanceId));
         } finally {
             stats.removeRoute(instanceId);
         }
     }
 
-    private void doClose(final Integer index, final Object objectId) {
+    private void doClose(final ZMQ.PollItem item, final Object objectId) {
 
-        if (index == null) {
-            logger.error("No socket for index {} {}", index, objectId);
+        if (item == null) {
+            logger.error("No socket for index {} {}", item, objectId);
         } else {
 
-            final ZMQ.Socket socket = poller.getSocket(index);
+            final var socket = item.getSocket();
 
-            logger.info("Closing socket for sockets[{}] for {}", index, objectId);
+            logger.info("Closing socket for sockets[{}] for {}", item, objectId);
             poller.unregister(socket);
 
             try {
@@ -287,12 +307,6 @@ public class JeroMQMultiplexRouter {
 
         }
 
-    }
-
-    public static String[] getHostAndConnectionId(final String instanceConnectAddress) {
-        return instanceConnectAddress.contains("#") ?
-            instanceConnectAddress.split("#") :
-            new String[] {instanceConnectAddress, ""};
     }
 
     public String getLocalBindAddress(final NodeId nodeId, final JeroMQInstanceConnectionId connectionId) {

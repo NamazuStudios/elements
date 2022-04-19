@@ -33,7 +33,7 @@ public interface ItemService {
      *
      * @return the {@link Item}
      */
-    Pagination<Item> getItems(int offset, int count, List<String> tags, String query);
+    Pagination<Item> getItems(int offset, int count, List<String> tags, String category, String query);
 
     /**
      * Updates the specific {@link Item}.

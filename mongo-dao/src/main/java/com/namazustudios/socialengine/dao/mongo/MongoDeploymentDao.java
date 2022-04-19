@@ -1,13 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
-import com.mongodb.WriteResult;
 import com.namazustudios.socialengine.dao.DeploymentDao;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
 import com.namazustudios.socialengine.dao.mongo.model.MongoDeployment;
-import com.namazustudios.socialengine.dao.mongo.model.application.MongoApplication;
 import com.namazustudios.socialengine.exception.InternalException;
 import com.namazustudios.socialengine.exception.NotFoundException;
-import com.namazustudios.socialengine.exception.application.ApplicationNotFoundException;
 import com.namazustudios.socialengine.exception.cdnserve.DeploymentNotFoundException;
 import com.namazustudios.socialengine.exception.cdnserve.DuplicateDeploymentException;
 import com.namazustudios.socialengine.model.Deployment;
@@ -15,8 +12,6 @@ import com.namazustudios.socialengine.model.Pagination;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.Query;
-import org.bson.types.ObjectId;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;

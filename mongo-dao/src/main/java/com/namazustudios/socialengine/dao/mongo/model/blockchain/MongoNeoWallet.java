@@ -7,7 +7,6 @@ import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
 import dev.morphia.annotations.*;
 import dev.morphia.utils.IndexType;
-import io.neow3j.wallet.nep6.NEP6Wallet;
 import org.bson.types.ObjectId;
 
 @SearchableIdentity(@SearchableField(
@@ -24,24 +23,24 @@ import org.bson.types.ObjectId;
 public class MongoNeoWallet {
 
     @Id
-    public String id;
+    public ObjectId objectId;
 
     @Indexed
     @Property
     public String displayName;
 
     @Property
-    public String walletString;
+    public byte[] wallet;
 
     @Reference
     public MongoUser user;
 
-    public String getId() {
-        return id;
+    public ObjectId getObjectId() {
+        return objectId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
     }
 
     public String getDisplayName() {
@@ -52,12 +51,12 @@ public class MongoNeoWallet {
         this.displayName = displayName;
     }
 
-    public String getWalletString() {
-        return walletString;
+    public byte[] getWallet() {
+        return wallet;
     }
 
-    public void setWalletString(String walletString) {
-        this.walletString = walletString;
+    public void setWallet(byte[] wallet) {
+        this.wallet = wallet;
     }
 
     public MongoUser getUser() {

@@ -2,7 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.application;
 
 import com.namazustudios.socialengine.dao.ApplicationConfigurationDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
-import com.namazustudios.socialengine.dao.mongo.MongoItemDao;
+import com.namazustudios.socialengine.dao.mongo.goods.MongoItemDao;
 import com.namazustudios.socialengine.dao.mongo.model.application.*;
 import com.namazustudios.socialengine.dao.mongo.model.goods.MongoItem;
 import com.namazustudios.socialengine.exception.BadQueryException;

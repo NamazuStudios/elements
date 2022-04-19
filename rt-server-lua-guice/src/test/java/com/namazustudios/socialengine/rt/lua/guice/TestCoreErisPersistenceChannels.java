@@ -11,7 +11,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
 import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
+import org.testng.annotations.Factory;
 import org.testng.annotations.Test;
 
 import javax.ws.rs.client.Client;
@@ -23,6 +23,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
+import static com.google.inject.Guice.createInjector;
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Context.LOCAL;
 import static com.namazustudios.socialengine.rt.Context.REMOTE;
@@ -34,8 +35,19 @@ import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.mock;
 import static org.testng.Assert.*;
 
-@Guice(modules = ErisPersistenceTestModule.class)
 public class TestCoreErisPersistenceChannels {
+
+
+    @Factory
+    public static Object[] getIntegrationTests() {
+
+        final var injector = createInjector(new ErisPersistenceTestModule());
+
+        return new Object[] {
+            injector.getInstance(TestCoreErisPersistenceChannels.class)
+        };
+
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistenceChannels.class);
 

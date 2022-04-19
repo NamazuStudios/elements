@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.model.user;
 
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.model.profile.Profile;
+import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
@@ -20,26 +21,37 @@ import java.util.Objects;
 @ApiModel
 public class User implements Serializable {
 
+    @ApiModelProperty("The user's database assigned unique ID.")
     private String id;
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.NO_WHITE_SPACE)
+    @ApiModelProperty("A unique name for the user.")
     private String name;
 
     @NotNull
     @Pattern(regexp = Constants.Regexp.EMAIL_ADDRESS)
+    @ApiModelProperty("The user's email.")
     private String email;
 
     @NotNull
+    @ApiModelProperty("The user's access level.")
     private Level level;
 
+    @ApiModelProperty("True if the user is active. False otherwise.")
     private boolean active;
 
+    @ApiModelProperty("The user's Facebook ID.")
     private String facebookId;
 
+    @ApiModelProperty("The user's Firebase ID.")
     private String firebaseId;
 
+    @ApiModelProperty("The user's Apple Sign-In ID.")
     private String appleSignInId;
+
+    @ApiModelProperty("The user's external user ID. Used for custom authorization.")
+    private String externalUserId;
 
     private static final User UNPRIVILIGED = new User() {
 
@@ -224,6 +236,37 @@ public class User implements Serializable {
         this.appleSignInId = appleSignInId;
     }
 
+    /**
+     * Gets the user's external user ID.
+     *
+     * @return the user's external user ID.
+     */
+    public String getExternalUserId() {
+        return externalUserId;
+    }
+
+    /**
+     * Set the user's external user ID.
+     *
+     * @param externalUserId the external user ID
+     */
+    public void setExternalUserId(String externalUserId) {
+        this.externalUserId = externalUserId;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        User user = (User) o;
+        return isActive() == user.isActive() && Objects.equals(getId(), user.getId()) && Objects.equals(getName(), user.getName()) && Objects.equals(getEmail(), user.getEmail()) && getLevel() == user.getLevel() && Objects.equals(getFacebookId(), user.getFacebookId()) && Objects.equals(getFirebaseId(), user.getFirebaseId()) && Objects.equals(getAppleSignInId(), user.getAppleSignInId()) && Objects.equals(getExternalUserId(), user.getExternalUserId());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getFirebaseId(), getAppleSignInId(), getExternalUserId());
+    }
+
     @Override
     public String toString() {
         final StringBuilder sb = new StringBuilder("User{");
@@ -235,21 +278,9 @@ public class User implements Serializable {
         sb.append(", facebookId='").append(facebookId).append('\'');
         sb.append(", firebaseId='").append(firebaseId).append('\'');
         sb.append(", appleSignInId='").append(appleSignInId).append('\'');
+        sb.append(", externalUserId='").append(externalUserId).append('\'');
         sb.append('}');
         return sb.toString();
-    }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        User user = (User) o;
-        return isActive() == user.isActive() && Objects.equals(getId(), user.getId()) && Objects.equals(getName(), user.getName()) && Objects.equals(getEmail(), user.getEmail()) && getLevel() == user.getLevel() && Objects.equals(getFacebookId(), user.getFacebookId()) && Objects.equals(getFirebaseId(), user.getFirebaseId()) && Objects.equals(getAppleSignInId(), user.getAppleSignInId());
-    }
-
-    @Override
-    public int hashCode() {
-        return Objects.hash(getId(), getName(), getEmail(), getLevel(), isActive(), getFacebookId(), getFirebaseId(), getAppleSignInId());
     }
 
     /**

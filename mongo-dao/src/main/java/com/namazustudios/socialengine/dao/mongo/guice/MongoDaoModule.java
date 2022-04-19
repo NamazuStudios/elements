@@ -9,17 +9,29 @@ import com.namazustudios.socialengine.dao.mongo.*;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInSessionDao;
 import com.namazustudios.socialengine.dao.mongo.applesignin.MongoAppleSignInUserDao;
 import com.namazustudios.socialengine.dao.mongo.application.*;
-import com.namazustudios.socialengine.dao.mongo.blockchain.MongoSmartContractTemplateDao;
-import com.namazustudios.socialengine.dao.mongo.blockchain.MongoTokenDao;
+
+import com.namazustudios.socialengine.dao.mongo.auth.MongoAuthSchemeDao;
+import com.namazustudios.socialengine.dao.mongo.auth.MongoCustomAuthUserDao;
+import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoSmartContractDao;
+import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
+import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
+import com.namazustudios.socialengine.dao.mongo.blockchain.MongoTokenTemplateDao;
+import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscWalletDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
+import com.namazustudios.socialengine.dao.mongo.goods.MongoDistinctInventoryItemDao;
+import com.namazustudios.socialengine.dao.mongo.goods.MongoInventoryItemDao;
+import com.namazustudios.socialengine.dao.mongo.goods.MongoItemDao;
 import com.namazustudios.socialengine.dao.mongo.health.MongoDatabaseHealthStatusDao;
 import com.namazustudios.socialengine.dao.mongo.match.MongoMatchDao;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
+import com.namazustudios.socialengine.dao.mongo.savedata.MongoSaveDataDocumentDao;
+import com.namazustudios.socialengine.model.blockchain.Token;
+import com.namazustudios.socialengine.model.blockchain.template.TokenTemplate;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
@@ -79,9 +91,16 @@ public class MongoDaoModule extends PrivateModule {
         bind(FollowerDao.class).to(MongoFollowerDao.class);
         bind(DeploymentDao.class).to(MongoDeploymentDao.class);
         bind(DatabaseHealthStatusDao.class).to(MongoDatabaseHealthStatusDao.class);
-        bind(SmartContractTemplateDao.class).to(MongoSmartContractTemplateDao.class);
-        bind(TokenDao.class).to(MongoTokenDao.class);
+        bind(NeoSmartContractDao.class).to(MongoNeoSmartContractDao.class);
+        bind(NeoTokenDao.class).to(MongoNeoTokenDao.class);
+        bind(BscTokenDao.class).to(MongoBscTokenDao.class);
         bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
+        bind(TokenTemplateDao.class).to(MongoTokenTemplateDao.class);
+        bind(BscWalletDao.class).to(MongoBscWalletDao.class);
+        bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
+        bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
+        bind(CustomAuthUserDao.class).to(MongoCustomAuthUserDao.class);
+        bind(DistinctInventoryItemDao.class).to(MongoDistinctInventoryItemDao.class);
 
         bind(Datastore.class)
             .toProvider(MongoDatastoreProvider.class)
@@ -134,9 +153,16 @@ public class MongoDaoModule extends PrivateModule {
         expose(FollowerDao.class);
         expose(DeploymentDao.class);
         expose(DatabaseHealthStatusDao.class);
-        expose(SmartContractTemplateDao.class);
-        expose(TokenDao.class);
+        expose(NeoSmartContractDao.class);
+        expose(NeoTokenDao.class);
         expose(NeoWalletDao.class);
+        expose(BscTokenDao.class);
+        expose(TokenTemplateDao.class);
+        expose(BscWalletDao.class);
+        expose(SaveDataDocumentDao.class);
+        expose(AuthSchemeDao.class);
+        expose(CustomAuthUserDao.class);
+        expose(DistinctInventoryItemDao.class);
 
     }
 

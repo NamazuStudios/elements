@@ -45,17 +45,18 @@ public class IndexDetailBuiltin implements Builtin {
 
             final TaskId taskId = currentTaskId(luaState);
 
-            final Consumer<List<IndexContext.Listing>> success = listings ->
-                getLuaResource().getLocalContextOrContextFor(taskId)
+            final Consumer<List<IndexContext.Listing>> success = listings -> getLuaResource()
+                .getLocalContext()
                 .getSchedulerContext()
                 .resumeFromNetwork(taskId, listings);
 
-            final Consumer<Throwable> failure = throwable -> getLuaResource().getLocalContextOrContextFor(taskId)
+            final Consumer<Throwable> failure = throwable -> getLuaResource()
+                .getLocalContext()
                 .getSchedulerContext()
                 .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getLocalContextOrContextFor(path)
+                .getLocalContextOrContextForPath(path)
                 .getIndexContext()
                 .listAsync(path, success, failure);
 
@@ -81,13 +82,13 @@ public class IndexDetailBuiltin implements Builtin {
 
             final Consumer<Void> success = v ->
                 getLuaResource()
-                    .getLocalContextOrContextFor(taskId)
+                    .getLocalContext()
                     .getSchedulerContext()
                     .resumeFromNetwork(taskId, null);
 
             final Consumer<Throwable> failure = throwable ->
                 getLuaResource()
-                    .getLocalContextOrContextFor(taskId)
+                    .getLocalContext()
                     .getSchedulerContext()
                     .resumeWithError(taskId, throwable);
 
@@ -117,19 +118,19 @@ public class IndexDetailBuiltin implements Builtin {
             final TaskId taskId = currentTaskId(luaState);
 
             final Consumer<Void> success = v ->
-                    getLuaResource()
-                        .getLocalContextOrContextFor(taskId)
-                        .getSchedulerContext()
-                        .resumeFromNetwork(taskId, null);
+                getLuaResource()
+                    .getLocalContext()
+                    .getSchedulerContext()
+                    .resumeFromNetwork(taskId, null);
 
             final Consumer<Throwable> failure = throwable ->
-                    getLuaResource()
-                        .getLocalContextOrContextFor(taskId)
-                        .getSchedulerContext()
-                        .resumeWithError(taskId, throwable);
+                getLuaResource()
+                    .getLocalContext()
+                    .getSchedulerContext()
+                    .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getLocalContextOrContextFor(taskId)
+                .getLocalContext()
                 .getIndexContext()
                 .linkPathAsync(source, destination, success, failure);
 
@@ -153,18 +154,18 @@ public class IndexDetailBuiltin implements Builtin {
 
             final Consumer<IndexContext.Unlink> success = u ->
                 getLuaResource()
-                    .getLocalContextOrContextFor(taskId)
+                    .getLocalContext()
                     .getSchedulerContext()
                     .resumeFromNetwork(taskId, u);
 
             final Consumer<Throwable> failure = throwable ->
                 getLuaResource()
-                    .getLocalContextOrContextFor(taskId)
+                    .getLocalContext()
                     .getSchedulerContext()
                     .resumeWithError(taskId, throwable);
 
             getLuaResource()
-                .getLocalContextOrContextFor(path)
+                .getLocalContextOrContextForPath(path)
                 .getIndexContext()
                 .unlinkAsync(path, success, failure);
 

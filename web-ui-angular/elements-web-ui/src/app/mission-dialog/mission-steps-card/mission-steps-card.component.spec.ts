@@ -1,4 +1,4 @@
-import { async, ComponentFixture, TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed, waitForAsync } from '@angular/core/testing';
 
 import { MissionStepsCardComponent } from './mission-steps-card.component';
 import {FormBuilder, FormsModule, ReactiveFormsModule} from '@angular/forms';
@@ -7,7 +7,7 @@ describe('MissionStepsCardComponent', () => {
   let component: MissionStepsCardComponent;
   let fixture: ComponentFixture<MissionStepsCardComponent>;
 
-  beforeEach(async(() => {
+  beforeEach(waitForAsync(() => {
     TestBed.configureTestingModule({
       declarations: [ MissionStepsCardComponent ],
       imports: [FormsModule, ReactiveFormsModule],

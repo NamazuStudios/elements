@@ -115,7 +115,7 @@
         <jgit.version>4.8.0.201706111038-r</jgit.version>
         <mockito.version>3.5.13</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
-        <jeromq.version>0.5.1</jeromq.version>
+        <jeromq.version>0.5.2</jeromq.version>
         <javolution.version>6.0.0</javolution.version>
         <firebase.admin.version>6.2.0</firebase.admin.version>
         <netty.version>4.1.22.Final</netty.version>
@@ -126,6 +126,8 @@
         <auth0.java.jwt.version>3.10.3</auth0.java.jwt.version>
         <spotify.dns.version>3.2.2</spotify.dns.version>
         <annotations.version>2.11.3</annotations.version>
+        <neow3j.version>3.14.0</neow3j.version>
+        <web3j.version>5.0.0</web3j.version>
     </properties>
     <dependencies>
         <dependency>
@@ -138,11 +140,6 @@
             <artifactId>logback-classic</artifactId>
             <version>${logback.version}</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>io.neow3j</groupId>
-            <artifactId>contract</artifactId>
-            <version>3.13.0</version>
         </dependency>
     </dependencies>
     <build>

@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rest;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.goods.CreateItemRequest;
 import com.namazustudios.socialengine.model.goods.Item;
+import com.namazustudios.socialengine.model.goods.ItemCategory;
 import com.namazustudios.socialengine.model.inventory.*;
 import com.namazustudios.socialengine.rest.model.InventoryItemPagination;
 import org.testng.annotations.DataProvider;
@@ -17,6 +18,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.namazustudios.socialengine.model.goods.ItemCategory.FUNGIBLE;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
@@ -64,6 +66,7 @@ public class AdvancedInventoryApiTest {
     public void createDigitalGoods() {
 
         final var aRequest = new CreateItemRequest();
+        aRequest.setCategory(FUNGIBLE);
         aRequest.setName("advanced_inventory_test_item_a");
         aRequest.setDisplayName("Test Item A");
         aRequest.setDescription("Test Item A (More)");
@@ -74,6 +77,7 @@ public class AdvancedInventoryApiTest {
         aRequest.setMetadata(aMetadata);
 
         final var bRequest = new CreateItemRequest();
+        bRequest.setCategory(FUNGIBLE);
         bRequest.setName("advanced_inventory_test_item_b");
         bRequest.setDisplayName("Test Item B");
         bRequest.setDescription("Test Item B (More)");

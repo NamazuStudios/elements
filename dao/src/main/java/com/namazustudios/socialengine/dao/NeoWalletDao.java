@@ -2,13 +2,22 @@ package com.namazustudios.socialengine.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.SmartContractTemplate;
-import com.namazustudios.socialengine.model.blockchain.UpdateWalletRequest;
-import com.namazustudios.socialengine.model.blockchain.NeoWallet;
-import io.neow3j.wallet.nep6.NEP6Wallet;
+import com.namazustudios.socialengine.model.blockchain.neo.Nep6Wallet;
+import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
+import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
+import com.namazustudios.socialengine.rt.annotation.Expose;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
-import java.util.Optional;
-
+/**
+ * Created by garrettmcspadden on 11/12/21.
+ */
+@Expose({
+    @ModuleDefinition("namazu.elements.dao.neo.wallet"),
+    @ModuleDefinition(
+        value = "namazu.socialengine.dao.neo.wallet",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.wallet instead"))
+})
 public interface NeoWalletDao {
 
     /**
@@ -25,10 +34,10 @@ public interface NeoWalletDao {
      * Fetches a specific {@link NeoWallet} instance based on ID. If not found, an
      * exception is raised.
      *
-     * @param walletId the wallent name or ID to
+     * @param walletNameOrId the wallet name or ID to
      * @return the {@link NeoWallet}, never null
      */
-    Optional<NeoWallet> getWallet(String walletId);
+    NeoWallet getWallet(String walletNameOrId);
 
     /**
      * Tries to fetch a users specific {@link NeoWallet} instance based on name. Returns null if specified named wallet is not found.
@@ -42,10 +51,12 @@ public interface NeoWalletDao {
     /**
      * Updates the supplied {@link NeoWallet}.
      *
-     * @param wallet the {@link UpdateWalletRequest} with the information to update
-     * @return the {@link SmartContractTemplate} as it was changed by the service.
+     * @param walletId the id of the wallet to update
+     * @param updatedWalletRequest the {@link UpdateNeoWalletRequest} with the information to update
+     * @param updatedWallet the {@link Nep6Wallet} with the updated information
+     * @return the {@link NeoWallet} as it was changed by the service.
      */
-    NeoWallet updateWallet(UpdateWalletRequest wallet);
+    NeoWallet updateWallet(String walletId, UpdateNeoWalletRequest updatedWalletRequest, Nep6Wallet updatedWallet) throws JsonProcessingException;
 
     /**
      * Creates a new Wallet.

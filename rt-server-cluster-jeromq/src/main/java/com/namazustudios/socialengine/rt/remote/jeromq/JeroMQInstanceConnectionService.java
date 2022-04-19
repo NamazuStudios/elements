@@ -10,6 +10,7 @@ import com.namazustudios.socialengine.rt.id.InstanceId;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.*;
 import com.namazustudios.socialengine.rt.remote.AsyncControlClient.Request;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import com.namazustudios.socialengine.rt.util.ReadWriteGuard;
 import com.namazustudios.socialengine.rt.util.ReentrantReadWriteGuard;
 import org.slf4j.Logger;
@@ -22,17 +23,16 @@ import javax.inject.Provider;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.forMasterNode;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static java.util.function.Predicate.not;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toUnmodifiableList;
-import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.of;
 
 public class JeroMQInstanceConnectionService implements InstanceConnectionService {
@@ -63,32 +63,33 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
 
     private AsyncControlClient.Factory asyncControlClientFactory;
 
-    private final AtomicReference<InstanceConnectionContext> context = new AtomicReference<>();
+    private final Lock lock = new ReentrantLock();
+
+    private volatile InstanceConnectionContext context;
 
     @Override
     public void start() {
-
-        final InstanceConnectionContext context = new InstanceConnectionContext();
-
-        if (this.context.compareAndSet(null, context)) {
-            context.start();
-        } else {
-            throw new IllegalStateException("Already started.");
+        try (var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                context = new InstanceConnectionContext();
+                context.start();
+            } else {
+                throw new IllegalStateException("Already started.");
+            }
         }
-
     }
 
     @Override
     public void stop() {
-
-        final InstanceConnectionContext context = this.context.getAndSet(null);
-
-        if (context == null) {
-            throw new IllegalStateException("Not running.");
-        } else {
-            context.stop();
+        try (var monitor = Monitor.enter(lock)) {
+            if (context == null) {
+                throw new IllegalStateException("Not running.");
+            } else {
+                final var context = this.context;
+                this.context = null;
+                context.stop();
+            }
         }
-
     }
 
     @Override
@@ -128,7 +129,6 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
     }
 
     private InstanceConnectionContext getContext() {
-        final InstanceConnectionContext context = this.context.get();
         if (context == null) throw new IllegalStateException("Not running.");
         return context;
     }
@@ -296,7 +296,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     .collect(joining(","))
                 );
 
-                logger.info("\nKnown Hosts [{}]\nPending[{}]\nActive [{}]", known, pending, active);
+                logger.debug("\nKnown Hosts [{}]\nPending[{}]\nActive [{}]", known, pending, active);
 
             }
 
@@ -339,7 +339,7 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                 // node and formally establish the route to the node. This way, we know the node ID and can associate
                 // its IP/endpoint address.
 
-                logger.info("Fetching instance status for {}", instanceHostInfo);
+                logger.debug("Fetching instance status for {}", instanceHostInfo);
 
                 return rClient.getInstanceStatus(response -> {
 
@@ -348,11 +348,11 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                     try {
                         // We first attempt to get the status from the socket.
                         status = response.get();
-                        logger.info("Got status. {} -> {}", instanceHostInfo, status);
+                        logger.debug("Got status. {} -> {}", instanceHostInfo, status);
                     } catch (Exception ex) {
                         // If that fails we log it, close the client, as well as use the write lock to both remove
                         // the pending request. We also return here to bail out from processing further.
-                        logger.info("Failed to get instance status from {}. Closing.", instanceConnectAddress);
+                        logger.debug("Failed to get instance status from {}. Closing.", instanceConnectAddress);
                         rClient.close();
                         rwGuard.rw(_condition -> pending.remove(nfo));
                         return;
@@ -498,10 +498,10 @@ public class JeroMQInstanceConnectionService implements InstanceConnectionServic
                         }
                     }
                 } catch (InterruptedException e) {
-                    logger.info("Interrupted refreshing.", e);
+                    logger.warn("Interrupted refreshing.", e);
                 }
 
-                logger.info("Refreshed successfully.");
+                logger.debug("Refreshed successfully.");
 
             });
         }

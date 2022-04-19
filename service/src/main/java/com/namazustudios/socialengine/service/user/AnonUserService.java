@@ -8,15 +8,12 @@ import com.namazustudios.socialengine.model.user.UserCreateRequest;
 import com.namazustudios.socialengine.model.user.UserCreateResponse;
 import com.namazustudios.socialengine.model.user.UserUpdateRequest;
 import com.namazustudios.socialengine.security.PasswordGenerator;
-import com.namazustudios.socialengine.service.ProfileService;
 import com.namazustudios.socialengine.service.UserService;
 import org.dozer.Mapper;
 
 import javax.inject.Inject;
 
 import static com.google.common.base.Strings.isNullOrEmpty;
-import static com.google.common.base.Strings.nullToEmpty;
-import static com.namazustudios.socialengine.service.UserService.formatAnonymousEmail;
 import static java.util.Collections.emptyList;
 
 public class AnonUserService extends AbstractUserService implements UserService {
@@ -51,11 +48,7 @@ public class AnonUserService extends AbstractUserService implements UserService 
         user.setEmail(userCreateRequest.getEmail());
         user.setName(userCreateRequest.getName());
 
-        if (user.getName() == null || user.getEmail() == null) {
-            final var name = getNameService().generateQualifiedName();
-            if (user.getName() == null) user.setName(name);
-            if (user.getEmail() == null) user.setEmail(formatAnonymousEmail(name));
-        }
+        getNameService().assignNameAndEmailIfNecessary(user);
 
         final var password = isNullOrEmpty(userCreateRequest.getPassword())
             ? getPasswordGenerator().generate()

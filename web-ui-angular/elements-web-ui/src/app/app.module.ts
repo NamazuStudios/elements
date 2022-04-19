@@ -54,10 +54,33 @@ import { UserSelectDialogComponent } from './user-select-dialog/user-select-dial
 import { LeaderboardsListComponent } from './leaderboards-list/leaderboards-list.component';
 import { LeaderboardDialogComponent } from './leaderboard-dialog/leaderboard-dialog.component';
 import { InventoryDialogComponent } from './inventory-dialog/inventory-dialog.component';
-import { InventoryEditorComponent } from './inventory-dialog/inventory-editor/inventory-editor.component';
-import { AddInventoryComponent } from './inventory-dialog/add-inventory/add-inventory.component';
+import { FungibleInventoryEditorComponent } from './inventory-dialog/fungible-inventory-editor/fungible-inventory-editor.component';
+import { FungibleAddInventoryComponent } from './inventory-dialog/fungible-add-inventory/fungible-add-inventory.component';
+import { FungibleModifyInventoryComponent } from './inventory-dialog/fungible-modify-inventory/fungible-modify-inventory.component';
+import { DistinctAddInventoryComponent } from './inventory-dialog/distinct-add-inventory/distinct-add-inventory.component';
+import { DistinctModifyInventoryComponent } from './inventory-dialog/distinct-modify-inventory/distinct-modify-inventory.component';
+import { DistinctInventoryEditorComponent } from './inventory-dialog/distinct-inventory-editor/distinct-inventory-editor.component';
 import { ItemSelectDialogComponent } from './inventory-dialog/item-select-dialog/item-select-dialog.component';
-import { ModifyInventoryComponent } from './inventory-dialog/modify-inventory/modify-inventory.component';
+import { WalletsListComponent } from './wallets-list/wallets-list.component';
+import { WalletDialogComponent } from './wallets-dialog/wallet-dialog.component';
+import { NeoTokensListComponent } from './neo-tokens-list/neo-tokens-list.component';
+import { NeoTokenDialogComponent } from './neo-token-dialog/neo-token-dialog.component';
+import { YesNoPipe } from './neo-tokens-list/yesNo.pipe';
+import { TransferOptionsPipe } from './neo-tokens-list/transferOptions.pipe';
+import { TokensMenuComponent } from './tokens-menu/tokens-menu.component';
+import { AuthSchemesListComponent } from './auth-schemes-list/auth-schemes-list.component';
+import { AuthSchemeDialogComponent } from './auth-scheme-dialog/auth-scheme-dialog.component';
+import { RegenerateKeysDialogComponent } from './auth-scheme-dialog/regenerate-keys-dialog/regenerate-keys-dialog.component';
+import { GeneratedKeysDialogComponent } from './auth-scheme-dialog/generated-keys-dialog/generated-keys-dialog.component';
+import { NeoSmartContractsListComponent } from './neo-smart-contracts-list/neo-smart-contracts-list.component';
+import { NeoSmartContractsDialogComponent } from './neo-smart-contracts-dialog/neo-smart-contracts-dialog.component';
+import { NeoSmartContractSelectDialogComponent } from './neo-smart-contract-select-dialog/neo-smart-contract-select-dialog.component';
+import { NeoSmartContractMintDialogComponent } from './neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component';
+import { WalletSelectDialogComponent } from './wallet-select-dialog/wallet-select-dialog.component';
+import { PercentageDirective } from './neo-token-dialog/percentage-directive.directive';
+import { BlockchainDropdownComponent } from './blockchain-dropdown/blockchain-dropdown.component';
+import { TokenViewerDialogComponent } from './token-viewer-dialog/token-viewer-dialog.component';
+import { TokenViewLightboxDialogComponent } from './token-view-lightbox-dialog/token-view-lightbox-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -82,7 +105,8 @@ export function initialize(configService: ConfigService) {
     UserSelectDialogComponent,
     LeaderboardDialogComponent,
     InventoryDialogComponent,
-    ItemSelectDialogComponent,
+    ItemSelectDialogComponent
+
   ],
   declarations: [
     AppComponent,
@@ -120,11 +144,34 @@ export function initialize(configService: ConfigService) {
     UserSelectDialogComponent,
     LeaderboardsListComponent,
     LeaderboardDialogComponent,
+    WalletsListComponent,
+    WalletDialogComponent,
     InventoryDialogComponent,
-    InventoryEditorComponent,
-    AddInventoryComponent,
+    FungibleAddInventoryComponent,
+    FungibleModifyInventoryComponent,
+    FungibleInventoryEditorComponent,
+    DistinctAddInventoryComponent,
+    DistinctModifyInventoryComponent,
+    DistinctInventoryEditorComponent,
     ItemSelectDialogComponent,
-    ModifyInventoryComponent,
+    NeoTokensListComponent,
+    NeoTokenDialogComponent,
+    YesNoPipe,
+    TransferOptionsPipe,
+    TokensMenuComponent,
+    AuthSchemesListComponent,
+    AuthSchemeDialogComponent,
+    RegenerateKeysDialogComponent,
+    GeneratedKeysDialogComponent,
+    NeoSmartContractsListComponent,
+    NeoSmartContractsDialogComponent,
+    NeoSmartContractSelectDialogComponent,
+    NeoSmartContractMintDialogComponent,
+    WalletSelectDialogComponent,
+    PercentageDirective,
+    BlockchainDropdownComponent,
+    TokenViewerDialogComponent,
+    TokenViewLightboxDialogComponent
   ],
   imports: [
     BrowserModule,

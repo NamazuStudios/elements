@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.dao.mongo.model;
 
+import com.namazustudios.socialengine.dao.mongo.HexableId;
 import com.namazustudios.socialengine.rt.util.Hex;
 import dev.morphia.annotations.Embedded;
 import dev.morphia.annotations.Indexed;
@@ -17,7 +18,7 @@ import static java.lang.System.arraycopy;
  * ID value itself as a compound value
  */
 @Embedded
-public class MongoFriendshipId {
+public class MongoFriendshipId implements HexableId {
 
     public static final int VERSION = 0;
 
@@ -135,6 +136,7 @@ public class MongoFriendshipId {
 
     }
 
+    @Override
     public String toHexString() {
         final byte[] bytes = toByteArray();
         return Hex.encode(bytes);

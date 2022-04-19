@@ -48,14 +48,14 @@ import com.namazustudios.socialengine.service.progress.ProgressServiceProvider;
 import com.namazustudios.socialengine.service.progress.SuperUserProgressService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceService;
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
+import com.namazustudios.socialengine.service.savedata.SaveDataDocumentServiceProvider;
+import com.namazustudios.socialengine.service.savedata.SuperUserSaveDataDocumentService;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
 import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignService;
 import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
-import com.namazustudios.socialengine.util.DisplayNameGenerator;
-import com.namazustudios.socialengine.util.SimpleDisplayNameGenerator;
 import org.dozer.Mapper;
 
 import javax.inject.Provider;
@@ -87,12 +87,16 @@ public class ServicesModule extends PrivateModule {
 
         install(new DatabaseHealthStatusDaoAggregator());
 
+        bind(CryptoKeyUtility.class)
+            .to(StandardCryptoKeyUtility.class)
+            .asEagerSingleton();
+
         bind(Mapper.class)
             .toProvider(ServicesDozerMapperProvider.class)
             .asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
-            .toProvider(AuthServiceProvider.class)
+            .toProvider(UsernamePasswordAuthServiceProvider.class)
             .in(scope);
 
         bind(SocialCampaignService.class)
@@ -127,8 +131,8 @@ public class ServicesModule extends PrivateModule {
             .toProvider(ProfileServiceProvider.class)
             .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(FollowerService.class)
@@ -272,28 +276,51 @@ public class ServicesModule extends PrivateModule {
             .in(scope);
 
         bind(NeoWalletService.class)
-            .toProvider(WalletServiceProvider.class)
+            .toProvider(NeoWalletServiceProvider.class)
             .in(scope);
 
-        bind(TokenService.class)
-            .toProvider(TokenServiceProvider.class)
+        bind(BscWalletService.class)
+                .toProvider(BscWalletServiceProvider.class)
+                .in(scope);
+
+        bind(AuthSchemeService.class)
+            .toProvider(AuthSchemeServiceProvider.class)
+            .in(scope);
+        
+        bind(NeoTokenService.class)
+            .toProvider(NeoTokenServiceProvider.class)
             .in(scope);
 
-        bind(Neow3jService.class)
-            .toProvider(Neow3jServiceProvider.class)
-            .in(scope);
+        bind(BscTokenService.class)
+                .toProvider(BscTokenServiceProvider.class)
+                .in(scope);
 
-        bind(SmartContractTemplateService.class)
-            .toProvider(SmartContractTemplateServiceProvider.class)
+        bind(TokenTemplateService.class)
+                .toProvider(TokenTemplateServiceProvider.class)
+                .in(scope);
+
+        bind(NeoSmartContractService.class)
+            .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
         bind(HealthStatusService.class)
             .to(DefaultHealthStatusService.class)
             .in(scope);
 
+        bind(SaveDataDocumentService.class)
+            .toProvider(SaveDataDocumentServiceProvider.class)
+            .in(scope);
+
+        bind(DistinctInventoryItemService.class)
+            .toProvider(DistinctInventoryItemServiceProvider.class)
+            .in(scope);
+
         bind(NameService.class)
             .to(SimpleAdjectiveAnimalNameService.class)
             .asEagerSingleton();
+
+        bind(CustomAuthSessionService.class)
+            .to(StandardCustomAuthSessionService.class);
 
         bind(AdvancementService.class).to(StandardAdvancementService.class);
 
@@ -304,7 +331,10 @@ public class ServicesModule extends PrivateModule {
         bind(MatchServiceUtils.class).to(StandardMatchServiceUtils.class);
 
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
-        bind(DisplayNameGenerator.class).to(SimpleDisplayNameGenerator.class).asEagerSingleton();
+
+        bind(Neow3jClient.class).to(StandardNeow3jClient.class).asEagerSingleton();
+
+        bind(Bscw3jClient.class).to(StandardBscw3jClient.class).asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
             .annotatedWith(Unscoped.class)
@@ -355,8 +385,8 @@ public class ServicesModule extends PrivateModule {
             .to(SuperUserProfileService.class);
 
         bind(FollowerService.class)
-                .annotatedWith(Unscoped.class)
-                .to(SuperUserFollowerService.class);
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserFollowerService.class);
 
         bind(ProfileOverrideService.class)
             .annotatedWith(Unscoped.class)
@@ -444,17 +474,51 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoWalletService.class);
 
-        bind(Neow3jService.class)
-            .annotatedWith(Unscoped.class)
-            .to(UserNeow3jService.class);
+        bind(BscWalletService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserBscWalletService.class);
 
-        bind(TokenService.class)
+        bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserTokenService.class);
+            .to(StandardNeow3jClient.class)
+            .asEagerSingleton();
 
-        bind(SmartContractTemplateService.class)
+        bind(Bscw3jClient.class)
+                .annotatedWith(Unscoped.class)
+                .to(StandardBscw3jClient.class)
+                .asEagerSingleton();
+
+        bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
-            .to(SuperUserSmartContractTemplateService.class);
+            .to(SuperUserNeoTokenService.class);
+
+        bind(BscTokenService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserBscTokenService.class);
+
+        bind(TokenTemplateService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserTokenTemplateService.class);
+
+        bind(AuthSchemeService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserAuthSchemeService.class);
+
+        bind(NeoSmartContractService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserNeoSmartContractService.class);
+
+        bind(SaveDataDocumentService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserSaveDataDocumentService.class);
+
+        bind(CustomAuthSessionService.class)
+            .annotatedWith(Unscoped.class)
+            .to(StandardCustomAuthSessionService.class);
+
+        bind(DistinctInventoryItemService.class)
+            .annotatedWith(Unscoped.class)
+            .to(SuperUserDistinctInventoryItemService.class);
 
         // Exposes Scoped Services
         expose(UsernamePasswordAuthService.class);
@@ -506,9 +570,18 @@ public class ServicesModule extends PrivateModule {
         expose(NameService.class);
         expose(HealthStatusService.class);
         expose(NeoWalletService.class);
-        expose(Neow3jService.class);
-        expose(TokenService.class);
-        expose(SmartContractTemplateService.class);
+        expose(Neow3jClient.class);
+        expose(NeoTokenService.class);
+        expose(TokenTemplateService.class);
+        expose(NeoSmartContractService.class);
+        expose(AuthSchemeService.class);
+        expose(SaveDataDocumentService.class);
+        expose(NeoSmartContractService.class);
+        expose(CustomAuthSessionService.class);
+        expose(DistinctInventoryItemService.class);
+        expose(BscWalletService.class);
+        expose(Bscw3jClient.class);
+        expose(BscTokenService.class);
 
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
@@ -545,9 +618,18 @@ public class ServicesModule extends PrivateModule {
         expose(NameService.class).annotatedWith(Unscoped.class);
         expose(HealthStatusService.class).annotatedWith(Unscoped.class);
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
-        expose(Neow3jService.class).annotatedWith(Unscoped.class);
-        expose(TokenService.class).annotatedWith(Unscoped.class);
-        expose(SmartContractTemplateService.class).annotatedWith(Unscoped.class);
+        expose(Neow3jClient.class).annotatedWith(Unscoped.class);
+        expose(NeoTokenService.class).annotatedWith(Unscoped.class);
+        expose(TokenTemplateService.class).annotatedWith(Unscoped.class);
+        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
+        expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
+        expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
+        expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
+        expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
+        expose(DistinctInventoryItemService.class).annotatedWith(Unscoped.class);
+        expose(BscWalletService.class).annotatedWith(Unscoped.class);
+        expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
+        expose(BscTokenService.class).annotatedWith(Unscoped.class);
 
     }
 

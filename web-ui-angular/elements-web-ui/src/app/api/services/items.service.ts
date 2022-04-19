@@ -42,6 +42,7 @@ class ItemsService extends BaseService {
     if (params.search != null) __params = __params.set('search', params.search.toString());
     if (params.offset != null) __params = __params.set('offset', params.offset.toString());
     if (params.count != null) __params = __params.set('count', params.count.toString());
+    if (params.category != null) __params = __params.set('category', params.category.toString());
     let req = new HttpRequest<any>(
       'GET',
       this.rootUrl + `/item`,
@@ -263,6 +264,7 @@ module ItemsService {
     search?: string;
     offset?: number;
     count?: number;
+    category?: string;
   }
 
   /**
