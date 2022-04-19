@@ -81,6 +81,10 @@ import { PercentageDirective } from './neo-token-dialog/percentage-directive.dir
 import { BlockchainDropdownComponent } from './blockchain-dropdown/blockchain-dropdown.component';
 import { TokenViewerDialogComponent } from './token-viewer-dialog/token-viewer-dialog.component';
 import { TokenViewLightboxDialogComponent } from './token-view-lightbox-dialog/token-view-lightbox-dialog.component';
+import { NeoSmartTokenSpecsDialogComponent } from './neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
+import { NeoSmartTokenSpecsDialogFieldTypeComponent } from './neo-smart-token-specs-dialog/neo-smart-token-specs-dialog-field-type/neo-smart-token-specs-dialog-field-type.component';
+import { NeoTokenDialogUpdatedComponent } from './neo-token-dialog-updated/neo-token-dialog-updated.component';
+import { NeoTokenDialogHubComponent } from './neo-token-dialog-hub/neo-token-dialog-hub.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -171,7 +175,11 @@ export function initialize(configService: ConfigService) {
     PercentageDirective,
     BlockchainDropdownComponent,
     TokenViewerDialogComponent,
-    TokenViewLightboxDialogComponent
+    TokenViewLightboxDialogComponent,
+    NeoSmartTokenSpecsDialogComponent,
+    NeoSmartTokenSpecsDialogFieldTypeComponent,
+    NeoTokenDialogUpdatedComponent,
+    NeoTokenDialogHubComponent
   ],
   imports: [
     BrowserModule,

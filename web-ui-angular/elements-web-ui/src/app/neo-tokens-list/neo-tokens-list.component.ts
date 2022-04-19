@@ -185,7 +185,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
   }
 
   showDialog(isNew: boolean, neoToken: NeoToken, next) {
-    this.dialog.open(NeoTokenDialogComponent, {
+    this.dialog.open(TokenViewerDialogComponent, {
       width: "850px",
       data: {
         isNew: isNew,

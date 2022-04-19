@@ -1,0 +1,137 @@
+<div>
+  <div class="dialog-updated-header">
+    <div class="disalog-updated-title">New NFT Definition</div>
+    <div class="dialog-update-haader__info">
+      <div class="dialog-updated-contract">
+        <div class="disalog-updated-contract__title">Contract</div>
+        <div>ContractB</div>
+      </div>
+      <div class="dialog-updated-token">
+        <div class="dialog-updated-token__title">Token Spec</div>
+        <div>TokenSpec1</div>
+      </div>
+    </div>
+  </div>
+  <div class="dialog-updated-name">
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input
+        matInput
+        placeholder="Definition Name"
+        name="definitionname"
+        type="text"
+      >
+    </mat-form-field>
+  </div>
+  <mat-tab-group>
+    <mat-tab
+      *ngFor="let tab of [1, 2, 3, 4]; let i = index"
+      label="{{i + 1}}"
+    >
+      <div class="mat-tab-inner">
+        <mat-form-field>
+          <mat-label>String</mat-label>
+          <input
+            matInput
+            placeholder="Description"
+            name="description"
+            type="text"
+          >
+        </mat-form-field>
+        <mat-form-field appearance="standard">
+          <mat-label>Tags</mat-label>
+          <mat-chip-list #chipList aria-label="Tag selection">
+            <mat-chip *ngFor="let tag of tags" (removed)="remove(tag)">
+              {{tag}}
+              <button matChipRemove>
+                <mat-icon>cancel</mat-icon>
+              </button>
+            </mat-chip>
+            <input matInput placeholder="New tag..."
+                  [matChipInputFor]="chipList"
+                  [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                  [matChipInputAddOnBlur]="true"
+                  (matChipInputTokenEnd)="add($event)">
+          </mat-chip-list>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-select name="enum" placeholder="Enum">
+            <mat-option
+              *ngFor="let enum of enums"
+              [value]="enum.key"
+              [matTooltip]="enum.toolTip"
+              matTooltipPosition="left"
+            >
+              {{enum.label}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Number</mat-label>
+          <input
+            matInput
+            placeholder="Number"
+            name="number"
+            type="number"
+          >
+        </mat-form-field>
+        <div style="margin-bottom: 10px;">
+          <mat-checkbox>Boolean</mat-checkbox>
+        </div>
+        <div>
+          <mat-checkbox>Boolean</mat-checkbox>
+        </div>
+        <mat-card>
+          <div class="array-row">
+            <mat-form-field>
+              <mat-label>Array</mat-label>
+              <input
+                matInput
+                placeholder="Array"
+                type="text"
+                value="Edition"
+              >
+            </mat-form-field>
+            <button
+              mat-raised-button
+              color="primary"
+            >
+              -
+            </button>
+          </div>
+          <div class="array-row">
+            <mat-form-field>
+              <input
+                matInput
+                placeholder=""
+                type="text"
+                value=""
+              >
+            </mat-form-field>
+            <button
+              mat-raised-button
+              color="secondary"
+            >
+              +
+            </button>
+          </div>
+        </mat-card>
+      </div>
+    </mat-tab>
+  </mat-tab-group>
+  <div class="dialog-updated-footer">
+    <button
+      mat-raised-button
+      color="primary"
+    >
+      Ok
+    </button>
+    <button
+      class="dialog-updated-footer__cancel"
+      mat-raised-button
+      (click)="close()"
+    >
+      Cancel
+    </button>
+  </div>
+</div>

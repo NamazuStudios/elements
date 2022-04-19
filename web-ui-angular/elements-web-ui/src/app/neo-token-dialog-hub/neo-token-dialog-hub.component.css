@@ -1,0 +1,23 @@
+.dialog-hub-title {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.dialog-hub-description {
+  margin: 45px 0;
+}
+
+.token-spec-select {
+  margin-left: 25px;
+}
+
+.dialog-hub-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 50px;
+}
+
+.dialog-hub-footer .dialog-hub-footer__cancel {
+  margin-left: 20px;
+}
