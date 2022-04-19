@@ -144,6 +144,7 @@ public class ApplicationNode {
             try {
                 logger.info("Starting Instance.");
                 instance.start();
+                watchdogService.start();
                 logger.info("Instance started.");
             } catch (Exception ex) {
                 worker = null;
