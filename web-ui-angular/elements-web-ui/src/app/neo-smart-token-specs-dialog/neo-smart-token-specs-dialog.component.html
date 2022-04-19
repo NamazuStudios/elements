@@ -1,0 +1,200 @@
+<div class="head-title">
+  <h1 mat-dialog-title>New Token Spec</h1>
+</div>
+
+<div class="head-controls">
+  <mat-form-field>
+    <mat-label>Name</mat-label>
+    <input
+      matInput
+      placeholder="SpecName"
+      name="specname"
+      type="text"
+    >
+  </mat-form-field>
+  <mat-form-field>
+    <mat-select name="contracts" placeholder="Contract">
+      <mat-option
+        *ngFor="let contract of contracts"
+        [value]="contract.key"
+        [matTooltip]="contract.toolTip"
+        matTooltipPosition="left"
+      >
+        {{contract.label}}
+      </mat-option>
+    </mat-select>
+  </mat-form-field>
+  <button
+    mat-raised-button
+    color="primary"
+    class="add-tab"
+    (click)="addNewTab()"
+  >
+    Add Tab
+  </button>
+</div>
+
+<mat-tab-group [(selectedIndex)]="activeTabIndex">
+  <mat-tab *ngFor="let tab of tabs; let i = index" label="{{i + 1}}">
+    <div class="tab-header">
+      <mat-form-field>
+        <mat-label>Tab Name</mat-label>
+        <input
+          matInput
+          placeholder="TabName"
+          name="tabname"
+          type="text"
+        >
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Tab Position</mat-label>
+        <input
+          matInput
+          [value]="i"
+          placeholder="TabPosition"
+          name="tabposition"
+          type="number"
+          min="1"
+          max="5"
+        >
+      </mat-form-field>
+      <div class="tab-buttons">
+        <button
+          mat-raised-button
+          color="primary"
+          matTooltip="File Copy"
+          matTooltipPosition="above"
+        >
+          <mat-icon>file_copy</mat-icon>
+        </button>
+        <button
+          mat-raised-button
+          color="primary"
+          matTooltip="Remove"
+          matTooltipPosition="above"
+        >
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </div>
+    </div>
+    <div class="fields-header">
+      <div>Fields</div>
+      <button
+        mat-raised-button
+        color="primary"
+        matTooltip="Add Field"
+        matTooltipPosition="above"
+        (click)="addNewField()"
+      >
+        Add Field
+      </button>
+    </div>
+    <mat-card>
+      <mat-accordion cdkDropList (cdkDropListDropped)="drop($event)">
+        <mat-expansion-panel
+          *ngFor="let field of (activeTab.fields || []); let i = index"
+          [expanded]="false"
+          cdkDrag
+        >
+          <div class="custom-placeholder" *cdkDragPlaceholder></div>
+          <mat-expansion-panel-header>
+            <div class="menu-panel-header">
+              <div class="menu-index-keyname">
+                <mat-icon>menu</mat-icon>
+                <div>
+                  <span>1: </span>
+                  <span class="memu-keyname">{{field.name || 'KeyName'}}</span>
+                </div>
+              </div>
+              <div>Type</div>
+            </div>
+          </mat-expansion-panel-header>
+          <div>
+            <div class="field-name-type">
+              <mat-form-field>
+                <mat-label>Name</mat-label>
+                <input
+                  matInput
+                  placeholder="KeyName"
+                  name="keyname"
+                  type="text"
+                  [value]="field.content"
+                  (change)="changeFieldName($event.target.value, i)"
+                >
+              </mat-form-field>
+              <mat-form-field>
+                <mat-label>Type</mat-label>
+                <mat-select
+                  name="type"
+                  placeholder="Type"
+                  [value]="activeTabType.key"
+                  (selectionChange)="selectType($event.value)"
+                >
+                  <mat-option
+                    *ngFor="let tabType of tabTypes"
+                    [value]="tabType.key"
+                    [matTooltip]="tabType.value"
+                    matTooltipPosition="left"
+                  >
+                    {{tabType.value}}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+            </div>
+            <div class="menu-panel-footer">
+              <app-neo-smart-token-specs-dialog-field-type
+                [type]="activeTabType.value"
+                [tabTypes]="tabTypes"
+              >
+              </app-neo-smart-token-specs-dialog-field-type>
+              <div class="field-buttons">
+                <button mat-raised-button color="primary" matTooltip="Move Up"
+                  matTooltipPosition="above">
+                  <mat-icon>move_up</mat-icon>
+                </button>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  matTooltip="Duplicate Field"
+                  matTooltipPosition="above"
+                  (click)="duplicateField(i)"
+                >
+                  <mat-icon>file_copy</mat-icon>
+                </button>
+                <button
+                  mat-raised-button
+                  color="primary"
+                  matTooltip="Remove"
+                  matTooltipPosition="above"
+                  (click)="removeField(i)"
+                >
+                  <mat-icon>delete_outline</mat-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </mat-expansion-panel>
+      </mat-accordion>
+    </mat-card>
+  </mat-tab>
+</mat-tab-group>
+
+<div style="margin-top: 20px">
+  <button
+    mat-raised-button
+    (click)="submit()"
+    color="primary"
+    matTooltip="Remove"
+    matTooltipPosition="above"
+  >
+    OK
+  </button>
+  <button
+    mat-raised-button
+    matTooltip="Remove"
+    matTooltipPosition="above"
+    style="margin-left: 10px"
+  >
+    Cancel
+  </button>
+</div>

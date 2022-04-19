@@ -1,0 +1,102 @@
+<div>
+  <div *ngIf="type === 'String'">
+    <mat-form-field>
+      <mat-label>String</mat-label>
+      <input
+        matInput
+        placeholder="Value"
+        name="string"
+        type="text"
+      >
+    </mat-form-field>
+  </div>
+  <div *ngIf="type === 'Number'">
+    <mat-form-field>
+      <mat-label>Number</mat-label>
+      <input
+        matInput
+        placeholder="Value"
+        name="number"
+        type="number"
+        min="1"
+      >
+    </mat-form-field>
+  </div>
+  <div *ngIf="type === 'Boolean'">
+    <mat-checkbox>Default True</mat-checkbox>
+  </div>
+  <div class="enum-field" *ngIf="type === 'Enum'">
+    <mat-icon
+      class="help-description"
+      matTooltip="Comma separated list. The first item will be the default"
+      matTooltipPosition="right"
+    >
+      help_outline
+    </mat-icon>
+    <mat-form-field>
+      <mat-label>Enum Strings</mat-label>
+      <input
+        matInput
+        placeholder="Values"
+        name="string"
+        type="text"
+      >
+    </mat-form-field>
+  </div>
+  <div *ngIf="type === 'Object'">
+    <button
+      mat-raised-button
+      color="primary"
+      class="add-tab"
+    >
+      Define
+    </button>
+  </div>
+  <div class="tags-field" *ngIf="type === 'Tags'">
+    <mat-form-field appearance="standard">
+      <mat-label>Tags</mat-label>
+      <mat-chip-list #chipList aria-label="Tag selection">
+        <mat-chip *ngFor="let tag of tags" (removed)="remove(tag)">
+          {{tag}}
+          <button matChipRemove>
+            <mat-icon>cancel</mat-icon>
+          </button>
+        </mat-chip>
+        <input matInput placeholder="New tag..."
+               [matChipInputFor]="chipList"
+               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+               [matChipInputAddOnBlur]="true"
+               (matChipInputTokenEnd)="add($event)">
+      </mat-chip-list>
+    </mat-form-field>
+  </div>
+  <div class="array-field" *ngIf="type === 'Array'">
+    <mat-form-field>
+      <mat-label>Array Content Type</mat-label>
+      <mat-select
+        name="arrayContentType"
+        placeholder="Type"
+        [value]="selectedArrayType"
+        (selectionChange)="selectArrayType($event.value)"
+      >
+        <mat-option
+          *ngFor="let arrayType of arrayTypes"
+          [value]="arrayType"
+          [matTooltip]="arrayType"
+          matTooltipPosition="left"
+        >
+          {{arrayType}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button
+      mat-raised-button
+      color="primary"
+      class="add-tab"
+      style="margin-left: 15px"
+      *ngIf="selectedArrayType === 'Object'"
+    >
+      Define
+    </button>
+  </div>
+</div>
