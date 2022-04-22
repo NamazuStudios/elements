@@ -169,7 +169,6 @@ public class RestAPIMain implements Callable<Void>, Runnable {
         try {
             instance.start();
             server.start();
-            server.dumpStdErr();
             server.join();
         } catch (RuntimeException ex){
             throw ex;

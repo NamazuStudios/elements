@@ -14,9 +14,12 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Comparator.comparingDouble;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class DefaultHealthStatusService implements HealthStatusService {
@@ -233,6 +236,11 @@ public class DefaultHealthStatusService implements HealthStatusService {
             healthStatus.setProblems(problems);
             healthStatus.setChecksFailed(problems.size());
             healthStatus.setChecksPerformed(performed);
+
+            if (health < 100.0) {
+                logger.warn("Below healthy threshold {}%", health);
+                logger.warn("Encountered problems: [{}]", join(",", problems));
+            }
 
             return healthStatus;
 
