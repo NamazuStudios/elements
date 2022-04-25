@@ -102,7 +102,8 @@ public abstract class ConcurrentReferenceMap {
 
             this.delegate = delegate;
 
-            final var doCleanup = cleanup.andThen(delegate::remove);
+            final Consumer<K> remove = delegate::remove;
+            final Consumer<K> doCleanup = remove.andThen(cleanup);
 
             this.referenceCtor = (key, value, ref) -> {
                 final var reference = referenceCtor.apply(value, references);
@@ -259,6 +260,7 @@ public abstract class ConcurrentReferenceMap {
         @Override
         public V remove(final Object key) {
             final var result = delegate.remove(key);
+            collections.remove(result.reference);
             return result == null ? null : result.get();
         }
 
