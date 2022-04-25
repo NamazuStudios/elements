@@ -17,7 +17,6 @@ import static com.namazustudios.socialengine.rt.remote.jeromq.IdentityUtil.pushI
 import static com.namazustudios.socialengine.rt.remote.jeromq.JeroMQControlResponseCode.*;
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableCollection;
-import static java.util.UUID.randomUUID;
 import static org.zeromq.SocketType.DEALER;
 import static org.zeromq.ZMQ.Poller.POLLERR;
 import static org.zeromq.ZMQ.Poller.POLLIN;
@@ -141,7 +140,7 @@ public class JeroMQDemultiplexRouter {
 
     private void routeToFrontend(final NodeId nid, final ZMQ.PollItem item) {
 
-        if (!item.isReadable() || !frontend.isWritable()) return;
+        if (!item.isReadable()) return;
 
         final var backend = item.getSocket();
         final var frontend = this.frontend.getSocket();
