@@ -101,6 +101,13 @@ mat-expansion-panel-header {
   margin-left: 10px;
 }
 
+.field-buttons .move-to-other-tab {
+  transform: rotate(90deg);
+  height: 45px;
+  width: 36px;
+  min-width: 36px;
+}
+
 .menu-panel-footer {
   display: flex;
   justify-content: flex-end;

@@ -1,5 +1,5 @@
 <div>
-  <div *ngIf="type === 'String'">
+  <!-- <div *ngIf="type === 'String'">
     <mat-form-field>
       <mat-label>String</mat-label>
       <input
@@ -9,8 +9,8 @@
         type="text"
       >
     </mat-form-field>
-  </div>
-  <div *ngIf="type === 'Number'">
+  </div> -->
+  <!-- <div *ngIf="type === 'Number'">
     <mat-form-field>
       <mat-label>Number</mat-label>
       <input
@@ -21,9 +21,14 @@
         min="1"
       >
     </mat-form-field>
-  </div>
+  </div> -->
   <div *ngIf="type === 'Boolean'">
-    <mat-checkbox>Default True</mat-checkbox>
+    <mat-checkbox
+      [checked]="field?.content"
+      (change)="onBooleanChange($event.checked)"
+    >
+      Default True
+    </mat-checkbox>
   </div>
   <div class="enum-field" *ngIf="type === 'Enum'">
     <mat-icon
@@ -47,28 +52,10 @@
     <button
       mat-raised-button
       color="primary"
-      class="add-tab"
+      (click)="openDefineModal()"
     >
       Define
     </button>
-  </div>
-  <div class="tags-field" *ngIf="type === 'Tags'">
-    <mat-form-field appearance="standard">
-      <mat-label>Tags</mat-label>
-      <mat-chip-list #chipList aria-label="Tag selection">
-        <mat-chip *ngFor="let tag of tags" (removed)="remove(tag)">
-          {{tag}}
-          <button matChipRemove>
-            <mat-icon>cancel</mat-icon>
-          </button>
-        </mat-chip>
-        <input matInput placeholder="New tag..."
-               [matChipInputFor]="chipList"
-               [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
-               [matChipInputAddOnBlur]="true"
-               (matChipInputTokenEnd)="add($event)">
-      </mat-chip-list>
-    </mat-form-field>
   </div>
   <div class="array-field" *ngIf="type === 'Array'">
     <mat-form-field>
@@ -91,10 +78,11 @@
     </mat-form-field>
     <button
       mat-raised-button
+      *ngIf="selectedArrayType === 'Object'"
       color="primary"
       class="add-tab"
       style="margin-left: 15px"
-      *ngIf="selectedArrayType === 'Object'"
+      (click)="openDefineModal()"
     >
       Define
     </button>

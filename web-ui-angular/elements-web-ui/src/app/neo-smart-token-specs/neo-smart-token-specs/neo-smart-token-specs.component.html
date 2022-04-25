@@ -4,7 +4,7 @@
       <mat-form-field>
         <input matInput placeholder="Search NFTs" #input>
       </mat-form-field>
-      <button mat-raised-button color="primary" (click)="showDialog()">
+      <button mat-raised-button color="primary" (click)="showDialog(null)">
         New Token Spec
       </button>
       <button mat-raised-button color="primary" disabled>
@@ -49,8 +49,8 @@
 
     <ng-container matColumnDef="edit-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
-      <mat-cell *matCellDef="let neoSmartContract">
-        <button mat-raised-button color="primary">Edit</button>
+      <mat-cell *matCellDef="let neoSmartTokenSpec">
+        <button mat-raised-button color="primary" (click)="showDialog(neoSmartTokenSpec)">Edit</button>
       </mat-cell>
     </ng-container>
 

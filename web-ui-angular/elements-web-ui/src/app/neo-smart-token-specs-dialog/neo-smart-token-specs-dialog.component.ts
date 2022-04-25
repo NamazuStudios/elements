@@ -1,9 +1,14 @@
-import { CdkDragDrop, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, OnInit } from '@angular/core';
+import { CdkDragDrop } from '@angular/cdk/drag-drop';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { TokenSpecTab, TokenSpecTabField, TokenSpecTabFieldTypes } from '../api/models/blockchain/token-spec-tab';
 
 import { NeoSmartContractsService } from '../api/services/blockchain/neo-smart-contracts.service';
+import { NeoTokenSpecsService } from '../api/services/blockchain/neo-token-specs.service';
+import { NeoSmartTokenSpecsMoveFieldDialogComponent } from '../neo-smart-token-specs-move-field-dialog/neo-smart-token-specs-move-field-dialog.component';
+import { NeoTokenDialogDefineObjectComponent } from '../neo-token-dialog-define-object/neo-token-dialog-define-object.component';
 
-export enum TabTypes {
+export enum FieldTypes {
   STRING = 'String',
   NUMBER = 'Number',
   BOOLEAN = 'Boolean',
@@ -15,18 +20,18 @@ export enum TabTypes {
 
 export interface TabType {
   key: string;
-  value: TabTypes;
+  value: FieldTypes;
 }
 
-interface TabField {
+export interface TabField {
   name: string;
-  type: TabTypes;
+  type: FieldTypes;
   content: string;
 }
 
-interface Tab {
-  name: string;
-  fields: TabField[];
+interface Contract {
+  id: string;
+  displayName: string;
 }
 
 @Component({
@@ -35,63 +40,70 @@ interface Tab {
   styleUrls: ['./neo-smart-token-specs-dialog.component.css']
 })
 export class NeoSmartTokenSpecsDialogComponent implements OnInit {
+  tokenName: string = '';
+  selectedContract: string = '';
   maxTabs = 5;
-  tabs: Tab[] = [this.createTab()];
-  contracts = [
-    { key: 1, toolTip: 'ContractA', label: 'ContractA' },
-    { key: 2, toolTip: 'ContractB', label: 'ContractB' },
-    { key: 3, toolTip: 'ContractC', label: 'ContractC' },
-  ];
-  activeTabType = { key: 'STRING', value: TabTypes.STRING };
+  tabs: TokenSpecTab[] = [this.createTab()];
+  fields: TokenSpecTabField[] = [];
+  contracts: Contract[] = [];
   tabTypes: TabType[] = [];
   activeTabIndex = 0;
+  activeFieldIndex = null;
+  // Workaround for accordion animation on init
+  disableAnimation = true;
 
   constructor(
-    private neoSmartContractsService: NeoSmartContractsService
+    private neoSmartContractsService: NeoSmartContractsService,
+    private neoTokenSpecsService: NeoTokenSpecsService,
+    public dialogRef: MatDialogRef<NeoSmartTokenSpecsDialogComponent>,
+    public dialog: MatDialog,
+    @Inject(MAT_DIALOG_DATA)
+    public data: {
+      tokenSpec: TokenSpecTab,
+    },
   ) { }
 
   ngOnInit(): void {
     this.neoSmartContractsService.getNeoSmartContracts({})
-      .subscribe((tokens) => {
-        console.log(tokens);
+      .subscribe((res) => {
+        this.contracts = res.objects;
       });
-    this.tabTypes = Object.keys(TabTypes).map(key => ({
+    this.tabTypes = Object.keys(FieldTypes).map(key => ({
       key,
-      value: TabTypes[key]
+      value: FieldTypes[key]
     }));
+    this.fields = this.activeTab?.fields || [this.createField()];
   }
 
-  get activeTab(): Tab {
+  ngAfterViewInit(): void {
+    // timeout required to avoid the dreaded 'ExpressionChangedAfterItHasBeenCheckedError'
+    setTimeout(() => this.disableAnimation = false);
+  }
+
+  get activeTab(): TokenSpecTab {
     return this.tabs[this.activeTabIndex];
   }
 
-  createTab(): Tab {
+  createTab(): TokenSpecTab {
     return {
       name: '',
       fields: [this.createField()],
     };
   }
 
-  createField(): TabField {
+  createField(): TokenSpecTabField {
     return {
       name: "",
-      type: TabTypes.STRING,
+      type: TokenSpecTabFieldTypes.STRING,
       content: "",
     };
   }
 
   selectTab(tabIndex) {
+    this.updateActiveTabFields(this.fields);
     this.activeTabIndex = tabIndex;
+    this.fields = this.tabs[tabIndex]?.fields || [];
   }
-
-  selectType(val) {
-    this.activeTabType = {
-      key: val,
-      value: TabTypes[val]
-    };
-  }
-
-  submit() { }
 
   addNewTab() {
     if (this.tabs.length < this.maxTabs) {
@@ -101,45 +113,37 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   }
 
   addNewField() {
-    this.tabs = this.tabs.map((tab: Tab, index: number): Tab => {
-      if (index === this.activeTabIndex) {
-        return {
-          ...tab,
-          fields: [
-            ...tab.fields,
-            this.createField(),
-          ]
-        };
-      }
-      return tab;
-    });
+    this.fields = [...this.fields, this.createField()];
   }
 
   changeFieldName(value: string, fieldIndex: number) {
-    if (this.activeTab) {
-      const updatedTab = {
-        ...this.activeTab,
-        fields: this.activeTab.fields.map((field, index) => {
-          if (fieldIndex === index) {
-            return {
-              ...field,
-              name: value,
-            }
-          }
-          return field;
-        }),
-      };
-      this.tabs = this.tabs.map((tab: Tab, index: number) => {
-        if (index === this.activeTabIndex) {
-          return updatedTab;
+    this.fields = this.fields.map((field, index) => {
+      if (fieldIndex === index) {
+        return {
+          ...field,
+          name: value,
         }
-        return tab;
-      });
-    }
+      }
+      return field;
+    });
   }
 
-  updateFields(newFields: TabField[]) {
-    this.tabs = this.tabs.map((tab: Tab, index: number) => {
+  changeFieldType(key: string, fieldIndex: number) {
+    this.fields = this.fields.map(
+      (field: TokenSpecTabField, index: number): TokenSpecTabField => {
+        if (index === fieldIndex) {
+          return {
+            ...field,
+            type: FieldTypes[key],
+          }
+        }
+        return field;
+      }
+    );
+  }
+
+  updateActiveTabFields(newFields: TokenSpecTabField[]) {
+    this.tabs = this.tabs.map((tab: TokenSpecTab, index: number) => {
       if (index === this.activeTabIndex) {
         return {
           ...tab,
@@ -151,25 +155,143 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   }
 
   drop(event: CdkDragDrop<string[]>) {
-    const fields = [...this.activeTab.fields];
+    const fields = [...this.fields];
     const currentField = { ...fields[event.previousIndex] };
     const fieldToReplace = { ...fields[event.currentIndex] };
     fields[event.previousIndex] = fieldToReplace;
     fields[event.currentIndex] = currentField;
-    this.updateFields(fields);
+    this.fields = fields;
   }
 
   removeField(fieldIndex: number) {
-    const fields = this.activeTab.fields.filter(
-      (_: TabField, index: number): boolean => {
+    this.fields = this.fields.filter(
+      (_: TokenSpecTabField, index: number): boolean => {
         return fieldIndex !== index;
       }
     );
-    this.updateFields(fields);
   }
 
   duplicateField(fieldIndex: number) {
-    const fields = [...this.activeTab.fields, this.activeTab.fields[fieldIndex]];
-    this.updateFields(fields);
+    this.fields = [...this.fields, this.fields[fieldIndex]];
+  }
+
+  selectContract(contractId: string) {
+    this.selectedContract = contractId;
+  }
+
+  changeTokenName(value: string) {
+    this.tokenName = value;
+  }
+
+  openDefineObjectModal(index) {
+    this.dialog.open(NeoTokenDialogDefineObjectComponent, {
+      width: "800px",
+      data: {
+        updateFieldsWithContent: this.updateFieldsWithContent.bind(this),
+      }
+    });
+    this.activeFieldIndex = index;
+  }
+
+  changeFieldTab(fieldIndex: number, newTabIndex: number) {
+    let field;
+    const newFields = this.activeTab?.fields?.filter(
+      (f: TokenSpecTabField, index: number): boolean => {
+        if (index === fieldIndex) {
+          field = f;
+        }
+        return index !== fieldIndex;
+      }
+    );
+    this.fields = newFields;
+    this.tabs = this.tabs.map((tab: TokenSpecTab, index: number): TokenSpecTab => {
+      if (index === (newTabIndex - 1) && field) {
+        return {
+          ...tab,
+          fields: [
+            ...tab.fields,
+            field,
+          ]
+        }
+      }
+      return tab;
+    });
+  }
+
+  moveFieldToAnotherTab(index: number) {
+    this.dialog.open(NeoSmartTokenSpecsMoveFieldDialogComponent, {
+      width: "500px",
+      data: {
+        fieldIndex: index,
+        activeTabIndex: this.activeTabIndex + 1,
+        max: this.tabs.length,
+        changeFieldTab: this.changeFieldTab.bind(this),
+      }
+    });
+    this.activeFieldIndex = index;
+  }
+
+  // Tab actions
+
+  duplicateTab() {
+    if (this.activeTab && this.tabs.length < this.maxTabs) {
+      this.tabs = [...this.tabs, this.activeTab];
+      this.selectTab(this.tabs.length - 1);
+    }
+  }
+
+  updateTabName(value: string): void {
+    this.tabs = this.tabs.map((tab: TokenSpecTab, index: number): TokenSpecTab => {
+      if (index === this.activeTabIndex) {
+        return {
+          ...tab,
+          name: value,
+        }
+      }
+      return tab;
+    });
+  }
+
+  updateTabPosition(newTabIndex: string): void {
+    const tabIndex = parseInt(newTabIndex) - 1;
+    const tab = { ...this.activeTab };
+    this.tabs[this.activeTabIndex] = this.tabs[tabIndex];
+    this.tabs[tabIndex] = tab;
+  }
+
+  removeTab(): void {
+    this.tabs = this.tabs.filter((_, index: number) =>
+      index !== this.activeTabIndex,
+    );
+  }
+
+  //
+
+  updateFieldsWithContent(data) {
+    this.fields = this.fields.map(
+      (field: TokenSpecTabField, index: number) => {
+        if (index === this.activeFieldIndex) {
+          return {
+            ...field,
+            content: data,
+          }
+        }
+        return field;
+      }
+    );
+  }
+
+  close() {
+    this.dialogRef.close();
+  }
+
+  submit() {
+    this.close();
+    this.updateActiveTabFields(this.fields);
+    this.neoTokenSpecsService.createTokenSpec({
+      tokenName: this.tokenName,
+      contractId: this.selectedContract,
+      tabs: this.tabs,
+    });
   }
 }

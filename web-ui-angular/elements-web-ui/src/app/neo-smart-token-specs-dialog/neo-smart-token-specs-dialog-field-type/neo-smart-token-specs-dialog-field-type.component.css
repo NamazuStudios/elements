@@ -3,7 +3,7 @@
   width: 100%;
 }
 
-.enum-field mat-form-field, .tags-field mat-form-field {
+.enum-field mat-form-field {
   width: 100%;
 }
 
@@ -17,20 +17,6 @@
   top: -3px;
   font-size: 18px;
   z-index: 10;
-}
-
-.mat-chip.mat-standard-chip {
-  background-color: #5BC1DF;
-  color: white;
-  border-radius: 6px;
-}
-
-.mat-chip button {
-  opacity: 1;
-}
-
-.mat-chip mat-icon {
-  color: white;
 }
 
 .array-field {

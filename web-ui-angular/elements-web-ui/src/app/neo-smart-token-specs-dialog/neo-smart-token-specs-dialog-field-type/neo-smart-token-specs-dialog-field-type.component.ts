@@ -1,8 +1,6 @@
-import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { Component, Input, OnInit } from '@angular/core';
-import { MatChipInputEvent } from '@angular/material/chips';
+import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 
-import { TabType, TabTypes } from '../neo-smart-token-specs-dialog.component';
+import { FieldTypes, TabField } from '../neo-smart-token-specs-dialog.component';
 
 @Component({
   selector: 'app-neo-smart-token-specs-dialog-field-type',
@@ -10,41 +8,44 @@ import { TabType, TabTypes } from '../neo-smart-token-specs-dialog.component';
   styleUrls: ['./neo-smart-token-specs-dialog-field-type.component.css']
 })
 export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
-
   @Input()
-  type: TabTypes;
+  field: TabField;
+  @Input()
+  type: FieldTypes;
+  @Input()
+  index: number;
+  @Output("openDefineObjectModal")
+  openDefineObjectModal: EventEmitter<number> = new EventEmitter();
+  @Output("onContentUpdate")
+  onContentUpdate: EventEmitter<any> = new EventEmitter();
 
   selectedArrayType = 'String';
   arrayTypes = ['String', 'Object'];
 
-  readonly separatorKeysCodes = [ENTER, COMMA] as const;
-  tags = [];
 
   constructor() { }
 
-  ngOnInit(): void { }
-
-  add(event: MatChipInputEvent): void {
-    const value = (event.value || '').trim();
-
-    // Add our fruit
-    if (value) {
-      this.tags.push(value);
-    }
-
-    // Clear the input value
-    event.chipInput!.clear();
-  }
-
-  remove(tag: string): void {
-    const index = this.tags.indexOf(tag);
-
-    if (index >= 0) {
-      this.tags.splice(index, 1);
-    }
-  }
+  ngOnInit(): void {}
 
   selectArrayType(value: string) {
     this.selectedArrayType = value;
+  }
+
+  openDefineModal() {
+    this.openDefineObjectModal.emit(this.index);
+  }
+
+  onBooleanChange(state: boolean) {
+    this.onContentUpdate.emit({
+      index: this.index,
+      content: state,
+    });
+  }
+
+  onEnumChange(value: string) {
+    this.onContentUpdate.emit({
+      index: this.index,
+      content: value,
+    });
   }
 }

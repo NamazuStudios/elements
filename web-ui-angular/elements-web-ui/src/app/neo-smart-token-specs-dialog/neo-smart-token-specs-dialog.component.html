@@ -1,5 +1,6 @@
 <div class="head-title">
-  <h1 mat-dialog-title>New Token Spec</h1>
+  <h1 *ngIf="!!data.tokenSpec" mat-dialog-title>Edit Token Spec</h1>
+  <h1 *ngIf="!data.tokenSpec" mat-dialog-title>New Token Spec</h1>
 </div>
 
 <div class="head-controls">
@@ -10,17 +11,23 @@
       placeholder="SpecName"
       name="specname"
       type="text"
+      [value]="tokenName"
+      (input)="changeTokenName($event.target.value)"
     >
   </mat-form-field>
   <mat-form-field>
-    <mat-select name="contracts" placeholder="Contract">
+    <mat-select
+      name="contracts"
+      placeholder="Contract"
+      (selectionChange)="selectContract($event.value)"
+    >
       <mat-option
         *ngFor="let contract of contracts"
-        [value]="contract.key"
-        [matTooltip]="contract.toolTip"
+        [value]="contract.id"
+        [matTooltip]="contract.displayName"
         matTooltipPosition="left"
       >
-        {{contract.label}}
+        {{contract.displayName}}
       </mat-option>
     </mat-select>
   </mat-form-field>
@@ -34,7 +41,10 @@
   </button>
 </div>
 
-<mat-tab-group [(selectedIndex)]="activeTabIndex">
+<mat-tab-group
+  (selectedIndexChange)="selectTab($event)"
+  [selectedIndex]="activeTabIndex"
+>
   <mat-tab *ngFor="let tab of tabs; let i = index" label="{{i + 1}}">
     <div class="tab-header">
       <mat-form-field>
@@ -44,26 +54,31 @@
           placeholder="TabName"
           name="tabname"
           type="text"
+          [value]="tab.name"
+          (change)="updateTabName($event.target.value)"
         >
       </mat-form-field>
       <mat-form-field>
         <mat-label>Tab Position</mat-label>
         <input
           matInput
-          [value]="i"
+          [value]="i + 1"
+          (change)="updateTabPosition($event.target.value)"
           placeholder="TabPosition"
           name="tabposition"
           type="number"
           min="1"
-          max="5"
+          [max]="tabs.length"
         >
       </mat-form-field>
       <div class="tab-buttons">
         <button
           mat-raised-button
           color="primary"
-          matTooltip="File Copy"
+          matTooltip="Duplicate"
           matTooltipPosition="above"
+          [disabled]="tabs.length >= maxTabs"
+          (click)="duplicateTab()"
         >
           <mat-icon>file_copy</mat-icon>
         </button>
@@ -72,6 +87,8 @@
           color="primary"
           matTooltip="Remove"
           matTooltipPosition="above"
+          [disabled]="tabs.length === 1"
+          (click)="removeTab()"
         >
           <mat-icon>delete_outline</mat-icon>
         </button>
@@ -89,10 +106,10 @@
         Add Field
       </button>
     </div>
-    <mat-card>
+    <mat-card [@.disabled]="disableAnimation">
       <mat-accordion cdkDropList (cdkDropListDropped)="drop($event)">
         <mat-expansion-panel
-          *ngFor="let field of (activeTab.fields || []); let i = index"
+          *ngFor="let field of fields; let fieldIndex = index;"
           [expanded]="false"
           cdkDrag
         >
@@ -106,7 +123,7 @@
                   <span class="memu-keyname">{{field.name || 'KeyName'}}</span>
                 </div>
               </div>
-              <div>Type</div>
+              <div>{{field.type || 'Type'}}</div>
             </div>
           </mat-expansion-panel-header>
           <div>
@@ -118,17 +135,17 @@
                   placeholder="KeyName"
                   name="keyname"
                   type="text"
-                  [value]="field.content"
-                  (change)="changeFieldName($event.target.value, i)"
+                  [value]="field.name"
+                  (change)="changeFieldName($event.target.value, fieldIndex)"
                 >
               </mat-form-field>
               <mat-form-field>
-                <mat-label>Type</mat-label>
+                <mat-label>{{field.type || 'Type'}}</mat-label>
                 <mat-select
                   name="type"
                   placeholder="Type"
-                  [value]="activeTabType.key"
-                  (selectionChange)="selectType($event.value)"
+                  [value]="field.type"
+                  (selectionChange)="changeFieldType($event.value, fieldIndex)"
                 >
                   <mat-option
                     *ngFor="let tabType of tabTypes"
@@ -143,13 +160,21 @@
             </div>
             <div class="menu-panel-footer">
               <app-neo-smart-token-specs-dialog-field-type
-                [type]="activeTabType.value"
-                [tabTypes]="tabTypes"
+                [type]="field.type"
+                [index]="fieldIndex"
+                [field]="field"
+                (onContentUpdate)="updateFieldsWithContent($event)"
+                (openDefineObjectModal)="openDefineObjectModal($event)"
               >
               </app-neo-smart-token-specs-dialog-field-type>
               <div class="field-buttons">
-                <button mat-raised-button color="primary" matTooltip="Move Up"
-                  matTooltipPosition="above">
+                <button
+                  mat-raised-button color="primary"
+                  matTooltip="Move Up"
+                  matTooltipPosition="above"
+                  class="move-to-other-tab"
+                  (click)="moveFieldToAnotherTab(fieldIndex)"
+                >
                   <mat-icon>move_up</mat-icon>
                 </button>
                 <button
@@ -157,7 +182,7 @@
                   color="primary"
                   matTooltip="Duplicate Field"
                   matTooltipPosition="above"
-                  (click)="duplicateField(i)"
+                  (click)="duplicateField(fieldIndex)"
                 >
                   <mat-icon>file_copy</mat-icon>
                 </button>
@@ -166,7 +191,7 @@
                   color="primary"
                   matTooltip="Remove"
                   matTooltipPosition="above"
-                  (click)="removeField(i)"
+                  (click)="removeField(fieldIndex)"
                 >
                   <mat-icon>delete_outline</mat-icon>
                 </button>
@@ -184,16 +209,17 @@
     mat-raised-button
     (click)="submit()"
     color="primary"
-    matTooltip="Remove"
+    matTooltip="Ok"
     matTooltipPosition="above"
   >
     OK
   </button>
   <button
     mat-raised-button
-    matTooltip="Remove"
+    matTooltip="Cancel"
     matTooltipPosition="above"
     style="margin-left: 10px"
+    (click)="close()"
   >
     Cancel
   </button>

@@ -1,7 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { NeoSmartTokenSpecsService } from 'src/app/api/services/blockchain/neo-smart-token-specs.service';
+import { NeoTokenSpecsService } from 'src/app/api/services/blockchain/neo-token-specs.service';
 import { NeoSmartTokenSpecsDialogComponent } from 'src/app/neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
+import { NeoTokensSpecDataSource } from 'src/app/neo-tokens-spec.datasource';
 
 @Component({
   selector: 'app-neo-smart-token-specs',
@@ -11,6 +12,7 @@ import { NeoSmartTokenSpecsDialogComponent } from 'src/app/neo-smart-token-specs
 export class NeoSmartTokenSpecsComponent implements OnInit {
 
   dataSource;
+  tokenSpecs = [];
   displayedColumns: Array<string> = [
     "id",
     "name",
@@ -21,30 +23,27 @@ export class NeoSmartTokenSpecsComponent implements OnInit {
   ];
 
   constructor(
-    private neoSmartTokenSpecsService: NeoSmartTokenSpecsService,
+    private neoTokenSpecsService: NeoTokenSpecsService,
     public dialog: MatDialog,
   ) {}
 
   ngOnInit() {
-    this.dataSource = [
-      {
-        id: 'tfdvkdmvdfk',
-        name: 'Name 1',
-        contract: 'Contract 1',
-      },
-      {
-        id: 'kmlkmnklghnmk',
-        name: 'Name 2',
-        contract: 'Contract 2',
-      }
-    ];
+    this.dataSource = new NeoTokensSpecDataSource(this.neoTokenSpecsService);
   }
 
-  showDialog() {
+  ngAfterViewInit() {
+    this.dataSource.tokens$.subscribe(
+      (tokenSpecs) => (this.tokenSpecs = tokenSpecs)
+    );
+  }
+
+  showDialog(tokenSpec) {
     this.dialog.open(NeoSmartTokenSpecsDialogComponent, {
       width: "800px",
       maxHeight: "90vh",
-      data: {},
+      data: {
+        tokenSpec,
+      },
     });
   }
 }
