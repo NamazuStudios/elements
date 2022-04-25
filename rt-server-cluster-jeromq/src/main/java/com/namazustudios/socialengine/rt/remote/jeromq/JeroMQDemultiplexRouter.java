@@ -141,7 +141,7 @@ public class JeroMQDemultiplexRouter {
 
     private void routeToFrontend(final NodeId nid, final ZMQ.PollItem item) {
 
-        if (!item.isReadable() || !frontend.isWritable()) return;
+        if (!item.isReadable()) return;
 
         final var backend = item.getSocket();
         final var frontend = this.frontend.getSocket();
