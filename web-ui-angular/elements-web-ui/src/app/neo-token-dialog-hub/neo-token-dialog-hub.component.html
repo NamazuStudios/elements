@@ -9,11 +9,11 @@
       <mat-select name="contracts" placeholder="Contract">
         <mat-option
           *ngFor="let contract of contracts"
-          [value]="contract.key"
-          [matTooltip]="contract.toolTip"
+          [value]="contract.id"
+          [matTooltip]="contract.displayName"
           matTooltipPosition="left"
         >
-          {{contract.label}}
+          {{contract.displayName}}
         </mat-option>
       </mat-select>
     </mat-form-field>
@@ -48,12 +48,12 @@
         Cancel
       </button>
     </div>
-    <button
+    <!-- <button
       mat-raised-button
       color="primary"
       (click)="openLegacyNeoTokenDialog()"
     >
       Legacy
-    </button>
+    </button> -->
   </div>
 </div>

@@ -29,7 +29,7 @@
       label="{{i + 1}}"
     >
       <div class="mat-tab-inner">
-        <mat-form-field>
+        <mat-form-field class="full-width">
           <mat-label>String</mat-label>
           <input
             matInput
@@ -38,7 +38,7 @@
             type="text"
           >
         </mat-form-field>
-        <mat-form-field appearance="standard">
+        <mat-form-field appearance="standard" class="full-width">
           <mat-label>Tags</mat-label>
           <mat-chip-list #chipList aria-label="Tag selection">
             <mat-chip *ngFor="let tag of tags" (removed)="remove(tag)">
@@ -75,10 +75,10 @@
             type="number"
           >
         </mat-form-field>
-        <div style="margin-bottom: 10px;">
+        <div class="boolean-field">
           <mat-checkbox>Boolean</mat-checkbox>
         </div>
-        <div>
+        <div class="boolean-field">
           <mat-checkbox>Boolean</mat-checkbox>
         </div>
         <mat-card>

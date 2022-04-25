@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NeoToken } from '../api/models/blockchain/neo-token';
+import { NeoSmartContractsService } from '../api/services/blockchain/neo-smart-contracts.service';
 import { NeoTokenDialogUpdatedComponent } from '../neo-token-dialog-updated/neo-token-dialog-updated.component';
 import { NeoTokenDialogComponent } from '../neo-token-dialog/neo-token-dialog.component';
 
@@ -11,11 +12,7 @@ import { NeoTokenDialogComponent } from '../neo-token-dialog/neo-token-dialog.co
 })
 export class NeoTokenDialogHubComponent implements OnInit {
 
-  contracts = [
-    { key: 1, toolTip: 'ContractA', label: 'ContractA' },
-    { key: 2, toolTip: 'ContractB', label: 'ContractB' },
-    { key: 3, toolTip: 'ContractC', label: 'ContractC' },
-  ];
+  contracts = [];
 
   tokenSpecs = [
     { key: 1, toolTip: 'TokenSpec1', label: 'TokenSpec1' },
@@ -24,6 +21,7 @@ export class NeoTokenDialogHubComponent implements OnInit {
   ];
 
   constructor(
+    private neoSmartContractsService: NeoSmartContractsService,
     public dialogRef: MatDialogRef<NeoTokenDialogHubComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -36,7 +34,10 @@ export class NeoTokenDialogHubComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log(this.data);
+    this.neoSmartContractsService.getNeoSmartContracts({})
+      .subscribe((res) => {
+        this.contracts = res.objects;
+      });
   }
 
   openNewNeoTokenDialog() {
