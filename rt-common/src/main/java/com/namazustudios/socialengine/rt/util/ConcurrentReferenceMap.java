@@ -260,7 +260,7 @@ public abstract class ConcurrentReferenceMap {
         @Override
         public V remove(final Object key) {
             final var result = delegate.remove(key);
-            collections.remove(result.reference);
+            if (result != null) collections.remove(result.reference);
             return result == null ? null : result.get();
         }
 
