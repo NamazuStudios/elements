@@ -85,6 +85,8 @@ import { NeoSmartTokenSpecsDialogComponent } from './neo-smart-token-specs-dialo
 import { NeoSmartTokenSpecsDialogFieldTypeComponent } from './neo-smart-token-specs-dialog/neo-smart-token-specs-dialog-field-type/neo-smart-token-specs-dialog-field-type.component';
 import { NeoTokenDialogUpdatedComponent } from './neo-token-dialog-updated/neo-token-dialog-updated.component';
 import { NeoTokenDialogHubComponent } from './neo-token-dialog-hub/neo-token-dialog-hub.component';
+import { NeoTokenDialogDefineObjectComponent } from './neo-token-dialog-define-object/neo-token-dialog-define-object.component';
+import { NeoSmartTokenSpecsMoveFieldDialogComponent } from './neo-smart-token-specs-move-field-dialog/neo-smart-token-specs-move-field-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -179,7 +181,9 @@ export function initialize(configService: ConfigService) {
     NeoSmartTokenSpecsDialogComponent,
     NeoSmartTokenSpecsDialogFieldTypeComponent,
     NeoTokenDialogUpdatedComponent,
-    NeoTokenDialogHubComponent
+    NeoTokenDialogHubComponent,
+    NeoTokenDialogDefineObjectComponent,
+    NeoSmartTokenSpecsMoveFieldDialogComponent
   ],
   imports: [
     BrowserModule,
