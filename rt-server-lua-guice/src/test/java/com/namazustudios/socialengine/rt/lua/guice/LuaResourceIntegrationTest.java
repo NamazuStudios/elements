@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.lua.guice;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.namazustudios.socialengine.MongoTestModule;
 import com.namazustudios.socialengine.jnlua.LuaRuntimeException;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.Path;
@@ -25,10 +24,7 @@ import static org.testng.Assert.*;
 /**
  * Provides tests for various lua libraries by instantiating them and invoking specific methods.
  */
-@Guice(modules = MongoTestModule.class)
 public class LuaResourceIntegrationTest {
-
-    private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
     @Factory
     public static Object[] getIntegrationTests() {
@@ -37,6 +33,8 @@ public class LuaResourceIntegrationTest {
                 getUnixFSTest(LuaResourceIntegrationTest::new)
         };
     }
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaResourceIntegrationTest.class);
 
     private final Context context;
 

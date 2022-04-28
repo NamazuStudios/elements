@@ -12,6 +12,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -19,13 +20,11 @@ import static java.lang.String.format;
 import static java.lang.Thread.sleep;
 import static java.util.UUID.randomUUID;
 
-public class MongoTestModule extends AbstractModule {
+public class MongoTestInstanceModule extends AbstractModule {
 
-    private static final Logger logger = LoggerFactory.getLogger(MongoTestModule.class);
+    private static final Logger logger = LoggerFactory.getLogger(MongoTestInstanceModule.class);
 
     public static final String TEST_COMPONENT = "com.namazustudios.socialengine.MongoTestModule.test";
-
-    private static final int TEST_MONGO_PORT = 45000;
 
     private static final int CONNECT_POLLING_RATE = 1000;
 
@@ -37,12 +36,17 @@ public class MongoTestModule extends AbstractModule {
 
     public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.uri";
 
-    private static final ShutdownHooks hooks = new ShutdownHooks(MongoTestModule.class);
+    private static final ShutdownHooks hooks = new ShutdownHooks(MongoTestInstanceModule.class);
+
+    private static final AtomicInteger testPort = new AtomicInteger(45000);
 
     @Override
     protected void configure() {
 
+        final int port = testPort.getAndIncrement();
+
         try {
+
             logger.info("Starting test mongo process via Docker.");
 
             final var uuid = format("%s_%s", getClass().getSimpleName(), randomUUID());
@@ -54,7 +58,7 @@ public class MongoTestModule extends AbstractModule {
                             "--name",
                             uuid,
                             "--rm",
-                            format("-p%d:27017", TEST_MONGO_PORT),
+                            format("-p%d:27017", port),
                             format("mongo:%s", TEST_MONGO_VERSION)
                     )
                     .redirectErrorStream(true)
@@ -81,7 +85,7 @@ public class MongoTestModule extends AbstractModule {
 
             });
 
-            waitForConnect();
+            waitForConnect(port);
 
         } catch (IOException | InterruptedException e) {
             addError(e);
@@ -92,17 +96,17 @@ public class MongoTestModule extends AbstractModule {
 
         install(new ConfigurationModule(() -> {
             final Properties properties = defaultConfigurationSupplier.get();
-            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, TEST_MONGO_PORT));
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
             return properties;
         }));
     }
 
-    private void waitForConnect() throws InterruptedException, UnknownHostException {
+    private void waitForConnect(final int port) throws InterruptedException, UnknownHostException {
 
         final var addr = InetAddress.getByAddress(new byte[]{127,0,0,1});
 
         for (int i = 0; i < CONNECT_POLLING_CYCLES; ++i) {
-            try (final var socket = new Socket(addr, TEST_MONGO_PORT)) {
+            try (final var socket = new Socket(addr, port)) {
                 break;
             } catch (IOException e) {
                 sleep(CONNECT_POLLING_RATE);
