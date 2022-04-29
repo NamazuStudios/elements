@@ -6,7 +6,7 @@
 local ioc = require "namazu.ioc.resolver"
 local connect_uri = ioc:inject("java.lang.String", "com.namazustudios.socialengine.mongo.uri")
 local database_name = ioc:inject("java.lang.String", "com.namazustudios.socialengine.mongo.database.name")
-local application_id = ioc:resolve("com.namazustudios.socialengine.rt.id.ApplicationId"):asString()
+local application_id = ioc:inject("com.namazustudios.socialengine.rt.id.ApplicationId"):asString()
 local mongo = require "mongo"
 
 

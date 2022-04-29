@@ -17,8 +17,8 @@ import javax.inject.Inject;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getUnixFSTestWithMongo;
-import static com.namazustudios.socialengine.rt.lua.guice.TestUtils.getXodusTestWithMongo;
+import static com.namazustudios.socialengine.TestUtils.getUnixFSIntegrationTest;
+import static com.namazustudios.socialengine.TestUtils.getXodusIntegrationTest;
 import static java.util.UUID.randomUUID;
 import static org.testng.Assert.assertNull;
 
@@ -30,28 +30,14 @@ public class LuaMongoIntegrationTest {
 
     private Application application;
 
-    private final EmbeddedTestService embeddedTestService;
+    private EmbeddedTestService embeddedTestService;
 
-    private LuaMongoIntegrationTest(final EmbeddedTestService embeddedTestService) {
-
-        this.embeddedTestService = embeddedTestService;
-
-        final var testApplicationId = getEmbeddedTestService()
-                .getWorker()
-                .getApplicationId();
-
-        this.context = getEmbeddedTestService()
-                .getClient()
-                .getContextFactory()
-                .getContextForApplication(testApplicationId);
-
-    }
 
     @Factory
     public static Object[] getTests() {
         return new Object[] {
-                getXodusTestWithMongo(LuaMongoIntegrationTest::new),
-                getUnixFSTestWithMongo(LuaMongoIntegrationTest::new)
+                getXodusIntegrationTest(LuaMongoIntegrationTest.class),
+                getUnixFSIntegrationTest(LuaMongoIntegrationTest.class)
         };
     }
 
@@ -109,6 +95,11 @@ public class LuaMongoIntegrationTest {
     @Inject
     public void setApplication(Application application) {
         this.application = application;
+    }
+
+    @Inject
+    public void setEmbeddedTestService(EmbeddedTestService embeddedTestService) {
+        this.embeddedTestService = embeddedTestService;
     }
 
     public EmbeddedTestService getEmbeddedTestService() {

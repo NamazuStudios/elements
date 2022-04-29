@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.name.Names;
 import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
@@ -30,7 +31,7 @@ public class MongoTestInstanceModule extends AbstractModule {
 
     private static final int CONNECT_POLLING_CYCLES = 300;
 
-    private static final String TEST_MONGO_VERSION = "3.4.5";
+    private static final String TEST_MONGO_VERSION = "3.6.0";
 
     private static final String TEST_BIND_IP = "localhost";
 
@@ -92,13 +93,9 @@ public class MongoTestInstanceModule extends AbstractModule {
             return;
         }
 
-        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-        install(new ConfigurationModule(() -> {
-            final Properties properties = defaultConfigurationSupplier.get();
-            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
-            return properties;
-        }));
+        bind(String.class)
+                .annotatedWith(Names.named(MONGO_CLIENT_URI))
+                .toInstance(format("mongodb://%s:%d", TEST_BIND_IP, port));
     }
 
     private void waitForConnect(final int port) throws InterruptedException, UnknownHostException {
