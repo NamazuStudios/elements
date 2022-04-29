@@ -5,8 +5,8 @@
 
 local ioc = require "namazu.ioc.resolver"
 local connect_uri = ioc:inject("java.lang.String", "com.namazustudios.socialengine.mongo.uri")
-local database_name = ioc:inject("java.lang.String", "com.namazustudios.socialengine.mongo.database.name")
-local application_id = ioc:inject("com.namazustudios.socialengine.rt.id.ApplicationId"):asString()
+local elements_database_name = ioc:inject("java.lang.String", "com.namazustudios.socialengine.mongo.database.name")
+
 local mongo = require "mongo"
 
 
@@ -14,23 +14,37 @@ local mongodb = {
     client = mongo.Client(connect_uri)
 }
 
+local function get_database(db_name)
 
-function mongodb.elements_database()
+    local db, error = mongodb.client:getDatabase(db_name)
 
-    return mongodb.client:getDatabase(database_name)
+    return db, error
 end
 
 
-function mongodb.application_collection()
+-- Gets the Elements default database.
+function mongodb.get_elements_database()
 
-    local db = mongodb.elements_database()
+    return get_database(elements_database_name)
+end
 
-    if(db:hasCollection(application_id)) then
 
-        return db:getCollection()
-    end
+-- Gets the database for the given name.
+function mongodb.get_database(db_name)
 
-    return db:createCollection(application_id)
+    return get_database(db_name)
+end
+
+
+-- Gets the collection for the given name from the specified database.
+-- Will create the collection if it doesn't exist.
+function mongodb.get_collection(db, collection_name)
+
+    local c, error = db:hasCollection(collection_name) and
+            db:getCollection(collection_name) or
+            db:createCollection(collection_name)
+
+    return c, error
 end
 
 
