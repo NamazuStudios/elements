@@ -35,11 +35,6 @@ public class IntegrationTestModule extends AbstractModule {
     @Override
     protected void configure() {
 
-        final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-        install(new ConfigurationModule(() -> defaultConfigurationSupplier.get()));
-
         install(new MongoDaoModule(){
             @Override
             protected void configure() {

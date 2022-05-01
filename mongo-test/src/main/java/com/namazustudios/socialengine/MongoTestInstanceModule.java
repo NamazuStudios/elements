@@ -46,15 +46,15 @@ public class MongoTestInstanceModule extends AbstractModule {
 
         final int port = testPort.getAndIncrement();
 
-//        final DefaultConfigurationSupplier defaultConfigurationSupplier;
-//        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-//
-//        install(new ConfigurationModule(() -> {
-//            final Properties properties = defaultConfigurationSupplier.get();
-//            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
-//            return properties;
-//        }));
+        final DefaultConfigurationSupplier defaultConfigurationSupplier;
+        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
 
+        install(new ConfigurationModule(() -> {
+            final Properties properties = defaultConfigurationSupplier.get();
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
+            return properties;
+        }));
+        
         try {
 
             logger.info("Starting test mongo process via Docker.");
@@ -102,9 +102,6 @@ public class MongoTestInstanceModule extends AbstractModule {
             return;
         }
 
-        bind(String.class)
-                .annotatedWith(Names.named(MONGO_CLIENT_URI))
-                .toInstance(format("mongodb://%s:%d", TEST_BIND_IP, port));
     }
 
     private void waitForConnect(final int port) throws InterruptedException, UnknownHostException {
