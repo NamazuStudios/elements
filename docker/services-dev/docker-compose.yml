@@ -17,7 +17,7 @@ services:
       - "6379:6379"
 
   mongo:
-    image: mongo:4.4.13
+    image: mongo:4.4.1
     deploy:
       replicas: 1
     networks:

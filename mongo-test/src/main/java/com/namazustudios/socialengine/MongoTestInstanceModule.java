@@ -31,7 +31,7 @@ public class MongoTestInstanceModule extends AbstractModule {
 
     private static final int CONNECT_POLLING_CYCLES = 300;
 
-    private static final String TEST_MONGO_VERSION = "4.4.13";
+    private static final String TEST_MONGO_VERSION = "4.4.1";
 
     private static final String TEST_BIND_IP = "localhost";
 
