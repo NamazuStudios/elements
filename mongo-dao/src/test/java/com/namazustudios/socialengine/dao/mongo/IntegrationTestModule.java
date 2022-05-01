@@ -3,10 +3,12 @@ package com.namazustudios.socialengine.dao.mongo;
 import com.google.inject.AbstractModule;
 import com.google.inject.name.Names;
 import com.namazustudios.socialengine.MongoTestInstanceModule;
+import com.namazustudios.socialengine.config.DefaultConfigurationSupplier;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.dao.mongo.guice.MongoSearchModule;
 import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvider;
+import com.namazustudios.socialengine.guice.ConfigurationModule;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import com.namazustudios.socialengine.security.SecureRandomPasswordGenerator;
 import dev.morphia.Datastore;
@@ -14,6 +16,10 @@ import org.dozer.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
+
+import java.util.Properties;
+
+import static java.lang.String.format;
 
 
 public class IntegrationTestModule extends AbstractModule {
@@ -28,6 +34,11 @@ public class IntegrationTestModule extends AbstractModule {
 
     @Override
     protected void configure() {
+
+        final DefaultConfigurationSupplier defaultConfigurationSupplier;
+        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+
+        install(new ConfigurationModule(() -> defaultConfigurationSupplier.get()));
 
         install(new MongoDaoModule(){
             @Override
