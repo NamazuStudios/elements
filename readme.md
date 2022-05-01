@@ -9,6 +9,7 @@ environment from scratch.
 - [Docker (Latest Version)](https://www.docker.com/products/docker-engine)
 - [git](https://git-scm.com/)
 - [node](https://nodejs.org/en/download/)
+- [lua-mongo](https://github.com/neoxic/lua-mongo)
 
 All dependencies are fetched using Maven*, so the first build may take a 
 considerably long time.  Most of Elements depends on freely available open 
