@@ -96,9 +96,7 @@ public class JeroMQMultiplexRouter {
         OK.pushResponseCode(zMsg);
         pushIdentity(zMsg, identity);
 
-        if (zMsg.send(frontend)) {
-            logger.trace("Message sent successfully.");
-        } else {
+        if (!zMsg.send(frontend)) {
             logger.error("Failed to send: {}", frontend.errno());
         }
 

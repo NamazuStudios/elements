@@ -14,6 +14,8 @@ public class MongoTemplateTab {
     private String name;
 
     @Property
+    private Integer tabOrder;
+    @Property
     private List<MongoTemplateTabField> fields;
 
     public MongoTemplateTab() {
@@ -26,6 +28,14 @@ public class MongoTemplateTab {
 
     public String getName() {
         return name;
+    }
+
+    public Integer getTabOrder() {
+        return tabOrder;
+    }
+
+    public void setTabOrder(Integer tabOrder) {
+        this.tabOrder = tabOrder;
     }
 
     public List<MongoTemplateTabField>  getFields() {

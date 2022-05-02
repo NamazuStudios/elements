@@ -1,8 +1,5 @@
 <component name="ProjectRunConfigurationManager">
   <configuration default="false" name="RestAPIMain" type="Application" factoryName="Application" nameIsGenerated="true">
-    <envs>
-      <env name="com_namazustudios_socialengine_global_secret" value="asdf" />
-    </envs>
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.rest.RestAPIMain" />
     <module name="rest-jetty" />
     <extension name="coverage">

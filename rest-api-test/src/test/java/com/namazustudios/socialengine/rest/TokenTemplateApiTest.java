@@ -27,7 +27,6 @@ import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET
 import static com.namazustudios.socialengine.exception.ErrorCode.FORBIDDEN;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
-import static java.util.UUID.randomUUID;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
@@ -80,6 +79,8 @@ public class TokenTemplateApiTest {
     @Test(dataProvider = "getAuthHeader")
     public void testCreateAndDeleteTokenTemplate(final String authHeader) {
         final var request = new CreateTokenTemplateRequest();
+        request.setTokenName("New Token");
+        request.setContractId("uu1234");
         List<TemplateTab> tabs = new ArrayList<>() ;
         List<TemplateTabField> fields = new ArrayList<>();
         TemplateTabField field = new TemplateTabField();
@@ -87,7 +88,11 @@ public class TokenTemplateApiTest {
         field.setContent("Test");
         fields.add(field);
         TemplateTab tab = new TemplateTab("tab1",fields);
+        tab.setTabOrder(1);
         tabs.add(tab);
+        TemplateTab tab2 = new TemplateTab("tab2",fields);
+        tab.setTabOrder(2);
+        tabs.add(tab2);
         request.setTabs(tabs);
 
         TokenTemplate tokenTemplate = client
@@ -99,7 +104,12 @@ public class TokenTemplateApiTest {
 
         assertNotNull(tokenTemplate);
         assertNotNull(tokenTemplate.getId());
+        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
+        assertEquals(tokenTemplate.getContractId(), request.getContractId());
         assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
+        assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
+        assertEquals(tokenTemplate.getTabs().get(1).getName(), tab2.getName());
+        assertEquals(tokenTemplate.getTabs().get(1).getTabOrder(), tab2.getTabOrder());
 
         Response response = client
                 .target(apiRoot + "/blockchain/token/template/" + tokenTemplate.getId())
@@ -112,10 +122,9 @@ public class TokenTemplateApiTest {
 
     @Test(dataProvider = "getAuthHeader")
     public void testGetTokenTemplate(final String authHeader) {
-
-        String tokenName = "TokenTest-" + randomUUID().toString();
-
         final var request = new CreateTokenTemplateRequest();
+        request.setTokenName("New Token");
+        request.setContractId("uu1234");
         List<TemplateTab> tabs = new ArrayList<>() ;
         List<TemplateTabField> fields = new ArrayList<>();
         TemplateTabField field = new TemplateTabField();
@@ -123,6 +132,7 @@ public class TokenTemplateApiTest {
         field.setContent("Test");
         fields.add(field);
         TemplateTab tab = new TemplateTab("tab1",fields);
+        tab.setTabOrder(1);
         tabs.add(tab);
         request.setTabs(tabs);
 
@@ -145,7 +155,10 @@ public class TokenTemplateApiTest {
 
         assertNotNull(tokenTemplate);
         assertNotNull(tokenTemplate.getId());
+        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
+        assertEquals(tokenTemplate.getContractId(), request.getContractId());
         assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
+        assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
         response = client
                 .target(apiRoot + "/blockchain/token/template/" + tokenTemplate.getId())
@@ -161,6 +174,8 @@ public class TokenTemplateApiTest {
     public void testUpdateTokenTemplate(final String authHeader) {
 
         final var request = new CreateTokenTemplateRequest();
+        request.setTokenName("New Token");
+        request.setContractId("uu1234");
         List<TemplateTab> tabs = new ArrayList<>() ;
         List<TemplateTabField> fields = new ArrayList<>();
         TemplateTabField field = new TemplateTabField();
@@ -168,6 +183,7 @@ public class TokenTemplateApiTest {
         field.setContent("Test");
         fields.add(field);
         TemplateTab tab = new TemplateTab("tab1",fields);
+        tab.setTabOrder(1);
         tabs.add(tab);
         request.setTabs(tabs);
 
@@ -180,9 +196,14 @@ public class TokenTemplateApiTest {
 
         assertNotNull(tokenTemplate);
         assertNotNull(tokenTemplate.getId());
+        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
+        assertEquals(tokenTemplate.getContractId(), request.getContractId());
         assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
+        assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
         UpdateTokenTemplateRequest updateRequest = new UpdateTokenTemplateRequest();
+        updateRequest.setTokenName("Updated Token");
+        updateRequest.setContractId("uu6789");
         tabs = new ArrayList<>() ;
         fields = new ArrayList<>();
         field = new TemplateTabField();
@@ -190,6 +211,7 @@ public class TokenTemplateApiTest {
         field.setContent("Test");
         fields.add(field);
         tab = new TemplateTab("tab2",fields);
+        tab.setTabOrder(2);
         tabs.add(tab);
         updateRequest.setTabs(tabs);
 
@@ -202,7 +224,10 @@ public class TokenTemplateApiTest {
 
         assertNotNull(updatedTokenTemplate);
         assertNotNull(updatedTokenTemplate.getId());
+        assertEquals(updatedTokenTemplate.getTokenName(), updateRequest.getTokenName());
+        assertEquals(updatedTokenTemplate.getContractId(), updateRequest.getContractId());
         assertEquals(updatedTokenTemplate.getTabs().get(0).getName(), tab.getName());
+        assertEquals(updatedTokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
         var response = client
             .target(apiRoot + "/blockchain/token/template/" + updatedTokenTemplate.getId())

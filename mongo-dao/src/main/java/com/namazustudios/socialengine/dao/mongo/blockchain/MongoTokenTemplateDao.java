@@ -74,7 +74,9 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
         );
 
         final var builder = new UpdateBuilder().with(
-            set("tabs", updateTokenTemplateRequest.getTabs())
+            set("tabs", updateTokenTemplateRequest.getTabs()),
+                set("tokenName", updateTokenTemplateRequest.getTokenName()),
+                set("contractId", updateTokenTemplateRequest.getContractId())
         );
 
         final MongoTokenTemplate mongoTokenTemplate = getMongoDBUtils().perform(ds ->
@@ -99,7 +101,9 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
         query.filter(exists("tabs").not());
 
         final var builder = new UpdateBuilder().with(
-            set("tabs", tokenRequest.getTabs())
+            set("tabs", tokenRequest.getTabs()),
+                set("tokenName", tokenRequest.getTokenName()),
+                set("contractId", tokenRequest.getContractId())
         );
 
         final var mongoTokenTemplate = getMongoDBUtils().perform(
@@ -118,7 +122,9 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
         final var tabs = tokenTemplate.getTabs();
 
         final var builder = new UpdateBuilder().with(
-                set("tab", tabs)
+                set("tab", tabs),
+                set("tokenName", tokenTemplate.getTokenName()),
+                set("contractId", tokenTemplate.getContractId())
         );
 
         final var mongoTokenTemplate = getMongoDBUtils().perform(
