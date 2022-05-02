@@ -3,8 +3,6 @@ package com.namazustudios.socialengine;
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoCoreModule;
-import com.namazustudios.socialengine.dao.mongo.guice.MongoDaoModule;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
@@ -26,7 +24,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import static com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider.DATABASE_NAME;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.spy;
@@ -42,6 +39,8 @@ public class IntegrationTestModule extends AbstractModule {
     private static final String TEST_BIND_IP = "localhost";
 
     public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.uri";
+
+    public static final String DATABASE_NAME = "com.namazustudios.socialengine.mongo.database.name";
 
     public IntegrationTestModule(JeroMQEmbeddedTestService embeddedTestService) {
         this.embeddedTestService = embeddedTestService;
