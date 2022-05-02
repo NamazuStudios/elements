@@ -33,28 +33,18 @@ public class MongoTestInstanceModule extends AbstractModule {
 
     private static final String TEST_MONGO_VERSION = "4.4.1";
 
-    private static final String TEST_BIND_IP = "localhost";
-
-    public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.uri";
-
     private static final ShutdownHooks hooks = new ShutdownHooks(MongoTestInstanceModule.class);
 
-    private static final AtomicInteger testPort = new AtomicInteger(45000);
+    private int port;
+
+    public MongoTestInstanceModule(final int port) {
+        this.port = port;
+    }
+
 
     @Override
     protected void configure() {
 
-        final int port = testPort.getAndIncrement();
-
-        final DefaultConfigurationSupplier defaultConfigurationSupplier;
-        defaultConfigurationSupplier = new DefaultConfigurationSupplier();
-
-        install(new ConfigurationModule(() -> {
-            final Properties properties = defaultConfigurationSupplier.get();
-            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
-            return properties;
-        }));
-        
         try {
 
             logger.info("Starting test mongo process via Docker.");

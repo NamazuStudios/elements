@@ -17,7 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import ru.vyarus.guice.validator.ValidationModule;
 
-import java.util.Properties;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static java.lang.String.format;
 
@@ -28,12 +28,23 @@ public class IntegrationTestModule extends AbstractModule {
 
     public static final String TEST_COMPONENT = "com.namazustudios.socialengine.dao.mongo.IntegrationTestModule.test";
 
-    private static final int TEST_MONGO_PORT = 45000;
-
     private static final String TEST_BIND_IP = "localhost";
+
+    public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.uri";
+
+    private static final AtomicInteger testPort = new AtomicInteger(45000);
 
     @Override
     protected void configure() {
+
+        final var defaultConfigurationSupplier = new DefaultConfigurationSupplier();
+        final int port = testPort.getAndIncrement();
+
+        install(new ConfigurationModule(() -> {
+            final var properties = defaultConfigurationSupplier.get();
+            properties.put(MONGO_CLIENT_URI, format("mongodb://%s:%d", TEST_BIND_IP, port));
+            return properties;
+        }));
 
         install(new MongoDaoModule(){
             @Override
@@ -55,7 +66,7 @@ public class IntegrationTestModule extends AbstractModule {
         bind(ProfileTestFactory.class).asEagerSingleton();
         bind(ApplicationTestFactory.class).asEagerSingleton();
 
-        install(new MongoTestInstanceModule());
+        install(new MongoTestInstanceModule(port));
         install(new MongoCoreModule());
         install(new MongoSearchModule());
         install(new ValidationModule());

@@ -24,8 +24,10 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.namazustudios.socialengine.dao.mongo.provider.MongoDatastoreProvider.DATABASE_NAME;
+import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static org.mockito.Mockito.spy;
 
@@ -34,6 +36,12 @@ public class IntegrationTestModule extends AbstractModule {
     private static final Logger logger = LoggerFactory.getLogger(IntegrationTestModule.class);
 
     private final JeroMQEmbeddedTestService embeddedTestService;
+
+    private static final AtomicInteger testPort = new AtomicInteger(45000);
+
+    private static final String TEST_BIND_IP = "localhost";
+
+    public static final String MONGO_CLIENT_URI = "com.namazustudios.socialengine.mongo.uri";
 
     public IntegrationTestModule(JeroMQEmbeddedTestService embeddedTestService) {
         this.embeddedTestService = embeddedTestService;
@@ -51,6 +59,7 @@ public class IntegrationTestModule extends AbstractModule {
 
         final var mockModule = new MockModule();
         final var applicationId = ApplicationId.forUniqueName(spyApplication.getId());
+        final var port = testPort.getAndIncrement();
 
         mockModule.mock(Client.class);
         mockModule.mock(NotificationBuilder.class);
@@ -58,13 +67,16 @@ public class IntegrationTestModule extends AbstractModule {
 
         bind(EmbeddedTestService.class).toInstance(embeddedTestService
                 .withClient()
-                .withWorkerModule(new MongoTestInstanceModule())
+                .withWorkerModule(new MongoTestInstanceModule(port))
                 .withWorkerModule(new AbstractModule() {
                     @Override
                     protected void configure() {
                         bind(String.class)
                                 .annotatedWith(Names.named(DATABASE_NAME))
                                 .toInstance("test_elements_db");
+                        bind(String.class)
+                                .annotatedWith(Names.named(MONGO_CLIENT_URI))
+                                .toInstance(format("mongodb://%s:%d", TEST_BIND_IP, port));
                     }
                 })
                 .withApplicationNode(applicationId)
