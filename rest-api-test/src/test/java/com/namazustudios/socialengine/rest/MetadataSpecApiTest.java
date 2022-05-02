@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rest;
 
 
-import com.namazustudios.socialengine.dao.TokenTemplateDao;
+import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.blockchain.template.*;
 import com.namazustudios.socialengine.rest.model.TokenTemplatePagination;
@@ -19,7 +19,9 @@ import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
@@ -31,13 +33,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 
-public class TokenTemplateApiTest {
+public class MetadataSpecApiTest {
 
     @Factory
     public Object[] getTests() {
         return new Object[] {
-            TestUtils.getInstance().getXodusTest(TokenTemplateApiTest.class),
-            TestUtils.getInstance().getUnixFSTest(TokenTemplateApiTest.class)
+            TestUtils.getInstance().getXodusTest(MetadataSpecApiTest.class),
+            TestUtils.getInstance().getUnixFSTest(MetadataSpecApiTest.class)
         };
     }
 
@@ -55,7 +57,7 @@ public class TokenTemplateApiTest {
     private ClientContext userClientContext;
 
     @Inject
-    private TokenTemplateDao tokenTemplateDao;
+    private MetadataSpecDao metadataSpecDao;
 
 
     @DataProvider
@@ -78,15 +80,13 @@ public class TokenTemplateApiTest {
 
     @Test(dataProvider = "getAuthHeader")
     public void testCreateAndDeleteTokenTemplate(final String authHeader) {
-        final var request = new CreateTokenTemplateRequest();
-        request.setTokenName("New Token");
-        request.setContractId("uu1234");
+        final var request = new CreateMetadataSpecRequest();
+        request.setName("New Token");
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
@@ -95,17 +95,16 @@ public class TokenTemplateApiTest {
         tabs.add(tab2);
         request.setTabs(tabs);
 
-        TokenTemplate tokenTemplate = client
+        MetadataSpec tokenTemplate = client
             .target(apiRoot + "/blockchain/token/template")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON))
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
         assertNotNull(tokenTemplate);
         assertNotNull(tokenTemplate.getId());
-        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
-        assertEquals(tokenTemplate.getContractId(), request.getContractId());
+        assertEquals(tokenTemplate.getName(), request.getName());
         assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
         assertEquals(tokenTemplate.getTabs().get(1).getName(), tab2.getName());
@@ -122,15 +121,13 @@ public class TokenTemplateApiTest {
 
     @Test(dataProvider = "getAuthHeader")
     public void testGetTokenTemplate(final String authHeader) {
-        final var request = new CreateTokenTemplateRequest();
-        request.setTokenName("New Token");
-        request.setContractId("uu1234");
+        final var request = new CreateMetadataSpecRequest();
+        request.setName("New Token");
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
@@ -142,7 +139,7 @@ public class TokenTemplateApiTest {
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON));
 
-        var created = response.readEntity(TokenTemplate.class);
+        var created = response.readEntity(MetadataSpec.class);
 
         assertEquals(response.getStatus(), 200);
 
@@ -151,12 +148,11 @@ public class TokenTemplateApiTest {
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .get()
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
         assertNotNull(tokenTemplate);
         assertNotNull(tokenTemplate.getId());
-        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
-        assertEquals(tokenTemplate.getContractId(), request.getContractId());
+        assertEquals(tokenTemplate.getName(), request.getName());
         assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
@@ -173,43 +169,38 @@ public class TokenTemplateApiTest {
     @Test(dataProvider = "getAuthHeader")
     public void testUpdateTokenTemplate(final String authHeader) {
 
-        final var request = new CreateTokenTemplateRequest();
-        request.setTokenName("New Token");
-        request.setContractId("uu1234");
+        final var request = new CreateMetadataSpecRequest();
+        request.setName("New Token");
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
         request.setTabs(tabs);
 
-        TokenTemplate tokenTemplate = client
+        MetadataSpec tokenTemplate = client
             .target(apiRoot + "/blockchain/token/template")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON))
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
         assertNotNull(tokenTemplate);
         assertNotNull(tokenTemplate.getId());
-        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
-        assertEquals(tokenTemplate.getContractId(), request.getContractId());
+        assertEquals(tokenTemplate.getName(), request.getName());
         assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
-        UpdateTokenTemplateRequest updateRequest = new UpdateTokenTemplateRequest();
-        updateRequest.setTokenName("Updated Token");
-        updateRequest.setContractId("uu6789");
+        UpdateMetadataSpecRequest updateRequest = new UpdateMetadataSpecRequest();
+        updateRequest.setName("Updated Token");
         tabs = new ArrayList<>() ;
-        fields = new ArrayList<>();
+        fields = new HashMap<>();
         field = new TemplateTabField();
         field.setName("field2");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         tab = new TemplateTab("tab2",fields);
         tab.setTabOrder(2);
         tabs.add(tab);
@@ -220,12 +211,11 @@ public class TokenTemplateApiTest {
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .put(Entity.entity(updateRequest, APPLICATION_JSON))
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
         assertNotNull(updatedTokenTemplate);
         assertNotNull(updatedTokenTemplate.getId());
-        assertEquals(updatedTokenTemplate.getTokenName(), updateRequest.getTokenName());
-        assertEquals(updatedTokenTemplate.getContractId(), updateRequest.getContractId());
+        assertEquals(updatedTokenTemplate.getName(), updateRequest.getName());
         assertEquals(updatedTokenTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(updatedTokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
@@ -244,7 +234,7 @@ public class TokenTemplateApiTest {
 
         final var called = new AtomicBoolean();
 
-        final PaginationWalker.WalkFunction<TokenTemplate> walkFunction = (offset, count) -> {
+        final PaginationWalker.WalkFunction<MetadataSpec> walkFunction = (offset, count) -> {
             final var response = client.target(format("%s/blockchain/token/template?offset=%d&count=%d",
                     apiRoot,
                     offset,
@@ -265,13 +255,13 @@ public class TokenTemplateApiTest {
     @Test(dataProvider = "getAuthHeader")
     public void testNormalUserRestrictionAccess(final String authHeader) {
 
-        final var request = new CreateTokenTemplateRequest();
+        final var request = new CreateMetadataSpecRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
+
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tabs.add(tab);
         request.setTabs(tabs);

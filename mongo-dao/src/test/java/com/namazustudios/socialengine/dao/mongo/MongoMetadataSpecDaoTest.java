@@ -1,11 +1,10 @@
 package com.namazustudios.socialengine.dao.mongo;
 
 import com.namazustudios.socialengine.BlockchainConstants;
-import com.namazustudios.socialengine.dao.TokenTemplateDao;
+import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.template.*;
-import com.namazustudios.socialengine.model.user.User;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;
@@ -13,19 +12,19 @@ import org.testng.annotations.Test;
 
 import javax.inject.Inject;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
-public class MongoTokenTemplateDaoTest {
+public class MongoMetadataSpecDaoTest {
 
-    private TokenTemplateDao tokenTemplateDao;
+    private MetadataSpecDao metadataSpecDao;
 
-    private String tokenName;
-
-    private String contractId;
+    private String name;
 
     private String tabName;
 
@@ -40,8 +39,7 @@ public class MongoTokenTemplateDaoTest {
         this.tabName = "Tab1";
         this.fieldName="Field1";
         this.content="New content";
-        this.tokenName = "New Token";
-        this.contractId = "uu1234";
+        this.name = "New Token";
         this.tabOrder = 1;
     }
 
@@ -55,38 +53,34 @@ public class MongoTokenTemplateDaoTest {
 
     @Test(dataProvider = "getFieldType")
     public void testCreateTokenTemplate(final BlockchainConstants.TemplateFieldType fieldType) {
-        testCreateTokenTemplate(tokenName, contractId, tabOrder, tabName, fieldName, content, fieldType);
+        testCreateTokenTemplate(name, tabOrder, tabName, fieldName, content, fieldType);
     }
 
-    private void testCreateTokenTemplate(final String tokenName, final String contractId, final Integer tabOrder, final String tabName, final String fieldName, final String content, final BlockchainConstants.TemplateFieldType fieldType) {
+    private void testCreateTokenTemplate(final String name, final Integer tabOrder, final String tabName, final String fieldName, final String content, final BlockchainConstants.TemplateFieldType fieldType) {
 
-        final var request = new CreateTokenTemplateRequest();
+        final var request = new CreateMetadataSpecRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
         field.setName(fieldName);
-        field.setContent(content);
-        fields.add(field);
+        fields.put("field1", field);
         field.setFieldType(fieldType);
         TemplateTab tab = new TemplateTab(tabName,fields);
         tab.setTabOrder(tabOrder);
         tabs.add(tab);
         request.setTabs(tabs);
-        request.setTokenName(tokenName);
-        request.setContractId(contractId);
+        request.setName(name);
 
-        TokenTemplate inserted = getTokenTemplateDao().createTokenTemplate(request);
+        MetadataSpec inserted = getTokenTemplateDao().createMetadataSpec(request);
 
-        TokenTemplate fetched = getTokenTemplateDao().getTokenTemplate(inserted.getId());
-        assertEquals(tokenName, fetched.getTokenName());
-        assertEquals(contractId, fetched.getContractId());
+        MetadataSpec fetched = getTokenTemplateDao().getMetadataSpec(inserted.getId());
+        assertEquals(name, fetched.getName());
         assertEquals(tabName, fetched.getTabs().get(0).getName());
         assertEquals(tabOrder, fetched.getTabs().get(0).getTabOrder());
         assertEquals(fieldName, fetched.getTabs().get(0).getFields().get(0).getName());
-        assertEquals(content, fetched.getTabs().get(0).getFields().get(0).getContent());
         assertEquals(fieldType, fetched.getTabs().get(0).getFields().get(0).getFieldType());
 
-        final Pagination<TokenTemplate> items = getTokenTemplateDao().getTokenTemplates(0, 20);
+        final Pagination<MetadataSpec> items = getTokenTemplateDao().getMetadataSpecs(0, 20);
 
         assertNotEquals(items.getTotal(), 0);
 
@@ -101,36 +95,32 @@ public class MongoTokenTemplateDaoTest {
     @Test(dependsOnMethods = "testCreateTokenTemplate")
     public void testUpdateTokenTemplate() {
 
-        final Pagination<TokenTemplate> items = getTokenTemplateDao().getTokenTemplates(0, 1);
+        final Pagination<MetadataSpec> items = getTokenTemplateDao().getMetadataSpecs(0, 1);
 
         final var tokenTemplate = items.iterator().next();
-        final var idTokenTemplate = getTokenTemplateDao().getTokenTemplate(tokenTemplate.getId());
+        final var idTokenTemplate = getTokenTemplateDao().getMetadataSpec(tokenTemplate.getId());
         assertEquals(tokenTemplate.getTabs().get(0).getFields().get(0).getFieldType(), idTokenTemplate.getTabs().get(0).getFields().get(0).getFieldType());
         assertEquals(tokenTemplate.getId(), idTokenTemplate.getId());
 
         tokenTemplate.getTabs().get(0).setName("Tab 2");
-        UpdateTokenTemplateRequest updateRequest = new UpdateTokenTemplateRequest();
+        UpdateMetadataSpecRequest updateRequest = new UpdateMetadataSpecRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         tabs = new ArrayList<>() ;
-        fields = new ArrayList<>();
         TemplateTabField field = new TemplateTabField();
         field.setName("Field2");
-        field.setContent("Updated Content");
-        fields.add(field);
+        fields.put("field2", field);
         TemplateTab tab = new TemplateTab("Tab2",fields);
         tab.setTabOrder(2);
         tabs.add(tab);
 
-        updateRequest.setTokenName("Updated Token Name");
-        updateRequest.setContractId("uu6789");
+        updateRequest.setName("Updated Token Name");
         updateRequest.setTabs(tabs);
 
-        final TokenTemplate updatedTemplate = getTokenTemplateDao().updateTokenTemplate(tokenTemplate.getId(), updateRequest);
+        final MetadataSpec updatedTemplate = getTokenTemplateDao().updateMetadataSpec(tokenTemplate.getId(), updateRequest);
 
         assertEquals(updatedTemplate.getId(), tokenTemplate.getId());
-        assertEquals(updatedTemplate.getTokenName(), updateRequest.getTokenName());
-        assertEquals(updatedTemplate.getContractId(), updateRequest.getContractId());
+        assertEquals(updatedTemplate.getName(), updateRequest.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
@@ -138,7 +128,7 @@ public class MongoTokenTemplateDaoTest {
         tab = new TemplateTab("Tab3",fields);
         tabs.add(tab);
         updateRequest.setTabs(tabs);
-        final TokenTemplate updatedTemplate2 = getTokenTemplateDao().updateTokenTemplate(tokenTemplate.getId(), updateRequest);
+        final MetadataSpec updatedTemplate2 = getTokenTemplateDao().updateMetadataSpec(tokenTemplate.getId(), updateRequest);
 
         assertEquals(updatedTemplate2.getId(), tokenTemplate.getId());
         assertEquals(updatedTemplate2.getTabs().get(0).getName(), "Tab3");
@@ -147,15 +137,15 @@ public class MongoTokenTemplateDaoTest {
 
     @Test(expectedExceptions = NotFoundException.class)
     public void testTokenTemplateNotFoundById() {
-        getTokenTemplateDao().getTokenTemplate("0");
+        getTokenTemplateDao().getMetadataSpec("0");
     }
 
-    public TokenTemplateDao getTokenTemplateDao() {
-        return tokenTemplateDao;
+    public MetadataSpecDao getTokenTemplateDao() {
+        return metadataSpecDao;
     }
 
     @Inject
-    public void setTokenTemplateDao(TokenTemplateDao tokenTemplateDao) {
-        this.tokenTemplateDao = tokenTemplateDao;
+    public void setTokenTemplateDao(MetadataSpecDao metadataSpecDao) {
+        this.metadataSpecDao = metadataSpecDao;
     }
 }

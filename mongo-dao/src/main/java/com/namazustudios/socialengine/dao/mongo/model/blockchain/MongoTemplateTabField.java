@@ -14,35 +14,70 @@ public class MongoTemplateTabField {
     private String name;
 
     @Property
-    private BlockchainConstants.TemplateFieldType fieldType = BlockchainConstants.TemplateFieldType.Enum;
+    private String displayName;
+
+    @ApiModelProperty("isRequired")
+    private Boolean isRequired;
+
+    @ApiModelProperty("placeHolder")
+    private String placeHolder;
+
+    @ApiModelProperty("defaultValue")
+    private String defaultValue;
 
     @Property
-    private String content;
+    private BlockchainConstants.TemplateFieldType fieldType = BlockchainConstants.TemplateFieldType.Enum;
+
 
     public MongoTemplateTabField() {
-    }
-
-    public MongoTemplateTabField(String name, String content) {
-        this.name = name;
-        this.content = content;
-    }
-
-    public MongoTemplateTabField(String name, BlockchainConstants.TemplateFieldType fieldType, String content) {
-        this.name = name;
-        this.fieldType = fieldType;
-        this.content = content;
     }
 
     public String getName() {
         return name;
     }
 
-    public BlockchainConstants.TemplateFieldType getFieldType() {
-        return fieldType;
+    public void setName(String name) {
+        this.name = name;
     }
 
-    public String getContent() {
-        return content;
+    public String getDisplayName() {
+        return displayName;
+    }
+
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
+
+    public Boolean getRequired() {
+        return isRequired;
+    }
+
+    public void setRequired(Boolean required) {
+        isRequired = required;
+    }
+
+    public String getPlaceHolder() {
+        return placeHolder;
+    }
+
+    public void setPlaceHolder(String placeHolder) {
+        this.placeHolder = placeHolder;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
+    public void setFieldType(BlockchainConstants.TemplateFieldType fieldType) {
+        this.fieldType = fieldType;
+    }
+
+    public BlockchainConstants.TemplateFieldType getFieldType() {
+        return fieldType;
     }
 
     @Override
@@ -52,20 +87,25 @@ public class MongoTemplateTabField {
         MongoTemplateTabField contract = (MongoTemplateTabField) o;
         return Objects.equals(getName(), contract.getName()) &&
                 Objects.equals(getFieldType(), contract.getFieldType()) &&
-                Objects.equals(getContent(), contract.getContent());
+                Objects.equals(getDisplayName(), contract.getDisplayName()) &&
+                Objects.equals(getRequired(), contract.getRequired()) &&
+                Objects.equals(getDefaultValue(), contract.getDefaultValue()) &&
+                Objects.equals(getPlaceHolder(), contract.getPlaceHolder());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getFieldType(), getContent());
+        return Objects.hash(getName(), getFieldType(), getDisplayName(), getRequired(), getDefaultValue(), getPlaceHolder());
     }
 
     @Override
     public String toString() {
         return "TemplateTabField{" +
                 "name='" + name + '\'' +
-                ", fieldType=" + fieldType +
-                ", content=" + content +
+                "displayName='" + displayName + '\'' +
+                ", isRequired=" + isRequired +
+                ", defaultValue=" + defaultValue +
+                ", placeHolder=" + placeHolder +
                 '}';
     }
 }

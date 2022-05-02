@@ -295,8 +295,8 @@ public class ServicesModule extends PrivateModule {
                 .toProvider(BscTokenServiceProvider.class)
                 .in(scope);
 
-        bind(TokenTemplateService.class)
-                .toProvider(TokenTemplateServiceProvider.class)
+        bind(MetadataSpecService.class)
+                .toProvider(MetadataSpecServiceProvider.class)
                 .in(scope);
 
         bind(NeoSmartContractService.class)
@@ -496,9 +496,9 @@ public class ServicesModule extends PrivateModule {
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserBscTokenService.class);
 
-        bind(TokenTemplateService.class)
+        bind(MetadataSpecService.class)
                 .annotatedWith(Unscoped.class)
-                .to(SuperUserTokenTemplateService.class);
+                .to(SuperUserMetadataSpecService.class);
 
         bind(AuthSchemeService.class)
             .annotatedWith(Unscoped.class)
@@ -572,7 +572,7 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
         expose(NeoTokenService.class);
-        expose(TokenTemplateService.class);
+        expose(MetadataSpecService.class);
         expose(NeoSmartContractService.class);
         expose(AuthSchemeService.class);
         expose(SaveDataDocumentService.class);
@@ -620,7 +620,7 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
         expose(NeoTokenService.class).annotatedWith(Unscoped.class);
-        expose(TokenTemplateService.class).annotatedWith(Unscoped.class);
+        expose(MetadataSpecService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
         expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);

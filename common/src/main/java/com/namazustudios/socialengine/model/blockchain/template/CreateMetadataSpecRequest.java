@@ -8,34 +8,23 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Null;
 import java.util.List;
 
-@ApiModel(description = "Represents a request to create a TokenTemplate definition.")
-public class CreateTokenTemplateRequest {
+@ApiModel(description = "Represents a request to create a MetadataSpec definition.")
+public class CreateMetadataSpecRequest {
 
     @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
     @Null(groups = ValidationGroups.Update.class)
     @ApiModelProperty("The token template tabs to create.")
     List<TemplateTab> tabs;
 
-    @ApiModelProperty("The Token Name of the template.")
-    private String tokenName;
+    @ApiModelProperty("The name of the schema.")
+    private String name;
 
-    @ApiModelProperty("The contract id of the template. ")
-    private String contractId;
-
-    public String getTokenName() {
-        return tokenName;
+    public String getName() {
+        return name;
     }
 
-    public void setTokenName(String tokenName) {
-        this.tokenName = tokenName;
-    }
-
-    public String getContractId() {
-        return contractId;
-    }
-
-    public void setContractId(String contractId) {
-        this.contractId = contractId;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<TemplateTab> getTabs() {

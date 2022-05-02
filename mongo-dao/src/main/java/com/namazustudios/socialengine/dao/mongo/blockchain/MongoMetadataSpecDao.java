@@ -1,16 +1,16 @@
 package com.namazustudios.socialengine.dao.mongo.blockchain;
 
 import com.namazustudios.elements.fts.ObjectIndex;
-import com.namazustudios.socialengine.dao.TokenTemplateDao;
+import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoTokenTemplate;
-import com.namazustudios.socialengine.exception.blockchain.TokenTemplateNotFoundException;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoMetadataSpec;
+import com.namazustudios.socialengine.exception.blockchain.MetadataSpecNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.template.CreateTokenTemplateRequest;
-import com.namazustudios.socialengine.model.blockchain.template.TokenTemplate;
-import com.namazustudios.socialengine.model.blockchain.template.UpdateTokenTemplateRequest;
+import com.namazustudios.socialengine.model.blockchain.template.CreateMetadataSpecRequest;
+import com.namazustudios.socialengine.model.blockchain.template.MetadataSpec;
+import com.namazustudios.socialengine.model.blockchain.template.UpdateMetadataSpecRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
@@ -23,7 +23,7 @@ import static com.mongodb.client.model.ReturnDocument.AFTER;
 import static dev.morphia.query.experimental.filters.Filters.*;
 import static dev.morphia.query.experimental.updates.UpdateOperators.set;
 
-public class MongoTokenTemplateDao implements TokenTemplateDao {
+public class MongoMetadataSpecDao implements MetadataSpecDao {
 
     private ObjectIndex objectIndex;
 
@@ -36,74 +36,76 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
     private ValidationHelper validationHelper;
 
     @Override
-    public Pagination<TokenTemplate> getTokenTemplates(final int offset,
-                                               final int count) {
+    public Pagination<MetadataSpec> getMetadataSpecs(final int offset,
+                                                     final int count) {
 
-        final var mongoQuery = getDatastore().find(MongoTokenTemplate.class);
+        final var mongoQuery = getDatastore().find(MongoMetadataSpec.class);
 
         return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform, new FindOptions());
 
     }
 
     @Override
-    public TokenTemplate getTokenTemplate(String templateId) {
+    public MetadataSpec getMetadataSpec(String metadataSpecIdOrName) {
 
-        final var objectId = getMongoDBUtils().parseOrReturnNull(templateId);
+        final var objectId = getMongoDBUtils().parseOrReturnNull(metadataSpecIdOrName);
 
         var mongoTokenTemplate = getDatastore()
-            .find(MongoTokenTemplate.class)
-            .filter(Filters.eq("_id", objectId))
+            .find(MongoMetadataSpec.class)
+                .filter(Filters.or(
+                                Filters.eq("_id", objectId),
+                                Filters.eq("name", metadataSpecIdOrName)
+                        )
+                )
             .first();
 
         if(mongoTokenTemplate == null) {
-            throw new TokenTemplateNotFoundException("Unable to find token template with an id of " + templateId);
+            throw new MetadataSpecNotFoundException("Unable to find metadataSpec with an id of " + metadataSpecIdOrName);
         }
 
         return transform(mongoTokenTemplate);
     }
 
     @Override
-    public TokenTemplate updateTokenTemplate(String tokenId, UpdateTokenTemplateRequest updateTokenTemplateRequest) {
-        getValidationHelper().validateModel(updateTokenTemplateRequest, ValidationGroups.Update.class);
+    public MetadataSpec updateMetadataSpec(String metadataSpecId, UpdateMetadataSpecRequest updateMetadataSpecRequest) {
+        getValidationHelper().validateModel(updateMetadataSpecRequest, ValidationGroups.Update.class);
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(tokenId);
-        final var query = getDatastore().find(MongoTokenTemplate.class);
+        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(metadataSpecId);
+        final var query = getDatastore().find(MongoMetadataSpec.class);
 
         query.filter(and(
             eq("_id", objectId))
         );
 
         final var builder = new UpdateBuilder().with(
-            set("tabs", updateTokenTemplateRequest.getTabs()),
-                set("tokenName", updateTokenTemplateRequest.getTokenName()),
-                set("contractId", updateTokenTemplateRequest.getContractId())
+            set("tabs", updateMetadataSpecRequest.getTabs()),
+                set("name", updateMetadataSpecRequest.getName())
         );
 
-        final MongoTokenTemplate mongoTokenTemplate = getMongoDBUtils().perform(ds ->
+        final MongoMetadataSpec mongoMetadataSpec = getMongoDBUtils().perform(ds ->
                 builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
-        if (mongoTokenTemplate == null) {
-            throw new TokenTemplateNotFoundException("TokenTemplate not found or was already minted: " + tokenId);
+        if (mongoMetadataSpec == null) {
+            throw new MetadataSpecNotFoundException("MetadataSpec not found or was already minted: " + metadataSpecId);
         }
 
-        getObjectIndex().index(mongoTokenTemplate);
-        return transform(mongoTokenTemplate);
+        getObjectIndex().index(mongoMetadataSpec);
+        return transform(mongoMetadataSpec);
     }
 
     @Override
-    public TokenTemplate createTokenTemplate(CreateTokenTemplateRequest tokenRequest) {
-        getValidationHelper().validateModel(tokenRequest, ValidationGroups.Insert.class);
-        getValidationHelper().validateModel(tokenRequest.getTabs(), ValidationGroups.Insert.class);
+    public MetadataSpec createMetadataSpec(CreateMetadataSpecRequest createMetadataSpecRequest) {
+        getValidationHelper().validateModel(createMetadataSpecRequest, ValidationGroups.Insert.class);
+        getValidationHelper().validateModel(createMetadataSpecRequest.getTabs(), ValidationGroups.Insert.class);
 
-        final var query = getDatastore().find(MongoTokenTemplate.class);
+        final var query = getDatastore().find(MongoMetadataSpec.class);
 
-        query.filter(exists("tabs").not());
+        query.filter(exists("name").not());
 
         final var builder = new UpdateBuilder().with(
-            set("tabs", tokenRequest.getTabs()),
-                set("tokenName", tokenRequest.getTokenName()),
-                set("contractId", tokenRequest.getContractId())
+            set("tabs", createMetadataSpecRequest.getTabs()),
+                set("name", createMetadataSpecRequest.getName())
         );
 
         final var mongoTokenTemplate = getMongoDBUtils().perform(
@@ -115,16 +117,17 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
     }
 
     @Override
-    public TokenTemplate cloneTokenTemplate(TokenTemplate tokenTemplate) {
-        getValidationHelper().validateModel(tokenTemplate.getTabs(), ValidationGroups.Insert.class);
+    public MetadataSpec cloneMetadataSpec(MetadataSpec metadataSpec) {
+        getValidationHelper().validateModel(metadataSpec.getTabs(), ValidationGroups.Insert.class);
 
-        final var query = getDatastore().find(MongoTokenTemplate.class);
-        final var tabs = tokenTemplate.getTabs();
+        final var query = getDatastore().find(MongoMetadataSpec.class);
+        final var tabs = metadataSpec.getTabs();
+
+        query.filter(exists("name").not());
 
         final var builder = new UpdateBuilder().with(
                 set("tab", tabs),
-                set("tokenName", tokenTemplate.getTokenName()),
-                set("contractId", tokenTemplate.getContractId())
+                set("name", metadataSpec.getName())
         );
 
         final var mongoTokenTemplate = getMongoDBUtils().perform(
@@ -136,22 +139,22 @@ public class MongoTokenTemplateDao implements TokenTemplateDao {
     }
 
     @Override
-    public void deleteTokenTemplate(String tokenId) {
-        final var objectId = getMongoDBUtils().parseOrThrow(tokenId, TokenTemplateNotFoundException::new);
+    public void deleteMetadataSpec(String metadataSpecId) {
+        final var objectId = getMongoDBUtils().parseOrThrow(metadataSpecId, MetadataSpecNotFoundException::new);
 
         final var result = getDatastore()
-                .find(MongoTokenTemplate.class)
+                .find(MongoMetadataSpec.class)
                 .filter(eq("_id", objectId))
                 .delete();
 
         if(result.getDeletedCount() == 0){
-            throw new TokenTemplateNotFoundException("TokenTemplate not deleted: " + tokenId);
+            throw new MetadataSpecNotFoundException("MetadataSpec not deleted: " + metadataSpecId);
         }
     }
 
-    private TokenTemplate transform(MongoTokenTemplate token)
+    private MetadataSpec transform(MongoMetadataSpec token)
     {
-        return getBeanMapper().map(token, TokenTemplate.class);
+        return getBeanMapper().map(token, MetadataSpec.class);
     }
 
     public MongoDBUtils getMongoDBUtils() {

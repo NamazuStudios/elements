@@ -5,6 +5,7 @@ import dev.morphia.annotations.Property;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @Embedded
@@ -16,12 +17,12 @@ public class MongoTemplateTab {
     @Property
     private Integer tabOrder;
     @Property
-    private List<MongoTemplateTabField> fields;
+    private Map<String, MongoTemplateTabField> fields;
 
     public MongoTemplateTab() {
     }
 
-    public MongoTemplateTab(String name, List<MongoTemplateTabField> fields) {
+    public MongoTemplateTab(String name, Map<String, MongoTemplateTabField> fields) {
         this.name = name;
         this.fields = fields;
     }
@@ -38,7 +39,7 @@ public class MongoTemplateTab {
         this.tabOrder = tabOrder;
     }
 
-    public List<MongoTemplateTabField>  getFields() {
+    public Map<String, MongoTemplateTabField>  getFields() {
         return fields;
     }
 

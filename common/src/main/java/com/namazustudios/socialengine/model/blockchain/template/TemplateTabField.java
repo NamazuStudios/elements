@@ -10,24 +10,23 @@ public class TemplateTabField {
     @ApiModelProperty("name")
     private String name;
 
+    @ApiModelProperty("displayName")
+    private String displayName;
+
     @ApiModelProperty("fieldType")
     private BlockchainConstants.TemplateFieldType fieldType = BlockchainConstants.TemplateFieldType.Enum;
 
-    @ApiModelProperty("content")
-    private String content;
+    @ApiModelProperty("isRequired")
+    private Boolean isRequired;
+
+    @ApiModelProperty("placeHolder")
+    private String placeHolder;
+
+    @ApiModelProperty("defaultValue")
+    private String defaultValue;
+
 
     public TemplateTabField() {
-    }
-
-    public TemplateTabField(String name, String content) {
-        this.name = name;
-        this.content = content;
-    }
-
-    public TemplateTabField(String name, BlockchainConstants.TemplateFieldType fieldType, String content) {
-        this.name = name;
-        this.fieldType = fieldType;
-        this.content = content;
     }
 
     public String getName() {
@@ -46,13 +45,38 @@ public class TemplateTabField {
         this.fieldType = fieldType;
     }
 
-    public String getContent() {
-        return content;
+    public String getDisplayName() {
+        return displayName;
     }
 
-    public void setContent(String content) {
-        this.content = content;
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
     }
+
+    public Boolean getRequired() {
+        return isRequired;
+    }
+
+    public void setRequired(Boolean required) {
+        isRequired = required;
+    }
+
+    public String getPlaceHolder() {
+        return placeHolder;
+    }
+
+    public void setPlaceHolder(String placeHolder) {
+        this.placeHolder = placeHolder;
+    }
+
+    public String getDefaultValue() {
+        return defaultValue;
+    }
+
+    public void setDefaultValue(String defaultValue) {
+        this.defaultValue = defaultValue;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
@@ -60,20 +84,25 @@ public class TemplateTabField {
         TemplateTabField contract = (TemplateTabField) o;
         return Objects.equals(getName(), contract.getName()) &&
                 Objects.equals(getFieldType(), contract.getFieldType()) &&
-                Objects.equals(getContent(), contract.getContent());
+                Objects.equals(getDisplayName(), contract.getDisplayName()) &&
+                        Objects.equals(getRequired(), contract.getRequired()) &&
+                                Objects.equals(getDefaultValue(), contract.getDefaultValue()) &&
+                                        Objects.equals(getPlaceHolder(), contract.getPlaceHolder());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getFieldType(), getContent());
+        return Objects.hash(getName(), getFieldType(), getDisplayName(), getRequired(), getDefaultValue(), getPlaceHolder());
     }
 
     @Override
     public String toString() {
         return "TemplateTabField{" +
                 "name='" + name + '\'' +
-                ", fieldType=" + fieldType +
-                ", content=" + content +
+                "displayName='" + displayName + '\'' +
+                ", isRequired=" + isRequired +
+                ", defaultValue=" + defaultValue +
+                ", placeHolder=" + placeHolder +
                 '}';
     }
 }
