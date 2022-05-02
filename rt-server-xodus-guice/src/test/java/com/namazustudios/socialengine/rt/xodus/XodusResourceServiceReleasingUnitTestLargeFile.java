@@ -103,6 +103,7 @@ public class XodusResourceServiceReleasingUnitTestLargeFile extends AbstractReso
                 final var originalCrcValue = buffer.getInt() & 0x00000000FFFFFFFFL;
 
                 crc.update(buffer.rewind().putInt(0).rewind());
+
                 assertEquals(originalCrcValue, crc.getValue(), "CRC Mismatch");
                 buffer.position(Integer.BYTES);
 

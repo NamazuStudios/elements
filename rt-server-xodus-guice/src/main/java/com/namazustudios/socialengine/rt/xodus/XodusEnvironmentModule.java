@@ -1,6 +1,9 @@
 package com.namazustudios.socialengine.rt.xodus;
 
 import com.google.inject.AbstractModule;
+import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.rt.SchedulerEnvironment;
+import com.namazustudios.socialengine.rt.util.ProxyDelegate;
 import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import com.namazustudios.socialengine.rt.xodus.provider.ResourceEnvironmentProvider;
 import com.namazustudios.socialengine.rt.xodus.provider.SchedulerEnvironmentProvider;
@@ -64,10 +67,19 @@ public class XodusEnvironmentModule extends AbstractModule {
 
     @Override
     protected void configure() {
+        
         bindResourceEnvironment.run();
         bindSchedulerEnvironment.run();
         bindResourceEnvironmentPath.run();
         bindSchedulerEnvironmentPath.run();
+
+        bind(SchedulerEnvironment.class).to(XodusSchedulerEnvironment.class);
+
+        bind(new TypeLiteral<ProxyDelegate<Environment>>(){})
+            .annotatedWith(named(SCHEDULER_ENVIRONMENT))
+            .toProvider(() -> ProxyDelegate.getProxy(Environment.class))
+            .asEagerSingleton();
+
     }
 
 }
