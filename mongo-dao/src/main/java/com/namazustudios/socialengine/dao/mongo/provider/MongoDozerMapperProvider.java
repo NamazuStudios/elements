@@ -26,6 +26,7 @@ import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.model.blockchain.template.MetadataSpec;
 import com.namazustudios.socialengine.model.blockchain.template.TemplateTab;
+import com.namazustudios.socialengine.model.blockchain.template.TemplateTabField;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
@@ -196,7 +197,7 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                         .fields("tabs","tabs");
 
             mapping(TemplateTab.class, MongoTemplateTab.class)
-                    .fields("fields","fields")
+                    .fields("fields","fields", customConverter(MongoTemplateTabFieldConverter.class))
                     .fields("tabOrder","tabOrder");
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)

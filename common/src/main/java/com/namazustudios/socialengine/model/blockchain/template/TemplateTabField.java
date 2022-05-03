@@ -57,6 +57,14 @@ public class TemplateTabField {
         return isRequired;
     }
 
+    public void setIsRequired(Boolean required) {
+        isRequired = required;
+    }
+
+    public Boolean getIsRequired() {
+        return isRequired;
+    }
+
     public void setRequired(Boolean required) {
         isRequired = required;
     }

@@ -56,6 +56,14 @@ public class MongoTemplateTabField {
         isRequired = required;
     }
 
+    public void setIsRequired(Boolean required) {
+        isRequired = required;
+    }
+
+    public Boolean getIsRequired() {
+        return isRequired;
+    }
+
     public String getPlaceHolder() {
         return placeHolder;
     }
