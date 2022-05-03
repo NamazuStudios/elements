@@ -13,6 +13,7 @@ import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.service.NotificationBuilder;
 import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
+
 import org.mockito.Mockito;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
