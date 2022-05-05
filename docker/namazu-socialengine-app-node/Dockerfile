@@ -16,9 +16,11 @@ RUN apt-get install -y cmake libssl-dev libsasl2-dev lua5.3 lua5.3-dev luarocks 
     cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF .. && \
     make install && \
     luarocks install lua-mongo && \
-    apt-get remove -y cmake libssl-dev libsasl2-dev lua5.3 lua5.3-dev luarocks && \
+    apt-get remove -y luarocks lua5.3-dev lua5.3 libsasl2-dev libssl-dev cmake && \
+    apt autoremove && \
     cd ../.. && \
-    rm -rf mongo-c-driver-1.21.1.tar.gz mongo-c-driver-1.21.1
+    rm -f mongo-c-driver-1.21.1.tar.gz && \
+    rm -rf mongo-c-driver-1.21.1
 
 USER elements:elements
 
