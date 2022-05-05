@@ -16,7 +16,6 @@ ENV ELEMENTS_HOME "/opt/elements"
 # - ELEMETNS_CONF houes any configuration fciles used by the service (Including elements.properties)
 # - ELEMETNS_CLASSPATH a directory which is added to the Java classpath (eg Logging Configuration)
 
-
 ENV ELEMENTS_BIN "$ELEMENTS_HOME/bin"
 ENV ELEMENTS_LIB "$ELEMENTS_HOME/lib"
 ENV ELEMENTS_TEMP "$ELEMENTS_HOME/tmp"

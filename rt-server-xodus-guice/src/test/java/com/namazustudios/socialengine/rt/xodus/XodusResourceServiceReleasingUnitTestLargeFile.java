@@ -10,7 +10,10 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceService;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServiceModule;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.mockito.Mockito;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Guice;
@@ -19,27 +22,38 @@ import javax.inject.Inject;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import java.nio.file.StandardOpenOption;
+import java.util.List;
+import java.util.Objects;
+import java.util.Random;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ThreadLocalRandom;
-import java.util.zip.Adler32;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static com.namazustudios.socialengine.rt.id.NodeId.randomNodeId;
-import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromByteBuffer;
-import static com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment.DEFAULT_RESOURCE_BLOCK_SIZE;
-import static java.lang.Integer.min;
+import static java.nio.channels.FileChannel.open;
+import static java.nio.file.StandardOpenOption.WRITE;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyBoolean;
 import static org.mockito.Mockito.*;
-import static org.testng.Assert.assertEquals;
 import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 
 @Guice(modules = XodusResourceServiceReleasingUnitTestLargeFile.Module.class)
 public class XodusResourceServiceReleasingUnitTestLargeFile extends AbstractResourceServiceReleasingUnitTest {
 
+    private static final Logger logger = LoggerFactory.getLogger(XodusResourceServiceReleasingUnitTestLargeFile.class);
+
     private static final int FILE_SIZE_MAX = 1024 * 1024;
 
-    private static final int FILE_SIZE_MIN = ResourceId.getSizeInBytes() + Integer.BYTES;
+    private static final int FILE_SIZE_MIN = ResourceId.getSizeInBytes();
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(XodusResourceServiceReleasingUnitTestLargeFile.class);
 
     @Inject
     private PersistenceEnvironment persistence;
@@ -90,7 +104,6 @@ public class XodusResourceServiceReleasingUnitTestLargeFile extends AbstractReso
 
             doAnswer(a -> {
 
-                final var crc = new Adler32();
                 final var rbc = (ReadableByteChannel) a.getArgument(0);
                 final var buffer = ByteBuffer.allocate(FILE_SIZE_MAX);
 
@@ -100,14 +113,7 @@ public class XodusResourceServiceReleasingUnitTestLargeFile extends AbstractReso
 
                 buffer.flip();
 
-                final var originalCrcValue = buffer.getInt() & 0x00000000FFFFFFFFL;
-
-                crc.update(buffer.rewind().putInt(0).rewind());
-
-                assertEquals(originalCrcValue, crc.getValue(), "CRC Mismatch");
-                buffer.position(Integer.BYTES);
-
-                final var resourceId = resourceIdFromByteBuffer(buffer);
+                final var resourceId = ResourceId.resourceIdFromByteBuffer(buffer);
                 return doGetMockResource(resourceId);
 
             }).when(resourceLoader).load(any(ReadableByteChannel.class), anyBoolean());
@@ -120,50 +126,32 @@ public class XodusResourceServiceReleasingUnitTestLargeFile extends AbstractReso
 
     private static Resource doGetMockResource(final ResourceId resourceId) {
 
-        final Resource resource = Mockito.mock(Resource.class);
+        final var resource = Mockito.mock(Resource.class);
         when(resource.getId()).thenReturn(resourceId);
+
+        final var current = new AtomicReference<Thread>();
 
         try {
             doAnswer(a -> {
 
-                // This makes a randomly large file to actually simulate what the data may look like in production.
-                // We fill the randomly sized file with a bunch of random junk. We CRC that random junk to ensure that
-                // when read back out the contents are preserved without error.
+                final var thread = Thread.currentThread();
+                assertTrue(current.compareAndSet(null, thread), "Concurrent access.");
 
-                final var wbc = (WritableByteChannel) a.getArgument(0);
+                final var seed = ThreadLocalRandom.current().nextLong();
+                final var temporaryPath = temporaryFiles.createTempFile();
+                final var datastoreWritableByteChannel = (WritableByteChannel) a.getArgument(0);
 
-                final var crc = new Adler32();
-                final var random = ThreadLocalRandom.current();
+                try (final var temporaryWritableByteChannel = open(temporaryPath, WRITE)) {
 
-                final var block = ByteBuffer.allocate( (int) DEFAULT_RESOURCE_BLOCK_SIZE);
-                final var buffer = ByteBuffer.allocate(random.nextInt(FILE_SIZE_MIN, FILE_SIZE_MAX));
+                    final var random = new Random();
+                    random.setSeed(seed);
+                    write(random, resourceId, temporaryWritableByteChannel);
+                    random.setSeed(seed);
+                    write(random, resourceId, datastoreWritableByteChannel);
 
-                block.putInt(0);
-                block.put(resourceId.asBytes());
-
-                while (block.hasRemaining()) block.put((byte) random.nextInt());
-                buffer.put(block.position(0).limit(min(block.remaining(), buffer.remaining())));
-
-                for (var sequence = 1L; buffer.hasRemaining(); ++sequence) {
-                    block.clear().putInt((int) sequence);
-                    while (block.hasRemaining()) block.put((byte) random.nextInt());
-                    buffer.put(block.position(0).limit(min(block.remaining(), buffer.remaining())));
+                } finally {
+                    assertTrue(current.compareAndSet(thread, null), "Concurrent access.");
                 }
-
-                crc.update(buffer.flip());
-
-                final int crcValue = (int) crc.getValue();
-                buffer.rewind().putInt(crcValue).rewind();
-
-                while (buffer.hasRemaining()) wbc.write(buffer);
-                assertEquals(buffer.limit(), buffer.capacity(), "Expected full buffer to be consumed.");
-
-                crc.reset();
-                buffer.rewind().putInt(0).rewind();
-                crc.update(buffer.rewind());
-
-                final int recalculatedCrcValue = (int) crc.getValue();
-                assertEquals(recalculatedCrcValue, crcValue);
 
                 return null;
 
@@ -174,6 +162,27 @@ public class XodusResourceServiceReleasingUnitTestLargeFile extends AbstractReso
         }
 
         return resource;
+
+    }
+
+    private static void write(final Random random,
+                              final ResourceId resourceId,
+                              final WritableByteChannel wbc) throws Exception {
+
+        // This makes a randomly large file to actually simulate what the data may look like in production.
+
+        final var size = random.nextInt( (FILE_SIZE_MAX - FILE_SIZE_MIN) + 1) + FILE_SIZE_MIN;
+        final var buffer = ByteBuffer.allocate(size);
+
+        resourceId.toByteBuffer(buffer);
+
+        while (buffer.hasRemaining()) {
+            final var value = (byte) random.nextInt(Byte.MAX_VALUE);
+            buffer.put(value);
+        }
+
+        buffer.flip();
+        while (buffer.hasRemaining()) wbc.write(buffer);
 
     }
 
