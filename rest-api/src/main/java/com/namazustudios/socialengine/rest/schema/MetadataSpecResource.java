@@ -23,7 +23,7 @@ import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingReso
 @Api(value = "Metadata Specs",
         description = "Allows for the storage and retrieval of Metadata Specs.",
         authorizations = {@Authorization(AUTH_BEARER), @Authorization(SESSION_SECRET), @Authorization(SOCIALENGINE_SESSION_SECRET)})
-@Path("/blockchain/metadata_spec")
+@Path("/schema/metadata_spec")
 public class MetadataSpecResource {
 
     private MetadataSpecService metadataSpecService;
