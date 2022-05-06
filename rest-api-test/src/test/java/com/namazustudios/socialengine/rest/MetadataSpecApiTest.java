@@ -93,7 +93,7 @@ public class MetadataSpecApiTest {
         request.setTabs(tabs);
 
         MetadataSpec metadataSpec = client
-            .target(apiRoot + "/blockchain/metadata_spec")
+            .target(apiRoot + "/schema/metadata_spec")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON))
@@ -108,7 +108,7 @@ public class MetadataSpecApiTest {
         assertEquals(metadataSpec.getTabs().get(1).getTabOrder(), tab2.getTabOrder());
 
         Response response = client
-                .target(apiRoot + "/blockchain/metadata_spec/" + metadataSpec.getId())
+                .target(apiRoot + "/schema/metadata_spec/" + metadataSpec.getId())
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
                 .delete();
@@ -132,7 +132,7 @@ public class MetadataSpecApiTest {
         request.setTabs(tabs);
 
         Response response = client
-            .target(apiRoot + "/blockchain/metadata_spec")
+            .target(apiRoot + "/schema/metadata_spec")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON));
@@ -143,7 +143,7 @@ public class MetadataSpecApiTest {
 
         //get Spec by ID
         var metadataSpec = client
-            .target(apiRoot + "/blockchain/metadata_spec/" + created.getId())
+            .target(apiRoot + "/schema/metadata_spec/" + created.getId())
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .get()
@@ -157,7 +157,7 @@ public class MetadataSpecApiTest {
 
         //get Spec by Name
         var metadataSpec2 = client
-                .target(apiRoot + "/blockchain/metadata_spec/" + specName)
+                .target(apiRoot + "/schema/metadata_spec/" + specName)
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
                 .get()
@@ -171,7 +171,7 @@ public class MetadataSpecApiTest {
 
 
         response = client
-                .target(apiRoot + "/blockchain/metadata_spec/" + metadataSpec.getId())
+                .target(apiRoot + "/schema/metadata_spec/" + metadataSpec.getId())
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
                 .delete();
@@ -197,7 +197,7 @@ public class MetadataSpecApiTest {
         request.setTabs(tabs);
 
         MetadataSpec metadataSpec = client
-            .target(apiRoot + "/blockchain/metadata_spec")
+            .target(apiRoot + "/schema/metadata_spec")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON))
@@ -222,7 +222,7 @@ public class MetadataSpecApiTest {
         updateRequest.setTabs(tabs);
 
         var updatedMetadataSpec = client
-            .target(apiRoot + "/blockchain/metadata_spec/" + metadataSpec.getId())
+            .target(apiRoot + "/schema/metadata_spec/" + metadataSpec.getId())
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .put(Entity.entity(updateRequest, APPLICATION_JSON))
@@ -235,7 +235,7 @@ public class MetadataSpecApiTest {
         assertEquals(updatedMetadataSpec.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
         var response = client
-            .target(apiRoot + "/blockchain/metadata_spec/" + updatedMetadataSpec.getId())
+            .target(apiRoot + "/schema/metadata_spec/" + updatedMetadataSpec.getId())
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .delete();
@@ -250,7 +250,7 @@ public class MetadataSpecApiTest {
         final var called = new AtomicBoolean();
 
         final PaginationWalker.WalkFunction<MetadataSpec> walkFunction = (offset, count) -> {
-            final var response = client.target(format("%s/blockchain/metadata_spec?offset=%d&count=%d",
+            final var response = client.target(format("%s/schema/metadata_spec?offset=%d&count=%d",
                     apiRoot,
                     offset,
                     count)
@@ -284,7 +284,7 @@ public class MetadataSpecApiTest {
         request.setTabs(tabs);
 
         final var response = client
-                .target(apiRoot + "/blockchain/metadata_spec")
+                .target(apiRoot + "/schema/metadata_spec")
                 .request()
                 .header(authHeader, userClientContext.getSessionSecret())
                 .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
@@ -297,7 +297,7 @@ public class MetadataSpecApiTest {
 
 
         try {
-            var responseGet = client.target(format("%s/blockchain/metadata_spec?offset=%d&count=%d",
+            var responseGet = client.target(format("%s/schema/metadata_spec?offset=%d&count=%d",
                             apiRoot,
                             0,
                             30)
