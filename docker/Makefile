@@ -69,6 +69,7 @@ revision: login deps
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-code-serve,code-serve)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-setup,setup)
 	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-cdn-serve,cdn-serve)
+	$(call DOCKER_BUILD_TAG_JAVA,namazu-socialengine-doc-serve,doc-serve)
 
 deps:
 	$(MAVEN_COPY_DEPS)

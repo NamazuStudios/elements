@@ -16,11 +16,13 @@
     <name>namazu-socialengine-doc-serve</name>
 
     <dependencies>
+
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>doc-serve</artifactId>
             <version>${project.version}</version>
         </dependency>
+
         <dependency>
             <groupId>ch.qos.logback</groupId>
             <artifactId>logback-classic</artifactId>
@@ -28,6 +30,13 @@
         </dependency>
 
         <!-- These are the actual documentation artifacts -->
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+            <classifier>luastubs</classifier>
+        </dependency>
 
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
@@ -39,6 +48,7 @@
             <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-server-lua</artifactId>
             <version>${project.version}</version>
+            <classifier>luastubs</classifier>
         </dependency>
 
         <dependency>
@@ -57,21 +67,7 @@
 
         <dependency>
             <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>service</artifactId>
-            <version>${project.version}</version>
-            <classifier>luastubs</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
             <artifactId>rt-server-lua</artifactId>
-            <version>${project.version}</version>
-            <classifier>luastubs</classifier>
-        </dependency>
-
-        <dependency>
-            <groupId>com.namazustudios.socialengine</groupId>
-            <artifactId>common</artifactId>
             <version>${project.version}</version>
             <classifier>luastubs</classifier>
         </dependency>
@@ -104,35 +100,6 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>exec-maven-plugin</artifactId>
-                <version>${exec.plugin.version}</version>
-                <executions>
-                    <execution>
-                        <id>my-exec</id>
-                        <phase>install</phase>
-                        <goals>
-                            <goal>exec</goal>
-                        </goals>
-                        <inherited>false</inherited>
-                    </execution>
-                </executions>
-                <configuration>
-                    <workingDirectory>${project.basedir}</workingDirectory>
-                    <executable>docker</executable>
-                    <arguments>
-                        <argument>build</argument>
-                        <argument>${project.basedir}</argument>
-                        <argument>--build-arg</argument>
-                        <argument>APPLICATION_LIBS=target/lib/*.jar</argument>
-                        <argument>--tag</argument>
-                        <argument>${project.artifactId}:latest</argument>
-                        <argument>--tag</argument>
-                        <argument>${project.artifactId}:${project.version}</argument>
-                    </arguments>
-                </configuration>
             </plugin>
         </plugins>
     </build>
