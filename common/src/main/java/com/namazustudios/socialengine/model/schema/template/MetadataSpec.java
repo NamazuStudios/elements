@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.blockchain.template;
+package com.namazustudios.socialengine.model.schema.template;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;

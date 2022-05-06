@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.exception.blockchain;
+package com.namazustudios.socialengine.exception.schema;
 
 import com.namazustudios.socialengine.exception.NotFoundException;
 

@@ -2,9 +2,9 @@ package com.namazustudios.socialengine.dao;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
-import com.namazustudios.socialengine.model.blockchain.template.CreateMetadataSpecRequest;
-import com.namazustudios.socialengine.model.blockchain.template.MetadataSpec;
-import com.namazustudios.socialengine.model.blockchain.template.UpdateMetadataSpecRequest;
+import com.namazustudios.socialengine.model.schema.template.CreateMetadataSpecRequest;
+import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
+import com.namazustudios.socialengine.model.schema.template.UpdateMetadataSpecRequest;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;

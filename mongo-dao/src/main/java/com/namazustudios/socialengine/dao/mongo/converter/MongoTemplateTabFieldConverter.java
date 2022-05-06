@@ -1,8 +1,7 @@
 package com.namazustudios.socialengine.dao.mongo.converter;
 
-import com.namazustudios.socialengine.dao.mongo.model.MongoFriendshipId;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoTemplateTabField;
-import com.namazustudios.socialengine.model.blockchain.template.TemplateTabField;
+import com.namazustudios.socialengine.model.schema.template.TemplateTabField;
 import org.dozer.CustomConverter;
 import org.dozer.MappingException;
 
@@ -17,7 +16,6 @@ public class MongoTemplateTabFieldConverter implements CustomConverter {
         if (sourceClass == MongoTemplateTabField.class && destinationClass == MongoTemplateTabField.class) {
             return sourceFieldValue;
         } else if (sourceFieldValue instanceof Map) {
-            if (sourceFieldValue == null ) return null;
             try{
                 Map<String, MongoTemplateTabField> fields =  (Map<String, MongoTemplateTabField>) sourceFieldValue;
                 Map<String, TemplateTabField> returnFields =  new HashMap<>();
@@ -33,7 +31,7 @@ public class MongoTemplateTabFieldConverter implements CustomConverter {
                     returnFields.put(entry.getKey(), result);
                 }
                 return returnFields;
-            }catch (Exception e){
+            }catch (ClassCastException e){
                 Map<String, TemplateTabField> fields =  (Map<String, TemplateTabField>) sourceFieldValue;
                 Map<String, MongoTemplateTabField> returnFields =  new HashMap<>();
                 for (Map.Entry<String, TemplateTabField> entry : fields.entrySet()){

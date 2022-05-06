@@ -1,12 +1,12 @@
-package com.namazustudios.socialengine.rest.blockchain;
+package com.namazustudios.socialengine.rest.schema;
 
 import com.google.common.base.Strings;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.template.CreateMetadataSpecRequest;
-import com.namazustudios.socialengine.model.blockchain.template.MetadataSpec;
-import com.namazustudios.socialengine.model.blockchain.template.UpdateMetadataSpecRequest;
-import com.namazustudios.socialengine.service.blockchain.MetadataSpecService;
+import com.namazustudios.socialengine.model.schema.template.CreateMetadataSpecRequest;
+import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
+import com.namazustudios.socialengine.model.schema.template.UpdateMetadataSpecRequest;
+import com.namazustudios.socialengine.service.schema.MetadataSpecService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;

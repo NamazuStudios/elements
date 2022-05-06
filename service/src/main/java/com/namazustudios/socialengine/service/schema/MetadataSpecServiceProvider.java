@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.service.blockchain;
+package com.namazustudios.socialengine.service.schema;
 
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.service.Services;

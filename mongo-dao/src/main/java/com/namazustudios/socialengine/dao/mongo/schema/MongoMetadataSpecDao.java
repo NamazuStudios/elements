@@ -1,16 +1,16 @@
-package com.namazustudios.socialengine.dao.mongo.blockchain;
+package com.namazustudios.socialengine.dao.mongo.schema;
 
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
-import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoMetadataSpec;
-import com.namazustudios.socialengine.exception.blockchain.MetadataSpecNotFoundException;
+import com.namazustudios.socialengine.dao.mongo.model.schema.MongoMetadataSpec;
+import com.namazustudios.socialengine.exception.schema.MetadataSpecNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
-import com.namazustudios.socialengine.model.blockchain.template.CreateMetadataSpecRequest;
-import com.namazustudios.socialengine.model.blockchain.template.MetadataSpec;
-import com.namazustudios.socialengine.model.blockchain.template.UpdateMetadataSpecRequest;
+import com.namazustudios.socialengine.model.schema.template.CreateMetadataSpecRequest;
+import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
+import com.namazustudios.socialengine.model.schema.template.UpdateMetadataSpecRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;

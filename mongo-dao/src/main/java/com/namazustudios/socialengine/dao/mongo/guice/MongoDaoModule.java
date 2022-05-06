@@ -16,7 +16,7 @@ import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoSmartContract
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
-import com.namazustudios.socialengine.dao.mongo.blockchain.MongoMetadataSpecDao;
+import com.namazustudios.socialengine.dao.mongo.schema.MongoMetadataSpecDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscWalletDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;

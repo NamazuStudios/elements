@@ -50,6 +50,9 @@ import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServi
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
 import com.namazustudios.socialengine.service.savedata.SaveDataDocumentServiceProvider;
 import com.namazustudios.socialengine.service.savedata.SuperUserSaveDataDocumentService;
+import com.namazustudios.socialengine.service.schema.MetadataSpecService;
+import com.namazustudios.socialengine.service.schema.MetadataSpecServiceProvider;
+import com.namazustudios.socialengine.service.schema.SuperUserMetadataSpecService;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;

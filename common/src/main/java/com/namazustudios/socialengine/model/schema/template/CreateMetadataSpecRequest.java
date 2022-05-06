@@ -1,16 +1,19 @@
-package com.namazustudios.socialengine.model.blockchain.template;
+package com.namazustudios.socialengine.model.schema.template;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Null;
 import java.util.List;
 
-@ApiModel(description = "Represents a request to update a MetadataSpec.")
-public class UpdateMetadataSpecRequest {
-    @NotNull(groups = ValidationGroups.Update.class)
-    @ApiModelProperty("The updated token template tabs.")
+@ApiModel(description = "Represents a request to create a MetadataSpec definition.")
+public class CreateMetadataSpecRequest {
+
+    @NotNull(groups = {ValidationGroups.Create.class, ValidationGroups.Insert.class})
+    @Null(groups = ValidationGroups.Update.class)
+    @ApiModelProperty("The token template tabs to create.")
     List<TemplateTab> tabs;
 
     @ApiModelProperty("The name of the schema.")

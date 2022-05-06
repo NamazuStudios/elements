@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.template.*;
+import com.namazustudios.socialengine.model.schema.template.*;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Guice;

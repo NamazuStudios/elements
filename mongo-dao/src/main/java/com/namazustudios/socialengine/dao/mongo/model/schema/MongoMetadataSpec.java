@@ -1,9 +1,10 @@
-package com.namazustudios.socialengine.dao.mongo.model.blockchain;
+package com.namazustudios.socialengine.dao.mongo.model.schema;
 
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoTemplateTab;
 import dev.morphia.annotations.*;
 import org.bson.types.ObjectId;
 

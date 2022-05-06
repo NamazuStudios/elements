@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.model.ErrorResponse;
-import com.namazustudios.socialengine.model.blockchain.template.*;
+import com.namazustudios.socialengine.model.schema.template.*;
 import com.namazustudios.socialengine.rest.model.MetadataSpecPagination;
 import com.namazustudios.socialengine.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
