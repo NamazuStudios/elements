@@ -63,6 +63,8 @@
 
                             <doclet>com.namazustudios.socialengine.doclet.lua.LDocStubDoclet</doclet>
 
+                            <debug>true</debug>
+
                             <docletArtifact>
                                 <groupId>com.namazustudios.socialengine</groupId>
                                 <artifactId>doclet</artifactId>
