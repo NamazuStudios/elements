@@ -125,7 +125,7 @@
 
                             <additionalOptions>
                                 <additionalOption>-d</additionalOption>
-                                <additionalOption>${project.build.directory}/site/luastubs</additionalOption>
+                                <additionalOption>'${project.build.directory}/site/luastubs'</additionalOption>
                             </additionalOptions>
 
                             <useStandardDocletOptions>false</useStandardDocletOptions>
