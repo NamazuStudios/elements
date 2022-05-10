@@ -7,6 +7,7 @@ import java.util.Properties;
 import static com.namazustudios.socialengine.Constants.HTTP_PATH_PREFIX;
 import static com.namazustudios.socialengine.Constants.HTTP_PORT;
 import static com.namazustudios.socialengine.rt.Constants.*;
+import static com.namazustudios.socialengine.rt.jeromq.JeroMQAsyncConnectionService.ASYNC_CONNECTION_IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.MAX_SOCKETS;
 import static com.namazustudios.socialengine.rt.remote.JndiSrvInstanceDiscoveryService.SRV_AUTHORITATIVE;
@@ -29,6 +30,7 @@ public class DocServeModuleDefaults implements ModuleDefaults {
         properties.setProperty(HTTP_PATH_PREFIX, "doc");
         properties.setProperty(MAX_SOCKETS, "500000");
         properties.setProperty(IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
+        properties.setProperty(ASYNC_CONNECTION_IO_THREADS, Integer.toString(getRuntime().availableProcessors() + 1));
         properties.setProperty(REMOTE_INVOKER_MIN_CONNECTIONS, "10");
         properties.setProperty(REMOTE_INVOKER_MAX_CONNECTIONS, "100");
         properties.setProperty(JEROMQ_CLUSTER_BIND_ADDRESS, "");
