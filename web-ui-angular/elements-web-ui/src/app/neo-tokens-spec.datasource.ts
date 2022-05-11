@@ -2,11 +2,11 @@ import { CollectionViewer, DataSource } from "@angular/cdk/collections";
 import { BehaviorSubject, Observable, of } from "rxjs";
 import { catchError, finalize } from "rxjs/operators";
 
-import { NeoToken } from "./api/models/blockchain/neo-token";
-import { NeoTokenSpecsService } from "./api/services/blockchain/neo-token-specs.service";
+import { TokenTemplate } from './api/models/token-spec-tab';
+import { MetadataSpecsService } from "./api/services/metadata-specs.service";
 
-export class NeoTokensSpecDataSource implements DataSource<NeoToken> {
-  private tokensSubject = new BehaviorSubject<NeoToken[]>([]);
+export class NeoTokensSpecDataSource implements DataSource<TokenTemplate> {
+  private tokensSubject = new BehaviorSubject<TokenTemplate[]>([]);
   private totalCountSubject = new BehaviorSubject<number>(0);
   private loadingSubject = new BehaviorSubject<boolean>(false);
 
@@ -14,9 +14,9 @@ export class NeoTokensSpecDataSource implements DataSource<NeoToken> {
   public loading$ = this.loadingSubject.asObservable();
   public totalCount$ = this.totalCountSubject.asObservable();
 
-  constructor(private neoTokenSpecsService: NeoTokenSpecsService) {}
+  constructor(private metadataSpecsService: MetadataSpecsService) {}
 
-  connect(collectionViewer: CollectionViewer): Observable<NeoToken[]> {
+  connect(collectionViewer: CollectionViewer): Observable<TokenTemplate[]> {
     return this.tokens$;
   }
 
@@ -25,13 +25,13 @@ export class NeoTokensSpecDataSource implements DataSource<NeoToken> {
     this.loadingSubject.complete();
   }
 
-  loadTokens(
+  loadTemplates(
     offset: number | null,
     count: number | null,
   ) {
     this.loadingSubject.next(true);
 
-    this.neoTokenSpecsService
+    this.metadataSpecsService
       .getTokenTemplates({ offset: offset, count: count })
       .pipe(
         catchError(() => of({ objects: [], total: 0 })),

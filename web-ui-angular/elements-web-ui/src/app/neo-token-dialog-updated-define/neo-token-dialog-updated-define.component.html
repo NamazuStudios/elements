@@ -1,0 +1,19 @@
+<div class="dialog-define-object-title">
+  Define Object
+</div>
+<div>
+  <app-neo-token-dialog-updated-field
+    *ngFor="let field of data.content"
+    [field]="field"
+  >
+  </app-neo-token-dialog-updated-field>
+</div>
+
+<div>
+  <button mat-raised-button color="primary" (click)="close()">
+    Ok
+  </button>
+  <button mat-raised-button (click)="close()">
+    Cancel
+  </button>
+</div>

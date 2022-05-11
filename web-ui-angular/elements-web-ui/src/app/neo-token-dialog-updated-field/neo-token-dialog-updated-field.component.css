@@ -1,0 +1,49 @@
+
+.field {
+  margin-bottom: 20px;
+}
+mat-form-field {
+  width: 35%;
+  margin-right: 20px;
+}
+mat-form-field.full-width {
+  width: 100%;
+  margin: 0;
+}
+
+
+.boolean-field {
+  display: inline-block;
+  width: 35%;
+}
+
+.mat-chip.mat-standard-chip {
+  background-color: #5BC1DF;
+  color: white;
+  border-radius: 6px;
+}
+
+.mat-chip button {
+  opacity: 1;
+}
+
+.mat-chip mat-icon {
+  color: white;
+}
+
+.array-row {
+  display: grid;
+  grid-template-columns: 1fr max-content;
+  column-gap: 25px;
+  align-items: center;
+  margin-bottom: 10px;
+  &:last-child {
+    margin-bottom: 0;
+  }
+}
+
+.add-remove-button {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+}

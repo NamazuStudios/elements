@@ -6,7 +6,11 @@
   <div>
     <mat-form-field>
       <mat-label>Contract</mat-label>
-      <mat-select name="contracts" placeholder="Contract">
+      <mat-select
+        name="contracts"
+        placeholder="Contract"
+        (selectionChange)="selectContract($event.value)"
+      >
         <mat-option
           *ngFor="let contract of contracts"
           [value]="contract.id"
@@ -19,24 +23,32 @@
     </mat-form-field>
     <mat-form-field class="token-spec-select">
       <mat-label>Token Spec</mat-label>
-      <mat-select name="tokenspec" placeholder="Token Spec">
+      <mat-select
+        name="tokenspec"
+        placeholder="Token Spec"
+        (selectionChange)="selectTokenTempalte($event.value)"
+      >
         <mat-option
-          *ngFor="let tokenSpec of tokenSpecs"
-          [value]="tokenSpec.key"
-          [matTooltip]="tokenSpec.toolTip"
+          *ngFor="let template of templates"
+          [value]="template.id"
+          [matTooltip]="template.name"
           matTooltipPosition="left"
         >
-          {{tokenSpec.label}}
+          {{template.name}}
         </mat-option>
       </mat-select>
     </mat-form-field>
   </div>
+  <mat-error *ngIf="error">
+    Please select contract and token spec
+  </mat-error>
   <div class="dialog-hub-footer">
     <div>
       <button
         mat-raised-button
         color="primary"
         (click)="openNewNeoTokenDialog()"
+        [disabled]="!selectedTempalte || !selectedContract"
       >
         Ok
       </button>

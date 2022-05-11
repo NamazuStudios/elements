@@ -86,7 +86,7 @@ mat-card {
   background-color: #f7f7f7;
   max-height: 300px;
   overflow-y: auto;
-  padding: 0 20px;
+  padding: 20px 20px 0 20px;
 }
 
 .mat-chip.mat-standard-chip {
