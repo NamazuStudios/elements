@@ -4,15 +4,16 @@ export interface CreateNeoTokenSpecRequest {
   /**
    * Tabs listed.
    */
-  tabs: TokenSpecTab[];
+  // tabs: TokenSpecTab[];
+  tabs: any[];
 
   /**
    * The token spec name.
    */
-  tokenName: string;
+  name: string;
 
   /**
    * The contract id.
    */
-   contractId: string;
+  contractId?: string;
 }

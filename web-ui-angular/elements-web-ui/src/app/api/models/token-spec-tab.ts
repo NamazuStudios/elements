@@ -10,11 +10,18 @@ export enum TokenSpecTabFieldTypes {
 
 export interface TokenSpecTabField {
   name: string;
-  type: TokenSpecTabFieldTypes;
-  content: string;
+  fieldType: TokenSpecTabFieldTypes;
+  content: any;
 }
 
 export interface TokenSpecTab {
   name: string;
   fields: TokenSpecTabField[];
+}
+
+export interface TokenTemplate {
+  contractId: string;
+  id: string;
+  name: string;
+  tabs: TokenSpecTab[];
 }
