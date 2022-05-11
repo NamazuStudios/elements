@@ -17,6 +17,8 @@ import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.component.AbstractLifeCycle;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -31,6 +33,8 @@ import static java.util.EnumSet.allOf;
 import static org.eclipse.jetty.util.Loader.getResource;
 
 public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
+
+    private static final Logger logger = LoggerFactory.getLogger(DocAppProvider.class);
 
     public static final String LUA_CONTEXT_FORMAT = "%s/lua";
 
@@ -91,6 +95,7 @@ public class DocAppProvider extends AbstractLifeCycle implements AppProvider {
 
         final var resourceBase = pathDocs.getPath().toAbsolutePath().toString();
         defaultServletHolder.setInitParameter("resourceBase", resourceBase);
+        logger.info("Serving documentation at path {}", resourceBase);
 
         final var servletContextHandler = new ServletContextHandler();
 
