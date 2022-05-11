@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-
-import { FieldTypes, TabField } from '../neo-smart-token-specs-dialog.component';
+import { TokenSpecTabField, TokenSpecTabFieldTypes } from 'src/app/api/models/token-spec-tab';
+import { enumRegex } from '../neo-smart-token-specs-dialog.component';
 
 @Component({
   selector: 'app-neo-smart-token-specs-dialog-field-type',
@@ -9,9 +9,9 @@ import { FieldTypes, TabField } from '../neo-smart-token-specs-dialog.component'
 })
 export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
   @Input()
-  field: TabField;
+  field: TokenSpecTabField;
   @Input()
-  type: FieldTypes;
+  type: TokenSpecTabFieldTypes;
   @Input()
   index: number;
   @Output("openDefineObjectModal")
@@ -21,11 +21,15 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
 
   selectedArrayType = 'String';
   arrayTypes = ['String', 'Object'];
-
+  enumError = false;
 
   constructor() { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    if (this.field.fieldType === TokenSpecTabFieldTypes.ENUM && this.field.content) {
+      this.enumError = !enumRegex.test(this.field.content);
+    }
+  }
 
   selectArrayType(value: string) {
     this.selectedArrayType = value;

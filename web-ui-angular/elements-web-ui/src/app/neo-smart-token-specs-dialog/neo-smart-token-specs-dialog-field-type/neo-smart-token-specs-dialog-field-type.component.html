@@ -1,27 +1,4 @@
 <div>
-  <!-- <div *ngIf="type === 'String'">
-    <mat-form-field>
-      <mat-label>String</mat-label>
-      <input
-        matInput
-        placeholder="Value"
-        name="string"
-        type="text"
-      >
-    </mat-form-field>
-  </div> -->
-  <!-- <div *ngIf="type === 'Number'">
-    <mat-form-field>
-      <mat-label>Number</mat-label>
-      <input
-        matInput
-        placeholder="Value"
-        name="number"
-        type="number"
-        min="1"
-      >
-    </mat-form-field>
-  </div> -->
   <div *ngIf="type === 'Boolean'">
     <mat-checkbox
       [checked]="field?.content"
@@ -45,8 +22,11 @@
         placeholder="Values"
         name="string"
         type="text"
+        [value]="field?.content"
+        (change)="onEnumChange($event.target.value)"
       >
     </mat-form-field>
+    <mat-error *ngIf="enumError">Invalid format</mat-error>
   </div>
   <div *ngIf="type === 'Object'">
     <button

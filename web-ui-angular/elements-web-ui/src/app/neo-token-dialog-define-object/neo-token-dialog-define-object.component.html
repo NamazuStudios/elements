@@ -14,11 +14,12 @@
       Add Field
     </button>
   </div>
-  <mat-card>
+  <mat-card [@.disabled]="disableAnimation">
     <mat-accordion cdkDropList>
       <mat-expansion-panel
         *ngFor="let field of fields; let i = index"
-        [expanded]="false"
+        (opened)="handleFieldPanelStateChange(i)"
+        [expanded]="expandedField === i"
         cdkDrag
       >
         <div class="custom-placeholder" *cdkDragPlaceholder></div>
@@ -31,7 +32,7 @@
                 <span class="memu-keyname">{{field.name || 'KeyName'}}</span>
               </div>
             </div>
-            <div>{{field.type || 'Type'}}</div>
+            <div>{{field.fieldType || 'Type'}}</div>
           </div>
         </mat-expansion-panel-header>
         <div>
@@ -52,7 +53,7 @@
               <mat-select
                 name="type"
                 placeholder="Type"
-                [value]="field.type?.toUpperCase()"
+                [value]="field.fieldType?.toUpperCase()"
                 (selectionChange)="updateFieldType($event.value, i)"
               >
                 <mat-option
@@ -68,8 +69,7 @@
           </div>
           <div class="menu-panel-footer">
             <app-neo-smart-token-specs-dialog-field-type
-              [type]="field.type"
-              [tabTypes]="fieldTypes"
+              [type]="field.fieldType"
               [field]="field"
               [index]="i"
               (onContentUpdate)="updateNonObjectField($event)"

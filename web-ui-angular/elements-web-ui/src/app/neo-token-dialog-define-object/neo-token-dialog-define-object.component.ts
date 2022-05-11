@@ -1,14 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FieldTypes } from '../neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
-
-type Content = any;
-
-interface Field {
-  name: string;
-  type: FieldTypes;
-  content: Content;
-}
+import { TokenSpecTabField, TokenSpecTabFieldTypes } from '../api/models/token-spec-tab';
 
 @Component({
   selector: 'app-neo-token-dialog-define-object',
@@ -20,6 +12,9 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
   fields = [];
   fieldTypes = [];
   activeObjectIndex = null;
+  expandedField = null;
+  // Workaround for accordion animation on init
+  disableAnimation = true;
 
   constructor(
     public dialogRef: MatDialogRef<NeoTokenDialogDefineObjectComponent>,
@@ -27,36 +22,53 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       updateFieldsWithContent: Function,
+      content: TokenSpecTabField[],
     },
   ) { }
 
   ngOnInit(): void {
-    this.fields = [this.createField()];
-    this.fieldTypes = Object.keys(FieldTypes).map(key => ({
+    if (this.data.content) {
+      this.fields = this.data.content;
+    } else {
+      this.fields = [this.createField()];
+    }
+    this.fieldTypes = Object.keys(TokenSpecTabFieldTypes).map(key => ({
       key,
-      value: FieldTypes[key]
+      value: TokenSpecTabFieldTypes[key]
     }));
   }
 
-  createField(): Field {
+  ngAfterViewInit(): void {
+    // timeout required to avoid the dreaded 'ExpressionChangedAfterItHasBeenCheckedError'
+    setTimeout(() => this.disableAnimation = false);
+  }
+
+  handleFieldPanelStateChange(index: number) {
+    this.expandedField = index;
+    console.log(this.expandedField);
+  }
+
+  createField(): TokenSpecTabField {
     return {
       name: "",
-      type: FieldTypes.STRING,
+      fieldType: TokenSpecTabFieldTypes.STRING,
       content: "",
     };
   }
 
   removeField(fieldIndex: number): void {
-    this.fields = this.fields.filter((_: Field, index: number): boolean => {
+    this.fields = this.fields.filter((_: TokenSpecTabField, index: number): boolean => {
       return index !== fieldIndex;
     });
   }
 
   addNewField(): void {
+    this.disableAnimation = true;
     this.fields = [...this.fields, this.createField()];
+    setTimeout(() => this.disableAnimation = false, 10);
   }
 
-  duplicateField(field: Field): void {
+  duplicateField(field: TokenSpecTabField): void {
     if (field) {
       this.fields = [...this.fields, field];
     }
@@ -74,20 +86,21 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     });
   }
 
-  updateFieldType(type: FieldTypes, index: number): void {
-    this.fields = this.fields.map((field: Field, i: number): Field => {
+  updateFieldType(type: TokenSpecTabFieldTypes, index: number): void {
+    this.disableAnimation = true;
+    this.fields = this.fields.map((field: TokenSpecTabField, i: number): TokenSpecTabField => {
       if (index === i) {
         return {
           ...field,
-          type: FieldTypes[type],
+          fieldType: TokenSpecTabFieldTypes[type],
         }
       }
       return field;
     });
+    setTimeout(() => this.disableAnimation = false);
   }
 
   openDefineObjectModal(index: number): void {
-    console.log('INDEX', index);
     this.dialog.open(NeoTokenDialogDefineObjectComponent, {
       width: "800px",
       data: {
@@ -97,9 +110,9 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     this.activeObjectIndex = index;
   }
 
-  updateFieldContentByIndex(index: number, content: Field | string | null): Field[] {
+  updateFieldContentByIndex(index: number, content: TokenSpecTabField | string | null): TokenSpecTabField[] {
     if (!content) return this.fields;
-    return this.fields.map((field: Field, i: number) => {
+    return this.fields.map((field: TokenSpecTabField, i: number) => {
       if (index === i) {
         return {
           ...field,
@@ -116,7 +129,7 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
   updateNonObjectField(data): void {
     this.fields = this.fields.map(
-      (field: Field, index: number) => {
+      (field: TokenSpecTabField, index: number) => {
         if (index === data.index) {
           return {
             ...field,
@@ -128,8 +141,8 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
     );
   }
 
-  updateFieldsWithContent(fields: Field[]): void {
-    this.fields = this.fields.map((field: Field, index: number): Field => {
+  updateFieldsWithContent(fields: TokenSpecTabField[]): void {
+    this.fields = this.fields.map((field: TokenSpecTabField, index: number): TokenSpecTabField => {
       if (index === this.activeObjectIndex) {
         return {
           ...field,

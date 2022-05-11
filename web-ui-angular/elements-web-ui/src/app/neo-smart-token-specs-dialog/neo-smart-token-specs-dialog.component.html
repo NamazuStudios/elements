@@ -1,21 +1,23 @@
 <div class="head-title">
-  <h1 *ngIf="!!data.tokenSpec" mat-dialog-title>Edit Metadata Spec</h1>
-  <h1 *ngIf="!data.tokenSpec" mat-dialog-title>New Metadata Spec</h1>
+  <h1 *ngIf="!!data.template" mat-dialog-title>Edit Token Spec</h1>
+  <h1 *ngIf="!data.template" mat-dialog-title>New Token Spec</h1>
 </div>
 
 <div class="head-controls">
-  <mat-form-field>
-    <mat-label>Name</mat-label>
-    <input
-      matInput
-      placeholder="SpecName"
-      name="specname"
-      type="text"
-      [value]="tokenName"
-      (input)="changeTokenName($event.target.value)"
-    >
-  </mat-form-field>
-  <mat-form-field>
+  <div>
+    <mat-form-field>
+      <mat-label>Name</mat-label>
+      <input
+        matInput
+        placeholder="SpecName"
+        name="specname"
+        type="text"
+        [value]="tokenName"
+        (input)="changeTokenName($event.target.value)"
+      >
+    </mat-form-field>
+  </div>
+  <!-- <mat-form-field>
     <mat-select
       name="contracts"
       placeholder="Contract"
@@ -30,7 +32,7 @@
         {{contract.displayName}}
       </mat-option>
     </mat-select>
-  </mat-form-field>
+  </mat-form-field> -->
   <button
     mat-raised-button
     color="primary"
@@ -110,7 +112,8 @@
       <mat-accordion cdkDropList (cdkDropListDropped)="drop($event)">
         <mat-expansion-panel
           *ngFor="let field of fields; let fieldIndex = index;"
-          [expanded]="false"
+          (opened)="handleFieldPanelStateChange(fieldIndex)"
+          [expanded]="expandedField === fieldIndex"
           cdkDrag
         >
           <div class="custom-placeholder" *cdkDragPlaceholder></div>
@@ -123,7 +126,7 @@
                   <span class="memu-keyname">{{field.name || 'KeyName'}}</span>
                 </div>
               </div>
-              <div>{{field.type || 'Type'}}</div>
+              <div>{{field.fieldType || 'Type'}}</div>
             </div>
           </mat-expansion-panel-header>
           <div>
@@ -140,11 +143,11 @@
                 >
               </mat-form-field>
               <mat-form-field>
-                <mat-label>{{field.type || 'Type'}}</mat-label>
+                <mat-label>{{field.fieldType || 'Type'}}</mat-label>
                 <mat-select
                   name="type"
                   placeholder="Type"
-                  [value]="field.type"
+                  [value]="field.fieldType"
                   (selectionChange)="changeFieldType($event.value, fieldIndex)"
                 >
                   <mat-option
@@ -160,7 +163,7 @@
             </div>
             <div class="menu-panel-footer">
               <app-neo-smart-token-specs-dialog-field-type
-                [type]="field.type"
+                [type]="field.fieldType"
                 [index]="fieldIndex"
                 [field]="field"
                 (onContentUpdate)="updateFieldsWithContent($event)"
@@ -170,7 +173,7 @@
               <div class="field-buttons">
                 <button
                   mat-raised-button color="primary"
-                  matTooltip="Move Up"
+                  matTooltip="Move To Another Tab"
                   matTooltipPosition="above"
                   class="move-to-other-tab"
                   (click)="moveFieldToAnotherTab(fieldIndex)"
@@ -207,10 +210,11 @@
 <div style="margin-top: 20px">
   <button
     mat-raised-button
-    (click)="submit()"
     color="primary"
     matTooltip="Ok"
     matTooltipPosition="above"
+    [disabled]="!isValid()"
+    (click)="submit()"
   >
     OK
   </button>

@@ -1,7 +1,14 @@
-import { Component, OnInit } from '@angular/core';
+import { SelectionModel } from '@angular/cdk/collections';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { NeoTokenSpecsService } from 'src/app/api/services/blockchain/neo-token-specs.service';
+import { MatPaginator } from '@angular/material/paginator';
+import { filter, tap } from 'rxjs/operators';
+import { AlertService } from 'src/app/alert.service';
+import { TokenTemplate } from 'src/app/api/models/token-spec-tab';
+import { MetadataSpecsService } from 'src/app/api/services/metadata-specs.service';
+import { ConfirmationDialogService } from 'src/app/confirmation-dialog/confirmation-dialog.service';
 import { NeoSmartTokenSpecsDialogComponent } from 'src/app/neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
+import { NeoSmartTokenSpecsDuplicateDialogComponent } from 'src/app/neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
 import { NeoTokensSpecDataSource } from 'src/app/neo-tokens-spec.datasource';
 
 @Component({
@@ -11,39 +18,136 @@ import { NeoTokensSpecDataSource } from 'src/app/neo-tokens-spec.datasource';
 })
 export class NeoSmartTokenSpecsComponent implements OnInit {
 
-  dataSource;
-  tokenSpecs = [];
+  hasSelection = false;
+  dataSource: NeoTokensSpecDataSource;
+  selection: SelectionModel<TokenTemplate>;
+  templates = [];
   displayedColumns: Array<string> = [
+    "select",
     "id",
     "name",
-    "contract",
     "edit-action",
     "copy-action",
     "remove-action"
   ];
 
+  @ViewChild(MatPaginator) paginator: MatPaginator;
+
   constructor(
-    private neoTokenSpecsService: NeoTokenSpecsService,
+    private metadataSpecsService: MetadataSpecsService,
+    private dialogService: ConfirmationDialogService,
+    private alertService: AlertService,
     public dialog: MatDialog,
   ) {}
 
   ngOnInit() {
-    this.dataSource = new NeoTokensSpecDataSource(this.neoTokenSpecsService);
+    this.selection = new SelectionModel<TokenTemplate>(true, []);
+    this.dataSource = new NeoTokensSpecDataSource(this.metadataSpecsService);
+    this.dataSource.loadTemplates(null, null);
   }
 
   ngAfterViewInit() {
+    this.selection.changed.subscribe(s => this.hasSelection = this.selection.hasValue());
     this.dataSource.tokens$.subscribe(
-      (tokenSpecs) => (this.tokenSpecs = tokenSpecs)
+      (tokenSpecs) => {
+        this.templates = tokenSpecs;
+      }
     );
+    this.dataSource.totalCount$.subscribe(
+      (totalCount) => (this.paginator.length = totalCount)
+    );
+    this.paginator.page.pipe(tap(() => this.refresh())).subscribe();
   }
 
-  showDialog(tokenSpec) {
+  showDialog(template: TokenTemplate) {
     this.dialog.open(NeoSmartTokenSpecsDialogComponent, {
       width: "800px",
       maxHeight: "90vh",
       data: {
-        tokenSpec,
+        template,
+        refresh: this.refresh.bind(this),
       },
     });
+  }
+
+  refresh(delay = 500) {
+    setTimeout(() => {
+      this.selection.clear();
+      this.dataSource.loadTemplates(
+        this.paginator.pageIndex * this.paginator.pageSize,
+        this.paginator.pageSize,
+      );
+    }, delay);
+  }
+
+  /** Whether the number of selected elements matches the total number of rows. */
+  isAllSelected() {
+    const numSelected = this.selection.selected.length;
+    const numRows = this.templates.length;
+    return numSelected == numRows;
+  }
+
+  /** Selects all rows if they are not all selected; otherwise clear selection. */
+  masterToggle() {
+    this.isAllSelected() ?
+      this.selection.clear() :
+      this.templates.forEach(row => this.selection.select(row));
+  }
+
+  openDuplicateModal(template: TokenTemplate) {
+    this.dialog.open(NeoSmartTokenSpecsDuplicateDialogComponent, {
+      width: "450px",
+      maxHeight: "90vh",
+      data: {
+        submit: this.duplicateTempalte.bind(this, template),
+      },
+    });
+  }
+
+  duplicateTempalte(template: TokenTemplate, name: string) {
+    this.metadataSpecsService.createTokenSpec({
+      name,
+      contractId: template.contractId,
+      tabs: template.tabs,
+    })
+    .subscribe(() => {
+      this.refresh();
+    });
+  }
+
+  removeTemplate(template: TokenTemplate) {
+    this.metadataSpecsService.deleteTokenTemplate(template.id).subscribe(
+      (r) => {},
+      (error) => this.alertService.error(error)
+    );
+  }
+
+  confirmTemplateRemove(template: TokenTemplate) {
+    this.dialogService
+      .confirm(
+        "Confirm Dialog",
+        `Are you sure you want to remove the token spec ${template.name}?`
+      )
+      .pipe(filter((r) => r))
+      .subscribe(() => {
+        this.removeTemplate(template);
+        this.refresh();
+      });
+  }
+
+  confirmSelectedTemplatesRemove() {
+    this.dialogService
+      .confirm(
+        "Confirm Dialog",
+        `Are you sure you want to remove ${
+          this.selection.selected.length} selected token spec${
+            this.selection.selected.length == 1 ? "" : "s"
+        }?`
+      )
+      .pipe(filter((r) => r))
+      .subscribe(() => {
+        this.selection.selected.forEach(template => this.removeTemplate(template));
+        this.refresh();
+      });
   }
 }
