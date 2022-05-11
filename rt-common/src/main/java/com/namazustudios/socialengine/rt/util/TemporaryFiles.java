@@ -209,6 +209,30 @@ public class TemporaryFiles {
 
     }
 
+    /**
+     * Creates a temporary file with the supplied prefix and suffix.
+     *
+     * @param prefix the prefix
+     * @param suffix the suffix
+     * @return the temporary file {@link Path}
+     *
+     * @throws UncheckedIOException if an error occurred creating the temporary file.
+     */
+    public Path createTempFile(final String prefix, final String suffix, final Path parent) throws UncheckedIOException {
+
+        final Path path;
+
+        try {
+            final var fullPrefix = format("%s%s", this.prefix, prefix == null ? "" : prefix);
+            path = Files.createTempFile(parent, fullPrefix, suffix);
+        } catch (IOException ex) {
+            throw new UncheckedIOException(ex);
+        }
+
+        return path.toAbsolutePath().normalize();
+
+    }
+
     private class DeleteRecursive extends SimpleFileVisitor<Path> {
 
         @Override

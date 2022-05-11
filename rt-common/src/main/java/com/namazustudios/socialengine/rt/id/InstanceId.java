@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
-import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 
 import java.io.*;
 import java.nio.file.StandardCopyOption;
@@ -10,13 +9,12 @@ import java.util.UUID;
 
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Builder;
 import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
+import static java.io.File.createTempFile;
 import static java.nio.file.Files.move;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
 public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
-
-    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(InstanceId.class);
 
     final V1CompoundId v1CompoundId;
 
@@ -215,10 +213,10 @@ public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
         final File temp;
 
         try {
-            temp = temporaryFiles.createTempFile("instance-id", ".txt").toFile();
+            temp = createTempFile("instance-id", ".txt", parent);
             temp.deleteOnExit();
-        } catch (UncheckedIOException ex) {
-            throw new InternalException(ex.getCause());
+        } catch (IOException ex) {
+            throw new InternalException(ex);
         }
 
         final InstanceId instanceId = randomInstanceId();
