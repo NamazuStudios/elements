@@ -3,14 +3,13 @@ package com.namazustudios.socialengine.testsources;
 import com.namazustudios.socialengine.rt.annotation.Public;
 
 /**
- * A standard type to expose.
+ * A standard type to expose, but lacks the proper Public annotation and shouldn't be generated.
  *
  * Try looking at {@link TestExposedStandard#getFoo()}
  *
  * {@see http://java.net}
  */
-@Public
-public class TestExposedStandard {
+public class TestNonPublicStandard {
 
     private int foo;
 

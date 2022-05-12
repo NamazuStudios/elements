@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.annotation.Public;
 import com.namazustudios.socialengine.rt.exception.InvalidResourceIdException;
 
 import java.io.Serializable;
@@ -27,6 +28,7 @@ import static com.namazustudios.socialengine.rt.id.V1CompoundId.Field.*;
  *
  * Created by patricktwohig on 4/11/17.
  */
+@Public
 public class ResourceId implements Serializable, HasNodeId, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;

@@ -29,7 +29,7 @@ import static org.testng.Assert.assertNotEquals;
 import static org.testng.AssertJUnit.*;
 
 @Guice(modules = IntegrationTestModule.class)
-public class MongoSaveDataDocumentDaoTest {
+public class MongoSaveDataPublicDocumentDaoTest {
 
     private Mapper mapper;
 
@@ -60,7 +60,7 @@ public class MongoSaveDataDocumentDaoTest {
     @BeforeClass
     public void createTestUser() {
 
-        application = getApplicationTestFactory().createMockApplication(MongoSaveDataDocumentDaoTest.class);
+        application = getApplicationTestFactory().createMockApplication(MongoSaveDataPublicDocumentDaoTest.class);
 
         testUserBob = getUserTestFactory().createTestUser();
         testProfileBob = getProfileTestFactory().makeMockProfile(testUserBob, application);

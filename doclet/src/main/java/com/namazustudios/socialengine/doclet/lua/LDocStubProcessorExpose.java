@@ -16,7 +16,7 @@ import javax.lang.model.element.VariableElement;
 import java.util.*;
 
 import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isConstant;
-import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isPublic;
+import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isPublicModifier;
 import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getAuthors;
 import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getReturnComment;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
@@ -103,7 +103,7 @@ public class LDocStubProcessorExpose implements DocProcessor<LDocRootStubModule>
                         if (isConstant(enclosed)) processField(stub, (VariableElement) enclosed);
                         break;
                     case METHOD:
-                        if (isPublic(enclosed)) processMethod(stub, (ExecutableElement) enclosed);
+                        if (isPublicModifier(enclosed)) processMethod(stub, (ExecutableElement) enclosed);
                         break;
                 }
             }

@@ -2,9 +2,9 @@ package com.namazustudios.socialengine.doclet.lua;
 
 import com.namazustudios.socialengine.doclet.DocContext;
 import com.namazustudios.socialengine.doclet.DocProcessor;
-import com.namazustudios.socialengine.doclet.visitor.FunctionalElementVisitor;
 import com.sun.source.doctree.ParamTree;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -13,9 +13,10 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 
+import static com.namazustudios.socialengine.doclet.DocAnnotations.isPrivateDoc;
+import static com.namazustudios.socialengine.doclet.DocAnnotations.isPublicDoc;
 import static com.namazustudios.socialengine.doclet.metadata.ModuleDefinitionMetadata.fromJavaClassName;
-import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isConstant;
-import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.isPublic;
+import static com.namazustudios.socialengine.doclet.metadata.TypeModifiers.*;
 import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getReturnComment;
 import static com.namazustudios.socialengine.doclet.visitor.DocCommentTags.getText;
 import static com.sun.source.doctree.DocTree.Kind.PARAM;
@@ -45,6 +46,32 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
     }
 
     private void process(final ArrayList<LDocRootStubClass> classes, final TypeElement typeElement) {
+        if (isPrivateDoc(typeElement)) {
+            processPrivateType(classes, typeElement);
+        } else if (isPublicDoc(typeElement)) {
+            processPublicType(classes, typeElement);
+        } else {
+            processDefaultType(classes, typeElement);
+        }
+    }
+
+    private void processDefaultType(final ArrayList<LDocRootStubClass> classes, final TypeElement typeElement) {
+        for (var enclosed : typeElement.getEnclosedElements()) {
+            if (enclosed.getKind() == ElementKind.CLASS && isPublicModifier(enclosed) && isProtectedModifier(typeElement)) {
+                process(classes, (TypeElement) enclosed);
+            }
+        }
+    }
+
+    private void processPrivateType(final ArrayList<LDocRootStubClass> classes, final TypeElement typeElement) {
+        for (var enclosed : typeElement.getEnclosedElements()) {
+            if (enclosed.getKind() == ElementKind.CLASS && isPublicModifier(enclosed)) {
+                process(classes, (TypeElement) enclosed);
+            }
+        }
+    }
+
+    private void processPublicType(final ArrayList<LDocRootStubClass> classes, final TypeElement typeElement) {
 
         final var docTree = docContext.getDocTrees().getDocCommentTree(typeElement);
 
@@ -72,27 +99,31 @@ public class LDocStubProcessorStandard implements DocProcessor<LDocRootStubClass
         header.prependMetadata(format("@usage java.require \"%s\"", typeElement.getQualifiedName()));
 
         for (var enclosed : typeElement.getEnclosedElements()) {
-
-            final var modifiers = enclosed.getModifiers();
-
-            if (modifiers.contains(PUBLIC) || modifiers.contains(PROTECTED)) {
+            if (isPublicModifier(typeElement) || isProtectedModifier(typeElement)) {
                 switch (enclosed.getKind()) {
                     case CLASS:
-                        if (isPublic(enclosed)) process(classes, (TypeElement) enclosed);
+                        if (!isPrivateDoc(enclosed)){
+                            process(classes, (TypeElement) enclosed);
+                        }
                         break;
                     case FIELD:
                     case ENUM_CONSTANT:
-                        if (isConstant(enclosed)) processField(stubClass, (VariableElement) enclosed);
+                        if (!isPrivateDoc(enclosed) && isConstant(enclosed)) {
+                            processField(stubClass, (VariableElement) enclosed);
+                        }
                         break;
                     case METHOD:
-                        if (isPublic(enclosed)) processMethod(stubClass, (ExecutableElement) enclosed);
+                        if (!isPrivateDoc(enclosed)) {
+                            processMethod(stubClass, (ExecutableElement) enclosed);
+                        }
                         break;
                     case CONSTRUCTOR:
-                        if (isPublic(enclosed)) processConstructor(stubClass, (ExecutableElement) enclosed);
+                        if (!isPrivateDoc(enclosed)) {
+                            processConstructor(stubClass, (ExecutableElement) enclosed);
+                        }
                         break;
                 }
             }
-
         }
 
         classes.add(stubClass);

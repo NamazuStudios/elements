@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.annotation.Public;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
 
@@ -14,6 +15,10 @@ import static java.nio.file.Files.move;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
+/**
+ * Represents an ID for an instance.
+ */
+@Public
 public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;

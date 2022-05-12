@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.annotation.Public;
 import com.namazustudios.socialengine.rt.exception.InvalidApplicationIdException;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ import static java.util.UUID.randomUUID;
 /**
  * Uniquely identifies an application.
  */
+@Public
 public class ApplicationId implements Serializable, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;

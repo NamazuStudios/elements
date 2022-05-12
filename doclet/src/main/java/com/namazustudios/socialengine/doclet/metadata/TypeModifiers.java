@@ -44,7 +44,18 @@ public class TypeModifiers {
      *
      * @return true if public, false otherwise
      */
-    public static boolean isPublic(final Element element) {
+    public static boolean isPublicModifier(final Element element) {
+        return element.getModifiers().contains(PUBLIC);
+    }
+
+    /**
+     * Returns true if the supplied {@link Element} is public.
+     *
+     * @param element the public element
+     *
+     * @return true if public, false otherwise
+     */
+    public static boolean isProtectedModifier(final Element element) {
         return element.getModifiers().contains(PUBLIC);
     }
 

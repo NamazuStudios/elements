@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.doclet;
 
 import com.namazustudios.socialengine.doclet.lua.LDocStubProcessorStandard;
-import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposeEnum;
-import com.namazustudios.socialengine.rt.annotation.Intrinsic;
-import com.namazustudios.socialengine.rt.annotation.Private;
+import com.namazustudios.socialengine.rt.annotation.*;
 
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -18,12 +15,31 @@ public class DocAnnotations {
     private DocAnnotations() {}
 
     /**
+     * Tests if the specified type is flagged as {@link Public}
+     *
+     * @param element the element to test
+     * @return true if private, false otherwise
+     */
+    public static boolean isPublicDoc(final Element element) {
+
+        var e = element;
+
+        do {
+            final var priv = e.getAnnotation(Public.class);
+            if (priv != null) return true;
+        } while((e = e.getEnclosingElement()) != null && !isTopLevel(e));
+
+        return false;
+
+    }
+
+    /**
      * Tests if the specified type is flagged as {@link Private}
      *
      * @param element the element to test
      * @return true if private, false otherwise
      */
-    public static boolean isPrivate(final Element element) {
+    public static boolean isPrivateDoc(final Element element) {
 
         var e = element;
 
@@ -57,7 +73,7 @@ public class DocAnnotations {
             case ENUM:
             case CLASS:
             case INTERFACE:
-                return !isPrivate(typeElement);
+                return true;
             default:
                 return false;
         }
@@ -73,7 +89,7 @@ public class DocAnnotations {
         switch (typeElement.getKind()) {
             case CLASS:
             case INTERFACE:
-                return isPrivate(typeElement) ? null : typeElement.getAnnotation(Expose.class);
+                return isPrivateDoc(typeElement) ? null : typeElement.getAnnotation(Expose.class);
             default:
                 return null;
         }
@@ -88,7 +104,7 @@ public class DocAnnotations {
     public static ExposeEnum getExposedEnum(final TypeElement typeElement) {
         switch (typeElement.getKind()) {
             case ENUM:
-                return isPrivate(typeElement) ? null : typeElement.getAnnotation(ExposeEnum.class);
+                return isPrivateDoc(typeElement) ? null : typeElement.getAnnotation(ExposeEnum.class);
             default:
                 return null;
         }
@@ -101,7 +117,7 @@ public class DocAnnotations {
      * @return the instance of {@link Intrinsic} or null if not
      */
     public static Intrinsic getIntrinsic(final Element element) {
-        return isPrivate(element) ? null : element.getAnnotation(Intrinsic.class);
+        return isPrivateDoc(element) ? null : element.getAnnotation(Intrinsic.class);
     }
 
 }

@@ -33,13 +33,13 @@ import static org.testng.Assert.assertNotNull;
 import static org.testng.Assert.assertNull;
 import static org.testng.AssertJUnit.assertEquals;
 
-public class UserSaveDocumentApiTest {
+public class UserSavePublicDocumentApiTest {
 
     @Factory
     public static Object[] getTests() {
         return new Object[] {
-            TestUtils.getInstance().getXodusTest(UserSaveDocumentApiTest.class),
-            TestUtils.getInstance().getUnixFSTest(UserSaveDocumentApiTest.class)
+            TestUtils.getInstance().getXodusTest(UserSavePublicDocumentApiTest.class),
+            TestUtils.getInstance().getUnixFSTest(UserSavePublicDocumentApiTest.class)
         };
     }
 
