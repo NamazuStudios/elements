@@ -237,11 +237,73 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${slf4j.version}</version>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>${logback.version}</version>
             <scope>provided</scope>
         </dependency>
+
+
+        <!-- These are the actual documentation artifacts -->
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common</artifactId>
+            <version>${project.version}</version>
+            <classifier>luastubs</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common-lua</artifactId>
+            <version>${project.version}</version>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-lua</artifactId>
+            <version>${project.version}</version>
+            <classifier>luastubs</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>service</artifactId>
+            <version>${project.version}</version>
+            <classifier>luastubs</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>dao</artifactId>
+            <version>${project.version}</version>
+            <classifier>luastubs</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>rt-server-lua</artifactId>
+            <version>${project.version}</version>
+            <classifier>luastubs</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+        <dependency>
+            <groupId>com.namazustudios.socialengine</groupId>
+            <artifactId>common-util</artifactId>
+            <version>${project.version}</version>
+            <classifier>luastubs</classifier>
+            <scope>provided</scope>
+        </dependency>
+
+
+        <!-- End Documentation Artifacts -->
+
     </dependencies>
 
 </project>

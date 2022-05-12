@@ -3,6 +3,7 @@
     <option name="INCLUDE_PROVIDED_SCOPE" value="true" />
     <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.docserve.DocServeMain" />
     <module name="doc-serve" />
+    <option name="VM_PARAMETERS" value="-Dlogback.configurationFile=logback-debug.xml" />
     <extension name="coverage">
       <pattern>
         <option name="PATTERN" value="com.namazustudios.socialengine.docserve.*" />

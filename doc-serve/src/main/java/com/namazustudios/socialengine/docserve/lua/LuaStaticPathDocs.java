@@ -2,11 +2,14 @@ package com.namazustudios.socialengine.docserve.lua;
 
 import com.namazustudios.socialengine.docserve.StaticPathDocs;
 import com.namazustudios.socialengine.exception.InternalException;
+import com.namazustudios.socialengine.rt.util.ProcessLogger;
 import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.reflections.Reflections;
 import org.reflections.scanners.ResourcesScanner;
 import org.reflections.util.ClasspathHelper;
 import org.reflections.util.ConfigurationBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.nio.file.Files;
@@ -19,6 +22,8 @@ import static java.lang.ClassLoader.getSystemClassLoader;
 import static java.nio.file.Files.createDirectories;
 
 public class LuaStaticPathDocs implements StaticPathDocs {
+
+    private static final Logger logger = LoggerFactory.getLogger(LuaStaticPathDocs.class);
 
     private static final String DOCS_PREFIX = "doc";
 
@@ -84,9 +89,13 @@ public class LuaStaticPathDocs implements StaticPathDocs {
             .findFirst()
             .orElse(false);
 
-        if (excluded) return;
+        if (excluded) {
+            logger.debug("Excluding: {} from {}", source, path);
+            return;
+        }
 
         final var dst = path.resolve(source);
+        logger.debug("Including {} -> {}", source, dst);
 
         try {
             createDirectories(dst.getParent());
@@ -119,6 +128,9 @@ public class LuaStaticPathDocs implements StaticPathDocs {
             final var process = new ProcessBuilder()
                 .command("ldoc", "-d", paths.toString(), sources.toString())
                 .start();
+
+            final var processLogger = new ProcessLogger("ldoc", process, logger);
+            processLogger.start();
 
             process.waitFor();
 
