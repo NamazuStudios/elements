@@ -6,6 +6,8 @@ import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 
 import static com.namazustudios.socialengine.Constants.API_OUTSIDE_URL;
 import static com.namazustudios.socialengine.Constants.DOC_OUTSIDE_URL;
@@ -30,14 +32,19 @@ public class RestDocRedirectFilter implements Filter {
                          final FilterChain chain) throws IOException, ServletException {
 
         final var httpServletResponse = (HttpServletResponse) response;
-        httpServletResponse.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
 
         final var restApiSwaggerJsonUrl = appendPath(getApiOutsideUrl(), "swagger.json");
+        final var restApiSwaggerJsonUrlEncoded = URLEncoder.encode(
+            restApiSwaggerJsonUrl.toString(),
+            response.getCharacterEncoding()
+        );
+
         final var swaggerUiUrl = appendPath(getDocOutsideUrl(), "swagger");
-        final var query = format("%s=%s", DOC_URL, restApiSwaggerJsonUrl.toString());
+        final var query = format("%s=%s", DOC_URL, restApiSwaggerJsonUrlEncoded);
 
         final var location = appendOrReplaceQuery(swaggerUiUrl, query);
         httpServletResponse.setHeader("Location", location.toString());
+        httpServletResponse.setStatus(HttpServletResponse.SC_MOVED_TEMPORARILY);
 
     }
 
