@@ -43,7 +43,7 @@ public class TokenTemplateResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets a specific Token Template",
             notes = "Gets a specific TokenTemplate by name or Id.")
-    public TokenTemplate getToken(@PathParam("tokenTemplateNameOrId") String tokenTemplateNameOrId) {
+    public TokenTemplate getTokenTemplate(@PathParam("tokenTemplateNameOrId") String tokenTemplateNameOrId) {
         return getTokenTemplateService().getTokenTemplate(tokenTemplateNameOrId);
     }
 
@@ -51,7 +51,7 @@ public class TokenTemplateResource {
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Creates a new Token Template definition",
             notes = "Creates a new Token Template definition.")
-    public TokenTemplate createToken(final CreateTokenTemplateRequest tokenRequest) {
+    public TokenTemplate createTokenTemplate(final CreateTokenTemplateRequest tokenRequest) {
         return getTokenTemplateService().createTokenTemplate(tokenRequest);
     }
 

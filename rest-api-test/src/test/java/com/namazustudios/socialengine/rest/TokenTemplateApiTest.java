@@ -248,6 +248,10 @@ public class TokenTemplateApiTest {
         assertEquals(tokenTemplate.getName(), tokenTemplateName);
 
         UpdateTokenTemplateRequest updateRequest = new UpdateTokenTemplateRequest();
+        updateRequest.setUserId(superUserClientContext.getUser().getId());
+        updateRequest.setName(tokenTemplateName);
+        updateRequest.setContractId(this.contractId);
+        updateRequest.setMetadataSpecId(this.specId);
         updateRequest.setDisplayName("Token Template 2");
 
         var updatedTokenTemplate = client
@@ -260,7 +264,6 @@ public class TokenTemplateApiTest {
         assertNotNull(updatedTokenTemplate);
         assertNotNull(updatedTokenTemplate.getId());
         assertEquals(updatedTokenTemplate.getUser().getId(), superUserClientContext.getUser().getId());
-        assertNotEquals(updatedTokenTemplate.getDisplayName(), tokenTemplateName);
         assertEquals(updatedTokenTemplate.getDisplayName(), "Token Template 2");
 
         Response response = client
@@ -300,7 +303,7 @@ public class TokenTemplateApiTest {
         ).toArray(Object[][]::new);
     }
 
-    @Test(dataProvider = "getClientContextsForOpposingUsers")
+    @Test(dependsOnMethods = "setupTestItems", dataProvider = "getClientContextsForOpposingUsers")
     public void testCreateUserSaveTokenTemplateFailsAcrossUsers(final ClientContext context,
                                                            final ClientContext other) {
 
@@ -328,12 +331,12 @@ public class TokenTemplateApiTest {
 
     }
 
-    @Test(dataProvider = "getClientContexts")
+    @Test(dependsOnMethods = "setupTestItems", dataProvider = "getClientContexts")
     public void testCheckedUpdateUserSaveTokenTemplate(final ClientContext context) {
         String tokenTemplateName = "TokenTemplateTest-" + randomUUID().toString();
 
         final var request = new CreateTokenTemplateRequest();
-        request.setUserId(superUserClientContext.getUser().getId());
+        request.setUserId(context.getUser().getId());
         request.setName(tokenTemplateName);
         request.setContractId(this.contractId);
         request.setMetadataSpecId(this.specId);
@@ -354,6 +357,11 @@ public class TokenTemplateApiTest {
         String updatedTokenTemplateName = "TokenTemplateTest-" + randomUUID().toString();
         UpdateTokenTemplateRequest updateRequest = new UpdateTokenTemplateRequest();
         updateRequest.setName(updatedTokenTemplateName);
+        updateRequest.setUserId(context.getUser().getId());
+        updateRequest.setContractId(this.contractId);
+        updateRequest.setMetadataSpecId(this.specId);
+        updateRequest.setDisplayName("Updated Token Template");
+
 
         var updatedTokenTemplate = client
                 .target(apiRoot + "/schema/token_template/" + tokenTemplate.getId())
@@ -365,7 +373,7 @@ public class TokenTemplateApiTest {
         assertNotNull(updatedTokenTemplate);
         assertNotNull(updatedTokenTemplate.getId());
         assertEquals(updatedTokenTemplate.getUser().getId(), context.getUser().getId());
-        assertEquals(updatedTokenTemplate.getDisplayName(), updatedTokenTemplateName);
+        assertEquals(updatedTokenTemplate.getName(), updatedTokenTemplateName);
 
         Response response = client
                 .target(apiRoot + "/schema/token_template/" + tokenTemplate.getId())
