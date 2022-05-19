@@ -51,7 +51,6 @@ public class MongoMetadataSpecDaoTest {
     }
 
     private void testCreateMetadataSpec(final String name, final Integer tabOrder, final String tabName, final String fieldName, final BlockchainConstants.TemplateFieldType fieldType) {
-
         final var request = new CreateMetadataSpecRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
         Map<String, TemplateTabField> fields = new HashMap<>();
@@ -81,7 +80,6 @@ public class MongoMetadataSpecDaoTest {
         assertNotEquals(items.getTotal(), 0);
 
         items.forEach(ii -> {
-
             assertEquals(ii.getTabs().get(0).getFields().get("field1").getName(), tab.getFields().get("field1").getName());
             assertEquals(ii.getTabs().get(0).getName(), tab.getName());
         });
