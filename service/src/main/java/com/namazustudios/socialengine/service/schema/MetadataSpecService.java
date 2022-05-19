@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
 import com.namazustudios.socialengine.model.schema.template.UpdateMetadataSpecRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 /**
@@ -15,11 +15,11 @@ import com.namazustudios.socialengine.service.Unscoped;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.metadata.spec"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.metadata.spec",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.metadata.spec"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.unscoped.metadata.spec",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface MetadataSpecService {
 
