@@ -86,7 +86,6 @@ public class MongoMetadataSpecDaoTest {
         final var idMetadataSpec = getMetadataSpecDao().getMetadataSpec(metadataSpec.getId());
         assertEquals(metadataSpec.getId(), idMetadataSpec.getId());
 
-        metadataSpec.getTabs().get(0).setName("Tab 2");
         UpdateMetadataSpecRequest updateRequest = new UpdateMetadataSpecRequest();
         List<TemplateTab> tabs = new ArrayList<>() ;
         Map<String, TemplateTabField> fields = new HashMap<>();
