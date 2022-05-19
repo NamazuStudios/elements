@@ -78,12 +78,6 @@ public class MongoMetadataSpecDaoTest {
         final Pagination<MetadataSpec> items = getMetadataSpecDao().getMetadataSpecs(0, 20);
 
         assertNotEquals(items.getTotal(), 0);
-
-        items.forEach(ii -> {
-            assertEquals(ii.getTabs().get(0).getFields().get("field1").getName(), tab.getFields().get("field1").getName());
-            assertEquals(ii.getTabs().get(0).getName(), tab.getName());
-        });
-
     }
 
     @Test(dependsOnMethods = "testCreateMetadataSpec")
