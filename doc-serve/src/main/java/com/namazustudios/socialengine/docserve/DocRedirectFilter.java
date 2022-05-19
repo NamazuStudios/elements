@@ -68,7 +68,7 @@ public class DocRedirectFilter implements Filter {
                 docSwaggerPage.getHost(),
                 docSwaggerPage.getPort(),
                 docSwaggerPage.getPath(),
-                format("url=%s", restApiSwaggerJson.toString()),
+                format("url=%s", restApiSwaggerJsonEncoded),
                 null
             );
         } catch (URISyntaxException e) {
