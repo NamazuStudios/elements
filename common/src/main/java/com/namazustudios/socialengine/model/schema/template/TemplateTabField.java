@@ -1,20 +1,20 @@
-package com.namazustudios.socialengine.dao.mongo.model.blockchain;
+package com.namazustudios.socialengine.model.schema.template;
 
 import com.namazustudios.socialengine.BlockchainConstants;
-import dev.morphia.annotations.Embedded;
-import dev.morphia.annotations.Property;
 import io.swagger.annotations.ApiModelProperty;
 
 import java.util.Objects;
 
-@Embedded
-public class MongoTemplateTabField {
+public class TemplateTabField {
 
-    @Property
+    @ApiModelProperty("name")
     private String name;
 
-    @Property
+    @ApiModelProperty("displayName")
     private String displayName;
+
+    @ApiModelProperty("fieldType")
+    private BlockchainConstants.TemplateFieldType fieldType = BlockchainConstants.TemplateFieldType.Enum;
 
     @ApiModelProperty("isRequired")
     private Boolean isRequired;
@@ -25,11 +25,8 @@ public class MongoTemplateTabField {
     @ApiModelProperty("defaultValue")
     private String defaultValue;
 
-    @Property
-    private BlockchainConstants.TemplateFieldType fieldType = BlockchainConstants.TemplateFieldType.Enum;
 
-
-    public MongoTemplateTabField() {
+    public TemplateTabField() {
     }
 
     public String getName() {
@@ -38,6 +35,14 @@ public class MongoTemplateTabField {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public BlockchainConstants.TemplateFieldType getFieldType() {
+        return fieldType;
+    }
+
+    public void setFieldType(BlockchainConstants.TemplateFieldType fieldType) {
+        this.fieldType = fieldType;
     }
 
     public String getDisplayName() {
@@ -52,16 +57,16 @@ public class MongoTemplateTabField {
         return isRequired;
     }
 
-    public void setRequired(Boolean required) {
-        isRequired = required;
-    }
-
     public void setIsRequired(Boolean required) {
         isRequired = required;
     }
 
     public Boolean getIsRequired() {
         return isRequired;
+    }
+
+    public void setRequired(Boolean required) {
+        isRequired = required;
     }
 
     public String getPlaceHolder() {
@@ -80,25 +85,17 @@ public class MongoTemplateTabField {
         this.defaultValue = defaultValue;
     }
 
-    public void setFieldType(BlockchainConstants.TemplateFieldType fieldType) {
-        this.fieldType = fieldType;
-    }
-
-    public BlockchainConstants.TemplateFieldType getFieldType() {
-        return fieldType;
-    }
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof MongoTemplateTabField)) return false;
-        MongoTemplateTabField contract = (MongoTemplateTabField) o;
+        if (!(o instanceof TemplateTabField)) return false;
+        TemplateTabField contract = (TemplateTabField) o;
         return Objects.equals(getName(), contract.getName()) &&
                 Objects.equals(getFieldType(), contract.getFieldType()) &&
                 Objects.equals(getDisplayName(), contract.getDisplayName()) &&
-                Objects.equals(getRequired(), contract.getRequired()) &&
-                Objects.equals(getDefaultValue(), contract.getDefaultValue()) &&
-                Objects.equals(getPlaceHolder(), contract.getPlaceHolder());
+                        Objects.equals(getRequired(), contract.getRequired()) &&
+                                Objects.equals(getDefaultValue(), contract.getDefaultValue()) &&
+                                        Objects.equals(getPlaceHolder(), contract.getPlaceHolder());
     }
 
     @Override

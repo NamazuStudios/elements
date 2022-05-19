@@ -1,16 +1,13 @@
-package com.namazustudios.socialengine.dao.mongo.model.blockchain;
+package com.namazustudios.socialengine.dao.mongo.model.schema;
 
 import com.namazustudios.elements.fts.annotation.SearchableField;
 import com.namazustudios.elements.fts.annotation.SearchableIdentity;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdExtractor;
 import com.namazustudios.socialengine.dao.mongo.model.ObjectIdProcessor;
-import com.namazustudios.socialengine.model.ValidationGroups;
+import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoTemplateTab;
 import dev.morphia.annotations.*;
-import io.swagger.annotations.ApiModelProperty;
 import org.bson.types.ObjectId;
 
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Null;
 import java.util.List;
 
 @SearchableIdentity(@SearchableField(
@@ -19,17 +16,15 @@ import java.util.List;
         type = ObjectId.class,
         extractor = ObjectIdExtractor.class,
         processors = ObjectIdProcessor.class))
-@Entity(value = "token_template", useDiscriminator = false)
-public class MongoTokenTemplate {
+@Entity(value = "metadata_spec", useDiscriminator = false)
+public class MongoMetadataSpec {
 
     @Id
     private ObjectId objectId;
 
     @Property
-    private String tokenName;
-
-    @Property
-    private String contractId;
+    @Indexed(options = @IndexOptions(unique = true))
+    private String name;
 
     @Property
     private List<MongoTemplateTab> tabs;
@@ -42,20 +37,12 @@ public class MongoTokenTemplate {
         this.objectId = objectId;
     }
 
-    public String getTokenName() {
-        return tokenName;
+    public String getName() {
+        return name;
     }
 
-    public void setTokenName(String tokenName) {
-        this.tokenName = tokenName;
-    }
-
-    public String getContractId() {
-        return contractId;
-    }
-
-    public void setContractId(String contractId) {
-        this.contractId = contractId;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<MongoTemplateTab>  getTabs() {

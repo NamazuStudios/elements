@@ -18,15 +18,15 @@ import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatch;
 import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.*;
 import com.namazustudios.socialengine.dao.mongo.model.savedata.MongoSaveDataDocument;
+import com.namazustudios.socialengine.dao.mongo.model.schema.MongoMetadataSpec;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.application.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
-import com.namazustudios.socialengine.model.blockchain.template.TemplateTab;
-import com.namazustudios.socialengine.model.blockchain.template.TemplateTabField;
-import com.namazustudios.socialengine.model.blockchain.template.TokenTemplate;
+import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
+import com.namazustudios.socialengine.model.schema.template.TemplateTab;
 import com.namazustudios.socialengine.model.friend.Friend;
 import com.namazustudios.socialengine.model.gameon.game.GameOnRegistration;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
@@ -191,13 +191,13 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(BscToken.class, MongoBscToken.class)
                         .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
-            mapping(TokenTemplate.class, MongoTokenTemplate.class)
+            mapping(MetadataSpec.class, MongoMetadataSpec.class)
                         .fields("id", "objectId", customConverter(ObjectIdConverter.class))
-                        .fields("tokenName","tokenName")
-                        .fields("contractId","contractId");
+                        .fields("name","name")
+                        .fields("tabs","tabs");
 
             mapping(TemplateTab.class, MongoTemplateTab.class)
-                    .fields("fields","fields")
+                    .fields("fields","fields", customConverter(MongoTemplateTabFieldConverter.class))
                     .fields("tabOrder","tabOrder");
 
             mapping(SaveDataDocument.class, MongoSaveDataDocument.class)

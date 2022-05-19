@@ -1,4 +1,4 @@
-package com.namazustudios.socialengine.model.blockchain.template;
+package com.namazustudios.socialengine.model.schema.template;
 
 import com.namazustudios.socialengine.model.ValidationGroups;
 import io.swagger.annotations.ApiModel;
@@ -9,22 +9,19 @@ import javax.validation.constraints.Null;
 import java.util.List;
 
 @ApiModel
-public class TokenTemplate {
+public class MetadataSpec {
 
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
-    @ApiModelProperty("The unique ID of the template itself.")
+    @ApiModelProperty("The unique ID of the schema itself.")
     private String id;
 
-    @ApiModelProperty("The Token Name of the template.")
-    private String tokenName;
-
-    @ApiModelProperty("The Contact Id of the template.")
-    private String contractId;
+    @ApiModelProperty("The Name of the schema.")
+    private String name;
 
     @NotNull(groups = ValidationGroups.Update.class)
     @Null(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class})
-    @ApiModelProperty("The tabs of the token template.")
+    @ApiModelProperty("The tabs of the metadata spec.")
     private List<TemplateTab> tabs ;
 
     public String getId() {
@@ -35,20 +32,12 @@ public class TokenTemplate {
         this.id = id;
     }
 
-    public String getTokenName() {
-        return tokenName;
+    public String getName() {
+        return name;
     }
 
-    public void setTokenName(String tokenName) {
-        this.tokenName = tokenName;
-    }
-
-    public String getContractId() {
-        return contractId;
-    }
-
-    public void setContractId(String contractId) {
-        this.contractId = contractId;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public List<TemplateTab> getTabs() {
@@ -56,6 +45,7 @@ public class TokenTemplate {
     }
 
     public void setTabs(List<TemplateTab> tabs) {
+
         this.tabs = tabs;
     }
 }

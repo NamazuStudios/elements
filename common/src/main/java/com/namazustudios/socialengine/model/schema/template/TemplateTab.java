@@ -1,8 +1,8 @@
-package com.namazustudios.socialengine.model.blockchain.template;
+package com.namazustudios.socialengine.model.schema.template;
 
 import io.swagger.annotations.ApiModelProperty;
 
-import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 public class TemplateTab {
@@ -14,12 +14,12 @@ public class TemplateTab {
     private Integer tabOrder;
 
     @ApiModelProperty("fields")
-    private List<TemplateTabField> fields;
+    private Map<String, TemplateTabField> fields;
 
     public TemplateTab() {
     }
 
-    public TemplateTab(String name, List<TemplateTabField> fields) {
+    public TemplateTab(String name, Map<String, TemplateTabField> fields) {
         this.name = name;
         this.fields = fields;
     }
@@ -40,11 +40,11 @@ public class TemplateTab {
         this.tabOrder = tabOrder;
     }
 
-    public List<TemplateTabField>  getFields() {
+    public Map<String, TemplateTabField>  getFields() {
         return fields;
     }
 
-    public void  setFields(List<TemplateTabField> fields) {
+    public void  setFields(Map<String, TemplateTabField> fields) {
          this.fields = fields;
     }
 

@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.rest;
 
 
-import com.namazustudios.socialengine.dao.TokenTemplateDao;
+import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.model.ErrorResponse;
-import com.namazustudios.socialengine.model.blockchain.template.*;
-import com.namazustudios.socialengine.rest.model.TokenTemplatePagination;
+import com.namazustudios.socialengine.model.schema.template.*;
+import com.namazustudios.socialengine.rest.model.MetadataSpecPagination;
 import com.namazustudios.socialengine.util.PaginationWalker;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
@@ -18,8 +18,7 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
@@ -31,13 +30,13 @@ import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 
-public class TokenTemplateApiTest {
+public class MetadataSpecApiTest {
 
     @Factory
     public Object[] getTests() {
         return new Object[] {
-            TestUtils.getInstance().getXodusTest(TokenTemplateApiTest.class),
-            TestUtils.getInstance().getUnixFSTest(TokenTemplateApiTest.class)
+            TestUtils.getInstance().getXodusTest(MetadataSpecApiTest.class),
+            TestUtils.getInstance().getUnixFSTest(MetadataSpecApiTest.class)
         };
     }
 
@@ -55,7 +54,7 @@ public class TokenTemplateApiTest {
     private ClientContext userClientContext;
 
     @Inject
-    private TokenTemplateDao tokenTemplateDao;
+    private MetadataSpecDao metadataSpecDao;
 
 
     @DataProvider
@@ -69,24 +68,22 @@ public class TokenTemplateApiTest {
     @BeforeClass
     public void createUser() {
         superUserClientContext
-            .createSuperuser("tokenTemplateAdmin")
+            .createSuperuser("metadataSpecAdmin")
             .createSession();
         userClientContext
-                .createUser("tokenTemplateUser")
+                .createUser("metadataSpecUser")
                 .createSession();
     }
 
     @Test(dataProvider = "getAuthHeader")
-    public void testCreateAndDeleteTokenTemplate(final String authHeader) {
-        final var request = new CreateTokenTemplateRequest();
-        request.setTokenName("New Token");
-        request.setContractId("uu1234");
+    public void testCreateAndDeleteMetadataSpec(final String authHeader) {
+        final var request = new CreateMetadataSpecRequest();
+        request.setName("New Token");
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
@@ -95,24 +92,23 @@ public class TokenTemplateApiTest {
         tabs.add(tab2);
         request.setTabs(tabs);
 
-        TokenTemplate tokenTemplate = client
-            .target(apiRoot + "/blockchain/token/template")
+        MetadataSpec metadataSpec = client
+            .target(apiRoot + "/schema/metadata_spec")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON))
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
-        assertNotNull(tokenTemplate);
-        assertNotNull(tokenTemplate.getId());
-        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
-        assertEquals(tokenTemplate.getContractId(), request.getContractId());
-        assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
-        assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
-        assertEquals(tokenTemplate.getTabs().get(1).getName(), tab2.getName());
-        assertEquals(tokenTemplate.getTabs().get(1).getTabOrder(), tab2.getTabOrder());
+        assertNotNull(metadataSpec);
+        assertNotNull(metadataSpec.getId());
+        assertEquals(metadataSpec.getName(), request.getName());
+        assertEquals(metadataSpec.getTabs().get(0).getName(), tab.getName());
+        assertEquals(metadataSpec.getTabs().get(0).getTabOrder(), tab.getTabOrder());
+        assertEquals(metadataSpec.getTabs().get(1).getName(), tab2.getName());
+        assertEquals(metadataSpec.getTabs().get(1).getTabOrder(), tab2.getTabOrder());
 
         Response response = client
-                .target(apiRoot + "/blockchain/token/template/" + tokenTemplate.getId())
+                .target(apiRoot + "/schema/metadata_spec/" + metadataSpec.getId())
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
                 .delete();
@@ -121,47 +117,61 @@ public class TokenTemplateApiTest {
     }
 
     @Test(dataProvider = "getAuthHeader")
-    public void testGetTokenTemplate(final String authHeader) {
-        final var request = new CreateTokenTemplateRequest();
-        request.setTokenName("New Token");
-        request.setContractId("uu1234");
+    public void testGetMetadataSpec(final String authHeader) {
+        final var request = new CreateMetadataSpecRequest();
+        String specName = "New Metadata Spec" + (new Date()).getTime();
+        request.setName(specName);
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
         request.setTabs(tabs);
 
         Response response = client
-            .target(apiRoot + "/blockchain/token/template")
+            .target(apiRoot + "/schema/metadata_spec")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON));
 
-        var created = response.readEntity(TokenTemplate.class);
+        var created = response.readEntity(MetadataSpec.class);
 
         assertEquals(response.getStatus(), 200);
 
-        var tokenTemplate = client
-            .target(apiRoot + "/blockchain/token/template/" + created.getId())
+        //get Spec by ID
+        var metadataSpec = client
+            .target(apiRoot + "/schema/metadata_spec/" + created.getId())
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .get()
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
-        assertNotNull(tokenTemplate);
-        assertNotNull(tokenTemplate.getId());
-        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
-        assertEquals(tokenTemplate.getContractId(), request.getContractId());
-        assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
-        assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
+        assertNotNull(metadataSpec);
+        assertNotNull(metadataSpec.getId());
+        assertEquals(metadataSpec.getName(), request.getName());
+        assertEquals(metadataSpec.getTabs().get(0).getName(), tab.getName());
+        assertEquals(metadataSpec.getTabs().get(0).getTabOrder(), tab.getTabOrder());
+
+        //get Spec by Name
+        var metadataSpec2 = client
+                .target(apiRoot + "/schema/metadata_spec/" + specName)
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .get()
+                .readEntity(MetadataSpec.class);
+
+        assertNotNull(metadataSpec2);
+        assertNotNull(metadataSpec2.getId());
+        assertEquals(metadataSpec2.getName(), request.getName());
+        assertEquals(metadataSpec2.getTabs().get(0).getName(), tab.getName());
+        assertEquals(metadataSpec2.getTabs().get(0).getTabOrder(), tab.getTabOrder());
+
 
         response = client
-                .target(apiRoot + "/blockchain/token/template/" + tokenTemplate.getId())
+                .target(apiRoot + "/schema/metadata_spec/" + metadataSpec.getId())
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
                 .delete();
@@ -171,66 +181,61 @@ public class TokenTemplateApiTest {
     }
 
     @Test(dataProvider = "getAuthHeader")
-    public void testUpdateTokenTemplate(final String authHeader) {
+    public void testUpdateMetadataSpec(final String authHeader) {
 
-        final var request = new CreateTokenTemplateRequest();
-        request.setTokenName("New Token");
-        request.setContractId("uu1234");
+        final var request = new CreateMetadataSpecRequest();
+        String specName = "New Metadata Spec" + (new Date()).getTime();
+        request.setName(specName);
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tab.setTabOrder(1);
         tabs.add(tab);
         request.setTabs(tabs);
 
-        TokenTemplate tokenTemplate = client
-            .target(apiRoot + "/blockchain/token/template")
+        MetadataSpec metadataSpec = client
+            .target(apiRoot + "/schema/metadata_spec")
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .post(Entity.entity(request, APPLICATION_JSON))
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
-        assertNotNull(tokenTemplate);
-        assertNotNull(tokenTemplate.getId());
-        assertEquals(tokenTemplate.getTokenName(), request.getTokenName());
-        assertEquals(tokenTemplate.getContractId(), request.getContractId());
-        assertEquals(tokenTemplate.getTabs().get(0).getName(), tab.getName());
-        assertEquals(tokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
+        assertNotNull(metadataSpec);
+        assertNotNull(metadataSpec.getId());
+        assertEquals(metadataSpec.getName(), request.getName());
+        assertEquals(metadataSpec.getTabs().get(0).getName(), tab.getName());
+        assertEquals(metadataSpec.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
-        UpdateTokenTemplateRequest updateRequest = new UpdateTokenTemplateRequest();
-        updateRequest.setTokenName("Updated Token");
-        updateRequest.setContractId("uu6789");
+        UpdateMetadataSpecRequest updateRequest = new UpdateMetadataSpecRequest();
+        updateRequest.setName("Updated Token");
         tabs = new ArrayList<>() ;
-        fields = new ArrayList<>();
+        fields = new HashMap<>();
         field = new TemplateTabField();
         field.setName("field2");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         tab = new TemplateTab("tab2",fields);
         tab.setTabOrder(2);
         tabs.add(tab);
         updateRequest.setTabs(tabs);
 
-        var updatedTokenTemplate = client
-            .target(apiRoot + "/blockchain/token/template/" + tokenTemplate.getId())
+        var updatedMetadataSpec = client
+            .target(apiRoot + "/schema/metadata_spec/" + metadataSpec.getId())
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .put(Entity.entity(updateRequest, APPLICATION_JSON))
-            .readEntity(TokenTemplate.class);
+            .readEntity(MetadataSpec.class);
 
-        assertNotNull(updatedTokenTemplate);
-        assertNotNull(updatedTokenTemplate.getId());
-        assertEquals(updatedTokenTemplate.getTokenName(), updateRequest.getTokenName());
-        assertEquals(updatedTokenTemplate.getContractId(), updateRequest.getContractId());
-        assertEquals(updatedTokenTemplate.getTabs().get(0).getName(), tab.getName());
-        assertEquals(updatedTokenTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
+        assertNotNull(updatedMetadataSpec);
+        assertNotNull(updatedMetadataSpec.getId());
+        assertEquals(updatedMetadataSpec.getName(), updateRequest.getName());
+        assertEquals(updatedMetadataSpec.getTabs().get(0).getName(), tab.getName());
+        assertEquals(updatedMetadataSpec.getTabs().get(0).getTabOrder(), tab.getTabOrder());
 
         var response = client
-            .target(apiRoot + "/blockchain/token/template/" + updatedTokenTemplate.getId())
+            .target(apiRoot + "/schema/metadata_spec/" + updatedMetadataSpec.getId())
             .request()
             .header(authHeader, superUserClientContext.getSessionSecret())
             .delete();
@@ -240,24 +245,24 @@ public class TokenTemplateApiTest {
     }
 
     @Test
-    public void testGetTokenTemplates() {
+    public void testGetMetadataSpecs() {
 
         final var called = new AtomicBoolean();
 
-        final PaginationWalker.WalkFunction<TokenTemplate> walkFunction = (offset, count) -> {
-            final var response = client.target(format("%s/blockchain/token/template?offset=%d&count=%d",
+        final PaginationWalker.WalkFunction<MetadataSpec> walkFunction = (offset, count) -> {
+            final var response = client.target(format("%s/schema/metadata_spec?offset=%d&count=%d",
                     apiRoot,
                     offset,
                     count)
             )
             .request()
             .header("Authorization", format("Bearer %s", superUserClientContext.getSessionSecret()))
-            .get(TokenTemplatePagination.class);
+            .get(MetadataSpecPagination.class);
             called.set(true);
             return response;
         };
 
-        new PaginationWalker().forEach(walkFunction, tokenTemplate -> {});
+        new PaginationWalker().forEach(walkFunction, metadataSpec -> {});
         assertTrue(called.get());
 
     }
@@ -265,19 +270,21 @@ public class TokenTemplateApiTest {
     @Test(dataProvider = "getAuthHeader")
     public void testNormalUserRestrictionAccess(final String authHeader) {
 
-        final var request = new CreateTokenTemplateRequest();
+        final var request = new CreateMetadataSpecRequest();
+        String specName = "New Metadata Spec" + (new Date()).getTime();
+        request.setName(specName);
         List<TemplateTab> tabs = new ArrayList<>() ;
-        List<TemplateTabField> fields = new ArrayList<>();
+        Map<String, TemplateTabField> fields = new HashMap<>();
+
         TemplateTabField field = new TemplateTabField();
         field.setName("field1");
-        field.setContent("Test");
-        fields.add(field);
+        fields.put("field1", field);
         TemplateTab tab = new TemplateTab("tab1",fields);
         tabs.add(tab);
         request.setTabs(tabs);
 
         final var response = client
-                .target(apiRoot + "/blockchain/token/template")
+                .target(apiRoot + "/schema/metadata_spec")
                 .request()
                 .header(authHeader, userClientContext.getSessionSecret())
                 .post(Entity.entity(request, MediaType.APPLICATION_JSON_TYPE));
@@ -290,14 +297,14 @@ public class TokenTemplateApiTest {
 
 
         try {
-            var responseGet = client.target(format("%s/blockchain/token/template?offset=%d&count=%d",
+            var responseGet = client.target(format("%s/schema/metadata_spec?offset=%d&count=%d",
                             apiRoot,
                             0,
                             30)
                     )
                     .request()
                     .header(authHeader, userClientContext.getSessionSecret())
-                    .get(TokenTemplatePagination.class);
+                    .get(MetadataSpecPagination.class);
         }catch(ForbiddenException e) {
             assertEquals(403, e.getResponse().getStatus());
         }

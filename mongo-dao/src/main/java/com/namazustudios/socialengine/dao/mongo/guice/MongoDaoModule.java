@@ -16,7 +16,7 @@ import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoSmartContract
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscTokenDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoNeoWalletDao;
-import com.namazustudios.socialengine.dao.mongo.blockchain.MongoTokenTemplateDao;
+import com.namazustudios.socialengine.dao.mongo.schema.MongoMetadataSpecDao;
 import com.namazustudios.socialengine.dao.mongo.blockchain.MongoBscWalletDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnRegistrationDao;
 import com.namazustudios.socialengine.dao.mongo.gameon.MongoGameOnSessionDao;
@@ -30,8 +30,6 @@ import com.namazustudios.socialengine.dao.mongo.provider.MongoDozerMapperProvide
 import com.namazustudios.socialengine.dao.mongo.provider.MongoMatchmakerFunctionProvider;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.mongo.savedata.MongoSaveDataDocumentDao;
-import com.namazustudios.socialengine.model.blockchain.Token;
-import com.namazustudios.socialengine.model.blockchain.template.TokenTemplate;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import org.dozer.Mapper;
 import dev.morphia.Datastore;
@@ -95,7 +93,7 @@ public class MongoDaoModule extends PrivateModule {
         bind(NeoTokenDao.class).to(MongoNeoTokenDao.class);
         bind(BscTokenDao.class).to(MongoBscTokenDao.class);
         bind(NeoWalletDao.class).to(MongoNeoWalletDao.class);
-        bind(TokenTemplateDao.class).to(MongoTokenTemplateDao.class);
+        bind(MetadataSpecDao.class).to(MongoMetadataSpecDao.class);
         bind(BscWalletDao.class).to(MongoBscWalletDao.class);
         bind(SaveDataDocumentDao.class).to(MongoSaveDataDocumentDao.class);
         bind(AuthSchemeDao.class).to(MongoAuthSchemeDao.class);
@@ -157,7 +155,7 @@ public class MongoDaoModule extends PrivateModule {
         expose(NeoTokenDao.class);
         expose(NeoWalletDao.class);
         expose(BscTokenDao.class);
-        expose(TokenTemplateDao.class);
+        expose(MetadataSpecDao.class);
         expose(BscWalletDao.class);
         expose(SaveDataDocumentDao.class);
         expose(AuthSchemeDao.class);

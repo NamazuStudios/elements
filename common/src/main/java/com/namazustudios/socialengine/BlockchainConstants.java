@@ -13,7 +13,7 @@ public interface BlockchainConstants {
     }
 
     /**
-     * The field type of the field inside Token Template
+     * The field type of the field inside MetadataSpec
      */
     enum TemplateFieldType {
         String,
