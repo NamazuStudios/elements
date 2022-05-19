@@ -74,10 +74,6 @@ public class MongoMetadataSpecDaoTest {
         String fetchedFieldName = fetchedField.getName();
         assertEquals(fieldName, fetchedFieldName);
         assertEquals(fieldType, fetchedField.getFieldType());
-
-        final Pagination<MetadataSpec> items = getMetadataSpecDao().getMetadataSpecs(0, 20);
-
-        assertNotEquals(items.getTotal(), 0);
     }
 
     @Test(dependsOnMethods = "testCreateMetadataSpec")
