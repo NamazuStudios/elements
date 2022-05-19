@@ -83,7 +83,6 @@ public class MongoMetadataSpecDaoTest {
 
         final var metadataSpec = items.iterator().next();
         final var idMetadataSpec = getMetadataSpecDao().getMetadataSpec(metadataSpec.getId());
-        assertEquals(metadataSpec.getTabs().get(0).getFields().get("field1").getFieldType(), idMetadataSpec.getTabs().get(0).getFields().get("field1").getFieldType());
         assertEquals(metadataSpec.getId(), idMetadataSpec.getId());
 
         metadataSpec.getTabs().get(0).setName("Tab 2");
@@ -93,7 +92,7 @@ public class MongoMetadataSpecDaoTest {
         tabs = new ArrayList<>() ;
         TemplateTabField field = new TemplateTabField();
         field.setName("Field2");
-        field.setFieldType(idMetadataSpec.getTabs().get(0).getFields().get("field1").getFieldType());
+        field.setFieldType(BlockchainConstants.TemplateFieldType.Enum);
         fields.put("field2", field);
         TemplateTab tab = new TemplateTab("Tab2",fields);
         tab.setTabOrder(2);
@@ -109,7 +108,7 @@ public class MongoMetadataSpecDaoTest {
         assertEquals(updatedTemplate.getName(), updateRequest.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getName(), tab.getName());
         assertEquals(updatedTemplate.getTabs().get(0).getTabOrder(), tab.getTabOrder());
-        assertEquals(updatedTemplate.getTabs().get(0).getFields().get("field2").getFieldType(), idMetadataSpec.getTabs().get(0).getFields().get("field1").getFieldType());
+        assertEquals(updatedTemplate.getTabs().get(0).getFields().get("field2").getFieldType(), BlockchainConstants.TemplateFieldType.Enum);
 
         tabs = new ArrayList<>() ;
         tab = new TemplateTab("Tab3",fields);
