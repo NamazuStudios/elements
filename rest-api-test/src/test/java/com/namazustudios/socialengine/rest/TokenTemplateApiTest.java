@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-import com.namazustudios.socialengine.BlockchainConstants;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
