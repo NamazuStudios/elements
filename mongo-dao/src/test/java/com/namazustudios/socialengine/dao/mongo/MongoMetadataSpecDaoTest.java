@@ -14,6 +14,7 @@ import javax.inject.Inject;
 import java.util.*;
 import java.util.stream.Stream;
 
+import static java.util.UUID.randomUUID;
 import static org.testng.Assert.*;
 
 @Guice(modules = IntegrationTestModule.class)
@@ -46,7 +47,7 @@ public class MongoMetadataSpecDaoTest {
 
     @Test(dataProvider = "getFieldType")
     public void testCreateMetadataSpec(final BlockchainConstants.TemplateFieldType fieldType) {
-        this.name = "New MetadataSpec " + (new Date()).getTime();
+        this.name = "New MetadataSpec " + (new Date()).getTime() + randomUUID().toString();
         testCreateMetadataSpec(name, tabOrder, tabName, fieldName, fieldType);
     }
 
