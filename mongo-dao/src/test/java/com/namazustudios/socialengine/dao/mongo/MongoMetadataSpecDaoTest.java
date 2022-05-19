@@ -46,7 +46,7 @@ public class MongoMetadataSpecDaoTest {
 
     @Test(dataProvider = "getFieldType")
     public void testCreateMetadataSpec(final BlockchainConstants.TemplateFieldType fieldType) {
-        this.name = "New MetadataSpec " + (new Date()).getTime();;
+        this.name = "New MetadataSpec " + (new Date()).getTime();
         testCreateMetadataSpec(name, tabOrder, tabName, fieldName, fieldType);
     }
 
