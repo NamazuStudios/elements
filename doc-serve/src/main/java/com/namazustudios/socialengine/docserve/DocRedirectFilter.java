@@ -52,11 +52,6 @@ public class DocRedirectFilter implements Filter {
 
         final var restApiSwaggerJson = appendPath(getApiOutsideUrl(), "swagger.json");
 
-        final var restApiSwaggerJsonEncoded = encode(
-            restApiSwaggerJson.toString(),
-            response.getCharacterEncoding()
-        );
-
         final var docSwaggerPage = appendPath(getDocOutsideUrl(), "swagger");
 
         final URI location;
@@ -68,7 +63,7 @@ public class DocRedirectFilter implements Filter {
                 docSwaggerPage.getHost(),
                 docSwaggerPage.getPort(),
                 docSwaggerPage.getPath(),
-                format("url=%s", restApiSwaggerJsonEncoded),
+                format("url=%s", restApiSwaggerJson.toString()),
                 null
             );
         } catch (URISyntaxException e) {

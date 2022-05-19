@@ -34,13 +34,9 @@ public class RestDocRedirectFilter implements Filter {
         final var httpServletResponse = (HttpServletResponse) response;
 
         final var restApiSwaggerJsonUrl = appendPath(getApiOutsideUrl(), "swagger.json");
-        final var restApiSwaggerJsonUrlEncoded = URLEncoder.encode(
-            restApiSwaggerJsonUrl.toString(),
-            response.getCharacterEncoding()
-        );
 
         final var swaggerUiUrl = appendPath(getDocOutsideUrl(), "swagger");
-        final var query = format("%s=%s", DOC_URL, restApiSwaggerJsonUrlEncoded);
+        final var query = format("%s=%s", DOC_URL, restApiSwaggerJsonUrl.toString());
 
         final var location = appendOrReplaceQuery(swaggerUiUrl, query);
         httpServletResponse.setHeader("Location", location.toString());
