@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscTokenRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 import java.util.List;
@@ -18,11 +18,11 @@ import java.util.List;
  * Created by TuanTran on 3/24/22.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.bsc.token"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.bsc.unscoped.token",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.bsc.token"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.bsc.unscoped.token",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface BscTokenService {
 

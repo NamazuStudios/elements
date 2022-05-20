@@ -6,7 +6,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.TaskId;
-import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.AfterSuite;
@@ -51,13 +51,13 @@ public class TestCoreErisPersistenceChannels {
 
     private static final Logger logger = LoggerFactory.getLogger(TestCoreErisPersistenceChannels.class);
 
-    private static final TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles(TestCoreErisPersistenceChannels.class);
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(TestCoreErisPersistenceChannels.class);
 
     private ResourceLoader resourceLoader;
 
     @AfterSuite
     public static void deleteTempFiles() {
-        testTemporaryFiles.deleteTempFiles();
+        temporaryFiles.deleteTempFilesAndDirectories();
     }
 
     @DataProvider
@@ -70,7 +70,7 @@ public class TestCoreErisPersistenceChannels {
 
         logger.debug("Testing Persistence for {}", moduleName);
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final var tempFile = temporaryFiles.createTempFile();
 
         try (final var wbc = open(tempFile, WRITE);
              final var resource = getResourceLoader().load(moduleName)) {
@@ -88,7 +88,7 @@ public class TestCoreErisPersistenceChannels {
     @Test
     public void testIocIsRestoredAfterUnpersist() throws IOException {
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final var tempFile = temporaryFiles.createTempFile();
 
         try (final var wbc = open(tempFile, WRITE);
              final var resource = getResourceLoader().load("test.ioc_resolve")) {
@@ -128,7 +128,7 @@ public class TestCoreErisPersistenceChannels {
     @Test
     public void testIocProviderIsRestoredAfterUnpersist() throws IOException {
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final var tempFile = temporaryFiles.createTempFile();
 
         try (final var wbc = open(tempFile, WRITE);
              final var resource = getResourceLoader().load("test.ioc_resolve")) {
@@ -168,7 +168,7 @@ public class TestCoreErisPersistenceChannels {
     @Test(threadPoolSize = 100, invocationCount = 100)
     public void testUpvaluesArePersisted() throws Exception {
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final var tempFile = temporaryFiles.createTempFile();
         final var original = new DummyObject();
 
         try (final var wbc = open(tempFile, WRITE);
@@ -184,7 +184,7 @@ public class TestCoreErisPersistenceChannels {
         }
 
         var toRead = tempFile;
-        var toWrite = testTemporaryFiles.createTempFile();
+        var toWrite = temporaryFiles.createTempFile();
 
         for (int i = 0; i < 100; ++i) try (final FileChannel rbc = open(toRead, READ);
                                            final Resource resource = getResourceLoader().load(rbc);
@@ -197,7 +197,7 @@ public class TestCoreErisPersistenceChannels {
             resource.serialize(wbc);
 
             toRead = toWrite;
-            toWrite = testTemporaryFiles.createTempFile();
+            toWrite = temporaryFiles.createTempFile();
 
         }
 
@@ -209,7 +209,7 @@ public class TestCoreErisPersistenceChannels {
         final TaskId taskId;
         final Set<TaskId> taskIdSet;
 
-        final var tempFile = testTemporaryFiles.createTempFile();
+        final var tempFile = temporaryFiles.createTempFile();
 
         try (final var wbc = open(tempFile, WRITE);
              final var resource = getResourceLoader().load("test.simple_yield")) {

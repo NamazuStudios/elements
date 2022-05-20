@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.Map;
 import java.util.Optional;
@@ -17,8 +17,8 @@ import java.util.Optional;
  * Created by patricktwohig on 6/28/17.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.profile"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.profile"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.profile",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.profile instead"))
 })

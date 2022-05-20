@@ -7,17 +7,16 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.mission.Mission;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by davidjbrooks on 11/24/18.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.mission"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.mission"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.mission",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.mission instead"))
 })

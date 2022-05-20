@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoTokenRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 import java.util.List;
@@ -18,11 +18,11 @@ import java.util.List;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neo.token"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.neo.token",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.neo.token"),
+    @ModuleDefinition(
+            value = "namazu.elements.service.blockchain.unscoped.neo.token",
+            annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface NeoTokenService {
 

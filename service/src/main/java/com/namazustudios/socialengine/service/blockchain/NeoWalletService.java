@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 import java.util.List;
@@ -18,11 +18,11 @@ import java.util.List;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neo.wallet"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.neo.wallet",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.wallet"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.unscoped.wallet",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface NeoWalletService {
 

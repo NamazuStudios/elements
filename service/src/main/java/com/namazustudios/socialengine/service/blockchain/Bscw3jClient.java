@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service.blockchain;
 import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
@@ -17,11 +17,11 @@ import java.math.BigInteger;
  * Created by Tuan Tran on 3/24/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.bsc.client"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.bsc.unscoped.client",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.bsc.client"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.bsc.unscoped.client",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface Bscw3jClient {
 

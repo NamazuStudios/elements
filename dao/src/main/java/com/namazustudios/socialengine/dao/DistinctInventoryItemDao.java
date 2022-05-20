@@ -4,7 +4,7 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.inventory.DistinctInventoryItem;
 import com.namazustudios.socialengine.model.inventory.InventoryItem;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.Optional;
 
@@ -12,7 +12,7 @@ import java.util.Optional;
  * Distinct inventory item Dao.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.distinctinventoryitem"),
+    @ModuleDefinition("namazu.elements.dao.distinctinventoryitem"),
 })
 public interface DistinctInventoryItemDao {
 

@@ -18,12 +18,12 @@ public class CommonModuleDefaults implements ModuleDefaults {
         defaultProperties.setProperty(Constants.PASSWORD_DIGEST_ALGORITHM, "SHA-256");
         defaultProperties.setProperty(Constants.PASSWORD_ENCODING, "UTF-8");
         defaultProperties.setProperty(Constants.API_PREFIX, "rest");
-        defaultProperties.setProperty(Constants.DOC_OUTSIDE_URL, "http://localhost:8081/api");
+        defaultProperties.setProperty(Constants.DOC_OUTSIDE_URL, "http://localhost:8085/doc");
         defaultProperties.setProperty(Constants.API_OUTSIDE_URL, "http://localhost:8081/api/rest");
         defaultProperties.setProperty(Constants.CORS_ALLOWED_ORIGINS, "http://localhost:8081,http://127.0.0.1:8081,http://localhost:4200,http://127.0.0.1:4200");
         defaultProperties.setProperty(Constants.ASYNC_TIMEOUT_LIMIT, Integer.toString(0));
-        defaultProperties.setProperty(Constants.CODE_SERVE_URL, "http://localhost:8082/code/git");
-        defaultProperties.setProperty(Constants.HTTP_TUNNEL_URL, "http://localhost:8083/app");
+        defaultProperties.setProperty(Constants.CODE_SERVE_URL, "http://localhost:8082/code-serve/git");
+        defaultProperties.setProperty(Constants.HTTP_TUNNEL_URL, "http://localhost:8083/app-serve");
         defaultProperties.setProperty(Constants.GENERATED_PASSWORD_LENGTH, "24");
         defaultProperties.setProperty(Constants.GLOBAL_SECRET, "");
         return defaultProperties;

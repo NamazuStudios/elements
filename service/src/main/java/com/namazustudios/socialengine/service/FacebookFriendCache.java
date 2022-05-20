@@ -2,9 +2,6 @@ package com.namazustudios.socialengine.service;
 
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.friend.FacebookFriend;
-import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
 
 import java.util.function.Supplier;
 

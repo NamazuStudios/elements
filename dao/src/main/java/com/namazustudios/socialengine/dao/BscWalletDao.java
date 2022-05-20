@@ -7,16 +7,17 @@ import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by garrettmcspadden on 11/12/21.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.bsc.wallet"),
-        @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.bsc.wallet",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.wallet instead"))
+    @ModuleDefinition("namazu.elements.dao.bsc.wallet"),
+    @ModuleDefinition(
+        value = "namazu.socialengine.dao.bsc.wallet",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.wallet instead")
+    )
 })
 public interface BscWalletDao {
 

@@ -18,6 +18,13 @@ public @interface ExposeEnum {
      *
      * @return the module name
      */
-    String[] modules();
+    ModuleDefinition[] value() default {};
+
+    /**
+     * The name of the lua module which will map to the Enum.
+     *
+     * @return the module name
+     */
+    String[] modules() default {};
 
 }

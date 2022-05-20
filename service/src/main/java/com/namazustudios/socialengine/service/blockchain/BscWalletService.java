@@ -1,16 +1,13 @@
 package com.namazustudios.socialengine.service.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.Token;
-import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
+import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
-
-import java.util.List;
 
 /**
  * Manages instances of {@link BscWallet}.
@@ -18,11 +15,11 @@ import java.util.List;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.bsc.wallet"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.bsc.unscoped.wallet",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.bsc.wallet"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.bsc.unscoped.wallet",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface BscWalletService {
 

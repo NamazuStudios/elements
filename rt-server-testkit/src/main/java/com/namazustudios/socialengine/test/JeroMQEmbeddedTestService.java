@@ -69,7 +69,7 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
     }
 
     /**
-     * Installs the supplied {@link Module} to the client {@link Instance}.
+     * Installs the supplied {@link Module} to the worker {@link Instance}.
      *
      * If no worker instance was configured, this will implicitly configure a worker instance.
      *

@@ -5,14 +5,14 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.GooglePlayApplicationConfiguration;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by patricktwohig on 5/25/17.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.googleplay"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.googleplay"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.googleplay",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.googleplay instead"))
 })

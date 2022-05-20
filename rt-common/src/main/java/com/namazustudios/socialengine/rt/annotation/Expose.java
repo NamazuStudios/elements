@@ -16,7 +16,7 @@ public @interface Expose {
      *
      * @return the value
      */
-    ExposedModuleDefinition[] value() default {};
+    ModuleDefinition[] value() default {};
 
     /**
      * The name of the lua module which will map to the object.

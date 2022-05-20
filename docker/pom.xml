@@ -25,6 +25,7 @@
         <module>namazu-socialengine-app-serve</module>
         <module>namazu-socialengine-app-node</module>
         <module>namazu-socialengine-cdn-serve</module>
+        <module>namazu-socialengine-doc-serve</module>
     </modules>
 
     <properties>

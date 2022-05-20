@@ -46,14 +46,14 @@ public class RestAPIMain implements Callable<Void>, Runnable {
     public static final String DEFAULT_API_CONTEXT = "api";
 
     private static final OptionSpec<Stage> stageOptionSpec = optionParser
-            .accepts("stage", "Is this running in development or production?")
-            .withOptionalArg()
-            .ofType(Stage.class)
-            .defaultsTo(DEFAULT_STAGE);
+        .accepts("stage", "Is this running in development or production?")
+        .withOptionalArg()
+        .ofType(Stage.class)
+        .defaultsTo(DEFAULT_STAGE);
 
     private static final OptionSpec<Void> helpOptionSpec = optionParser
-            .accepts("help", "Displays the help message.")
-            .forHelp();
+        .accepts("help", "Displays the help message.")
+        .forHelp();
 
     private final Server server;
 
@@ -90,11 +90,12 @@ public class RestAPIMain implements Callable<Void>, Runnable {
             new RestAPIModule(defaultConfigurationSupplier));
 
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
+        final var restDocRedirectFilter = injector.getInstance(RestDocRedirectFilter.class);
         final var servletHandler = injector.getInstance(ServletContextHandler.class);
 
         this.server = injector.getInstance(Server.class);
         this.instance = injector.getInstance(Instance.class);
-        doInit(injector, guiceFilter, servletHandler);
+        doInit(injector, guiceFilter, restDocRedirectFilter, servletHandler);
 
     }
 
@@ -103,38 +104,34 @@ public class RestAPIMain implements Callable<Void>, Runnable {
                         final Instance instance,
                         final Injector injector,
                         final GuiceFilter guiceFilter,
+                        final RestDocRedirectFilter restDocRedirectFilter,
                         final ServletContextHandler servletHandler) {
         this.server = server;
         this.instance = instance;
-        doInit(injector, guiceFilter, servletHandler);
+        doInit(injector, guiceFilter, restDocRedirectFilter, servletHandler);
     }
 
     private void doInit(final Injector injector,
                         final GuiceFilter guiceFilter,
+                        final RestDocRedirectFilter restDocRedirectFilter,
                         final ServletContextHandler servletHandler) {
 
-        final var handlerCollection = new HandlerCollection();
+        final var collection = new HandlerCollection();
 
         servletHandler.getServletContext().setAttribute(INJECTOR_ATTRIBUTE_NAME, injector);
         servletHandler.addFilter(new FilterHolder(guiceFilter), "/*", allOf(DispatcherType.class));
+        servletHandler.addFilter(new FilterHolder(restDocRedirectFilter), "/*", allOf(DispatcherType.class));
 
-        final var defaultInitParameters = new HashMap<String, String>();
-        defaultInitParameters.put("dirAllowed", "false");
-        defaultInitParameters.put("resourceBase", getResource("swagger").toString());
-
-        final var defaultServletHolder = servletHandler.addServlet(DefaultServlet.class, "/");
-        defaultServletHolder.setInitParameters(defaultInitParameters);
-
-        handlerCollection.addHandler(servletHandler);
+        collection.addHandler(servletHandler);
 
         if (!"/".equals(servletHandler.getContextPath())) {
             final var rootServletHandler = new ServletContextHandler();
             rootServletHandler.setContextPath("/");
             rootServletHandler.addServlet(HappyServlet.class, "/");
-            handlerCollection.addHandler(rootServletHandler);
+            collection.addHandler(rootServletHandler);
         }
 
-        server.setHandler(handlerCollection);
+        server.setHandler(collection);
 
     }
 

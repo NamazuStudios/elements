@@ -3,12 +3,10 @@ package com.namazustudios.socialengine.service.blockchain;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.neo.MintNeoTokenResponse;
-import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
-import io.neow3j.protocol.core.response.NeoApplicationLog;
 import io.neow3j.protocol.core.response.NeoInvokeFunction;
 import io.neow3j.protocol.core.response.NeoSendRawTransaction;
 
@@ -22,11 +20,11 @@ import java.util.function.Consumer;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neo.smartcontract"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.neo.smartcontract",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.neo.smartcontract"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.unscoped.neo.smartcontract",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface NeoSmartContractService {
 

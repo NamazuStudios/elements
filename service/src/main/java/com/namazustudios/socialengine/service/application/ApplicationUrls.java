@@ -6,7 +6,6 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.net.URI;
 
-import static com.google.common.net.UrlEscapers.urlFragmentEscaper;
 import static com.namazustudios.socialengine.Constants.*;
 import static com.namazustudios.socialengine.util.URIs.appendOrReplaceQuery;
 import static com.namazustudios.socialengine.util.URIs.appendPath;
@@ -14,17 +13,15 @@ import static java.lang.String.format;
 
 public class ApplicationUrls {
 
-    public static final String GIT_PREFIX = "git";
+    public static final String DOC_URL = "url";
 
-    private static final String CONFIG_PARAM = "url";
+    public static final String GIT_PREFIX = "git";
 
     private static final String API_SUFFIX = "rest";
 
     private URI codeServeUrl;
 
     private URI httpTunnelUrl;
-
-    private URI apiOutsideUrl;
 
     private URI docOutsideUrl;
 
@@ -41,27 +38,37 @@ public class ApplicationUrls {
     }
 
     public void addCodeServeUrl(final Application application) {
-        final URI base = appendPath(getCodeServeUrl(), GIT_PREFIX, application.getName());
-        final URI repositoryRoot = base.resolve(application.getName());
+        final var base = appendPath(getCodeServeUrl(), GIT_PREFIX, application.getName());
+        final var repositoryRoot = base.resolve(application.getName());
         application.setScriptRepoUrl(repositoryRoot.toString());
     }
 
     public void addHttpTunnelUrl(final Application application) {
-        final URI base = appendPath(getHttpTunnelUrl(), application.getName());
-        final URI httpTunnelEndpointUrl = base.resolve(format("%s/%s", application.getName(), API_SUFFIX));
+        final var base = appendPath(getHttpTunnelUrl(), application.getName());
+        final var httpTunnelEndpointUrl = base.resolve(format("%s/%s", application.getName(), API_SUFFIX));
         application.setHttpTunnelEndpointUrl(httpTunnelEndpointUrl.toString());
     }
 
     public void addDocumentationUrl(final Application application) {
-        final URI httpDocumentationUrl = appendPath(getApiOutsideUrl(), "application", application.getId(), "swagger.json");
+
+        final var httpDocumentationUrl = appendPath(
+            getDocOutsideUrl(),
+            "rest",
+            "swagger",
+            "2",
+            application.getName(),
+            "swagger.json"
+        );
+
         application.setHttpDocumentationUrl(httpDocumentationUrl.toString());
         addDocumentationUiUrl(httpDocumentationUrl, application);
+
     }
 
     private void addDocumentationUiUrl(final URI httpDocumentationUrl, final Application application) {
-        final String encoded = urlFragmentEscaper().escape(httpDocumentationUrl.toString());
-        final String fragment = format("%s=%s", CONFIG_PARAM, encoded);
-        final URI documentationUiUri = appendOrReplaceQuery(getDocOutsideUrl(), fragment);
+        final var swaggerUiUrl = appendPath(getDocOutsideUrl(), "swagger");
+        final var query = format("%s=%s", DOC_URL, httpDocumentationUrl.toString());
+        final URI documentationUiUri = appendOrReplaceQuery(swaggerUiUrl, query);
         application.setHttpDocumentationUiUrl(documentationUiUri.toString());
     }
 
@@ -81,15 +88,6 @@ public class ApplicationUrls {
     @Inject
     public void setHttpTunnelUrl(@Named(HTTP_TUNNEL_URL) URI httpTunnelUrl) {
         this.httpTunnelUrl = httpTunnelUrl;
-    }
-
-    public URI getApiOutsideUrl() {
-        return apiOutsideUrl;
-    }
-
-    @Inject
-    public void setApiOutsideUrl(@Named(API_OUTSIDE_URL) URI apiOutsideUrl) {
-        this.apiOutsideUrl = apiOutsideUrl;
     }
 
     public URI getDocOutsideUrl() {

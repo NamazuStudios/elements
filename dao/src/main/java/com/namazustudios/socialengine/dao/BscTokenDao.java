@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscTokenRequest;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.List;
 
@@ -15,10 +15,10 @@ import java.util.List;
  * Created by TuanTran on 3/24/22.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.bsc.token"),
-        @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.bsc.token",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.token instead"))
+    @ModuleDefinition("namazu.elements.dao.bsc.token"),
+    @ModuleDefinition(
+        value = "namazu.socialengine.dao.bsc.token",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.bsc.token instead"))
 })
 public interface BscTokenDao {
 

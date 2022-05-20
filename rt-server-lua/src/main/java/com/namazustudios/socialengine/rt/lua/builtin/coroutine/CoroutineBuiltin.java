@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.jnlua.LuaType;
 import com.namazustudios.socialengine.rt.CurrentResource;
 import com.namazustudios.socialengine.rt.PersistenceStrategy;
+import com.namazustudios.socialengine.rt.annotation.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.id.TaskId;
@@ -28,6 +29,58 @@ import static java.lang.StrictMath.round;
 import static java.lang.System.currentTimeMillis;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
+@Intrinsic(
+    value = @ModuleDefinition("namazu.coroutine"),
+    authors = "ptwohig",
+    summary = "System-managed Coroutines.",
+    description = "This API controls the managed coroutines used by the system allowing hte caller to create, " +
+                  "manage, and schedule tasks modeled as coroutines. Coroutines in this module have special yield " +
+                  "semantics enabling the system to manage the lifecycle of the VMs contained in the cluster.",
+    methods = {
+        @MethodDefinition(
+            value = "start",
+            summary = "Starts a system-managed coroutine.",
+            description =
+                "Starts the coroutine and assigns it a task id. The system will manage this coroutine until " +
+                "it fails with an error, exits, is explicitly killed, or its associated resource is " +
+                "destroyed.",
+            parameters = {
+                @ParameterDefinition(value="coroutine", type = "thread", comment = "The coroutine to start.")
+            },
+            returns = {
+                @ReturnDefinition(comment = "the status (yield or exit).", type = "string"),
+                @ReturnDefinition(comment = "the system-assigned task ID.", type = "string"),
+                @ReturnDefinition(comment = "if the coroutine finished, all remaining execution results.", type = "..."),
+            }
+        ),
+        @MethodDefinition(
+            value = "resume",
+            summary = "Resumes a system-managed coroutine.",
+            description =
+                "Starts the coroutine and assigns it a task id. The system will manage this coroutine until " +
+                "it fails with an error, exits, is explicitly killed, or its associated resource is " +
+                "destroyed.",
+            parameters = {
+                @ParameterDefinition(value="task_id", type = "string", comment = "The system-managed task ID to resume.")
+            },
+            returns = {
+                @ReturnDefinition(comment = "the status (yield or exit).", type = "string"),
+                @ReturnDefinition(comment = "the system-assigned task ID.", type = "string"),
+                @ReturnDefinition(comment = "if the coroutine finished, all remaining execution results.", type = "..."),
+            }
+        ),
+        @MethodDefinition(
+            value = "current_task_id",
+            summary = "Returns the current Task ID.",
+            description =
+                "The currently executing Task ID. This is always set by the system. All executions must be happening" +
+                "within the scope of a Task ID, except for the initial startup and loading of the script.",
+            parameters = {
+                @ParameterDefinition(value="task_id", type = "string", comment = "The system-managed task ID to resume.")
+            }
+        )
+    }
+)
 public class CoroutineBuiltin implements Builtin {
 
     private static final Logger logger = LoggerFactory.getLogger(CoroutineBuiltin.class);

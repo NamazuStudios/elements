@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.exception.gameon.GameOnConfigurationExcept
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.model.application.ApplicationConfiguration;
 import com.namazustudios.socialengine.model.application.GameOnApplicationConfiguration;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.List;
 
@@ -15,8 +15,8 @@ import java.util.List;
  * Accesss and manages instances of {@link GameOnApplicationConfiguration} in the database.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.application.configuration.gameon"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.application.configuration.gameon"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.application.configuration.gameon",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.application.configuration.gameon instead"))
 })

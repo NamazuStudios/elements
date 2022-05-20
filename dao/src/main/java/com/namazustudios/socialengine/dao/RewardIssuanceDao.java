@@ -7,7 +7,7 @@ import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.reward.RewardIssuance.State;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 import java.util.List;
 
@@ -18,8 +18,8 @@ import static java.util.Collections.emptyList;
  * inserted into the database and credited to a user's inventory in an atomic way.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.rewardissuance"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.rewardissuance"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.rewardissuance",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.rewardissuance instead"))
 })

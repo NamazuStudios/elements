@@ -9,21 +9,21 @@ import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by davidjbrooks on 11/11/18.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.inventoryitem"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.inventoryitem"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.inventoryitem",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.inventoryitem instead"))
 })
 public interface InventoryItemDao {
 
     /**
-     * The priority for use by the {@link InventoryItemDao};
+     * The priority for use by the {@link InventoryItemDao}
      */
     int SIMPLE_PRIORITY = 0;
 
