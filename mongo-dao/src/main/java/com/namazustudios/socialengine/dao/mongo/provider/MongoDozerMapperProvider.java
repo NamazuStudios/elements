@@ -19,8 +19,10 @@ import com.namazustudios.socialengine.dao.mongo.model.match.MongoMatchSnapshot;
 import com.namazustudios.socialengine.dao.mongo.model.mission.*;
 import com.namazustudios.socialengine.dao.mongo.model.savedata.MongoSaveDataDocument;
 import com.namazustudios.socialengine.dao.mongo.model.schema.MongoMetadataSpec;
+import com.namazustudios.socialengine.dao.mongo.model.schema.MongoTokenTemplate;
 import com.namazustudios.socialengine.model.Deployment;
 import com.namazustudios.socialengine.model.application.*;
+import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscToken;
@@ -45,6 +47,7 @@ import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.reward.Reward;
 import com.namazustudios.socialengine.model.reward.RewardIssuance;
 import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
+import com.namazustudios.socialengine.model.schema.template.TokenTemplate;
 import com.namazustudios.socialengine.model.user.User;
 import org.dozer.DozerBeanMapper;
 import org.dozer.Mapper;
@@ -188,6 +191,9 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
             mapping(NeoToken.class, MongoNeoToken.class)
                 .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
+            mapping(ElementsSmartContract.class, MongoNeoSmartContract.class)
+                    .fields("id", "objectId", customConverter(ObjectIdConverter.class));
+
             mapping(BscToken.class, MongoBscToken.class)
                         .fields("id", "objectId", customConverter(ObjectIdConverter.class));
 
@@ -195,6 +201,10 @@ public class MongoDozerMapperProvider implements Provider<Mapper> {
                         .fields("id", "objectId", customConverter(ObjectIdConverter.class))
                         .fields("name","name")
                         .fields("tabs","tabs");
+
+            mapping(TokenTemplate.class, MongoTokenTemplate.class)
+                    .fields("id","objectId", customConverter(ObjectIdConverter.class))
+                    .fields("metadata","metadata", customConverter(IdentityConverter.class));
 
             mapping(TemplateTab.class, MongoTemplateTab.class)
                     .fields("fields","fields", customConverter(MongoTemplateTabFieldConverter.class))
