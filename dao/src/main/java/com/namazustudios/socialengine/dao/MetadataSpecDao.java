@@ -5,7 +5,6 @@ import com.namazustudios.socialengine.model.blockchain.neo.NeoToken;
 import com.namazustudios.socialengine.model.schema.template.CreateMetadataSpecRequest;
 import com.namazustudios.socialengine.model.schema.template.MetadataSpec;
 import com.namazustudios.socialengine.model.schema.template.UpdateMetadataSpecRequest;
-import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
@@ -13,11 +12,7 @@ import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
  * Created by garrettmcspadden on 11/23/21.
  */
 @Expose({
-    @ModuleDefinition("namazu.elements.dao.token.template"),
-    @ModuleDefinition(
-        value = "namazu.socialengine.dao.token.template",
-        deprecated = @DeprecationDefinition("Use namazu.elements.dao.token.template instead")
-    )
+    @ModuleDefinition("namazu.elements.dao.metadata.spec")
 })
 public interface MetadataSpecDao {
 
