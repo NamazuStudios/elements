@@ -18,6 +18,7 @@ public class ServiceModuleDefaults implements ModuleDefaults {
         properties.put(MOCK_SESSION_TIMEOUT_SECONDS, Long.toString(SECONDS.convert(1, TimeUnit.HOURS)));
         properties.put(NEO_BLOCKCHAIN_HOST, "http://127.0.0.1");
         properties.put(NEO_BLOCKCHAIN_PORT, "50012");
+        properties.put(BSC_RPC_PROVIDER, "https://data-seed-prebsc-1-s1.binance.org:8545/"); //Smart Chain - Testnet network RPC Url
         return properties;
     }
 

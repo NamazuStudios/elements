@@ -5,7 +5,7 @@ import com.namazustudios.socialengine.jnlua.JavaFunction;
 import com.namazustudios.socialengine.jnlua.JavaReflector;
 import com.namazustudios.socialengine.jnlua.LuaState;
 import com.namazustudios.socialengine.rt.CurrentResource;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.lua.persist.ErisPersistence;
 import org.slf4j.Logger;
@@ -14,7 +14,9 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Provider;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -23,12 +25,8 @@ import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromDefinition;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
 import static com.namazustudios.socialengine.rt.lua.persist.ErisPersistence.mangle;
-import static java.lang.String.format;
-import static java.lang.String.join;
-import static java.util.Arrays.fill;
 import static java.util.Arrays.stream;
 import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.joining;
 
 /**
  * Allows a Java object to behave as a module.
@@ -52,7 +50,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
         this(fromModuleName(moduleName), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
     }
 
-    public <T> JavaObjectModuleBuiltin(final ExposedModuleDefinition definition,
+    public <T> JavaObjectModuleBuiltin(final ModuleDefinition definition,
                                        final Provider<T> tProvider) {
         this(fromDefinition(definition), tProvider, in -> LOWER_UNDERSCORE.to(LOWER_CAMEL, in));
     }
@@ -191,28 +189,7 @@ public class JavaObjectModuleBuiltin implements Builtin {
                 .filter(m -> m.getParameterCount() == nargs)
                 .filter(m -> parametersMatch(luaState, m))
                 .findFirst()
-                .orElseThrow(() -> {
-
-                    final var nargsMismatch = methodList
-                        .stream()
-                        .filter(m -> m.getParameterCount() != nargs)
-                        .map(m -> format("%s has mismatched arg count. Expected %d. Got %d ",
-                            m,
-                            m.getParameterCount(),
-                            nargs)).collect(joining(","));
-
-                    final var paramMismatch = methodList
-                        .stream()
-                        .filter(m -> m.getParameterCount() == nargs)
-                        .map(m -> format("%s fails at parameter %s",
-                            m,
-                            m.getParameters()[failedMatchIndex(luaState, m)].getName()
-                        )).collect(joining(",\n"));
-
-                    final var aggregate = join(",\n", nargsMismatch, paramMismatch);
-                    return new InternalException(format("Can't match %s: [%s]", methodName, aggregate));
-
-                });
+                .orElseThrow(() -> new InternalException("parameters do not match" + target + "." + methodName));
 
             final Object[] args = new Object[nargs];
             final Class<?>[] parameterTypes = toInvoke.getParameterTypes();
@@ -236,23 +213,20 @@ public class JavaObjectModuleBuiltin implements Builtin {
             }
 
         };
+
     }
 
     private boolean parametersMatch(final LuaState luaState, final Method method) {
-        return failedMatchIndex(luaState, method) < 0;
-    }
-
-    private int failedMatchIndex(final LuaState luaState, final Method method) {
 
         final var parameterTypes = method.getParameterTypes();
 
         for (int i = 0; i < parameterTypes.length; ++i) {
             if (!luaState.isJavaObject(i + 1, parameterTypes[i])) {
-                return i;
+                return false;
             }
         }
 
-        return -1;
+        return true;
 
     }
 

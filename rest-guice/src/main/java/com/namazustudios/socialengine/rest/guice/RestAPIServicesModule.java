@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rest.guice;
 
 import com.google.inject.servlet.ServletScopes;
+import com.namazustudios.socialengine.rt.servlet.HttpServletAttributesProvider;
 import com.namazustudios.socialengine.service.guice.ServicesModule;
 
 /**
@@ -9,7 +10,7 @@ import com.namazustudios.socialengine.service.guice.ServicesModule;
 public class RestAPIServicesModule extends ServicesModule {
 
     public RestAPIServicesModule() {
-        super(ServletScopes.REQUEST, AttributesProvider.class);
+        super(ServletScopes.REQUEST, HttpServletAttributesProvider.class);
     }
 
 }

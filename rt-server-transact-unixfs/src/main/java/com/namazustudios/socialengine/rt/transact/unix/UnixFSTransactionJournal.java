@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.id.ResourceId;
 import com.namazustudios.socialengine.rt.transact.*;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,6 +39,8 @@ public class UnixFSTransactionJournal implements TransactionJournal {
     private static final byte FILLER = (byte) 0xFF;
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSTransactionJournal.class);
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(UnixFSTransactionJournal.class);
 
     /**
      * The size of each transaction entry.  This is a fixed size.  If a transaction attempts to write more bytes than
@@ -307,10 +310,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
 
             final MappedByteBuffer mappedByteBuffer;
 
-            final Path temporaryCopy = createTempFile(
-                journalPath.getParent(),
-                "journal",
-                "temp");
+            final Path temporaryCopy = temporaryFiles.createTempFile("journal", "temp");
 
             copy(journalPath, temporaryCopy, REPLACE_EXISTING);
 
@@ -377,11 +377,7 @@ public class UnixFSTransactionJournal implements TransactionJournal {
                         txnBufferSize, getTxnBufferSize(),
                         txnBufferCount, getTxnBufferCount());
 
-                    final Path newTemporaryJournal = createTempFile(
-                        journalPath.getParent(),
-                        "journal",
-                        "temp"
-                    );
+                    final Path newTemporaryJournal = temporaryFiles.createTempFile("journal", "temp");
 
                     // Makes a copy buffer and creates a new journal file.
                     final ByteBuffer copyBuf = allocateDirect((int)getTxnBufferSize());

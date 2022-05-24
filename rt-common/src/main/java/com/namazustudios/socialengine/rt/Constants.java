@@ -37,4 +37,34 @@ public interface Constants {
      */
     String SRV_SERVERS = "com.namazustudios.socialengine.rt.srv.servers";
 
+    /**
+     * The ELEMENTS_TEMP environment variable.
+     */
+    String ELEMENTS_TEMP = "ELEMENTS_TEMP";
+
+    /**
+     * Environment variable to indicate whether or not temporary files should be automatically purged.
+     */
+    String ELEMENTS_TEMP_PURGE = "ELEMENTS_TEMP_PURGE";
+
+    /**
+     * Default for {@link #ELEMENTS_TEMP_PURGE}.
+     */
+    String ELEMENTS_TEMP_PURGE_DEFAULT = "true";
+
+    /**
+     * Specifies the default temporary directory.
+     */
+    String ELEMENTS_TEMP_DEFAULT = "tmp";
+
+    /**
+     * The ELEMENTS_HOME environment variable.
+     */
+    String ELEMENTS_HOME = "ELEMENTS_HOME";
+
+    /**
+     * The default elements configuration directory.
+     */
+    String ELEMENTS_HOME_DEFAULT = "/opt/elements";
+
 }

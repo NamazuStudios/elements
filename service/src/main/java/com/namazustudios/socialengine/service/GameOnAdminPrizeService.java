@@ -7,14 +7,14 @@ import com.namazustudios.socialengine.model.gameon.admin.GameOnAddPrizeListRespo
 import com.namazustudios.socialengine.model.gameon.admin.GameOnGetPrizeListResponse;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Used to interact with the GameOn Admin API to manage available prizes.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.admin.prize"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.gameon.admin.prize"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.gameon.admin.prize",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

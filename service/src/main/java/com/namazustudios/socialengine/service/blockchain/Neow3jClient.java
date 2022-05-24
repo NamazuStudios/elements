@@ -3,7 +3,7 @@ package com.namazustudios.socialengine.service.blockchain;
 import com.namazustudios.socialengine.model.blockchain.neo.Nep6Wallet;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 import io.neow3j.contract.SmartContract;
 import io.neow3j.crypto.exceptions.CipherException;
@@ -24,11 +24,11 @@ import io.neow3j.wallet.nep6.NEP6Wallet;
  * Created by keithhudnall on 9/22/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.blockchain.neow3j"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.blockchain.unscoped.neow3j",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )
+    @ModuleDefinition(value = "namazu.elements.service.blockchain.neo.client"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.blockchain.unscoped.neo.client",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
 })
 public interface Neow3jClient {
 

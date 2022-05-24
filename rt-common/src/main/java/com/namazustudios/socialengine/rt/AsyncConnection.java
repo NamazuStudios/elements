@@ -104,7 +104,6 @@ public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT,
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection<ContextT, SocketT>>} to receive the event
      * @return {@link Subscription}
      */
-
     Subscription onWrite(Consumer<AsyncConnection<ContextT, SocketT>> asyncConnectionConsumer);
 
     /**
@@ -113,7 +112,6 @@ public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT,
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection<ContextT, SocketT>>} to receive the event
      * @return {@link Subscription}
      */
-    
     Subscription onError(Consumer<AsyncConnection<ContextT, SocketT>> asyncConnectionConsumer);
 
     /**
@@ -122,7 +120,6 @@ public interface AsyncConnection<ContextT, SocketT> extends Connection<ContextT,
      * @param asyncConnectionConsumer the {@link Consumer<AsyncConnection<ContextT, SocketT>>} to receive the event
      * @return {@link Subscription}
      */
-    
     Subscription onClose(Consumer<AsyncConnection<ContextT, SocketT>> asyncConnectionConsumer);
 
     /**

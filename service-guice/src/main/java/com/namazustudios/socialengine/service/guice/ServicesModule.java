@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.guice;
 
 import com.google.inject.PrivateModule;
 import com.google.inject.Scope;
+import com.namazustudios.socialengine.dao.TokenTemplateDao;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.rt.Attributes;
@@ -50,6 +51,7 @@ import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServi
 import com.namazustudios.socialengine.service.rewardissuance.RewardIssuanceServiceProvider;
 import com.namazustudios.socialengine.service.savedata.SaveDataDocumentServiceProvider;
 import com.namazustudios.socialengine.service.savedata.SuperUserSaveDataDocumentService;
+import com.namazustudios.socialengine.service.schema.*;
 import com.namazustudios.socialengine.service.shortlink.ShortLinkServiceProvider;
 import com.namazustudios.socialengine.service.shortlink.SuperuserShortLinkService;
 import com.namazustudios.socialengine.service.social.SocialCampaignServiceProvider;
@@ -279,6 +281,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(NeoWalletServiceProvider.class)
             .in(scope);
 
+        bind(BscWalletService.class)
+                .toProvider(BscWalletServiceProvider.class)
+                .in(scope);
+
         bind(AuthSchemeService.class)
             .toProvider(AuthSchemeServiceProvider.class)
             .in(scope);
@@ -289,6 +295,14 @@ public class ServicesModule extends PrivateModule {
 
         bind(BscTokenService.class)
                 .toProvider(BscTokenServiceProvider.class)
+                .in(scope);
+
+        bind(MetadataSpecService.class)
+                .toProvider(MetadataSpecServiceProvider.class)
+                .in(scope);
+
+        bind(TokenTemplateService.class)
+                .toProvider(TokenTemplateServiceProvider.class)
                 .in(scope);
 
         bind(NeoSmartContractService.class)
@@ -325,6 +339,8 @@ public class ServicesModule extends PrivateModule {
         bind(PasswordGenerator.class).to(SecureRandomPasswordGenerator.class).asEagerSingleton();
 
         bind(Neow3jClient.class).to(StandardNeow3jClient.class).asEagerSingleton();
+
+        bind(Bscw3jClient.class).to(StandardBscw3jClient.class).asEagerSingleton();
 
         bind(UsernamePasswordAuthService.class)
             .annotatedWith(Unscoped.class)
@@ -464,10 +480,19 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoWalletService.class);
 
+        bind(BscWalletService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserBscWalletService.class);
+
         bind(Neow3jClient.class)
             .annotatedWith(Unscoped.class)
             .to(StandardNeow3jClient.class)
             .asEagerSingleton();
+
+        bind(Bscw3jClient.class)
+                .annotatedWith(Unscoped.class)
+                .to(StandardBscw3jClient.class)
+                .asEagerSingleton();
 
         bind(NeoTokenService.class)
             .annotatedWith(Unscoped.class)
@@ -476,6 +501,14 @@ public class ServicesModule extends PrivateModule {
         bind(BscTokenService.class)
                 .annotatedWith(Unscoped.class)
                 .to(SuperUserBscTokenService.class);
+
+        bind(MetadataSpecService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserMetadataSpecService.class);
+
+        bind(TokenTemplateService.class)
+                .annotatedWith(Unscoped.class)
+                .to(UserTokenTemplateService.class);
 
         bind(AuthSchemeService.class)
             .annotatedWith(Unscoped.class)
@@ -549,13 +582,18 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class);
         expose(Neow3jClient.class);
         expose(NeoTokenService.class);
+        expose(MetadataSpecService.class);
+        expose(TokenTemplateService.class);
         expose(NeoSmartContractService.class);
         expose(AuthSchemeService.class);
         expose(SaveDataDocumentService.class);
         expose(NeoSmartContractService.class);
         expose(CustomAuthSessionService.class);
         expose(DistinctInventoryItemService.class);
+        expose(BscWalletService.class);
+        expose(Bscw3jClient.class);
         expose(BscTokenService.class);
+
         // Unscoped Services
         expose(UsernamePasswordAuthService.class).annotatedWith(Unscoped.class);
         expose(SocialCampaignService.class).annotatedWith(Unscoped.class);
@@ -593,12 +631,16 @@ public class ServicesModule extends PrivateModule {
         expose(NeoWalletService.class).annotatedWith(Unscoped.class);
         expose(Neow3jClient.class).annotatedWith(Unscoped.class);
         expose(NeoTokenService.class).annotatedWith(Unscoped.class);
+        expose(MetadataSpecService.class).annotatedWith(Unscoped.class);
+        expose(TokenTemplateService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
         expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
         expose(CustomAuthSessionService.class).annotatedWith(Unscoped.class);
         expose(DistinctInventoryItemService.class).annotatedWith(Unscoped.class);
+        expose(BscWalletService.class).annotatedWith(Unscoped.class);
+        expose(Bscw3jClient.class).annotatedWith(Unscoped.class);
         expose(BscTokenService.class).annotatedWith(Unscoped.class);
 
     }

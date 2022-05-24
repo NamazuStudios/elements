@@ -12,16 +12,12 @@ import org.slf4j.LoggerFactory;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.remote.Node.MASTER_NODE_NAME;
-import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.concat;
@@ -43,10 +39,6 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
     private SchedulerEnvironment schedulerEnvironment;
 
     private PersistenceEnvironment persistenceEnvironment;
-
-    private ExecutorService executorService;
-
-    private ScheduledExecutorService scheduledExecutorService;
 
     private Node.Factory nodeFactory;
 
@@ -76,14 +68,7 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             exceptionConsumer.accept(ex);
         }
 
-        final var lock = rwLock.writeLock();
-
-        try {
-            lock.lock();
-            doPostStart(exceptionConsumer);
-        } finally {
-            lock.unlock();
-        }
+        doPostStart(exceptionConsumer);
 
     }
 
@@ -125,7 +110,6 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
             final var binding = getInstanceConnectionService().openBinding(s.getNodeId());
             bindingSet.add(binding);
-
             logger.debug("Opened binding for node {}.", s.getNodeId());
 
             try {
@@ -136,15 +120,19 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
                 logger.error("Error in node startup process.", ex);
                 exceptionConsumer.accept(ex);
                 s.cancel();
+                logger.error("Closing binding for node {}", binding.getNodeId(), ex);
                 binding.close();
+                logger.error("Closed binding for node {}", binding.getNodeId(), ex);
                 return null;
             }
+
         }).filter(Objects::nonNull).collect(toList());
 
         startupList.stream().map(s -> {
             try {
                 logger.debug("Executing post-start operations for node {}.", s.getNodeId());
                 s.postStart();
+                logger.debug("Executed post-start operations for node {}.", s.getNodeId());
                 return null;
             } catch (Exception ex) {
                 logger.error("Error in node post-startup process.", ex);
@@ -225,7 +213,9 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
         bindingSet.stream().map(binding -> {
             try {
+                SimpleWorkerInstance.logger.debug("Closing binding for node {} -> {}", binding.getNodeId(), binding.getBindAddress());
                 binding.close();
+                SimpleWorkerInstance.logger.debug("Closed binding for node {} -> {}", binding.getNodeId(), binding.getBindAddress());
                 return null;
             } catch (Exception ex) {
                 SimpleWorkerInstance.logger.error("Error closing binding {}.", binding, ex);
@@ -237,42 +227,12 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
     @Override
     protected void postClose(Consumer<Exception> exceptionConsumer) {
-
-        logger.info("Shutting down scheduler threads.");
-        getExecutorService().shutdown();
-
-        logger.info("Shutting down dispatcher threads.");
-        getScheduledExecutorService().shutdown();
-
-        try {
-            if (getScheduledExecutorService().awaitTermination(5, MINUTES)) {
-                logger.info("Shut down scheduler threads.");
-            } else {
-                logger.error("Timed out shutting down scheduler threads.");
-            }
-        } catch (InterruptedException ex) {
-            logger.error("Interrupted while shutting down scheduler threads.", ex);
-            exceptionConsumer.accept(ex);
-        }
-
-        try {
-            if (getScheduledExecutorService().awaitTermination(5, TimeUnit.MINUTES)) {
-                logger.info("Shut down worker threads.");
-            } else {
-                logger.error("Timed out shutting down worker threads.");
-            }
-        } catch (InterruptedException ex) {
-            logger.error("Interrupted while shutting down worker threads.", ex);
-            exceptionConsumer.accept(ex);
-        }
-
         try {
             getPersistenceEnvironment().stop();
         } catch (Exception ex) {
             logger.error("Could not stop worker instance persistence.", ex);
             exceptionConsumer.accept(ex);
         }
-
     }
 
     @Override
@@ -360,6 +320,8 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
             @Override
             public Mutator restartNode(final ApplicationId applicationId) {
 
+                check();
+
                 if (!existing.contains(applicationId)) {
                     throw new IllegalArgumentException("Application does not exist: "  + applicationId);
                 } else if (toAdd.contains(applicationId)) {
@@ -376,6 +338,8 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
 
             @Override
             public Mutator removeNode(final ApplicationId applicationId) {
+
+                check();
 
                 if (!existing.contains(applicationId)) {
                     throw new IllegalArgumentException("Application does not exist: "  + applicationId);
@@ -483,24 +447,6 @@ public class SimpleWorkerInstance extends SimpleInstance implements Worker {
     @Inject
     public void setInstanceId(InstanceId instanceId) {
         this.instanceId = instanceId;
-    }
-
-    public ExecutorService getExecutorService() {
-        return executorService;
-    }
-
-    @Inject
-    public void setExecutorService(@Named(EXECUTOR_SERVICE) ExecutorService executorService) {
-        this.executorService = executorService;
-    }
-
-    public ScheduledExecutorService getScheduledExecutorService() {
-        return scheduledExecutorService;
-    }
-
-    @Inject
-    public void setScheduledExecutorService(@Named(SCHEDULED_EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
-        this.scheduledExecutorService = scheduledExecutorService;
     }
 
     public Node.Factory getNodeFactory() {

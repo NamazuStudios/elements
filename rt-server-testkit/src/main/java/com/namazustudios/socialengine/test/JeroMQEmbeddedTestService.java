@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.test;
 
-import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.namazustudios.socialengine.rt.Publisher;
 import com.namazustudios.socialengine.rt.SimplePublisher;
@@ -26,9 +25,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
-
-import static com.google.inject.name.Names.named;
-import static com.namazustudios.socialengine.rt.jeromq.ZContextProvider.IO_THREADS;
 
 /**
  * Embeds a test kit which supplies two {@link Instance}s. One which runs the client, and one which runs a worker.
@@ -73,7 +69,7 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
     }
 
     /**
-     * Installs the supplied {@link Module} to the client {@link Instance}.
+     * Installs the supplied {@link Module} to the worker {@link Instance}.
      *
      * If no worker instance was configured, this will implicitly configure a worker instance.
      *
@@ -193,7 +189,6 @@ public class JeroMQEmbeddedTestService implements EmbeddedTestService {
     public JeroMQEmbeddedTestService withXodusWorker() {
 
         withWorker().worker.withInstanceModules(
-//            new CommonTestModule(),
             new XodusEnvironmentModule()
                 .withTempSchedulerEnvironment()
                 .withTempResourceEnvironment(),

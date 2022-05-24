@@ -5,14 +5,14 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.application.Application;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by patricktwohig on 7/10/15.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.application"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.application"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.application",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.application instead"))
 })

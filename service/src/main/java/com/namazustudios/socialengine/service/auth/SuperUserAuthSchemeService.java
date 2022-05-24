@@ -1,10 +1,5 @@
 package com.namazustudios.socialengine.service.auth;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.databind.JsonSerializer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.namazustudios.socialengine.dao.AuthSchemeDao;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups.Create;
@@ -14,17 +9,8 @@ import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.util.ValidationHelper;
 
 import javax.inject.Inject;
-import java.io.IOException;
-import java.math.BigInteger;
-import java.security.KeyFactory;
 import java.util.Base64;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.toList;
-import static java.util.stream.Collectors.toMap;
 
 public class SuperUserAuthSchemeService implements AuthSchemeService {
 

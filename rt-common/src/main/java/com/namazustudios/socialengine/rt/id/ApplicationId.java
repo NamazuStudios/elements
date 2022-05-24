@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.annotation.Public;
 import com.namazustudios.socialengine.rt.exception.InvalidApplicationIdException;
 
 import java.io.Serializable;
@@ -12,6 +13,7 @@ import static java.util.UUID.randomUUID;
 /**
  * Uniquely identifies an application.
  */
+@Public
 public class ApplicationId implements Serializable, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;
@@ -98,7 +100,7 @@ public class ApplicationId implements Serializable, HasCompoundId<V1CompoundId> 
 
     /**
      * Returns the {@link byte[]} representation of this {@link TaskId}
-     * @return
+     * @return the value as bytes
      */
     public byte[] asBytes() {
         return bytes == null ? (bytes = v1CompoundId.asBytes(APPLICATION)) : bytes;
@@ -129,6 +131,16 @@ public class ApplicationId implements Serializable, HasCompoundId<V1CompoundId> 
     @Override
     public String toString() {
         return asString();
+    }
+
+    /**
+     * The Java standard valueOf method.
+     *
+     * @param value the value
+     * @return the {@link ApplicationId}
+     */
+    public static ApplicationId valueOf(final String value) {
+        return new ApplicationId(value);
     }
 
     /**

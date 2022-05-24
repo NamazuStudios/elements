@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.transact.unix;
 
 
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.annotations.BeforeClass;
@@ -16,7 +17,6 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static java.nio.channels.FileChannel.MapMode.READ_WRITE;
-import static java.nio.file.Files.createTempFile;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.testng.Assert.assertEquals;
@@ -26,6 +26,8 @@ public class UnixFSMemoryUtilsTest {
     private static final int TEST_COUNT = 16;
 
     private static final Logger logger = LoggerFactory.getLogger(UnixFSMemoryUtilsTest.class);
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(UnixFSMemoryUtilsTest.class);
 
     private final UnixFSMemoryUtils underTest = UnixFSMemoryUtils.getInstance();
 
@@ -38,7 +40,7 @@ public class UnixFSMemoryUtilsTest {
     @BeforeClass
     public void setup() throws Exception {
 
-        temp = createTempFile(getClass().getSimpleName(), "bin");
+        temp = temporaryFiles.createTempFile(getClass().getSimpleName(), "bin");
 
         try (final FileChannel fileChannel = FileChannel.open(temp, READ, WRITE)) {
             final ByteBuffer filler = ByteBuffer.allocateDirect(Long.BYTES * TEST_COUNT);

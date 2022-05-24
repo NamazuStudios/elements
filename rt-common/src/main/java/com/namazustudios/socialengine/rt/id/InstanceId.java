@@ -1,12 +1,10 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.annotation.Public;
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.exception.InvalidInstanceIdException;
 
 import java.io.*;
-import java.nio.file.CopyOption;
-import java.nio.file.FileAlreadyExistsException;
-import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 
@@ -17,6 +15,10 @@ import static java.nio.file.Files.move;
 import static java.util.UUID.nameUUIDFromBytes;
 import static java.util.UUID.randomUUID;
 
+/**
+ * Represents an ID for an instance.
+ */
+@Public
 public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;
@@ -126,6 +128,16 @@ public class InstanceId implements Serializable, HasCompoundId<V1CompoundId>  {
     @Override
     public String toString() {
         return asString();
+    }
+
+    /**
+     * The Java standard valueOf method.
+     *
+     * @param value the value
+     * @return the {@link InstanceId}
+     */
+    public static InstanceId valueOf(final String value) {
+        return new InstanceId(value);
     }
 
     /**

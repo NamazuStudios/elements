@@ -5,14 +5,14 @@ import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Creates and manages instances of {@link Score}.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.score"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.score"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.score",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

@@ -30,7 +30,7 @@ end
 --- Fetches the current Profile
 -- This fetches the current profile executing the request.  This defers to the attributes set when the resource was
 -- created.  If no profile exists, this returns nil
--- @return the profile, or nil
+-- @treturn com.namazustudios.socialengine.model.profile.Profile the profile, or nil
 function auth.profile()
     return attributes:getAttribute(Profile.PROFILE_ATTRIBUTE)
 end

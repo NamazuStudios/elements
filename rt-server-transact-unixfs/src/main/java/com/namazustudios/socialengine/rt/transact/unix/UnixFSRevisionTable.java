@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.transact.FatalException;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore.LockedRevision;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.Slice;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSCircularBlockBuffer.View;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 
 import javax.inject.Inject;
@@ -40,6 +41,8 @@ import static org.slf4j.LoggerFactory.getLogger;
  * As the collection cycle for revisions are processed, the garbage collector will reclaim entries in the revision table
  */
 public class UnixFSRevisionTable {
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(UnixFSRevisionTable.class);
 
     private static final byte FILLER = (byte) 0xFF;
 
@@ -256,10 +259,7 @@ public class UnixFSRevisionTable {
 
             } else {
 
-                final Path temporary = createTempFile(
-                    revisionTableFilePath.getParent(),
-                    "revision-table",
-                    "temp");
+                final Path temporary = temporaryFiles.createTempFile("revision-table", "temp");
 
                 logger.info("Creating new revision table at {}", temporary);
                 revisionTableBuffer = createRevisionTableFile(temporary);
@@ -309,10 +309,7 @@ public class UnixFSRevisionTable {
 
             final MappedByteBuffer mappedByteBuffer;
 
-            final Path temporaryCopy = createTempFile(
-                revisionTableFilePath.getParent(),
-                "revision-table",
-                "temp");
+            final Path temporaryCopy = temporaryFiles.createTempFile("revision-table", "temp");
 
             copy(revisionTableFilePath, temporaryCopy, REPLACE_EXISTING);
 

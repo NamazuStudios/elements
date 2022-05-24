@@ -79,6 +79,8 @@
         <module>rest-api-test</module>
         <module>rt-server-testkit</module>
         <module>service-test</module>
+        <module>doc-serve</module>
+        <module>doclet</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>
@@ -88,7 +90,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javax.servlet.api.version>3.1.0</javax.servlet.api.version>
         <javax.xml.bind.version>2.3.1</javax.xml.bind.version>
-        <slf4j.version>1.7.25</slf4j.version>
+        <slf4j.version>1.7.32</slf4j.version>
         <logback.version>1.2.3</logback.version>
         <guava.version>21.0</guava.version>
         <commons.lang.version>3.3.2</commons.lang.version>
@@ -113,7 +115,7 @@
         <jgit.version>4.8.0.201706111038-r</jgit.version>
         <mockito.version>3.5.13</mockito.version>
         <jopt.version>4.9-beta-1</jopt.version>
-        <jeromq.version>0.5.1</jeromq.version>
+        <jeromq.version>0.5.2</jeromq.version>
         <javolution.version>6.0.0</javolution.version>
         <firebase.admin.version>6.2.0</firebase.admin.version>
         <netty.version>4.1.22.Final</netty.version>
@@ -125,8 +127,8 @@
         <spotify.dns.version>3.2.2</spotify.dns.version>
         <annotations.version>2.11.3</annotations.version>
         <neow3j.version>3.14.0</neow3j.version>
+        <web3j.version>5.0.0</web3j.version>
     </properties>
-
     <dependencies>
         <dependency>
             <groupId>org.slf4j</groupId>

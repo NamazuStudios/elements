@@ -58,7 +58,7 @@ public class LuaHandlerIntegrationTest {
     @Test(dataProvider = "resourcesToTest")
     public void performRetainedHandlerTest(final String moduleName, final String methodName) {
 
-        final Object result = getContext()
+        final var result = getContext()
             .getHandlerContext()
             .invokeRetainedHandler(Attributes.emptyAttributes(), moduleName, methodName);
 
@@ -69,7 +69,7 @@ public class LuaHandlerIntegrationTest {
     @Test(dataProvider = "resourcesToTest") // TODO Enable This Test
     public void performSingleUseHandlerTest(final String moduleName, final String methodName) {
 
-        final Object result = getContext()
+        final var result = getContext()
             .getHandlerContext()
             .invokeSingleUseHandler(Attributes.emptyAttributes(), moduleName, methodName);
 

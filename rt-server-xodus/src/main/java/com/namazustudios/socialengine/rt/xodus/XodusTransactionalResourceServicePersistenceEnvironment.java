@@ -39,6 +39,7 @@ public class XodusTransactionalResourceServicePersistenceEnvironment implements
 
         final var environment = new EnvironmentContext();
 
+
         if (this.environment.compareAndSet(null, environment)) {
             logger.info("Started Environment");
             setup(environment);
@@ -87,8 +88,7 @@ public class XodusTransactionalResourceServicePersistenceEnvironment implements
 
         return open(environment::beginTransaction, txn -> {
             final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
-            final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
-            return new XodusReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
+            return new XodusReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn);
         });
 
     }
@@ -99,24 +99,14 @@ public class XodusTransactionalResourceServicePersistenceEnvironment implements
 
         return open(environment::beginExclusiveTransaction, txn -> {
             final var stores = new XodusResourceStores(txn, getEnvironmentContext().environment);
-            final var pessimisticLocking = getPessimisticLockingMaster().newPessimisticLocking();
-            return new XodusExclusiveReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn, pessimisticLocking);
+            return new XodusExclusiveReadWriteTransaction(nodeId, stores, getEnvironmentContext().virtualFileSystem, txn);
         });
 
     }
     private <T extends ReadOnlyTransaction> T open(final Supplier<Transaction> xodusTransactionSupplier,
                                                    final Function<Transaction, T> persistenceTransactionSupplier) {
-
         final var txn = xodusTransactionSupplier.get();
-
-        try {
-            return persistenceTransactionSupplier.apply(txn);
-        } catch (Exception ex) {
-            txn.abort();
-            logger.error("Could not open transaction.", ex);
-            throw ex;
-        }
-
+        return persistenceTransactionSupplier.apply(txn);
     }
 
     private EnvironmentContext getEnvironmentContext() {
@@ -135,15 +125,6 @@ public class XodusTransactionalResourceServicePersistenceEnvironment implements
     @Inject
     public void setEnvironmentProvider(@Named(RESOURCE_ENVIRONMENT) Provider<Environment> environmentProvider) {
         this.environmentProvider = environmentProvider;
-    }
-
-    public PessimisticLockingMaster getPessimisticLockingMaster() {
-        return pessimisticLockingMaster;
-    }
-
-    @Inject
-    public void setPessimisticLockingMaster(PessimisticLockingMaster pessimisticLockingMaster) {
-        this.pessimisticLockingMaster = pessimisticLockingMaster;
     }
 
     private class EnvironmentContext implements AutoCloseable {

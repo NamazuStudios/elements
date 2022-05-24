@@ -8,11 +8,11 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.appleiapreceipt.AppleIapReceipt;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.appleiapreceipt"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.appleiapreceipt"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.appleiapreceipt",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.appleiapreceipt instead"))
 })

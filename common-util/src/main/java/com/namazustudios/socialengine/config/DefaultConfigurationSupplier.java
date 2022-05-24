@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.config;
 
+import com.namazustudios.socialengine.rt.Constants;
 import org.reflections.Reflections;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -102,7 +103,7 @@ public class DefaultConfigurationSupplier implements Supplier<Properties> {
         properties.putAll(env);
         properties.putAll(getProperties());
 
-        final var home = env.getOrDefault(ELEMENTS_HOME, ELEMENTS_HOME_DEFAULT);
+        final var home = env.getOrDefault(Constants.ELEMENTS_HOME, Constants.ELEMENTS_HOME_DEFAULT);
 
         return loadProperties(
             properties,

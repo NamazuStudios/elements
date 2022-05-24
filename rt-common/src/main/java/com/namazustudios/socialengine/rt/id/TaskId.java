@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.id;
 
 import com.namazustudios.socialengine.rt.Resource;
+import com.namazustudios.socialengine.rt.annotation.Public;
 import com.namazustudios.socialengine.rt.exception.InvalidTaskIdException;
 
 import java.io.Serializable;
@@ -22,6 +23,7 @@ import static java.lang.String.format;
  * {@link ResourceId} with the string representation of the TaskId's UUID, separated by the ID_SEPARATOR. Such a
  * string will take the form "{instance_uuid}.{app_uuid}+{resource_uuid}:{task_uuid}".
  */
+@Public
 public class TaskId implements Serializable, HasNodeId, HasCompoundId<V1CompoundId>  {
 
     final V1CompoundId v1CompoundId;

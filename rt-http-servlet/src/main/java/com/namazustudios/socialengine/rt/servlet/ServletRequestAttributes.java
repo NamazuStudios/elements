@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.rt.servlet;
 
-import com.namazustudios.socialengine.rt.Attributes;
 import com.namazustudios.socialengine.rt.MutableAttributes;
 
 import javax.servlet.ServletRequest;
-import java.util.*;
+import java.util.Enumeration;
+import java.util.HashSet;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.Supplier;
 
 import static java.util.Collections.emptySet;

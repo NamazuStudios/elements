@@ -3,15 +3,15 @@ package com.namazustudios.socialengine.service;
 import com.namazustudios.socialengine.model.notification.FCMRegistration;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Manages instance of {@link FCMRegistration}.  This provides methods to create, update, and delete registrations
  * with the Firebase Notification Service.
  */
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.firebase.registration"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.firebase.registration"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.firebase.registration",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

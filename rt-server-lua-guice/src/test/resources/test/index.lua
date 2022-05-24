@@ -11,32 +11,56 @@ local index = require "namazu.index"
 local resource = require "namazu.resource"
 local responsecode = require "namazu.response.code"
 local coroutine = require "coroutine"
+local runtime = require "namazu.runtime"
+local cluster = require "namazu.cluster"
+
+local Path = java.require "com.namazustudios.socialengine.rt.Path"
+
+local TEST_INDEX_PREFIX = "test_index"
+local TEST_INDEX_PREFIX_ALIAS = "test_index_alias"
+local TEST_INDEX_PREFIX_UNLINK_YIELD = "test_index_unlink_yield"
 
 local test_index = {}
 
-local function make_resource(prefix)
-    local path = prefix .. "/" .. util.uuid()
-    local rid, code = resource.create("test.helloworld", path)
-    print("Created resource " .. rid .. " (" .. code .. ") at path " .. path)
-    return rid, path, code
+local function make_resource(context, prefix)
+
+    -- Identifies the Path
+    local uuid = util.uuid()
+    local full = Path:new(context, {TEST_INDEX_PREFIX, prefix, uuid}):toString()
+    local rid, code = resource.create("test.helloworld", full)
+    print("Created resource " .. rid .. " (" .. code .. ") at path " .. full)
+
+    -- Fully-qualifies the path based on the resource id
+    local nid = runtime.node_id_from_resource_id(rid)
+    local resolved = Path:new(nid, {TEST_INDEX_PREFIX, prefix, uuid}):toString()
+
+    return rid, resolved, code
+
 end
 
-function test_index.test_list()
+local function do_test_list(context)
 
     local original = {}
     local prefix = util.uuid();
     -- Builds the listing
 
-    for i = 1,2
+    for i = 1,10
     do
-        local rid, path, code = make_resource(prefix);
-        print("added " .. rid .. " at path " .. path)
+
+        local rid, path, code = make_resource(context, prefix);
         assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
+        print("added " .. rid .. " at path " .. path)
+
+        local node_id = runtime.node_id_from_resource_id(rid)
         original[path] = rid
+
     end
 
-    local listing = index.list("test_list/*")
-    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+    local query = Path:new(context, {TEST_INDEX_PREFIX, prefix, "*"}):toString()
+    local listing = index.list(query)
+
+    assert(next(listing), "Expected at least one result.")
+    assert(type(listing) == "table", "Expected table for listing but got " .. type(listing))
 
     for path, resource_id in pairs(listing)
     do
@@ -52,128 +76,234 @@ function test_index.test_list()
 
 end
 
-function test_index.test_link()
+function test_index.test_list_local()
+    do_test_list(nil)
+end
+
+function test_index.test_list_remote()
+    local nid = runtime.node_id()
+    do_test_list(nid)
+end
+
+function test_index.test_list_wildcard()
+    do_test_list("*")
+end
+
+local function do_test_link(context)
 
     local response, rid, path, code
-
-    rid, path, code = make_resource("test");
+    rid, path, code = make_resource(context, "test");
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
-    local alias = "alias/" .. util.uuid()
+    local prefix = util.uuid();
+    local alias = Path:new(context, {TEST_INDEX_PREFIX_ALIAS, prefix, util.uuid()}):toString()
 
     response, code = index.link(rid, alias)
-
     response, code = resource.invoke_path(alias, "knock_knock")
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
     assert(response == "Who's there?", "Expected \"Who's There?\"  Got " .. tostring(response))
 
 end
 
-function test_index.test_link_path()
+function test_index.test_link_local()
+    do_test_link(nil)
+end
+
+function test_index.test_link_remote()
+    local nid = runtime.node_id()
+    do_test_link(nid)
+end
+
+local function do_test_link_path(context)
 
     local response, rid, path, code
-
-    rid, path, code = make_resource("test");
+    rid, path, code = make_resource(context, "test");
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
-    local alias = "alias/" .. util.uuid()
+    local prefix = util.uuid();
+    local alias = Path:new(context, {TEST_INDEX_PREFIX_ALIAS, prefix, util.uuid()}):toString()
 
     response, code = index.link_path(path, alias)
-
     response, code = resource.invoke_path(alias, "knock_knock")
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
     assert(response == "Who's there?", "Expected \"Who's There?\"  Got " .. tostring(response))
 
 end
 
-function test_index.test_unlink()
+function test_index.test_link_path_local()
+    do_test_link_path(nil)
+end
+
+function test_index.test_link_path_remote()
+    local nid = runtime.node_id()
+    do_test_link_path(nid)
+end
+
+local function do_test_unlink(context)
 
     local response, rid, original_rid, path, code, removed
 
-    original_rid, path, code = make_resource("test");
+    original_rid, path, code = make_resource(context, util.uuid());
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
     response, code = resource.invoke_path(path, "save_resource")
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
-    index.link(original_rid, "alias" .. "/" .. util.uuid())
+    local prefix = util.uuid();
+    local alias = Path:new(context, {TEST_INDEX_PREFIX_ALIAS, prefix, util.uuid()}):toString()
+
+    index.link(original_rid, alias)
+
+    response, code = resource.invoke(original_rid, "knock_knock")
+    assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
     rid, removed, code = index.unlink(path)
-    assert(original_rid == rid, "Expected resource id match")
-    assert(removed == false, "Expected resource was removed.  It wasn't.")
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+    assert(removed == false, "Expected resource wasn't removed.  It was.")
 
     response, code = resource.invoke_path(path, "knock_knock")
     assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected response code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " got " .. tostring(code))
 
+    response, code = resource.invoke(rid, "knock_knock")
+    assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+
+    response, code = resource.invoke_path(alias, "knock_knock")
+    assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
 end
 
-function test_index.test_unlink_and_destroy()
+function test_index.test_unlink_local()
+    do_test_unlink(nil)
+end
+
+function test_index.test_unlink_remote()
+    local nid = runtime.node_id()
+    do_test_unlink(nid)
+end
+
+local function test_unlink_and_destroy(context)
 
     local response, rid, original_rid, path, code, removed
 
-    original_rid, path, code = make_resource("test");
+    original_rid, path, code = make_resource(context, util.uuid());
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
     response, code = resource.invoke_path(path, "save_resource")
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
 
-    rid, removed, code = index.unlink(path)
+    local prefix = util.uuid();
+    local alias = Path:new(context, {TEST_INDEX_PREFIX_ALIAS, prefix, util.uuid()}):toString()
 
-    assert(original_rid == rid, "Expected resource id match")
-    assert(removed, "Expected resource was removed.  It wasn't.")
+    index.link(original_rid, alias)
+
+    rid, removed, code = index.unlink(path)
     assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+    assert(removed == false, "Expected resource wasn't removed.  It was.")
+
+    rid, removed, code = index.unlink(alias)
+    assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+    assert(removed == true, "Expected resource was removed.  It wasn't.")
+
+    response, code = resource.invoke(rid, "knock_knock")
+    assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected response code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " got " .. tostring(code))
 
     response, code = resource.invoke_path(path, "knock_knock")
     assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected response code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " got " .. tostring(code))
 
+    response, code = resource.invoke_path(alias, "knock_knock")
+    assert(code == responsecode.RESOURCE_NOT_FOUND, "Expected response code " .. tostring(responsecode.RESOURCE_NOT_FOUND) .. " got " .. tostring(code))
+
 end
 
-function test_index.test_link_yield_and_list()
+function test_index.test_unlink_and_destroy_local()
+    test_unlink_and_destroy(nil)
+end
+
+function test_index.test_unlink_and_destroy_remote()
+    local nid = runtime.node_id()
+    test_unlink_and_destroy(nid)
+end
+
+local function do_test_link_yield_and_list(context)
 
     local original = {}
-    local p1_id = util.uuid();
-    local p2_id = util.uuid();
+    local prefix = util.uuid()
+    local player_1 = util.uuid()
+    local player_2 = util.uuid()
+
     -- Builds the listing
 
     for i = 1,10
     do
-        local path = "test/" .. util.uuid()
-        local rid, code = resource.create("test.helloworld", path)
 
-        index.link(rid, p1_id .. "/" .. rid)
-        index.link(rid, p2_id .. "/" .. rid)
+        local rid, path, code = make_resource(context, prefix);
+        assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
+        print("Added " .. rid .. " at path " .. path)
 
+        local nid = runtime.node_id_from_resource_id(rid)
+        local node_id = runtime.node_id_from_resource_id(rid)
+        local player_1_full = Path:new(nid, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_1, util.uuid()}):toString()
+        local player_2_full = Path:new(nid, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_2, util.uuid()}):toString()
+
+        original[player_1_full] = rid
+        original[player_2_full] = rid
+
+        index.link(rid, player_1_full)
+        index.link(rid, player_2_full)
         index.unlink(path)
 
-        print("added " .. rid .. " at path " .. path)
-        assert(code == responsecode.OK, "Expected OK response code got " .. tostring(code))
-        original[path] = rid
     end
 
-    -- Check player 1 listing
-    local listing = index.list("test/" .. p1_id .. "/*")
-    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+    local function do_test(query)
 
-    for path, resource_id in pairs(listing)
-    do
-        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
+        local listing = index.list(query)
+        assert(next(listing), "Expected at least one result.")
+        assert(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+
+        for path, resource_id in pairs(listing)
+        do
+            print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
+        end
+
+        for path, resource_id in pairs(listing)
+        do
+            local original_rid = original[path]
+            print("Checking path " .. path)
+            assert(original_rid == resource_id, "Path mismatch " .. tostring(original_rid) .. " does not match " .. tostring(resource_id))
+
+            local response, code = resource.invoke(original_rid, "knock_knock")
+            assert(code == responsecode.OK, "Expected response code " .. tostring(responsecode.OK) .. " got " .. tostring(code))
+        end
+
     end
 
-    assert(#listing == #original, "Listing for player one failed to find all resources! Expected: " .. tostring(#original) .. " Found: " .. tostring(#listing))
+    local query
 
-    -- Check player 2 listing
-    listing = index.list("test/" .. p2_id .. "/*")
-    print(type(listing) == "table", "Expected table for listing but got " .. type(listing))
+    query = Path:new(context, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, "*"}):toString()
+    print("Testing query: " .. query)
+    do_test(query)
 
-    for path, resource_id in pairs(listing)
-    do
-        print("resource "  .. tostring(path)  .. " -> " .. tostring(resource_id))
-    end
+    query = Path:new(context, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_1, "*"}):toString()
+    print("Testing query: " .. query)
+    do_test(query)
 
-    assert(#listing == #original, "Listing for player two failed to find all resources! Expected: " .. tostring(#original) .. " Found: " .. tostring(#listing))
+    query = Path:new(context, {TEST_INDEX_PREFIX_UNLINK_YIELD, prefix, player_2, "*"}):toString()
+    print("Testing query: " .. query)
+    do_test(query)
 
+end
+
+function test_index.test_link_yield_and_list_local()
+    do_test_link_yield_and_list(nil)
+end
+
+function test_index.test_link_yield_and_list_remote()
+    local nid = runtime.node_id()
+    do_test_link_yield_and_list(nid)
+end
+
+function test_index.test_link_yield_and_list_wildcard()
+    do_test_link_yield_and_list("*")
 end
 
 return test_index

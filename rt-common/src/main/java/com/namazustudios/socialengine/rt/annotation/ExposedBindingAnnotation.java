@@ -34,7 +34,7 @@ public @interface ExposedBindingAnnotation {
     @interface Undefined {}
 
     /**
-     * Resolves an instance of {@link Annotation} given the supplied {@link ExposedModuleDefinition}
+     * Resolves an instance of {@link Annotation} given the supplied {@link ModuleDefinition}
      */
     @FunctionalInterface
     interface BindingAnnotationFactory {  Annotation construct(Class<?> cls, ExposedBindingAnnotation annotation); }
