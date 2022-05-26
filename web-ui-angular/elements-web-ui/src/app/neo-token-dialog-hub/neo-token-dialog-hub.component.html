@@ -9,6 +9,8 @@
       <mat-select
         name="contracts"
         placeholder="Contract"
+        [value]="selectedContract?.id"
+        [disabled]="data?.token?.contract?.id"
         (selectionChange)="selectContract($event.value)"
       >
         <mat-option
@@ -26,6 +28,8 @@
       <mat-select
         name="tokenspec"
         placeholder="Token Spec"
+        [value]="selectedTempalte?.id"
+        [disabled]="data?.token?.metadataSpec?.id"
         (selectionChange)="selectTokenTempalte($event.value)"
       >
         <mat-option
@@ -48,7 +52,7 @@
         mat-raised-button
         color="primary"
         (click)="openNewNeoTokenDialog()"
-        [disabled]="!selectedTempalte || !selectedContract"
+        [disabled]="(!selectedTempalte || !selectedContract) && !data.token?.id"
       >
         Ok
       </button>

@@ -16,6 +16,15 @@ mat-form-field.full-width {
   display: inline-block;
   width: 35%;
 }
+.object-field {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.object-field button {
+  margin-left: 20px;
+}
 
 .mat-chip.mat-standard-chip {
   background-color: #5BC1DF;

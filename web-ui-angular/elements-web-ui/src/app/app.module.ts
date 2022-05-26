@@ -91,6 +91,7 @@ import { CustomizationMenuComponent } from './customization-menu/customization-m
 import { NeoTokenDialogUpdatedFieldComponent } from './neo-token-dialog-updated-field/neo-token-dialog-updated-field.component';
 import { NeoTokenDialogUpdatedDefineComponent } from './neo-token-dialog-updated-define/neo-token-dialog-updated-define.component';
 import { NeoSmartTokenSpecsDuplicateDialogComponent } from './neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
+import { TokenDefinationDuplicateDialogComponent } from './token-defination-duplicate-dialog/token-defination-duplicate-dialog.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -191,7 +192,8 @@ export function initialize(configService: ConfigService) {
     CustomizationMenuComponent,
     NeoTokenDialogUpdatedFieldComponent,
     NeoTokenDialogUpdatedDefineComponent,
-    NeoSmartTokenSpecsDuplicateDialogComponent
+    NeoSmartTokenSpecsDuplicateDialogComponent,
+    TokenDefinationDuplicateDialogComponent
   ],
   imports: [
     BrowserModule,

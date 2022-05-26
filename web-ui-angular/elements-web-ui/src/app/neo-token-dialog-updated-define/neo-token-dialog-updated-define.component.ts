@@ -8,17 +8,48 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 })
 export class NeoTokenDialogUpdatedDefineComponent implements OnInit {
 
+  fields = [];
+
   constructor(
     public dialogRef: MatDialogRef<NeoTokenDialogUpdatedDefineComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       content,
+      isUpdate,
+      index,
+      onUpdate,
     },
   ) { }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    console.log(this.data.content);
+    this.fields = this.data.content;
+  }
+
+  updateFieldValue(value: string, fieldIndex: number): void {
+    this.fields = this.fields.map((field, index) => {
+      if (fieldIndex === index) {
+        return {
+          ...field,
+          value: value,
+        }
+      }
+      return field;
+    });
+  }
 
   close() {
     this.dialogRef.close();
+  }
+
+  submit() {
+    this.data.onUpdate(
+      this.fields,
+      {
+        isUpdate: this.data.isUpdate,
+        index: this.data.index,
+      }
+    );
+    this.close();
   }
 }

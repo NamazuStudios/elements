@@ -1,5 +1,5 @@
 import { COMMA, ENTER } from '@angular/cdk/keycodes';
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { TokenSpecTabField } from '../api/models/token-spec-tab';
@@ -14,12 +14,11 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
 
   @Input()
   field: TokenSpecTabField;
-
-  tags = [];
-  enumValues = [];
-  arr = [];
   arrValue = '';
+  enumValues = [];
   readonly separatorKeysCodes = [ENTER, COMMA ] as const;
+  @Output("updateFieldValue")
+  updateFieldValue: EventEmitter<any> = new EventEmitter();
 
   constructor(
     public dialog: MatDialog,
@@ -34,9 +33,9 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
   add(event: MatChipInputEvent): void {
     const value = (event.value || '').trim();
 
-    // Add our fruit
     if (value) {
-      this.tags.push(value);
+      const tags = this.field.value ? [...this.field.value, value] : [value];
+      this.changeValue(tags);
     }
 
     // Clear the input value
@@ -44,10 +43,12 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
   }
 
   remove(tag: string): void {
-    const index = this.tags.indexOf(tag);
+    const index = this.field.value.indexOf(tag);
 
     if (index >= 0) {
-      this.tags.splice(index, 1);
+      const tags = [...this.field.value];
+      tags.splice(index, 1);
+      this.changeValue(tags);
     }
   }
 
@@ -56,27 +57,50 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
   }
 
   addArrItem(): void {
-    this.arr = [...this.arr, this.arrValue];
+    const newArr = this.field.value ? [...this.field.value, this.arrValue] : [this.arrValue];
     this.arrValue = '';
+    this.changeValue(newArr);
   }
 
   removeArrItem(index: number): void {
-    this.arr = this.arr.filter((_, i) => index !== i);
+    const newArr = this.field.value.filter((_, i) => index !== i);
+    this.changeValue(newArr);
   }
 
   changeArrItem(value: string, index: number): void {
-    this.arr = this.arr.map((item: string, i: number): string => {
+    const newArr = (this.field.value || []).map((item: string, i: number): string => {
       if (index === i) return value;
       return item;
-    })
+    });
+    this.changeValue(newArr);
   }
 
-  openDefineModal() {
+  changeValue(value: string | string[]): void {
+    this.updateFieldValue.emit(value);
+  }
+
+  onUpdate(data, params) {
+    if (this.field.fieldType === 'Array') {
+      if (!params?.isUpdate) {
+        this.arrValue = data;
+        this.addArrItem();
+      } else {
+        this.changeArrItem(data, params.index);
+      }
+    } else if (this.field.fieldType === 'Object') {
+      this.changeValue(data);
+    }
+  }
+
+  openDefineModal(item, index) {
     this.dialog.open(NeoTokenDialogUpdatedDefineComponent, {
       width: "800px",
       maxHeight: "90vh",
       data: {
-        content: this.field.content,
+        isUpdate: !!item,
+        index,
+        content: item || this.field.content,
+        onUpdate: this.onUpdate.bind(this),
       },
     });
   }

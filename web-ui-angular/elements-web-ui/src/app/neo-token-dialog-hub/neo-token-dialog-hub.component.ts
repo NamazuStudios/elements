@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { NeoSmartContract } from '../api/models/blockchain/neo-smart-contract';
-import { NeoToken } from '../api/models/blockchain/neo-token';
+import { TokenDefinition } from '../api/models/blockchain/token-definition';
 import { TokenTemplate } from '../api/models/token-spec-tab';
 import { NeoSmartContractsService } from '../api/services/blockchain/neo-smart-contracts.service';
 import { MetadataSpecsService } from '../api/services/metadata-specs.service';
@@ -33,7 +33,7 @@ export class NeoTokenDialogHubComponent implements OnInit {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       isNew: boolean;
-      neoToken: NeoToken;
+      token: TokenDefinition;
       next: any;
       refresher: any;
     },
@@ -41,6 +41,10 @@ export class NeoTokenDialogHubComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
+    if (this.data.token?.id) {
+      this.selectedContract = this.data.token.contract;
+      this.selectedTempalte = this.data.token.metadataSpec;
+    }
     this.contractsDataSource = new NeoSmartContractsDataSource(this.neoSmartContractsService);
     this.contractsDataSource.loadNeoSmartContracts(null, null, null);
     this.tokenSpecsDataSource = new NeoTokensSpecDataSource(this.metadataSpecsService);
@@ -73,13 +77,20 @@ export class NeoTokenDialogHubComponent implements OnInit {
   }
 
   openNewNeoTokenDialog(): void {
-    if (this.selectedContract && this.selectedTempalte) {
+    if ((this.selectedContract && this.selectedTempalte) || this.data.token?.id) {
       this.dialog.open(NeoTokenDialogUpdatedComponent, {
         width: "850px",
         maxHeight: "90vh",
         data: {
+          token: this.data.token,
           contract: this.selectedContract,
           template: this.selectedTempalte,
+          contracts: this.contracts,
+          templates: this.templates,
+          refresher: this.data.refresher,
+          selectContract: this.selectContract.bind(this),
+          selectTemplate: this.selectTokenTempalte.bind(this),
+          close: this.close.bind(this),
         },
       });
     }

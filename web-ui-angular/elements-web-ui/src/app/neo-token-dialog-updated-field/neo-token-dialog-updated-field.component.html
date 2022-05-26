@@ -1,4 +1,3 @@
-
 <mat-form-field *ngIf="field?.fieldType === 'String'" class="field full-width">
   <mat-label>{{field.name}}</mat-label>
   <input
@@ -6,6 +5,8 @@
     placeholder="String"
     name="description"
     type="text"
+    [value]="field.value || ''"
+    (change)="changeValue($event.target.value)"
   >
 </mat-form-field>
 <mat-form-field *ngIf="field?.fieldType === 'Number'" class="field">
@@ -15,12 +16,24 @@
     placeholder="Number"
     name="number"
     type="number"
+    [value]="field.value || ''"
+    (change)="changeValue($event.target.value)"
   >
 </mat-form-field>
+<div *ngIf="field?.fieldType === 'Object'" class="field object-field">
+  <div>{{field.name}}</div>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="openDefineModal()"
+  >
+    Define
+  </button>
+</div>
 <mat-form-field *ngIf="field?.fieldType === 'Tags'" appearance="standard" class="field full-width">
   <mat-label>{{field.name}}</mat-label>
   <mat-chip-list #chipList aria-label="Tag selection">
-    <mat-chip *ngFor="let tag of tags" (removed)="remove(tag)">
+    <mat-chip *ngFor="let tag of (field.value || [])" (removed)="remove(tag)">
       {{tag}}
       <button matChipRemove>
         <mat-icon>cancel</mat-icon>
@@ -38,7 +51,12 @@
 </mat-form-field>
 
 <mat-form-field *ngIf="field?.fieldType === 'Enum'" class="field">
-  <mat-select name="enum" placeholder="Enum">
+  <mat-select
+    name="enum"
+    placeholder="Enum"
+    (selectionChange)="changeValue($event.value)"
+    [value]="field.value"
+  >
     <mat-option
       *ngFor="let enumValue of enumValues"
       [value]="enumValue"
@@ -51,11 +69,16 @@
 </mat-form-field>
 
 <div *ngIf="field?.fieldType === 'Boolean'" class="field boolean-field">
-  <mat-checkbox [checked]="!!field?.content">{{field.name}}</mat-checkbox>
+  <mat-checkbox
+    [checked]="field.value === undefined ? !!field.content : !!field.value"
+    (change)="changeValue($event.checked)"
+  >
+    {{field.name}}
+  </mat-checkbox>
 </div>
 
 <mat-card *ngIf="field?.fieldType === 'Array'" class="field">
-  <div *ngFor="let item of arr; let i = index" class="array-row">
+  <div *ngFor="let item of (field.value || []); let i = index;" class="array-row">
     <mat-form-field *ngIf="!field?.content">
       <mat-label>Array</mat-label>
       <input
@@ -70,7 +93,7 @@
       <button
         mat-raised-button
         color="primary"
-        (click)="openDefineModal()"
+        (click)="openDefineModal(item, i)"
       >
         Define
       </button>
@@ -98,7 +121,7 @@
       <button
         mat-raised-button
         color="primary"
-        (click)="openDefineModal()"
+        (click)="openDefineModal(item, i)"
       >
         Define
       </button>
@@ -114,4 +137,3 @@
     </button>
   </div>
 </mat-card>
-
