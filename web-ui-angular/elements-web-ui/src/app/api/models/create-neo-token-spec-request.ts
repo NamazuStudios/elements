@@ -1,5 +1,3 @@
-import { TokenSpecTab } from "./token-spec-tab";
-
 export interface CreateNeoTokenSpecRequest {
   /**
    * Tabs listed.
