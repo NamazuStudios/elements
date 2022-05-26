@@ -7,7 +7,7 @@
         <mat-select
           name="contracts"
           placeholder="Contract"
-          [value]="selectedContract.id"
+          [value]="selectedContract?.id"
           [disabled]="data.token?.id"
           (selectionChange)="selectContract($event.value)"
         >
@@ -26,7 +26,7 @@
         <mat-select
           name="tokenspec"
           placeholder="Token Spec"
-          [value]="selectedTemplate.id"
+          [value]="selectedTemplate?.id"
           [disabled]="data.token?.id"
           (selectionChange)="selectTemplate($event.value)"
         >
@@ -79,6 +79,7 @@
       mat-raised-button
       color="primary"
       (click)="submit()"
+      [disabled]="!selectedContract || !selectedTemplate || !name"
     >
       Ok
     </button>

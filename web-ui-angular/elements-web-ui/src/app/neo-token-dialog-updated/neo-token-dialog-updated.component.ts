@@ -5,8 +5,12 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { NeoSmartContract } from '../api/models/blockchain/neo-smart-contract';
 import { TokenDefinition } from '../api/models/blockchain/token-definition';
 import { TokenSpecTab, TokenSpecTabField, TokenSpecTabFieldTypes, TokenTemplate } from '../api/models/token-spec-tab';
+import { NeoSmartContractsService } from '../api/services/blockchain/neo-smart-contracts.service';
 import { TokenDefinitionService } from '../api/services/blockchain/token-definition.service';
+import { MetadataSpecsService } from '../api/services/metadata-specs.service';
 import { AuthenticationService } from '../authentication.service';
+import { NeoSmartContractsDataSource } from '../neo-smart-contracts.datasource';
+import { NeoTokensSpecDataSource } from '../neo-tokens-spec.datasource';
 
 const complexFields = [
   TokenSpecTabFieldTypes.OBJECT,
@@ -22,6 +26,8 @@ const complexFields = [
 export class NeoTokenDialogUpdatedComponent implements OnInit {
 
   readonly separatorKeysCodes = [ENTER, COMMA ] as const;
+  contractsDataSource: NeoSmartContractsDataSource;
+  tokenSpecsDataSource: NeoTokensSpecDataSource;
   name = '';
   activeTabIndex = 0;
   fields: TokenSpecTabField[] = [];
@@ -34,6 +40,8 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
   disableAnimation = true;
 
   constructor(
+    private neoSmartContractsService: NeoSmartContractsService,
+    private metadataSpecsService: MetadataSpecsService,
     private tokenDefinitionService: TokenDefinitionService,
     private authenticationService: AuthenticationService,
     public dialogRef: MatDialogRef<NeoTokenDialogUpdatedComponent>,
@@ -50,10 +58,10 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    this.contracts = this.data.contracts;
-    this.templates = this.data.templates;
-    this.selectedContract = this.data.contract;
-    this.selectedTemplate = this.data.template;
+    this.contractsDataSource = new NeoSmartContractsDataSource(this.neoSmartContractsService);
+    this.contractsDataSource.loadNeoSmartContracts(null, null, null);
+    this.tokenSpecsDataSource = new NeoTokensSpecDataSource(this.metadataSpecsService);
+    this.tokenSpecsDataSource.loadTemplates(null, null);
     if (this.data.token?.id) {
       this.tabs = this.data?.token?.metadata?.tabs.map((tab) => {
         const fields = tab.fields.map((field) => {
@@ -65,13 +73,14 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
           }
           return field;
         });
-        console.log(fields);
         return {
           ...tab,
           fields,
         }
       });
       this.name = this.data.token.name;
+      this.selectedContract = this.data.token.contract;
+      this.selectedTemplate = this.data.token.metadataSpec;
     } else {
       this.tabs = this.selectedTemplate.tabs.map(tab => ({
         ...tab,
@@ -84,6 +93,15 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
   ngAfterViewInit(): void {
     // timeout required to avoid the dreaded 'ExpressionChangedAfterItHasBeenCheckedError'
     setTimeout(() => this.disableAnimation = false);
+
+    this.contractsDataSource.neoSmartContracts$.subscribe(
+      (currentNeoSmartContracts: NeoSmartContract[]) => (this.contracts = currentNeoSmartContracts)
+    );
+    this.tokenSpecsDataSource.tokens$.subscribe(
+      (templates: TokenTemplate[]): void => {
+        this.templates = templates;
+      }
+    );
   }
 
   selectContract(contractId: string): void {
@@ -190,7 +208,6 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
   }
 
   close() {
-    this.data.close();
     this.dialogRef.close();
   }
 }

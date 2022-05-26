@@ -10,18 +10,16 @@ import { ConfirmationDialogService } from "../confirmation-dialog/confirmation-d
 import { UsersService } from "../api/services";
 import { User } from "../api/models";
 import { NeoTokensService } from "../api/services/blockchain/neo-tokens.service";
-import { CreateNeoTokenRequest } from "../api/models/blockchain/create-neo-token-request";
-import { UpdateNeoTokenRequest } from "../api/models/blockchain/update-neo-token-request";
 import { TransferOptionsPipe } from "./transferOptions.pipe";
 import { MintTokenRequest } from "../api/models/blockchain/mint-token-request";
 import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
 import { NeoSmartContractMintDialogComponent } from "../neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component";
 import { TokenViewerDialogComponent } from "../token-viewer-dialog/token-viewer-dialog.component";
-import { NeoTokenDialogHubComponent } from "../neo-token-dialog-hub/neo-token-dialog-hub.component";
 import { TokenDefinitionsDataSource } from '../token-definitions.datasource';
 import { TokenDefinitionService } from '../api/services/blockchain/token-definition.service';
 import { TokenDefinition } from '../api/models/blockchain/token-definition';
 import { TokenDefinationDuplicateDialogComponent } from '../token-defination-duplicate-dialog/token-defination-duplicate-dialog.component';
+import { NeoTokenDialogUpdatedComponent } from '../neo-token-dialog-updated/neo-token-dialog-updated.component';
 
 
 @Component({
@@ -119,13 +117,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
   }
 
   addToken() {
-    this.showDialog(
-      true,
-      null,
-      (createTokenRequest: CreateNeoTokenRequest) => {
-        return this.neoTokensService.createToken(createTokenRequest);
-      }
-    );
+    this.showDialog(null);
   }
 
   // add support for searching here
@@ -189,13 +181,11 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
       });
   }
 
-  showDialog(isNew: boolean, token: TokenDefinition, next) {
-    this.dialog.open(NeoTokenDialogHubComponent, {
+  showDialog(token: TokenDefinition) {
+    this.dialog.open(NeoTokenDialogUpdatedComponent, {
       width: "850px",
       data: {
-        isNew: isNew,
         token,
-        next: next,
         refresher: this,
       },
     });
@@ -263,16 +253,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
   // }
 
   editToken(token: TokenDefinition) {
-    this.showDialog(
-      false,
-      token,
-      (updateNeoTokenRequest: UpdateNeoTokenRequest) => {
-        return this.neoTokensService.updateToken({
-          id: token.id,
-          body: updateNeoTokenRequest,
-        });
-      }
-    );
+    this.showDialog(token);
   }
 
   viewToken(token: TokenDefinition) {
