@@ -6,7 +6,7 @@ import com.google.inject.name.Names;
 import com.namazustudios.socialengine.model.application.Application;
 import com.namazustudios.socialengine.rt.Context;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
@@ -116,7 +116,7 @@ public class IntegrationTestModule extends AbstractModule {
 
         }
 
-        public <T> void mock(final ExposedModuleDefinition module, final Class<T> type) {
+        public <T> void mock(final ModuleDefinition module, final Class<T> type) {
 
             if (module.annotation().value() == ExposedBindingAnnotation.Undefined.class) {
 
