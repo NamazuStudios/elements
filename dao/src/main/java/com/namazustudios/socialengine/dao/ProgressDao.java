@@ -9,18 +9,16 @@ import com.namazustudios.socialengine.model.mission.Progress;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * Created by davidjbrooks on 12/05/18.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.progress"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.progress"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.progress",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.progress instead"))
 })

@@ -79,7 +79,6 @@ public interface ReadOnlyTransaction extends AutoCloseable {
     /**
      * Closes this transaction, releasing any underlying system resources associated with this transaction.
      *
-     * @throws TransactionConflictException if the operation caused a conflict on close.
      */
     void close();
 

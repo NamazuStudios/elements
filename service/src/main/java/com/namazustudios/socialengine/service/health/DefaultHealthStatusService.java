@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.service.health;
 
-import com.google.common.collect.Comparators;
 import com.namazustudios.socialengine.dao.DatabaseHealthStatusDao;
 import com.namazustudios.socialengine.model.health.*;
 import com.namazustudios.socialengine.rt.exception.InternalException;
@@ -15,9 +14,12 @@ import javax.inject.Inject;
 import javax.inject.Provider;
 import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.Comparator.comparingDouble;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 
 public class DefaultHealthStatusService implements HealthStatusService {
@@ -111,7 +113,7 @@ public class DefaultHealthStatusService implements HealthStatusService {
         final var priorityComparator = comparingDouble(RemoteInvokerStatus::getPriority).reversed();
 
         final var priorities = getRemoteInvokerRegistry()
-            .getAllRemoteInvokerStatus()
+            .getAllRemoteInvokerStatuses()
             .stream()
             .sorted((s0, s1) -> {
                 final var nodeIdCmp = s0.getNodeId().compareTo(s1.getNodeId());
@@ -122,7 +124,7 @@ public class DefaultHealthStatusService implements HealthStatusService {
             .collect(toList());
 
         final var connectedPeers = getRemoteInvokerRegistry()
-            .getAllRemoteInvokerStatus()
+            .getAllRemoteInvokerStatuses()
             .stream()
             .map(s -> s.getInvoker().getConnectAddress())
             .collect(toList());
@@ -234,6 +236,11 @@ public class DefaultHealthStatusService implements HealthStatusService {
             healthStatus.setProblems(problems);
             healthStatus.setChecksFailed(problems.size());
             healthStatus.setChecksPerformed(performed);
+
+            if (health < 100.0) {
+                logger.warn("Below healthy threshold {}%", health);
+                logger.warn("Encountered problems: [{}]", join(",", problems));
+            }
 
             return healthStatus;
 

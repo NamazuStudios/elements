@@ -11,6 +11,28 @@ import java.net.URISyntaxException;
 public interface URIs {
 
     /**
+     * Returns a {@link URI} to meet the requirements of the HTTP Origin header.
+     *
+     * @param uri the {@link URI} from which to derive the origin
+     * @return the origin URI.
+     */
+    static URI originFor(final URI uri) {
+        try {
+            return new URI(
+                uri.getScheme(),
+                uri.getUserInfo(),
+                uri.getHost(),
+                uri.getPort(),
+                null,
+                null,
+                null
+            );
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    /**
      * Ensures that the provided {@link URI}'s {@link URI#getPath()} ends with a '/' thus indicating
      * @param base
      * @return

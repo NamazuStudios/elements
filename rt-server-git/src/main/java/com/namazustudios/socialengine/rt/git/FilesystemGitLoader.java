@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.ApplicationCodeNotFoundExcept
 import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.id.ApplicationId;
 import com.namazustudios.socialengine.rt.util.ShutdownHooks;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.eclipse.jgit.api.CloneCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -54,6 +55,8 @@ public class FilesystemGitLoader implements GitLoader {
     private static final String GIT_DIRECTORY = ".git";
 
     private static final Logger logger = LoggerFactory.getLogger(FilesystemGitLoader.class);
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(FilesystemGitLoader.class);
 
     private static final ShutdownHooks hooks = new ShutdownHooks(FilesystemGitLoader.class);
 
@@ -158,15 +161,15 @@ public class FilesystemGitLoader implements GitLoader {
         try {
 
             final String prefix = format("%s.%s-", applicationId, GIT_SUFFIX);
-            codeDirectory = createTempDirectory(prefix).toFile().getAbsoluteFile();
+            codeDirectory = temporaryFiles.createTempDirectory(prefix).toFile().getAbsoluteFile();
 
             hooks.add(codeDirectory, () -> Files.walk(codeDirectory.toPath())
                  .sorted(Comparator.reverseOrder())
                  .map(java.nio.file.Path::toFile)
                  .forEach(File::delete));
 
-        } catch (IOException ex) {
-            throw new InternalException(ex);
+        } catch (UncheckedIOException ex) {
+            throw new InternalException(ex.getCause());
         }
 
         return codeDirectory;

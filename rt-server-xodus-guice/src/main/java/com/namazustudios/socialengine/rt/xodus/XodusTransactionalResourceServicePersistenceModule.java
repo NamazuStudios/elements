@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.rt.xodus;
 import com.google.inject.PrivateModule;
 import com.namazustudios.socialengine.rt.PersistenceEnvironment;
 import com.namazustudios.socialengine.rt.Resource;
-import com.namazustudios.socialengine.rt.transact.PessimisticLockingMaster;
 import com.namazustudios.socialengine.rt.transact.SimplePessimisticLockingMaster;
 import com.namazustudios.socialengine.rt.transact.TransactionalResourceServicePersistence;
 
@@ -22,7 +21,6 @@ public class XodusTransactionalResourceServicePersistenceModule extends PrivateM
 
         bind(PersistenceEnvironment.class).to(XodusTransactionalResourceServicePersistenceEnvironment.class);
         bind(TransactionalResourceServicePersistence.class).to(XodusTransactionalResourceServicePersistenceEnvironment.class);
-        bind(PessimisticLockingMaster.class).to(SimplePessimisticLockingMaster.class).asEagerSingleton();
         bind(XodusTransactionalResourceServicePersistenceEnvironment.class).asEagerSingleton();
 
         expose(PersistenceEnvironment.class);

@@ -6,10 +6,10 @@
         <app-neo-smart-contracts-list></app-neo-smart-contracts-list>
     </mat-tab>
     <mat-tab label="Definitions">
-        <app-neo-tokens-list></app-neo-tokens-list>
+        <app-neo-tokens-list [isMinted]="false"></app-neo-tokens-list>
     </mat-tab>
-    <mat-tab label="NFTs" disabled="true">
-        <app-neo-tokens-list></app-neo-tokens-list>
+    <mat-tab label="NFTs">
+        <app-neo-tokens-list [isMinted]="true"></app-neo-tokens-list>
     </mat-tab>
     <!-- <mat-tab label="Assets" disabled="true">
         Assets component...

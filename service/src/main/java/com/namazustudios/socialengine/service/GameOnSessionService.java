@@ -6,11 +6,10 @@ import com.namazustudios.socialengine.model.gameon.game.DeviceOSType;
 import com.namazustudios.socialengine.model.gameon.game.GameOnSession;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.gameon.session")
+    @ModuleDefinition(value = "namazu.elements.service.gameon.session")
 })
 public interface GameOnSessionService {
 

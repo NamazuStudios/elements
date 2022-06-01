@@ -1,9 +1,9 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
-@Expose(@ExposedModuleDefinition("test.java.event"))
+@Expose(@ModuleDefinition("test.java.event"))
 public interface TestJavaEvent {
 
     void helloWorldEvent();

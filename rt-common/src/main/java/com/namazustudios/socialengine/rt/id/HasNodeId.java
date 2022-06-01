@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.id;
 
+import com.namazustudios.socialengine.rt.annotation.Public;
 import com.namazustudios.socialengine.rt.exception.InvalidNodeIdException;
 
 import java.util.Optional;
@@ -7,6 +8,7 @@ import java.util.Optional;
 /**
  * An interface which may report a {@link NodeId}.
  */
+@Public
 public interface HasNodeId {
 
     /**

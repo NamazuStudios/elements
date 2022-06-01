@@ -25,7 +25,7 @@ public class UserNeoTokenService implements NeoTokenService {
             final int offset,
             final int count,
             final List<String> tags,
-            final BlockchainConstants.MintStatus mintStatus,
+            final List<BlockchainConstants.MintStatus> mintStatus,
             final String search) {
         return getNeoTokenDao().getTokens(offset, count, tags, mintStatus, search);
     }

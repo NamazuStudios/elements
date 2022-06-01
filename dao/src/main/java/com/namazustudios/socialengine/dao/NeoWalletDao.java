@@ -7,16 +7,16 @@ import com.namazustudios.socialengine.model.blockchain.neo.UpdateNeoWalletReques
 import com.namazustudios.socialengine.model.blockchain.neo.NeoWallet;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by garrettmcspadden on 11/12/21.
  */
 @Expose({
-        @ExposedModuleDefinition("namazu.elements.dao.neowallet"),
-        @ExposedModuleDefinition(
-                value = "namazu.socialengine.dao.neowallet",
-                deprecated = @DeprecationDefinition("Use namazu.elements.dao.neowallet instead"))
+    @ModuleDefinition("namazu.elements.dao.neo.wallet"),
+    @ModuleDefinition(
+        value = "namazu.socialengine.dao.neo.wallet",
+        deprecated = @DeprecationDefinition("Use namazu.elements.dao.neo.wallet instead"))
 })
 public interface NeoWalletDao {
 

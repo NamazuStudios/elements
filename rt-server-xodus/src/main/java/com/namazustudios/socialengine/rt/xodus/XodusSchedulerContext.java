@@ -40,6 +40,8 @@ public class XodusSchedulerContext implements SchedulerContext {
         final var now = currentTimeMillis();
         final var environment = getEnvironment();
 
+        getSimpleSchedulerContext().start();
+
         getEnvironment().executeInTransaction(txn -> {
 
             int count = 0;
@@ -75,8 +77,6 @@ public class XodusSchedulerContext implements SchedulerContext {
                     count, skipped, failed);
 
         });
-
-        getSimpleSchedulerContext().start();
 
     }
 

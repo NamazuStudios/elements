@@ -1,17 +1,20 @@
 package com.namazustudios.socialengine.rt.guice;
 
 import com.google.inject.PrivateModule;
-import com.namazustudios.socialengine.rt.SimpleIndexContext;
+import com.google.inject.TypeLiteral;
+import com.namazustudios.socialengine.rt.remote.Instance;
 import com.namazustudios.socialengine.rt.remote.provider.CachedThreadPoolProvider;
+import com.namazustudios.socialengine.rt.remote.provider.ExecutorServiceFactory;
+import com.namazustudios.socialengine.rt.remote.provider.InstanceThreadFactory;
 import com.namazustudios.socialengine.rt.remote.provider.ScheduledExecutorServiceProvider;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ThreadFactory;
 
 import static com.google.inject.name.Names.named;
 import static com.namazustudios.socialengine.rt.Constants.SCHEDULER_THREADS;
-import static com.namazustudios.socialengine.rt.remote.Worker.EXECUTOR_SERVICE;
-import static com.namazustudios.socialengine.rt.remote.Worker.SCHEDULED_EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.remote.Instance.*;
 import static java.lang.Runtime.getRuntime;
 
 public class SimpleExecutorsModule extends PrivateModule {
@@ -46,17 +49,23 @@ public class SimpleExecutorsModule extends PrivateModule {
 
         bindSchedulerThreads.run();
 
-        bind(ScheduledExecutorService.class)
+        bind(ThreadGroup.class)
+            .annotatedWith(named(THREAD_GROUP))
+            .toInstance(new ThreadGroup(Instance.class.getName()));
+
+        bind(new TypeLiteral<ExecutorServiceFactory<ExecutorService>>(){})
+            .annotatedWith(named(EXECUTOR_SERVICE))
+            .toProvider(CachedThreadPoolProvider.class);
+
+        bind(new TypeLiteral<ExecutorServiceFactory<ScheduledExecutorService>>(){})
             .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE))
             .toProvider(ScheduledExecutorServiceProvider.class);
 
-        bind(ExecutorService.class)
-            .annotatedWith(named(EXECUTOR_SERVICE))
-            .toProvider(new CachedThreadPoolProvider(SimpleIndexContext.class, "Shared Context"))
-            .asEagerSingleton();
+        expose(new TypeLiteral<ExecutorServiceFactory<ExecutorService>>(){})
+            .annotatedWith(named(EXECUTOR_SERVICE));
 
-        expose(ExecutorService.class).annotatedWith(named(EXECUTOR_SERVICE));
-        expose(ScheduledExecutorService.class).annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE));
+        expose(new TypeLiteral<ExecutorServiceFactory<ScheduledExecutorService>>(){})
+            .annotatedWith(named(SCHEDULED_EXECUTOR_SERVICE));
 
     }
 

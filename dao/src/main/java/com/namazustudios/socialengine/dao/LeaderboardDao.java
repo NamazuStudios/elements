@@ -5,14 +5,14 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.leaderboard.Leaderboard;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Provides CRUD operations for Leaderboard instances in the database.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.leaderboard"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.leaderboard"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.leaderboard",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.leaderboard instead"))
 })

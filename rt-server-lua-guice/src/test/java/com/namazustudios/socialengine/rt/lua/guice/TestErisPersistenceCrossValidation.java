@@ -1,13 +1,10 @@
 package com.namazustudios.socialengine.rt.lua.guice;
 
 import com.namazustudios.socialengine.rt.ResourceLoader;
-import com.namazustudios.socialengine.rt.util.TestTemporaryFiles;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.testng.annotations.AfterSuite;
-import org.testng.annotations.DataProvider;
-import org.testng.annotations.Guice;
-import org.testng.annotations.Test;
+import org.testng.annotations.*;
 
 import javax.inject.Inject;
 import java.io.*;
@@ -15,24 +12,35 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.google.inject.Guice.createInjector;
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static org.testng.Assert.assertEquals;
 
-@Guice(modules = ErisPersistenceTestModule.class)
 public class TestErisPersistenceCrossValidation {
+
+    @Factory
+    public static Object[] getIntegrationTests() {
+
+        final var injector = createInjector(new ErisPersistenceTestModule());
+
+        return new Object[] {
+                injector.getInstance(TestErisPersistenceCrossValidation.class)
+        };
+
+    }
 
     private static final Logger logger = LoggerFactory.getLogger(TestErisPersistenceCrossValidation.class);
 
-    private static TestTemporaryFiles testTemporaryFiles = new TestTemporaryFiles(TestErisPersistenceCrossValidation.class);
+    private static TemporaryFiles temporaryFiles = new TemporaryFiles(TestErisPersistenceCrossValidation.class);
 
     private ResourceLoader resourceLoader;
 
     @AfterSuite
     public static void deleteTempFiles() {
-        testTemporaryFiles.deleteTempFiles();
+        temporaryFiles.deleteTempFilesAndDirectories();
     }
 
     @DataProvider
@@ -47,8 +55,8 @@ public class TestErisPersistenceCrossValidation {
 
         logger.debug("Testing Persistence for {}", moduleName);
 
-        final var streamFile = testTemporaryFiles.createTempFile();
-        final var channelFile = testTemporaryFiles.createTempFile();
+        final var streamFile = temporaryFiles.createTempFile();
+        final var channelFile = temporaryFiles.createTempFile();
 
         try (final var fos = new FileOutputStream(streamFile.toFile());
              final var bos = new BufferedOutputStream(fos);

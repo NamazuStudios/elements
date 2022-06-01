@@ -1,0 +1,33 @@
+<component name="ProjectRunConfigurationManager">
+  <configuration default="false" name="TestLuadoclet.testGenerateFirst" type="TestNG" nameIsGenerated="true">
+    <module name="doclet" />
+    <useClassPathOnly />
+    <extension name="coverage">
+      <pattern>
+        <option name="PATTERN" value="com.namazustudios.socialengine.doclet.metadata.*" />
+        <option name="ENABLED" value="true" />
+      </pattern>
+    </extension>
+    <option name="SUITE_NAME" value="" />
+    <option name="PACKAGE_NAME" value="com.namazustudios.socialengine.doclet" />
+    <option name="MAIN_CLASS_NAME" value="com.namazustudios.socialengine.doclet.TestLuadoclet" />
+    <option name="METHOD_NAME" value="testGenerateFirst" />
+    <option name="GROUP_NAME" value="" />
+    <option name="TEST_OBJECT" value="METHOD" />
+    <option name="PARAMETERS" value="" />
+    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="OUTPUT_DIRECTORY" value="" />
+    <option name="TEST_SEARCH_SCOPE">
+      <value defaultName="moduleWithDependencies" />
+    </option>
+    <option name="PROPERTIES_FILE" value="" />
+    <envs>
+      <env name="ELEMENTS_TEMP_PURGE" value="false" />
+    </envs>
+    <properties />
+    <listeners />
+    <method v="2">
+      <option name="Make" enabled="true" />
+    </method>
+  </configuration>
+</component>

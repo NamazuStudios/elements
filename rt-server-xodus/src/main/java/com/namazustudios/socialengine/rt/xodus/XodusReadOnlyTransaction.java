@@ -146,8 +146,8 @@ public class XodusReadOnlyTransaction implements ReadOnlyTransaction {
         check(resourceId);
 
         final var resourceFile = virtualFileSystem.openFile(getTransaction(), resourceId.toString(), false);
-
-        if (resourceFile == null) throw new NullResourceException();
+        if (resourceFile == null)
+                throw new NullResourceException("File for: " + resourceId);
 
         final var inputStream = virtualFileSystem.readFile(getTransaction(), resourceFile);
 

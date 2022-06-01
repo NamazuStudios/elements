@@ -16,7 +16,6 @@ import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
-import dev.morphia.query.Query;
 import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
 
@@ -47,7 +46,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
     public Pagination<NeoToken> getTokens(final int offset,
                                           final int count,
                                           final List<String> tags,
-                                          final BlockchainConstants.MintStatus mintStatus,
+                                          final List<BlockchainConstants.MintStatus> mintStatus,
                                           final String search) {
 
         final var trimmedSearch = nullToEmpty(search).trim();
@@ -64,7 +63,7 @@ public class MongoNeoTokenDao implements NeoTokenDao {
         }
 
         if (mintStatus != null) {
-            mongoQuery.filter(Filters.eq("mintStatus", mintStatus));
+            mongoQuery.filter(Filters.in("mintStatus", mintStatus));
         }
 
         return getMongoDBUtils().paginationFromQuery(mongoQuery, offset, count, this::transform, new FindOptions());

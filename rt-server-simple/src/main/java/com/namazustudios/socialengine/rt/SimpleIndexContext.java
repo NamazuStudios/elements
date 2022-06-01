@@ -3,9 +3,10 @@ package com.namazustudios.socialengine.rt;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.annotation.Routing;
 import com.namazustudios.socialengine.rt.id.ResourceId;
-import com.namazustudios.socialengine.rt.remote.SimpleWorkerInstance;
+import com.namazustudios.socialengine.rt.remote.Instance;
+import com.namazustudios.socialengine.rt.remote.provider.ExecutorServiceFactory;
 import com.namazustudios.socialengine.rt.routing.ListAggregateRoutingStrategy;
-import com.namazustudios.socialengine.rt.util.LatchedExecutorServiceCompletionService;
+import com.namazustudios.socialengine.rt.util.Monitor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,7 +14,9 @@ import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Consumer;
 
 import static java.util.stream.Collectors.toList;
@@ -26,19 +29,42 @@ public class SimpleIndexContext implements IndexContext {
 
     private ResourceService resourceService;
 
-    private final AtomicReference<LatchedExecutorServiceCompletionService> completionService = new AtomicReference<>();
+    private final Lock lock = new ReentrantLock();
+
+    private volatile ExecutorServiceFactory<ExecutorService> executorServiceFactory;
+
+    @Override
+    public void start() {
+        try (var monitor = Monitor.enter(lock)) {
+            if (executorService == null) {
+                executorService = getExecutorServiceFactory().getService(SimpleIndexContext.class);
+            } else {
+                throw new IllegalStateException("Already started.");
+            }
+        }
+    }
 
     @Override
     public void stop() {
+        try (var monitor = Monitor.enter(lock)) {
+            if (executorService == null) {
+                throw new IllegalStateException("Not running.");
+            } else {
 
-        final var completionService = this.completionService.getAndSet(null);
+                executorService.shutdown();
 
-        if (completionService == null) {
-            throw new IllegalStateException("Not running.");
-        } else {
-            completionService.stop();
+                try {
+                    if (!executorService.awaitTermination(1, TimeUnit.MINUTES)) {
+                        logger.error("Timed out.");
+                    }
+                } catch (InterruptedException ex) {
+                    logger.error("Interrupted");
+                } finally {
+                    executorService = null;
+                }
+
+            }
         }
-
     }
 
     @RemotelyInvokable(routing = @Routing(ListAggregateRoutingStrategy.class))
@@ -131,12 +157,17 @@ public class SimpleIndexContext implements IndexContext {
     }
 
     public ExecutorService getExecutorService() {
+        if (executorService == null) throw new IllegalStateException("Not running.");
         return executorService;
     }
 
+    public ExecutorServiceFactory<ExecutorService> getExecutorServiceFactory() {
+        return executorServiceFactory;
+    }
+
     @Inject
-    public void setExecutorService(@Named(SimpleWorkerInstance.EXECUTOR_SERVICE) ExecutorService executorService) {
-        this.executorService = executorService;
+    public void setExecutorServiceFactory(@Named(Instance.EXECUTOR_SERVICE) ExecutorServiceFactory<ExecutorService> executorServiceFactory) {
+        this.executorServiceFactory = executorServiceFactory;
     }
 
     public ResourceService getResourceService() {

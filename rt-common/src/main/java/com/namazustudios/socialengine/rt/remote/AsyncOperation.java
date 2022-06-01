@@ -4,7 +4,6 @@ import com.namazustudios.socialengine.rt.annotation.Dispatch.Type;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 
 import java.util.List;
-import java.util.Timer;
 import java.util.concurrent.TimeUnit;
 
 /**'
@@ -39,6 +38,7 @@ public interface AsyncOperation {
 
         @Override
         public void timeout(long time, TimeUnit timeUnit) {}
+
     };
 
 }

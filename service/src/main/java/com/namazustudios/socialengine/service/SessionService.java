@@ -5,11 +5,11 @@ import com.namazustudios.socialengine.model.session.Session;
 import com.namazustudios.socialengine.model.session.SessionCreation;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 @Expose({
-    @ExposedModuleDefinition(value = "namazu.elements.service.session"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition(value = "namazu.elements.service.session"),
+    @ModuleDefinition(
         value = "namazu.elements.service.unscoped.session",
         annotation = @ExposedBindingAnnotation(Unscoped.class)
     )

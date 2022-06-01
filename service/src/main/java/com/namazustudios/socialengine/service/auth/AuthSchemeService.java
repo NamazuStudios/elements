@@ -8,7 +8,7 @@ import com.namazustudios.socialengine.model.auth.UpdateAuthSchemeRequest;
 import com.namazustudios.socialengine.model.auth.UpdateAuthSchemeResponse;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 import java.util.List;
@@ -19,11 +19,12 @@ import java.util.List;
  * Created by robb on 11/12/21.
  */
 @Expose({
-        @ExposedModuleDefinition(value = "namazu.elements.service.auth.authscheme"),
-        @ExposedModuleDefinition(
-                value = "namazu.elements.service.auth.unscoped.authscheme",
-                annotation = @ExposedBindingAnnotation(Unscoped.class)
-        )})
+    @ModuleDefinition(value = "namazu.elements.service.auth.authscheme"),
+    @ModuleDefinition(
+        value = "namazu.elements.service.auth.unscoped.authscheme",
+        annotation = @ExposedBindingAnnotation(Unscoped.class)
+    )
+})
 public interface AuthSchemeService {
 
     /**

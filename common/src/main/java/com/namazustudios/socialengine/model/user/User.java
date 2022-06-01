@@ -9,6 +9,7 @@ import io.swagger.annotations.ApiModelProperty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.io.Serializable;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -37,7 +38,7 @@ public class User implements Serializable {
     @ApiModelProperty("The user's access level.")
     private Level level;
 
-    @ApiModelProperty(hidden = true)
+    @ApiModelProperty("True if the user is active. False otherwise.")
     private boolean active;
 
     @ApiModelProperty("The user's Facebook ID.")

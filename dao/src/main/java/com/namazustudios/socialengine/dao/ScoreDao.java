@@ -5,15 +5,15 @@ import com.namazustudios.socialengine.model.leaderboard.Score;
 import com.namazustudios.socialengine.model.profile.Profile;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Manipulates instances of {@link Score} within the database.
  *
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.score"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.score"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.score",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.score instead"))
 })

@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.servlet;
 
-import com.namazustudios.socialengine.rt.*;
+import com.namazustudios.socialengine.rt.MutableAttributes;
+import com.namazustudios.socialengine.rt.RequestHeader;
 import com.namazustudios.socialengine.rt.exception.BadRequestException;
 import com.namazustudios.socialengine.rt.http.CompositeHttpManifestMetadata;
 import com.namazustudios.socialengine.rt.http.HttpManifestMetadata;
@@ -11,20 +12,16 @@ import com.namazustudios.socialengine.rt.manifest.http.HttpVerb;
 import com.namazustudios.socialengine.rt.util.LazyValue;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.ArrayList;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.POST;
 import static com.namazustudios.socialengine.rt.manifest.http.HttpVerb.PUT;
 import static java.lang.String.format;
 import static java.util.Collections.list;
-import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toList;
 
 public class ServletHttpRequest implements HttpRequest {

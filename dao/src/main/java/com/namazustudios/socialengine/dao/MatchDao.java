@@ -8,14 +8,14 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.match.Match;
 import com.namazustudios.socialengine.model.match.MatchingAlgorithm;
 import com.namazustudios.socialengine.model.profile.Profile;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 /**
  * Created by patricktwohig on 7/20/17.
  */
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.match"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.match"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.match",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.match instead"))
 })

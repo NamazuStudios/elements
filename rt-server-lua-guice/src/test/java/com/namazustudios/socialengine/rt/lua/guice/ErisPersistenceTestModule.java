@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.*;
 import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
 import com.namazustudios.socialengine.rt.guice.GuiceIoCResolver;
 import com.namazustudios.socialengine.rt.id.NodeId;
+import com.namazustudios.socialengine.rt.remote.RemoteInvokerRegistry;
 
 import javax.ws.rs.client.Client;
 
@@ -36,9 +37,16 @@ public class ErisPersistenceTestModule extends AbstractModule {
         bind(Client.class).toInstance(mock(Client.class));
         bind(PersistenceStrategy.class).toInstance(mock(PersistenceStrategy.class));
 
+        install(new AbstractModule() {
+            @Override
+            protected void configure() {
+                final var mockRemoteInvokerRegistry = mock(RemoteInvokerRegistry.class);
+                bind(RemoteInvokerRegistry.class).toInstance(mockRemoteInvokerRegistry);
+            }
+        });
+
         final var localContext = mockContext();
         final var remoteContext = mockContext();
-
         bind(Context.class).annotatedWith(named(LOCAL)).toInstance(localContext);
         bind(Context.class).annotatedWith(named(REMOTE)).toInstance(remoteContext);
 

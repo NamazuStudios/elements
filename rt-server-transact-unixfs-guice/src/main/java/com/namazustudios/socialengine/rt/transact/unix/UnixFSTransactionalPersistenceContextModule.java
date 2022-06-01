@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.transact.Revision;
 import com.namazustudios.socialengine.rt.transact.RevisionDataStore;
 import com.namazustudios.socialengine.rt.transact.TransactionJournal;
 import com.namazustudios.socialengine.rt.transact.JournalTransactionalPersistenceDriver;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -16,9 +17,10 @@ import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJ
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionJournal.UNIXFS_TRANSACTION_BUFFER_SIZE;
 import static com.namazustudios.socialengine.rt.transact.unix.UnixFSUtils.UNIXFS_STORAGE_ROOT_DIRECTORY;
 import static java.lang.String.format;
-import static java.nio.file.Files.createTempDirectory;
 
 public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(UnixFSTransactionalPersistenceContextModule.class);
 
     private Runnable storageRootBinding = () -> {};
 
@@ -170,19 +172,14 @@ public class UnixFSTransactionalPersistenceContextModule extends PrivateModule {
             "elements-unixfs-test" :
             format("elements-unixfs-test-%s", name);
 
-        storageRootBinding = () -> bind(Path.class).annotatedWith(named(UNIXFS_STORAGE_ROOT_DIRECTORY)).toProvider(() -> {
-            try {
-                return createTempDirectory(prefix);
-            } catch (IOException ex) {
-                addError(ex);
-                return null;
-            }
-        });
+        storageRootBinding = () -> bind(Path.class)
+            .annotatedWith(named(UNIXFS_STORAGE_ROOT_DIRECTORY))
+            .toProvider(() -> temporaryFiles.createTempDirectory(prefix));
 
         return withTransactionBufferSize(4096)
-                .withTransactionBufferCount(4096)
-                .withRevisionTableCount(4096)
-                .withChecksumAlgorithm(ADLER_32);
+            .withTransactionBufferCount(4096)
+            .withRevisionTableCount(4096)
+            .withChecksumAlgorithm(ADLER_32);
 
     }
 

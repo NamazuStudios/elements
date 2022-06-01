@@ -1,6 +1,7 @@
 package com.namazustudios.socialengine.rt.remote.watchdog;
 
 import com.namazustudios.socialengine.rt.remote.Worker;
+import com.namazustudios.socialengine.rt.remote.provider.ExecutorServiceFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,7 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
-import static com.namazustudios.socialengine.rt.remote.Worker.SCHEDULED_EXECUTOR_SERVICE;
+import static com.namazustudios.socialengine.rt.remote.Instance.SCHEDULED_EXECUTOR_SERVICE;
 import static java.lang.String.format;
 import static java.util.concurrent.TimeUnit.*;
 
@@ -28,7 +29,7 @@ public class SimpleWatchdogService implements WatchdogService {
 
     private Set<WorkerWatchdog> workerWatchdogList;
 
-    private ScheduledExecutorService scheduledExecutorService;
+    private ExecutorServiceFactory<ScheduledExecutorService> scheduledExecutorServiceFactory;
 
     private final AtomicReference<Context> context = new AtomicReference<>();
 
@@ -72,28 +73,33 @@ public class SimpleWatchdogService implements WatchdogService {
         this.workerWatchdogList = workerWatchdogList;
     }
 
-    public ScheduledExecutorService getScheduledExecutorService() {
-        return scheduledExecutorService;
+    public ExecutorServiceFactory<ScheduledExecutorService> getScheduledExecutorServiceFactory() {
+        return scheduledExecutorServiceFactory;
     }
 
     @Inject
-    public void setScheduledExecutorService(@Named(SCHEDULED_EXECUTOR_SERVICE) ScheduledExecutorService scheduledExecutorService) {
-        this.scheduledExecutorService = scheduledExecutorService;
+    public void setScheduledExecutorServiceFactory(@Named(SCHEDULED_EXECUTOR_SERVICE) ExecutorServiceFactory<ScheduledExecutorService> scheduledExecutorServiceFactory) {
+        this.scheduledExecutorServiceFactory = scheduledExecutorServiceFactory;
     }
 
     private class Context {
 
         private ExecutorService dispatch;
 
+        private final ScheduledExecutorService scheduledExecutorService = getScheduledExecutorServiceFactory()
+            .getService(SimpleWatchdogService.class);
+
         public void start() {
+
             dispatch = Executors.newFixedThreadPool(2);
 
-            getScheduledExecutorService().scheduleAtFixedRate(this::poll,
+            scheduledExecutorService.scheduleAtFixedRate(this::poll,
                 POLL_TIME_MILLISECONDS,
                 POLL_TIME_MILLISECONDS,
                 MILLISECONDS);
 
             logger.info("Started. Using Logger \"{}\" for alerts.", alerts.getName());
+
         }
 
         private void poll() {

@@ -32,8 +32,7 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
             final NodeId nodeId,
             final XodusResourceStores stores,
             final VirtualFileSystem virtualFileSystem,
-            final Transaction transaction,
-            final PessimisticLocking pessimisticLocking) {
+            final Transaction transaction) {
 
         if (!transaction.isExclusive() && transaction.isReadonly())
             throw new IllegalArgumentException("Must use read-write transaction.");
@@ -44,8 +43,7 @@ public class XodusExclusiveReadWriteTransaction implements ExclusiveReadWriteTra
             nodeId,
             stores,
             virtualFileSystem,
-            transaction,
-            pessimisticLocking);
+            transaction);
 
     }
 

@@ -2,7 +2,6 @@ package com.namazustudios.socialengine.guice;
 
 import com.google.common.base.Splitter;
 import com.google.inject.AbstractModule;
-import com.google.inject.TypeLiteral;
 import com.google.inject.multibindings.Multibinder;
 import org.nnsoft.guice.rocoto.converters.FileConverter;
 import org.nnsoft.guice.rocoto.converters.URIConverter;

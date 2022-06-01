@@ -1,17 +1,16 @@
 package com.namazustudios.socialengine.rest.profile;
 
 import com.google.common.base.Strings;
-import com.namazustudios.socialengine.model.ValidationGroups.Create;
-import com.namazustudios.socialengine.model.ValidationGroups.Update;
-import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
-import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
-import com.namazustudios.socialengine.util.ValidationHelper;
-import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.InvalidParameterException;
 import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
+import com.namazustudios.socialengine.model.ValidationGroups.Create;
+import com.namazustudios.socialengine.model.ValidationGroups.Update;
+import com.namazustudios.socialengine.model.profile.CreateProfileRequest;
 import com.namazustudios.socialengine.model.profile.Profile;
+import com.namazustudios.socialengine.model.profile.UpdateProfileRequest;
 import com.namazustudios.socialengine.service.ProfileService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -19,7 +18,6 @@ import io.swagger.annotations.Authorization;
 import javax.inject.Inject;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
-import java.util.Objects;
 
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;

@@ -103,7 +103,11 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
             throw new IllegalArgumentException("App must have origin ID: " + getManageContext());
         }
 
-        final var injector = getInjector().createChildInjector(new CdnJerseyModule(), new CdnServeSecurityModule());
+        final var injector = getInjector().createChildInjector(
+            new CdnJerseyModule(),
+            new CdnServeSecurityModule()
+        );
+
         final var guiceFilter = injector.getInstance(GuiceFilter.class);
 
         final var servletContextHandler = new ServletContextHandler();
@@ -117,10 +121,10 @@ public class CdnAppProvider extends AbstractLifeCycle implements AppProvider {
 
     private ContextHandler createCdnContext(final App app) throws IOException {
 
-        final ServletContextHandler ctx = new ServletContextHandler();
+        final var ctx = new ServletContextHandler();
         ctx.setContextPath(format("%s/%s/%s", getStaticOriginContext(), app.getOriginId(), getServeEndpoint()));
 
-        final DefaultServlet defaultServlet = new DefaultServlet();
+        final var defaultServlet = new DefaultServlet();
         ServletHolder holderPwd = new ServletHolder("default", defaultServlet);
         holderPwd.setInitParameter("resourceBase", format("%s/%s/%s", getContentDirectory(), app.getOriginId(), getServeEndpoint()));
         ctx.addServlet(holderPwd, "/*");

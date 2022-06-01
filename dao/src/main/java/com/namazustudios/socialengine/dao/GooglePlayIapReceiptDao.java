@@ -8,11 +8,11 @@ import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.model.googleplayiapreceipt.GooglePlayIapReceipt;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
 @Expose({
-    @ExposedModuleDefinition("namazu.elements.dao.googleplayiapreceipt"),
-    @ExposedModuleDefinition(
+    @ModuleDefinition("namazu.elements.dao.googleplayiapreceipt"),
+    @ModuleDefinition(
         value = "namazu.socialengine.dao.googleplayiapreceipt",
         deprecated = @DeprecationDefinition("Use namazu.elements.dao.googleplayiapreceipt instead"))
 })

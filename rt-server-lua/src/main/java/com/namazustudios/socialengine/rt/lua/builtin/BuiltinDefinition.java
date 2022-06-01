@@ -1,6 +1,10 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
-import com.namazustudios.socialengine.rt.annotation.ExposedModuleDefinition;
+import com.google.common.base.CaseFormat;
+import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+
+import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
+import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
 
 /**
  * Interface to wrangle the builtin definitions.
@@ -28,6 +32,20 @@ public interface BuiltinDefinition {
      */
     String getDeprecationWarning();
 
+    /**
+     * Gets the {@link CaseFormat} used by this {@link BuiltinDefinition} when binding methods.
+     *
+     * @return the {@link CaseFormat}
+     */
+    CaseFormat getMethodCaseFormat();
+
+    /**
+     * Gets the {@link CaseFormat} used by this {@link BuiltinDefinition} when binding constants.
+     *
+     * @return the {@link CaseFormat}
+     */
+    CaseFormat getConstantCaseFormat();
+
     static BuiltinDefinition fromModuleName(final String moduleName) {
         return new BuiltinDefinition() {
             @Override
@@ -44,10 +62,21 @@ public interface BuiltinDefinition {
             public String getDeprecationWarning() {
                 return "";
             }
+
+            @Override
+            public CaseFormat getMethodCaseFormat() {
+                return LOWER_UNDERSCORE;
+            }
+
+            @Override
+            public CaseFormat getConstantCaseFormat() {
+                return UPPER_UNDERSCORE;
+            }
+
         };
     }
 
-    static BuiltinDefinition fromDefinition(final ExposedModuleDefinition definition) {
+    static BuiltinDefinition fromDefinition(final ModuleDefinition definition) {
         return new BuiltinDefinition() {
 
             @Override
@@ -63,6 +92,16 @@ public interface BuiltinDefinition {
             @Override
             public boolean isDeprecated() {
                 return definition.deprecated().deprecated();
+            }
+
+            @Override
+            public CaseFormat getMethodCaseFormat() {
+                return definition.style().methodCaseFormat();
+            }
+
+            @Override
+            public CaseFormat getConstantCaseFormat() {
+                return definition.style().constantCaseFormat();
             }
 
         };

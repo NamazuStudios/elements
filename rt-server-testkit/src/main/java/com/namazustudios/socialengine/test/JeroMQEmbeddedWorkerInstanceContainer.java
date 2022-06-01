@@ -12,11 +12,9 @@ import com.namazustudios.socialengine.rt.id.NodeId;
 import com.namazustudios.socialengine.rt.remote.Node;
 import com.namazustudios.socialengine.rt.remote.Worker;
 import com.namazustudios.socialengine.rt.remote.jeromq.guice.JeroMQInstanceConnectionServiceModule;
-import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceModule;
-import com.namazustudios.socialengine.rt.transact.unix.UnixFSTransactionalPersistenceContextModule;
+import com.namazustudios.socialengine.test.guice.TestApplicationNodeModule;
 import com.namazustudios.socialengine.test.guice.TestMasterNodeModule;
 import com.namazustudios.socialengine.test.guice.TestWorkerInstanceModule;
-import com.namazustudios.socialengine.test.guice.TestApplicationNodeModule;
 import org.zeromq.ZContext;
 
 import javax.ws.rs.client.Client;
@@ -96,6 +94,12 @@ public class JeroMQEmbeddedWorkerInstanceContainer extends JeroMQEmbeddedInstanc
             .map(injector -> injector.getInstance(Node.class))
             .collect(toSet());
 
+    }
+
+    @Override
+    protected void doStart(ZContext zContext) {
+        addConnectAddress(bindAddress);
+        super.doStart(zContext);
     }
 
     @Override

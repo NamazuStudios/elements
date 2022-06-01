@@ -40,16 +40,6 @@ public interface Constants {
     /**
      * The ELEMENTS_HOME environment variable.
      */
-    String ELEMENTS_HOME = "ELEMENTS_HOME";
-
-    /**
-     * The default elements configuration directory.
-     */
-    String ELEMENTS_HOME_DEFAULT = "/opt/elements";
-
-    /**
-     * The ELEMENTS_HOME environment variable.
-     */
     String CONFIGURATION_DIRECTORY = "conf";
 
     /**
@@ -179,6 +169,11 @@ public interface Constants {
      * Used to specify the port for neo blockchain.
      */
     String NEO_BLOCKCHAIN_PORT = "com.namazustudios.socialengine.blockchain.neo.port";
+
+    /**
+     * Used to specify the RPC provider for bsc blockchain.
+     */
+    String BSC_RPC_PROVIDER = "com.namazustudios.socialengine.blockchain.bsc.provider";
 
     /**
      * Defines some useful regex patterns.

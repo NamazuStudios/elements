@@ -1,7 +1,7 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.util.InputStreamAdapter;
-import com.namazustudios.socialengine.rt.util.OutputStreamAdapter;
+import com.namazustudios.socialengine.rt.util.TemporaryFiles;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Factory;
@@ -25,13 +25,14 @@ import static java.nio.ByteBuffer.allocateDirect;
 import static java.nio.channels.FileChannel.MapMode.READ_ONLY;
 import static java.nio.channels.FileChannel.open;
 import static java.nio.file.Files.deleteIfExists;
-import static java.nio.file.Files.find;
 import static java.nio.file.StandardOpenOption.READ;
 import static java.nio.file.StandardOpenOption.WRITE;
 import static java.util.Arrays.fill;
 import static org.testng.Assert.assertEquals;
 
 public class InputStreamAdapterTest {
+
+    private static final TemporaryFiles temporaryFiles = new TemporaryFiles(InputStreamAdapterTest.class);
 
     private static java.nio.file.Path testFile;
 
@@ -52,7 +53,7 @@ public class InputStreamAdapterTest {
     @BeforeClass
     public static void setupGarbageFile() throws IOException  {
 
-        testFile = Files.createTempFile(InputStreamAdapterTest.class.getSimpleName(), "garbage");
+        testFile = temporaryFiles.createTempFile("garbage");
 
         final Random random = ThreadLocalRandom.current();
         final ByteBuffer buffer = ByteBuffer.wrap(new byte[1000000]);
@@ -154,7 +155,7 @@ public class InputStreamAdapterTest {
     @Test
     public void testUnsignedByteRead() throws IOException {
 
-        final var signedByte = Files.createTempFile(InputStreamAdapterTest.class.getSimpleName(), "test");
+        final var signedByte = temporaryFiles.createTempFile("test");
         final ByteBuffer fileContents = allocate(256);
         for (int i = 0; fileContents.hasRemaining(); ++i) fileContents.put((byte)i);
 

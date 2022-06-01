@@ -23,8 +23,7 @@ import static java.lang.System.currentTimeMillis;
 import static java.lang.Thread.currentThread;
 import static org.zeromq.SocketType.ROUTER;
 import static org.zeromq.ZContext.shadow;
-import static org.zeromq.ZMQ.Poller.POLLERR;
-import static org.zeromq.ZMQ.Poller.POLLIN;
+import static org.zeromq.ZMQ.Poller.*;
 import static zmq.ZError.EAGAIN;
 
 public class JeroMQRoutingServer implements AutoCloseable {
@@ -62,10 +61,12 @@ public class JeroMQRoutingServer implements AutoCloseable {
         final var main = zContextShadow.createSocket(ROUTER);
         bindAddresses.forEach(main::bind);
 
-        final var frontend = poller.register(main, POLLIN | POLLERR);
+        final var frontendIndex = poller.register(main, POLLIN | POLLERR);
+        final var frontend = poller.getItem(frontendIndex);
+
         this.multiplex = new JeroMQMultiplexRouter(instanceId, zContextShadow, poller);
         this.demultiplex = new JeroMQDemultiplexRouter(instanceId, zContextShadow, poller, frontend);
-        this.control = new JeroMQCommandServer(instanceId, poller, frontend, multiplex, demultiplex);
+        this.control = new JeroMQCommandServer(instanceId, frontend, multiplex, demultiplex);
         this.monitorThread = new JeroMQMonitorThread(JeroMQRoutingServer.class.getSimpleName(), logger, zContext, main);
         this.monitorThread.start();
 
