@@ -81,6 +81,7 @@
         <module>service-test</module>
         <module>doc-serve</module>
         <module>doclet</module>
+        <module>mongo-test</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

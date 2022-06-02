@@ -1,9 +1,15 @@
 package com.namazustudios.socialengine;
 
+import com.namazustudios.socialengine.rt.guice.ClasspathAssetLoaderModule;
+import com.namazustudios.socialengine.rt.lua.guice.JavaEventModule;
+import com.namazustudios.socialengine.rt.lua.guice.LuaModule;
 import com.namazustudios.socialengine.rt.transact.JournalTransactionalResourceServicePersistenceEnvironment;
 import com.namazustudios.socialengine.rt.transact.unix.UnixFSJournalTransactionalPersistenceDriver;
 import com.namazustudios.socialengine.rt.xodus.XodusTransactionalResourceServicePersistenceEnvironment;
+import com.namazustudios.socialengine.test.EmbeddedTestService;
 import com.namazustudios.socialengine.test.JeroMQEmbeddedTestService;
+
+import java.util.function.Function;
 
 import static com.google.inject.Guice.createInjector;
 
@@ -36,4 +42,31 @@ public class TestUtils {
         return injector.getInstance(testClass);
     }
 
+
+    /**
+     * Creates a test case with the {@link XodusTransactionalResourceServicePersistenceEnvironment}
+     *
+     * @param testClass the type to construct
+     * @param <T> the type to return
+     * @return the constructed test case
+     */
+    public static <T> T getXodusIntegrationTest(Class<T> testClass) {
+        final var module = new IntegrationTestModule(new JeroMQEmbeddedTestService().withXodusWorker());
+        final var injector = createInjector(module);
+        return injector.getInstance(testClass);
+    }
+
+    /**
+     * Creates a test case with the {@link JournalTransactionalResourceServicePersistenceEnvironment} backed by the
+     * {@link UnixFSJournalTransactionalPersistenceDriver}
+     *
+     * @param testClass the type to construct
+     * @param <T> the type to return
+     * @return the constructed test case
+     */
+    public static <T> T getUnixFSIntegrationTest(Class<T> testClass) {
+        final var module = new IntegrationTestModule(new JeroMQEmbeddedTestService().withUnixFSWorker());
+        final var injector = createInjector(module);
+        return injector.getInstance(testClass);
+    }
 }
