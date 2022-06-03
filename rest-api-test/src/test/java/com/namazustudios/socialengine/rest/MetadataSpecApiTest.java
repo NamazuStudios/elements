@@ -78,7 +78,7 @@ public class MetadataSpecApiTest {
     @Test(dataProvider = "getAuthHeader")
     public void testCreateAndDeleteMetadataSpec(final String authHeader) {
         final var request = new CreateMetadataSpecRequest();
-        request.setName("New Token");
+        request.setName("New Token"+ (new Date()).getTime());
         List<TemplateTab> tabs = new ArrayList<>() ;
         Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
