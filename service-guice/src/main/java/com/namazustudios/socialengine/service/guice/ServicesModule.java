@@ -137,6 +137,10 @@ public class ServicesModule extends PrivateModule {
             .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
 
+        bind(BscSmartContractService.class)
+                .toProvider(BscSmartContractServiceProvider.class)
+                .in(scope);
+
         bind(FollowerService.class)
             .toProvider(FollowerServiceProvider.class)
             .in(scope);
@@ -308,6 +312,10 @@ public class ServicesModule extends PrivateModule {
         bind(NeoSmartContractService.class)
             .toProvider(NeoSmartContractServiceProvider.class)
             .in(scope);
+
+        bind(BscSmartContractService.class)
+                .toProvider(BscSmartContractServiceProvider.class)
+                .in(scope);
 
         bind(HealthStatusService.class)
             .to(DefaultHealthStatusService.class)
@@ -518,6 +526,10 @@ public class ServicesModule extends PrivateModule {
             .annotatedWith(Unscoped.class)
             .to(SuperUserNeoSmartContractService.class);
 
+        bind(BscSmartContractService.class)
+                .annotatedWith(Unscoped.class)
+                .to(SuperUserBscSmartContractService.class);
+
         bind(SaveDataDocumentService.class)
             .annotatedWith(Unscoped.class)
             .to(SuperUserSaveDataDocumentService.class);
@@ -585,9 +597,11 @@ public class ServicesModule extends PrivateModule {
         expose(MetadataSpecService.class);
         expose(TokenTemplateService.class);
         expose(NeoSmartContractService.class);
+        expose(BscSmartContractService.class);
         expose(AuthSchemeService.class);
         expose(SaveDataDocumentService.class);
         expose(NeoSmartContractService.class);
+        expose(BscSmartContractService.class);
         expose(CustomAuthSessionService.class);
         expose(DistinctInventoryItemService.class);
         expose(BscWalletService.class);
@@ -634,6 +648,7 @@ public class ServicesModule extends PrivateModule {
         expose(MetadataSpecService.class).annotatedWith(Unscoped.class);
         expose(TokenTemplateService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
+        expose(BscSmartContractService.class).annotatedWith(Unscoped.class);
         expose(AuthSchemeService.class).annotatedWith(Unscoped.class);
         expose(SaveDataDocumentService.class).annotatedWith(Unscoped.class);
         expose(NeoSmartContractService.class).annotatedWith(Unscoped.class);
