@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-
 import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.schema.template.*;
