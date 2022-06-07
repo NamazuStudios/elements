@@ -131,15 +131,20 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
 
             final BigInteger gasPrice = BigInteger.valueOf(2205000);
             final BigInteger gasLimit = BigInteger.valueOf(14300000);
+            int attempt = 200;
+            int sleepDuration = 500;
             final ContractGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimit);
 
+            //Send a transaction to a (already deployed) smart contract
             try {
+                // RawTransactionManager use a wallet (credential) to create and sign transaction
+                TransactionManager manager = new RawTransactionManager(getBscw3JClient().getWeb3j(), credentials, attempt, sleepDuration);
 
-                TransactionManager manager = new RawTransactionManager(getBscw3JClient().getWeb3j(), credentials, 200, 500);
-
+                //load contract information into the transaction
                 final BscSmartContract contract = BscSmartContract.load(contractAddress, getBscw3JClient().getWeb3j(), manager, gasProvider);
 
-                var returnType = contract.run(invokeRequest.getMethodName()).send(); // <-- throws exception
+                //invoke contract function
+                final var returnType = contract.run(invokeRequest.getMethodName()).send(); // <-- throws exception
 
                 return  returnType;
 
