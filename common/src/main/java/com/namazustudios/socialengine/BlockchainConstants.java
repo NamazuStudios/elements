@@ -1,5 +1,7 @@
 package com.namazustudios.socialengine;
 
+import java.math.BigInteger;
+
 public interface BlockchainConstants {
 
     /**
@@ -49,6 +51,11 @@ public interface BlockchainConstants {
          */
         String NEO_APPLICATION_LOG = "neoapplicationlog";
         String BSC_APPLICATION_LOG = "bscapplicationlog";
+    }
+
+    interface SmartContracts{
+        BigInteger GAS_PRICE = BigInteger.valueOf(20000000000L);
+        BigInteger GAS_LIMIT = BigInteger.valueOf(6721975);
     }
 
 }

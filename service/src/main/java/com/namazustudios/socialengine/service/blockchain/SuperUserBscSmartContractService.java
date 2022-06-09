@@ -129,11 +129,9 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
 
             String contractAddress = contractMetadata.getBlockchain();
 
-            final BigInteger gasPrice = BigInteger.valueOf(2205000);
-            final BigInteger gasLimit = BigInteger.valueOf(14300000);
             int attempt = 200;
             int sleepDuration = 500;
-            final ContractGasProvider gasProvider = new StaticGasProvider(gasPrice, gasLimit);
+            final ContractGasProvider gasProvider = new StaticGasProvider(BlockchainConstants.SmartContracts.GAS_PRICE, BlockchainConstants.SmartContracts.GAS_LIMIT);
 
             //Send a transaction to a (already deployed) smart contract
             try {
