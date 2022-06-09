@@ -50,6 +50,9 @@ public interface BlockchainConstants {
          * The root topic of the NeoApplicationLog type
          */
         String NEO_APPLICATION_LOG = "neoapplicationlog";
+        /**
+         * The root topic of the BscApplicationLog type
+         */
         String BSC_APPLICATION_LOG = "bscapplicationlog";
     }
 
