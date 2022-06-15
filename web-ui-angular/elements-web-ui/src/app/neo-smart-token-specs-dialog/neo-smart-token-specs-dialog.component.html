@@ -161,11 +161,12 @@
                 </mat-select>
               </mat-form-field>
             </div>
-            <div class="menu-panel-footer">
+            <div [ngClass]="{'menu-panel-footer-column': field?.fieldType === 'Enum', 'menu-panel-footer': true}">
               <app-neo-smart-token-specs-dialog-field-type
                 [type]="field.fieldType"
                 [index]="fieldIndex"
                 [field]="field"
+                (onContentTypeUpdate)="changeFieldContentType($event, fieldIndex)"
                 (onContentUpdate)="updateFieldsWithContent($event)"
                 (openDefineObjectModal)="openDefineObjectModal($event)"
               >

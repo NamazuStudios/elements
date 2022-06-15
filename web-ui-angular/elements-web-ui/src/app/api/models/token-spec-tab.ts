@@ -12,7 +12,10 @@ export interface TokenSpecTabField {
   name: string;
   fieldType: TokenSpecTabFieldTypes;
   content: any;
+  fieldContentType?: string;
   value?: any;
+  placeHolder?: string;
+  defaultValue?: string;
 }
 
 export interface TokenSpecTab {

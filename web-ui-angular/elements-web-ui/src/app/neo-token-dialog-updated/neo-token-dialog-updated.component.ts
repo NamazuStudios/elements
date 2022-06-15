@@ -82,7 +82,7 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
       this.selectedContract = this.data.token.contract;
       this.selectedTemplate = this.data.token.metadataSpec;
     } else {
-      this.tabs = this.selectedTemplate.tabs.map(tab => ({
+      this.tabs = this.selectedTemplate?.tabs.map(tab => ({
         ...tab,
         fields: this.convertFieldsToArray(tab.fields),
       }));
@@ -124,15 +124,33 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
     this.selectTab(0);
   }
 
+  getFieldValue(field: TokenSpecTabField) {
+    switch(field.fieldType) {
+      case 'Tags': {
+        if (field.defaultValue) {
+          return field.defaultValue.split(',');
+        }
+        break;
+      }
+      case 'Number':
+        return field.defaultValue;
+      default:
+        return '';
+    }
+  }
+
   convertFieldsToArray(fields): TokenSpecTabField[] {
     if (fields?.length !== undefined) return fields;
     const keys = Object.keys(fields);
     const newFields: TokenSpecTabField[] = [];
     for (let i = 0; i < keys.length; i++) {
       const field = fields[keys[i]];
+      console.log(field);
       newFields.push({
         name: field?.name || '',
         fieldType: field.fieldType,
+        placeHolder: field.placeHolder,
+        value: this.getFieldValue(field),
         content:
           complexFields.includes(field.fieldType) && field.defaultValue
             ? JSON.parse(field.defaultValue)

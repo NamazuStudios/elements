@@ -110,7 +110,9 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
       newFields.push({
         name: field?.name || '',
         fieldType: field.fieldType,
+        placeHolder: field.placeHolder,
         content: complexFields.includes(field.fieldType) ? JSON.parse(field.defaultValue) : field.defaultValue,
+        defaultValue: complexFields.includes(field.fieldType) ? JSON.parse(field.defaultValue) : field.defaultValue
       });
     }
     return newFields;
@@ -121,11 +123,26 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     const newFields = {};
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i];
+      let defaultValue;
+      if (field?.content) {
+        if (complexFields.includes(field.fieldType)) {
+          defaultValue = JSON.stringify(field.content);
+        } else {
+          defaultValue = field.content;
+        }
+      } else if (field.defaultValue) {
+        if (complexFields.includes(field.fieldType)) {
+          defaultValue = JSON.stringify(field.defaultValue);
+        } else {
+          defaultValue = field.defaultValue;
+        }
+      }
       newFields[i] = {
         name: field.name,
         displayName: field.name,
         fieldType: field.fieldType,
-        defaultValue: complexFields.includes(field.fieldType) ? JSON.stringify(field.content) : field.content,
+        placeHolder: field.placeHolder,
+        defaultValue,
       }
     };
     return newFields;
@@ -177,6 +194,22 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
           return {
             ...field,
             fieldType: TokenSpecTabFieldTypes[key],
+          }
+        }
+        return field;
+      }
+    );
+    setTimeout(() => this.disableAnimation = false);
+  }
+
+  changeFieldContentType(type: string, fieldIndex): void {
+    this.disableAnimation = true
+    this.fields = this.fields.map(
+      (field: TokenSpecTabField, index: number): TokenSpecTabField => {
+        if (index === fieldIndex) {
+          return {
+            ...field,
+            fieldContentType: type,
           }
         }
         return field;
@@ -279,7 +312,8 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
 
   duplicateTab() {
     if (this.activeTab && this.tabs.length < this.maxTabs) {
-      this.tabs = [...this.tabs, this.activeTab];
+      const tab = { ...this.activeTab, fields: this.fields, name: this.tabName };
+      this.tabs = [...this.tabs, tab];
       this.selectTab(this.tabs.length - 1);
     }
   }
@@ -302,9 +336,12 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
 
   updateTabPosition(newTabIndex: string): void {
     const tabIndex = parseInt(newTabIndex) - 1;
-    const tab = { ...this.activeTab };
-    this.tabs[this.activeTabIndex] = this.tabs[tabIndex];
-    this.tabs[tabIndex] = tab;
+    const tab1 = { ...this.activeTab };
+    const tab2 = { ...this.tabs[tabIndex] };
+    this.tabs[this.activeTabIndex] = tab2;
+    this.tabs[tabIndex] = tab1;
+    this.fields = tab2.fields;
+    this.tabName = tab2.name;
   }
 
   removeTab(): void {
@@ -320,9 +357,12 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     this.fields = this.fields.map(
       (field: TokenSpecTabField, index: number) => {
         if (index === fieldIndex) {
+          const content = data.hasOwnProperty('content') ? data.content : data;
           return {
             ...field,
-            content: data.hasOwnProperty('content') ? data.content : data,
+            content: content && !content?.otherProps ? content : field.content,
+            placeHolder: data?.otherProps?.placeHolder || field.placeHolder || '',
+            defaultValue: data?.otherProps?.defaultValue || field.defaultValue || '',
           }
         }
         return field;
@@ -366,6 +406,8 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
       })),
     };
 
+    console.log(body);
+
     if (this.data.template) {
       this.metadataSpecsService.updateTokenTemplate({
         id: this.data.template.id,
@@ -374,8 +416,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
         .subscribe(() => {
           this.data.refresh();
         });;
-    }
-    else {
+    } else {
       this.metadataSpecsService.createTokenSpec(body)
         .subscribe(() => {
           this.data.refresh();

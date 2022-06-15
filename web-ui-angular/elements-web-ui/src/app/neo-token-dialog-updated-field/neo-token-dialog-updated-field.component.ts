@@ -16,6 +16,7 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
   field: TokenSpecTabField;
   arrValue = '';
   enumValues = [];
+  arrayContentType = 'string';
   readonly separatorKeysCodes = [ENTER, COMMA ] as const;
   @Output("updateFieldValue")
   updateFieldValue: EventEmitter<any> = new EventEmitter();
@@ -26,7 +27,12 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
 
   ngOnInit(): void {
     if (this.field.fieldType === 'Enum') {
-      this.enumValues = this.field.content.replaceAll(' ', '').split(',') || [];
+      this.enumValues = this.field.content.split(',') || [];
+    } else if (this.field.fieldType === 'Array') {
+      this.arrayContentType = typeof this.field.content;
+      if (this.arrayContentType === 'string') {
+        this.arrValue = this.field.content;
+      }
     }
   }
 
@@ -58,7 +64,11 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
 
   addArrItem(): void {
     const newArr = this.field.value ? [...this.field.value, this.arrValue] : [this.arrValue];
-    this.arrValue = '';
+    if (this.arrayContentType === 'string') {
+      this.arrValue = this.field.content;
+    } else {
+      this.arrValue = '';
+    }
     this.changeValue(newArr);
   }
 

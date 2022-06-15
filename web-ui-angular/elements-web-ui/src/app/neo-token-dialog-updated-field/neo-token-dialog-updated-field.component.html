@@ -79,17 +79,17 @@
 
 <mat-card *ngIf="field?.fieldType === 'Array'" class="field">
   <div *ngFor="let item of (field.value || []); let i = index;" class="array-row">
-    <mat-form-field *ngIf="!field?.content">
+    <mat-form-field *ngIf="arrayContentType === 'string'">
       <mat-label>Array</mat-label>
       <input
         matInput
-        placeholder="Value"
         type="text"
+        [placeholder]="field?.placeHolder || ''"
         [value]="item"
         (change)="changeArrItem($event.target.value, i)"
       >
     </mat-form-field>
-    <div *ngIf="field?.content">
+    <div *ngIf="arrayContentType === 'object'">
       <button
         mat-raised-button
         color="primary"
@@ -108,16 +108,17 @@
     </button>
   </div>
   <div class="array-row">
-    <mat-form-field *ngIf="!field?.content">
+    <mat-form-field *ngIf="arrayContentType === 'string'">
       <input
         matInput
-        placeholder=""
         type="text"
+        [defaultValue]="field?.content"
+        [placeholder]="field?.placeHolder || ''"
         [value]="arrValue"
         (input)="changeArrValue($event.target.value)"
       >
     </mat-form-field>
-    <div *ngIf="field?.content">
+    <div *ngIf="arrayContentType === 'object'">
       <button
         mat-raised-button
         color="primary"
@@ -131,7 +132,7 @@
       color="secondary"
       class="add-remove-button"
       (click)="addArrItem()"
-      [disabled]="!arrValue && !field?.content"
+      [disabled]="!arrValue && arrayContentType === 'string'"
     >
       +
     </button>

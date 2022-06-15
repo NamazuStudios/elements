@@ -133,7 +133,9 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
         if (index === data.index) {
           return {
             ...field,
-            content: data.content,
+            content: data.content || field.content,
+            defaultValue: data?.otherProps?.defaultValue || field.defaultValue || '',
+            placeHolder: data?.otherProps?.placeHolder || field.placeHolder || '',
           }
         }
         return field;

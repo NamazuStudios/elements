@@ -96,6 +96,7 @@ mat-expansion-panel-header {
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  padding-bottom: 10px;
 }
 
 .field-buttons button {
@@ -115,13 +116,19 @@ mat-expansion-panel-header {
 .menu-panel-footer {
   display: flex;
   justify-content: flex-end;
-  align-items: center;
+  align-items: flex-end;
   flex-wrap: wrap;
+}
+
+.menu-panel-footer.menu-panel-footer-column {
+  flex-direction: column;
+  width: 100%;
 }
 
 
 app-neo-smart-token-specs-dialog-field-type {
   flex: 1;
+  width: 100%;
 }
 
 .custom-placeholder {
