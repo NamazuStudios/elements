@@ -189,6 +189,7 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
       if (fieldIndex === index) {
         return {
           ...field,
+          content: field?.fieldType === 'Object' ? value : field.content,
           value: value,
         }
       }
@@ -209,6 +210,8 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
         tabs: this.tabs,
       },
     }
+    console.log(data);
+    return;
     if (this.data.token?.id) {
       this.tokenDefinitionService.updateTokenDefinition({
         id: this.data.token.id,

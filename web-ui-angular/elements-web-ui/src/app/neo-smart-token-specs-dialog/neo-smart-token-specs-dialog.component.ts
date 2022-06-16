@@ -408,8 +408,6 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
       })),
     };
 
-    console.log(body);
-
     if (this.data.template) {
       this.metadataSpecsService.updateTokenTemplate({
         id: this.data.template.id,
