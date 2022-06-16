@@ -335,13 +335,15 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
   }
 
   updateTabPosition(newTabIndex: string): void {
-    const tabIndex = parseInt(newTabIndex) - 1;
-    const tab1 = { ...this.activeTab };
-    const tab2 = { ...this.tabs[tabIndex] };
-    this.tabs[this.activeTabIndex] = tab2;
-    this.tabs[tabIndex] = tab1;
-    this.fields = tab2.fields;
-    this.tabName = tab2.name;
+    if (+newTabIndex <= this.tabs.length) {
+      const tabIndex = parseInt(newTabIndex) - 1;
+      const tab1 = { ...this.activeTab };
+      const tab2 = { ...this.tabs[tabIndex] };
+      this.tabs[this.activeTabIndex] = tab2;
+      this.tabs[tabIndex] = tab1;
+      this.fields = tab2.fields;
+      this.tabName = tab2.name;
+    }
   }
 
   removeTab(): void {

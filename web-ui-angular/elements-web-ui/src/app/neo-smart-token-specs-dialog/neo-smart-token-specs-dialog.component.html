@@ -64,13 +64,13 @@
         <mat-label>Tab Position</mat-label>
         <input
           matInput
-          [value]="i + 1"
-          (change)="updateTabPosition($event.target.value)"
           placeholder="TabPosition"
           name="tabposition"
           type="number"
           min="1"
+          [defaultValue]="i + 1"
           [max]="tabs.length"
+          (change)="updateTabPosition($event.target.value)"
         >
       </mat-form-field>
       <div class="tab-buttons">
