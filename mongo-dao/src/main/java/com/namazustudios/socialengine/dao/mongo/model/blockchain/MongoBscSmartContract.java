@@ -27,7 +27,7 @@ import java.util.Map;
 public class MongoBscSmartContract {
 
     @Id
-    private String id;
+    private ObjectId objectId;
 
     @Property
     private String displayName;
@@ -47,12 +47,12 @@ public class MongoBscSmartContract {
     @Property
     private Map<String, Object> metadata;
 
-    public String getId() {
-        return id;
+    public ObjectId getObjectId() {
+        return objectId;
     }
 
-    public void setId(String id) {
-        this.id = id;
+    public void setObjectId(ObjectId objectId) {
+        this.objectId = objectId;
     }
 
     public String getDisplayName() {
