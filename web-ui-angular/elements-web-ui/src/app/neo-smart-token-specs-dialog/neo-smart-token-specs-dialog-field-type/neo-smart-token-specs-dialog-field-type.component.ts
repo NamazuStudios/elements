@@ -2,6 +2,7 @@ import { COMMA, ENTER } from '@angular/cdk/keycodes';
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { MatChipInputEvent } from '@angular/material/chips';
 import { TokenSpecTabField, TokenSpecTabFieldTypes } from 'src/app/api/models/token-spec-tab';
+import { enumRegex } from '../neo-smart-token-specs-dialog.component';
 
 @Component({
   selector: 'app-neo-smart-token-specs-dialog-field-type',
@@ -46,6 +47,10 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
         this.selectedArrayType = 'String';
       }
     }
+  }
+
+  isEnumValid() {
+    return this.enumValue && enumRegex.test(this.enumValue);
   }
 
   add(event: MatChipInputEvent): void {

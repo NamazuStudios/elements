@@ -94,14 +94,14 @@
           name="string"
           type="text"
           [value]="enumValue"
-          (change)="changeEnumValue($event.target.value)"
+          (input)="changeEnumValue($event.target.value)"
         >
       </mat-form-field>
       <button
         mat-raised-button
         color="primary"
         class="add-remove-button"
-        [disabled]="!enumValue"
+        [disabled]="!isEnumValid()"
         (click)="onEnumChange()"
       >
         +
