@@ -1,6 +1,5 @@
 package com.namazustudios.socialengine.rest;
 
-
 import com.namazustudios.socialengine.dao.MetadataSpecDao;
 import com.namazustudios.socialengine.model.ErrorResponse;
 import com.namazustudios.socialengine.model.schema.template.*;
@@ -78,7 +77,7 @@ public class MetadataSpecApiTest {
     @Test(dataProvider = "getAuthHeader")
     public void testCreateAndDeleteMetadataSpec(final String authHeader) {
         final var request = new CreateMetadataSpecRequest();
-        request.setName("New Token");
+        request.setName("New Token"+ (new Date()).getTime());
         List<TemplateTab> tabs = new ArrayList<>() ;
         Map<String, TemplateTabField> fields = new HashMap<>();
         TemplateTabField field = new TemplateTabField();
