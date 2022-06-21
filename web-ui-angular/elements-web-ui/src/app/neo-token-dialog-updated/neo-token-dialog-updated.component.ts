@@ -168,7 +168,9 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
       this.updateActiveTabFields(this.fields);
     }
     this.activeTabIndex = tabIndex;
-    this.fields = this.tabs[tabIndex].fields;
+    if (this.tabs?.[tabIndex]) {
+      this.fields = this.tabs[tabIndex].fields;
+    }
   }
 
   updateActiveTabFields(newFields: TokenSpecTabField[]) {
