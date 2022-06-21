@@ -45,7 +45,6 @@ export class NeoTokenDialogDefineObjectComponent implements OnInit {
 
   handleFieldPanelStateChange(index: number) {
     this.expandedField = index;
-    console.log(this.expandedField);
   }
 
   createField(): TokenSpecTabField {

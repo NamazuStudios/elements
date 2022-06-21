@@ -145,7 +145,6 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
     const newFields: TokenSpecTabField[] = [];
     for (let i = 0; i < keys.length; i++) {
       const field = fields[keys[i]];
-      console.log(field);
       newFields.push({
         name: field?.name || '',
         fieldType: field.fieldType,
@@ -210,8 +209,6 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
         tabs: this.tabs,
       },
     }
-    console.log(data);
-    return;
     if (this.data.token?.id) {
       this.tokenDefinitionService.updateTokenDefinition({
         id: this.data.token.id,

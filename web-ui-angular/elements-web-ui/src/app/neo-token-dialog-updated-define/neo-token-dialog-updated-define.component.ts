@@ -22,7 +22,6 @@ export class NeoTokenDialogUpdatedDefineComponent implements OnInit {
   ) { }
 
   ngOnInit(): void {
-    console.log(this.data.content);
     this.fields = this.data.content;
   }
 
