@@ -210,6 +210,10 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
         if (index === fieldIndex) {
           return {
             ...field,
+            defaultValue: '',
+            placeHolder: '',
+            content: '',
+            value: '',
             fieldContentType: type,
           }
         }
