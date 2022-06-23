@@ -56,3 +56,13 @@ mat-form-field.full-width {
   height: 40px;
   min-width: 40px;
 }
+
+.object-row {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.object-row div {
+  margin-right: 10px;
+}

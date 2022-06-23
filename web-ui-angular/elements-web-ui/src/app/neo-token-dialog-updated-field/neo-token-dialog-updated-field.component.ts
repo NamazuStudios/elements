@@ -14,7 +14,7 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
 
   @Input()
   field: TokenSpecTabField;
-  arrValue = '';
+  arrValue: number | string;
   enumValues = [];
   arrayContentType = 'string';
   readonly separatorKeysCodes = [ENTER, COMMA ] as const;
@@ -29,8 +29,10 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
     if (this.field.fieldType === 'Enum') {
       this.enumValues = this.field.content.split(',') || [];
     } else if (this.field.fieldType === 'Array') {
-      this.arrayContentType = typeof this.field.content;
+      this.arrayContentType = this.field.content?.[0] ? typeof this.field.content?.[0] : typeof this.field.content;
       if (this.arrayContentType === 'string') {
+        this.arrValue = this.field.content;
+      } else if (this.arrayContentType === 'number') {
         this.arrValue = this.field.content;
       }
     }
@@ -62,9 +64,13 @@ export class NeoTokenDialogUpdatedFieldComponent implements OnInit {
     this.arrValue = value;
   }
 
+  changeArrNumberValue(value: string): void {
+    this.arrValue = +value;
+  }
+
   addArrItem(): void {
     const newArr = this.field.value ? [...this.field.value, this.arrValue] : [this.arrValue];
-    if (this.arrayContentType === 'string') {
+    if (this.arrayContentType === 'string' || this.arrayContentType === 'number') {
       this.arrValue = this.field.content;
     } else {
       this.arrValue = '';

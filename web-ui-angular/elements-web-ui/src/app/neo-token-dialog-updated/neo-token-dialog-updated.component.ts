@@ -145,15 +145,16 @@ export class NeoTokenDialogUpdatedComponent implements OnInit {
     const newFields: TokenSpecTabField[] = [];
     for (let i = 0; i < keys.length; i++) {
       const field = fields[keys[i]];
+      const fieldDefaulValue = complexFields.includes(field.fieldType) && field.defaultValue
+        ? JSON.parse(field.defaultValue)
+        : field.defaultValue;
       newFields.push({
         name: field?.name || '',
         fieldType: field.fieldType,
-        placeHolder: field.placeHolder,
+        placeHolder: fieldDefaulValue?.[0]?.placeHolder || field.placeHolder,
+        defaultValue: fieldDefaulValue?.[0]?.defaultValue || field.defaultValue || '',
         value: this.getFieldValue(field),
-        content:
-          complexFields.includes(field.fieldType) && field.defaultValue
-            ? JSON.parse(field.defaultValue)
-            : field.defaultValue,
+        content: fieldDefaulValue,
       });
     }
     return newFields;
