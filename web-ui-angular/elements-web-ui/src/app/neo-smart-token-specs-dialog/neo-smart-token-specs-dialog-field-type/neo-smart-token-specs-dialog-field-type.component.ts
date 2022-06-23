@@ -25,7 +25,7 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
 
   readonly separatorKeysCodes = [ENTER, COMMA] as const;
   selectedArrayType = 'String';
-  arrayTypes = ['String', 'Object'];
+  arrayTypes = ['String', 'Object', 'Number'];
   tagsArr = [];
   enumFields = [];
   enumError = false;
@@ -43,6 +43,8 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
         this.selectedArrayType = this.field.fieldContentType || 'String';
       } else if (typeof this.field.content === 'object') {
         this.selectedArrayType = 'Object';
+      } else if (typeof this.field.content === 'number') {
+        this.selectedArrayType = 'Number';
       } else {
         this.selectedArrayType = 'String';
       }
@@ -98,11 +100,20 @@ export class NeoSmartTokenSpecsDialogFieldTypeComponent implements OnInit {
     });
   }
 
-  onDefaultValueChange(value: string) {
+  onDefaultValueChange(value: string | number) {
     this.onContentUpdate.emit({
       index: this.index,
       otherProps: {
         defaultValue: value,
+      },
+    });
+  }
+
+  onNumberDefaultValueChange(value: number) {
+    this.onContentUpdate.emit({
+      index: this.index,
+      otherProps: {
+        defaultValue: +value,
       },
     });
   }

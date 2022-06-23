@@ -89,6 +89,16 @@
         (change)="changeArrItem($event.target.value, i)"
       >
     </mat-form-field>
+    <mat-form-field *ngIf="arrayContentType === 'number'">
+      <mat-label>Array</mat-label>
+      <input
+        matInput
+        type="text"
+        [placeholder]="field?.placeHolder || ''"
+        [value]="item"
+        (change)="changeArrItem($event.target.value, i)"
+      >
+    </mat-form-field>
     <div *ngIf="arrayContentType === 'object'">
       <button
         mat-raised-button
@@ -112,6 +122,16 @@
       <input
         matInput
         type="text"
+        [defaultValue]="field?.content"
+        [placeholder]="field?.placeHolder || ''"
+        [value]="arrValue"
+        (input)="changeArrValue($event.target.value)"
+      >
+    </mat-form-field>
+    <mat-form-field *ngIf="arrayContentType === 'number'">
+      <input
+        matInput
+        type="number"
         [defaultValue]="field?.content"
         [placeholder]="field?.placeHolder || ''"
         [value]="arrValue"

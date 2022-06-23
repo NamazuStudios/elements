@@ -1,4 +1,26 @@
 <div>
+  <div *ngIf="type === 'String'" class="number-field">
+    <mat-form-field>
+      <mat-label>Placeholder</mat-label>
+      <input
+        matInput
+        placeholder="Placeholder Text"
+        type="text"
+        [value]="field?.placeHolder || ''"
+        (change)="onPlaceholderChange($event.target.value)"
+      >
+    </mat-form-field>
+    <mat-form-field>
+      <mat-label>Default</mat-label>
+      <input
+        matInput
+        placeholder="Default String"
+        type="string"
+        [value]="field?.defaultValue || ''"
+        (change)="onDefaultValueChange($event.target.value)"
+      >
+    </mat-form-field>
+  </div>
   <div *ngIf="type === 'Number'" class="number-field">
     <mat-form-field>
       <mat-label>Placeholder</mat-label>
@@ -170,6 +192,28 @@
           type="text"
           [value]="field?.defaultValue || ''"
           (change)="onDefaultValueChange($event.target.value)"
+        >
+      </mat-form-field>
+    </div>
+    <div *ngIf="selectedArrayType === 'Number'" class="array-field__default-placeholder">
+      <mat-form-field>
+        <mat-label>Placeholder</mat-label>
+        <input
+          matInput
+          placeholder="Placeholder Text"
+          type="text"
+          [value]="field?.placeHolder || ''"
+          (change)="onPlaceholderChange($event.target.value)"
+        >
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>Default</mat-label>
+        <input
+          matInput
+          placeholder="Default Number"
+          type="number"
+          [value]="field?.defaultValue || ''"
+          (change)="onNumberDefaultValueChange($event.target.value)"
         >
       </mat-form-field>
     </div>

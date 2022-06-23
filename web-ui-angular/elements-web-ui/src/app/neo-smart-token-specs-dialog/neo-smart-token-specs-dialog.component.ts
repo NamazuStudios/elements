@@ -72,6 +72,7 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
       }));
     }
     this.fields = this.activeTab?.fields || [this.createField()];
+    this.tabName = this.activeTab?.name || '';
   }
 
   ngAfterViewInit(): void {
@@ -124,17 +125,17 @@ export class NeoSmartTokenSpecsDialogComponent implements OnInit {
     for (let i = 0; i < fields.length; i++) {
       const field = fields[i];
       let defaultValue;
-      if (field?.content) {
-        if (complexFields.includes(field.fieldType)) {
-          defaultValue = JSON.stringify(field.content);
-        } else {
-          defaultValue = field.content;
-        }
-      } else if (field.defaultValue) {
+      if (field.defaultValue) {
         if (complexFields.includes(field.fieldType)) {
           defaultValue = JSON.stringify(field.defaultValue);
         } else {
           defaultValue = field.defaultValue;
+        }
+      } else if (field?.content) {
+        if (complexFields.includes(field.fieldType)) {
+          defaultValue = JSON.stringify(field.content);
+        } else {
+          defaultValue = field.content;
         }
       }
       newFields[i] = {
