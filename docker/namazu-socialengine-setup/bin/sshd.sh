@@ -28,6 +28,8 @@ function decode_base64_to_file() {
 
     echo "Writing secret to ${2}"
     echo "${1}" | base64 --decode > "${2}"
+    status=$?
+    [ "${status}" -eq 0 ] || exit $status
 
   else
     echo "Secret not defined for ${2}"
