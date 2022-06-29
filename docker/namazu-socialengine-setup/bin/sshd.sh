@@ -26,13 +26,13 @@ function to_file() {
         exit 1
       fi
 
-    echo "Writing secret to ${2}"
+    echo "Writing secret ${3} to ${2}"
     echo "${1}" > "${2}"
     status=$?
     [ "${status}" -eq 0 ] || exit $status
 
   else
-    echo "Secret not defined for ${2}"
+    echo "Secret not defined for ${3}"
   fi
 
 }
@@ -48,13 +48,13 @@ function decode_base64_to_file() {
         exit 1
       fi
 
-    echo "Writing secret to ${2}"
+    echo "Writing secret ${3} to ${2}"
     echo "${1}" | base64 --decode > "${2}"
     status=$?
     [ "${status}" -eq 0 ] || exit $status
 
   else
-    echo "Secret not defined for ${2}"
+    echo "Secret not defined for ${3}"
   fi
 
 }
@@ -70,15 +70,15 @@ mkdir -p "$run_sshd"
 chown root:root "$run_sshd"
 chmod go-rwx "$run_sshd"
 
-to_file "${SECRET_ELEMENTS_SSH_HOST_RSA_KEY}" "$ELEMENTS_CONF/ssh_host_rsa_key"
-to_file "${SECRET_ELEMENTS_SSH_HOST_DSA_KEY}" "$ELEMENTS_CONF/ssh_host_dsa_key"
-to_file "${SECRET_ELEMENTS_SSH_HOST_ECDSA_KEY}" "$ELEMENTS_CONF/ssh_host_ecdsa_key"
-to_file "${SECRET_ELEMENTS_SSH_AUTHORIZED_KEYS}" "$ELEMENTS_CONF/authorized_keys"
+to_file "${SECRET_ELEMENTS_SSH_HOST_RSA_KEY}" "$ELEMENTS_CONF/ssh_host_rsa_key" "SECRET_ELEMENTS_SSH_HOST_RSA_KEY"
+to_file "${SECRET_ELEMENTS_SSH_HOST_DSA_KEY}" "$ELEMENTS_CONF/ssh_host_dsa_key" "SECRET_ELEMENTS_SSH_HOST_DSA_KEY"
+to_file "${SECRET_ELEMENTS_SSH_HOST_ECDSA_KEY}" "$ELEMENTS_CONF/ssh_host_ecdsa_key" "SECRET_ELEMENTS_SSH_HOST_ECDSA_KEY"
+to_file "${SECRET_ELEMENTS_SSH_AUTHORIZED_KEYS}" "$ELEMENTS_CONF/authorized_keys" "SECRET_ELEMENTS_SSH_AUTHORIZED_KEYS"
 
-decode_base64_to_file "${SECRET_ELEMENTS_SSH_HOST_RSA_KEY_BASE64}" "$ELEMENTS_CONF/ssh_host_rsa_key"
-decode_base64_to_file "${SECRET_ELEMENTS_SSH_HOST_DSA_KEY_BASE64}" "$ELEMENTS_CONF/ssh_host_dsa_key"
-decode_base64_to_file "${SECRET_ELEMENTS_SSH_HOST_ECDSA_KEY_BASE64}" "$ELEMENTS_CONF/ssh_host_ecdsa_key"
-decode_base64_to_file "${SECRET_ELEMENTS_SSH_AUTHORIZED_KEYS_BASE64}" "$ELEMENTS_CONF/authorized_keys"
+decode_base64_to_file "${SECRET_ELEMENTS_SSH_HOST_RSA_KEY_BASE64}" "$ELEMENTS_CONF/ssh_host_rsa_key" "SECRET_ELEMENTS_SSH_HOST_RSA_KEY_BASE64"
+decode_base64_to_file "${SECRET_ELEMENTS_SSH_HOST_DSA_KEY_BASE64}" "$ELEMENTS_CONF/ssh_host_dsa_key" "SECRET_ELEMENTS_SSH_HOST_DSA_KEY_BASE64"
+decode_base64_to_file "${SECRET_ELEMENTS_SSH_HOST_ECDSA_KEY_BASE64}" "$ELEMENTS_CONF/ssh_host_ecdsa_key" "SECRET_ELEMENTS_SSH_HOST_ECDSA_KEY_BASE64"
+decode_base64_to_file "${SECRET_ELEMENTS_SSH_AUTHORIZED_KEYS_BASE64}" "$ELEMENTS_CONF/authorized_keys" "SECRET_ELEMENTS_SSH_AUTHORIZED_KEYS_BASE64"
 
 echo "CLASSPATH=$CLASSPATH" > "$pam_env_conf"
 env | grep "ELEMENTS_*" >> "$pam_env_conf"
