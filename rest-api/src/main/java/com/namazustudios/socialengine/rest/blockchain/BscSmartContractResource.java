@@ -74,6 +74,7 @@ public class BscSmartContractResource {
             m -> asyncResponse.resume(m == null ? Response.status(NOT_FOUND).build() : m),
             asyncResponse::resume);
 
+        asyncResponse.setTimeoutHandler(response -> operation.close());
     }
 
     @POST
@@ -88,9 +89,10 @@ public class BscSmartContractResource {
 
         final var operation = getBscSmartContractService().invoke(
             request,
-            (blockId, response) -> asyncResponse.resume(response),
+            (response) -> asyncResponse.resume(response),
             asyncResponse::resume);
 
+        asyncResponse.setTimeoutHandler(response -> operation.close());
     }
 
     @DELETE

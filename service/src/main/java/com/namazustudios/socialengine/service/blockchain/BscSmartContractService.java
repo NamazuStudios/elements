@@ -62,7 +62,7 @@ public interface BscSmartContractService {
      * @param exceptionConsumer
      * @return the {@link List<String>} responses from the blockchain.
      */
-    String mintToken(final MintTokenRequest mintTokenRequest,
+    PendingOperation mintToken(final MintTokenRequest mintTokenRequest,
                                final Consumer<MintBscTokenResponse> applicationLogConsumer,
                                final Consumer<Throwable> exceptionConsumer);
 
@@ -74,8 +74,8 @@ public interface BscSmartContractService {
      * @param exceptionConsumer
      * @return the {@link String} response from the blockchain invocation.
      */
-    String  invoke(final InvokeContractRequest invokeRequest,
-                            final BiConsumer<Long, InvokeContractResponse> applicationLogConsumer,
+    PendingOperation invoke(final InvokeContractRequest invokeRequest,
+                            final Consumer<String> applicationLogConsumer,
                             final Consumer<Throwable> exceptionConsumer);
 
 
