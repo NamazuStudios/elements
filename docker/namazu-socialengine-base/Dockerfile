@@ -50,8 +50,8 @@ RUN mkdir -p "$ELEMENTS_BIN" && \
     mkdir -p "$ELEMENTS_CDN_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_REPOS" && \
     mkdir -p "$ELEMENTS_SCRIPT_STORAGE" && \
-    groupadd elements -gid 1000 && \
-    useradd elements -u 1000 -g 1000 -M --shell /usr/bin/bash --base-dir /opt --home "$ELEMENTS_HOME" && \
+    groupadd elements --gid 1000 && \
+    useradd elements --uid 1000 --gid 1000 -M --shell /usr/bin/bash --base-dir /opt --home "$ELEMENTS_HOME" && \
     chown -R elements:elements "$ELEMENTS_HOME"
 
 WORKDIR $ELEMENTS_HOME
