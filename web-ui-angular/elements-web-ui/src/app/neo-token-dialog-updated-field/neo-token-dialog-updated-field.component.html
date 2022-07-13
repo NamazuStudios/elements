@@ -1,0 +1,161 @@
+<mat-form-field *ngIf="field?.fieldType === 'String'" class="field full-width">
+  <mat-label>{{field.name}}</mat-label>
+  <input
+    matInput
+    placeholder="String"
+    name="description"
+    type="text"
+    [value]="field.value || ''"
+    (change)="changeValue($event.target.value)"
+  >
+</mat-form-field>
+<mat-form-field *ngIf="field?.fieldType === 'Number'" class="field">
+  <mat-label>{{field.name}}</mat-label>
+  <input
+    matInput
+    placeholder="Number"
+    name="number"
+    type="number"
+    [value]="field.value || ''"
+    (change)="changeValue($event.target.value)"
+  >
+</mat-form-field>
+<div *ngIf="field?.fieldType === 'Object'" class="field object-field">
+  <div>{{field.name}}</div>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="openDefineModal()"
+  >
+    Define
+  </button>
+</div>
+<mat-form-field *ngIf="field?.fieldType === 'Tags'" appearance="standard" class="field full-width">
+  <mat-label>{{field.name}}</mat-label>
+  <mat-chip-list #chipList aria-label="Tag selection">
+    <mat-chip *ngFor="let tag of (field.value || [])" (removed)="remove(tag)">
+      {{tag}}
+      <button matChipRemove>
+        <mat-icon>cancel</mat-icon>
+      </button>
+    </mat-chip>
+    <input
+      matInput
+      placeholder="New tag..."
+      [matChipInputFor]="chipList"
+      [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+      [matChipInputAddOnBlur]="true"
+      (matChipInputTokenEnd)="add($event)"
+    >
+  </mat-chip-list>
+</mat-form-field>
+
+<mat-form-field *ngIf="field?.fieldType === 'Enum'" class="field">
+  <mat-select
+    name="enum"
+    placeholder="Enum"
+    (selectionChange)="changeValue($event.value)"
+    [value]="field.value"
+  >
+    <mat-option
+      *ngFor="let enumValue of enumValues"
+      [value]="enumValue"
+      [matTooltip]="enumValue"
+      matTooltipPosition="left"
+    >
+      {{enumValue}}
+    </mat-option>
+  </mat-select>
+</mat-form-field>
+
+<div *ngIf="field?.fieldType === 'Boolean'" class="field boolean-field">
+  <mat-checkbox
+    [checked]="field.value === undefined ? !!field.content : !!field.value"
+    (change)="changeValue($event.checked)"
+  >
+    {{field.name}}
+  </mat-checkbox>
+</div>
+
+<mat-card *ngIf="field?.fieldType === 'Array'" class="field">
+  <div *ngFor="let item of (field.value || []); let i = index;" class="array-row">
+    <mat-form-field *ngIf="arrayContentType === 'string'">
+      <mat-label>Array</mat-label>
+      <input
+        matInput
+        type="text"
+        [placeholder]="field?.placeHolder || ''"
+        [value]="item || ''"
+        (change)="changeArrItem($event.target.value, i)"
+      >
+    </mat-form-field>
+    <mat-form-field *ngIf="arrayContentType === 'number'">
+      <mat-label>Array</mat-label>
+      <input
+        matInput
+        type="text"
+        [placeholder]="field?.placeHolder || ''"
+        [value]="item || ''"
+        (change)="changeArrItem($event.target.value, i)"
+      >
+    </mat-form-field>
+    <div *ngIf="arrayContentType === 'object'" class="object-row">
+      <div *ngIf="field?.name">{{field?.name}}</div>
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="openDefineModal(item, i)"
+      >
+        Define
+      </button>
+    </div>
+    <button
+      mat-raised-button
+      color="primary"
+      class="add-remove-button"
+      (click)="removeArrItem(i)"
+    >
+      -
+    </button>
+  </div>
+  <div class="array-row">
+    <mat-form-field *ngIf="arrayContentType === 'string'">
+      <input
+        matInput
+        type="text"
+        [defaultValue]="field?.content"
+        [placeholder]="field?.placeHolder || ''"
+        [value]="arrValue"
+        (input)="changeArrValue($event.target.value)"
+      >
+    </mat-form-field>
+    <mat-form-field *ngIf="arrayContentType === 'number'">
+      <input
+        matInput
+        type="number"
+        [defaultValue]="field?.content"
+        [placeholder]="field?.placeHolder || ''"
+        [value]="arrValue"
+        (input)="changeArrNumberValue($event.target.value)"
+      >
+    </mat-form-field>
+    <div *ngIf="arrayContentType === 'object'">
+      <button
+        mat-raised-button
+        color="primary"
+        (click)="openDefineModal(item, i)"
+      >
+        Define
+      </button>
+    </div>
+    <button
+      mat-raised-button
+      color="secondary"
+      class="add-remove-button"
+      (click)="addArrItem()"
+      [disabled]="!arrValue && arrayContentType === 'string'"
+    >
+      +
+    </button>
+  </div>
+</mat-card>

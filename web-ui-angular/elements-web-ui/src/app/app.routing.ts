@@ -12,6 +12,7 @@ import { LeaderboardsListComponent } from "./leaderboards-list/leaderboards-list
 import { TokensMenuComponent } from "./tokens-menu/tokens-menu.component";
 import { AuthSchemesListComponent } from "./auth-schemes-list/auth-schemes-list.component";
 import { NeoSmartContractsListComponent } from "./neo-smart-contracts-list/neo-smart-contracts-list.component";
+import { CustomizationMenuComponent } from "./customization-menu/customization-menu.component";
 
 const appRoutes: Routes = [
   { path: "login", component: LoginComponent },
@@ -55,6 +56,11 @@ const appRoutes: Routes = [
   {
     path: "auth-schemes",
     component: AuthSchemesListComponent,
+    canActivate: [AuthenticationGuard],
+  },
+  {
+    path: "customization",
+    component: CustomizationMenuComponent,
     canActivate: [AuthenticationGuard],
   },
   {

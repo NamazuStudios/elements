@@ -43,38 +43,41 @@
       </mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="name">
-      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
-      <mat-cell *matCellDef="let token">{{token?.token?.name}}</mat-cell>
+    <ng-container matColumnDef="id">
+      <mat-header-cell *matHeaderCellDef>ID</mat-header-cell>
+      <mat-cell *matCellDef="let token">{{token?.id}}</mat-cell>
     </ng-container>
 
-    <ng-container matColumnDef="totalSupply">
-      <mat-header-cell *matHeaderCellDef>Total Supply</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.totalMintedQuantity}} / {{token?.token?.totalSupply}}</span></mat-cell>
+    <ng-container matColumnDef="name">
+      <mat-header-cell *matHeaderCellDef>Name</mat-header-cell>
+      <mat-cell *matCellDef="let token">{{token?.name}}</mat-cell>
     </ng-container>
-    <!-- <ng-container matColumnDef="spec">
-        <mat-header-cell *matHeaderCellDef>Spec</mat-header-cell>
-        <mat-cell *matCellDef="let token"><span class="truncate-text-right">NEP11?</span></mat-cell>
-      </ng-container> -->
+
+    <ng-container matColumnDef="type">
+      <mat-header-cell *matHeaderCellDef>Type</mat-header-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right"></span></mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="quantity">
+      <mat-header-cell *matHeaderCellDef>Quantity</mat-header-cell>
+      <mat-cell *matCellDef="let token">1</mat-cell>
+    </ng-container>
+    <ng-container matColumnDef="contract">
+      <mat-header-cell *matHeaderCellDef>Contract</mat-header-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.contract?.displayName}}</span></mat-cell>
+    </ng-container>
     <ng-container matColumnDef="network">
-      <mat-header-cell *matHeaderCellDef>Network</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">NEO</span></mat-cell>
+      <mat-header-cell *matHeaderCellDef matTooltip="Indicates whether or not the license is revocable by the owner.">
+        Network</mat-header-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right">Neo</span>
+      </mat-cell>
     </ng-container>
     <ng-container matColumnDef="transferOptions">
       <mat-header-cell *matHeaderCellDef>Transfer</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span [matTooltip]="getTransferOptionsToolTip(token?.token?.transferOptions)" class="truncate-text-right">{{token?.token?.transferOptions |
-          transferOptions: "label"}}</span></mat-cell>
+      <mat-cell *matCellDef="let token"><span [matTooltip]="getTransferOptionsToolTip(token?.token?.transferOptions)" class="truncate-text-right"></span></mat-cell>
     </ng-container>
-    <ng-container matColumnDef="accessOption">
+    <ng-container matColumnDef="public">
       <mat-header-cell *matHeaderCellDef>Public</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.token?.accessOption |
-          titlecase}}</span></mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="revocable">
-      <mat-header-cell *matHeaderCellDef matTooltip="Indicates whether or not the license is revocable by the owner.">
-        Revocable</mat-header-cell>
-      <mat-cell *matCellDef="let token"><span class="truncate-text-right">{{token?.token?.revocable | yesNo}}</span>
-      </mat-cell>
+      <mat-cell *matCellDef="let token"><span class="truncate-text-right"></span></mat-cell>
     </ng-container>
     <ng-container matColumnDef="renewable">
       <mat-header-cell *matHeaderCellDef
@@ -94,7 +97,7 @@
         <button mat-raised-button color="primary" (click)="mintToken(token)">Mint</button>
       </mat-cell>
     </ng-container>
-    <ng-container matColumnDef="list-action">
+    <!-- <ng-container matColumnDef="list-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
         <button *ngIf="!token?.listed && !(token?.totalMintedQuantity === token?.token?.totalSupply)" [disabled]="(token?.totalMintedQuantity === token?.token?.totalSupply)" mat-raised-button color="primary" (click)="listToken(token, true)" matTooltip="List"
@@ -110,13 +113,13 @@
           <mat-icon>not_interested</mat-icon>
         </button>
       </mat-cell>
-    </ng-container>
-    <ng-container matColumnDef="view-action">
+    </ng-container> -->
+    <!-- <ng-container matColumnDef="view-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">
         <button mat-raised-button color="primary" (click)="viewToken(token)">View</button>
       </mat-cell>
-    </ng-container>
+    </ng-container> -->
     <ng-container matColumnDef="edit-action">
       <mat-header-cell *matHeaderCellDef></mat-header-cell>
       <mat-cell *matCellDef="let token">

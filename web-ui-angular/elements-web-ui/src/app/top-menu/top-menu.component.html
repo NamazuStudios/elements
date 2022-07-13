@@ -11,6 +11,7 @@
       <a mat-list-item routerLink="/leaderboards" (click)="toggle()">Leaderboards</a>
       <a mat-list-item routerLink="/tokens" (click)="toggle()">Tokens</a>
       <a mat-list-item routerLink="/auth-schemes" (click)="toggle()">Auth</a>
+      <a mat-list-item routerLink="/customization" (click)="toggle()">Customization</a>
       <hr />
       <a mat-list-item routerLink="/login">Logout {{this.authenticationService.currentSession?.session.user.name}}</a>
     </mat-nav-list>
@@ -40,6 +41,7 @@
         *ngIf="(this.authenticationService.isLoggedIn() | async)">Leaderboards</a>
       <a mat-button routerLink="/tokens" *ngIf="(this.authenticationService.isLoggedIn() | async)">Tokens</a>
       <a mat-button routerLink="/auth-schemes" *ngIf="(this.authenticationService.isLoggedIn() | async)">Auth</a>
+      <a mat-button routerLink="/customization" *ngIf="(this.authenticationService.isLoggedIn() | async)">Customization</a>
 
       <span class="fill-remaining-space"></span>
 

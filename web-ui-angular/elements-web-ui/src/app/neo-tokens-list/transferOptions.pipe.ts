@@ -23,7 +23,7 @@ export class TransferOptionsPipe implements PipeTransform {
       toolTip: "Can be either resold or traded.",
     },
   ];
-  
+
   transform(key: string, option: string): string {
     const data: OptionType[] = this.transferOptionType.filter(option => option.key === key);
     if(!data[0]){
