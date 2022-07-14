@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.service.blockchain;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.namazustudios.socialengine.BlockchainConstants;
+import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.dao.BscSmartContractDao;
 import com.namazustudios.socialengine.dao.BscTokenDao;
 import com.namazustudios.socialengine.dao.BscWalletDao;
@@ -13,26 +14,30 @@ import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
 import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
+import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.tx.RawTransactionManager;
 import org.web3j.tx.TransactionManager;
-import org.web3j.tx.gas.ContractGasProvider;
-import org.web3j.tx.gas.StaticGasProvider;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.utils.Numeric;
 
 import javax.inject.Inject;
-import java.math.BigInteger;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
+import javax.inject.Named;
+import javax.ws.rs.client.Client;
+import java.util.*;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import static com.namazustudios.socialengine.BlockchainConstants.MintStatus.*;
 import static java.lang.String.format;
+import static javax.ws.rs.client.Entity.entity;
+import static org.web3j.abi.TypeReference.makeTypeReference;
 
 public class SuperUserBscSmartContractService implements BscSmartContractService {
 
@@ -47,6 +52,10 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
     private ObjectMapper objectMapper;
 
     private TopicService topicService;
+
+    private Client client;
+
+    private String bscHost;
 
     private final AsyncUtils asyncUtils = new AsyncUtils(SuperUserBscSmartContractService.class);
 
@@ -82,14 +91,14 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
 
         getBscTokenDao().setMintStatusForToken(clone.getId(), MINT_PENDING);
 
-        final var invokeContractRequest = new InvokeContractRequest();
+        final var invokeContractRequest = new EVMInvokeContractRequest();
         invokeContractRequest.setMethodName("mint");
         invokeContractRequest.setContractId(clone.getContractId());
         invokeContractRequest.setPassword(mintTokenRequest.getPassword());
         invokeContractRequest.setWalletId(mintTokenRequest.getWalletId());
         invokeContractRequest.setParameters(List.of(clone.getTokenUUID(), tokenMap));
 
-        return doInvoke(invokeContractRequest, (result) -> {
+        return doSend(invokeContractRequest, (result) -> {
 
                     clone.setMintStatus(MINTED);
 
@@ -108,14 +117,22 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
     }
 
     @Override
-    public PendingOperation invoke(final InvokeContractRequest invokeRequest,
+    public PendingOperation send(final EVMInvokeContractRequest invokeRequest,
                          final Consumer<String> applicationLogConsumer,
                          final Consumer<Throwable> exceptionConsumer) {
 
-        return doInvoke(invokeRequest, applicationLogConsumer, exceptionConsumer);
+        return doSend(invokeRequest, applicationLogConsumer, exceptionConsumer);
     }
 
-    private PendingOperation doInvoke(final InvokeContractRequest invokeRequest,
+    @Override
+    public PendingOperation call(final EVMInvokeContractRequest invokeRequest,
+                                 final Consumer<String> applicationLogConsumer,
+                                 final Consumer<Throwable> exceptionConsumer) {
+
+        return doCall(invokeRequest, applicationLogConsumer, exceptionConsumer);
+    }
+
+    private PendingOperation doSend(final EVMInvokeContractRequest invokeRequest,
                             final Consumer<String> applicationLogConsumer,
                             final Consumer<Throwable> exceptionConsumer) {
 
@@ -136,42 +153,56 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
             final var credentials = Credentials.create(decryptedAccount);
             final var contractAddress = contractMetadata.getScriptHash();
 
-            final int attempt = 200;
-            final int sleepDuration = 500;
-            final ContractGasProvider gasProvider = new StaticGasProvider(BlockchainConstants.SmartContracts.GAS_PRICE,
-                    BlockchainConstants.SmartContracts.GAS_LIMIT);
-
             //Send a transaction to a (already deployed) smart contract
             try {
-                // RawTransactionManager use a wallet (credential) to create and sign transaction
-                final TransactionManager manager = new RawTransactionManager(getBscw3JClient().getWeb3j(), credentials, attempt, sleepDuration);
+                final var solidityInputTypes =
+                        invokeRequest.getParameters().stream()
+                                .map(o -> getBscw3JClient().convertObject(o))
+                                .collect(Collectors.toUnmodifiableList());
 
-                //TODO: I think this is what we need to get working
-//                final var tokenId = new TypeReference<Uint256>(){};
-//
-//                Function function = new Function(
-//                        invokeRequest.getMethodName(),  // function we're calling
-//                        invokeRequest.getParameters(),  // Parameters to pass as Solidity Types
-//                        Arrays.asList(tokenId));
+                final var function = new Function(
+                        invokeRequest.getMethodName(),
+                        solidityInputTypes,
+                        Collections.singletonList(new TypeReference<Uint256>() {}));
 
-//                String encodedFunction = FunctionEncoder.encode(function)
-//                Transaction transaction = Transaction.createFunctionCallTransaction(
-//                        <from>, <gasPrice>, <gasLimit>, contractAddress, <funds>, encodedFunction);
-//
-//                org.web3j.protocol.core.methods.response.EthSendTransaction transactionResponse =
-//                        web3j.ethSendTransaction(transaction).sendAsync().get();
+                final var encodedFunction = FunctionEncoder.encode(function);
 
-                //String transactionHash = transactionResponse.getTransactionHash();
+                final var ethGetTransactionCount =
+                        getBscw3JClient().getWeb3j()
+                                .ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.LATEST)
+                                .send();
 
-                // wait for response using EthGetTransactionReceipt...
+                final var nonce = ethGetTransactionCount.getTransactionCount();
 
-                //load contract information into the transaction
-                final var contract = BscSmartContract.load(contractAddress, getBscw3JClient().getWeb3j(), manager, gasProvider);
+                // Prepare the rawTransaction
+                final var rawTransaction = RawTransaction.createTransaction(
+                        nonce,
+                        BlockchainConstants.SmartContracts.GAS_PRICE,
+                        BlockchainConstants.SmartContracts.GAS_LIMIT,
+                        contractAddress,
+                        encodedFunction);
 
-                //invoke contract function
-                final var result = contract.run(invokeRequest.getMethodName()).send(); // <-- throws exception
+                // Sign the transaction
+                final var signedMessage = TransactionEncoder.signMessage(rawTransaction, credentials);
+                final var hexValue = Numeric.toHexString(signedMessage);
 
-                applicationLogConsumer.accept(result);
+                // Send transaction
+                final var ethSendTransaction = getBscw3JClient().getWeb3j().ethSendRawTransaction(hexValue).send();
+                final var transactionHash = ethSendTransaction.getTransactionHash();
+
+                final var receiptProcessor = new PollingTransactionReceiptProcessor(
+                        getBscw3JClient().getWeb3j(),
+                        TransactionManager.DEFAULT_POLLING_FREQUENCY,
+                        TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+                //Wait for the transaction block
+                final var txReceipt = receiptProcessor.waitForTransactionReceipt(transactionHash);
+
+                final var response = txReceipt.getRevertReason() != null ?
+                        txReceipt.getRevertReason() :
+                        txReceipt.getBlockHash();
+
+                applicationLogConsumer.accept(response);
 
             } catch (Exception e) {
                 final var msg = format(
@@ -184,6 +215,81 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
 
             return null;
         });
+    }
+
+    private PendingOperation doCall(final EVMInvokeContractRequest invokeRequest,
+                                    final Consumer<String> applicationLogConsumer,
+                                    final Consumer<Throwable> exceptionConsumer) {
+
+        return asyncUtils.doNoThrow(exceptionConsumer, () -> {
+
+            final var contractMetadata = getBscSmartContractDao()
+                    .getBscSmartContract(invokeRequest.getContractId());
+
+            if (!contractMetadata.getBlockchain().equals(BlockchainConstants.Names.BSC)) {
+                final var msg = format("Contract Blockchain %s is not a supported type.", contractMetadata.getBlockchain());
+                throw new ContractInvocationException(msg);
+            }
+
+            final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
+            final var wallet = getBscWalletDao().getWallet(walletId);
+            final var mintAccount = wallet.getWallet().getAccounts().get(0);
+            final var decryptedAccount = Web3jWallet.decrypt(mintAccount);
+            final var credentials = Credentials.create(decryptedAccount);
+            final var contractAddress = contractMetadata.getScriptHash();
+
+            //Send a transaction to a (already deployed) smart contract
+            try {
+
+                final var solidityOutputTypes =
+                        invokeRequest.getOutputTypes().stream()
+                                .map(o -> {
+                                    try {
+                                        return (TypeReference<Type>)TypeReference.makeTypeReference(o);
+                                    } catch (ClassNotFoundException e) {
+                                        throw new ContractInvocationException(e.getMessage());
+                                    }
+                                })
+                                .collect(Collectors.toUnmodifiableList());
+
+                final var function =
+                        FunctionEncoder.makeFunction(invokeRequest.getMethodName(),
+                                invokeRequest.getInputTypes(),
+                                invokeRequest.getParameters(),
+                                invokeRequest.getOutputTypes());
+
+                final var responseValue = callSmartContractFunction(function, credentials.getAddress(), contractAddress);
+                final var responseObjects = FunctionReturnDecoder.decode(responseValue, solidityOutputTypes);
+                final var response = responseObjects.get(0).getValue().toString();
+
+                applicationLogConsumer.accept(response);
+
+            } catch (Exception e) {
+                final var msg = format(
+                        "Bsc Call Failed: %s",
+                        e.getMessage()
+                );
+
+                throw new ContractInvocationException(msg);
+            }
+
+            return null;
+        });
+    }
+
+    private String callSmartContractFunction(Function function, String fromAddress, String contractAddress)
+            throws Exception {
+        String encodedFunction = FunctionEncoder.encode(function);
+
+        org.web3j.protocol.core.methods.response.EthCall response =
+                getBscw3JClient().getWeb3j().ethCall(
+                                Transaction.createEthCallTransaction(
+                                        fromAddress, contractAddress, encodedFunction),
+                                DefaultBlockParameterName.LATEST)
+                        .sendAsync()
+                        .get();
+
+        return response.getValue();
     }
 
     @Override
@@ -245,4 +351,21 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
         this.topicService = topicService;
     }
 
+    public Client getClient() {
+        return client;
+    }
+
+    @Inject
+    public void setClient(Client client) {
+        this.client = client;
+    }
+
+    @Inject
+    private void setBscHost(@Named(Constants.BSC_RPC_PROVIDER)String bscHost) {
+        this.bscHost = bscHost;
+    }
+
+    private String getBSCHost() {
+        return this.bscHost;
+    }
 }

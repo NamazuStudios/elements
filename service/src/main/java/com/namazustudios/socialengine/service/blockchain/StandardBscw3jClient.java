@@ -6,6 +6,13 @@ import com.namazustudios.socialengine.model.blockchain.bsc.*;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import io.neow3j.types.ContractParameter;
+import io.neow3j.types.Hash160;
+import org.web3j.abi.TypeDecoder;
+import org.web3j.abi.datatypes.*;
+import org.web3j.abi.datatypes.primitive.Byte;
+import org.web3j.abi.datatypes.primitive.Int;
+import org.web3j.abi.datatypes.primitive.Long;
 import org.web3j.crypto.*;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.Web3jService;
@@ -16,6 +23,14 @@ import java.math.BigInteger;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 public class StandardBscw3jClient implements Bscw3jClient {
 
@@ -100,6 +115,44 @@ public class StandardBscw3jClient implements Bscw3jClient {
                 throw new CipherException(e.getMessage());
             }
         }
+    }
+
+    @Override
+    public Type convertObject(final Object object) {
+        if (object == null) {
+            return null;
+        } else if (object instanceof String) {
+            final var str = (String)object;
+            if(Numeric.containsHexPrefix(str))
+                return new Address(str);
+            return new Utf8String(str);
+        } else if (object instanceof Integer) {
+            return new Int((Integer)object);
+        } else if (object instanceof Long) {
+            return new Long((long) object);
+        } else if (object instanceof Boolean) {
+            return new Bool((Boolean) object);
+        } else if (object instanceof List) {
+            return convertList((List) object);
+        } else {
+            throw new IllegalArgumentException("Invalid object: " + object);
+        }
+    }
+
+    private DynamicArray convertList(final List<Object> list) {
+        final var l = list.stream()
+                .map(this::convertObject)
+                .collect(Collectors.toList());
+
+        Type prev = null;
+        for (Type t : l) {
+            if(prev != null && !Objects.equals(t.getTypeAsString(), prev.getTypeAsString())) {
+                return new DynamicStruct(l);
+            }
+            prev = t;
+        }
+
+        return new DynamicArray(l);
     }
 
     @Inject

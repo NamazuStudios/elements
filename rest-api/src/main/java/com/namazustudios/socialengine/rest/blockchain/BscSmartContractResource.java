@@ -1,10 +1,7 @@
 package com.namazustudios.socialengine.rest.blockchain;
 
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
-import com.namazustudios.socialengine.model.blockchain.InvokeContractRequest;
-import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
 import com.namazustudios.socialengine.service.blockchain.BscSmartContractService;
 import io.swagger.annotations.Api;
@@ -78,19 +75,35 @@ public class BscSmartContractResource {
     }
 
     @POST
-    @Path("invocation")
+    @Path("send")
     @Produces(MediaType.APPLICATION_JSON)
-    @ApiOperation(value = "Invokes the specified method on the contract.",
-            notes = "Invokes the specified method using the specified contract id.",
-            response = String.class)
-    public void invoke(final InvokeContractRequest request,
+    @ApiOperation(value = "Sends a transaction to the specified method on the contract.",
+            notes = "Sends a transaction to the specified method using the specified contract id.")
+    public void send(final EVMInvokeContractRequest request,
                        @Suspended
                        final AsyncResponse asyncResponse) {
 
-        final var operation = getBscSmartContractService().invoke(
+        final var operation = getBscSmartContractService().send(
             request,
             (response) -> asyncResponse.resume(response),
             asyncResponse::resume);
+
+        asyncResponse.setTimeoutHandler(response -> operation.close());
+    }
+
+    @POST
+    @Path("call")
+    @Produces(MediaType.APPLICATION_JSON)
+    @ApiOperation(value = "Calls the specified method on the contract.",
+            notes = "Calls the specified method using the specified contract id.")
+    public void call(final EVMInvokeContractRequest request,
+                       @Suspended
+                       final AsyncResponse asyncResponse) {
+
+        final var operation = getBscSmartContractService().call(
+                request,
+                (response) -> asyncResponse.resume(response),
+                asyncResponse::resume);
 
         asyncResponse.setTimeoutHandler(response -> operation.close());
     }

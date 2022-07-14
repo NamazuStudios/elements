@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
+import io.neow3j.types.ContractParameter;
 import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
@@ -90,5 +91,13 @@ public interface Bscw3jClient {
      * @return the {@link Web3jWallet}
      */
     Web3jWallet updateWallet(Web3jWallet wallet, String name, String password, String newPassword) throws CipherException;
+
+    /**
+     * Constructs a {@link org.web3j.abi.datatypes.Type} representing the object.
+     *
+     * @param object the Java {@link Object}.
+     * @return the {@link org.web3j.abi.datatypes.Type}, never null
+     */
+    org.web3j.abi.datatypes.Type convertObject(final Object object);
 }
 
