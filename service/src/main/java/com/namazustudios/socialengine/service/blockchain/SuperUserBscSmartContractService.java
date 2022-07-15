@@ -13,6 +13,8 @@ import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
 import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
+import io.reactivex.disposables.Disposable;
+import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
@@ -21,7 +23,9 @@ import org.web3j.abi.datatypes.generated.Uint256;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
+import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.response.PollingTransactionReceiptProcessor;
@@ -30,6 +34,7 @@ import org.web3j.utils.Numeric;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -132,6 +137,7 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
         return doCall(invokeRequest, applicationLogConsumer, exceptionConsumer);
     }
 
+
     private PendingOperation doSend(final EVMInvokeContractRequest invokeRequest,
                             final Consumer<String> applicationLogConsumer,
                             final Consumer<Throwable> exceptionConsumer) {
@@ -155,15 +161,13 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
 
             //Send a transaction to a (already deployed) smart contract
             try {
-                final var solidityInputTypes =
-                        invokeRequest.getParameters().stream()
-                                .map(o -> getBscw3JClient().convertObject(o))
-                                .collect(Collectors.toUnmodifiableList());
 
-                final var function = new Function(
-                        invokeRequest.getMethodName(),
-                        solidityInputTypes,
-                        Collections.singletonList(new TypeReference<Uint256>() {}));
+                final var function =
+                        FunctionEncoder.makeFunction(
+                                invokeRequest.getMethodName(),
+                                invokeRequest.getInputTypes(),
+                                invokeRequest.getParameters(),
+                                invokeRequest.getOutputTypes());
 
                 final var encodedFunction = FunctionEncoder.encode(function);
 
