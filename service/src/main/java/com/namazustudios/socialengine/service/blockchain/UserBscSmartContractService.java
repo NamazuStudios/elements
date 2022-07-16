@@ -109,7 +109,7 @@ public class UserBscSmartContractService implements BscSmartContractService {
             final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
             final var wallet = getBscWalletDao().getWallet(walletId);
             final var mintAccount = wallet.getWallet().getAccounts().get(0);
-            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount);
+            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount, null);
             final var credentials = Credentials.create(decryptedAccount);
             final var contractAddress = contractMetadata.getScriptHash();
 

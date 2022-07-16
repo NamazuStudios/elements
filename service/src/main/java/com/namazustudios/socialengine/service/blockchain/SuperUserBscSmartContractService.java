@@ -13,7 +13,6 @@ import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
 import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
 import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
-import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
 import org.web3j.abi.FunctionEncoder;
@@ -149,7 +148,7 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
             final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
             final var wallet = getBscWalletDao().getWallet(walletId);
             final var mintAccount = wallet.getWallet().getAccounts().get(0);
-            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount);
+            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount, null);
             final var credentials = Credentials.create(decryptedAccount);
             final var contractAddress = contractMetadata.getScriptHash();
 
@@ -232,7 +231,7 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
             final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
             final var wallet = getBscWalletDao().getWallet(walletId);
             final var mintAccount = wallet.getWallet().getAccounts().get(0);
-            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount);
+            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount, null);
             final var credentials = Credentials.create(decryptedAccount);
             final var contractAddress = contractMetadata.getScriptHash();
 

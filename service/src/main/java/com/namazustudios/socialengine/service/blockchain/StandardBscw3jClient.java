@@ -37,11 +37,11 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
     private static final int IV_LENGTH = 16;
 
-    private static final int SALT_LENGTH = 64;
+    private static final int SALT_LENGTH = 32;
 
     private static final int AES_KEY_LENGTH = 256;
 
-    private static final int AES_ITERATIONS = 65535;
+    private static final int AES_ITERATIONS = 65536;
 
     private static final String AES = "AES";
 
@@ -51,7 +51,7 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
     private static final String DEFAULT_PASSPHRASE = "com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet";
 
-    private static final SecureRandom secureRandom = new SecureRandom();
+    private static final SecureRandom sr = new SecureRandom();
 
     private HttpService httpService;
 
@@ -72,13 +72,15 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
         final var iv = new byte[IV_LENGTH];
         final var salt = new byte[SALT_LENGTH];
-        secureRandom.nextBytes(iv);
-        secureRandom.nextBytes(salt);
+        sr.nextBytes(iv);
+        sr.nextBytes(salt);
 
         final var credentials = Credentials.create(privateKey);
-        final var encryptedCredentials = encrypt(iv, salt, passphrase, credentials);
+        final var encryptedCredentials = encrypt(iv, salt, credentials, passphrase);
 
         final var wallet = new Web3jWallet();
+        wallet.setIv(Hex.encode(iv));
+        wallet.setSalt(Hex.encode(salt));
         wallet.setName(name);
 
         final var accounts = new ArrayList<String>();
@@ -89,8 +91,6 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
         wallet.setAccounts(accounts);
         wallet.setAddresses(addresses);
-        wallet.setIv(Hex.encode(iv));
-        wallet.setSalt(Hex.encode(salt));
 
         return wallet;
 
@@ -113,13 +113,13 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
             final var iv = new byte[IV_LENGTH];
             final var salt = new byte[SALT_LENGTH];
-            secureRandom.nextBytes(iv);
-            secureRandom.nextBytes(salt);
+            sr.nextBytes(iv);
+            sr.nextBytes(salt);
 
             try {
                 decrypted = wallet.getAccounts()
                     .stream()
-                    .map(e -> decrypt(wallet, e, passphrase))
+                    .map(e -> decrypt(wallet, passphrase, e))
                     .collect(toList());
             } catch (CryptoException ex) {
                 throw new InvalidDataException("Unable to decrypt one or more accounts.", ex);
@@ -127,7 +127,7 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
             final var accounts = decrypted
                 .stream()
-                .map(d -> encrypt(iv, salt, passphrase, d))
+                .map(d -> encrypt(iv, salt, d, passphrase))
                 .collect(toList());
 
             final var addresses = decrypted
@@ -154,12 +154,12 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
             final var iv = new byte[IV_LENGTH];
             final var salt = new byte[SALT_LENGTH];
-            secureRandom.nextBytes(iv);
-            secureRandom.nextBytes(salt);
+            sr.nextBytes(iv);
+            sr.nextBytes(salt);
 
             final var ecKeyPair = Keys.createEcKeyPair();
             final var credentials = Credentials.create(ecKeyPair);
-            final var encryptedCredentials = encrypt(iv, salt, passphrase, credentials);
+            final var encryptedCredentials = encrypt(iv, salt, credentials, passphrase);
 
             final var accounts = new ArrayList<String>();
             accounts.add(encryptedCredentials);
@@ -221,36 +221,26 @@ public class StandardBscw3jClient implements Bscw3jClient {
         httpService = new HttpService(bscHost);
     }
 
-    public String encrypt(final byte[] iv, final byte[] salt, final String passphrase, final String unencryptedString) {
+    public String encrypt(final byte[] iv, final byte[] salt, final String unencrypted, final String passphrase) {
         try {
-            final var cipher = getCipher(iv, salt, passphrase, Cipher.DECRYPT_MODE);
-            final var unencryptedBytes = unencryptedString.getBytes(StandardCharsets.UTF_8);
-            final var encrypted = cipher.doFinal(unencryptedBytes);
-            return Hex.encode(encrypted);
+            final var cipher = getCipher(iv, salt, passphrase, Cipher.ENCRYPT_MODE);
+            final var unencryptedBytes = unencrypted.getBytes(StandardCharsets.UTF_8);
+            final var encryptedBytes = cipher.doFinal(unencryptedBytes);
+            final var encryptedString = Hex.encode(encryptedBytes);
+            return encryptedString;
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
             throw new CryptoException(ex);
         }
     }
 
     @Override
-    public String decrypt(final Web3jWallet wallet, final String encryptedString) {
-        return decrypt(wallet, encryptedString, DEFAULT_PASSPHRASE);
-    }
-
-    @Override
-    public String decrypt(final Web3jWallet wallet, final String encryptedString, final String passphrase) {
-        final var iv = Hex.decode(wallet.getIv());
-        final var salt = Hex.decode(wallet.getSalt());
-        return decrypt(iv, salt, encryptedString, passphrase);
-    }
-
-    @Override
-    public String decrypt(byte[] iv, byte[] salt, final String encryptedString, final String passphrase) {
+    public String decrypt(byte[] iv, byte[] salt, final String encrypted, final String passphrase) {
         try {
             final var cipher = getCipher(iv, salt, passphrase, Cipher.DECRYPT_MODE);
-            final var encryptedBytes = encryptedString.getBytes(StandardCharsets.UTF_8);
+            final var encryptedBytes = Hex.decode(encrypted);
             final var decryptedBytes = cipher.doFinal(encryptedBytes);
-            return Hex.encode(decryptedBytes);
+            final var decryptedString = new String(decryptedBytes, StandardCharsets.UTF_8);
+            return decryptedString;
         } catch (IllegalBlockSizeException | BadPaddingException ex) {
             throw new CryptoException(ex);
         }
@@ -266,22 +256,22 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
             final var chars = passphraseOrDefault(passphrase);
             final var keySpec = new PBEKeySpec(chars, salt, AES_ITERATIONS, AES_KEY_LENGTH);
-
             final var factory = SecretKeyFactory.getInstance(SECRET_KEY_ALGORITHM);
             final var secret = factory.generateSecret(keySpec);
             final var secretKeySpec = new SecretKeySpec(secret.getEncoded(), AES);
             final var ivParameterSpec = new IvParameterSpec(iv);
-
             final var cipher = Cipher.getInstance(AES_ALGORITHM);
+
             cipher.init(mode, secretKeySpec, ivParameterSpec);
             return cipher;
         } catch (
                 NoSuchAlgorithmException |
-                        InvalidKeySpecException |
-                        InvalidKeyException |
-                        InvalidAlgorithmParameterException |
-                        NoSuchPaddingException ex) {
+                InvalidKeySpecException |
+                InvalidKeyException |
+                InvalidAlgorithmParameterException |
+                NoSuchPaddingException ex) {
             throw new CryptoException(ex);
         }
     }
+
 }
