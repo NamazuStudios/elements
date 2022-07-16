@@ -3,7 +3,6 @@ package com.namazustudios.socialengine.service.blockchain;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.crypto.CryptoException;
-import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.rt.util.Hex;
 import org.slf4j.Logger;
@@ -18,7 +17,6 @@ import org.web3j.protocol.http.HttpService;
 import org.web3j.utils.Numeric;
 
 import javax.crypto.*;
-import javax.crypto.spec.DESedeKeySpec;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
@@ -27,9 +25,7 @@ import javax.inject.Named;
 import java.nio.charset.StandardCharsets;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.KeySpec;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.Objects;
 
@@ -227,31 +223,11 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
     public String encrypt(final byte[] iv, final byte[] salt, final String passphrase, final String unencryptedString) {
         try {
-
-            final var chars = passphraseOrDefault(passphrase);
-            final var keySpec = new PBEKeySpec(chars, salt, AES_ITERATIONS, AES_KEY_LENGTH);
-
-            final var factory = SecretKeyFactory.getInstance(SECRET_KEY_ALGORITHM);
-            final var secret = factory.generateSecret(keySpec);
-            final var secretKeySpec = new SecretKeySpec(secret.getEncoded(), AES);
-            final var ivParameterSpec = new IvParameterSpec(iv);
-
-            final var cipher = Cipher.getInstance(AES_ALGORITHM);
-            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
-
+            final var cipher = getCipher(iv, salt, passphrase, Cipher.DECRYPT_MODE);
             final var unencryptedBytes = unencryptedString.getBytes(StandardCharsets.UTF_8);
             final var encrypted = cipher.doFinal(unencryptedBytes);
-
             return Hex.encode(encrypted);
-
-        } catch (
-                NoSuchAlgorithmException |
-                InvalidKeySpecException |
-                NoSuchPaddingException |
-                InvalidKeyException |
-                InvalidAlgorithmParameterException |
-                IllegalBlockSizeException |
-                BadPaddingException ex) {
+        } catch (IllegalBlockSizeException | BadPaddingException ex) {
             throw new CryptoException(ex);
         }
     }
@@ -271,6 +247,22 @@ public class StandardBscw3jClient implements Bscw3jClient {
     @Override
     public String decrypt(byte[] iv, byte[] salt, final String encryptedString, final String passphrase) {
         try {
+            final var cipher = getCipher(iv, salt, passphrase, Cipher.DECRYPT_MODE);
+            final var encryptedBytes = encryptedString.getBytes(StandardCharsets.UTF_8);
+            final var decryptedBytes = cipher.doFinal(encryptedBytes);
+            return Hex.encode(decryptedBytes);
+        } catch (IllegalBlockSizeException | BadPaddingException ex) {
+            throw new CryptoException(ex);
+        }
+    }
+
+    private static char[] passphraseOrDefault(final String passphrase) {
+        final var trimmed = passphrase == null ? "" : passphrase;
+        return (trimmed.isBlank() ? DEFAULT_PASSPHRASE : trimmed).toCharArray();
+    }
+
+    private Cipher getCipher(final byte[] iv, final byte[] salt, final String passphrase, final int mode) {
+        try {
 
             final var chars = passphraseOrDefault(passphrase);
             final var keySpec = new PBEKeySpec(chars, salt, AES_ITERATIONS, AES_KEY_LENGTH);
@@ -281,27 +273,15 @@ public class StandardBscw3jClient implements Bscw3jClient {
             final var ivParameterSpec = new IvParameterSpec(iv);
 
             final var cipher = Cipher.getInstance(AES_ALGORITHM);
-            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
-
-            final var encryptedBytes = encryptedString.getBytes(StandardCharsets.UTF_8);
-            final var decryptedBytes = cipher.doFinal(encryptedBytes);
-            return Hex.encode(decryptedBytes);
-
+            cipher.init(mode, secretKeySpec, ivParameterSpec);
+            return cipher;
         } catch (
                 NoSuchAlgorithmException |
-                InvalidKeySpecException |
-                InvalidKeyException |
-                InvalidAlgorithmParameterException |
-                NoSuchPaddingException |
-                IllegalBlockSizeException |
-                BadPaddingException ex) {
+                        InvalidKeySpecException |
+                        InvalidKeyException |
+                        InvalidAlgorithmParameterException |
+                        NoSuchPaddingException ex) {
             throw new CryptoException(ex);
         }
     }
-
-    private static char[] passphraseOrDefault(final String passphrase) {
-        final var trimmed = passphrase == null ? "" : passphrase;
-        return (trimmed.isBlank() ? DEFAULT_PASSPHRASE : trimmed).toCharArray();
-    }
-
 }

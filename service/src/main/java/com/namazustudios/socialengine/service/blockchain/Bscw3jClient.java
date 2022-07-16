@@ -91,7 +91,6 @@ public interface Bscw3jClient {
      */
     String  encrypt(byte[] iv, byte[] salt, String passphrase, String credentials);
 
-
     String decrypt(final Web3jWallet wallet, String encryptedString);
 
     String decrypt(final Web3jWallet wallet, String passphrase, String encryptedString);
