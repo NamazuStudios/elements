@@ -78,12 +78,12 @@ public class SuperUserBscWalletService implements BscWalletService {
             getBscw3jClient().createWallet(createBscWalletRequest.getDisplayName(), pw) :
             getBscw3jClient().createWallet(createBscWalletRequest.getDisplayName(), pw, pk);
 
-        final var BscWallet = new BscWallet();
-        BscWallet.setDisplayName(createBscWalletRequest.getDisplayName());
-        BscWallet.setWallet(wallet);
-        BscWallet.setUser(userOptional.get());
+        final var bscWallet = new BscWallet();
+        bscWallet.setDisplayName(createBscWalletRequest.getDisplayName());
+        bscWallet.setWallet(wallet);
+        bscWallet.setUser(userOptional.get());
 
-        return getWalletDao().createWallet(BscWallet);
+        return getWalletDao().createWallet(bscWallet);
 
     }
 

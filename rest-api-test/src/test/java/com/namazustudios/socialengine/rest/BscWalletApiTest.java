@@ -25,8 +25,7 @@ import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.IntStream.range;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.testng.Assert.assertNotEquals;
-import static org.testng.Assert.assertNotNull;
+import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 
 public class BscWalletApiTest {
@@ -215,33 +214,39 @@ public class BscWalletApiTest {
         request.setUserId(superUserClientContext.getUser().getId());
         request.setDisplayName(walletName);
 
-        Response response = client
-                .target(apiRoot + "/blockchain/bsc/wallet")
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .post(Entity.entity(request, APPLICATION_JSON));
+        final var postResponse = client
+            .target(apiRoot + "/blockchain/bsc/wallet")
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .post(Entity.entity(request, APPLICATION_JSON));
 
-        assertEquals(response.getStatus(), 200);
+        assertEquals(postResponse.getStatus(), 200);
 
-        var bscWallet = client
-                .target(apiRoot + "/blockchain/bsc/wallet/" + walletName)
-                .request()
-                .header(authHeader, superUserClientContext.getSessionSecret())
-                .get()
-                .readEntity(BscWallet.class);
+        final var postResultWallet = postResponse.readEntity(BscWallet.class);
+
+        var getResponse = client
+            .target(apiRoot + "/blockchain/bsc/wallet/" + postResultWallet.getId())
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .get();
+
+        assertEquals(getResponse.getStatus(), 200);
+
+        final var bscWallet = getResponse.readEntity(BscWallet.class);
 
         assertNotNull(bscWallet);
         assertNotNull(bscWallet.getId());
         assertEquals(bscWallet.getUser().getId(), superUserClientContext.getUser().getId());
         assertEquals(bscWallet.getDisplayName(), walletName);
 
-        response = client
+        final var deleteResponse = client
                 .target(apiRoot + "/blockchain/bsc/wallet/" + bscWallet.getId())
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
                 .delete();
 
-        assertEquals(response.getStatus(), 204);
+        assertEquals(deleteResponse.getStatus(), 204);
+
     }
 
     @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
@@ -267,14 +272,22 @@ public class BscWalletApiTest {
 
         String updatedWalletName = "WalletTest-" + randomUUID().toString();
         UpdateBscWalletRequest updateRequest = new UpdateBscWalletRequest();
+        updateRequest.setUserId(superUserClientContext.getUser().getId());
         updateRequest.setDisplayName(updatedWalletName);
 
-        var updatedBscWallet = client
+        var updateResponse = client
                 .target(apiRoot + "/blockchain/bsc/wallet/" + bscWallet.getId())
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
-                .put(Entity.entity(updateRequest, APPLICATION_JSON))
-                .readEntity(BscWallet.class);
+                .put(Entity.entity(updateRequest, APPLICATION_JSON));
+
+
+        if (updateResponse.getStatus() != 200) {
+            final var entity = updateResponse.readEntity(String.class);
+            fail(entity);
+        }
+
+        var updatedBscWallet = updateResponse.readEntity(BscWallet.class);
 
         assertNotNull(updatedBscWallet);
         assertNotNull(updatedBscWallet.getId());
@@ -366,6 +379,7 @@ public class BscWalletApiTest {
 
         String updatedWalletName = "WalletTest-" + randomUUID().toString();
         UpdateBscWalletRequest updateRequest = new UpdateBscWalletRequest();
+
         updateRequest.setDisplayName(updatedWalletName);
 
         var updatedBscWallet = client
