@@ -5,12 +5,8 @@ import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ExposedBindingAnnotation;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
-import io.neow3j.types.ContractParameter;
-import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
-import org.web3j.protocol.*;
-import java.math.BigInteger;
 
 /**
  * Manages instances of {@link Bscw3j}.
@@ -31,14 +27,6 @@ public interface Bscw3jClient {
      * @return the {@link Web3j}, never null
      */
     Web3j getWeb3j();
-
-    /**
-     * Creates a {@link Web3jWallet}.
-     *
-     * @param name the name for the wallet
-     * @return the {@link Web3jWallet}
-     */
-    Web3jWallet createWallet(String name);
 
     /**
      * Creates an encrypted {@link Web3jWallet}.
@@ -68,7 +56,7 @@ public interface Bscw3jClient {
      * @param newPassword the new password for the wallet
      * @return the {@link Web3jWallet}
      */
-    Web3jWallet updateWallet(Web3jWallet wallet, String name, String password, String newPassword) throws CipherException;
+    Web3jWallet updateWallet(Web3jWallet wallet, String name, String password, String newPassword);
 
     /**
      * Constructs a {@link org.web3j.abi.datatypes.Type} representing the object.
@@ -78,16 +66,37 @@ public interface Bscw3jClient {
      */
     org.web3j.abi.datatypes.Type<?> convertObject(final Object object);
 
-    String encrypt(Credentials credentials);
+    /**
+     * Encrypts the credentials with the iv, salt, passphrase, and raw credentials.
+     *
+     * @param iv
+     * @param salt
+     * @param passphrase
+     * @param credentials
+     * @return
+     */
+    default String encrypt(byte[] iv, byte[] salt, String passphrase, Credentials credentials) {
+        final var credentialsString = credentials.getEcKeyPair().getPrivateKey().toString(16);
+        return encrypt(iv, salt, passphrase, credentialsString);
+    }
 
-    String encrypt(Credentials credentials, String passphrase);
+    /**
+     * Encrypts the credentials with the iv, salt, passphrase, and raw credentials.
+     *
+     * @param iv
+     * @param salt
+     * @param passphrase
+     * @param credentials
+     * @return
+     */
+    String  encrypt(byte[] iv, byte[] salt, String passphrase, String credentials);
 
-    String encrypt(String unencryptedString, String passphrase);
 
-    String decrypt(String encryptedString);
+    String decrypt(final Web3jWallet wallet, String encryptedString);
 
-    String decrypt(String encryptedString, String passphrase);
+    String decrypt(final Web3jWallet wallet, String passphrase, String encryptedString);
 
+    String decrypt(byte[] iv, byte[] salt, String passphrase, String encryptedString);
 
 }
 

@@ -17,16 +17,16 @@ public class BscWallet {
     private String id;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
+    @ApiModelProperty("The User associated with this wallet.")
+    private User user;
+
+    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The name given to this wallet.")
     private String displayName;
 
     @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
     @ApiModelProperty("The Web3j wallet file.")
     private Web3jWallet wallet;
-
-    @NotNull(groups = {ValidationGroups.Insert.class, ValidationGroups.Create.class, ValidationGroups.Update.class})
-    @ApiModelProperty("The User associated with this wallet.")
-    private User user;
 
     public String getId() {
         return id;

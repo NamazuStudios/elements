@@ -9,11 +9,14 @@ import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
+import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.model.user.User;
 import com.namazustudios.socialengine.security.PasswordGenerator;
 import org.web3j.crypto.CipherException;
 
 import javax.inject.Inject;
+
+import static com.google.common.base.Strings.nullToEmpty;
 
 public class UserBscWalletService implements BscWalletService {
 
@@ -37,70 +40,57 @@ public class UserBscWalletService implements BscWalletService {
 
     @Override
     public BscWallet updateWallet(String walletId, UpdateBscWalletRequest walletRequest) {
-        var user = getUser();
-        var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
-        if (userId.isEmpty()){
+
+        final var user = getUser();
+        final var userId = nullToEmpty(walletRequest.getUserId()).trim();
+
+        if (userId.isEmpty()) {
             walletRequest.setUserId(user.getId());
         } else if(!user.getId().equals(userId)){
-            throw new InsufficientPermissionException("You do not have permission to update a wallet for another user.");
+            throw new InsufficientPermissionException();
         }
 
-        var name = Strings.nullToEmpty(walletRequest.getDisplayName()).trim();
-        var password = Strings.nullToEmpty(walletRequest.getPassword()).trim();
-        var newPassword = Strings.nullToEmpty(walletRequest.getNewPassword()).trim();
+        final var name = nullToEmpty(walletRequest.getDisplayName()).trim();
+        final var password = nullToEmpty(walletRequest.getPassword()).trim();
+        final var displayName = nullToEmpty(walletRequest.getDisplayName());
+        final var newPassword = nullToEmpty(walletRequest.getNewPassword()).trim();
 
-        var bscWallet = getWalletDao().getWallet(walletId);
+        final var bscWallet = getWalletDao().getWallet(walletId);
+        final var web3jWallet = getBscw3jClient().updateWallet(bscWallet.getWallet(), name, password, newPassword);
 
-        try {
-            var wallet = getBscw3jClient().updateWallet(bscWallet.getWallet(), name, password, newPassword);
-            return getWalletDao().updateWallet(walletId, walletRequest, wallet);
-        } catch (CipherException  | JsonProcessingException e) {
-            throw new InternalException(e.getMessage());
-        }
+        bscWallet.setUser(user);
+        bscWallet.setWallet(web3jWallet);
+        bscWallet.setDisplayName(displayName);
+
+        return getWalletDao().updateWallet(bscWallet);
 
     }
 
     @Override
-    public BscWallet createWallet(CreateBscWalletRequest walletRequest) {
+    public BscWallet createWallet(final CreateBscWalletRequest createBscWalletRequest) {
 
         var user = getUser();
-        var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
+        var userId = nullToEmpty(createBscWalletRequest.getUserId()).trim();
 
-        if (userId.isEmpty()){
-            walletRequest.setUserId(user.getId());
-        } else if(!user.getId().equals(userId)){
-            throw new InsufficientPermissionException("You do not have permission to create a wallet for another user.");
+        if (userId.isEmpty()) {
+            createBscWalletRequest.setUserId(user.getId());
+        } else if(!user.getId().equals(userId)) {
+            throw new InsufficientPermissionException();
         }
 
-        var pw = Strings.nullToEmpty(walletRequest.getPassword()).trim();
+        final var pw = nullToEmpty(createBscWalletRequest.getPassword()).trim();
+        final var pk = nullToEmpty(createBscWalletRequest.getPrivateKey()).trim();
 
-        if (pw.isEmpty()) {
-            try {
-                var wallet = getBscw3jClient().createWallet(walletRequest.getDisplayName());
-                var bscWallet = new BscWallet();
+        final var wallet = pk.isEmpty() ?
+            getBscw3jClient().createWallet(createBscWalletRequest.getDisplayName(), pw) :
+            getBscw3jClient().createWallet(createBscWalletRequest.getDisplayName(), pw, pk);
 
-                bscWallet.setDisplayName(walletRequest.getDisplayName());
-                bscWallet.setWallet(wallet);
-                bscWallet.setUser(user);
+        var bscWallet = new BscWallet();
+        bscWallet.setDisplayName(createBscWalletRequest.getDisplayName());
+        bscWallet.setWallet(wallet);
+        bscWallet.setUser(user);
 
-                return bscWalletDao.createWallet(bscWallet);
-            } catch (JsonProcessingException ex) {
-                throw new InternalException(ex);
-            }
-        } else {
-            try {
-                var wallet = getBscw3jClient().createWallet(walletRequest.getDisplayName(), pw);
-                var bscWallet = new BscWallet();
-
-                bscWallet.setDisplayName(walletRequest.getDisplayName());
-                bscWallet.setWallet(wallet);
-                bscWallet.setUser(user);
-
-                return bscWalletDao.createWallet(bscWallet);
-            } catch (JsonProcessingException ex) {
-                throw new InternalException(ex);
-            }
-        }
+        return bscWalletDao.createWallet(bscWallet);
 
     }
 

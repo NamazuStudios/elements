@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.dao.mongo.converter;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
+import com.namazustudios.socialengine.rt.exception.InternalException;
 import org.dozer.CustomConverter;
 import org.dozer.MappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -11,6 +12,14 @@ import java.io.IOException;
 public class MongoBscWalletConverter implements CustomConverter {
 
     public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+
+    public static byte[] asBytes(final Web3jWallet wallet) {
+        try {
+            return OBJECT_MAPPER.writeValueAsBytes(wallet);
+        } catch (JsonProcessingException ex) {
+            throw new InternalException(ex);
+        }
+    }
 
     @Override
     public Object convert(final Object existingDestinationFieldValue, final Object sourceFieldValue,
@@ -30,7 +39,7 @@ public class MongoBscWalletConverter implements CustomConverter {
                 return null;
             }
         } else {
-            throw new MappingException("No conversion exists betweeen " + sourceClass + " and " + destinationClass);
+            throw new MappingException("No conversion exists between " + sourceClass + " and " + destinationClass);
         }
     }
 

@@ -1,12 +1,9 @@
 package com.namazustudios.socialengine.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.namazustudios.socialengine.exception.NotFoundException;
 import com.namazustudios.socialengine.exception.blockchain.BscWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
-import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
-import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
@@ -71,12 +68,10 @@ public interface BscWalletDao {
     /**
      * Updates the supplied {@link BscWallet}.
      *
-     * @param walletId the id of the wallet to update
-     * @param updatedWalletRequest the {@link UpdateBscWalletRequest} with the information to update
-     * @param updatedWallet the {@link Web3jWallet} with the updated information
      * @return the {@link BscWallet} as it was changed by the service.
+     * @param bscWallet
      */
-    BscWallet updateWallet(String walletId, UpdateBscWalletRequest updatedWalletRequest, Web3jWallet updatedWallet) throws JsonProcessingException;
+    BscWallet updateWallet(BscWallet bscWallet);
 
     /**
      * Creates a new Wallet.
@@ -84,7 +79,7 @@ public interface BscWalletDao {
      * @param wallet the {@link BscWallet} with the information to create
      * @return the {@link BscWallet} as it was created by the service.
      */
-    BscWallet createWallet(BscWallet wallet) throws JsonProcessingException;
+    BscWallet createWallet(BscWallet wallet);
 
     /**
      * Deletes the {@link BscWallet} with the supplied wallet ID.

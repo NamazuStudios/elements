@@ -1,14 +1,9 @@
 package com.namazustudios.socialengine.rest;
 
 import com.namazustudios.socialengine.model.ErrorResponse;
-import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
+import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
-import com.namazustudios.socialengine.model.savedata.CreateSaveDataDocumentRequest;
-import com.namazustudios.socialengine.model.savedata.SaveDataDocument;
-import com.namazustudios.socialengine.model.savedata.UpdateSaveDataDocumentRequest;
-import com.namazustudios.socialengine.rest.model.SaveDataDocumentPagination;
-import com.namazustudios.socialengine.rt.util.Hex;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Factory;
@@ -20,20 +15,18 @@ import javax.ws.rs.client.Client;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Stream;
 
 import static com.namazustudios.socialengine.Headers.SESSION_SECRET;
 import static com.namazustudios.socialengine.Headers.SOCIALENGINE_SESSION_SECRET;
-import static com.namazustudios.socialengine.exception.ErrorCode.*;
-import static com.namazustudios.socialengine.exception.ErrorCode.NOT_FOUND;
+import static com.namazustudios.socialengine.exception.ErrorCode.FORBIDDEN;
 import static com.namazustudios.socialengine.rest.TestUtils.TEST_API_ROOT;
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
 import static java.util.stream.IntStream.range;
 import static javax.ws.rs.core.MediaType.APPLICATION_JSON;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertNotEquals;
+import static org.testng.Assert.assertNotNull;
 import static org.testng.AssertJUnit.assertEquals;
 
 public class BscWalletApiTest {
@@ -87,6 +80,40 @@ public class BscWalletApiTest {
         request.setDisplayName(walletName);
 
         BscWallet bscWallet = client
+            .target(apiRoot + "/blockchain/bsc/wallet")
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .post(Entity.entity(request, APPLICATION_JSON))
+            .readEntity(BscWallet.class);
+
+        assertNotNull(bscWallet);
+        assertNotNull(bscWallet.getId());
+        assertEquals(bscWallet.getUser().getId(), superUserClientContext.getUser().getId());
+        assertEquals(bscWallet.getDisplayName(), walletName);
+
+        String req = "/blockchain/bsc/wallet/" + bscWallet.getId();
+
+        Response response = client
+            .target(apiRoot + req)
+            .request()
+            .header(authHeader, superUserClientContext.getSessionSecret())
+            .delete();
+
+        assertEquals(response.getStatus(), 204);
+
+    }
+
+    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    public void testCreateAndDeleteWalletWithPassphrase(final String authHeader) {
+
+        String walletName = "WalletTest-" + randomUUID().toString();
+
+        final var request = new CreateBscWalletRequest();
+        request.setUserId(superUserClientContext.getUser().getId());
+        request.setDisplayName(walletName);
+        request.setPassword("1234");
+
+        BscWallet bscWallet = client
                 .target(apiRoot + "/blockchain/bsc/wallet")
                 .request()
                 .header(authHeader, superUserClientContext.getSessionSecret())
@@ -107,6 +134,76 @@ public class BscWalletApiTest {
                 .delete();
 
         assertEquals(response.getStatus(), 204);
+
+    }
+
+    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    public void testImportWallet(final String authHeader) {
+
+        final var walletName = "WalletTest-" + randomUUID().toString();
+
+        final var request = new CreateBscWalletRequest();
+        request.setUserId(superUserClientContext.getUser().getId());
+        request.setDisplayName(walletName);
+        request.setPrivateKey("0xc9aa92ff79ca085f7cc421227fe9f418d76933aadf0f81b595acd4722d63c943");
+
+        final var bscWallet = client
+                .target(apiRoot + "/blockchain/bsc/wallet")
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON))
+                .readEntity(BscWallet.class);
+
+        assertNotNull(bscWallet);
+        assertNotNull(bscWallet.getId());
+        assertEquals(bscWallet.getUser().getId(), superUserClientContext.getUser().getId());
+        assertEquals(bscWallet.getDisplayName(), walletName);
+
+        String req = "/blockchain/bsc/wallet/" + bscWallet.getId();
+
+        final var response = client
+                .target(apiRoot + req)
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 204);
+
+    }
+
+    @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
+    public void testImportWalletWithPassphrase(final String authHeader) {
+
+        final var walletName = "WalletTest-" + randomUUID().toString();
+
+        final var request = new CreateBscWalletRequest();
+        request.setUserId(superUserClientContext.getUser().getId());
+        request.setDisplayName(walletName);
+        request.setPassword("1234");
+        request.setPrivateKey("0xc9aa92ff79ca085f7cc421227fe9f418d76933aadf0f81b595acd4722d63c943");
+
+        final var bscWallet = client
+                .target(apiRoot + "/blockchain/bsc/wallet")
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .post(Entity.entity(request, APPLICATION_JSON))
+                .readEntity(BscWallet.class);
+
+        assertNotNull(bscWallet);
+        assertNotNull(bscWallet.getId());
+        assertEquals(bscWallet.getUser().getId(), superUserClientContext.getUser().getId());
+        assertEquals(bscWallet.getDisplayName(), walletName);
+
+        String req = "/blockchain/bsc/wallet/" + bscWallet.getId();
+
+        final var response = client
+                .target(apiRoot + req)
+                .request()
+                .header(authHeader, superUserClientContext.getSessionSecret())
+                .delete();
+
+        assertEquals(response.getStatus(), 204);
+
     }
 
     @Test(dependsOnMethods = "createUser", dataProvider = "getAuthHeader")
@@ -231,7 +328,6 @@ public class BscWalletApiTest {
         final var request = new CreateBscWalletRequest();
         request.setUserId(other.getUser().getId());
         request.setDisplayName(walletName);
-
 
         final var response = client
                 .target(apiRoot + "/blockchain/bsc/wallet")

@@ -7,6 +7,7 @@ import com.namazustudios.socialengine.model.blockchain.bsc.CreateBscWalletReques
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
 import com.namazustudios.socialengine.service.blockchain.BscWalletService;
+import com.namazustudios.socialengine.util.ValidationHelper;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.Authorization;
@@ -29,6 +30,8 @@ public class BscWalletResource {
 
     private BscWalletService bscWalletService;
 
+    private ValidationHelper validationHelper;
+
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Gets Bsc wallets. Optionally filtered for a specific user",
@@ -48,9 +51,6 @@ public class BscWalletResource {
     @ApiOperation(value = "Gets a specific Bsc Wallet",
             notes = "Gets a specific Bsc Wallet by Id.")
     public BscWallet getWallet(@PathParam("walletNameOrId") String walletNameOrId) {
-
-        walletNameOrId = Strings.nullToEmpty(walletNameOrId).trim();
-
         return getWalletService().getWallet(walletNameOrId);
     }
 
@@ -59,6 +59,7 @@ public class BscWalletResource {
     @ApiOperation(value = "Creates a new Bsc Wallet",
             notes = "Creates a new Bsc Wallet, associated with the given user.")
     public BscWallet createWallet(final CreateBscWalletRequest request) {
+        getValidationHelper().validateModel(request);
         return getWalletService().createWallet(request);
     }
 
@@ -68,6 +69,7 @@ public class BscWalletResource {
     @ApiOperation(value = "Updates a Bsc Wallet",
             notes = "Updates a Bsc Wallet with the specified name or id.")
     public BscWallet updateWallet(@PathParam("walletId") String walletId, final UpdateBscWalletRequest request) {
+        getValidationHelper().validateModel(request);
         return getWalletService().updateWallet(walletId, request);
     }
 
@@ -88,4 +90,14 @@ public class BscWalletResource {
     public void setWalletService(BscWalletService bscWalletService) {
         this.bscWalletService = bscWalletService;
     }
+
+    public ValidationHelper getValidationHelper() {
+        return validationHelper;
+    }
+
+    @Inject
+    public void setValidationHelper(ValidationHelper validationHelper) {
+        this.validationHelper = validationHelper;
+    }
+
 }

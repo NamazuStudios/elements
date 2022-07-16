@@ -1,27 +1,23 @@
 package com.namazustudios.socialengine.dao.mongo.blockchain;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.namazustudios.elements.fts.ObjectIndex;
 import com.namazustudios.socialengine.dao.BscWalletDao;
 import com.namazustudios.socialengine.dao.mongo.MongoDBUtils;
 import com.namazustudios.socialengine.dao.mongo.MongoUserDao;
 import com.namazustudios.socialengine.dao.mongo.UpdateBuilder;
 import com.namazustudios.socialengine.dao.mongo.application.MongoApplicationDao;
-import com.namazustudios.socialengine.dao.mongo.model.MongoUser;
+import com.namazustudios.socialengine.dao.mongo.converter.MongoBscWalletConverter;
 import com.namazustudios.socialengine.dao.mongo.model.blockchain.MongoBscWallet;
 import com.namazustudios.socialengine.exception.blockchain.BscWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.ValidationGroups;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
-import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
-import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletRequest;
 import com.namazustudios.socialengine.util.ValidationHelper;
 import dev.morphia.Datastore;
 import dev.morphia.ModifyOptions;
 import dev.morphia.query.FindOptions;
 import dev.morphia.query.experimental.filters.Filters;
 import org.dozer.Mapper;
-import com.namazustudios.socialengine.dao.mongo.converter.MongoBscWalletConverter;
 
 import javax.inject.Inject;
 
@@ -59,108 +55,102 @@ public class MongoBscWalletDao implements BscWalletDao {
             query.filter(eq("user", mongoUser));
         }
 
-        return getMongoDBUtils().paginationFromQuery(query, offset, count, input -> transform(input), new FindOptions());
-    }
-
-    @Override
-    public BscWallet getWallet(String walletNameOrId) {
-
-        final var objectId = getMongoDBUtils().parseOrReturnNull(walletNameOrId);
-
-        var mongoBscWallet = getDatastore().find(MongoBscWallet.class)
-                .filter(Filters.or(
-                                Filters.eq("_id", objectId),
-                                Filters.eq("displayName", walletNameOrId)
-                        )
-                ).first();
-
-        if (mongoBscWallet == null) {
-            throw new BscWalletNotFoundException("Wallet not found: " + walletNameOrId);
-        }
-
-        return transform(mongoBscWallet);
-    }
-
-    @Override
-    public BscWallet getWalletForUser(final String userId, final String walletName) {
-
-        final var query = getDatastore().find(MongoBscWallet.class);
-        final var user = getMongoUser(userId);
-
-        query.filter(and(
-            eq("user", user),
-            eq("displayName", walletName)
-        ));
-
-        final var mongoBscWallet = query.first();
-
-        if (mongoBscWallet == null) {
-            throw new BscWalletNotFoundException("Wallet not found: " + walletName);
-        }
-
-        return transform(mongoBscWallet);
+        return getMongoDBUtils().paginationFromQuery(query, offset, count, this::transform, new FindOptions());
 
     }
 
     @Override
-    public BscWallet updateWallet(String walletId, UpdateBscWalletRequest updatedWalletRequest, Web3jWallet updatedWallet) throws JsonProcessingException {
-        getValidationHelper().validateModel(updatedWalletRequest, ValidationGroups.Update.class);
+    public BscWallet getWallet(final String walletId) {
 
-        final var objectId = getMongoDBUtils().parseOrThrowNotFoundException(walletId);
-        final var query = getDatastore().find(MongoBscWallet.class);
-        final var displayName = nullToEmpty(updatedWalletRequest.getDisplayName()).trim();
-        final var newUserId = nullToEmpty(updatedWalletRequest.getNewUserId()).trim();
+        final var objectId = getMongoDBUtils().parseOrReturnNull(walletId);
 
-        final var builder = new UpdateBuilder();
-
-        query.filter(eq("_id", objectId));
-
-        if (!displayName.isEmpty()) {
-            builder.with(set("displayName", displayName));
-        }
-        if (!newUserId.isEmpty()){
-            final var newUser = getMongoUser(newUserId);
-            builder.with(set("user", newUser));
-        }
-
-        builder.with(set("wallet", MongoBscWalletConverter.OBJECT_MAPPER.writeValueAsBytes(updatedWallet)));
-
-        final MongoBscWallet mongoBscWallet = getMongoDBUtils().perform(ds ->
-                builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
-        );
+        var mongoBscWallet = getDatastore()
+            .find(MongoBscWallet.class)
+            .filter(Filters.eq("_id", objectId))
+            .first();
 
         if (mongoBscWallet == null) {
             throw new BscWalletNotFoundException("Wallet not found: " + walletId);
         }
 
-        getObjectIndex().index(mongoBscWallet);
         return transform(mongoBscWallet);
+
     }
 
     @Override
-    public BscWallet createWallet(final BscWallet wallet) throws JsonProcessingException {
-
-        getValidationHelper().validateModel(wallet, ValidationGroups.Insert.class);
+    public BscWallet getWalletForUser(final String userId, final String walletId) {
 
         final var query = getDatastore().find(MongoBscWallet.class);
-        final var user = getMongoUser(wallet.getUser().getId());
+        final var user = getMongoUserDao().getActiveMongoUser(userId);
+        final var objectId = getMongoDBUtils().parseOrThrow(walletId, BscWalletNotFoundException::new);
 
         query.filter(and(
+            eq("_id", objectId),
             eq("user", user)
         ));
 
-        final var builder = new UpdateBuilder().with(
-            set("user", user),
-            set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
-            set("wallet", MongoBscWalletConverter.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
+        final var mongoBscWallet = query.first();
+
+        if (mongoBscWallet == null) {
+            throw new BscWalletNotFoundException("Wallet not found: " + walletId);
+        }
+
+        return transform(mongoBscWallet);
+
+    }
+
+    @Override
+    public BscWallet updateWallet(final BscWallet bscWallet) {
+
+        getValidationHelper().validateModel(bscWallet, ValidationGroups.Update.class);
+
+        final var objectId = getMongoDBUtils().parseOrThrow(
+            bscWallet.getId(),
+            BscWalletNotFoundException::new
         );
 
-        final var mongoWallet = getMongoDBUtils().perform(
-            ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+        final var displayName = nullToEmpty(bscWallet.getDisplayName()).trim();
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(bscWallet.getUser());
+
+        final var builder = new UpdateBuilder()
+            .with(set("user", mongoUser))
+            .with(set("displayName", displayName))
+            .with(set("wallet", MongoBscWalletConverter.asBytes(bscWallet.getWallet())));
+
+        final var query = getDatastore()
+                .find(MongoBscWallet.class)
+                .filter(eq("_id", objectId));
+
+        final MongoBscWallet mongoBscWallet = getMongoDBUtils().perform(ds ->
+            builder.execute(query, new ModifyOptions().upsert(false).returnDocument(AFTER))
         );
 
-        getObjectIndex().index(mongoWallet);
-        return transform(mongoWallet);
+        if (mongoBscWallet == null) {
+            throw new BscWalletNotFoundException("Wallet not found: " + objectId);
+        }
+
+        getObjectIndex().index(mongoBscWallet);
+        return transform(mongoBscWallet);
+
+    }
+
+    @Override
+    public BscWallet createWallet(final BscWallet wallet) {
+
+        getValidationHelper().validateModel(wallet, ValidationGroups.Insert.class);
+
+        final var mongoUser = getMongoUserDao().getActiveMongoUser(wallet.getUser().getId());
+
+        final var mongoBscWallet = new MongoBscWallet();
+        mongoBscWallet.setUser(mongoUser);
+        mongoBscWallet.setDisplayName(wallet.getDisplayName());
+        mongoBscWallet.setWallet(MongoBscWalletConverter.asBytes(wallet.getWallet()));
+
+        final var saved = getMongoDBUtils().perform(ds -> ds.save(mongoBscWallet));
+        getObjectIndex().index(saved);
+
+        return transform(saved);
+
     }
 
     @Override
@@ -175,6 +165,7 @@ public class MongoBscWalletDao implements BscWalletDao {
         if(result.getDeletedCount() == 0){
             throw new BscWalletNotFoundException("BscWallet not deleted: " + walletId);
         }
+
     }
 
 
@@ -185,12 +176,8 @@ public class MongoBscWalletDao implements BscWalletDao {
         }
 
         return getBeanMapper().map(input, BscWallet.class);
-    }
 
-    private MongoUser getMongoUser(final String userId) {
-        return getMongoUserDao().getActiveMongoUser(userId);
     }
-
 
     public MongoDBUtils getMongoDBUtils() {
         return mongoDBUtils;

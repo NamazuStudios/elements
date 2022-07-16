@@ -3,13 +3,14 @@ package com.namazustudios.socialengine.service.blockchain;
 import com.namazustudios.socialengine.Constants;
 import com.namazustudios.socialengine.exception.InvalidDataException;
 import com.namazustudios.socialengine.exception.crypto.CryptoException;
+import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
+import com.namazustudios.socialengine.rt.util.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.web3j.abi.datatypes.*;
 import org.web3j.abi.datatypes.primitive.Int;
 import org.web3j.abi.datatypes.primitive.Long;
-import org.web3j.crypto.CipherException;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.Keys;
 import org.web3j.protocol.Web3j;
@@ -18,13 +19,13 @@ import org.web3j.utils.Numeric;
 
 import javax.crypto.*;
 import javax.crypto.spec.DESedeKeySpec;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.PBEKeySpec;
+import javax.crypto.spec.SecretKeySpec;
 import javax.inject.Inject;
 import javax.inject.Named;
 import java.nio.charset.StandardCharsets;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
-import java.security.NoSuchProviderException;
+import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.KeySpec;
 import java.util.ArrayList;
@@ -38,20 +39,29 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
     private static final Logger logger = LoggerFactory.getLogger(StandardBscw3jClient.class);
 
-    public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
+    private static final int IV_LENGTH = 16;
+
+    private static final int SALT_LENGTH = 64;
+
+    private static final int AES_KEY_LENGTH = 256;
+
+    private static final int AES_ITERATIONS = 65535;
+
+    private static final String AES = "AES";
+
+    private static final String AES_ALGORITHM = "AES/CBC/PKCS5Padding";
+
+    private static final String SECRET_KEY_ALGORITHM = "PBKDF2WithHmacSHA256";
 
     private static final String DEFAULT_PASSPHRASE = "com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet";
+
+    private static final SecureRandom secureRandom = new SecureRandom();
 
     private HttpService httpService;
 
     @Override
     public Web3j getWeb3j() {
         return Web3j.build(httpService);
-    }
-
-    @Override
-    public Web3jWallet createWallet(final String name) {
-        return createWallet(name, DEFAULT_PASSPHRASE);
     }
 
     @Override
@@ -64,8 +74,13 @@ public class StandardBscw3jClient implements Bscw3jClient {
     @Override
     public Web3jWallet createWallet(final String name, final String passphrase, final String privateKey) {
 
+        final var iv = new byte[IV_LENGTH];
+        final var salt = new byte[SALT_LENGTH];
+        secureRandom.nextBytes(iv);
+        secureRandom.nextBytes(salt);
+
         final var credentials = Credentials.create(privateKey);
-        final var encryptedCredentials = encrypt(credentials);
+        final var encryptedCredentials = encrypt(iv, salt, passphrase, credentials);
 
         final var wallet = new Web3jWallet();
         wallet.setName(name);
@@ -78,6 +93,8 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
         wallet.setAccounts(accounts);
         wallet.setAddresses(addresses);
+        wallet.setIv(Hex.encode(iv));
+        wallet.setSalt(Hex.encode(salt));
 
         return wallet;
 
@@ -87,7 +104,7 @@ public class StandardBscw3jClient implements Bscw3jClient {
     public Web3jWallet updateWallet(final Web3jWallet wallet,
                                     final String name,
                                     final String passphrase,
-                                    final String newPassphrase) throws CipherException {
+                                    final String newPassphrase)  {
 
         final var updatedWallet = new Web3jWallet();
         updatedWallet.setName(name);
@@ -98,18 +115,23 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
             final List<String> decrypted;
 
+            final var iv = new byte[IV_LENGTH];
+            final var salt = new byte[SALT_LENGTH];
+            secureRandom.nextBytes(iv);
+            secureRandom.nextBytes(salt);
+
             try {
                 decrypted = wallet.getAccounts()
                     .stream()
-                    .map(e -> decrypt(e, passphrase))
+                    .map(e -> decrypt(wallet, e, passphrase))
                     .collect(toList());
             } catch (CryptoException ex) {
-                throw new InvalidDataException("Unable to decrypt one or more accounts.");
+                throw new InvalidDataException("Unable to decrypt one or more accounts.", ex);
             }
 
             final var accounts = decrypted
                 .stream()
-                .map(d -> encrypt(d, newPassphrase))
+                .map(d -> encrypt(iv, salt, passphrase, d))
                 .collect(toList());
 
             final var addresses = decrypted
@@ -118,6 +140,8 @@ public class StandardBscw3jClient implements Bscw3jClient {
                 .map(Credentials::getAddress)
                 .collect(toList());
 
+            updatedWallet.setIv(Hex.encode(iv));
+            updatedWallet.setSalt(Hex.encode(salt));
             updatedWallet.setAccounts(accounts);
             updatedWallet.setAddresses(addresses);
 
@@ -132,9 +156,14 @@ public class StandardBscw3jClient implements Bscw3jClient {
     private Web3jWallet generateKeyPair(final Web3jWallet wallet, final String passphrase) {
         try{
 
+            final var iv = new byte[IV_LENGTH];
+            final var salt = new byte[SALT_LENGTH];
+            secureRandom.nextBytes(iv);
+            secureRandom.nextBytes(salt);
+
             final var ecKeyPair = Keys.createEcKeyPair();
             final var credentials = Credentials.create(ecKeyPair);
-            final var encryptedCredentials = encrypt(credentials, passphrase);
+            final var encryptedCredentials = encrypt(iv, salt, passphrase, credentials);
 
             final var accounts = new ArrayList<String>();
             accounts.add(encryptedCredentials);
@@ -142,6 +171,8 @@ public class StandardBscw3jClient implements Bscw3jClient {
             final var addresses = new ArrayList<String>();
             addresses.add(credentials.getAddress());
 
+            wallet.setIv(Hex.encode(iv));
+            wallet.setSalt(Hex.encode(salt));
             wallet.setAccounts(accounts);
             wallet.setAddresses(addresses);
 
@@ -194,72 +225,83 @@ public class StandardBscw3jClient implements Bscw3jClient {
         httpService = new HttpService(bscHost);
     }
 
-    @Override
-    public String encrypt(final Credentials credentials) {
-        final var credentialsString = credentials.getEcKeyPair().getPrivateKey().toString(16);
-        return encrypt(credentialsString, DEFAULT_PASSPHRASE);
-    }
-
-    @Override
-    public String encrypt(final Credentials credentials, final String passphrase) {
-        final var credentialsString = credentials.getEcKeyPair().getPrivateKey().toString(16);
-        return encrypt(credentialsString, passphrase);
-    }
-
-    @Override
-    public String encrypt(final String unencryptedString, final String passphrase) {
+    public String encrypt(final byte[] iv, final byte[] salt, final String passphrase, final String unencryptedString) {
         try {
-            final var passphraseBytes = passphraseOrDefault(passphrase);
-            KeySpec ks = new DESedeKeySpec(passphraseBytes);
-            SecretKeyFactory skf = SecretKeyFactory.getInstance(DESEDE_ENCRYPTION_SCHEME);
-            Cipher cipher  = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME);
-            SecretKey key = skf.generateSecret(ks);
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-            byte[] plainText = unencryptedString.getBytes(StandardCharsets.UTF_8);
-            byte[] encryptedText = cipher.doFinal(plainText);
-            return Base64.getEncoder().encodeToString(encryptedText);
+
+            final var chars = passphraseOrDefault(passphrase);
+            final var keySpec = new PBEKeySpec(chars, salt, AES_ITERATIONS, AES_KEY_LENGTH);
+
+            final var factory = SecretKeyFactory.getInstance(SECRET_KEY_ALGORITHM);
+            final var secret = factory.generateSecret(keySpec);
+            final var secretKeySpec = new SecretKeySpec(secret.getEncoded(), AES);
+            final var ivParameterSpec = new IvParameterSpec(iv);
+
+            final var cipher = Cipher.getInstance(AES_ALGORITHM);
+            cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+            final var unencryptedBytes = unencryptedString.getBytes(StandardCharsets.UTF_8);
+            final var encrypted = cipher.doFinal(unencryptedBytes);
+
+            return Hex.encode(encrypted);
+
         } catch (
-                InvalidKeySpecException |
                 NoSuchAlgorithmException |
-                IllegalBlockSizeException |
-                BadPaddingException |
-                NoSuchPaddingException |
-                InvalidKeyException ex) {
-            throw new CryptoException(ex);
-        }
-    }
-
-    @Override
-    public String decrypt(final String encryptedString) {
-        return decrypt(encryptedString, DEFAULT_PASSPHRASE);
-    }
-
-    @Override
-    public String decrypt(final String encryptedString, final String passphrase) {
-        try {
-            final var passphraseBytes = passphraseOrDefault(passphrase);
-            KeySpec ks = new DESedeKeySpec(passphraseBytes);
-            SecretKeyFactory skf = SecretKeyFactory.getInstance(DESEDE_ENCRYPTION_SCHEME);
-            Cipher cipher  = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME);
-            SecretKey key = skf.generateSecret(ks);
-            cipher.init(Cipher.DECRYPT_MODE, key);
-            byte[] encryptedText = Base64.getDecoder().decode(encryptedString);
-            byte[] plainText = cipher.doFinal(encryptedText);
-            return new String(plainText);
-        } catch (
                 InvalidKeySpecException |
-                        NoSuchAlgorithmException |
-                        IllegalBlockSizeException |
-                        BadPaddingException |
-                        NoSuchPaddingException |
-                        InvalidKeyException ex) {
+                NoSuchPaddingException |
+                InvalidKeyException |
+                InvalidAlgorithmParameterException |
+                IllegalBlockSizeException |
+                BadPaddingException ex) {
             throw new CryptoException(ex);
         }
     }
 
-    private static byte[] passphraseOrDefault(final String passphrase) {
+    @Override
+    public String decrypt(final Web3jWallet wallet, final String encryptedString) {
+        return decrypt(wallet, encryptedString, DEFAULT_PASSPHRASE);
+    }
+
+    @Override
+    public String decrypt(final Web3jWallet wallet, final String encryptedString, final String passphrase) {
+        final var iv = Hex.decode(wallet.getIv());
+        final var salt = Hex.decode(wallet.getSalt());
+        return decrypt(iv, salt, encryptedString, passphrase);
+    }
+
+    @Override
+    public String decrypt(byte[] iv, byte[] salt, final String encryptedString, final String passphrase) {
+        try {
+
+            final var chars = passphraseOrDefault(passphrase);
+            final var keySpec = new PBEKeySpec(chars, salt, AES_ITERATIONS, AES_KEY_LENGTH);
+
+            final var factory = SecretKeyFactory.getInstance(SECRET_KEY_ALGORITHM);
+            final var secret = factory.generateSecret(keySpec);
+            final var secretKeySpec = new SecretKeySpec(secret.getEncoded(), AES);
+            final var ivParameterSpec = new IvParameterSpec(iv);
+
+            final var cipher = Cipher.getInstance(AES_ALGORITHM);
+            cipher.init(Cipher.DECRYPT_MODE, secretKeySpec, ivParameterSpec);
+
+            final var encryptedBytes = encryptedString.getBytes(StandardCharsets.UTF_8);
+            final var decryptedBytes = cipher.doFinal(encryptedBytes);
+            return Hex.encode(decryptedBytes);
+
+        } catch (
+                NoSuchAlgorithmException |
+                InvalidKeySpecException |
+                InvalidKeyException |
+                InvalidAlgorithmParameterException |
+                NoSuchPaddingException |
+                IllegalBlockSizeException |
+                BadPaddingException ex) {
+            throw new CryptoException(ex);
+        }
+    }
+
+    private static char[] passphraseOrDefault(final String passphrase) {
         final var trimmed = passphrase == null ? "" : passphrase;
-        return (trimmed.isBlank() ? DEFAULT_PASSPHRASE : trimmed).getBytes(StandardCharsets.UTF_8);
+        return (trimmed.isBlank() ? DEFAULT_PASSPHRASE : trimmed).toCharArray();
     }
 
 }
