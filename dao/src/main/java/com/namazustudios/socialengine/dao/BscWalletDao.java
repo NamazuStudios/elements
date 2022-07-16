@@ -1,6 +1,8 @@
 package com.namazustudios.socialengine.dao;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.namazustudios.socialengine.exception.NotFoundException;
+import com.namazustudios.socialengine.exception.blockchain.BscWalletNotFoundException;
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.bsc.BscWallet;
 import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
@@ -8,6 +10,8 @@ import com.namazustudios.socialengine.model.blockchain.bsc.UpdateBscWalletReques
 import com.namazustudios.socialengine.rt.annotation.DeprecationDefinition;
 import com.namazustudios.socialengine.rt.annotation.Expose;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
+
+import java.util.Optional;
 
 /**
  * Created by garrettmcspadden on 11/12/21.
@@ -41,13 +45,28 @@ public interface BscWalletDao {
     BscWallet getWallet(String walletNameOrId);
 
     /**
-     * Tries to fetch a users specific {@link BscWallet} instance based on name. Returns null if specified named wallet is not found.
+     * Tries to fetch a users specific {@link BscWallet} instance based on name.
      *
      * @param userId the user ID to check for the wallet
      * @param walletName the wallet name
-     * @return the {@link BscWallet}
+     * @return the {@link BscWallet}, never null
      */
     BscWallet getWalletForUser(String userId, String walletName);
+
+    /**
+     * Tries to fetch a users specific {@link BscWallet} instance based on name. Returns an empty optional if not found.
+     *
+     * @param userId the user ID to check for the wallet
+     * @param walletName the wallet name
+     * @return the {@link BscWallet}, never null
+     */
+    default Optional<BscWallet> findWalletForUser(final String userId, final String walletName) {
+        try {
+            return Optional.of(getWalletForUser(userId, walletName));
+        } catch (BscWalletNotFoundException ex) {
+            return Optional.empty();
+        }
+    }
 
     /**
      * Updates the supplied {@link BscWallet}.

@@ -50,6 +50,7 @@ public class SuperUserBscWalletService implements BscWalletService {
 
     @Override
     public BscWallet updateWallet(final String walletId, final UpdateBscWalletRequest walletRequest) {
+
         final var user = getUser();
         final var userId = Strings.nullToEmpty(walletRequest.getUserId()).trim();
 
@@ -80,19 +81,13 @@ public class SuperUserBscWalletService implements BscWalletService {
             walletRequest.setUserId(user.getId());
         }
 
-        final var existing = getWalletDao().getWalletForUser(walletRequest.getUserId(), walletRequest.getDisplayName());
-
-        if (existing != null) {
-            throw new DuplicateException(String.format("Wallet with name: %s already exists.", walletRequest.getDisplayName()));
-        }
-
         final var pw = Strings.nullToEmpty(walletRequest.getPassword()).trim();
         final var wif = Strings.nullToEmpty(walletRequest.getPrivateKey()).trim();
 
         try {
             final var wallet = wif.isEmpty() ?
-                    getBscw3jClient().createWallet(walletRequest.getDisplayName(), pw) :
-                    getBscw3jClient().createWallet(walletRequest.getDisplayName(), pw, wif);
+                getBscw3jClient().createWallet(walletRequest.getDisplayName(), pw) :
+                getBscw3jClient().createWallet(walletRequest.getDisplayName(), pw, wif);
 
             final var BscWallet = new BscWallet();
 
@@ -101,7 +96,7 @@ public class SuperUserBscWalletService implements BscWalletService {
             BscWallet.setUser(getUserService().getUser(walletRequest.getUserId()));
 
             return getWalletDao().createWallet(BscWallet);
-        } catch (final CipherException | JsonProcessingException e) {
+        } catch (final JsonProcessingException e) {
             throw new InternalException(e.getMessage());
         }
     }

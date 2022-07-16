@@ -8,24 +8,23 @@ import com.namazustudios.socialengine.dao.BscTokenDao;
 import com.namazustudios.socialengine.dao.BscWalletDao;
 import com.namazustudios.socialengine.exception.blockchain.ContractInvocationException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.*;
+import com.namazustudios.socialengine.model.blockchain.EVMInvokeContractRequest;
+import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
+import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
+import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
 import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
-import io.reactivex.disposables.Disposable;
-import org.web3j.abi.EventEncoder;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.*;
-import org.web3j.abi.datatypes.generated.Uint256;
+import org.web3j.abi.datatypes.Function;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
-import org.web3j.protocol.core.DefaultBlockParameter;
 import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.request.EthFilter;
 import org.web3j.protocol.core.methods.request.Transaction;
 import org.web3j.tx.TransactionManager;
 import org.web3j.tx.response.PollingTransactionReceiptProcessor;
@@ -34,15 +33,14 @@ import org.web3j.utils.Numeric;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
-import java.math.BigInteger;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.namazustudios.socialengine.BlockchainConstants.MintStatus.*;
+import static com.namazustudios.socialengine.BlockchainConstants.MintStatus.MINTED;
+import static com.namazustudios.socialengine.BlockchainConstants.MintStatus.MINT_PENDING;
 import static java.lang.String.format;
-import static javax.ws.rs.client.Entity.entity;
-import static org.web3j.abi.TypeReference.makeTypeReference;
 
 public class SuperUserBscSmartContractService implements BscSmartContractService {
 
@@ -88,10 +86,6 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
         final var bscToken = getBscTokenDao().getToken(tokenId);
 
         final var clone = getBscTokenDao().cloneBscToken(bscToken);
-        final var ownerAddress = mintTokenRequest.getOwnerAddress() != null ?
-                mintTokenRequest.getOwnerAddress() : clone.getToken().getOwner();
-
-
         final var tokenMap = getObjectMapper().convertValue(clone.getToken(), Map.class);
 
         getBscTokenDao().setMintStatusForToken(clone.getId(), MINT_PENDING);
@@ -155,7 +149,7 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
             final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
             final var wallet = getBscWalletDao().getWallet(walletId);
             final var mintAccount = wallet.getWallet().getAccounts().get(0);
-            final var decryptedAccount = Web3jWallet.decrypt(mintAccount);
+            final var decryptedAccount = getBscw3JClient().decrypt(mintAccount);
             final var credentials = Credentials.create(decryptedAccount);
             final var contractAddress = contractMetadata.getScriptHash();
 
@@ -238,7 +232,7 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
             final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
             final var wallet = getBscWalletDao().getWallet(walletId);
             final var mintAccount = wallet.getWallet().getAccounts().get(0);
-            final var decryptedAccount = Web3jWallet.decrypt(mintAccount);
+            final var decryptedAccount = getBscw3JClient().decrypt(mintAccount);
             final var credentials = Credentials.create(decryptedAccount);
             final var contractAddress = contractMetadata.getScriptHash();
 
@@ -246,15 +240,15 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
             try {
 
                 final var solidityOutputTypes =
-                        invokeRequest.getOutputTypes().stream()
-                                .map(o -> {
-                                    try {
-                                        return (TypeReference<Type>)TypeReference.makeTypeReference(o);
-                                    } catch (ClassNotFoundException e) {
-                                        throw new ContractInvocationException(e.getMessage());
-                                    }
-                                })
-                                .collect(Collectors.toUnmodifiableList());
+                    invokeRequest.getOutputTypes().stream()
+                        .map(o -> {
+                            try {
+                                return (TypeReference<Type>)TypeReference.makeTypeReference(o);
+                            } catch (ClassNotFoundException e) {
+                                throw new ContractInvocationException(e.getMessage());
+                            }
+                        })
+                        .collect(Collectors.toUnmodifiableList());
 
                 final var function =
                         FunctionEncoder.makeFunction(invokeRequest.getMethodName(),
@@ -269,12 +263,14 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
                 applicationLogConsumer.accept(response);
 
             } catch (Exception e) {
+
                 final var msg = format(
-                        "Bsc Call Failed: %s",
-                        e.getMessage()
+                    "Bsc Call Failed: %s",
+                    e.getMessage()
                 );
 
                 throw new ContractInvocationException(msg);
+
             }
 
             return null;

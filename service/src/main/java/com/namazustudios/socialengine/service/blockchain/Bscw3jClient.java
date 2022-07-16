@@ -33,34 +33,12 @@ public interface Bscw3jClient {
     Web3j getWeb3j();
 
     /**
-     * Gets the {@link Web3jService} instance for making raw requests.
-     * @return the {@link Web3jService}, never null
-     */
-    Web3jService getWeb3jService();
-
-    /**
-     * Gets the {@link Credentials} instance.
-     *
-     * @param wif the wallet id
-     * @return the {@link Credentials}, never null
-     */
-    Credentials getAccount(String privateKey);
-
-    /**
-     * Gets the {@link Web3jWallet} instance.
-     *
-     * @param account the account of the wallet
-     * @return the {@link Web3jWallet}, never null
-     */
-    Web3jWallet getWallet(BigInteger accountSecretKey);
-
-    /**
      * Creates a {@link Web3jWallet}.
      *
      * @param name the name for the wallet
      * @return the {@link Web3jWallet}
      */
-    Web3jWallet createWallet(String name) throws CipherException;
+    Web3jWallet createWallet(String name);
 
     /**
      * Creates an encrypted {@link Web3jWallet}.
@@ -69,7 +47,7 @@ public interface Bscw3jClient {
      * @param password the password for the wallet
      * @return the {@link Web3jWallet}
      */
-    Web3jWallet createWallet(String name, String password) throws CipherException;
+    Web3jWallet createWallet(String name, String password);
 
     /**
      * Creates an encrypted {@link Web3jWallet}.
@@ -79,7 +57,7 @@ public interface Bscw3jClient {
      * @param privateKey the key for the account to be imported into this wallet
      * @return the {@link Web3jWallet}
      */
-    Web3jWallet createWallet(String name, String password, String privateKey) throws CipherException;
+    Web3jWallet createWallet(String name, String password, String privateKey);
 
     /**
      * Creates an encrypted {@link Web3jWallet}.
@@ -98,6 +76,18 @@ public interface Bscw3jClient {
      * @param object the Java {@link Object}.
      * @return the {@link org.web3j.abi.datatypes.Type}, never null
      */
-    org.web3j.abi.datatypes.Type convertObject(final Object object);
+    org.web3j.abi.datatypes.Type<?> convertObject(final Object object);
+
+    String encrypt(Credentials credentials);
+
+    String encrypt(Credentials credentials, String passphrase);
+
+    String encrypt(String unencryptedString, String passphrase);
+
+    String decrypt(String encryptedString);
+
+    String decrypt(String encryptedString, String passphrase);
+
+
 }
 

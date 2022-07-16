@@ -47,8 +47,6 @@ public class MongoBscWalletDao implements BscWalletDao {
 
     private MongoApplicationDao mongoApplicationDao;
 
-
-
     @Override
     public Pagination<BscWallet> getWallets(final int offset,
                                             final int count,
@@ -84,18 +82,24 @@ public class MongoBscWalletDao implements BscWalletDao {
     }
 
     @Override
-    public BscWallet getWalletForUser(String userId, String walletName){
+    public BscWallet getWalletForUser(final String userId, final String walletName) {
 
         final var query = getDatastore().find(MongoBscWallet.class);
         final var user = getMongoUser(userId);
 
         query.filter(and(
-                eq("user", user),
-                eq("displayName", walletName)
+            eq("user", user),
+            eq("displayName", walletName)
         ));
 
         final var mongoBscWallet = query.first();
-        return mongoBscWallet == null ? null : transform(mongoBscWallet);
+
+        if (mongoBscWallet == null) {
+            throw new BscWalletNotFoundException("Wallet not found: " + walletName);
+        }
+
+        return transform(mongoBscWallet);
+
     }
 
     @Override
@@ -134,7 +138,7 @@ public class MongoBscWalletDao implements BscWalletDao {
     }
 
     @Override
-    public BscWallet createWallet(BscWallet wallet) throws JsonProcessingException {
+    public BscWallet createWallet(final BscWallet wallet) throws JsonProcessingException {
 
         getValidationHelper().validateModel(wallet, ValidationGroups.Insert.class);
 
@@ -142,18 +146,17 @@ public class MongoBscWalletDao implements BscWalletDao {
         final var user = getMongoUser(wallet.getUser().getId());
 
         query.filter(and(
-                eq("user", user),
-                eq("displayName", nullToEmpty(wallet.getDisplayName()).trim())
+            eq("user", user)
         ));
 
         final var builder = new UpdateBuilder().with(
-                set("user", user),
-                set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
-                set("wallet", MongoBscWalletConverter.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
+            set("user", user),
+            set("displayName", nullToEmpty(wallet.getDisplayName()).trim()),
+            set("wallet", MongoBscWalletConverter.OBJECT_MAPPER.writeValueAsBytes(wallet.getWallet()))
         );
 
         final var mongoWallet = getMongoDBUtils().perform(
-                ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
+            ds -> builder.execute(query, new ModifyOptions().upsert(true).returnDocument(AFTER))
         );
 
         getObjectIndex().index(mongoWallet);

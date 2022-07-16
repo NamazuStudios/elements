@@ -255,12 +255,13 @@ public class BscWalletApiTest {
         request.setUserId(context.getUser().getId());
         request.setDisplayName(walletName);
 
-        BscWallet bscWallet = client
+        var bscWalletResponse = client
                 .target(apiRoot + "/blockchain/bsc/wallet")
                 .request()
                 .header("Authorization", format("Bearer %s", context.getSessionSecret()))
-                .post(Entity.entity(request, APPLICATION_JSON))
-                .readEntity(BscWallet.class);
+                .post(Entity.entity(request, APPLICATION_JSON));
+
+        var bscWallet = bscWalletResponse.readEntity(BscWallet.class);
 
         assertNotNull(bscWallet);
         assertNotNull(bscWallet.getId());
