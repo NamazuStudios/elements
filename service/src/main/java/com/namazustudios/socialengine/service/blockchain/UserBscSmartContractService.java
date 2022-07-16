@@ -73,7 +73,7 @@ public class UserBscSmartContractService implements BscSmartContractService {
                                       final Consumer<MintBscTokenResponse> tokenResponseConsumer,
                                       final Consumer<Throwable> exceptionConsumer) {
 
-        throw new ForbiddenException("Must be SUPERUSER");
+        throw new ForbiddenException();
     }
 
     @Override
@@ -81,7 +81,7 @@ public class UserBscSmartContractService implements BscSmartContractService {
                                  final Consumer<String> applicationLogConsumer,
                                  final Consumer<Throwable> exceptionConsumer) {
 
-        throw new ForbiddenException("Must be SUPERUSER");
+        throw new ForbiddenException();
     }
 
     @Override
