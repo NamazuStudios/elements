@@ -119,7 +119,7 @@ public class StandardBscw3jClient implements Bscw3jClient {
             try {
                 decrypted = wallet.getAccounts()
                     .stream()
-                    .map(e -> decrypt(wallet, passphrase, e))
+                    .map(e -> decrypt(wallet, e, passphrase))
                     .collect(toList());
             } catch (CryptoException ex) {
                 throw new InvalidDataException("Unable to decrypt one or more accounts.", ex);
