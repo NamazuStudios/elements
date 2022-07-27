@@ -350,21 +350,4 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
         this.topicService = topicService;
     }
 
-    public Client getClient() {
-        return client;
-    }
-
-    @Inject
-    public void setClient(Client client) {
-        this.client = client;
-    }
-
-    @Inject
-    private void setBscHost(@Named(Constants.BSC_RPC_PROVIDER)String bscHost) {
-        this.bscHost = bscHost;
-    }
-
-    private String getBSCHost() {
-        return this.bscHost;
-    }
 }

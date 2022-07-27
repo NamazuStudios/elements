@@ -55,10 +55,7 @@ public class StandardBscw3jClient implements Bscw3jClient {
 
     private HttpService httpService;
 
-    @Override
-    public Web3j getWeb3j() {
-        return Web3j.build(httpService);
-    }
+    private Web3j web3j;
 
     @Override
     public Web3jWallet createWallet(final String name, final String passphrase) {
@@ -216,11 +213,6 @@ public class StandardBscw3jClient implements Bscw3jClient {
         return new DynamicArray(l);
     }
 
-    @Inject
-    private void setHttpService(@Named(Constants.BSC_RPC_PROVIDER)String bscHost) {
-        httpService = new HttpService(bscHost);
-    }
-
     public String encrypt(final byte[] iv, final byte[] salt, final String unencrypted, final String passphrase) {
         try {
             final var cipher = getCipher(iv, salt, passphrase, Cipher.ENCRYPT_MODE);
@@ -274,4 +266,14 @@ public class StandardBscw3jClient implements Bscw3jClient {
         }
     }
 
+    @Override
+    public Web3j getWeb3j() {
+        return web3j;
+    }
+
+    @Inject
+    private void setHttpService(@Named(Constants.BSC_RPC_PROVIDER)String bscHost) {
+        httpService = new HttpService(bscHost);
+        web3j = Web3j.build(httpService);
+    }
 }
