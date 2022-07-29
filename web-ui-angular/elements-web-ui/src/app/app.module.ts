@@ -81,6 +81,17 @@ import { PercentageDirective } from './neo-token-dialog/percentage-directive.dir
 import { BlockchainDropdownComponent } from './blockchain-dropdown/blockchain-dropdown.component';
 import { TokenViewerDialogComponent } from './token-viewer-dialog/token-viewer-dialog.component';
 import { TokenViewLightboxDialogComponent } from './token-view-lightbox-dialog/token-view-lightbox-dialog.component';
+import { NeoSmartTokenSpecsDialogComponent } from './neo-smart-token-specs-dialog/neo-smart-token-specs-dialog.component';
+import { NeoSmartTokenSpecsDialogFieldTypeComponent } from './neo-smart-token-specs-dialog/neo-smart-token-specs-dialog-field-type/neo-smart-token-specs-dialog-field-type.component';
+import { NeoTokenDialogUpdatedComponent } from './neo-token-dialog-updated/neo-token-dialog-updated.component';
+import { NeoTokenDialogDefineObjectComponent } from './neo-token-dialog-define-object/neo-token-dialog-define-object.component';
+import { NeoSmartTokenSpecsMoveFieldDialogComponent } from './neo-smart-token-specs-move-field-dialog/neo-smart-token-specs-move-field-dialog.component';
+import { CustomizationMenuComponent } from './customization-menu/customization-menu.component';
+import { NeoTokenDialogUpdatedFieldComponent } from './neo-token-dialog-updated-field/neo-token-dialog-updated-field.component';
+import { NeoTokenDialogUpdatedDefineComponent } from './neo-token-dialog-updated-define/neo-token-dialog-updated-define.component';
+import { NeoSmartTokenSpecsDuplicateDialogComponent } from './neo-smart-token-specs-duplicate-dialog/neo-smart-token-specs-duplicate-dialog.component';
+import { TokenDefinationDuplicateDialogComponent } from './token-defination-duplicate-dialog/token-defination-duplicate-dialog.component';
+import { NeoSmartTokenSpecsComponent } from './neo-smart-token-specs/neo-smart-token-specs/neo-smart-token-specs.component';
 
 export function initialize(configService: ConfigService) {
   return () => configService.load();
@@ -171,7 +182,18 @@ export function initialize(configService: ConfigService) {
     PercentageDirective,
     BlockchainDropdownComponent,
     TokenViewerDialogComponent,
-    TokenViewLightboxDialogComponent
+    TokenViewLightboxDialogComponent,
+    NeoSmartTokenSpecsDialogComponent,
+    NeoSmartTokenSpecsDialogFieldTypeComponent,
+    NeoTokenDialogUpdatedComponent,
+    NeoTokenDialogDefineObjectComponent,
+    NeoSmartTokenSpecsMoveFieldDialogComponent,
+    CustomizationMenuComponent,
+    NeoTokenDialogUpdatedFieldComponent,
+    NeoTokenDialogUpdatedDefineComponent,
+    NeoSmartTokenSpecsDuplicateDialogComponent,
+    TokenDefinationDuplicateDialogComponent,
+    NeoSmartTokenSpecsComponent
   ],
   imports: [
     BrowserModule,

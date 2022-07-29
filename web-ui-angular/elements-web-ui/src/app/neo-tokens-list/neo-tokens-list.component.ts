@@ -9,20 +9,17 @@ import { ConfirmationDialogService } from "../confirmation-dialog/confirmation-d
 
 import { UsersService } from "../api/services";
 import { User } from "../api/models";
-import { NeoToken } from "../api/models/blockchain/neo-token";
-import { NeoTokensDataSource } from "../neo-tokens.datasource";
 import { NeoTokensService } from "../api/services/blockchain/neo-tokens.service";
-import { NeoTokenViewModel } from "../models/blockchain/neo-token-view-model";
-import { CreateNeoTokenRequest } from "../api/models/blockchain/create-neo-token-request";
-import { UpdateNeoTokenRequest } from "../api/models/blockchain/update-neo-token-request";
-import {
-  NeoTokenDialogComponent, OptionType,
-} from "../neo-token-dialog/neo-token-dialog.component";
 import { TransferOptionsPipe } from "./transferOptions.pipe";
 import { MintTokenRequest } from "../api/models/blockchain/mint-token-request";
 import { NeoSmartContractsService } from "../api/services/blockchain/neo-smart-contracts.service";
 import { NeoSmartContractMintDialogComponent } from "../neo-smart-contract-mint-dialog/neo-smart-contract-mint-dialog.component";
 import { TokenViewerDialogComponent } from "../token-viewer-dialog/token-viewer-dialog.component";
+import { TokenDefinitionsDataSource } from '../token-definitions.datasource';
+import { TokenDefinitionService } from '../api/services/blockchain/token-definition.service';
+import { TokenDefinition } from '../api/models/blockchain/token-definition';
+import { TokenDefinationDuplicateDialogComponent } from '../token-defination-duplicate-dialog/token-defination-duplicate-dialog.component';
+import { NeoTokenDialogUpdatedComponent } from '../neo-token-dialog-updated/neo-token-dialog-updated.component';
 
 
 @Component({
@@ -34,37 +31,36 @@ import { TokenViewerDialogComponent } from "../token-viewer-dialog/token-viewer-
 export class NeoTokensListComponent implements OnInit, AfterViewInit {
   @Input() isMinted = false;
   hasSelection = false;
-  selection: SelectionModel<NeoToken>;
-  dataSource: NeoTokensDataSource;
+  selection: SelectionModel<TokenDefinition>;
+  dataSource: TokenDefinitionsDataSource;
+  tokenToCopy;
 
   displayedColumns: Array<string> = [
     "select",
+    "id",
     "name",
-    // "type",
-    "totalSupply",
-    // "spec",
+    "type",
+    "quantity",
+    "contract",
     "network",
-    "transferOptions",
-    "accessOption",
+    "public",
     "listed",
-    "revocable",
-    "renewable",
-    "mint-action",
-    "list-action",
-    "view-action",
+    "transferOptions",
+    // "list-action",
+    // "view-action",
     "edit-action",
     "copy-action",
     "remove-action",
   ];
-
-  currentTokens: NeoToken[];
+  currentTokens: TokenDefinition[];
   currentUser: User;
 
   @ViewChild(MatPaginator) paginator: MatPaginator;
   // @ViewChild('input') input: ElementRef;
-  @ViewChild(MatTable) table: MatTable<NeoToken>;
+  @ViewChild(MatTable) table: MatTable<TokenDefinition>;
 
   constructor(
+    private tokenDefinitionService: TokenDefinitionService,
     private neoTokensService: NeoTokensService,
     private neoSmartContractService: NeoSmartContractsService,
     private alertService: AlertService,
@@ -80,8 +76,8 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
       .subscribe(
         (user: User) => (this.currentUser = JSON.parse(JSON.stringify(user)))
       );
-    this.selection = new SelectionModel<NeoToken>(true, []);
-    this.dataSource = new NeoTokensDataSource(this.neoTokensService);
+    this.selection = new SelectionModel<TokenDefinition>(true, []);
+    this.dataSource = new TokenDefinitionsDataSource(this.tokenDefinitionService);
     // this.refresh(0);
 
     this.neoTokensService.network.subscribe(
@@ -111,11 +107,17 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
       (s) => (this.hasSelection = this.selection.hasValue())
     );
     this.dataSource.tokens$.subscribe(
-      (currentTokens) => (this.currentTokens = currentTokens)
+      (currentTokens) => {
+        this.currentTokens = currentTokens;
+      }
     );
     this.dataSource.totalCount$.subscribe(
       (totalCount) => (this.paginator.length = totalCount)
     );
+  }
+
+  addToken() {
+    this.showDialog(null);
   }
 
   // add support for searching here
@@ -125,11 +127,6 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
       this.dataSource.loadTokens(
         this.paginator.pageIndex * this.paginator.pageSize,
         this.paginator.pageSize,
-        //TODO: We'll need to switch these to YOURS | SUPERUSERS | USERS
-        null,
-        this.isMinted ? ['MINTED'] : ['NOT_MINTED', 'MINT_FAILED', 'MINT_PENDING'],
-        //this.input.nativeElement.value, // for searching...
-        "None"
       );
     }, delay);
   }
@@ -162,7 +159,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
   }
 
   doDeleteToken(token) {
-    this.neoTokensService.deleteToken(token.id).subscribe(
+    this.tokenDefinitionService.deleteTokenDefinition(token.id).subscribe(
       (r) => {},
       (error) => this.alertService.error(error)
     );
@@ -184,62 +181,43 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
       });
   }
 
-  showDialog(isNew: boolean, neoToken: NeoToken, next) {
-    this.dialog.open(NeoTokenDialogComponent, {
+  showDialog(token: TokenDefinition) {
+    this.dialog.open(NeoTokenDialogUpdatedComponent, {
       width: "850px",
       data: {
-        isNew: isNew,
-        neoToken,
-        next: next,
+        token,
         refresher: this,
       },
     });
   }
 
-  addToken() {
-    let neoTokenViewModel = new NeoTokenViewModel();
-
-    neoTokenViewModel.id = "";
-    neoTokenViewModel.token = {
-      owner: "",
-      name: "",
-      description: "",
-      tags: [],
-      totalSupply: 0,
-      accessOption: "private",
-      previewUrls: [],
-      assetUrls: [],
-      ownership: { stakeHolders: [], capitalization: 0 },
-      transferOptions: "none",
-      revocable: false,
-      expiry: 0,
-      renewable: false,
-      metadata: {},
-    };
-    neoTokenViewModel.contractId = "";
-    neoTokenViewModel.listed = false;
-    neoTokenViewModel.minted = false;
-
-    this.showDialog(
-      true,
-      neoTokenViewModel,
-      (createTokenRequest: CreateNeoTokenRequest) => {
-        return this.neoTokensService.createToken(createTokenRequest);
-      }
-    );
+  copyToken(token: TokenDefinition) {
+    this.tokenToCopy = token;
+    this.dialog.open(TokenDefinationDuplicateDialogComponent, {
+      width: "500px",
+      data: {
+        submit: this.submitCopyToken.bind(this),
+      },
+    });
   }
 
-  copyToken(token: NeoToken) {
-    this.showDialog(
-      true,
-      token,
-      (createTokenRequest: CreateNeoTokenRequest) => {
-        return this.neoTokensService.createToken(createTokenRequest);
-      }
-    );
+  submitCopyToken(name: string) {
+    const data = {
+      name,
+      displayName: name,
+      metadataSpecId: this.tokenToCopy.metadataSpec.id,
+      contractId: this.tokenToCopy.contract.id,
+      userId: this.tokenToCopy.user.id,
+      metadata: this.tokenToCopy.metadata,
+    }
+    this.tokenDefinitionService.createTokenDefinition(data)
+      .subscribe(() => {
+        this.refresh();
+      });
+    this.tokenToCopy = null;
   }
 
-  showMintDialog(neoToken: NeoToken, next) {
+  showMintDialog(neoToken: TokenDefinition, next) {
     this.dialog.open(NeoSmartContractMintDialogComponent, {
       width: "500px",
       data: {
@@ -250,7 +228,7 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
     });
   }
 
-  mintToken(token: NeoToken){
+  mintToken(token: TokenDefinition){
     this.showMintDialog(
       token,
       (mintTokenRequest: MintTokenRequest) => {
@@ -259,35 +237,26 @@ export class NeoTokensListComponent implements OnInit, AfterViewInit {
     );
   }
 
-  listToken(token: NeoToken, listed: boolean) {
-    this.neoTokensService
-      .updateToken({
-        id: token.id,
-        body: {
-          token: token.token,
-          listed,
-          contractId: token.contractId,
-        },
-      })
-      .subscribe(() => {
-        this.refresh();
-      });
+  // listToken(token: TokenDefinition, listed: boolean) {
+  //   this.neoTokensService
+  //     .updateToken({
+  //       id: token.id,
+  //       body: {
+  //         token: token.token,
+  //         listed,
+  //         contractId: token.contractId,
+  //       },
+  //     })
+  //     .subscribe(() => {
+  //       this.refresh();
+  //     });
+  // }
+
+  editToken(token: TokenDefinition) {
+    this.showDialog(token);
   }
 
-  editToken(token: NeoToken) {
-    this.showDialog(
-      false,
-      token,
-      (updateNeoTokenRequest: UpdateNeoTokenRequest) => {
-        return this.neoTokensService.updateToken({
-          id: token.id,
-          body: updateNeoTokenRequest,
-        });
-      }
-    );
-  }
-
-  viewToken(token: NeoToken) {
+  viewToken(token: TokenDefinition) {
     this.dialog.open(TokenViewerDialogComponent, {
       width: "600px",
       data: {
