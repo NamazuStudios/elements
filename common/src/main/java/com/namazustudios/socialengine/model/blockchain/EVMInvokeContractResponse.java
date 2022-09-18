@@ -56,6 +56,8 @@ public class EVMInvokeContractResponse {
     @ApiModelProperty("The removed status.")
     private String effectiveGasPrice;
 
+    private List<Object> decodedLog;
+
     public String getTransactionHash() {
         return transactionHash;
     }
@@ -195,5 +197,13 @@ public class EVMInvokeContractResponse {
     public void setEffectiveGasPrice(String effectiveGasPrice) {
         this.effectiveGasPrice = effectiveGasPrice;
     }
-    
+
+    public List<Object> getDecodedLog() {
+        return decodedLog;
+    }
+
+    public void setDecodedLog(List<Object> decodedLog) {
+        this.decodedLog = decodedLog;
+    }
+
 }

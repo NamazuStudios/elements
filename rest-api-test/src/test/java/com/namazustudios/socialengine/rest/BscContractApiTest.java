@@ -133,7 +133,7 @@ public class BscContractApiTest {
         request.setMethodName("createListing");
         request.setInputTypes(List.of("string", "string"));
         request.setParameters(List.of(name, desc));
-        request.setOutputTypes(List.of("uint256"));
+        request.setOutputTypes(List.of("string", "uint256"));
 
         final var response = client
                 .target(apiRoot + "/blockchain/bsc/contract/send")
@@ -150,23 +150,14 @@ public class BscContractApiTest {
         final var data = logs.get(0).getData();
         assertNotNull(data);
 
-        try {
-            final List<Type> decodedData =
-                    FunctionReturnDecoder.decode(data,
-                            List.of(TypeReference.makeTypeReference("string"),
-                                    TypeReference.makeTypeReference("uint256")));
+        final List<Object> decodedData = response.getDecodedLog();
+        final var responseName = decodedData.get(0).toString();
+        final var responseId = decodedData.get(1).toString();
 
-            final var responseName = decodedData.get(0).getValue().toString();
-            final var responseId = decodedData.get(1).getValue().toString();
+        assertEquals(decodedData.size(), 2);
+        assertEquals(name, responseName);
 
-            assertEquals(decodedData.size(), 2);
-            assertEquals(name, responseName);
-
-            listingId = responseId;
-
-        } catch (ClassNotFoundException e) {
-            assert false;
-        }
+        listingId = responseId;
     }
 
 

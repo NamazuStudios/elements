@@ -13,6 +13,8 @@ import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
 import org.web3j.abi.FunctionEncoder;
 import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Credentials;
 import org.web3j.crypto.RawTransaction;
 import org.web3j.crypto.TransactionEncoder;
@@ -193,6 +195,17 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
                 //Wait for the transaction block
                 final var txReceipt = receiptProcessor.waitForTransactionReceipt(transactionHash);
                 final var response = convertTransactionReceipt(txReceipt);
+
+                if(response.getLogs().size() > 0) {
+                    final var data = response.getLogs().get(0).getData();
+                    final var decodedData =
+                            FunctionReturnDecoder.decode(data, function.getOutputParameters())
+                                    .stream()
+                                    .map(t -> t.getValue())
+                                    .collect(Collectors.toList());
+
+                    response.setDecodedLog(decodedData);
+                }
 
                 applicationLogConsumer.accept(response);
 
