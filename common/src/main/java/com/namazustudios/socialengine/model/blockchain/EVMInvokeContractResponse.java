@@ -6,56 +6,59 @@ import java.util.List;
 
 public class EVMInvokeContractResponse {
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The transaction hash.")
     private String transactionHash;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The transaction index.")
     private long transactionIndex;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The block hash that contains the transaction.")
     private String blockHash;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The block number that contains the transaction.")
     private long blockNumber;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The cumulative gas used.")
     private long cumulativeGasUsed;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The gas used.")
     private long gasUsed;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The contract address.")
     private String contractAddress;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The root.")
     private String root;
 
     // status is only present on Byzantium transactions onwards
     // see EIP 658 https://github.com/ethereum/EIPs/pull/658
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The status. Only present on Byzantium transactions onwards.")
     private long status;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The address of the sender.")
     private String from;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The address of the recipient.")
     private String to;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The logs of any emitted events.")
     private List<EVMTransactionLog> logs;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The logs bloom.")
     private String logsBloom;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The revert reason, if any.")
     private String revertReason;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The type.")
     private String type;
 
-    @ApiModelProperty("The removed status.")
+    @ApiModelProperty("The effective gas price.")
     private String effectiveGasPrice;
 
+    @ApiModelProperty("The decoded log. Elements will attempt to decode the first log using the passed in " +
+            "output types. This is made available to get any sort of return value from an emitted event, " +
+            "as transactions that affect state or storage on a contract cannot directly return values.")
     private List<Object> decodedLog;
 
     public String getTransactionHash() {
