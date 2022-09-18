@@ -15,6 +15,8 @@ import javax.ws.rs.container.Suspended;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+import java.util.List;
+
 import static com.namazustudios.socialengine.rest.swagger.EnhancedApiListingResource.*;
 import static javax.ws.rs.core.Response.Status.NOT_FOUND;
 
@@ -78,7 +80,8 @@ public class BscSmartContractResource {
     @Path("send")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Sends a transaction to the specified method on the contract.",
-            notes = "Sends a transaction to the specified method using the specified contract id.")
+            notes = "Sends a transaction to the specified method using the specified contract id.",
+            response = EVMInvokeContractResponse.class)
     public void send(final EVMInvokeContractRequest request,
                        @Suspended
                        final AsyncResponse asyncResponse) {
@@ -95,7 +98,8 @@ public class BscSmartContractResource {
     @Path("call")
     @Produces(MediaType.APPLICATION_JSON)
     @ApiOperation(value = "Calls the specified method on the contract.",
-            notes = "Calls the specified method using the specified contract id.")
+            notes = "Calls the specified method using the specified contract id.",
+            response = List.class)
     public void call(final EVMInvokeContractRequest request,
                        @Suspended
                        final AsyncResponse asyncResponse) {

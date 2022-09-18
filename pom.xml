@@ -128,7 +128,7 @@
         <spotify.dns.version>3.2.2</spotify.dns.version>
         <annotations.version>2.11.3</annotations.version>
         <neow3j.version>3.14.0</neow3j.version>
-        <web3j.version>4.8.7</web3j.version>
+        <web3j.version>4.9.4</web3j.version>
     </properties>
     <dependencies>
         <dependency>

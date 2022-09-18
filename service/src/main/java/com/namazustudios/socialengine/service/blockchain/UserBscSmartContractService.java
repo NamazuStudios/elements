@@ -9,10 +9,7 @@ import com.namazustudios.socialengine.dao.BscWalletDao;
 import com.namazustudios.socialengine.exception.ForbiddenException;
 import com.namazustudios.socialengine.exception.blockchain.ContractInvocationException;
 import com.namazustudios.socialengine.model.Pagination;
-import com.namazustudios.socialengine.model.blockchain.EVMInvokeContractRequest;
-import com.namazustudios.socialengine.model.blockchain.ElementsSmartContract;
-import com.namazustudios.socialengine.model.blockchain.MintTokenRequest;
-import com.namazustudios.socialengine.model.blockchain.PatchSmartContractRequest;
+import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
@@ -28,6 +25,7 @@ import org.web3j.protocol.core.methods.request.Transaction;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.ws.rs.client.Client;
+import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -78,7 +76,7 @@ public class UserBscSmartContractService implements BscSmartContractService {
 
     @Override
     public PendingOperation send(final EVMInvokeContractRequest invokeRequest,
-                                 final Consumer<String> applicationLogConsumer,
+                                 final Consumer<EVMInvokeContractResponse> applicationLogConsumer,
                                  final Consumer<Throwable> exceptionConsumer) {
 
         throw new ForbiddenException();
@@ -86,14 +84,14 @@ public class UserBscSmartContractService implements BscSmartContractService {
 
     @Override
     public PendingOperation call(final EVMInvokeContractRequest invokeRequest,
-                                 final Consumer<String> applicationLogConsumer,
+                                 final Consumer<List<Object>> applicationLogConsumer,
                                  final Consumer<Throwable> exceptionConsumer) {
 
         return doCall(invokeRequest, applicationLogConsumer, exceptionConsumer);
     }
 
     private PendingOperation doCall(final EVMInvokeContractRequest invokeRequest,
-                                    final Consumer<String> applicationLogConsumer,
+                                    final Consumer<List<Object>> applicationLogConsumer,
                                     final Consumer<Throwable> exceptionConsumer) {
 
         return asyncUtils.doNoThrow(exceptionConsumer, () -> {
@@ -108,24 +106,11 @@ public class UserBscSmartContractService implements BscSmartContractService {
 
             final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
             final var wallet = getBscWalletDao().getWallet(walletId);
-            final var mintAccount = wallet.getWallet().getAccounts().get(0);
-            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount, null);
-            final var credentials = Credentials.create(decryptedAccount);
+            final var accountAddress = wallet.getWallet().getAddresses().get(0);
             final var contractAddress = contractMetadata.getScriptHash();
 
             //Send a transaction to a (already deployed) smart contract
             try {
-
-                final var solidityOutputTypes =
-                        invokeRequest.getOutputTypes().stream()
-                                .map(o -> {
-                                    try {
-                                        return (TypeReference<Type>)TypeReference.makeTypeReference(o);
-                                    } catch (ClassNotFoundException e) {
-                                        throw new ContractInvocationException(e.getMessage());
-                                    }
-                                })
-                                .collect(Collectors.toUnmodifiableList());
 
                 final var function =
                         FunctionEncoder.makeFunction(invokeRequest.getMethodName(),
@@ -133,11 +118,27 @@ public class UserBscSmartContractService implements BscSmartContractService {
                                 invokeRequest.getParameters(),
                                 invokeRequest.getOutputTypes());
 
-                final var responseValue = callSmartContractFunction(function, credentials.getAddress(), contractAddress);
-                final var responseObjects = FunctionReturnDecoder.decode(responseValue, solidityOutputTypes);
-                final var response = responseObjects.get(0).getValue().toString();
+                final var encodedFunction = FunctionEncoder.encode(function);
 
-                applicationLogConsumer.accept(response);
+                final var transaction =
+                        Transaction.createEthCallTransaction(accountAddress, contractAddress, encodedFunction);
+
+                final var ethCall = getBscw3JClient().getWeb3j()
+                        .ethCall(transaction, DefaultBlockParameterName.LATEST)
+                        .sendAsync()
+                        .get();
+
+                final var responseValue = ethCall.getValue();
+
+                final var responseObjects =
+                        FunctionReturnDecoder.decode(responseValue, function.getOutputParameters());
+
+                final var convertedObjects = responseObjects
+                        .stream()
+                        .map(o -> o.getValue())
+                        .collect(Collectors.toList());
+
+                applicationLogConsumer.accept(convertedObjects);
 
             } catch (Exception e) {
 
@@ -152,21 +153,6 @@ public class UserBscSmartContractService implements BscSmartContractService {
 
             return null;
         });
-    }
-
-    private String callSmartContractFunction(Function function, String fromAddress, String contractAddress)
-            throws Exception {
-        String encodedFunction = FunctionEncoder.encode(function);
-
-        org.web3j.protocol.core.methods.response.EthCall response =
-                getBscw3JClient().getWeb3j().ethCall(
-                                Transaction.createEthCallTransaction(
-                                        fromAddress, contractAddress, encodedFunction),
-                                DefaultBlockParameterName.LATEST)
-                        .sendAsync()
-                        .get();
-
-        return response.getValue();
     }
 
     @Override

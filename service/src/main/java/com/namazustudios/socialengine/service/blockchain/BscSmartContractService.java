@@ -74,7 +74,7 @@ public interface BscSmartContractService {
      * @return the {@link String} response from the blockchain invocation.
      */
     PendingOperation send(final EVMInvokeContractRequest invokeRequest,
-                          final Consumer<String> applicationLogConsumer,
+                          final Consumer<EVMInvokeContractResponse> applicationLogConsumer,
                           final Consumer<Throwable> exceptionConsumer);
 
     /**
@@ -86,7 +86,7 @@ public interface BscSmartContractService {
      * @return the {@link String} response from the blockchain invocation.
      */
     PendingOperation call(final EVMInvokeContractRequest invokeRequest,
-                          final Consumer<String> applicationLogConsumer,
+                          final Consumer<List<Object>> applicationLogConsumer,
                           final Consumer<Throwable> exceptionConsumer);
 
     /**
