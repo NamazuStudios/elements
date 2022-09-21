@@ -9,7 +9,6 @@ import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 import com.namazustudios.socialengine.service.Unscoped;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 /**
@@ -62,22 +61,33 @@ public interface BscSmartContractService {
      * @param exceptionConsumer
      * @return the {@link List<String>} responses from the blockchain.
      */
-    String mintToken(final MintTokenRequest mintTokenRequest,
+    PendingOperation mintToken(final MintTokenRequest mintTokenRequest,
                                final Consumer<MintBscTokenResponse> applicationLogConsumer,
                                final Consumer<Throwable> exceptionConsumer);
 
     /**
-     * Invokes a method on the {@link ElementsSmartContract} corresponding to the passed contract id
-     * in a transactional manner. This will always incur a GAS fee.
+     * Sends a transaction to a method on the {@link ElementsSmartContract} corresponding to the passed
+     * contract id. This will always incur a GAS fee. Cannot return data from the invoked function.
      *
      * @param invokeRequest     the {@link InvokeContractRequest} with the information to invoke
      * @param exceptionConsumer
      * @return the {@link String} response from the blockchain invocation.
      */
-    String  invoke(final InvokeContractRequest invokeRequest,
-                            final BiConsumer<Long, InvokeContractResponse> applicationLogConsumer,
-                            final Consumer<Throwable> exceptionConsumer);
+    PendingOperation send(final EVMInvokeContractRequest invokeRequest,
+                          final Consumer<EVMInvokeContractResponse> applicationLogConsumer,
+                          final Consumer<Throwable> exceptionConsumer);
 
+    /**
+     * Calls a method on the {@link ElementsSmartContract} corresponding to the passed contract id
+     * to attempt to read data from the contract. This will never incur a GAS fee.
+     *
+     * @param invokeRequest     the {@link InvokeContractRequest} with the information to invoke
+     * @param exceptionConsumer
+     * @return the {@link String} response from the blockchain invocation.
+     */
+    PendingOperation call(final EVMInvokeContractRequest invokeRequest,
+                          final Consumer<List<Object>> applicationLogConsumer,
+                          final Consumer<Throwable> exceptionConsumer);
 
     /**
      * Deletes the {@link ElementsSmartContract} with the supplied contract ID.

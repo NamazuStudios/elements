@@ -9,23 +9,33 @@ import com.namazustudios.socialengine.exception.blockchain.ContractInvocationExc
 import com.namazustudios.socialengine.model.Pagination;
 import com.namazustudios.socialengine.model.blockchain.*;
 import com.namazustudios.socialengine.model.blockchain.bsc.MintBscTokenResponse;
-import com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet;
 import com.namazustudios.socialengine.service.TopicService;
 import com.namazustudios.socialengine.util.AsyncUtils;
+import org.web3j.abi.FunctionEncoder;
+import org.web3j.abi.FunctionReturnDecoder;
+import org.web3j.abi.TypeReference;
+import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Credentials;
-import org.web3j.tx.RawTransactionManager;
+import org.web3j.crypto.RawTransaction;
+import org.web3j.crypto.TransactionEncoder;
+import org.web3j.protocol.core.DefaultBlockParameterName;
+import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.Log;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.tx.TransactionManager;
-import org.web3j.tx.gas.ContractGasProvider;
-import org.web3j.tx.gas.StaticGasProvider;
+import org.web3j.tx.response.PollingTransactionReceiptProcessor;
+import org.web3j.utils.Numeric;
 
 import javax.inject.Inject;
+import javax.ws.rs.client.Client;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
-import static com.namazustudios.socialengine.BlockchainConstants.MintStatus.*;
+import static com.namazustudios.socialengine.BlockchainConstants.MintStatus.MINTED;
+import static com.namazustudios.socialengine.BlockchainConstants.MintStatus.MINT_PENDING;
 import static java.lang.String.format;
 
 public class SuperUserBscSmartContractService implements BscSmartContractService {
@@ -41,6 +51,10 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
     private ObjectMapper objectMapper;
 
     private TopicService topicService;
+
+    private Client client;
+
+    private String bscHost;
 
     private final AsyncUtils asyncUtils = new AsyncUtils(SuperUserBscSmartContractService.class);
 
@@ -60,30 +74,26 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
     }
 
     @Override
-    public String  mintToken(final MintTokenRequest mintTokenRequest,
-                                      final Consumer<MintBscTokenResponse> tokenResponseConsumer,
-                                      final Consumer<Throwable> exceptionConsumer) {
+    public PendingOperation mintToken(final MintTokenRequest mintTokenRequest,
+                            final Consumer<MintBscTokenResponse> tokenResponseConsumer,
+                            final Consumer<Throwable> exceptionConsumer) {
 
         final var tokenId = mintTokenRequest.getTokenId();
         final var bscToken = getBscTokenDao().getToken(tokenId);
 
         final var clone = getBscTokenDao().cloneBscToken(bscToken);
-        final var ownerAddress = mintTokenRequest.getOwnerAddress() != null ?
-                mintTokenRequest.getOwnerAddress() : clone.getToken().getOwner();
-
-
         final var tokenMap = getObjectMapper().convertValue(clone.getToken(), Map.class);
 
         getBscTokenDao().setMintStatusForToken(clone.getId(), MINT_PENDING);
 
-        final var invokeContractRequest = new InvokeContractRequest();
+        final var invokeContractRequest = new EVMInvokeContractRequest();
         invokeContractRequest.setMethodName("mint");
         invokeContractRequest.setContractId(clone.getContractId());
         invokeContractRequest.setPassword(mintTokenRequest.getPassword());
         invokeContractRequest.setWalletId(mintTokenRequest.getWalletId());
         invokeContractRequest.setParameters(List.of(clone.getTokenUUID(), tokenMap));
 
-        return doInvoke(invokeContractRequest, (blockIndex, tx) -> {
+        return doSend(invokeContractRequest, (result) -> {
 
                     clone.setMintStatus(MINTED);
 
@@ -102,51 +112,104 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
     }
 
     @Override
-    public String invoke(final InvokeContractRequest invokeRequest,
-                                   final BiConsumer<Long, InvokeContractResponse> applicationLogConsumer,
-                                   final Consumer<Throwable> exceptionConsumer) {
-        return doInvoke(invokeRequest, (blockIndex, tx) -> {
-            final var invokeContractResponse = new InvokeContractResponse();
-            invokeContractResponse.setBlockNetworkId(blockIndex.toString());
-        }, exceptionConsumer);
+    public PendingOperation send(final EVMInvokeContractRequest invokeRequest,
+                         final Consumer<EVMInvokeContractResponse> applicationLogConsumer,
+                         final Consumer<Throwable> exceptionConsumer) {
+
+        return doSend(invokeRequest, applicationLogConsumer, exceptionConsumer);
     }
 
-    private String doInvoke(final InvokeContractRequest invokeRequest, final BiConsumer<Long, InvokeContractResponse> applicationLogConsumer,
-                                      final Consumer<Throwable> exceptionConsumer) {
-            final var contractMetadata = getBscSmartContractDao()
-                .getBscSmartContract(invokeRequest.getContractId());
+    @Override
+    public PendingOperation call(final EVMInvokeContractRequest invokeRequest,
+                                 final Consumer<List<Object>> applicationLogConsumer,
+                                 final Consumer<Throwable> exceptionConsumer) {
 
-            if(!contractMetadata.getBlockchain().equals(BlockchainConstants.Names.BSC)) {
+        return doCall(invokeRequest, applicationLogConsumer, exceptionConsumer);
+    }
+
+
+    private PendingOperation doSend(final EVMInvokeContractRequest invokeRequest,
+                            final Consumer<EVMInvokeContractResponse> applicationLogConsumer,
+                            final Consumer<Throwable> exceptionConsumer) {
+
+        return asyncUtils.doNoThrow(exceptionConsumer, () -> {
+
+            final var contractMetadata = getBscSmartContractDao()
+                    .getBscSmartContract(invokeRequest.getContractId());
+
+            if (!contractMetadata.getBlockchain().equals(BlockchainConstants.Names.BSC)) {
                 final var msg = format("Contract Blockchain %s is not a supported type.", contractMetadata.getBlockchain());
                 throw new ContractInvocationException(msg);
             }
 
-            final var wallet = getBscWalletDao().getWallet(invokeRequest.getWalletId());
+            final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
+            final var wallet = getBscWalletDao().getWallet(walletId);
             final var mintAccount = wallet.getWallet().getAccounts().get(0);
-
-            Credentials credentials = Credentials.create(Web3jWallet.decrypt(wallet.getWallet().getAccounts().get(0)));
-
-
-            String contractAddress = contractMetadata.getBlockchain();
-
-            int attempt = 200;
-            int sleepDuration = 500;
-            final ContractGasProvider gasProvider = new StaticGasProvider(BlockchainConstants.SmartContracts.GAS_PRICE, BlockchainConstants.SmartContracts.GAS_LIMIT);
+            final var decryptedAccount = getBscw3JClient().decrypt(wallet.getWallet(), mintAccount, invokeRequest.getPassword());
+            final var credentials = Credentials.create(decryptedAccount);
+            final var contractAddress = contractMetadata.getScriptHash();
 
             //Send a transaction to a (already deployed) smart contract
             try {
-                // RawTransactionManager use a wallet (credential) to create and sign transaction
-                TransactionManager manager = new RawTransactionManager(getBscw3JClient().getWeb3j(), credentials, attempt, sleepDuration);
 
-                //load contract information into the transaction
-                final BscSmartContract contract = BscSmartContract.load(contractAddress, getBscw3JClient().getWeb3j(), manager, gasProvider);
+                final var function =
+                        FunctionEncoder.makeFunction(
+                                invokeRequest.getMethodName(),
+                                invokeRequest.getInputTypes(),
+                                invokeRequest.getParameters(),
+                                invokeRequest.getOutputTypes());
 
-                //invoke contract function
-                final var returnType = contract.run(invokeRequest.getMethodName()).send(); // <-- throws exception
+                final var encodedFunction = FunctionEncoder.encode(function);
 
-                return  returnType;
+                final var ethGetTransactionCount =
+                        getBscw3JClient().getWeb3j()
+                                .ethGetTransactionCount(credentials.getAddress(), DefaultBlockParameterName.LATEST)
+                                .send();
 
-            } catch(Exception e) {
+                final var nonce = ethGetTransactionCount.getTransactionCount();
+
+                // Prepare the rawTransaction
+                final var rawTx =
+                        RawTransaction.createTransaction(
+                                nonce,
+                                BlockchainConstants.SmartContracts.GAS_PRICE,
+                                BlockchainConstants.SmartContracts.GAS_LIMIT,
+                                contractAddress,
+                                BigInteger.ZERO,
+                                encodedFunction
+                        );
+
+                // Sign the transaction
+                final var signedMessage = TransactionEncoder.signMessage(rawTx, credentials);
+                final var hexValue = Numeric.toHexString(signedMessage);
+
+                // Send transaction
+                final var ethSendTransaction = getBscw3JClient().getWeb3j().ethSendRawTransaction(hexValue).send();
+                final var transactionHash = ethSendTransaction.getTransactionHash();
+
+                final var receiptProcessor = new PollingTransactionReceiptProcessor(
+                        getBscw3JClient().getWeb3j(),
+                        TransactionManager.DEFAULT_POLLING_FREQUENCY,
+                        TransactionManager.DEFAULT_POLLING_ATTEMPTS_PER_TX_HASH);
+
+                //Wait for the transaction block
+                final var txReceipt = receiptProcessor.waitForTransactionReceipt(transactionHash);
+                final var response = convertTransactionReceipt(txReceipt);
+
+                if(response.getLogs().size() > 0) {
+                    final var data = response.getLogs().get(0).getData();
+                    final var decodedData =
+                            FunctionReturnDecoder.decode(data, function.getOutputParameters())
+                                    .stream()
+                                    .map(t -> t.getValue())
+                                    .collect(Collectors.toList());
+
+                    response.setDecodedLog(decodedData);
+                }
+
+                applicationLogConsumer.accept(response);
+
+            } catch (Exception e) {
                 final var msg = format(
                         "Bsc Transaction Failed: %s",
                         e.getMessage()
@@ -154,7 +217,76 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
 
                 throw new ContractInvocationException(msg);
             }
+
+            return null;
+        });
     }
+
+    private PendingOperation doCall(final EVMInvokeContractRequest invokeRequest,
+                                    final Consumer<List<Object>> applicationLogConsumer,
+                                    final Consumer<Throwable> exceptionConsumer) {
+
+        return asyncUtils.doNoThrow(exceptionConsumer, () -> {
+
+            final var contractMetadata = getBscSmartContractDao()
+                    .getBscSmartContract(invokeRequest.getContractId());
+
+            if (!contractMetadata.getBlockchain().equals(BlockchainConstants.Names.BSC)) {
+                final var msg = format("Contract Blockchain %s is not a supported type.", contractMetadata.getBlockchain());
+                throw new ContractInvocationException(msg);
+            }
+
+            final var walletId = invokeRequest.getWalletId() == null ? contractMetadata.getWalletId() : invokeRequest.getWalletId();
+            final var wallet = getBscWalletDao().getWallet(walletId);
+            final var accountAddress = wallet.getWallet().getAddresses().get(0);
+            final var contractAddress = contractMetadata.getScriptHash();
+
+            //Send a transaction to a (already deployed) smart contract
+            try {
+
+                final var function =
+                        FunctionEncoder.makeFunction(invokeRequest.getMethodName(),
+                                                     invokeRequest.getInputTypes(),
+                                                     invokeRequest.getParameters(),
+                                                     invokeRequest.getOutputTypes());
+
+                final var encodedFunction = FunctionEncoder.encode(function);
+
+                final var transaction =
+                        Transaction.createEthCallTransaction(accountAddress, contractAddress, encodedFunction);
+
+                final var ethCall = getBscw3JClient().getWeb3j()
+                        .ethCall(transaction, DefaultBlockParameterName.LATEST)
+                        .sendAsync()
+                        .get();
+
+                final var responseValue = ethCall.getValue();
+
+                final var responseObjects =
+                        FunctionReturnDecoder.decode(responseValue, function.getOutputParameters());
+
+                final var convertedObjects = responseObjects
+                        .stream()
+                        .map(o -> o.getValue())
+                        .collect(Collectors.toList());
+
+                applicationLogConsumer.accept(convertedObjects);
+
+            } catch (Exception e) {
+
+                final var msg = format(
+                    "Bsc Call Failed: %s",
+                    e.getMessage()
+                );
+
+                throw new ContractInvocationException(msg);
+
+            }
+
+            return null;
+        });
+    }
+
 
     @Override
     public void deleteContract(String contractId) {
@@ -215,4 +347,39 @@ public class SuperUserBscSmartContractService implements BscSmartContractService
         this.topicService = topicService;
     }
 
+    private EVMInvokeContractResponse convertTransactionReceipt(final TransactionReceipt txReceipt) {
+        final var response = new EVMInvokeContractResponse();
+        response.setBlockHash(txReceipt.getBlockHash());
+        response.setBlockNumber(txReceipt.getBlockNumber().longValue());
+        response.setContractAddress(txReceipt.getContractAddress());
+        response.setCumulativeGasUsed(txReceipt.getCumulativeGasUsed().longValue());
+        response.setEffectiveGasPrice(txReceipt.getEffectiveGasPrice());
+        response.setFrom(txReceipt.getFrom());
+        response.setGasUsed(txReceipt.getGasUsed().longValue());
+        response.setLogs(txReceipt.getLogs().stream().map(this::convertLog).collect(Collectors.toList()));
+        response.setLogsBloom(txReceipt.getLogsBloom());
+        response.setRevertReason(txReceipt.getRevertReason());
+        response.setRoot(txReceipt.getRoot());
+        response.setStatus(txReceipt.getStatus() == null ? 1 : Numeric.decodeQuantity(txReceipt.getStatus()).longValue());
+        response.setTo(txReceipt.getTo());
+        response.setTransactionHash(txReceipt.getTransactionHash());
+        response.setTransactionIndex(txReceipt.getTransactionIndex().longValue());
+        response.setType(txReceipt.getType());
+        return response;
+    }
+
+    private EVMTransactionLog convertLog(final Log l) {
+        final var txLog = new EVMTransactionLog();
+        txLog.setAddress(l.getAddress());
+        txLog.setBlockHash(l.getBlockHash());
+        txLog.setBlockNumber(l.getBlockNumber().longValue());
+        txLog.setData(l.getData());
+        txLog.setLogIndex(l.getLogIndex().longValue());
+        txLog.setRemoved(l.isRemoved());
+        txLog.setTopics(l.getTopics());
+        txLog.setTransactionHash(l.getTransactionHash());
+        txLog.setTransactionIndex(l.getTransactionIndex().longValue());
+        txLog.setType(l.getType());
+        return txLog;
+    }
 }

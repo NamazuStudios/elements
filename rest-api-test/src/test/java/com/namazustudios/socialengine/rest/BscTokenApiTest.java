@@ -141,6 +141,7 @@ public class BscTokenApiTest {
                 .delete();
 
         assertEquals(response.getStatus(), 204);
+
     }
 
     @Test(dataProvider = "getAuthHeader")

@@ -59,6 +59,7 @@ import com.namazustudios.socialengine.service.social.SuperuserSocialCampaignServ
 import com.namazustudios.socialengine.service.user.SuperuserUserService;
 import com.namazustudios.socialengine.service.user.UserServiceProvider;
 import org.dozer.Mapper;
+import org.glassfish.jersey.model.Scoped;
 
 import javax.inject.Provider;
 

@@ -12,11 +12,15 @@ public class BscSmartContractServiceProvider implements Provider<BscSmartContrac
 
     private Provider<SuperUserBscSmartContractService> superUserBscSmartContractService;
 
+    private Provider<UserBscSmartContractService> userBscSmartContractService;
+
     @Override
     public BscSmartContractService get() {
         switch (getUser().getLevel()) {
             case SUPERUSER:
                 return getSuperUserBscSmartContractService().get();
+            case USER:
+                return getUserBscSmartContractService().get();
             default:
                 return Services.forbidden(BscSmartContractService.class);
         }
@@ -29,6 +33,15 @@ public class BscSmartContractServiceProvider implements Provider<BscSmartContrac
     @Inject
     public void setUser(User user) {
         this.user = user;
+    }
+
+    public Provider<UserBscSmartContractService> getUserBscSmartContractService() {
+        return userBscSmartContractService;
+    }
+
+    @Inject
+    public void setUserBscSmartContractServiceProvider(Provider<UserBscSmartContractService> UserBscSmartContractService) {
+        this.userBscSmartContractService = UserBscSmartContractService;
     }
 
     public Provider<SuperUserBscSmartContractService> getSuperUserBscSmartContractService() {

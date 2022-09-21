@@ -25,7 +25,6 @@ public class MongoBscWallet {
     @Id
     public ObjectId objectId;
 
-    @Indexed
     @Property
     public String displayName;
 
@@ -66,4 +65,5 @@ public class MongoBscWallet {
     public void setUser(MongoUser user) {
         this.user = user;
     }
+
 }

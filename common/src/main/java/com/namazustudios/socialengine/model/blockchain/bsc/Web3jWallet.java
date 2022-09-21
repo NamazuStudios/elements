@@ -2,24 +2,16 @@ package com.namazustudios.socialengine.model.blockchain.bsc;
 
 import io.swagger.annotations.ApiModelProperty;
 
-import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import java.security.spec.KeySpec;
-import javax.crypto.Cipher;
-import javax.crypto.SecretKey;
-import javax.crypto.SecretKeyFactory;
-import javax.crypto.spec.DESedeKeySpec;
-import java.util.Base64;
-
 public class Web3jWallet {
 
-    private static final String UNICODE_FORMAT = "UTF8";
-    public static final String DESEDE_ENCRYPTION_SCHEME = "DESede";
+    @ApiModelProperty("The IV for encrypting this wallet.")
+    private String iv;
 
-    private static final String WEB3J_KEY = "com.namazustudios.socialengine.model.blockchain.bsc.Web3jWallet";
+    @ApiModelProperty("The IV for encrypting this wallet.")
+    private String salt;
 
     @ApiModelProperty("The name given to this wallet.")
     private String name;
@@ -27,135 +19,96 @@ public class Web3jWallet {
     @ApiModelProperty("The version of this wallet.")
     private String version;
 
-    @ApiModelProperty("The seed of this wallet.")
-    private String seed;
-
     @ApiModelProperty("The accounts associated with this wallet.")
     private List<String> accounts;
 
+    @ApiModelProperty("The public addresses associated with this wallet.")
+    private List<String> addresses;
+
     @ApiModelProperty("The extra object data associated with this wallet.")
     private Object extra;
-
-    public Web3jWallet() {
-    }
-
-    public Web3jWallet(BigInteger accountSecretKey) {
-        String sPrivatekeyInHex = Web3jWallet.encrypt(accountSecretKey.toString(16));
-        this.accounts = new ArrayList<>();
-        this.accounts.add(sPrivatekeyInHex);
-        this.name = sPrivatekeyInHex;
-    }
-
-    public Web3jWallet(String name) {
-        this.name = name;
-    }
-
-    public Web3jWallet(String name, BigInteger accountSecretKey) {
-        this.name = name;
-        if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(Web3jWallet.encrypt(accountSecretKey.toString(16)));
-    }
-
-    public Web3jWallet(String name, BigInteger accountSecretKey, String password) {
-        this.name = name;
-        this.seed = Web3jWallet.encrypt(password);
-        if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(Web3jWallet.encrypt(accountSecretKey.toString(16)));
-    }
-
-    public Web3jWallet(String name, String version, String password, BigInteger accountSecretKey, Object extra) {
-        this.name = name;
-        this.version = version;
-        this.seed = Web3jWallet.encrypt(password);
-        if (this.accounts == null) this.accounts = new ArrayList<>();
-        this.accounts.add(Web3jWallet.encrypt(accountSecretKey.toString(16)));
-        this.extra = extra;
-    }
 
     public String getName() {
         return name;
     }
 
-    public String getSeed() {
-        return seed;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getVersion() {
         return version;
     }
 
+    public void setVersion(String version) {
+        this.version = version;
+    }
+
+    public String getIv() {
+        return iv;
+    }
+
+    public void setIv(String iv) {
+        this.iv = iv;
+    }
+
+    public String getSalt() {
+        return salt;
+    }
+
+    public void setSalt(String salt) {
+        this.salt = salt;
+    }
+
     public List<String> getAccounts() {
         return accounts;
+    }
+
+    public void setAccounts(List<String> accounts) {
+        this.accounts = accounts;
+    }
+
+    public List<String> getAddresses() {
+        return addresses;
+    }
+
+    public void setAddresses(List<String> addresses) {
+        this.addresses = addresses;
     }
 
     public Object getExtra() {
         return extra;
     }
 
+    public void setExtra(Object extra) {
+        this.extra = extra;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof Web3jWallet)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         Web3jWallet that = (Web3jWallet) o;
-        return Objects.equals(getName(), that.getName()) &&
-                Objects.equals(getVersion(), that.getVersion()) &&
-                Objects.equals(getSeed(), that.getSeed()) &&
-                Objects.equals(getAccounts(), that.getAccounts()) &&
-                Objects.equals(getExtra(), that.getExtra());
+        return Objects.equals(getIv(), that.getIv()) && Objects.equals(getSalt(), that.getSalt()) && Objects.equals(getName(), that.getName()) && Objects.equals(getVersion(), that.getVersion()) && Objects.equals(getAccounts(), that.getAccounts()) && Objects.equals(getAddresses(), that.getAddresses()) && Objects.equals(getExtra(), that.getExtra());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getName(), getVersion(), getVersion(), getAccounts(), getExtra());
+        return Objects.hash(getIv(), getSalt(), getName(), getVersion(), getAccounts(), getAddresses(), getExtra());
     }
 
     @Override
     public String toString() {
-        return "Web3jWallet{" +
-                "name='" + name + '\'' +
-                ", version='" + version + '\'' +
-                ", getSeed=" + getSeed() +
-                ", accounts=" + accounts +
-                ", extra=" + extra +
-                '}';
+        final StringBuilder sb = new StringBuilder("Web3jWallet{");
+        sb.append("iv='").append(iv).append('\'');
+        sb.append(", salt='").append(salt).append('\'');
+        sb.append(", name='").append(name).append('\'');
+        sb.append(", version='").append(version).append('\'');
+        sb.append(", accounts=").append(accounts);
+        sb.append(", addresses=").append(addresses);
+        sb.append(", extra=").append(extra);
+        sb.append('}');
+        return sb.toString();
     }
 
-    public static String encrypt(String unencryptedString) {
-        String encryptedString = null;
-        try {
-             byte[] arrayBytes = WEB3J_KEY.getBytes(UNICODE_FORMAT);;
-             KeySpec ks = new DESedeKeySpec(arrayBytes);;
-             SecretKeyFactory skf = SecretKeyFactory.getInstance(DESEDE_ENCRYPTION_SCHEME);;
-             Cipher cipher  = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME);
-             String myEncryptionScheme = DESEDE_ENCRYPTION_SCHEME;;
-             SecretKey key = skf.generateSecret(ks);
-             cipher.init(Cipher.ENCRYPT_MODE, key);
-             byte[] plainText = unencryptedString.getBytes(UNICODE_FORMAT);
-             byte[] encryptedText = cipher.doFinal(plainText);
-             encryptedString = new String(Base64.getEncoder().encodeToString(encryptedText));
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return encryptedString;
-    }
-
-
-    public static String decrypt(String encryptedString) {
-        String decryptedText=null;
-        try {
-            byte[] arrayBytes = WEB3J_KEY.getBytes(UNICODE_FORMAT);;
-            KeySpec ks = new DESedeKeySpec(arrayBytes);;
-            SecretKeyFactory skf = SecretKeyFactory.getInstance(DESEDE_ENCRYPTION_SCHEME);;
-            Cipher cipher  = Cipher.getInstance(DESEDE_ENCRYPTION_SCHEME);
-            String myEncryptionScheme = DESEDE_ENCRYPTION_SCHEME;;
-            SecretKey key = skf.generateSecret(ks);
-            cipher.init(Cipher.DECRYPT_MODE, key);
-            byte[] encryptedText = Base64.getDecoder().decode(encryptedString);
-            byte[] plainText = cipher.doFinal(encryptedText);
-            decryptedText= new String(plainText);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return decryptedText;
-    }
 }
