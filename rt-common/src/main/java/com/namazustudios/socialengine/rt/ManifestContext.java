@@ -1,16 +1,22 @@
 package com.namazustudios.socialengine.rt;
 
 import com.namazustudios.socialengine.rt.annotation.Proxyable;
+import com.namazustudios.socialengine.rt.annotation.RemoteService;
+import com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition;
 import com.namazustudios.socialengine.rt.annotation.RemotelyInvokable;
 import com.namazustudios.socialengine.rt.manifest.http.HttpManifest;
 import com.namazustudios.socialengine.rt.manifest.model.ModelManifest;
 import com.namazustudios.socialengine.rt.manifest.security.SecurityManifest;
 import com.namazustudios.socialengine.rt.manifest.startup.StartupManifest;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.ELEMENTS_RT_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.WORKER_SCOPE;
+
 /**
  * Loads the various manifest types over the network to be used by dependent services.
  */
 @Proxyable
+@RemoteService(@RemoteServiceDefinition(scope = WORKER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL))
 public interface ManifestContext {
 
     /**

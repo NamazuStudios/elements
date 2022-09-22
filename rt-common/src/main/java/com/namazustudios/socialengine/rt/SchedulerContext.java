@@ -11,10 +11,14 @@ import com.namazustudios.socialengine.rt.exception.DuplicateTaskException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.ELEMENTS_RT_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.WORKER_SCOPE;
+
 /**
  * This is the {@link Proxyable} for scheduling tasks within the cluster.
  */
 @Proxyable
+@RemoteService(@RemoteServiceDefinition(scope = WORKER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL))
 public interface SchedulerContext {
 
     /**

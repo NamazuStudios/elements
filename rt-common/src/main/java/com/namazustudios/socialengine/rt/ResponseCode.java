@@ -100,6 +100,11 @@ public enum ResponseCode {
     METHOD_NOT_FOUND,
 
     /**
+     * A particular service could not be found at the requested path.
+     */
+    SERVICE_NOT_FOUND,
+
+    /**
      * A particular operation, (eg {@link HttpOperation}) could not be found.
      */
     OPERATION_NOT_FOUND,

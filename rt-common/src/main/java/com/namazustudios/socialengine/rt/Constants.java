@@ -67,4 +67,14 @@ public interface Constants {
      */
     String ELEMENTS_HOME_DEFAULT = "/opt/elements";
 
+    /**
+     * Indicates the scope for remote dispatch
+     */
+    String REMOTE_SCOPE = "com.namazustudios.socialengine.rt.scope";
+
+    /**
+     * Indicates the protocol for remote dispatch
+     */
+    String REMOTE_PROTOCOL = "com.namazustudios.socialengine.rt.protocol";
+
 }

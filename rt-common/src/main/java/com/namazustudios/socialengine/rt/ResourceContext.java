@@ -9,12 +9,15 @@ import com.namazustudios.socialengine.rt.util.SyncWait;
 import java.util.function.Consumer;
 
 import static com.namazustudios.socialengine.rt.Attributes.emptyAttributes;
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.ELEMENTS_RT_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.WORKER_SCOPE;
 import static com.namazustudios.socialengine.rt.id.ResourceId.resourceIdFromString;
 
 /**
  * The interface for manipulating {@link Resource}s in the cluster.
  */
 @Proxyable
+@RemoteService(@RemoteServiceDefinition(scope = WORKER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL))
 public interface ResourceContext {
 
     /**

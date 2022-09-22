@@ -10,10 +10,14 @@ import java.util.List;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
 
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.ELEMENTS_RT_PROTOCOL;
+import static com.namazustudios.socialengine.rt.annotation.RemoteServiceDefinition.WORKER_SCOPE;
+
 /**
  * Used to index various {@link Resource} instances by {@link Path}.
  */
 @Proxyable
+@RemoteService(@RemoteServiceDefinition(scope = WORKER_SCOPE, protocol = ELEMENTS_RT_PROTOCOL))
 public interface IndexContext {
 
     /**
