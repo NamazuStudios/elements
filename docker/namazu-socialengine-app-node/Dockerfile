@@ -7,7 +7,7 @@ EXPOSE 28883
 
 USER root:root
 
-RUN apt-get install -y cmake libssl-dev libsasl2-dev lua5.3 lua5.3-dev luarocks && \
+RUN apt-get update && apt-get install -y cmake libssl-dev libsasl2-dev lua5.3 lua5.3-dev luarocks && \
     wget https://github.com/mongodb/mongo-c-driver/releases/download/1.21.1/mongo-c-driver-1.21.1.tar.gz && \
     tar xzf mongo-c-driver-1.21.1.tar.gz && \
     cd mongo-c-driver-1.21.1 && \
