@@ -1,9 +1,5 @@
 package com.namazustudios.socialengine.rt.annotation;
 
-import com.google.common.base.CaseFormat;
-
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
-
 /**
  * Defines a constant.
  */
@@ -34,12 +30,5 @@ public @interface FieldDefinition {
      * The value of the description.
      */
     String description() default "";
-
-    /**
-     * The source case format. This defaults to {@link CaseFormat#UPPER_UNDERSCORE}.
-     *
-     * @return the source case format.
-     */
-    CaseFormat sourceCaseFormat() default UPPER_UNDERSCORE;
 
 }

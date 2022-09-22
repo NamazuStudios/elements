@@ -19,7 +19,6 @@ public @interface ModuleDefinition {
     /**
      * When binding to the underlying language, this defines the case format
      *
-     *
      * @return the method case format
      */
     CodeStyle style() default @CodeStyle();
@@ -34,7 +33,7 @@ public @interface ModuleDefinition {
     /**
      * Indicates that importing this particular module is deprecated.
      *
-     * @return true if deprecated, false otherwise
+     * @return the {@link DeprecationDefinition} containing specific deprecation information.
      */
     DeprecationDefinition deprecated() default @DeprecationDefinition(deprecated = false);
 

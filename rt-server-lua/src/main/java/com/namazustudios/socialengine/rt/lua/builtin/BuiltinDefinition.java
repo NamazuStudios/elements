@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.rt.lua.builtin;
 
-import com.google.common.base.CaseFormat;
+import com.namazustudios.socialengine.rt.annotation.CaseFormat;
 import com.namazustudios.socialengine.rt.annotation.ModuleDefinition;
 
-import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.LOWER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.UPPER_UNDERSCORE;
 
 /**
  * Interface to wrangle the builtin definitions.

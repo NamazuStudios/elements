@@ -20,7 +20,7 @@ public abstract class AbstractLocalInvocationDispatcher implements LocalInvocati
     private final LoadingCache<MethodKey, LocalInvocationProcessor> localDispatcherCache = CacheBuilder
         .newBuilder()
         .weakKeys()
-        .build(new CacheLoader<MethodKey, LocalInvocationProcessor>() {
+        .build(new CacheLoader<>() {
             @Override
             public LocalInvocationProcessor load(final MethodKey key) throws Exception {
                 return new LocalInvocationProcessorBuilder(key.getType(), key.getMethod(), key.getParameters()).build();

@@ -1,10 +1,10 @@
 package com.namazustudios.socialengine.doclet.metadata;
 
-import com.google.common.base.CaseFormat;
+import com.namazustudios.socialengine.rt.annotation.CaseFormat;
 import com.namazustudios.socialengine.rt.annotation.CodeStyle;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static com.google.common.base.CaseFormat.UPPER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.LOWER_CAMEL;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.UPPER_UNDERSCORE;
 
 /**
  * Defines code style.

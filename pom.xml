@@ -82,6 +82,7 @@
         <module>doc-serve</module>
         <module>doclet</module>
         <module>mongo-test</module>
+        <module>rpc-api</module>
     </modules>
     <properties>
         <test.suites>**/*UnitTestSuite.java</test.suites>

@@ -20,8 +20,8 @@ import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.LOWER_CAMEL;
+import static com.namazustudios.socialengine.rt.annotation.CaseFormat.LOWER_UNDERSCORE;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromDefinition;
 import static com.namazustudios.socialengine.rt.lua.builtin.BuiltinDefinition.fromModuleName;
 import static com.namazustudios.socialengine.rt.lua.persist.ErisPersistence.mangle;
