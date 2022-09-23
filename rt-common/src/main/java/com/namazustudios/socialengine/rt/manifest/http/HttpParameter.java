@@ -2,12 +2,17 @@ package com.namazustudios.socialengine.rt.manifest.http;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 public class HttpParameter implements Serializable, Comparable<HttpParameter> {
 
+        @Min(0)
+        @NotNull
         private int index;
 
+        @NotNull
         private Type type;
 
         /**
@@ -71,4 +76,5 @@ public class HttpParameter implements Serializable, Comparable<HttpParameter> {
                 return this.getIndex() == c.getIndex()
                         && this.getType() == c.getType();
         }
+
 }

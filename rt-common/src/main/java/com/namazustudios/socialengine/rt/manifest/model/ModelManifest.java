@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -8,7 +9,8 @@ import java.util.Map;
  */
 public class ModelManifest implements Serializable {
 
-    private Map<String, Model> modelsByName;
+    @NotNull
+    private Map<@NotNull String, @NotNull Model> modelsByName;
 
     /**
      * Gets a mapping of {@link Model} instance by name.

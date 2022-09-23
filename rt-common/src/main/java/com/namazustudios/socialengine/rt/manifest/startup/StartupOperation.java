@@ -5,6 +5,7 @@ import com.namazustudios.socialengine.rt.exception.InternalException;
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 import com.namazustudios.socialengine.rt.manifest.security.AuthScheme;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 
@@ -14,10 +15,13 @@ import java.util.Map;
  */
 public class StartupOperation {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private String method;
 
+    @NotNull
     private Map<String, Type> parameters;
 
     /**

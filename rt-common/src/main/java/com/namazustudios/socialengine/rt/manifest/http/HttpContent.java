@@ -4,6 +4,7 @@ import com.namazustudios.socialengine.rt.Request;
 import com.namazustudios.socialengine.rt.Response;
 import com.namazustudios.socialengine.rt.manifest.Header;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.List;
 import java.util.Map;
@@ -13,16 +14,21 @@ import java.util.Map;
  */
 public class HttpContent implements Serializable {
 
+    @NotNull
     private String type;
 
+    @NotNull
     private String model;
 
-    private Map<String, Header> headers;
+    @NotNull
+    private Map<@NotNull String, @NotNull Header> headers;
 
-    private Map<String, String> staticHeaders;
+    @NotNull
+    private Map<@NotNull String, @NotNull String> staticHeaders;
 
     private boolean defaultContent;
 
+    @NotNull
     public Class<?> payloadType;
 
     /**

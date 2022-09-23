@@ -1,12 +1,14 @@
 package com.namazustudios.socialengine.rt.manifest.event;
 
+import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
 public class EventManifest {
 
-    private Map<String, List<EventOperation>> modulesByEventName;
+    @NotNull
+    private Map<String, @NotNull List<@NotNull EventOperation>> modulesByEventName;
 
     public Map<String, List<EventOperation>> getModulesByEventName() {
         return modulesByEventName;

@@ -1,10 +1,12 @@
 package com.namazustudios.socialengine.rt.manifest.security;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 
 public class SecurityManifest implements Serializable {
 
+    @NotNull
     private Map<String, AuthScheme.Header> headerAuthSchemesByName;
 
     /**

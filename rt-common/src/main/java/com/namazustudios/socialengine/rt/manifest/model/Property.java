@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -7,12 +8,16 @@ import java.io.Serializable;
  */
 public class Property implements Serializable {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private String description;
 
+    @NotNull
     private Type type;
 
+    @NotNull
     private String model;
 
     /**

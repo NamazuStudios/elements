@@ -1,5 +1,6 @@
 package com.namazustudios.socialengine.rt.manifest.model;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Map;
 
@@ -8,11 +9,14 @@ import java.util.Map;
  */
 public class Model implements Serializable {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private String description;
 
-    private Map<String, Property> properties;
+    @NotNull
+    private Map<@NotNull String, @NotNull Property> properties;
 
     /**
      * Get the name of the model.

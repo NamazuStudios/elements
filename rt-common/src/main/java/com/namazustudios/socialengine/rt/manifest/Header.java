@@ -2,6 +2,7 @@ package com.namazustudios.socialengine.rt.manifest;
 
 import com.namazustudios.socialengine.rt.manifest.model.Type;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -9,10 +10,13 @@ import java.io.Serializable;
  */
 public class Header implements Serializable {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private String description;
 
+    @NotNull
     private Type type;
 
     public String getName() {

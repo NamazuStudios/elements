@@ -3,6 +3,7 @@ package com.namazustudios.socialengine.rt.manifest.security;
 import com.namazustudios.socialengine.rt.manifest.Header;
 import com.namazustudios.socialengine.rt.manifest.http.HttpOperation;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 
 /**
@@ -10,8 +11,10 @@ import java.io.Serializable;
  */
 public abstract class AuthScheme<SpecT> implements Serializable {
 
+    @NotNull
     private String name;
 
+    @NotNull
     private String description;
 
     /**

@@ -15,7 +15,7 @@ public @interface RemoteService {
     /**
      * Defines the various remote service definitions.
      *
-     * @return
+     * @return all {@link RemoteServiceDefinition}s within this
      */
     RemoteServiceDefinition[] value();
 
